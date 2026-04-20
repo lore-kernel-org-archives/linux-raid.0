@@ -1,286 +1,334 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3F5813C9C4
-	for <linux-raid@vger.kernel.org>; Mon, 20 Apr 2026 05:21:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B43B277029
+	for <linux-raid@vger.kernel.org>; Mon, 20 Apr 2026 05:24:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776662483; cv=pass; b=SDsJerMTHQ0zT31Amsvr3pplPR+S9mIYXEkafgW0vZaA8LgkLz6xffFMajnDnAen4j62mKRbr8/m6wq93m7DFdlhTxsv3kD/vKfGDRDdnDbfAeCVe6ghhmG1SVI6frbri+fqgYV0FZcMsVBpZuJORVOe59cj5Zy1L38N/glb6oY=
+	t=1776662698; cv=pass; b=haRjwbJ0FaJlo3T5CpzhlhpZcxJdXgIlu8313NFRHn3Ehj2br4jGjKV4TBKhUTOknzJOqkSS9/J4T0KHKCH6lFAGsLvqOWMmCIwbz9lX+WaSzXHK2ESTzc1xL5acc8tDkUav8AC9x/4DtNbctkG80DKpgALbwXwqxz2bDkx1ly4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776662483; c=relaxed/simple;
-	bh=Akz3ucyzMyAJwDcep9KOlStCzc2irEQOHj+P6l+OOq8=;
+	s=arc-20240116; t=1776662698; c=relaxed/simple;
+	bh=CrRYWrUSyLRraAH250s0SmXrDb0Dmql3rcfXwrLDmkk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=E4NR1hKgin6OmBYGK39cPiArNjISBHt15sOh745JX7EYHKiawg2kpiS6mgU0Lc2aMr1929ZMC0lKKGaY8+fGtFtaKXgxLqvN2kZAyYf2PuCq8KXDLKH/ALBRfZXgSSpbgBUUgyTPUwBOFOEBWjzrOANDkRqSEmngx/m0wvq3VcI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=f4/hbV9r; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=O286guKo; arc=pass smtp.client-ip=170.10.133.124
+	 To:Cc:Content-Type; b=eW9WYrnwCIUZpzlLHv3mAtcVGBMOzbyJNwO1Hv/fzWxhz+2YTy32ZZUxNiNFk46dtTRWzEDUfTekRj6AIIEAond5E+M15d3KewMDNsgmgu56jX1ERS4zJAGkhVMal17NgJlp/thYCv65Fo/sR+Kiau9rJN+/9wiWGfmHHvXAXj0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fNDh7c20; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=dAHwllVZ; arc=pass smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="f4/hbV9r";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="O286guKo"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fNDh7c20";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="dAHwllVZ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1776662480;
+	s=mimecast20190719; t=1776662696;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=HyCNjZAPDfYeZFyuc1bpz+SIpuuFFwwpbf5ud9WzP7s=;
-	b=f4/hbV9rMyjA0gtsuHAD9gfAy8GEsm4lQHKh6BIQ1FfRJs9URdqW+XENQ6MEvn24hQBqm0
-	V5jb3OSCU4ayTDiDCG0Pbn3YoGdwmlHAuu48xpgpea8W8QAOtvK0R16DpQR6zya9qcjyDb
-	vTjFlZ7fPugfNLk0/lrvSXdZLWTvwZQ=
-Received: from mail-lf1-f69.google.com (mail-lf1-f69.google.com
- [209.85.167.69]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=5kBvEWQHgQk5b/PPn9NtKRt3ckhWNcUA3RcQcg8sFGo=;
+	b=fNDh7c20bNRzcTvFsKMXGem2W+hXz+NRTSuiPY9fATpWzZCRRh9Gdt/F32XcELZNZdFuvh
+	rCk8O1Ta3UlLq/UrHUyxeyZ00PxEgHTWxgsCooOxBNHGime2H+3HOoqWyhq3xqDaiC2zPQ
+	pyNgHfZKWM7f5IVmrzN+s79Di6SvF5E=
+Received: from mail-lf1-f72.google.com (mail-lf1-f72.google.com
+ [209.85.167.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-120-KuUAQS9qPjCN280hzmzCXg-1; Mon, 20 Apr 2026 01:21:18 -0400
-X-MC-Unique: KuUAQS9qPjCN280hzmzCXg-1
-X-Mimecast-MFC-AGG-ID: KuUAQS9qPjCN280hzmzCXg_1776662477
-Received: by mail-lf1-f69.google.com with SMTP id 2adb3069b0e04-5a2d20c8d33so1912119e87.3
-        for <linux-raid@vger.kernel.org>; Sun, 19 Apr 2026 22:21:18 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1776662476; cv=none;
+ us-mta-284-r9aEDYXQMQiAuC0s9PBP0Q-1; Mon, 20 Apr 2026 01:24:54 -0400
+X-MC-Unique: r9aEDYXQMQiAuC0s9PBP0Q-1
+X-Mimecast-MFC-AGG-ID: r9aEDYXQMQiAuC0s9PBP0Q_1776662693
+Received: by mail-lf1-f72.google.com with SMTP id 2adb3069b0e04-5a3ffc66760so1494956e87.3
+        for <linux-raid@vger.kernel.org>; Sun, 19 Apr 2026 22:24:54 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1776662693; cv=none;
         d=google.com; s=arc-20240605;
-        b=d66PdzQdNYJGOsHBtbCKJfvXV+2VXuWjdTC3uYP/1XxKNMnLR/VVeQUxpWxqi68wv2
-         yzDsFmvY0vCLKeDbbULldZX3m853bN4KDHQ6MTNHkr0j13XP3Y8hB23HtwAxiiPZ/7yC
-         eTrUdneW78lyNnnB/kbxEAy2U3xJqHgxVFx1TR9+DhClbOp7x0QVsxd1SxgyE9GZs1eX
-         cpbdkEKEYRz6bLZ0plpStehZFi5jFqUHj4papCeCajl1qIb/BOHlpmJ77KwLox8xXi4C
-         vmHK8y61mXM4YDBYW2R5bHZsncJMCKtWeeRS5pIB1NRl7J8r9yD4bQUYIF/9cl5Ldcj3
-         YtFA==
+        b=FypL2ljMgO5DhudLu0m0jqrzRoND2sb4oIDcdIgpth34GO4533c5gSf+85SkkVpzVw
+         Yr31WfEpXvsdhScXViWmt5yjpC5CYSJC/l4xapxVhibLIMd10Pl/qQ5UkcHrea+iZTIq
+         h3rkEoldk3zr57kwEmKjaRsFG8Wd9OqC0/DwnAnHuoVld0IHu5+16Vrecx5HoMQdoYPN
+         wnEuioOXfjwJJ2Zsex8mdW78G7akp4ao4HsP0enLSJdCm7fD0RprTw5Q8yMhpJ/IqcYA
+         q0Xn+hhVrshq5D2K9YSInsQyWt68es+iHyK+qlUNsMzh8Cd4FI/7aVJOPgCCC+KVZdp2
+         jTKw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=HyCNjZAPDfYeZFyuc1bpz+SIpuuFFwwpbf5ud9WzP7s=;
-        fh=41+KV4VRlV7hiIh5C/oOheEY0iY7lh9WOkETZvZJmIc=;
-        b=QDnTX+Ywpp7B8QWk3hDmIVvUu4uOj50j4JCLA/Bv103H8Nveomfu1EdgeVJVT3bVPo
-         MmFBVKiRXM9LLegxiHxvnN+b7nk2KsRxAFcnNon+HHcsiEpnYXe9ro5J9jROgUGBnX84
-         VMB2/rPMNySXtf+vD4PQuSu6WL1l89rtBmoqKzBoqKyi1gdT83B+H8dU52aMo1cPrPtS
-         gFPcaUY4kVCjSR+DqR/a3WIX0EEnbOW7x6I5knvZyxy07Qo/N6IiY3+BbrLiN6Li5l1O
-         8QnW1eTp81hp5gEImEtAZR7n60qTQLx++r4ueuWDsUn8lX8SF1VB+Rq1+ViZHAFHn7Lq
-         xUyQ==;
+        bh=5kBvEWQHgQk5b/PPn9NtKRt3ckhWNcUA3RcQcg8sFGo=;
+        fh=TWACGSidAuI7eL+hD1976w75hZ91sk4LU3yEBGmW8+c=;
+        b=gXYkixXMCZ+m6XoV4wLsgaXOY/zWmdUf/bLdysT/Pt9/h2aXdwrluxSSIqyqIupj8Y
+         LjBO6BjBKvfWiHkqQ5XDCvjKbxEhkK45+Zp1R5dj84e6c6eGxYXtiVv1IMbIxAjRDBg2
+         LhQkmUX0eazJQV5COkjONOBsob83rB8H7/YMC5gioUTVicntVCOJYEk+pdrOaQcSZnia
+         Xkq/LV5AmVk34qIjs9mjuLnCC5Kz6ovJFF/lExRNuAH0TjV8PoKpSbwmY/17SvY9Yi2q
+         AU6FUkIOlX1007ctHHOBhoax2KQoBQnku5mXvJ7Qo97PXfZBy6pQWR1d628+d3FFqw59
+         dhNw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1776662476; x=1777267276; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1776662693; x=1777267493; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=HyCNjZAPDfYeZFyuc1bpz+SIpuuFFwwpbf5ud9WzP7s=;
-        b=O286guKocwuucU810HzgSSD4if4ALkHzLglw6RpGbaR56cvf9XU7XV8XYk+yM2DcbD
-         xsg9vJaq6JuizwPC1tXzalk4aaUhVW1iMfgIR2FzmOMD/cKRyXME2cDlFQ+UQZrXO9SF
-         xAMcX2fI8d+UBRbQGurMsG6ViuSxTZMLdwpJysdvF5Z0GP+uM67huDNdL8SSyazTHh73
-         cljcSgA5e61L5U2tvw15EiWEuGCXVrwMyylmaM8XF4hqfSSEmG+udR2D45ewaveIiNef
-         ee7TNy67NJDpejNsa4BU+LWS7BqCCIoeDxggxVuKTNHbmKdCcrBArEAP5k/P3lHlaFnl
-         ScTw==
+        bh=5kBvEWQHgQk5b/PPn9NtKRt3ckhWNcUA3RcQcg8sFGo=;
+        b=dAHwllVZdt1/u8+/TgbMSzyr2hXooCG7i50LENtok9sEFS5ceaIn7BtaTVSDqLU9yR
+         yw0TO6RrFXAqkb/H/2fd+uLopKM2XFyUaMDxKdiOqL7vCMVArrJln1NzL/QJGdH/oEaN
+         /uFGOojqq2cNPKhH28H/l0OVtDPMVdFCSstYy3fVMM2fkbjja+/61O3/btv9DFrI8Yjc
+         dag0WJkT8/ikrz/sI33M3ztlmzOWlSMZWiYxSKKQ1XNvidrVX0TIoJTEZjNqrnNs6jmU
+         QnztpTOV7PczLBls7tq0Vgm0s5Uk1bqCdP5XLfSpWSb3SgSJiIplu4OMP5DNnWy0kv4v
+         KZRA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776662476; x=1777267276;
+        d=1e100.net; s=20251104; t=1776662693; x=1777267493;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=HyCNjZAPDfYeZFyuc1bpz+SIpuuFFwwpbf5ud9WzP7s=;
-        b=jynFqJ4ElwAk6kph7hkrBVqpn71wI1IjSE9lV3rw/1g4xVEJT4O7xSLBV3cvATvy7W
-         559fRgaiT7UaZuY7bH+BgCDpbS1+Zq7OIFdCe6TP5Zk7VTkGUTQEaiTcguPJb8jMZYkh
-         jI6ZrlhHjYJ+XW++JFIDyI5Ocna/d3zpH54vFs/k1sZsDOs1siH/OBB0bxO0xt2RR42g
-         R8x0Xnrclm9mExO5MxJXrUbDQ9jhmrB2IF/7kWrmbDJgOEq04eSyiUZaAlY+knSsrCEE
-         wc6E2/FBQIrnxnNB/KmZig3tVdUyoPNvp4ECtvclQb/VY5IF5RqR7A5FceCiVwX3Yo1O
-         q9VQ==
-X-Forwarded-Encrypted: i=1; AFNElJ+HCL1I0IOqQ/SCKEXxE0n1O+4oLvXc3BfyUn9vnxSmHKhO9HuIv2KMPtlkdQ7uSPxRrt8s79eGRCWQ@vger.kernel.org
-X-Gm-Message-State: AOJu0YwsSk1C6uPZS0eBqKJnQFXU+cMXmAX9scxMFOsf+WPB83ni2nYi
-	0VqgpC737oDAh/EZljQP5csz9jpNvAlldMrLPL/FTNGHch5IV43iHptkHPds441V9L3Yb4l3Jk0
-	V3Ow6eAb06q9BUpsQoOkpzQ7AxGhY0NC4cmQHBbCA1hw0pcSOsJhSW2OXbmA46Xst7DzJkfq5uR
-	6hbwvwBRo9DspSmCkMNOz8Kq/zhHL2VzMHgsedFbE6yYVzQw==
-X-Gm-Gg: AeBDietJMYKb1IyAa9vCXYhUvxZVmcQpDsBIP7yNWru45nGPwOU/p4cjkq7GjDs25aN
-	eQVIiXGlzmYgBJq1eh3uQRGW40CXm39Zm9IVrihcoPT+eMswauMLGhCFQFj+ZtIgh2pMd5C6EYA
-	BQTG0GJ73pWlelVtcXOu2n511+VW7TGxoMhChwbgrF0vs9JlQdndJKna0F0M9yr64N2qtukyGVM
-	wxJS04sAZ6SDsTPURQNIlfsUOO5RhaZyMUleQ6mYD6uDPVPgqqyoxUW1CWNMq/LxUSRLnrpI1nV
-	XRvRtTvicfcO4f5+
-X-Received: by 2002:a05:6512:24f:b0:5a4:18f7:a744 with SMTP id 2adb3069b0e04-5a418f7a764mr2259503e87.31.1776662475543;
-        Sun, 19 Apr 2026 22:21:15 -0700 (PDT)
-X-Received: by 2002:a05:6512:24f:b0:5a4:18f7:a744 with SMTP id
- 2adb3069b0e04-5a418f7a764mr2259490e87.31.1776662474972; Sun, 19 Apr 2026
- 22:21:14 -0700 (PDT)
+        bh=5kBvEWQHgQk5b/PPn9NtKRt3ckhWNcUA3RcQcg8sFGo=;
+        b=RocONrQ4BxtKSFdyNRTazLNJPjdPoqbP8Xk4WaqLejIH6GA622LiUQ3KRSDrcIbUZq
+         dkVRUXbXgI8AW1YCuQ7HGbK8P75vuLs6Z18CQXANQ0/8Hsg4nRFNt59jz7BE9ZLJLvk3
+         5T8oIJpY+nxZB0X5MKxEKqWPuHYGq0zwfA/TRxeAQgULJqBAY/GEWAJiqVVfW3m4GKqc
+         F7WRKkR4ytsd4TyNjdVvPceXlM2fg5QO96kmV/8RVvEMdhm3neb+1TfS7vzaKaJWlz4T
+         56X4Tx1IgWuI2/bc1hGChF4rfRAp8w/wvOmVRv8+KIY5jA2T8f6pJV6cuJ4B3D+9ma3r
+         erqA==
+X-Gm-Message-State: AOJu0YwimRtQqMlXn86weqzVrORnNoPGqDQXmbgtUhBFQgpcxn7vqvSX
+	c1vQgACQWoy61BdD+RmicrshkF6IOu8RCQO8nrOe4FTSYtcLUT4WpuNWOgNi5RSt91ji5QZxB//
+	MgkPhdePRmBLqtOmZ/wkuBKV1mcbU/ki3ogh6bimbv4yuKNMs2ZQ+zD8J5PZh9X2vKnmSLqlXcP
+	VVgtYAzMfqMC7nzYglIRuyGmTWgEkI+7oD0z5NwQ==
+X-Gm-Gg: AeBDietXweEwa4SjpyTYHkx8R+l1Bm5zleDu7HIXwJ73wJj5g4ahw/IjQagfd89Z6wb
+	UBd+dOJUkOkPUy6ldRU/OMkK5lkMF9/V+l0B6MLDVCwziDp3EMH9XpSIn69xISly0+UqeOWYIJG
+	wm7w9RjvEvu2/3C6IP+n4zKOXmpivJpY/bUUYr0HjvIJfy2XWTSY8A3cKxYKgTCFKork7O0eirJ
+	mfEVXRH1XY1pOUtDTYeSr5MJrWewgiwBoqVWq+uDJqc0y7A6O18yN5RnlNfjL5LRkY5KUnN/WKg
+	mmcvbR03A7BUM8Mt
+X-Received: by 2002:a05:6512:8004:10b0:5a4:18f2:a25a with SMTP id 2adb3069b0e04-5a418f2a29bmr2400818e87.34.1776662692971;
+        Sun, 19 Apr 2026 22:24:52 -0700 (PDT)
+X-Received: by 2002:a05:6512:8004:10b0:5a4:18f2:a25a with SMTP id
+ 2adb3069b0e04-5a418f2a29bmr2400811e87.34.1776662692403; Sun, 19 Apr 2026
+ 22:24:52 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260407102625.5686-1-glass.su@suse.com> <20260407102625.5686-2-glass.su@suse.com>
- <CALTww28wN=9R2RMApc89M=cRtHmrFYgc8qgakR6LwcyXeQNdDw@mail.gmail.com> <h5pb6lqs.fsf@damenly.org>
-In-Reply-To: <h5pb6lqs.fsf@damenly.org>
+References: <20260407102625.5686-1-glass.su@suse.com> <20260407102625.5686-3-glass.su@suse.com>
+In-Reply-To: <20260407102625.5686-3-glass.su@suse.com>
 From: Xiao Ni <xni@redhat.com>
-Date: Mon, 20 Apr 2026 13:21:03 +0800
-X-Gm-Features: AQROBzDHzpedXO6EaCpnrgfckQSdJqWjMCc81me-YZXC-lOpDXupY_Bh69p62Oo
-Message-ID: <CALTww28=dKKbx+jrED_e3dzQYRtC=Vh9qk04JPy=rjpE2OA7ww@mail.gmail.com>
-Subject: Re: [PATCH v2 1/5] md/md-bitmap: call md_bitmap_create,destroy in location_store
-To: Su Yue <l@damenly.org>
-Cc: Su Yue <glass.su@suse.com>, linux-raid@vger.kernel.org, song@kernel.org, 
-	linan122@huawei.com, yukuai@fnnas.com, heming.zhao@suse.com
+Date: Mon, 20 Apr 2026 13:24:40 +0800
+X-Gm-Features: AQROBzBKugvqW7WMiKXjPCo7_9_vxSaykK_UdZ6dzzbYyifZiuZLEkQ-0g9W4oY
+Message-ID: <CALTww2-fv32n_PqEi502=O8AKAdr6dh9+docPaMniXB6nCrKjQ@mail.gmail.com>
+Subject: Re: [PATCH v2 2/5] md/md-bitmap: add an extra sysfs argument to
+ md_bitmap_create and destroy
+To: Su Yue <glass.su@suse.com>
+Cc: linux-raid@vger.kernel.org, song@kernel.org, linan122@huawei.com, 
+	yukuai@fnnas.com, heming.zhao@suse.com, l@damenly.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Apr 16, 2026 at 10:09=E2=80=AFPM Su Yue <l@damenly.org> wrote:
+On Tue, Apr 7, 2026 at 6:26=E2=80=AFPM Su Yue <glass.su@suse.com> wrote:
 >
-> On Wed 15 Apr 2026 at 18:34, Xiao Ni <xni@redhat.com> wrote:
+> For further use, no functional change.
 >
-> > On Tue, Apr 7, 2026 at 6:26=E2=80=AFPM Su Yue <glass.su@suse.com> wrote=
-:
-> >>
-> >> If bitmap/location is present, mdadm will call
-> >> update_array_info()
-> >> while growing bitmap from none to internal via
-> >> location_store().
-> >> md_bitmap_create() is needed to set mddev->bitmap_ops otherwise
-> >> mddev->bitmap_ops->get_stats() in update_array_info() will
-> >> trigger
-> >> kernel NULL pointer dereference.
-> >
-> >
-> > Hi Su Yue
-> >
-> > How can bitmap/location be present when bitmap is none? Could
-> > you
-> > provide the test commands that reproduce this problem?
-> >
-> Sorry for the misleading commit message. It can only be reproduced
-> patch 3 is appiled.
-> I adjusted the sequence of this patch for easy review because
-> md_bitmap_create,destroy
-> are touched in patch1,2 and 3. Also if put the patch after 3rd
-> patch,
-> it will break ability to bisect.
+> Signed-off-by: Su Yue <glass.su@suse.com>
+> ---
+>  drivers/md/md-bitmap.c |  6 +++---
+>  drivers/md/md.c        | 36 ++++++++++++++++++------------------
+>  drivers/md/md.h        |  4 ++--
+>  3 files changed, 23 insertions(+), 23 deletions(-)
 >
-> # mdadm --create --assume-clean /dev/md0 -f --bitmap=3Dinternal
->   --raid-devices=3D2 --level=3Dmirror --metadata=3D1.2 /dev/vdc /dev/vdd
-> # mdadm --grow /dev/md0 --bitmap=3Dnone
-> # mdadm --grow /dev/md0 --bitmap=3Dinternal # step 3
-> # mdadm --grow /dev/md0 --bitmap=3Dnone # step 4
-> [1]    2325 killed     mdadm --grow /dev/md0 --bitmap=3Dnone
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index 2f24aae05552..ac06c9647bf0 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -2618,7 +2618,7 @@ location_store(struct mddev *mddev, const char *buf=
+, size_t len)
+>                         goto out;
+>                 }
 >
-> When step 3 is called,
-> md_bitmap_destroy() is called in update_array_info() to set NULL
-> mddev->bitmap_ops
-> then in step 4 kernel Oops is triggered.
+> -               md_bitmap_destroy(mddev);
+> +               md_bitmap_destroy(mddev, true);
+>                 mddev->bitmap_info.offset =3D 0;
+>                 if (mddev->bitmap_info.file) {
+>                         struct file *f =3D mddev->bitmap_info.file;
+> @@ -2659,14 +2659,14 @@ location_store(struct mddev *mddev, const char *b=
+uf, size_t len)
+>                          */
+>                         mddev->bitmap_id =3D ID_BITMAP;
+>                         mddev->bitmap_info.offset =3D offset;
+> -                       rv =3D md_bitmap_create(mddev);
+> +                       rv =3D md_bitmap_create(mddev, true);
+>                         if (rv)
+>                                 goto out;
 >
+>                         rv =3D bitmap_load(mddev);
+>                         if (rv) {
+>                                 mddev->bitmap_info.offset =3D 0;
+> -                               md_bitmap_destroy(mddev);
+> +                               md_bitmap_destroy(mddev, true);
+>                                 goto out;
+>                         }
+>                 }
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 8b1ecc370ad6..d3c8f77b4fe3 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -678,7 +678,7 @@ static void active_io_release(struct percpu_ref *ref)
 >
-> I am willing to amend commit message or move it after patch 3 if
-> you would like.
-
-Hi Su
-
-Thanks for the detail explanation. After reading patch3, I totoally
-understand. The sequence is good to me. And yes, it's better to
-explain that this is needed after patch3.
-
-Best Regards
-Xiao
+>  static void no_op(struct percpu_ref *r) {}
 >
+> -static bool mddev_set_bitmap_ops(struct mddev *mddev)
+> +static bool mddev_set_bitmap_ops(struct mddev *mddev, bool create_sysfs)
+>  {
+>         struct bitmap_operations *old =3D mddev->bitmap_ops;
+>         struct md_submodule_head *head;
+> @@ -703,7 +703,7 @@ static bool mddev_set_bitmap_ops(struct mddev *mddev)
+>         mddev->bitmap_ops =3D (void *)head;
+>         xa_unlock(&md_submodule);
+>
+> -       if (!mddev_is_dm(mddev) && mddev->bitmap_ops->group) {
+> +       if (create_sysfs && !mddev_is_dm(mddev) && mddev->bitmap_ops->gro=
+up) {
+>                 if (sysfs_create_group(&mddev->kobj, mddev->bitmap_ops->g=
+roup))
+>                         pr_warn("md: cannot register extra bitmap attribu=
+tes for %s\n",
+>                                 mdname(mddev));
+> @@ -721,9 +721,9 @@ static bool mddev_set_bitmap_ops(struct mddev *mddev)
+>         return false;
+>  }
+>
+> -static void mddev_clear_bitmap_ops(struct mddev *mddev)
+> +static void mddev_clear_bitmap_ops(struct mddev *mddev, bool remove_sysf=
+s)
+>  {
+> -       if (!mddev_is_dm(mddev) && mddev->bitmap_ops &&
+> +       if (remove_sysfs && !mddev_is_dm(mddev) && mddev->bitmap_ops &&
+>             mddev->bitmap_ops->group)
+>                 sysfs_remove_group(&mddev->kobj, mddev->bitmap_ops->group=
+);
+>
+> @@ -6447,24 +6447,24 @@ static void md_safemode_timeout(struct timer_list=
+ *t)
+>
+>  static int start_dirty_degraded;
+>
+> -int md_bitmap_create(struct mddev *mddev)
+> +int md_bitmap_create(struct mddev *mddev, bool create_sysfs)
+>  {
+>         if (mddev->bitmap_id =3D=3D ID_BITMAP_NONE)
+>                 return -EINVAL;
+>
+> -       if (!mddev_set_bitmap_ops(mddev))
+> +       if (!mddev_set_bitmap_ops(mddev, create_sysfs))
+>                 return -ENOENT;
+>
+>         return mddev->bitmap_ops->create(mddev);
+>  }
+>
+> -void md_bitmap_destroy(struct mddev *mddev)
+> +void md_bitmap_destroy(struct mddev *mddev, bool remove_sysfs)
+>  {
+>         if (!md_bitmap_registered(mddev))
+>                 return;
+>
+>         mddev->bitmap_ops->destroy(mddev);
+> -       mddev_clear_bitmap_ops(mddev);
+> +       mddev_clear_bitmap_ops(mddev, remove_sysfs);
+>  }
+>
+>  int md_run(struct mddev *mddev)
+> @@ -6612,7 +6612,7 @@ int md_run(struct mddev *mddev)
+>         }
+>         if (err =3D=3D 0 && pers->sync_request &&
+>             (mddev->bitmap_info.file || mddev->bitmap_info.offset)) {
+> -               err =3D md_bitmap_create(mddev);
+> +               err =3D md_bitmap_create(mddev, true);
+>                 if (err)
+>                         pr_warn("%s: failed to create bitmap (%d)\n",
+>                                 mdname(mddev), err);
+> @@ -6685,7 +6685,7 @@ int md_run(struct mddev *mddev)
+>                 pers->free(mddev, mddev->private);
+>         mddev->private =3D NULL;
+>         put_pers(pers);
+> -       md_bitmap_destroy(mddev);
+> +       md_bitmap_destroy(mddev, true);
+>         return err;
+>  }
+>  EXPORT_SYMBOL_GPL(md_run);
+> @@ -6702,7 +6702,7 @@ int do_md_run(struct mddev *mddev)
+>         if (md_bitmap_registered(mddev)) {
+>                 err =3D mddev->bitmap_ops->load(mddev);
+>                 if (err) {
+> -                       md_bitmap_destroy(mddev);
+> +                       md_bitmap_destroy(mddev, true);
+>                         goto out;
+>                 }
+>         }
+> @@ -6903,7 +6903,7 @@ static void __md_stop(struct mddev *mddev)
+>  {
+>         struct md_personality *pers =3D mddev->pers;
+>
+> -       md_bitmap_destroy(mddev);
+> +       md_bitmap_destroy(mddev, true);
+>         mddev_detach(mddev);
+>         spin_lock(&mddev->lock);
+>         mddev->pers =3D NULL;
+> @@ -7680,16 +7680,16 @@ static int set_bitmap_file(struct mddev *mddev, i=
+nt fd)
+>         err =3D 0;
+>         if (mddev->pers) {
+>                 if (fd >=3D 0) {
+> -                       err =3D md_bitmap_create(mddev);
+> +                       err =3D md_bitmap_create(mddev, true);
+>                         if (!err)
+>                                 err =3D mddev->bitmap_ops->load(mddev);
+>
+>                         if (err) {
+> -                               md_bitmap_destroy(mddev);
+> +                               md_bitmap_destroy(mddev, true);
+>                                 fd =3D -1;
+>                         }
+>                 } else if (fd < 0) {
+> -                       md_bitmap_destroy(mddev);
+> +                       md_bitmap_destroy(mddev, true);
+>                 }
+>         }
+>
+> @@ -7996,12 +7996,12 @@ static int update_array_info(struct mddev *mddev,=
+ mdu_array_info_t *info)
+>                                 mddev->bitmap_info.default_offset;
+>                         mddev->bitmap_info.space =3D
+>                                 mddev->bitmap_info.default_space;
+> -                       rv =3D md_bitmap_create(mddev);
+> +                       rv =3D md_bitmap_create(mddev, true);
+>                         if (!rv)
+>                                 rv =3D mddev->bitmap_ops->load(mddev);
+>
+>                         if (rv)
+> -                               md_bitmap_destroy(mddev);
+> +                               md_bitmap_destroy(mddev, true);
+>                 } else {
+>                         struct md_bitmap_stats stats;
+>
+> @@ -8027,7 +8027,7 @@ static int update_array_info(struct mddev *mddev, m=
+du_array_info_t *info)
+>                                 put_cluster_ops(mddev);
+>                                 mddev->safemode_delay =3D DEFAULT_SAFEMOD=
+E_DELAY;
+>                         }
+> -                       md_bitmap_destroy(mddev);
+> +                       md_bitmap_destroy(mddev, true);
+>                         mddev->bitmap_info.offset =3D 0;
+>                 }
+>         }
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index ed69244af00d..4aaba3d7015c 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -895,8 +895,8 @@ static inline void safe_put_page(struct page *p)
+>
+>  int register_md_submodule(struct md_submodule_head *msh);
+>  void unregister_md_submodule(struct md_submodule_head *msh);
+> -int md_bitmap_create(struct mddev *mddev);
+> -void md_bitmap_destroy(struct mddev *mddev);
+> +int md_bitmap_create(struct mddev *mddev, bool create_sysfs);
+> +void md_bitmap_destroy(struct mddev *mddev, bool remove_sysfs);
+>
+>  extern struct md_thread *md_register_thread(
+>         void (*run)(struct md_thread *thread),
 > --
-> Su
+> 2.53.0
 >
-> >
-> > mdadm -CR /dev/md0 -l1 -n2 /dev/loop0 /dev/loop1 --bitmap=3Dnone
-> > (There
-> > is not bitmap/location, because bitmap directory is not created)
-> > mdadm /dev/md0 --grow --bitmap=3Dinternal
-> > Grow.c md_set_array_info runs
-> >  451             array.state |=3D (1 << MD_SB_BITMAP_PRESENT);
-> >  452             rv =3D md_set_array_info(fd, &array);
-> > In kernel space, it runs
-> >  8125             rv =3D md_bitmap_create(mddev);
-> >  8126             if (!rv)
-> >  8127                 rv =3D mddev->bitmap_ops->load(mddev);
-> >
-> > Best Regards
-> > Xiao
-> >
-> >>
-> >> Fixes: fb8cc3b0d9db ("md/md-bitmap: delay registration of
-> >> bitmap_ops until creating bitmap")
-> >> Signed-off-by: Su Yue <glass.su@suse.com>
-> >> ---
-> >>  drivers/md/md-bitmap.c | 11 ++++++++---
-> >>  drivers/md/md.c        |  4 ++--
-> >>  drivers/md/md.h        |  2 ++
-> >>  3 files changed, 12 insertions(+), 5 deletions(-)
-> >>
-> >> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> >> index 83378c033c72..2f24aae05552 100644
-> >> --- a/drivers/md/md-bitmap.c
-> >> +++ b/drivers/md/md-bitmap.c
-> >> @@ -2618,7 +2618,7 @@ location_store(struct mddev *mddev, const
-> >> char *buf, size_t len)
-> >>                         goto out;
-> >>                 }
-> >>
-> >> -               bitmap_destroy(mddev);
-> >> +               md_bitmap_destroy(mddev);
-> >>                 mddev->bitmap_info.offset =3D 0;
-> >>                 if (mddev->bitmap_info.file) {
-> >>                         struct file *f =3D
-> >>                         mddev->bitmap_info.file;
-> >> @@ -2653,15 +2653,20 @@ location_store(struct mddev *mddev,
-> >> const char *buf, size_t len)
-> >>                                 goto out;
-> >>                         }
-> >>
-> >> +                       /*
-> >> +                        * lockless bitmap shoudle have set
-> >> bitmap_id
-> >> +                        * using bitmap_type, so always
-> >> ID_BITMAP.
-> >> +                        */
-> >> +                       mddev->bitmap_id =3D ID_BITMAP;
-> >>                         mddev->bitmap_info.offset =3D offset;
-> >> -                       rv =3D bitmap_create(mddev);
-> >> +                       rv =3D md_bitmap_create(mddev);
-> >>                         if (rv)
-> >>                                 goto out;
-> >>
-> >>                         rv =3D bitmap_load(mddev);
-> >>                         if (rv) {
-> >>                                 mddev->bitmap_info.offset =3D 0;
-> >> -                               bitmap_destroy(mddev);
-> >> +                               md_bitmap_destroy(mddev);
-> >>                                 goto out;
-> >>                         }
-> >>                 }
-> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> >> index 3ce6f9e9d38e..8b1ecc370ad6 100644
-> >> --- a/drivers/md/md.c
-> >> +++ b/drivers/md/md.c
-> >> @@ -6447,7 +6447,7 @@ static void md_safemode_timeout(struct
-> >> timer_list *t)
-> >>
-> >>  static int start_dirty_degraded;
-> >>
-> >> -static int md_bitmap_create(struct mddev *mddev)
-> >> +int md_bitmap_create(struct mddev *mddev)
-> >>  {
-> >>         if (mddev->bitmap_id =3D=3D ID_BITMAP_NONE)
-> >>                 return -EINVAL;
-> >> @@ -6458,7 +6458,7 @@ static int md_bitmap_create(struct mddev
-> >> *mddev)
-> >>         return mddev->bitmap_ops->create(mddev);
-> >>  }
-> >>
-> >> -static void md_bitmap_destroy(struct mddev *mddev)
-> >> +void md_bitmap_destroy(struct mddev *mddev)
-> >>  {
-> >>         if (!md_bitmap_registered(mddev))
-> >>                 return;
-> >> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> >> index ac84289664cd..ed69244af00d 100644
-> >> --- a/drivers/md/md.h
-> >> +++ b/drivers/md/md.h
-> >> @@ -895,6 +895,8 @@ static inline void safe_put_page(struct
-> >> page *p)
-> >>
-> >>  int register_md_submodule(struct md_submodule_head *msh);
-> >>  void unregister_md_submodule(struct md_submodule_head *msh);
-> >> +int md_bitmap_create(struct mddev *mddev);
-> >> +void md_bitmap_destroy(struct mddev *mddev);
-> >>
-> >>  extern struct md_thread *md_register_thread(
-> >>         void (*run)(struct md_thread *thread),
-> >> --
-> >> 2.53.0
-> >>
->
+
+Looks good to me.
+Reviewed-by: Xiao Ni <xni@redhat.com>
 
