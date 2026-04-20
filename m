@@ -1,45 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E3123DC4B4;
-	Mon, 20 Apr 2026 13:24:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65A273F7A9B;
+	Mon, 20 Apr 2026 13:26:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776691458; cv=none; b=u8Q0cq7xGVMTsjZKknt/6DUlamk2L89j8G/9GKGmowv33JgNA4iuavtciXpMIMCCITB9zAb6nDwDrH7xyPKbVHsTnZNVaKcQbdBkF0WPQ9SJG+UGYMAH6rlHoO9eMg32tZ2d7rRZ/44reh5z4VYP6Mjg2ADpEUQ1a29GoKMO1CI=
+	t=1776691562; cv=none; b=gJDC6Q9Fk4HQK+J4RuaG3zzzbZ9vxa6+P5QlEGGOWSKreKSx1ohUWG9q4KZ7rkY9Z/J2Px+y8rN12h1lI4m0W3KvEO7pqYvkLturkwvEHIY8cH6YTXe+NyTSMVp1ymayEAnpQZzfnA0C4+01c9YJlFgXwpYLvIvhIHBxdfni/KM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776691458; c=relaxed/simple;
-	bh=qVbr9smmygCPDrQROEOKn16A+o0LYOpDI1j92VAZsog=;
+	s=arc-20240116; t=1776691562; c=relaxed/simple;
+	bh=7o5kbgW4+yXPbkR7btG860qYsi+XozYnRczfqaUF184=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=f03Ka5HhGnMrvFYgeamLZF+ULsiWc5IEWAv7bWtKVXWHGoLmfOadxJGp3unHKrhodQGiImOOuTJBvM1YzIqy0BbJudKRe51H4hodXQm9Yh31U1hWlF5msETe2sn3rKd3ABslzd9BUdBq3IQV25ewHpJIv5pGmzG2bgkcL0GuL/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VMrPuvG9; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=VwTPdvMLIit8fdiiF0oMl+MqhCx2eP/C6/mCrrdP43b23L3+l9mQFqgHur3dutX9WrWhDQJ8WVjlxxRtBnkSmZkBzc8YcxW1BPK052HrGgqSkdOGKL/M+S6x2aBIfUH9vnLZRaw1TPW7NS5B/FqE3bEIfm4+zOWKM7tS/L/8NR4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mTLZaeWa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VMrPuvG9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0750C2BCC6;
-	Mon, 20 Apr 2026 13:24:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mTLZaeWa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9C9FC19425;
+	Mon, 20 Apr 2026 13:26:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776691458;
-	bh=qVbr9smmygCPDrQROEOKn16A+o0LYOpDI1j92VAZsog=;
+	s=k20201202; t=1776691562;
+	bh=7o5kbgW4+yXPbkR7btG860qYsi+XozYnRczfqaUF184=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=VMrPuvG9y2VmHasLUGKbizideagK5G/sLw1uE9ZXcd7bCuXEhmkxyzYuXQzLhkyx7
-	 Z67S7kWSGRHDNgR1IgjU+g9pJGqDtCG+PXwXs4xQLqusMYbrVivlTinpKNhVLukziC
-	 PbecfVGAG9QJ1LGIWV9EhyGTBOIize0Ye/ctaCUPale9DtSjVb8Z+lT0nCVu6xm4rU
-	 tn/8mhhYAaPQtZYcYDITIvQE7hlAg1in7qMySp5XF95RbLkeOyLMcpiD/cP1bpcV2U
-	 k68f1oAYuXDHcqXVRPrw9pUQCVl4CRWvPbJXFjJg/ldt6mwuT5P7IvUcpLDkNFmKY1
-	 A+Xuts6jw8H7w==
+	b=mTLZaeWadNdMQd/A6Q1jKGSCfc/VexqeMGIM8OWLPC70l9dz6na7BJyyHZbcrjULz
+	 LZOFgWxYeRA2kGnipRD+NESgv0h6vfJhKafcIyEkZNJnb1JHLCD8FUIx8bepUIqIqC
+	 2giWpLotkY1iSPrc/ycJdThYS0PYSJGGEoidQhMrgLkxlOLmxZJVeAor0s4gsiX+Iy
+	 tVSpDkiJrLJNC85TMdHuTaIqGFBnIVL1/u8JpCibd10YNPZwSEKmOtDcZ+QrLXEBaC
+	 acbcwPt26edBm/vAntRljL2Piwjx/S/k9VCAXIQgV9R1CDLNlDJaeiDqsyRi2SDy+G
+	 ho/vLVbmXCK6g==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Gregory Price <gourry@gourry.net>,
-	syzbot+924649752adf0d3ac9dd@syzkaller.appspotmail.com,
+Cc: FengWei Shih <dannyshih@synology.com>,
 	Yu Kuai <yukuai@fnnas.com>,
-	Li Nan <linan122@huawei.com>,
+	Yu Kuai <yukuai3@huawei.com>,
 	Sasha Levin <sashal@kernel.org>,
 	song@kernel.org,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 7.0] md/raid0: use kvzalloc/kvfree for strip_zone and devlist allocations
-Date: Mon, 20 Apr 2026 09:17:14 -0400
-Message-ID: <20260420132314.1023554-40-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 7.0-5.10] md/raid5: skip 2-failure compute when other disk is R5_LOCKED
+Date: Mon, 20 Apr 2026 09:18:15 -0400
+Message-ID: <20260420132314.1023554-101-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260420132314.1023554-1-sashal@kernel.org>
 References: <20260420132314.1023554-1-sashal@kernel.org>
@@ -55,458 +54,375 @@ X-stable-base: Linux 7.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Gregory Price <gourry@gourry.net>
+From: FengWei Shih <dannyshih@synology.com>
 
-[ Upstream commit 078d1d8e688d75419abfedcae47eab8e42b991bb ]
+[ Upstream commit 52e4324935be917f8f3267354b3cc06bb8ffcec1 ]
 
-syzbot reported a WARNING at mm/page_alloc.c:__alloc_frozen_pages_noprof()
-triggered by create_strip_zones() in the RAID0 driver.
+When skip_copy is enabled on a doubly-degraded RAID6, a device that is
+being written to will be in R5_LOCKED state with R5_UPTODATE cleared.
+If a new read triggers fetch_block() while the write is still in
+flight, the 2-failure compute path may select this locked device as a
+compute target because it is not R5_UPTODATE.
 
-When raid_disks is large, the allocation size exceeds MAX_PAGE_ORDER (4MB
-on x86), causing WARN_ON_ONCE_GFP(order > MAX_PAGE_ORDER).
+Because skip_copy makes the device page point directly to the bio page,
+reconstructing data into it might be risky. Also, since the compute
+marks the device R5_UPTODATE, it triggers WARN_ON in ops_run_io()
+which checks that R5_SkipCopy and R5_UPTODATE are not both set.
 
-Convert the strip_zone and devlist allocations from kzalloc/kzalloc_objs to
-kvzalloc/kvzalloc_objs, which first attempts a contiguous allocation with
-__GFP_NOWARN and then falls back to vmalloc for large sizes. Convert the
-corresponding kfree calls to kvfree.
+This can be reproduced by running small-range concurrent read/write on
+a doubly-degraded RAID6 with skip_copy enabled, for example:
 
-Both arrays are pure metadata lookup tables (arrays of pointers and zone
-descriptors) accessed only via indexing, so they do not require physically
-contiguous memory.
+  mdadm -C /dev/md0 -l6 -n6 -R -f /dev/loop[0-3] missing missing
+  echo 1 > /sys/block/md0/md/skip_copy
+  fio --filename=/dev/md0 --rw=randrw --bs=4k --numjobs=8 \
+      --iodepth=32 --size=4M --runtime=30 --time_based --direct=1
 
-Reported-by: syzbot+924649752adf0d3ac9dd@syzkaller.appspotmail.com
-Closes: https://lore.kernel.org/all/69adaba8.a00a0220.b130.0005.GAE@google.com/
-Signed-off-by: Gregory Price <gourry@gourry.net>
+Fix by checking R5_LOCKED before proceeding with the compute. The
+compute will be retried once the lock is cleared on IO completion.
+
+Signed-off-by: FengWei Shih <dannyshih@synology.com>
 Reviewed-by: Yu Kuai <yukuai@fnnas.com>
-Reviewed-by: Li Nan <linan122@huawei.com>
-Link: https://lore.kernel.org/linux-raid/20260308234202.3118119-1-gourry@gourry.net/
-Signed-off-by: Yu Kuai <yukuai@fnnas.com>
+Link: https://lore.kernel.org/linux-raid/20260319053351.3676794-1-dannyshih@synology.com/
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-This confirms the same bug also triggers on linux-5.15.y stable kernel.
-Now I have comprehensive information for my analysis.
+Now I have all the information needed for my comprehensive analysis.
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
-### Step 1.1: PARSE THE SUBJECT LINE
-- **Subsystem prefix:** `md/raid0`
-- **Action verb:** "use" (converting allocation API calls)
-- **One-line summary:** Convert strip_zone and devlist allocations from
-  kzalloc to kvzalloc to avoid WARNING when allocation exceeds
-  MAX_PAGE_ORDER.
-Record: [md/raid0] [use/convert] [Switch large allocations to kvzalloc
-to avoid WARNING on large arrays]
+### Step 1.1: Subject Line
+- **Subsystem**: md/raid5
+- **Action verb**: "skip" — describing a fix that avoids proceeding with
+  a dangerous compute operation
+- **Summary**: Skip 2-failure compute when the other disk is R5_LOCKED
+- Record: [md/raid5] [skip/fix] [Prevent 2-failure compute from
+  selecting a locked device as target, avoiding data corruption and
+  WARN_ON triggers]
 
-### Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
-- **Reported-by:** syzbot+924649752adf0d3ac9dd@syzkaller.appspotmail.com
-  — syzbot fuzzer report, strong signal
-- **Closes:** https://lore.kernel.org/all/69adaba8.a00a0220.b130.0005.GA
-  E@google.com/ — syzbot bug report
-- **Signed-off-by:** Gregory Price <gourry@gourry.net> — patch author
-- **Reviewed-by:** Yu Kuai <yukuai@fnnas.com> — MD subsystem maintainer
-- **Reviewed-by:** Li Nan <linan122@huawei.com> — MD subsystem developer
-- **Link:** https://lore.kernel.org/linux-
-  raid/20260308234202.3118119-1-gourry@gourry.net/
-- **Signed-off-by:** Yu Kuai <yukuai@fnnas.com> — committer/maintainer
-Record: Syzbot report, two Reviewed-by from MD maintainers, no Fixes:
-tag (expected)
+### Step 1.2: Tags
+- **Signed-off-by**: FengWei Shih <dannyshih@synology.com> (author)
+- **Reviewed-by**: Yu Kuai <yukuai@fnnas.com> — **This is the MD
+  subsystem co-maintainer** (confirmed in MAINTAINERS)
+- **Link**: https://lore.kernel.org/linux-
+  raid/20260319053351.3676794-1-dannyshih@synology.com/
+- **Signed-off-by**: Yu Kuai <yukuai3@huawei.com> — Applied by the
+  subsystem maintainer
+- No Fixes: tag (expected for AUTOSEL candidates)
+- No Reported-by: tag (but author provides precise reproduction steps)
+- Record: Reviewed and applied by subsystem co-maintainer. Author
+  provides concrete repro.
 
-### Step 1.3: ANALYZE THE COMMIT BODY TEXT
-The commit explains that when `raid_disks` is large, the allocation size
-for `strip_zone` and `devlist` arrays exceeds `MAX_PAGE_ORDER` (4MB on
-x86), triggering `WARN_ON_ONCE_GFP(order > MAX_PAGE_ORDER)`. The fix
-converts to `kvzalloc`/`kvfree` which first tries contiguous allocation
-with `__GFP_NOWARN` and then falls back to vmalloc. The author
-explicitly notes these are "pure metadata lookup tables" accessed only
-via indexing, so physically contiguous memory is not required.
-Record: [Bug: WARNING triggered in page allocator when RAID0 array has
-many disks] [Symptom: kernel WARNING at mm/page_alloc.c] [No specific
-version info; bug present since original code in 2005] [Root cause:
-kzalloc for variable-size arrays that can exceed MAX_PAGE_ORDER]
+### Step 1.3: Commit Body Analysis
+- **Bug described**: On a doubly-degraded RAID6 with `skip_copy`
+  enabled, a concurrent read triggers `fetch_block()` during an in-
+  flight write. The 2-failure compute path selects the locked (being-
+  written-to) device as a compute target because it's not R5_UPTODATE.
+- **Symptom**: WARN_ON in `ops_run_io()` at line 1271, which checks that
+  R5_SkipCopy and R5_UPTODATE are not both set. Additionally,
+  reconstructing data into the device page is risky because with
+  `skip_copy`, the device page points directly to the bio page —
+  corrupting user data.
+- **Reproduction**: Concrete and reproducible with mdadm + fio commands
+  provided.
+- **Root cause**: The 2-failure compute path in `fetch_block()` finds a
+  non-R5_UPTODATE disk and selects it as the "other" compute target
+  without checking if it's R5_LOCKED (i.e., has an I/O in flight).
+- Record: Race between concurrent read and write on doubly-degraded
+  RAID6 with skip_copy. Triggers WARN_ON and potential data corruption.
+  Concrete reproduction steps provided.
 
-### Step 1.4: DETECT HIDDEN BUG FIXES
-This is a clear fix for a syzbot-reported WARNING. Not disguised at all.
-Record: [Not a hidden bug fix — explicitly described as fixing a
-WARNING]
+### Step 1.4: Hidden Bug Fix Detection
+This is NOT a hidden fix — it's an explicit, well-described bug fix. The
+commit clearly explains the bug mechanism, failure mode, and how to
+reproduce it.
 
----
+## PHASE 2: DIFF ANALYSIS
 
-## PHASE 2: DIFF ANALYSIS — LINE BY LINE
+### Step 2.1: Inventory
+- **Files changed**: 1 (drivers/md/raid5.c)
+- **Lines added**: 2
+- **Function modified**: `fetch_block()`
+- **Scope**: Single-file, single-function, 2-line surgical fix
+- Record: Minimal change — 2 lines added in fetch_block() in raid5.c
 
-### Step 2.1: INVENTORY THE CHANGES
-- **File:** `drivers/md/raid0.c` — 9 lines changed (9 added, 9 removed)
-- **Functions modified:**
-  - `create_strip_zones()` — allocation site + error cleanup path
-  - `raid0_free()` — normal cleanup path
-- **Scope:** Single-file surgical fix. Minimal.
-Record: [drivers/md/raid0.c: +9/-9] [create_strip_zones, raid0_free]
-[Single-file surgical fix]
+### Step 2.2: Code Flow Change
+**Before**: The 2-failure compute path finds the `other` disk that is
+not R5_UPTODATE, then immediately proceeds with the compute operation
+(setting R5_Wantcompute on both target disks).
 
-### Step 2.2: UNDERSTAND THE CODE FLOW CHANGE
-**Hunk 1 (create_strip_zones allocation):**
-- Before: `kzalloc_objs()` and `kzalloc()` for strip_zone and devlist
-- After: `kvzalloc_objs()` and `kvzalloc()` — same semantics but with
-  vmalloc fallback
+**After**: After finding the `other` disk, the code first checks if it
+has R5_LOCKED set. If so, it returns 0 (skip the compute), allowing the
+compute to be retried after the lock clears on I/O completion.
 
-**Hunk 2 (abort label cleanup):**
-- Before: `kfree(conf->strip_zone); kfree(conf->devlist);`
-- After: `kvfree(conf->strip_zone); kvfree(conf->devlist);`
+The change is in the 2-failure compute branch of `fetch_block()`:
 
-**Hunk 3 (raid0_free):**
-- Before: `kfree(conf->strip_zone); kfree(conf->devlist);`
-- After: `kvfree(conf->strip_zone); kvfree(conf->devlist);`
+```3918:3919:drivers/md/raid5.c
+                        BUG_ON(other < 0);
+// NEW: if (test_bit(R5_LOCKED, &sh->dev[other].flags)) return 0;
+                        pr_debug("Computing stripe %llu blocks %d,%d\n",
+```
 
-Record: [All three hunks: kzalloc->kvzalloc and kfree->kvfree, perfectly
-paired]
+### Step 2.3: Bug Mechanism
+This is a **race condition** combined with **potential data
+corruption**:
+1. Write path sets R5_SkipCopy on a device, pointing dev->page to the
+   bio page, and clears R5_UPTODATE (line 1961-1962).
+2. The device is R5_LOCKED (I/O in flight).
+3. A concurrent read triggers `fetch_block()` → enters the 2-failure
+   compute path.
+4. The loop finds this device as `other` (because it's !R5_UPTODATE).
+5. Compute is initiated, writing reconstructed data into `other->page`,
+   which is actually the user's bio page.
+6. The compute then marks the device R5_UPTODATE via
+   `mark_target_uptodate()` (line 1506).
+7. This triggers WARN_ON at line 1270-1271 because both R5_SkipCopy and
+   R5_UPTODATE are now set.
+8. Data could be corrupted because the compute overwrites the bio page.
 
-### Step 2.3: IDENTIFY THE BUG MECHANISM
-Category: **Logic/correctness fix** — Using physically-contiguous
-allocation for data that doesn't need it, causing allocation
-failures/warnings when size is large.
+Record: Race condition causing WARN_ON trigger + potential data
+corruption on RAID6 with skip_copy enabled.
 
-The code allocates `sizeof(struct strip_zone) * nr_strip_zones` and
-`sizeof(struct md_rdev *) * nr_strip_zones * raid_disks`. When
-`raid_disks` is large, this exceeds MAX_PAGE_ORDER (4MB), causing a
-WARN_ON_ONCE.
-
-The fix is the standard Linux kernel pattern: use `kvzalloc` (which
-falls back to vmalloc) for allocations that don't require physical
-contiguity.
-
-Record: [Logic/allocation bug] [kzalloc can't handle large allocations >
-MAX_PAGE_ORDER; kvzalloc falls back to vmalloc]
-
-### Step 2.4: ASSESS THE FIX QUALITY
-- **Obviously correct?** Yes. `kzalloc`→`kvzalloc` and `kfree`→`kvfree`
-  is an extremely common, well-understood pattern in the kernel.
-- **Minimal?** Yes, only 9 lines changed (purely API substitution).
-- **Regression risk?** Extremely low. `kvfree` correctly handles both
-  kmalloc and vmalloc memory. The arrays are metadata lookup tables
-  accessed via indexing — no DMA or physical contiguity requirement.
-Record: [Excellent fix quality, minimal, obviously correct, no
-regression risk]
-
----
+### Step 2.4: Fix Quality
+- **Obviously correct**: Yes — a device being written to (R5_LOCKED)
+  should not be selected as a compute target. The fix adds a simple
+  guard check.
+- **Minimal**: 2 lines, surgical.
+- **Regression risk**: Minimal. Returning 0 simply defers the compute
+  until the lock clears — this is the normal retry mechanism already
+  used elsewhere in the stripe handling.
+- **No red flags**: No API changes, no lock changes, no architectural
+  impact.
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
-### Step 3.1: BLAME THE CHANGED LINES
-- `conf->strip_zone` allocation: dates back to `1da177e4c3f41` (Linux
-  2.6.12, 2005) with wrapping by `kzalloc_objs` in 2026 (32a92f8c89326)
-  and earlier by `kcalloc` in 2018 (6396bb221514d2). Original code from
-  Linus's initial git commit.
-- `conf->devlist` allocation: same — dates to `1da177e4c3f41` (2005).
-- The kfree calls were refactored in `ed7b00380d957e` (2009) and
-  `d11854ed05635` (2024) but the fundamental issue (kzalloc for
-  variable-size metadata) has existed since 2005.
-Record: [Buggy code introduced in original Linux 2.6.12 (2005)] [Present
-in ALL stable trees]
+### Step 3.1: Blame
+- The 2-failure compute code in `fetch_block()` was introduced in commit
+  `5599becca4bee7` (2009-08-29, "md/raid6: asynchronous
+  handle_stripe_fill6"), which is from the v2.6.32 era.
+- The `R5_SkipCopy` mechanism was introduced in commit `584acdd49cd24`
+  (2014-12-15, "md/raid5: activate raid6 rmw feature"), which landed in
+  v4.1.
+- The bug exists since v4.1 when skip_copy was introduced — this created
+  the interaction where a device could be !R5_UPTODATE but R5_LOCKED
+  with page pointing to a bio page.
 
-### Step 3.2: FOLLOW THE FIXES: TAG
-No Fixes: tag present (expected for autosel candidates).
-Record: [No Fixes: tag — N/A]
+Record: Buggy interaction exists since ~v4.1 (2015). Present in all
+active stable trees.
 
-### Step 3.3: CHECK FILE HISTORY
-Recent `drivers/md/raid0.c` changes are mostly unrelated (alloc_obj
-refactoring, mddev flags, dm-raid NULL fix, queue limits). The patch is
-standalone.
-Record: [No prerequisites identified] [Standalone fix]
+### Step 3.2: Fixes tag
+No Fixes: tag present (expected for AUTOSEL). Based on analysis, the
+proper Fixes: would point to `584acdd49cd24` where the skip_copy feature
+introduced the problematic interaction.
 
-### Step 3.4: CHECK THE AUTHOR
-Gregory Price is primarily a CXL/mm developer, not the md subsystem
-maintainer. But the fix was reviewed and committed by Yu Kuai, who IS
-the MD subsystem maintainer.
-Record: [Authored by Gregory Price (CXL/mm), reviewed and committed by
-Yu Kuai (MD maintainer)]
+### Step 3.3: File history
+Recent changes to raid5.c show active development with fixes like IO
+hang fixes, null-pointer deref fixes, etc. This is actively maintained
+code.
 
-### Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS
-The key dependency concern: the mainline patch uses `kzalloc_objs` →
-`kvzalloc_objs`, but `kzalloc_objs`/`kvzalloc_objs` macros only exist in
-v7.0 (introduced by commit `2932ba8d9c99` in v7.0-rc1). In older stable
-trees (6.12, 6.6, 6.1, 5.15), the code uses `kcalloc`/`kzalloc`, so the
-backport would need trivial adaptation: `kcalloc` → `kvcalloc` (or
-`kvzalloc` with size calculation), not `kzalloc_objs` → `kvzalloc_objs`.
-This is a trivial adaptation. For this specific tree (7.0),
-`kvzalloc_objs` is available and the patch applies cleanly.
-Record: [For 7.0: applies cleanly. For older stable: needs trivial
-adaptation of the alloc macro]
+### Step 3.4: Author
+- FengWei Shih works at Synology (a major NAS/storage vendor that
+  heavily uses RAID6).
+- Yu Kuai (reviewer and committer) is the MD subsystem co-maintainer per
+  MAINTAINERS.
 
----
+### Step 3.5: Dependencies
+- No dependencies. The fix is a standalone 2-line addition checking an
+  existing flag.
+- Verified the code is identical in v5.15, v6.1, and v6.6 stable trees.
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-### Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION
-From spinics.net mirror:
-- The patch was submitted on 2026-03-08 as a single patch (not a
-  series).
-- Yu Kuai reviewed it on 2026-03-20 with `Reviewed-by`.
-- Li Nan reviewed it on 2026-03-21 with `Reviewed-by` and "LGTM".
-- Yu Kuai applied it to md-7.1 on 2026-04-07, adding the `Closes:` tag.
-- No objections, NAKs, or concerns raised.
-Record: [Single patch, two reviewers, both approved, applied by
-maintainer]
+### Step 4.1-4.5
+Lore was not accessible due to Anubis anti-bot protection. However:
+- The Link: tag in the commit points to the original submission on
+  linux-raid.
+- The patch was reviewed by Yu Kuai (subsystem co-maintainer) and
+  applied by him.
+- The author works at Synology, suggesting they encountered this in
+  production NAS workloads.
 
-### Step 4.2: CHECK WHO REVIEWED
-- Yu Kuai — MD subsystem maintainer (also the committer)
-- Li Nan — MD subsystem developer at Huawei
-Both are key people for the MD subsystem. Thorough review.
-Record: [Key MD maintainers reviewed the patch]
-
-### Step 4.3: SEARCH FOR THE BUG REPORT
-The syzbot report confirms:
-- **Upstream bug:** Reported 2026-03-08, fix commit `078d1d8e688d`
-  identified, patched on some CI instances.
-- **5.15 stable bug:** Same WARNING also triggered on linux-5.15.y
-  (commit `91d48252ad4b`), confirming the bug affects old stable trees.
-- Crash trace shows: `WARN_ON_ONCE` at
-  `__alloc_frozen_pages_noprof+0x23ea/0x2ba0`, triggered through
-  `create_strip_zones → raid0_run → md_run → do_md_run → md_ioctl →
-  blkdev_ioctl → vfs_ioctl → __x64_sys_ioctl`.
-Record: [Syzbot reproduced on both upstream and linux-5.15.y] [Triggered
-via ioctl syscall]
-
-### Step 4.4/4.5: CHECK FOR RELATED PATCHES AND STABLE DISCUSSION
-Single standalone patch. No series. No prior stable discussion found.
-Record: [Standalone fix, no series context]
-
----
+Record: Could not fetch lore discussion. But reviewer is subsystem co-
+maintainer, author is from major storage vendor.
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
-### Step 5.1: IDENTIFY KEY FUNCTIONS
-- `create_strip_zones()` — allocates RAID0 metadata
-- `raid0_free()` — frees RAID0 metadata
+### Step 5.1: Functions Modified
+- `fetch_block()` — the sole function modified.
 
-### Step 5.2: TRACE CALLERS
-- `create_strip_zones()` is called from `raid0_run()` → called from
-  `md_run()` → called from `do_md_run()` → called from `md_ioctl()` →
-  reachable from userspace via `ioctl()`.
-- `raid0_free()` is called during RAID0 teardown.
-Record: [Reachable from userspace via ioctl syscall — confirmed by
-syzbot stack trace]
+### Step 5.2: Callers
+`fetch_block()` is called from `handle_stripe_fill()` (line 3973) in a
+loop over all disks. `handle_stripe_fill()` is called from
+`handle_stripe()`, which is the main stripe processing function in
+RAID5/6 — called for every I/O operation.
 
-### Step 5.3-5.5: CALLEES AND SIMILAR PATTERNS
-The fix is purely about allocation strategy. No complex call chain
-analysis needed.
-Record: [Simple allocation API change, no complex callee analysis
-needed]
+### Step 5.3-5.4: Impact Surface
+The call chain is: I/O request → handle_stripe() → handle_stripe_fill()
+→ fetch_block(). This is a hot path for all RAID5/6 read operations
+during degraded mode.
 
----
+### Step 5.5: Similar Patterns
+The single-failure compute path (the `if` branch above the modified
+code, lines 3883-3905) doesn't have this problem because it only
+triggers when `s->uptodate == disks - 1`, meaning only one disk is not
+up-to-date, and it computes the requesting disk itself. The 2-failure
+path is uniquely vulnerable because it selects a *second* disk as
+compute target.
 
-## PHASE 6: CROSS-REFERENCING AND STABLE TREE ANALYSIS
+## PHASE 6: STABLE TREE ANALYSIS
 
-### Step 6.1: DOES THE BUGGY CODE EXIST IN STABLE TREES?
-Yes — the buggy `kzalloc`/`kcalloc` calls for strip_zone and devlist
-have existed since Linux 2.6.12 (2005). Confirmed in v5.15 and v6.12.
-Syzbot also reproduced the same WARNING on linux-5.15.y.
-Record: [Bug exists in ALL active stable trees]
+### Step 6.1: Code Existence
+Verified that the exact same 2-failure compute code block exists in
+v5.15, v6.1, and v6.6 stable trees. The code is character-for-character
+identical.
 
-### Step 6.2: CHECK FOR BACKPORT COMPLICATIONS
-- For **7.0 stable**: The patch should apply cleanly since
-  `kzalloc_objs`/`kvzalloc_objs` macros exist.
-- For **older stable trees** (6.12, 6.6, 6.1, 5.15): Needs trivial
-  adaptation (use `kvcalloc` instead of `kvzalloc_objs`; or `kvzalloc`
-  with manual size calculation instead of the macro).
-Record: [7.0: clean apply. Older: needs trivial adaptation of alloc
-macro]
+### Step 6.2: Backport Complications
+**None.** The patch will apply cleanly to all stable trees. The
+surrounding context lines match exactly.
 
-### Step 6.3: CHECK IF RELATED FIXES ARE ALREADY IN STABLE
-No. The syzbot report for 5.15 is still marked as unfixed.
-Record: [No existing fix in any stable tree]
+### Step 6.3: No related fixes already in stable.
 
----
+## PHASE 7: SUBSYSTEM CONTEXT
 
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+### Step 7.1: Subsystem
+- **Subsystem**: MD/RAID (drivers/md/) — Software RAID
+- **Criticality**: IMPORTANT — RAID6 is widely used in NAS, enterprise
+  storage, and data center systems. Data integrity issues in RAID are
+  critical.
 
-### Step 7.1: IDENTIFY THE SUBSYSTEM
-- **Subsystem:** `drivers/md` — MD (Multiple Devices) RAID subsystem
-- **Criticality:** IMPORTANT — RAID0 is a widely-used storage
-  configuration. Many production systems use MD RAID.
-Record: [md/raid0] [Criticality: IMPORTANT — widely used storage
-subsystem]
-
-### Step 7.2: ASSESS SUBSYSTEM ACTIVITY
-Active subsystem with regular commits from Yu Kuai and others.
-Record: [Actively maintained subsystem]
-
----
+### Step 7.2: Activity
+Active subsystem with regular fixes and enhancements. Maintained by Song
+Liu and Yu Kuai.
 
 ## PHASE 8: IMPACT AND RISK ASSESSMENT
 
-### Step 8.1: DETERMINE WHO IS AFFECTED
-Any user creating a RAID0 array with a large number of disks (where
-`nr_strip_zones * raid_disks` allocation exceeds 4MB). This is plausible
-in production environments with many disks.
-Record: [Affected: RAID0 users with large disk counts]
+### Step 8.1: Affected Users
+All users running doubly-degraded RAID6 arrays with skip_copy enabled
+during concurrent read/write. This is a realistic production scenario —
+a RAID6 array losing two disks (which RAID6 is designed to survive)
+while continuing to serve I/O.
 
-### Step 8.2: DETERMINE THE TRIGGER CONDITIONS
-- **Trigger:** Creating a RAID0 array (via `md_ioctl`) with enough disks
-  that the metadata allocation exceeds MAX_PAGE_ORDER.
-- **How common?** Syzbot triggered it, meaning it's reachable from
-  unprivileged-ish ioctl. In production, requires many disks.
-- **Unprivileged user?** The ioctl path is reachable from userspace
-  (requires device access, typically root for md devices).
-Record: [Triggered via ioctl with large raid_disks, reachable from
-userspace]
+### Step 8.2: Trigger Conditions
+- Doubly-degraded RAID6 (two disks failed or missing)
+- `skip_copy` enabled (configurable via sysfs, default off but commonly
+  enabled for performance)
+- Concurrent read and write to overlapping stripe regions
+- Reproducible with the fio command in the commit message
 
-### Step 8.3: DETERMINE THE FAILURE MODE SEVERITY
-- **Primary symptom:** kernel WARNING (WARN_ON_ONCE) in page allocator —
-  this taints the kernel and may trigger panic in some configurations
-  (`panic_on_warn`).
-- **Secondary consequence:** The allocation fails with -ENOMEM even
-  though vmalloc could service it, meaning RAID0 arrays with many disks
-  simply cannot be created (functional failure).
-- **Severity:** MEDIUM-HIGH — WARNING triggers kernel taint, potential
-  panic_on_warn crash, and prevents legitimate RAID0 creation.
-Record: [WARNING + allocation failure → kernel taint, possible panic,
-RAID0 creation failure] [Severity: MEDIUM-HIGH]
+### Step 8.3: Failure Mode Severity
+1. **WARN_ON trigger** in `ops_run_io()` — MEDIUM (kernel warning,
+   potential crash if panic_on_warn)
+2. **Data corruption** — CRITICAL: The compute writes reconstructed data
+   into a bio page that is owned by the user write operation. This can
+   corrupt user data silently.
+3. The commit says "reconstructing data into it might be risky" —
+   understatement given that the bio page belongs to user space.
 
-### Step 8.4: CALCULATE RISK-BENEFIT RATIO
-- **BENEFIT:** High — fixes a syzbot-reported real bug affecting
-  multiple stable trees, preventing WARNINGs and enabling RAID0 with
-  many disks.
-- **RISK:** Very low — 9 lines changed, pure API substitution
-  (kzalloc→kvzalloc, kfree→kvfree), a well-tested kernel pattern.
-Record: [High benefit, very low risk]
+**Severity: CRITICAL** (potential data corruption on RAID storage)
 
----
+### Step 8.4: Risk-Benefit Ratio
+- **BENEFIT**: Very high — prevents potential data corruption and
+  WARN_ON on RAID6 arrays
+- **RISK**: Very low — 2-line fix that adds a simple guard check,
+  returns 0 to defer (existing retry mechanism), no side effects
+- **Ratio**: Excellent — minimal risk, high benefit
 
 ## PHASE 9: FINAL SYNTHESIS
 
-### Step 9.1: COMPILE THE EVIDENCE
+### Step 9.1: Evidence Summary
 
 **FOR backporting:**
-- Syzbot-reported real bug with reproducer
-- Same bug reproduced on linux-5.15.y (confirmed in multiple stable
-  trees)
-- Triggers WARN_ON_ONCE, which can cause panic with `panic_on_warn`
-- Prevents creation of RAID0 arrays with many disks (functional failure)
-- Very small, surgical fix (9 lines, single file)
-- Well-understood pattern (kzalloc→kvzalloc) used thousands of times in
-  the kernel
-- Reviewed by TWO MD subsystem maintainers (Yu Kuai, Li Nan)
-- No objections or concerns in review
-- Standalone fix with no prerequisites (for 7.0 tree)
+- Fixes a real, reproducible race condition on doubly-degraded RAID6
+  with skip_copy
+- Can lead to data corruption (compute writes into bio page)
+- Triggers WARN_ON in ops_run_io() (system stability concern)
+- 2-line surgical fix, obviously correct
+- Reviewed and applied by subsystem co-maintainer (Yu Kuai)
+- Author from Synology (major NAS vendor, real-world scenario)
+- Concrete reproduction steps provided
+- Code identical in all stable trees (v5.15, v6.1, v6.6) — clean apply
+- Bug present since v4.1 (affects all active stable trees)
+- No dependencies on other patches
 
 **AGAINST backporting:**
-- For older stable trees (pre-7.0), the `kzalloc_objs`/`kvzalloc_objs`
-  macro won't exist — needs trivial adaptation
-- The trigger requires a large number of disks (not every RAID0 user
-  hits this)
+- No explicit Fixes: tag (expected for AUTOSEL)
+- Requires specific configuration (doubly-degraded + skip_copy +
+  concurrent I/O)
+- No syzbot report (but has clear reproduction path)
 
-### Step 9.2: APPLY THE STABLE RULES CHECKLIST
-1. **Obviously correct and tested?** YES — trivial API swap, reviewed by
-   two maintainers, syzbot-tested
-2. **Fixes a real bug?** YES — syzbot reproduced WARNING, confirmed on
-   multiple kernels
-3. **Important issue?** YES — WARNING can trigger panic_on_warn; blocks
-   RAID0 creation
-4. **Small and contained?** YES — 9 lines in one file
-5. **No new features or APIs?** CORRECT — pure API swap
-6. **Can apply to stable?** YES for 7.0; needs minor adaptation for
-   older trees
+### Step 9.2: Stable Rules Checklist
+1. Obviously correct and tested? **YES** — reviewed by maintainer,
+   concrete repro
+2. Fixes a real bug? **YES** — WARN_ON trigger + potential data
+   corruption
+3. Important issue? **YES** — data corruption on RAID storage is
+   critical
+4. Small and contained? **YES** — 2 lines in one function
+5. No new features? **YES** — just a guard check
+6. Applies to stable? **YES** — verified identical code in all stable
+   trees
 
-### Step 9.3: CHECK FOR EXCEPTION CATEGORIES
-Not an exception category — this is a straightforward bug fix.
+### Step 9.3: Exception Categories
+N/A — this is a standard bug fix, no exception needed.
 
-### Step 9.4: DECISION
-Clear YES. This is a textbook stable backport candidate: syzbot-
-reported, small surgical fix, obviously correct, reviewed by
-maintainers, fixes a real bug in widely-used code.
-
----
+### Step 9.4: Decision
+Clear YES. This is a 2-line fix that prevents potential data corruption
+and WARN_ON triggers on doubly-degraded RAID6 arrays. It was reviewed
+and merged by the subsystem co-maintainer, is obviously correct, and
+applies cleanly to all stable trees.
 
 ## Verification
 
-- [Phase 1] Parsed tags: found Reported-by: syzbot, Closes: link to
-  syzbot, Reviewed-by from Yu Kuai and Li Nan, committed by Yu Kuai (MD
-  maintainer)
-- [Phase 2] Diff analysis: 9 lines changed in `drivers/md/raid0.c`, pure
-  kzalloc→kvzalloc + kfree→kvfree swap in `create_strip_zones()`
-  (allocation + abort path) and `raid0_free()` (normal path)
-- [Phase 3] git blame: strip_zone/devlist allocations date to Linux
-  2.6.12 (2005), present in all stable trees
-- [Phase 3] git blame: `kzalloc_objs` wrapper is v7.0-only (commit
-  32a92f8c89326), older trees use `kcalloc`/`kzalloc`
-- [Phase 3] Verified `kvzalloc_objs` macro exists in v7.0 tree
-  (include/linux/slab.h line 1057)
-- [Phase 3] Verified `kvzalloc` and `kvfree` exist in v5.15, v6.6 (well-
-  established APIs)
-- [Phase 4] spinics.net mirror: confirmed patch reviewed by Yu Kuai
-  (2026-03-20) and Li Nan (2026-03-21), applied to md-7.1 on 2026-04-07,
-  no objections
-- [Phase 4] Syzbot upstream report: WARNING in create_strip_zones at
-  mm/page_alloc.c, fix commit 078d1d8e688d confirmed
-- [Phase 4] Syzbot 5.15 report: same WARNING triggered on linux-5.15.y
-  (commit 91d48252ad4b), confirming bug in old stable trees
-- [Phase 5] Call trace verified from syzbot: `create_strip_zones` →
-  `raid0_run` → `md_run` → `md_ioctl` → ioctl syscall (reachable from
-  userspace)
-- [Phase 6] Bug code confirmed in v5.15, v6.12, v6.14 — all use
-  kzalloc/kcalloc for strip_zone/devlist
-- [Phase 6] For 7.0 tree: patch applies cleanly (kvzalloc_objs
-  available)
-- [Phase 6] For older trees: needs trivial adaptation (kcalloc→kvcalloc
-  instead of kzalloc_objs→kvzalloc_objs)
-- [Phase 7] md/raid0 is IMPORTANT subsystem, actively maintained
-- [Phase 8] Failure mode: WARN_ON_ONCE (kernel taint, panic_on_warn) +
-  ENOMEM preventing RAID0 creation; severity MEDIUM-HIGH
+- [Phase 1] Parsed tags: Reviewed-by Yu Kuai (MD co-maintainer), Link to
+  linux-raid
+- [Phase 2] Diff analysis: 2 lines added in fetch_block(), adds
+  R5_LOCKED check before 2-failure compute
+- [Phase 3] git blame: buggy interaction since v4.1 (commit
+  584acdd49cd24, 2014); 2-failure compute since v2.6.32 (commit
+  5599becca4bee7, 2009)
+- [Phase 3] Verified identical code exists in v5.15 (line 3882), v6.1
+  (line 3984), v6.6 (line 3991)
+- [Phase 3] Yu Kuai confirmed as MD subsystem co-maintainer in
+  MAINTAINERS file
+- [Phase 4] Lore inaccessible (Anubis protection). UNVERIFIED: full
+  mailing list discussion. However, Reviewed-by from maintainer
+  mitigates this.
+- [Phase 5] fetch_block() called from handle_stripe_fill() →
+  handle_stripe(), hot path for RAID I/O
+- [Phase 5] Traced SkipCopy mechanism: set at line 1961 during write
+  prep, clears R5_UPTODATE, points dev->page to bio page
+- [Phase 5] Traced compute completion: mark_target_uptodate() at line
+  1506 sets R5_UPTODATE, triggering WARN_ON at line 1270-1271
+- [Phase 6] Code exists unchanged in all active stable trees (v5.15,
+  v6.1, v6.6) — patch applies cleanly
+- [Phase 7] MD/RAID subsystem, IMPORTANT criticality, actively
+  maintained
+- [Phase 8] Failure mode: data corruption (CRITICAL) + WARN_ON trigger
+  (MEDIUM); trigger requires doubly-degraded RAID6 + skip_copy +
+  concurrent I/O
 
 **YES**
 
- drivers/md/raid0.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/md/raid5.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index ef0045db409fc..5e38a51e349ad 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -143,13 +143,13 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 	}
- 
- 	err = -ENOMEM;
--	conf->strip_zone = kzalloc_objs(struct strip_zone, conf->nr_strip_zones);
-+	conf->strip_zone = kvzalloc_objs(struct strip_zone, conf->nr_strip_zones);
- 	if (!conf->strip_zone)
- 		goto abort;
--	conf->devlist = kzalloc(array3_size(sizeof(struct md_rdev *),
--					    conf->nr_strip_zones,
--					    mddev->raid_disks),
--				GFP_KERNEL);
-+	conf->devlist = kvzalloc(array3_size(sizeof(struct md_rdev *),
-+					     conf->nr_strip_zones,
-+					     mddev->raid_disks),
-+				 GFP_KERNEL);
- 	if (!conf->devlist)
- 		goto abort;
- 
-@@ -291,8 +291,8 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 
- 	return 0;
- abort:
--	kfree(conf->strip_zone);
--	kfree(conf->devlist);
-+	kvfree(conf->strip_zone);
-+	kvfree(conf->devlist);
- 	kfree(conf);
- 	*private_conf = ERR_PTR(err);
- 	return err;
-@@ -373,8 +373,8 @@ static void raid0_free(struct mddev *mddev, void *priv)
- {
- 	struct r0conf *conf = priv;
- 
--	kfree(conf->strip_zone);
--	kfree(conf->devlist);
-+	kvfree(conf->strip_zone);
-+	kvfree(conf->devlist);
- 	kfree(conf);
- }
- 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index a8e8d431071ba..6e9405a89bc4a 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3916,6 +3916,8 @@ static int fetch_block(struct stripe_head *sh, struct stripe_head_state *s,
+ 					break;
+ 			}
+ 			BUG_ON(other < 0);
++			if (test_bit(R5_LOCKED, &sh->dev[other].flags))
++				return 0;
+ 			pr_debug("Computing stripe %llu blocks %d,%d\n",
+ 			       (unsigned long long)sh->sector,
+ 			       disk_idx, other);
 -- 
 2.53.0
 
