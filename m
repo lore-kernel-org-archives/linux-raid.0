@@ -1,256 +1,286 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6235F375F67;
-	Mon, 20 Apr 2026 02:27:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776652038; cv=none; b=fEQM5S4BMg80tD6ejfOMMfLx5X/zVxz0N88ICrEhc72rFGjkVhUwmcSZiNP3g4Z+R51pZLuSwRMVoR/dfiKSBJupUb8De0c78zkZdxxO5z622dd3WerzgoyIBObKLyXE/yT1Fl7WVKWy2lTL0K2nn6rX9Jv7nAxJPlbGLhtJpEc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776652038; c=relaxed/simple;
-	bh=ITFfxWVYZShfg8ObCYl+/A7sDctvchvGVKnsu2Q0ZLU=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=Gv2ejwE8Op1pVdr6ONsXyI0Z9V+AmHg6DPXJnZM8gJuP5vYmk3AADkiOgnmpfybVZ/adtzwLlI7gd1VBkxou9u39j6C2drD5/+4iH3P6uGY1k5XNpXR494DVhySCpfh55PwLzdYOxyVEfYPQxp0FQoJ6LQhF9SbpklQpJu1jDGo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q/f2q8Yr; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3F5813C9C4
+	for <linux-raid@vger.kernel.org>; Mon, 20 Apr 2026 05:21:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776662483; cv=pass; b=SDsJerMTHQ0zT31Amsvr3pplPR+S9mIYXEkafgW0vZaA8LgkLz6xffFMajnDnAen4j62mKRbr8/m6wq93m7DFdlhTxsv3kD/vKfGDRDdnDbfAeCVe6ghhmG1SVI6frbri+fqgYV0FZcMsVBpZuJORVOe59cj5Zy1L38N/glb6oY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776662483; c=relaxed/simple;
+	bh=Akz3ucyzMyAJwDcep9KOlStCzc2irEQOHj+P6l+OOq8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=E4NR1hKgin6OmBYGK39cPiArNjISBHt15sOh745JX7EYHKiawg2kpiS6mgU0Lc2aMr1929ZMC0lKKGaY8+fGtFtaKXgxLqvN2kZAyYf2PuCq8KXDLKH/ALBRfZXgSSpbgBUUgyTPUwBOFOEBWjzrOANDkRqSEmngx/m0wvq3VcI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=f4/hbV9r; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=O286guKo; arc=pass smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q/f2q8Yr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39F54C2BCAF;
-	Mon, 20 Apr 2026 02:27:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776652038;
-	bh=ITFfxWVYZShfg8ObCYl+/A7sDctvchvGVKnsu2Q0ZLU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=q/f2q8YrNja2t4MOJ3XZm+daEZl1FcXY4nfOVvtrtjvqt5MbZxWUYOT3wirQo6FaB
-	 lOqgywkLPOjS1VIVUdoCXgyBgeqdQRzNwaylQtig4w+yS3qEz3gmO+SVZmZJKlQIS1
-	 5YnVfgyEXKpTOb6PrQd5kn+uZtfBKDFQ/8OCcifN8EDAPaZwjDRm8Zr0mh3XQALHBh
-	 Up6SdMQEWfpLr4yC73WCFbktXDXdQ7dXOqJfGS3V/MWdgRmzjD+Y1d8LwFkLfl9Ev0
-	 jN9uHYhQzEihNOM9Uulk+1xe1nQar6NN7XIMU3fvu8QzHpDFat9SPtxyteXUC9ijgd
-	 FqU1Wkd4FKflw==
-Date: Mon, 20 Apr 2026 11:27:07 +0900
-From: Masami Hiramatsu (Google) <mhiramat@kernel.org>
-To: Petr Mladek <pmladek@suse.com>
-Cc: Petr Pavlu <petr.pavlu@suse.com>, Song Chen <chensong_2000@189.cn>,
- rafael@kernel.org, lenb@kernel.org, mturquette@baylibre.com,
- sboyd@kernel.org, viresh.kumar@linaro.org, agk@redhat.com,
- snitzer@kernel.org, mpatocka@redhat.com, bmarzins@redhat.com,
- song@kernel.org, yukuai@fnnas.com, linan122@huawei.com,
- jason.wessel@windriver.com, danielt@kernel.org, dianders@chromium.org,
- horms@kernel.org, davem@davemloft.net, edumazet@google.com,
- kuba@kernel.org, pabeni@redhat.com, paulmck@kernel.org,
- frederic@kernel.org, mcgrof@kernel.org, da.gomez@kernel.org,
- samitolvanen@google.com, atomlin@atomlin.com, jpoimboe@kernel.org,
- jikos@kernel.org, mbenes@suse.cz, joe.lawrence@redhat.com,
- rostedt@goodmis.org, mhiramat@kernel.org, mark.rutland@arm.com,
- mathieu.desnoyers@efficios.com, linux-modules@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-clk@vger.kernel.org,
- linux-pm@vger.kernel.org, live-patching@vger.kernel.org,
- dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
- kgdb-bugreport@lists.sourceforge.net, netdev@vger.kernel.org
-Subject: Re: [RFC PATCH 2/2] kernel/module: Decouple klp and ftrace from
- load_module
-Message-Id: <20260420112707.aa3627ca9f975eeaf7d8ea0e@kernel.org>
-In-Reply-To: <aeD2_FrFL6E3dbAC@pathway.suse.cz>
-References: <20260413080701.180976-1-chensong_2000@189.cn>
-	<1191caf5-6a61-4622-a15e-854d3701f4fc@suse.com>
-	<a35f5f94-7d5a-4347-974b-b270c89ef241@189.cn>
-	<1db425bf-58a9-4768-8c38-3ae25d7662a5@suse.com>
-	<aeD2_FrFL6E3dbAC@pathway.suse.cz>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="f4/hbV9r";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="O286guKo"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1776662480;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HyCNjZAPDfYeZFyuc1bpz+SIpuuFFwwpbf5ud9WzP7s=;
+	b=f4/hbV9rMyjA0gtsuHAD9gfAy8GEsm4lQHKh6BIQ1FfRJs9URdqW+XENQ6MEvn24hQBqm0
+	V5jb3OSCU4ayTDiDCG0Pbn3YoGdwmlHAuu48xpgpea8W8QAOtvK0R16DpQR6zya9qcjyDb
+	vTjFlZ7fPugfNLk0/lrvSXdZLWTvwZQ=
+Received: from mail-lf1-f69.google.com (mail-lf1-f69.google.com
+ [209.85.167.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-120-KuUAQS9qPjCN280hzmzCXg-1; Mon, 20 Apr 2026 01:21:18 -0400
+X-MC-Unique: KuUAQS9qPjCN280hzmzCXg-1
+X-Mimecast-MFC-AGG-ID: KuUAQS9qPjCN280hzmzCXg_1776662477
+Received: by mail-lf1-f69.google.com with SMTP id 2adb3069b0e04-5a2d20c8d33so1912119e87.3
+        for <linux-raid@vger.kernel.org>; Sun, 19 Apr 2026 22:21:18 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1776662476; cv=none;
+        d=google.com; s=arc-20240605;
+        b=d66PdzQdNYJGOsHBtbCKJfvXV+2VXuWjdTC3uYP/1XxKNMnLR/VVeQUxpWxqi68wv2
+         yzDsFmvY0vCLKeDbbULldZX3m853bN4KDHQ6MTNHkr0j13XP3Y8hB23HtwAxiiPZ/7yC
+         eTrUdneW78lyNnnB/kbxEAy2U3xJqHgxVFx1TR9+DhClbOp7x0QVsxd1SxgyE9GZs1eX
+         cpbdkEKEYRz6bLZ0plpStehZFi5jFqUHj4papCeCajl1qIb/BOHlpmJ77KwLox8xXi4C
+         vmHK8y61mXM4YDBYW2R5bHZsncJMCKtWeeRS5pIB1NRl7J8r9yD4bQUYIF/9cl5Ldcj3
+         YtFA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=HyCNjZAPDfYeZFyuc1bpz+SIpuuFFwwpbf5ud9WzP7s=;
+        fh=41+KV4VRlV7hiIh5C/oOheEY0iY7lh9WOkETZvZJmIc=;
+        b=QDnTX+Ywpp7B8QWk3hDmIVvUu4uOj50j4JCLA/Bv103H8Nveomfu1EdgeVJVT3bVPo
+         MmFBVKiRXM9LLegxiHxvnN+b7nk2KsRxAFcnNon+HHcsiEpnYXe9ro5J9jROgUGBnX84
+         VMB2/rPMNySXtf+vD4PQuSu6WL1l89rtBmoqKzBoqKyi1gdT83B+H8dU52aMo1cPrPtS
+         gFPcaUY4kVCjSR+DqR/a3WIX0EEnbOW7x6I5knvZyxy07Qo/N6IiY3+BbrLiN6Li5l1O
+         8QnW1eTp81hp5gEImEtAZR7n60qTQLx++r4ueuWDsUn8lX8SF1VB+Rq1+ViZHAFHn7Lq
+         xUyQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1776662476; x=1777267276; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=HyCNjZAPDfYeZFyuc1bpz+SIpuuFFwwpbf5ud9WzP7s=;
+        b=O286guKocwuucU810HzgSSD4if4ALkHzLglw6RpGbaR56cvf9XU7XV8XYk+yM2DcbD
+         xsg9vJaq6JuizwPC1tXzalk4aaUhVW1iMfgIR2FzmOMD/cKRyXME2cDlFQ+UQZrXO9SF
+         xAMcX2fI8d+UBRbQGurMsG6ViuSxTZMLdwpJysdvF5Z0GP+uM67huDNdL8SSyazTHh73
+         cljcSgA5e61L5U2tvw15EiWEuGCXVrwMyylmaM8XF4hqfSSEmG+udR2D45ewaveIiNef
+         ee7TNy67NJDpejNsa4BU+LWS7BqCCIoeDxggxVuKTNHbmKdCcrBArEAP5k/P3lHlaFnl
+         ScTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776662476; x=1777267276;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=HyCNjZAPDfYeZFyuc1bpz+SIpuuFFwwpbf5ud9WzP7s=;
+        b=jynFqJ4ElwAk6kph7hkrBVqpn71wI1IjSE9lV3rw/1g4xVEJT4O7xSLBV3cvATvy7W
+         559fRgaiT7UaZuY7bH+BgCDpbS1+Zq7OIFdCe6TP5Zk7VTkGUTQEaiTcguPJb8jMZYkh
+         jI6ZrlhHjYJ+XW++JFIDyI5Ocna/d3zpH54vFs/k1sZsDOs1siH/OBB0bxO0xt2RR42g
+         R8x0Xnrclm9mExO5MxJXrUbDQ9jhmrB2IF/7kWrmbDJgOEq04eSyiUZaAlY+knSsrCEE
+         wc6E2/FBQIrnxnNB/KmZig3tVdUyoPNvp4ECtvclQb/VY5IF5RqR7A5FceCiVwX3Yo1O
+         q9VQ==
+X-Forwarded-Encrypted: i=1; AFNElJ+HCL1I0IOqQ/SCKEXxE0n1O+4oLvXc3BfyUn9vnxSmHKhO9HuIv2KMPtlkdQ7uSPxRrt8s79eGRCWQ@vger.kernel.org
+X-Gm-Message-State: AOJu0YwsSk1C6uPZS0eBqKJnQFXU+cMXmAX9scxMFOsf+WPB83ni2nYi
+	0VqgpC737oDAh/EZljQP5csz9jpNvAlldMrLPL/FTNGHch5IV43iHptkHPds441V9L3Yb4l3Jk0
+	V3Ow6eAb06q9BUpsQoOkpzQ7AxGhY0NC4cmQHBbCA1hw0pcSOsJhSW2OXbmA46Xst7DzJkfq5uR
+	6hbwvwBRo9DspSmCkMNOz8Kq/zhHL2VzMHgsedFbE6yYVzQw==
+X-Gm-Gg: AeBDietJMYKb1IyAa9vCXYhUvxZVmcQpDsBIP7yNWru45nGPwOU/p4cjkq7GjDs25aN
+	eQVIiXGlzmYgBJq1eh3uQRGW40CXm39Zm9IVrihcoPT+eMswauMLGhCFQFj+ZtIgh2pMd5C6EYA
+	BQTG0GJ73pWlelVtcXOu2n511+VW7TGxoMhChwbgrF0vs9JlQdndJKna0F0M9yr64N2qtukyGVM
+	wxJS04sAZ6SDsTPURQNIlfsUOO5RhaZyMUleQ6mYD6uDPVPgqqyoxUW1CWNMq/LxUSRLnrpI1nV
+	XRvRtTvicfcO4f5+
+X-Received: by 2002:a05:6512:24f:b0:5a4:18f7:a744 with SMTP id 2adb3069b0e04-5a418f7a764mr2259503e87.31.1776662475543;
+        Sun, 19 Apr 2026 22:21:15 -0700 (PDT)
+X-Received: by 2002:a05:6512:24f:b0:5a4:18f7:a744 with SMTP id
+ 2adb3069b0e04-5a418f7a764mr2259490e87.31.1776662474972; Sun, 19 Apr 2026
+ 22:21:14 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+References: <20260407102625.5686-1-glass.su@suse.com> <20260407102625.5686-2-glass.su@suse.com>
+ <CALTww28wN=9R2RMApc89M=cRtHmrFYgc8qgakR6LwcyXeQNdDw@mail.gmail.com> <h5pb6lqs.fsf@damenly.org>
+In-Reply-To: <h5pb6lqs.fsf@damenly.org>
+From: Xiao Ni <xni@redhat.com>
+Date: Mon, 20 Apr 2026 13:21:03 +0800
+X-Gm-Features: AQROBzDHzpedXO6EaCpnrgfckQSdJqWjMCc81me-YZXC-lOpDXupY_Bh69p62Oo
+Message-ID: <CALTww28=dKKbx+jrED_e3dzQYRtC=Vh9qk04JPy=rjpE2OA7ww@mail.gmail.com>
+Subject: Re: [PATCH v2 1/5] md/md-bitmap: call md_bitmap_create,destroy in location_store
+To: Su Yue <l@damenly.org>
+Cc: Su Yue <glass.su@suse.com>, linux-raid@vger.kernel.org, song@kernel.org, 
+	linan122@huawei.com, yukuai@fnnas.com, heming.zhao@suse.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, 16 Apr 2026 16:49:32 +0200
-Petr Mladek <pmladek@suse.com> wrote:
+On Thu, Apr 16, 2026 at 10:09=E2=80=AFPM Su Yue <l@damenly.org> wrote:
+>
+> On Wed 15 Apr 2026 at 18:34, Xiao Ni <xni@redhat.com> wrote:
+>
+> > On Tue, Apr 7, 2026 at 6:26=E2=80=AFPM Su Yue <glass.su@suse.com> wrote=
+:
+> >>
+> >> If bitmap/location is present, mdadm will call
+> >> update_array_info()
+> >> while growing bitmap from none to internal via
+> >> location_store().
+> >> md_bitmap_create() is needed to set mddev->bitmap_ops otherwise
+> >> mddev->bitmap_ops->get_stats() in update_array_info() will
+> >> trigger
+> >> kernel NULL pointer dereference.
+> >
+> >
+> > Hi Su Yue
+> >
+> > How can bitmap/location be present when bitmap is none? Could
+> > you
+> > provide the test commands that reproduce this problem?
+> >
+> Sorry for the misleading commit message. It can only be reproduced
+> patch 3 is appiled.
+> I adjusted the sequence of this patch for easy review because
+> md_bitmap_create,destroy
+> are touched in patch1,2 and 3. Also if put the patch after 3rd
+> patch,
+> it will break ability to bisect.
+>
+> # mdadm --create --assume-clean /dev/md0 -f --bitmap=3Dinternal
+>   --raid-devices=3D2 --level=3Dmirror --metadata=3D1.2 /dev/vdc /dev/vdd
+> # mdadm --grow /dev/md0 --bitmap=3Dnone
+> # mdadm --grow /dev/md0 --bitmap=3Dinternal # step 3
+> # mdadm --grow /dev/md0 --bitmap=3Dnone # step 4
+> [1]    2325 killed     mdadm --grow /dev/md0 --bitmap=3Dnone
+>
+> When step 3 is called,
+> md_bitmap_destroy() is called in update_array_info() to set NULL
+> mddev->bitmap_ops
+> then in step 4 kernel Oops is triggered.
+>
+>
+> I am willing to amend commit message or move it after patch 3 if
+> you would like.
 
-> On Thu 2026-04-16 13:18:30, Petr Pavlu wrote:
-> > On 4/15/26 8:43 AM, Song Chen wrote:
-> > > On 4/14/26 22:33, Petr Pavlu wrote:
-> > >> On 4/13/26 10:07 AM, chensong_2000@189.cn wrote:
-> > >>> diff --git a/include/linux/module.h b/include/linux/module.h
-> > >>> index 14f391b186c6..0bdd56f9defd 100644
-> > >>> --- a/include/linux/module.h
-> > >>> +++ b/include/linux/module.h
-> > >>> @@ -308,6 +308,14 @@ enum module_state {
-> > >>>       MODULE_STATE_COMING,    /* Full formed, running module_init. */
-> > >>>       MODULE_STATE_GOING,    /* Going away. */
-> > >>>       MODULE_STATE_UNFORMED,    /* Still setting it up. */
-> > >>> +    MODULE_STATE_FORMED,
-> > >>
-> > >> I don't see a reason to add a new module state. Why is it necessary and
-> > >> how does it fit with the existing states?
-> > >>
-> > > because once notifier fails in state MODULE_STATE_UNFORMED (now only ftrace has someting to do in this state), notifier chain will roll back by calling blocking_notifier_call_chain_robust, i'm afraid MODULE_STATE_GOING is going to jeopardise the notifers which don't handle it appropriately, like:
-> > > 
-> > > case MODULE_STATE_COMING:
-> > >      kmalloc();
-> > > case MODULE_STATE_GOING:
-> > >      kfree();
-> > 
-> > My understanding is that the current module "state machine" operates as
-> > follows. Transitions marked with an asterisk (*) are announced via the
-> > module notifier.
-> > 
-> > ---> UNFORMED --*> COMING --*> LIVE --*> GOING -.
-> >         ^            |                     ^    |
-> >         |            '---------------------*    |
-> >         '---------------------------------------'
-> > 
-> > The new code aims to replace the current ftrace_module_init() call in
-> > load_module(). To achieve this, it adds a notification for the UNFORMED
-> > state (only when loading a module) and introduces a new FORMED state for
-> > rollback. FORMED is purely a fake state because it never appears in
-> > module::state. The new structure is as follows:
-> > 
-> >         ,--*> (FORMED)
-> >         |
-> > --*> UNFORMED --*> COMING --*> LIVE --*> GOING -.
-> >         ^            |                     ^    |
-> >         |            '---------------------*    |
-> >         '---------------------------------------'
-> > 
-> > I'm afraid this is quite complex and inconsistent. Unless it can be kept
-> > simple, we would be just replacing one special handling with a different
-> > complexity, which is not worth it.
-> 
-> > >>
-> > >>> +    if (err)
-> > >>> +        goto ddebug_cleanup;
-> > >>>         /* Finally it's fully formed, ready to start executing. */
-> > >>>       err = complete_formation(mod, info);
-> > >>> -    if (err)
-> > >>> +    if (err) {
-> > >>> +        blocking_notifier_call_chain_reverse(&module_notify_list,
-> > >>> +                MODULE_STATE_FORMED, mod);
-> > >>>           goto ddebug_cleanup;
-> > >>> +    }
-> > >>>   -    err = prepare_coming_module(mod);
-> > >>> +    err = prepare_module_state_transaction(mod,
-> > >>> +                MODULE_STATE_COMING, MODULE_STATE_GOING);
-> > >>>       if (err)
-> > >>>           goto bug_cleanup;
-> > >>>   @@ -3522,7 +3519,6 @@ static int load_module(struct load_info *info, const char __user *uargs,
-> > >>>       destroy_params(mod->kp, mod->num_kp);
-> > >>>       blocking_notifier_call_chain(&module_notify_list,
-> > >>>                        MODULE_STATE_GOING, mod);
-> > >>
-> > >> My understanding is that all notifier chains for MODULE_STATE_GOING
-> > >> should be reversed.
-> > > yes, all, from lowest priority notifier to highest.
-> > > I will resend patch 1 which was failed due to my proxy setting.
-> > 
-> > What I meant here is that the call:
-> > 
-> > blocking_notifier_call_chain(&module_notify_list, MODULE_STATE_GOING, mod);
-> > 
-> > should be replaced with:
-> > 
-> > blocking_notifier_call_chain_reverse(&module_notify_list, MODULE_STATE_GOING, mod);
-> > 
-> > > 
-> > >>
-> > >>> -    klp_module_going(mod);
-> > >>>    bug_cleanup:
-> > >>>       mod->state = MODULE_STATE_GOING;
-> > >>>       /* module_bug_cleanup needs module_mutex protection */
-> > >>
-> > >> The patch removes the klp_module_going() cleanup call in load_module().
-> > >> Similarly, the ftrace_release_mod() call under the ddebug_cleanup label
-> > >> should be removed and appropriately replaced with a cleanup via
-> > >> a notifier.
-> > >>
-> > >     err = prepare_module_state_transaction(mod,
-> > >                 MODULE_STATE_UNFORMED, MODULE_STATE_FORMED);
-> > >     if (err)
-> > >         goto ddebug_cleanup;
-> > > 
-> > > ftrace will be cleanup in blocking_notifier_call_chain_robust rolling back.
-> > > 
-> > >     err = prepare_module_state_transaction(mod,
-> > >                 MODULE_STATE_COMING, MODULE_STATE_GOING);
-> > > 
-> > > each notifier including ftrace and klp will be cleanup in blocking_notifier_call_chain_robust rolling back.
-> > > 
-> > > if all notifiers are successful in MODULE_STATE_COMING, they all will be clean up in
-> > >  coming_cleanup:
-> > >     mod->state = MODULE_STATE_GOING;
-> > >     destroy_params(mod->kp, mod->num_kp);
-> > >     blocking_notifier_call_chain(&module_notify_list,
-> > >                      MODULE_STATE_GOING, mod);
-> > > 
-> > > if  something wrong underneath.
-> > 
-> > My point is that the patch leaves a call to ftrace_release_mod() in
-> > load_module(), which I expected to be handled via a notifier.
-> 
-> I think that I have got it. The ftrace code needs two notifiers when
-> the module is being loaded and two when it is going.
-> 
-> This is why Sond added the new state. But I think that we would
-> need two new states to call:
-> 
->     + ftrace_module_init() in MODULE_STATE_UNFORMED
->     + ftrace_module_enable() in MODULE_STATE_FORMED
-> 
-> and
-> 
->     + ftrace_free_mem() in MODULE_STATE_PRE_GOING
->     + ftrace_free_mem() in MODULE_STATE_GOING
-> 
-> 
-> By using the ascii art:
-> 
->  -*> UNFORMED -*> FORMED -> COMING -*> LIVE -*> PRE_GOING -*> GOING -.
->               |          |         |                ^           ^    ^
->               |          |         '----------------'           |    |
->               |          '--------------------------------------'    |
->               '------------------------------------------------------'
-> 
-> 
-> But I think that this is not worth it.
+Hi Su
 
-Agree.
+Thanks for the detail explanation. After reading patch3, I totoally
+understand. The sequence is good to me. And yes, it's better to
+explain that this is needed after patch3.
 
-If this needs to be ordered so strictly, why we will use a "single"
-module notifier chain for this complex situation?
+Best Regards
+Xiao
+>
+> --
+> Su
+>
+> >
+> > mdadm -CR /dev/md0 -l1 -n2 /dev/loop0 /dev/loop1 --bitmap=3Dnone
+> > (There
+> > is not bitmap/location, because bitmap directory is not created)
+> > mdadm /dev/md0 --grow --bitmap=3Dinternal
+> > Grow.c md_set_array_info runs
+> >  451             array.state |=3D (1 << MD_SB_BITMAP_PRESENT);
+> >  452             rv =3D md_set_array_info(fd, &array);
+> > In kernel space, it runs
+> >  8125             rv =3D md_bitmap_create(mddev);
+> >  8126             if (!rv)
+> >  8127                 rv =3D mddev->bitmap_ops->load(mddev);
+> >
+> > Best Regards
+> > Xiao
+> >
+> >>
+> >> Fixes: fb8cc3b0d9db ("md/md-bitmap: delay registration of
+> >> bitmap_ops until creating bitmap")
+> >> Signed-off-by: Su Yue <glass.su@suse.com>
+> >> ---
+> >>  drivers/md/md-bitmap.c | 11 ++++++++---
+> >>  drivers/md/md.c        |  4 ++--
+> >>  drivers/md/md.h        |  2 ++
+> >>  3 files changed, 12 insertions(+), 5 deletions(-)
+> >>
+> >> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> >> index 83378c033c72..2f24aae05552 100644
+> >> --- a/drivers/md/md-bitmap.c
+> >> +++ b/drivers/md/md-bitmap.c
+> >> @@ -2618,7 +2618,7 @@ location_store(struct mddev *mddev, const
+> >> char *buf, size_t len)
+> >>                         goto out;
+> >>                 }
+> >>
+> >> -               bitmap_destroy(mddev);
+> >> +               md_bitmap_destroy(mddev);
+> >>                 mddev->bitmap_info.offset =3D 0;
+> >>                 if (mddev->bitmap_info.file) {
+> >>                         struct file *f =3D
+> >>                         mddev->bitmap_info.file;
+> >> @@ -2653,15 +2653,20 @@ location_store(struct mddev *mddev,
+> >> const char *buf, size_t len)
+> >>                                 goto out;
+> >>                         }
+> >>
+> >> +                       /*
+> >> +                        * lockless bitmap shoudle have set
+> >> bitmap_id
+> >> +                        * using bitmap_type, so always
+> >> ID_BITMAP.
+> >> +                        */
+> >> +                       mddev->bitmap_id =3D ID_BITMAP;
+> >>                         mddev->bitmap_info.offset =3D offset;
+> >> -                       rv =3D bitmap_create(mddev);
+> >> +                       rv =3D md_bitmap_create(mddev);
+> >>                         if (rv)
+> >>                                 goto out;
+> >>
+> >>                         rv =3D bitmap_load(mddev);
+> >>                         if (rv) {
+> >>                                 mddev->bitmap_info.offset =3D 0;
+> >> -                               bitmap_destroy(mddev);
+> >> +                               md_bitmap_destroy(mddev);
+> >>                                 goto out;
+> >>                         }
+> >>                 }
+> >> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> >> index 3ce6f9e9d38e..8b1ecc370ad6 100644
+> >> --- a/drivers/md/md.c
+> >> +++ b/drivers/md/md.c
+> >> @@ -6447,7 +6447,7 @@ static void md_safemode_timeout(struct
+> >> timer_list *t)
+> >>
+> >>  static int start_dirty_degraded;
+> >>
+> >> -static int md_bitmap_create(struct mddev *mddev)
+> >> +int md_bitmap_create(struct mddev *mddev)
+> >>  {
+> >>         if (mddev->bitmap_id =3D=3D ID_BITMAP_NONE)
+> >>                 return -EINVAL;
+> >> @@ -6458,7 +6458,7 @@ static int md_bitmap_create(struct mddev
+> >> *mddev)
+> >>         return mddev->bitmap_ops->create(mddev);
+> >>  }
+> >>
+> >> -static void md_bitmap_destroy(struct mddev *mddev)
+> >> +void md_bitmap_destroy(struct mddev *mddev)
+> >>  {
+> >>         if (!md_bitmap_registered(mddev))
+> >>                 return;
+> >> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> >> index ac84289664cd..ed69244af00d 100644
+> >> --- a/drivers/md/md.h
+> >> +++ b/drivers/md/md.h
+> >> @@ -895,6 +895,8 @@ static inline void safe_put_page(struct
+> >> page *p)
+> >>
+> >>  int register_md_submodule(struct md_submodule_head *msh);
+> >>  void unregister_md_submodule(struct md_submodule_head *msh);
+> >> +int md_bitmap_create(struct mddev *mddev);
+> >> +void md_bitmap_destroy(struct mddev *mddev);
+> >>
+> >>  extern struct md_thread *md_register_thread(
+> >>         void (*run)(struct md_thread *thread),
+> >> --
+> >> 2.53.0
+> >>
+>
 
-I think the notifier call chain is just for notice a single signal,
-instead of sending several different signals, especially if there is
-any dependency among the callbacks.
-
-If notification callbacks need to be ordered, they are currently
-sorted by representing priority numerically, but this is quite
-fragile for updating. It has to look up other registered priorities
-and adjust the order among dependencies each time. For this reason,
-this mechanism is not suitable for global ordering. (It's like line
-numbers in BASIC.)
-It is probably only useful for representing dependencies between
-two components maintained by the same maintainer.
-
-I'm against a general-purpose system that makes everything modular.
-It unnecessarily complicates things. If there are processes that
-require strict ordering, especially processes that must be performed
-before each stage as part of the framework, they should be called
-directly from the framework, not via notification callbacks.
-
-This makes it simpler and more robust to maintain.
-
-Only the framework's end users should utilize notification callbacks.
-
-Thank you,
-
-
-> 
-> Best Regards,
-> Petr
-> 
-
-
--- 
-Masami Hiramatsu (Google) <mhiramat@kernel.org>
