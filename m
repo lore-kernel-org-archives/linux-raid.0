@@ -1,193 +1,208 @@
-Received: from va-2-29.ptr.blmpb.com (va-2-29.ptr.blmpb.com [209.127.231.29])
+Received: from va-2-36.ptr.blmpb.com (va-2-36.ptr.blmpb.com [209.127.231.36])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E55C37EFF1
-	for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 02:33:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A36F637F72C
+	for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 02:33:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.36
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776825236; cv=none; b=iQlgztzwCOlp0a7NGqgf4HH00Tptlhqx6kfrmXPvMjG0mb+OB7+mQtuSMWqhdltUFiY5CQ9fpOECe2Bq1ICZGaLWXgjBlrNW3MT2erTzobCDjU8db8/1MRvXrSYnHiBXSulyb7AQ1xZjAEj84jHcvKIZINfhRDznKOIjwgi2USg=
+	t=1776825237; cv=none; b=KIPS9td0kLCflwWOP/oWBjo80YAyixONiciTX3gAz3gU6yCZ6X+7mV8qbs6OxE4394XHhGhTLx+r76Vj7TvGA6aHp3SLo/W49ofn2B7ngJx86w26gH1cLWjZ9xNfwh2tmJkS8JT2hLqMqXmi+cXk+qqIBqwLCSg6kbJHv5t9Gdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776825236; c=relaxed/simple;
-	bh=X7AYA+Wnjna0zNzfopfpW8NnYvvD+L3omH56Fz0WWuI=;
-	h=Message-Id:References:In-Reply-To:Cc:From:Mime-Version:To:Subject:
-	 Date:Content-Type; b=inb+5fhVJ9Z1ovXenxTcBkl0DWCwk1jjUF7iBv9tmcPSmzzG1vs9fcS61cs2piEt4ujAp1QrOISdTFpO1QV07BfbjkU8PyOzaNYUTpb/0VVDGFnUZgTLzDNUayA17fcJTUzvaLw8pyn/uTimeD2KxegNeTXRmj3tXWvJgLO6cE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=sFT4GNjC; arc=none smtp.client-ip=209.127.231.29
+	s=arc-20240116; t=1776825237; c=relaxed/simple;
+	bh=frGf6y+RMqGevpOobR/Kk9dKrAl9pXxo3fhMo9O+nzg=;
+	h=Date:Message-Id:To:References:Cc:From:In-Reply-To:Subject:
+	 Mime-Version:Content-Type; b=e9OqB6QmOz6ypHSNZ4oqOjo4TMwZ+Ojd/+TIY7VaW6b21GaQC/IBZ9ccyxNxIaJncYbYMVNaU1IIZv65teJsbLovDpJ+uCyyL06XpbkOfwu4ldzPAk286Yl/g1uEj1PR6YvqYQLlvigAKZym7yaKc7QecLYOIdDHIucficrITko=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=JL7+Oc00; arc=none smtp.client-ip=209.127.231.36
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="sFT4GNjC"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="JL7+Oc00"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1776825213;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1776825215;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=OybY2ptPpSgMjYkxuwLXjdmGFEZg+u5cDVfosbKEHm0=;
- b=sFT4GNjCakiZ9Ie4U/O361p9GxnCAWM7ML2yiXbNAH9ugzy728gnGryDi6Et6cCA1wz4ce
- LFW/GVQADJV+G+yjwjBaoP3zSbRk49OlfIw8v2vhjUdYOHCygPCdVQr9ohnFB5uZ4Ghgh/
- UgEAMO+8AkQ1ShBLwkpaukO4V2hnbm+Cu5ZZvN/MURIFdYdaT8aDkjeOj/zzO2ndV1e9Te
- PbpUj9SXecewPLWuzEMb0g1PxA3TRTLYkn8tOKSyOtujDsvNNJND5Orf+7blORiGrcWC/N
- 0q9RoEO8XVqnJ/rmPRNbi60771Zi69Itn+HPOIJu/wujMDzS+PbXHzWgqvamsw==
-Message-Id: <20260422023317.796326-2-chencheng@fnnas.com>
+ bh=2f9y+UXK1Lu/tSGCicWquuODS+m028Vnz53xVRFUn8A=;
+ b=JL7+Oc00XS+MWsT32l79IoXKpLbKFNfDJFxng30x76lQf/WdwflO5JzluJdDlpYhY7Y6Qb
+ dio7tNFcRYhdoJqSe27z+3fRLqRw5ZGSRjwN688Q2GNQ6iyGM0uRvQNND48PWAuSchFJlj
+ MhqZS4ZkPS3AtriEzn3GapYFZQER3umnE1dcgnKwlHaeXmgTmolTA2ZJCSZvnaU+lForTq
+ SX0KWAha15oR/EWlIdjMCg4ZE7cf5MMb4vwh5JL9VemvQ2FUeMkkky6HgRpaA/HAeTHZRM
+ oFwvip3HD/soMSh4JGzkD7YRvYBM4WN4OKVVBk6DD/dbE9xeq9Q08I3kZOdJ7A==
+Date: Wed, 22 Apr 2026 10:33:16 +0800
+Message-Id: <20260422023317.796326-3-chencheng@fnnas.com>
+To: <linux-raid@vger.kernel.org>, <yukuai@fnnas.com>
 References: <20260422023317.796326-1-chencheng@fnnas.com>
-In-Reply-To: <20260422023317.796326-1-chencheng@fnnas.com>
 X-Original-From: chencheng@fnnas.com
+Received: from localhost.localdomain ([113.111.140.171]) by smtp.feishu.cn with ESMTPS; Wed, 22 Apr 2026 10:33:32 +0800
+X-Lms-Return-Path: <lba+269e8337d+59053c+vger.kernel.org+chencheng@fnnas.com>
 Cc: <chencheng@fnnas.com>, <chenchneg33@gmail.com>
 From: "Chen Cheng" <chencheng@fnnas.com>
+In-Reply-To: <20260422023317.796326-1-chencheng@fnnas.com>
+Content-Transfer-Encoding: 7bit
+X-Mailer: git-send-email 2.53.0
+Subject: [PATCH 3/4] md/raid10: fix r10bio devs overflow across reshape
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Mailer: git-send-email 2.53.0
-Content-Transfer-Encoding: 7bit
-Received: from localhost.localdomain ([113.111.140.171]) by smtp.feishu.cn with ESMTPS; Wed, 22 Apr 2026 10:33:30 +0800
-To: <linux-raid@vger.kernel.org>, <yukuai@fnnas.com>
-Subject: [PATCH 2/4] md/raid10: prepare r10bio allocation width tracking
-Date: Wed, 22 Apr 2026 10:33:15 +0800
-X-Lms-Return-Path: <lba+269e8337b+d4cdc5+vger.kernel.org+chencheng@fnnas.com>
 Content-Type: text/plain; charset=UTF-8
 
 From: Chen Cheng <chencheng@fnnas.com>
 
-Record how many devs[] slots each r10bio was allocated with.
+A 4-disk to 5-disk raid10 reshape can complete or free an r10bio that was
+allocated before the geometry switch.
 
-Keep the active r10bio pool in a separate object that carries its width.
-This keeps the allocation width separate from the per-request width stored
-in used_nr_devs and prepares the pool for replacement during reshape.
+The failure was reproduced with a simple write workload while reshaping a
+raid10 array from 4 disks to 5 disks, e.g.:
+
+  mdadm -C /dev/md777 -l10 -n4 /dev/sda /dev/sdb /dev/sdc /dev/sdd
+  mkfs.ext4 /dev/md777
+  mount /dev/md777 /mnt/test
+  fsstress -d /mnt/test -n 24000 -p 8 -l 24 &
+  mdadm /dev/md777 --add /dev/sde
+  mdadm --grow /dev/md777 --raid-devices=5 \
+    --backup-file=/tmp/md-reshape-backup
+
+Without this patch, the sequence above can trigger:
+
+  BUG: KASAN: slab-out-of-bounds in free_r10bio+0x1c4/0x260 [raid10]
+  Read of size 8 at addr ffff00008c2dfac8 by task ksoftirqd/0/15
+  free_r10bio
+  raid_end_bio_io
+  one_write_done
+  raid10_end_write_request
+
+The buggy object was 200 bytes long, which matches an r10bio with space for
+only four devs[] entries. However, put_all_bios() and find_bio_disk() walk
+r10_bio->devs[] using the current conf->geo.raid_disks value. Once reshape
+switches conf->geo.raid_disks from 4 to 5, an old 4-slot r10bio can be
+completed or freed as if it had 5 slots, and the walk overruns devs[4].
+
+The same stale-width mismatch can also surface during a 5-disk to 4-disk
+reshape.
+
+The same transition also leaves stale-width objects in the active r10bio
+pool, so new requests can reuse a 4-slot object after reshape starts unless
+the pool is replaced for the new geometry.
+
+Fix this by recording the actual devs[] slot count in each r10bio and using
+that count when scanning or freeing the object. Also replace the active
+r10bio pool with one sized for the new geometry before reshape switches
+layouts. Old-width r10bio objects are freed directly instead of being
+returned to a pool that now expects a different width.
+
+A/B validation:
+
+- Without this patch, the 4-disk to 5-disk reshape test triggered the
+  KASAN report.
+- With this patch, neither the 4-disk to 5-disk nor the 5-disk to 4-disk
+  reshape test triggers KASAN.
 ---
- drivers/md/raid10.c | 40 +++++++++++++++++++++++++++-------------
- drivers/md/raid10.h |  8 +++++++-
- 2 files changed, 34 insertions(+), 14 deletions(-)
+ drivers/md/raid10.c | 43 +++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 41 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index e93933632893..b447903fbdc6 100644
+index b447903fbdc6..3edde440623a 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -103,14 +103,22 @@ static inline struct r10bio *get_resync_r10bio(struct bio *bio)
- 	return get_resync_pages(bio)->raid_bio;
+@@ -234,6 +234,30 @@ static void * r10buf_pool_alloc(gfp_t gfp_flags, void *data)
+ 	return NULL;
  }
  
--static void * r10bio_pool_alloc(gfp_t gfp_flags, void *data)
-+static void *r10bio_pool_alloc(gfp_t gfp_flags, void *data)
- {
--	struct r10conf *conf = data;
--	int size = offsetof(struct r10bio, devs[conf->geo.raid_disks]);
-+	struct r10bio_pool *pool = data;
-+	int size = offsetof(struct r10bio, devs[pool->nr_devs]);
-+	struct r10bio *r10_bio = kzalloc(size, gfp_flags);
-+
-+	if (r10_bio)
-+		r10_bio->alloc_nr_devs = pool->nr_devs;
-+	return r10_bio;
-+}
- 
--	/* allocate a r10bio with room for raid_disks entries in the
--	 * bios array */
--	return kzalloc(size, gfp_flags);
-+static int init_r10bio_pool(struct r10bio_pool *pool, unsigned int nr_devs)
++static int reinit_r10bio_pool(struct r10conf *conf, unsigned int nr_devs)
 +{
-+	pool->nr_devs = nr_devs;
-+	return mempool_init(&pool->pool, NR_RAID_BIOS, r10bio_pool_alloc,
-+			    rbio_pool_free, pool);
- }
++	struct r10bio_pool *new_pool, *old_pool = conf->r10bio_pool;
++	int ret;
++
++	if (old_pool->nr_devs == nr_devs)
++		return 0;
++
++	new_pool = kzalloc_obj(struct r10bio_pool);
++	if (!new_pool)
++		return -ENOMEM;
++
++	ret = init_r10bio_pool(new_pool, nr_devs);
++	if (ret) {
++		kfree(new_pool);
++		return ret;
++	}
++
++	conf->r10bio_pool = new_pool;
++	mempool_exit(&old_pool->pool);
++	kfree(old_pool);
++	return 0;
++}
++
+ static void r10buf_pool_free(void *__r10_bio, void *data)
+ {
+ 	struct r10conf *conf = data;
+@@ -268,7 +292,7 @@ static void put_all_bios(struct r10conf *conf, struct r10bio *r10_bio)
+ {
+ 	int i;
  
- #define RESYNC_SECTORS (RESYNC_BLOCK_SIZE >> 9)
-@@ -137,7 +145,7 @@ static void * r10buf_pool_alloc(gfp_t gfp_flags, void *data)
- 	int nalloc, nalloc_rp;
- 	struct resync_pages *rps;
- 
--	r10_bio = r10bio_pool_alloc(gfp_flags, conf);
-+	r10_bio = r10bio_pool_alloc(gfp_flags, conf->r10bio_pool);
- 	if (!r10_bio)
- 		return NULL;
- 
-@@ -277,7 +285,7 @@ static void free_r10bio(struct r10bio *r10_bio)
+-	for (i = 0; i < conf->geo.raid_disks; i++) {
++	for (i = 0; i < r10_bio->used_nr_devs; i++) {
+ 		struct bio **bio = & r10_bio->devs[i].bio;
+ 		if (!BIO_SPECIAL(*bio))
+ 			bio_put(*bio);
+@@ -285,6 +309,10 @@ static void free_r10bio(struct r10bio *r10_bio)
  	struct r10conf *conf = r10_bio->mddev->private;
  
  	put_all_bios(conf, r10_bio);
--	mempool_free(r10_bio, &conf->r10bio_pool);
-+	mempool_free(r10_bio, &conf->r10bio_pool->pool);
++	if (r10_bio->alloc_nr_devs != conf->r10bio_pool->nr_devs) {
++		rbio_pool_free(r10_bio, conf);
++		return;
++	}
+ 	mempool_free(r10_bio, &conf->r10bio_pool->pool);
  }
  
- static void put_buf(struct r10bio *r10_bio)
-@@ -1531,7 +1539,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
- 	struct r10conf *conf = mddev->private;
- 	struct r10bio *r10_bio;
+@@ -365,7 +393,7 @@ static int find_bio_disk(struct r10conf *conf, struct r10bio *r10_bio,
+ 	int slot;
+ 	int repl = 0;
  
--	r10_bio = mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
-+	r10_bio = mempool_alloc(&conf->r10bio_pool->pool, GFP_NOIO);
+-	for (slot = 0; slot < conf->geo.raid_disks; slot++) {
++	for (slot = 0; slot < r10_bio->used_nr_devs; slot++) {
+ 		if (r10_bio->devs[slot].bio == bio)
+ 			break;
+ 		if (r10_bio->devs[slot].repl_bio == bio) {
+@@ -4416,6 +4444,11 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 	if (spares < mddev->delta_disks)
+ 		return -EINVAL;
  
- 	r10_bio->master_bio = bio;
- 	r10_bio->sectors = sectors;
-@@ -1724,7 +1732,7 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
- 				(last_stripe_index << geo->chunk_shift);
- 
- retry_discard:
--	r10_bio = mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
-+	r10_bio = mempool_alloc(&conf->r10bio_pool->pool, GFP_NOIO);
- 	r10_bio->mddev = mddev;
- 	r10_bio->state = 0;
- 	r10_bio->sectors = 0;
-@@ -3825,7 +3833,10 @@ static void raid10_free_conf(struct r10conf *conf)
- 	if (!conf)
- 		return;
- 
--	mempool_exit(&conf->r10bio_pool);
-+	if (conf->r10bio_pool) {
-+		mempool_exit(&conf->r10bio_pool->pool);
-+		kfree(conf->r10bio_pool);
-+	}
- 	kfree(conf->mirrors);
- 	kfree(conf->mirrors_old);
- 	kfree(conf->mirrors_new);
-@@ -3870,10 +3881,13 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- 	if (!conf->tmppage)
- 		goto out;
- 
-+	conf->r10bio_pool = kzalloc_obj(struct r10bio_pool);
-+	if (!conf->r10bio_pool)
-+		goto out;
++	raise_barrier(conf, 0);
++	ret = reinit_r10bio_pool(conf, new.raid_disks);
++	if (ret)
++		goto out_lower_barrier;
 +
- 	conf->geo = geo;
- 	conf->copies = copies;
--	err = mempool_init(&conf->r10bio_pool, NR_RAID_BIOS, r10bio_pool_alloc,
--			   rbio_pool_free, conf);
-+	err = init_r10bio_pool(conf->r10bio_pool, conf->geo.raid_disks);
- 	if (err)
- 		goto out;
+ 	conf->offset_diff = min_offset_diff;
+ 	spin_lock_irq(&conf->device_lock);
+ 	if (conf->mirrors_new) {
+@@ -4433,6 +4466,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 		sector_t size = raid10_size(mddev, 0, 0);
+ 		if (size < mddev->array_sectors) {
+ 			spin_unlock_irq(&conf->device_lock);
++			lower_barrier(conf);
+ 			pr_warn("md/raid10:%s: array size must be reduce before number of disks\n",
+ 				mdname(mddev));
+ 			return -EINVAL;
+@@ -4443,6 +4477,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 		conf->reshape_progress = 0;
+ 	conf->reshape_safe = conf->reshape_progress;
+ 	spin_unlock_irq(&conf->device_lock);
++	lower_barrier(conf);
  
-diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-index 92e8743023e6..8fa4e54c444c 100644
---- a/drivers/md/raid10.h
-+++ b/drivers/md/raid10.h
-@@ -20,6 +20,11 @@ struct raid10_info {
- 	sector_t	head_position;
- };
+ 	if (mddev->delta_disks && mddev->bitmap) {
+ 		struct mdp_superblock_1 *sb = NULL;
+@@ -4527,6 +4562,10 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 	md_new_event();
+ 	return 0;
  
-+struct r10bio_pool {
-+	mempool_t	pool;
-+	unsigned int	nr_devs;
-+};
++out_lower_barrier:
++	lower_barrier(conf);
++	return ret;
 +
- struct r10conf {
- 	struct mddev		*mddev;
- 	struct raid10_info	*mirrors;
-@@ -87,7 +92,7 @@ struct r10conf {
- 						   */
- 	wait_queue_head_t	wait_barrier;
- 
--	mempool_t		r10bio_pool;
-+	struct r10bio_pool	*r10bio_pool;
- 	mempool_t		r10buf_pool;
- 	struct page		*tmppage;
- 	struct bio_set		bio_split;
-@@ -128,6 +133,7 @@ struct r10bio {
- 	 */
- 	int			read_slot;
- 	unsigned int		used_nr_devs;
-+	unsigned int		alloc_nr_devs;
- 
- 	struct list_head	retry_list;
- 	/*
+ abort:
+ 	mddev->recovery = 0;
+ 	spin_lock_irq(&conf->device_lock);
 -- 
 2.53.0
