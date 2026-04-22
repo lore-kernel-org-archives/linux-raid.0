@@ -1,142 +1,124 @@
-Received: from mail-wr1-f73.google.com (mail-wr1-f73.google.com [209.85.221.73])
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFFED347532
-	for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 17:17:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.73
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F8443C4557
+	for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 18:07:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776878247; cv=none; b=l9cfpuxYT8zYW6oJFuzbWK6FT3j8I4RtOOsfNB1tLkknNilUnYnFOdFagRLD7Yx8wtN+jWYbikiaGWsgdPLJuxNi6DLDJuJhdyXyRcAchQE0CUq5XlhwqJBSBwu5scs0QhdyDruNDyaxsCApEd/fXEBmWewEzknXqqC8HxX9SPE=
+	t=1776881256; cv=none; b=BvfhRxmpmY9XmiEGzE5NQLDwU9Y9Bc9EEqtDfAf24QOMjvSsRGE/79AZufXy+igVyFpWbfVBxgQa3k5qPFCQI0Cbpv08HrXcCvZwLt+aebNfBoymjbhpQvmSC1GyRdVM5G1zbjnkEJudJaSqjMY+CyGgFiJdbhonnjp9AlhhiPs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776878247; c=relaxed/simple;
-	bh=PZFLd5rvqF35s/dAbltJY7JKK52t/+savyDJAyIJNmg=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=Rq37wQsFIGfSrM0Ngx3D9+Z818SsksawEa4xV5yCcY6DYltvD0qtsh8F2AfHAhFu3aftPqddsVOVZeRTy+w3GAvEG8wSVEXnRlzBnvzkaLkSST17ld7QW8I+GNxqeBZV3Vg9ect98DAPobt6a0vYXviGnu0HyEBW2nQAJb/lfzc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=eXej9QCd; arc=none smtp.client-ip=209.85.221.73
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com
+	s=arc-20240116; t=1776881256; c=relaxed/simple;
+	bh=68e2vkBr3OUqhrf81M0NoGbo9Z0zZ3BkkBAVPKwS+nU=;
+	h=Date:From:To:CC:Subject:In-Reply-To:Message-ID:MIME-Version:
+	 Content-Type; b=AgkzbosYzYxwmRGHOhr0A33NCs9jbtNqISH1+a07pSsb8Z70CjhhOguF7ZfgPN4inp0jLlYrj8h7eHpjwRn4z8isLYP58J6HEDoHwzOucDGMAqkQ9+NHVQGLnf4qEJ5Dcxs3/Cwy0B1ppME2wNAAnwBbyX8umz571nhFuRi2Hmo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cyczf0e3; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="eXej9QCd"
-Received: by mail-wr1-f73.google.com with SMTP id ffacd0b85a97d-4411a36715dso2542508f8f.2
-        for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 10:17:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cyczf0e3"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-48984d29fe3so50751585e9.0
+        for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 11:07:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1776878244; x=1777483044; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=w1KAxfG6BFXtsRWghQ1pcNf8ys+JfrNCOwRGJsq7foU=;
-        b=eXej9QCdibVndbAGlsO3951JdgifK/V38IDeTy0s88SPIPaaIVBjas6lSZaT2Ph3Tx
-         VHeSL6m1LhMmwKEfCi5F1BhzTBjilYc4+1GJV3EllgNLMOJghOW4rMj8YFBrqvFEUGIb
-         kdsm/P2XUTd1qgq/c7lDCKdaAAbKBLXs8QeRALr1cw6Nn4uhmgE3CU1SYhxjswXOq9ND
-         20oimLnmulclslanAuTjT2mpxJXfvwNKCOQKqG6dX8hnooz524A/Txu9oI484Ia50qWF
-         X16jqqhb7C8TCpEWLjX86DwVbHsq7xZPhkaGUM+aZIgWq9rXDG5effJDmj2WguiVhqsp
-         Dr7g==
+        d=gmail.com; s=20251104; t=1776881252; x=1777486052; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:in-reply-to
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=3v4gati8jz+0eLCt+fkaA6QE0HrpYumOYS61o02yFpA=;
+        b=cyczf0e3ByeaAAZFS5OtD02KqMwtPiJ5sdAH0doKrgxnWr8k3GqsYCYFsk0aA+bKjr
+         2iJIGWEX2HbeBKfCL840kscvJzAkq12kymk5enin/NgxMOHE/REUOw+QwFdymzXlFpbx
+         9+wqGE3i4jhLv+MH8PzewpiOgg0krrrj6icX+wfIIwxEI9bXs7FKQ9SUSuLRHFQ6qh3s
+         Q8QgSPZisTwyp0WBgsU+76Ewn89RwyeVcZA5gU5R9kVXh1mmV6CBn6/bNvvBSKfkXmkV
+         H5wOOrOPQaFXES9gFDsMiGkMKwTzcSOzq/tNBcLH6sp02P39Gw8535w4H8BwxqD4L5gl
+         n82A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776878244; x=1777483044;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=w1KAxfG6BFXtsRWghQ1pcNf8ys+JfrNCOwRGJsq7foU=;
-        b=cTv7B2d1NaiQ6gM4+S46aeRrrJlohasnEUNbjsDdBQATO7UO8rvnjE5YFNhVVSUD8l
-         rbLJhYCb+XoauW1xBlKFN/m221NslW2IGmDjiABFVs42ffjbhjz9uRsp4DeEdAJDWHDv
-         swARwEsd9CS2KLf4KY76zQktHWvrp7JNWGAqe2vvPfLCDDKKi41E6ysuqzzf7uqsGFeR
-         2I4/olla1Qbt9CRJGc5alANDZnuWm71wKvpzGXqBgR5w3+TXmZs7Q3TvvfzUgGUgqUki
-         JZyHb8Mqw8diIP1c15Ym92C1SAbfHczJgqyvfOZjZvmSvYy/f1wcjlr56PDlezgmBEvG
-         7evg==
-X-Forwarded-Encrypted: i=1; AFNElJ82Pnb6Ej24RzFWM2mh8U1PfHF4li9EiaESg/hu0AoZHAQ0SjttvQUg7QmZSw2qJUa9w6g5Ga+vwjDK@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy4IJPY1SP44UysqgxFa1oKvRClnBl89M+SSuX2Wo1Tr2EuSmCl
-	v/MUsutlO9zzeZ2PXLAQCAYD6pLjKJHlm0eHEmwDVqcrNj92BbvvC+h1zY+CRXF0R9GrOWSDvQ=
-	=
-X-Received: from wrmy2.prod.google.com ([2002:adf:e6c2:0:b0:43d:780a:6fbd])
- (user=ardb job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6000:1785:b0:43c:fc5c:a9fe
- with SMTP id ffacd0b85a97d-43fe3dbf4e7mr36040481f8f.20.1776878244159; Wed, 22
- Apr 2026 10:17:24 -0700 (PDT)
-Date: Wed, 22 Apr 2026 19:17:04 +0200
-In-Reply-To: <20260422171655.3437334-10-ardb+git@google.com>
+        d=1e100.net; s=20251104; t=1776881252; x=1777486052;
+        h=content-transfer-encoding:mime-version:message-id:in-reply-to
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=3v4gati8jz+0eLCt+fkaA6QE0HrpYumOYS61o02yFpA=;
+        b=miEqHTNd+XSUDj5soMcxUuGi9FLnSsoH2zp3RdpnnT1LVUpLk5fu9XhKKN8dMWhNkn
+         O0OORuKssDcfGfU7NbayVHL1Im/Je23r+ap7rmabG8p2TBXvS7WxS+WH2QDhMq8ANMsg
+         aqrPqrfw53zGb9dmIS2UbnIqQ/lcOFv126ltGL1+ZY4qGaJba+sXowqVxKgv2OTHZM/6
+         uaW7s1Mkwn182ZvPAOiwt9g2XoofSLYUIOaWv0xf236hVnCOOsV4fVEcY+tgjGSF93At
+         FZ/8hRwxqAmwW+ajQ2PXuSweqZJ2f9v/+To0VAcr/iVA1kkfC9yeT+kx8YNeznQsIbz9
+         3b7w==
+X-Forwarded-Encrypted: i=1; AFNElJ8bTYLRj4Hg3JJANPJbVaPo0nQtfUObg3ul3oICzRVbALfoKUP+pb9f1jacqNmcX5Ft5figtDWGNDz6@vger.kernel.org
+X-Gm-Message-State: AOJu0YyG4kd/DvGiOnKbm9NfPuI51WjhzbXtrorwom3SZ3j+HyK61mvQ
+	ZFjcUyc5rjxp1Il8zUdHPpTtN/0aaxmtx1Q0pa3tvfdjH2P2xNB6ZPS/
+X-Gm-Gg: AeBDietxgfBfBapO9FnvHpiBhflarVc1Du+yW/Pq9pQDoGv+soluK40IplDnJeh8L1d
+	FgDI6+Itkx5/pXheG8Vng1KJdEpiGOxlBGKuilvv812bUkRW9/OxQYgzAmnHde6XxkvkxOhJCWE
+	RCC0m23Fs1sl3JjGmYvF2zRgJph/9Hpe4Uz4eQxnwF1AVmjPd9wkw+v8tTTi00/9w9AFqdrvKMU
+	rwf/j87oc00dFGIztUDRtci/W8WTZajsJlhdz9wZvfl9zbupA863dl7bDJ6pvIdRZ5Ozv6LtLng
+	iPCJZMi8oWqn3/HDyPNIQ1S/OLAzDk01t0vSYzTiHKkhvX8mguhHxZDYxcxVh8ZfYIlS5lZyxux
+	NBfN27SMh4xvi8Hb5hTRxbC+LWTUWCBSdLC8ORjTI82QO8DIO3PYAlcYzMDQ0ufziX86bZU1H31
+	Ma4JUbVLmKuvjsOQvPw+p2TWqcmQdgWWUxikOa
+X-Received: by 2002:a05:600c:859a:b0:48a:53ea:13df with SMTP id 5b1f17b1804b1-48a53ea1500mr120994365e9.2.1776881252234;
+        Wed, 22 Apr 2026 11:07:32 -0700 (PDT)
+Received: from ehlo.thunderbird.net ([86.1.69.5])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488fc1393f5sm432764375e9.9.2026.04.22.11.07.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Apr 2026 11:07:31 -0700 (PDT)
+Date: Wed, 22 Apr 2026 19:07:32 +0100
+From: Josh Law <joshlaw48@gmail.com>
+To: ardb+git@google.com
+CC: ardb@kernel.org, arnd@arndb.de, ebiggers@kernel.org, hch@lst.de,
+ linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux@armlinux.org.uk
+Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_2/8=5D_xor/arm=3A_Replace_vectoriz?=
+ =?US-ASCII?Q?ed_implementation_with_arm64=27s_intrinsics?=
+In-Reply-To: <20260422171655.3437334-12-ardb+git@google.com>
+Message-ID: <3341B2B2-9B57-4273-AD5B-EDDE00CC4119@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260422171655.3437334-10-ardb+git@google.com>
-X-Developer-Key: i=ardb@kernel.org; a=openpgp; fpr=F43D03328115A198C90016883D200E9CA6329909
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2395; i=ardb@kernel.org;
- h=from:subject; bh=koeyEC8RTAmtOu/HBUQeDz+lw7UQyz/6JF7WLaYxDho=;
- b=owGbwMvMwCVmkMcZplerG8N4Wi2JIfMl0xQzr0KxmdZfvl+P5DSYP6tiwby57XVLbdaKvFJYd
- TqAx5i7o5SFQYyLQVZMkUVg9t93O09PlKp1niULM4eVCWQIAxenAEwk6Ssjwx2t741yoiGzA79V
- zeB3urdbxE9y8gYlxXWrAoTv+nRN5mRkeGwV3VUkElTDfrf232l2DlXJ7kYRmd57Vp+fq1xdz/a DBwA=
-X-Mailer: git-send-email 2.54.0.rc2.544.gc7ae2d5bb8-goog
-Message-ID: <20260422171655.3437334-18-ardb+git@google.com>
-Subject: [PATCH 8/8] ARM: Remove hacked-up asm/types.h header
-From: Ard Biesheuvel <ardb+git@google.com>
-To: linux-arm-kernel@lists.infradead.org
-Cc: linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org, 
-	Ard Biesheuvel <ardb@kernel.org>, Christoph Hellwig <hch@lst.de>, Russell King <linux@armlinux.org.uk>, 
-	Arnd Bergmann <arnd@arndb.de>, Eric Biggers <ebiggers@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: 8bit
 
-From: Ard Biesheuvel <ardb@kernel.org>
+Hi ard.
 
-ARM has a special version of asm/types.h which contains overrides for
-certain #define's related to the C types used to back C99 types such as
-uint32_t and uintptr_t.
+I like this patch.
 
-This is only needed when pulling in system headers such as stdint.h
-during the build, and this only happens when using NEON intrinsics,
-for which there is now a dedicated header file.
+So, I'd be crazy not to say what I love here.
 
-So drop this header entirely, and revert to the asm-generic one.
++		/* p1 ^= p2 */
++		v0 = veorq_u64(vld1q_u64(dp1 +  0), vld1q_u64(dp2 +  0));
++		v1 = veorq_u64(vld1q_u64(dp1 +  2), vld1q_u64(dp2 +  2));
++		v2 = veorq_u64(vld1q_u64(dp1 +  4), vld1q_u64(dp2 +  4));
++		v3 = veorq_u64(vld1q_u64(dp1 +  6), vld1q_u64(dp2 +  6));
++
++		/* p1 ^= p3 */
++		v0 = veorq_u64(v0, vld1q_u64(dp3 +  0));
++		v1 = veorq_u64(v1, vld1q_u64(dp3 +  2));
++		v2 = veorq_u64(v2, vld1q_u64(dp3 +  4));
++		v3 = veorq_u64(v3, vld1q_u64(dp3 +  6));
++
++		/* store */
++		vst1q_u64(dp1 +  0, v0);
++		vst1q_u64(dp1 +  2, v1);
++		vst1q_u64(dp1 +  4, v2);
++		vst1q_u64(dp1 +  6, v3);
++
++		dp1 += 8;
++		dp2 += 8;
++		dp3 += 8;
++	} while (--lines > 0);
++}
 
-Signed-off-by: Ard Biesheuvel <ardb@kernel.org>
----
- arch/arm/include/uapi/asm/types.h | 41 --------------------
- 1 file changed, 41 deletions(-)
+I really like how clean this is, I'm personally nodding my head here
 
-diff --git a/arch/arm/include/uapi/asm/types.h b/arch/arm/include/uapi/asm/types.h
-deleted file mode 100644
-index 1a667bc26510..000000000000
---- a/arch/arm/include/uapi/asm/types.h
-+++ /dev/null
-@@ -1,41 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
--#ifndef _UAPI_ASM_TYPES_H
--#define _UAPI_ASM_TYPES_H
--
--#include <asm-generic/int-ll64.h>
--
--/*
-- * The C99 types uintXX_t that are usually defined in 'stdint.h' are not as
-- * unambiguous on ARM as you would expect. For the types below, there is a
-- * difference on ARM between GCC built for bare metal ARM, GCC built for glibc
-- * and the kernel itself, which results in build errors if you try to build with
-- * -ffreestanding and include 'stdint.h' (such as when you include 'arm_neon.h'
-- * in order to use NEON intrinsics)
-- *
-- * As the typedefs for these types in 'stdint.h' are based on builtin defines
-- * supplied by GCC, we can tweak these to align with the kernel's idea of those
-- * types, so 'linux/types.h' and 'stdint.h' can be safely included from the same
-- * source file (provided that -ffreestanding is used).
-- *
-- *                    int32_t         uint32_t               uintptr_t
-- * bare metal GCC     long            unsigned long          unsigned int
-- * glibc GCC          int             unsigned int           unsigned int
-- * kernel             int             unsigned int           unsigned long
-- */
--
--#ifdef __INT32_TYPE__
--#undef __INT32_TYPE__
--#define __INT32_TYPE__		int
--#endif
--
--#ifdef __UINT32_TYPE__
--#undef __UINT32_TYPE__
--#define __UINT32_TYPE__	unsigned int
--#endif
--
--#ifdef __UINTPTR_TYPE__
--#undef __UINTPTR_TYPE__
--#define __UINTPTR_TYPE__	unsigned long
--#endif
--
--#endif /* _UAPI_ASM_TYPES_H */
--- 
-2.54.0.rc1.555.g9c883467ad-goog
+Taking the "bad" guesswork of the compiler here is also amazing, it also
+guarantees we won't get stupid regressions in the future.
 
+Also, that performance boost is even better ;) 
+
+I'm not the biggest expert of this subdirectory, but I understand it well.
+
+So well,
+
+Reviewed-by: Josh Law <joshlaw48@gmail.com>
+
+
+Thanks! (I will review your lib patches) :)
