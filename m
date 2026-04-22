@@ -1,54 +1,54 @@
 Received: from mail-wr1-f73.google.com (mail-wr1-f73.google.com [209.85.221.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0A8B383C86
-	for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 17:17:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFFED347532
+	for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 17:17:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776878246; cv=none; b=jP9xl/H+CtL4C4l0gk4ui89yUdLM+iv7zrN7HgXuxa/xQSsor9QS2pXE7x5T22mnH0dyUrCmgil608D+f2OBAdkV2aDJ4syDh5d+SXDbuHUYUjYftiFNxIUbIjSss+P3ZBqNn4xUwPtziSD+0Jf4Afh2GcZ2PyBGgBFimaUgwXU=
+	t=1776878247; cv=none; b=l9cfpuxYT8zYW6oJFuzbWK6FT3j8I4RtOOsfNB1tLkknNilUnYnFOdFagRLD7Yx8wtN+jWYbikiaGWsgdPLJuxNi6DLDJuJhdyXyRcAchQE0CUq5XlhwqJBSBwu5scs0QhdyDruNDyaxsCApEd/fXEBmWewEzknXqqC8HxX9SPE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776878246; c=relaxed/simple;
-	bh=3TSqmtAh8p9lAZuOtWE+Y2L1mmkvlXd6fQl3N6yASMw=;
+	s=arc-20240116; t=1776878247; c=relaxed/simple;
+	bh=PZFLd5rvqF35s/dAbltJY7JKK52t/+savyDJAyIJNmg=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=pCOcA31gsUoZZNS/sC+qXpitd8cad8BhyaXXNac3QLXNk7MQyn4B2QzIMkMm3LLqzoExyh3mPKK3jqVfXnjeKdADqSLIvhSrrzhOKaeK1mccMqsGXIUfKtLIKSZfptQU9MAlW6HX91L6k2uHFrJXC0UwTd2wx62Ujf9Isp795aM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=qe7I1ofq; arc=none smtp.client-ip=209.85.221.73
+	 To:Cc:Content-Type; b=Rq37wQsFIGfSrM0Ngx3D9+Z818SsksawEa4xV5yCcY6DYltvD0qtsh8F2AfHAhFu3aftPqddsVOVZeRTy+w3GAvEG8wSVEXnRlzBnvzkaLkSST17ld7QW8I+GNxqeBZV3Vg9ect98DAPobt6a0vYXviGnu0HyEBW2nQAJb/lfzc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=eXej9QCd; arc=none smtp.client-ip=209.85.221.73
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qe7I1ofq"
-Received: by mail-wr1-f73.google.com with SMTP id ffacd0b85a97d-43d70c27214so3929098f8f.3
-        for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 10:17:24 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="eXej9QCd"
+Received: by mail-wr1-f73.google.com with SMTP id ffacd0b85a97d-4411a36715dso2542508f8f.2
+        for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 10:17:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1776878243; x=1777483043; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1776878244; x=1777483044; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=kuqi0pEQ4aDjkPf/VIftR9YnRng2yC+64fHr+GUwwKA=;
-        b=qe7I1ofqyMnIEvPjFJncvywGBEWDwl+3GTGgzVn8uBuv40cpWeyIz6ETv0a7BJIF32
-         BBnNGwxshF9aELGDdT2NP2LhHFR9Y1Dklcb65OUPzRCluD8DLJkNduR9pKaaxPxRUJpf
-         GDzX7T8RW09o2qXDm4lufXnby4cgZLKtru+tK1S/qvjXXWSfMAJvvh6J5yQdZnLXx04o
-         tJo28Et+1yK7ncKrJSHC8UofiMNggjNQZJEhEHUn+Oh8JvnBW7Se4LMQ0wcB0YlsedND
-         9mdBm6eaVdO1s/KcAnHcGtOVS4VB5WVxGM2a3wW+yaQKfZe2a8iBy8/PITfif89kXsHF
-         /bWA==
+        bh=w1KAxfG6BFXtsRWghQ1pcNf8ys+JfrNCOwRGJsq7foU=;
+        b=eXej9QCdibVndbAGlsO3951JdgifK/V38IDeTy0s88SPIPaaIVBjas6lSZaT2Ph3Tx
+         VHeSL6m1LhMmwKEfCi5F1BhzTBjilYc4+1GJV3EllgNLMOJghOW4rMj8YFBrqvFEUGIb
+         kdsm/P2XUTd1qgq/c7lDCKdaAAbKBLXs8QeRALr1cw6Nn4uhmgE3CU1SYhxjswXOq9ND
+         20oimLnmulclslanAuTjT2mpxJXfvwNKCOQKqG6dX8hnooz524A/Txu9oI484Ia50qWF
+         X16jqqhb7C8TCpEWLjX86DwVbHsq7xZPhkaGUM+aZIgWq9rXDG5effJDmj2WguiVhqsp
+         Dr7g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776878243; x=1777483043;
+        d=1e100.net; s=20251104; t=1776878244; x=1777483044;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=kuqi0pEQ4aDjkPf/VIftR9YnRng2yC+64fHr+GUwwKA=;
-        b=m2XaPL1nA70FCbm63Qwlk0bCxnrLb5gZk777m+iNhOUC+oDONJtOKcVWt/FA+36v2X
-         bF3YcY+UtOf39XxTU+1L9SSYs20KhkbHi84dUx3LGPls7XhvAxhRwCs/PzV+rBHuWeG3
-         o79R0P7zwOjISprBuUYf1hSLiDkGAVc+Ac9hm/0w+URrbqhrwevIhVfPkky5fV2S/wcT
-         pcaNovaX3Ss3/BjrVHIXBg9jWgnydHZPdyaauvUnRpfO74eH/fPHjzXNRUUcQUOoNYEE
-         l8mm680kvhuns0VjFcvNjVYZZb2hWzoYbWDiuDYbD6Yik4aha+5bObbpy45P7dEg1V9m
-         uKoQ==
-X-Forwarded-Encrypted: i=1; AFNElJ8pAEd38jV7J4X5QJukgPt/KCI3ttjm1pVW/PHWAlE55l/vuSf85Im0GpmnCqjAci56ocLU2vQsW7dH@vger.kernel.org
-X-Gm-Message-State: AOJu0YxEWAj0zO+pawvGHbJyk+rdvppOqOdKnf0kNOHiEIIl8rM3u4GW
-	Qaup+tCRyo1HhTLZoTuyPkzNXyqIke4aZyRxEE9H+y6KawzRXwFp+hN0y6I9AvK81g5k8L2VNw=
+        bh=w1KAxfG6BFXtsRWghQ1pcNf8ys+JfrNCOwRGJsq7foU=;
+        b=cTv7B2d1NaiQ6gM4+S46aeRrrJlohasnEUNbjsDdBQATO7UO8rvnjE5YFNhVVSUD8l
+         rbLJhYCb+XoauW1xBlKFN/m221NslW2IGmDjiABFVs42ffjbhjz9uRsp4DeEdAJDWHDv
+         swARwEsd9CS2KLf4KY76zQktHWvrp7JNWGAqe2vvPfLCDDKKi41E6ysuqzzf7uqsGFeR
+         2I4/olla1Qbt9CRJGc5alANDZnuWm71wKvpzGXqBgR5w3+TXmZs7Q3TvvfzUgGUgqUki
+         JZyHb8Mqw8diIP1c15Ym92C1SAbfHczJgqyvfOZjZvmSvYy/f1wcjlr56PDlezgmBEvG
+         7evg==
+X-Forwarded-Encrypted: i=1; AFNElJ82Pnb6Ej24RzFWM2mh8U1PfHF4li9EiaESg/hu0AoZHAQ0SjttvQUg7QmZSw2qJUa9w6g5Ga+vwjDK@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy4IJPY1SP44UysqgxFa1oKvRClnBl89M+SSuX2Wo1Tr2EuSmCl
+	v/MUsutlO9zzeZ2PXLAQCAYD6pLjKJHlm0eHEmwDVqcrNj92BbvvC+h1zY+CRXF0R9GrOWSDvQ=
 	=
-X-Received: from wrre15.prod.google.com ([2002:adf:fd0f:0:b0:43f:ece8:6610])
- (user=ardb job=prod-delivery.src-stubby-dispatcher) by 2002:adf:e789:0:b0:43f:e94a:e773
- with SMTP id ffacd0b85a97d-43fe94ae82dmr21574127f8f.27.1776878243132; Wed, 22
- Apr 2026 10:17:23 -0700 (PDT)
-Date: Wed, 22 Apr 2026 19:17:03 +0200
+X-Received: from wrmy2.prod.google.com ([2002:adf:e6c2:0:b0:43d:780a:6fbd])
+ (user=ardb job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6000:1785:b0:43c:fc5c:a9fe
+ with SMTP id ffacd0b85a97d-43fe3dbf4e7mr36040481f8f.20.1776878244159; Wed, 22
+ Apr 2026 10:17:24 -0700 (PDT)
+Date: Wed, 22 Apr 2026 19:17:04 +0200
 In-Reply-To: <20260422171655.3437334-10-ardb+git@google.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -58,14 +58,14 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260422171655.3437334-10-ardb+git@google.com>
 X-Developer-Key: i=ardb@kernel.org; a=openpgp; fpr=F43D03328115A198C90016883D200E9CA6329909
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1168; i=ardb@kernel.org;
- h=from:subject; bh=+mzv579oicQpnDQky32vkIYpBcS6q+p6cFrwRCDc7Xs=;
- b=owGbwMvMwCVmkMcZplerG8N4Wi2JIfMl0+QsWclLTI08gu6hEhMu7A35euEEW6dSWKjl9/l72
- /V02k53lLIwiHExyIopsgjM/vtu5+mJUrXOs2Rh5rAygQxh4OIUgIlcjGZkWBPU73Lj+qWTd63+
- v1Vte9Jum7H+F++3/57q01c99cpjXszwT3Ges/Pv8JpTnFHXRMzrzzjrnd5eURr07u203D1/Nu1 cxAIA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2395; i=ardb@kernel.org;
+ h=from:subject; bh=koeyEC8RTAmtOu/HBUQeDz+lw7UQyz/6JF7WLaYxDho=;
+ b=owGbwMvMwCVmkMcZplerG8N4Wi2JIfMl0xQzr0KxmdZfvl+P5DSYP6tiwby57XVLbdaKvFJYd
+ TqAx5i7o5SFQYyLQVZMkUVg9t93O09PlKp1niULM4eVCWQIAxenAEwk6Ssjwx2t741yoiGzA79V
+ zeB3urdbxE9y8gYlxXWrAoTv+nRN5mRkeGwV3VUkElTDfrf232l2DlXJ7kYRmd57Vp+fq1xdz/a DBwA=
 X-Mailer: git-send-email 2.54.0.rc2.544.gc7ae2d5bb8-goog
-Message-ID: <20260422171655.3437334-17-ardb+git@google.com>
-Subject: [PATCH 7/8] lib/raid6: Include asm/neon-intrinsics.h rather than arm_neon.h
+Message-ID: <20260422171655.3437334-18-ardb+git@google.com>
+Subject: [PATCH 8/8] ARM: Remove hacked-up asm/types.h header
 From: Ard Biesheuvel <ardb+git@google.com>
 To: linux-arm-kernel@lists.infradead.org
 Cc: linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org, 
@@ -75,43 +75,68 @@ Content-Type: text/plain; charset="UTF-8"
 
 From: Ard Biesheuvel <ardb@kernel.org>
 
-arm_neon.h is a compiler header which needs some scaffolding to work
-correctly in the linux context, and so it is better not to include it
-directly. Both ARM and arm64 now provide asm/neon-intrinsics.h which
-takes care of this.
+ARM has a special version of asm/types.h which contains overrides for
+certain #define's related to the C types used to back C99 types such as
+uint32_t and uintptr_t.
+
+This is only needed when pulling in system headers such as stdint.h
+during the build, and this only happens when using NEON intrinsics,
+for which there is now a dedicated header file.
+
+So drop this header entirely, and revert to the asm-generic one.
 
 Signed-off-by: Ard Biesheuvel <ardb@kernel.org>
 ---
- lib/raid6/neon.uc            | 2 +-
- lib/raid6/recov_neon_inner.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ arch/arm/include/uapi/asm/types.h | 41 --------------------
+ 1 file changed, 41 deletions(-)
 
-diff --git a/lib/raid6/neon.uc b/lib/raid6/neon.uc
-index 355270af0cd6..3dc20511103a 100644
---- a/lib/raid6/neon.uc
-+++ b/lib/raid6/neon.uc
-@@ -24,7 +24,7 @@
-  * This file is postprocessed using unroll.awk
-  */
- 
--#include <arm_neon.h>
-+#include <asm/neon-intrinsics.h>
- #include "neon.h"
- 
- typedef uint8x16_t unative_t;
-diff --git a/lib/raid6/recov_neon_inner.c b/lib/raid6/recov_neon_inner.c
-index f9e7e8f5a151..06b2967fb8b6 100644
---- a/lib/raid6/recov_neon_inner.c
-+++ b/lib/raid6/recov_neon_inner.c
-@@ -4,7 +4,7 @@
-  * Copyright (C) 2017 Linaro Ltd. <ard.biesheuvel@linaro.org>
-  */
- 
--#include <arm_neon.h>
-+#include <asm/neon-intrinsics.h>
- #include "neon.h"
- 
- #ifdef CONFIG_ARM
+diff --git a/arch/arm/include/uapi/asm/types.h b/arch/arm/include/uapi/asm/types.h
+deleted file mode 100644
+index 1a667bc26510..000000000000
+--- a/arch/arm/include/uapi/asm/types.h
++++ /dev/null
+@@ -1,41 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
+-#ifndef _UAPI_ASM_TYPES_H
+-#define _UAPI_ASM_TYPES_H
+-
+-#include <asm-generic/int-ll64.h>
+-
+-/*
+- * The C99 types uintXX_t that are usually defined in 'stdint.h' are not as
+- * unambiguous on ARM as you would expect. For the types below, there is a
+- * difference on ARM between GCC built for bare metal ARM, GCC built for glibc
+- * and the kernel itself, which results in build errors if you try to build with
+- * -ffreestanding and include 'stdint.h' (such as when you include 'arm_neon.h'
+- * in order to use NEON intrinsics)
+- *
+- * As the typedefs for these types in 'stdint.h' are based on builtin defines
+- * supplied by GCC, we can tweak these to align with the kernel's idea of those
+- * types, so 'linux/types.h' and 'stdint.h' can be safely included from the same
+- * source file (provided that -ffreestanding is used).
+- *
+- *                    int32_t         uint32_t               uintptr_t
+- * bare metal GCC     long            unsigned long          unsigned int
+- * glibc GCC          int             unsigned int           unsigned int
+- * kernel             int             unsigned int           unsigned long
+- */
+-
+-#ifdef __INT32_TYPE__
+-#undef __INT32_TYPE__
+-#define __INT32_TYPE__		int
+-#endif
+-
+-#ifdef __UINT32_TYPE__
+-#undef __UINT32_TYPE__
+-#define __UINT32_TYPE__	unsigned int
+-#endif
+-
+-#ifdef __UINTPTR_TYPE__
+-#undef __UINTPTR_TYPE__
+-#define __UINTPTR_TYPE__	unsigned long
+-#endif
+-
+-#endif /* _UAPI_ASM_TYPES_H */
 -- 
 2.54.0.rc1.555.g9c883467ad-goog
 
