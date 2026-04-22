@@ -1,224 +1,168 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f74.google.com (mail-wm1-f74.google.com [209.85.128.74])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20E6C3CB2D9
-	for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 09:58:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776851911; cv=pass; b=iUAd7LDaHn07wF1AxfeSo3dThAzTHoR/vzaEt3ooCm+iOixJ1UYEOlY0vw9Yf7mYhWdg962HYUq5Ga91a2UGAoW0FHXx9TQrAegnWS/NpwmqK9KUni/UZ3yIK19a4bIXsKwY+lxxKGDqRwsQnG6dc92sdunY1TX5U+0+I30LxCA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776851911; c=relaxed/simple;
-	bh=EC11Y3vyMmB/Q/cm7lJbxm1JG8YBrXNT034yIEeyXt0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=OdnG3icQl5/qF8WohinfGf/feDGtER6xh3lo3dECgrXHH44oUNGB8e20HQDKHhungGBlMzlcUOo8Sh6vkfMJrXDqjgB+wkC7AKloIHF0N1v/OMrM1aysciseNoGPDywfrnl4Zt0aW+W4OweTY3jJyYLQuD4FIE/0KnziZp+8BrA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TrqCW8KV; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=sEtobtWu; arc=pass smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EB3C347532
+	for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 17:17:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.74
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776878240; cv=none; b=qTXy6VYbbTDBPI/mXjicPFbWlo8oU2on8I+ep1FkFYK+ZSzg99zDaiI76vTzS4FApX7ApO4sg4GxbIGA5rhtPA1y8lwNXuHQg8jBz9qTruOEguDW3E8GswaFPegtlEdLE21lTLYTfochUxTnBV6K1HI03edI9Y5ej7lJljCQmZc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776878240; c=relaxed/simple;
+	bh=d7B4uk59sJLFiJp148XsJHsOzksESJvDQl7EjYSP6jM=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=UNkphsV5+8sDwz5wbAU08aW2gK0eJUslHv//eVnplDWuy1+n+9epaJ9DeT/KqohKJq8qGDEIUo9aSOIgOSpcTDZYhdUh0+2O3QRTeQCbQD+dh7c00D46AByp7NW5lguNVBypOLytTA1vWZmCaPLUDq5ouAV3I2rc+C36X4A2u7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=EOWvoFpC; arc=none smtp.client-ip=209.85.128.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ardb.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TrqCW8KV";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="sEtobtWu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1776851909;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=tmwNlum+GScoMSRK+6uvuC4//taXSJ0HkuWKsvWIqig=;
-	b=TrqCW8KVXcuGkyb5TRGvggBj2qCk7TboNm7vGxDla0b4VBKaRjoJvoseL7PEJfNdg4Xa+y
-	aH9tXaisCcn6gmZWLGbaXkrsE5DpzfdAkUH7aFEwkEN0JNz5cIS5WBSbSV/x149Yjxg6ha
-	gGfEoltGDVwjZpboLLcgwMoC8/gsXhc=
-Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
- [209.85.208.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-107-GIV0TF1VMximU75WLYNjPQ-1; Wed, 22 Apr 2026 05:58:28 -0400
-X-MC-Unique: GIV0TF1VMximU75WLYNjPQ-1
-X-Mimecast-MFC-AGG-ID: GIV0TF1VMximU75WLYNjPQ_1776851907
-Received: by mail-lj1-f197.google.com with SMTP id 38308e7fff4ca-38e817d9498so24341201fa.2
-        for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 02:58:27 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1776851905; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Px6/wtiuEoO4mzFPYVA5hdX+ewRNwgCb+ziDsUTDFKLDbjnPAt0ZymmPWPif661Pa8
-         FsKg+l362rWlNOv0V3DfdZ10eHae1xelcxoJFVMTTTyT92XmToAgfxor08Hf8X3dtb/Z
-         5+SL0Ggz2X+ogr8xWS9JXbS/ADB2kitw0aj1XzDFJJmPzGbI3kfTuFE4uWFW8Sw4UgcE
-         dP8A22c2t2eY00mMsKq/0q+dSVn5a3DjghRhpELKh1DUFo4vDrFP3SQ/LzHoCjSpZBto
-         LDBE3p6LR1d7v5gfy5CNA0MOKuxq3g5emyC/ESbGKg1JIVzDtArQcPQwNntJGwkU5YbV
-         jOvQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=tmwNlum+GScoMSRK+6uvuC4//taXSJ0HkuWKsvWIqig=;
-        fh=+N3VoTIp/NYPExHC6q9GyoUBOluZV1NYyTLCMlizsec=;
-        b=Ma/v17xaeXKGhA3IyNYFjn9HYnHghDsSdvo8OF1NIuJfgVTUHf/eOKU7kAU1KlFzDO
-         ZyCEliz2K5L9YR7OtajmgO3dLbROB4ZSvxcd+Y0mWlQncgqqSlr9l/NU5GUx5AZ86jbD
-         lQFXdVGnD7xHRh0SJEXKLWcVVwKdNQtFrXwi74HDMsNOfoKMOOPSRwQZvj+zA3CxaKIW
-         I9Rq4NVNFEkkHtbQbCSSWm0F05vzRjTWg9kfG5+J1zYgclwmuaPuB2NSXvd86RDD3fSv
-         Qh7w1RwevNAcuHf9IJWR7ck+Ma95+uJ9Vg5ikR9LBUV2mysFwtehJ548q2URSo7GQops
-         sJag==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="EOWvoFpC"
+Received: by mail-wm1-f74.google.com with SMTP id 5b1f17b1804b1-48a55de6fb0so19621885e9.3
+        for <linux-raid@vger.kernel.org>; Wed, 22 Apr 2026 10:17:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1776851905; x=1777456705; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tmwNlum+GScoMSRK+6uvuC4//taXSJ0HkuWKsvWIqig=;
-        b=sEtobtWumWE7+yWMgUiU85jm8qce+zR1tdIAjUnPM8hnfvnspp3TufMR9Ffwhh/JKB
-         uqyJP2VLh0b0I76J1xRy0osQO4LE+4dMFYOin0rL3AR4uXjSkXfRJXKU6/MIEMFnKGrt
-         5bZn94qNOt1qG58GAWjEkYuCEtLwEZrD+GmHNRatcDqfldQvG6JoZMA4IAzTTTPYI7SW
-         TluJ73E1EFZI1MZy4CFBtSy+YLcSsK5JFDh77cI6v0xWvr45Ke4cc8EJ93U+TqkAbhJX
-         RAwabkk/Onx0vEq4zqEPqGgGlLhinMI1K7zzRzH2F6xizd0aCL84Gs+VhoBlgwMLN5iA
-         6huw==
+        d=google.com; s=20251104; t=1776878238; x=1777483038; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=deqUl/0DmpTgTWRSS3T6H4sZGghf3sR2Je/I0n4Iar8=;
+        b=EOWvoFpCUvrZKJciFQDvEQyFCq6FSsTFQPpFPQlIwWZhcI3d0+V1GHUrIkxSPV244e
+         uAmTH3WyE4WObhfOaUqEbR4L7sylgGA4peKtBtHxlVRymogD5IF9UFC5toBTH0ZgvtqA
+         V+/N5oTMP8JxGhad/Dx2feMvPgrDOj+Oqild/40DLVxEgvTB1IvTmzJdmWkJMBIFKPwV
+         BtxQPzJmIddzSh2BXfhrG7zLvr5hlFWkMei50dH6wO3ftd75jaKEXCaA9qVePaEF5faE
+         aqe4yYyHHHpMfCR8SkWmmKfBefGiLSQk7N5lqXlOSDZRKlzM8rjtJSrd7ETtB9hKQ/52
+         IEww==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776851905; x=1777456705;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=tmwNlum+GScoMSRK+6uvuC4//taXSJ0HkuWKsvWIqig=;
-        b=XkfSLi4CqYOJgvMB8SixTegOVOI4KUWx186a9aAGcwNOiPYclrsgJtrBoXRWKqP9vZ
-         tquQAVSuCO1xLhaqUFxdRHWrYT0BqwpzHGIpdb+r5yyvDHhPdzX0KwC/FaHrJwWyeBgk
-         3UDHLCHL29D0mGSu+9QW7GNJ4hZ4nUs9zwuris+ty8VWIO6xDqnJKTTdII1TfS2zW8N9
-         JQ4JEQpvAqD2TTBBUAJ19H5DmqrQNWBrZ1kHtdNqADA7NnlAbXcDHjGXdhu1jakDcDSP
-         lgXTsZillemHEsfoy+GMuQmkjtG/DOG0MlVcAwaIHdGRVF6FLSV+JBWdlPem5jCvPQSE
-         /ONw==
-X-Forwarded-Encrypted: i=1; AFNElJ+GJ7aAN/EAlvWt2o3wB/GjM7Iu6DZmULQ1VoJ9S0GqYG14WFGXOSBGrDJHPN5/x8HPY7S8qMdTZvIZ@vger.kernel.org
-X-Gm-Message-State: AOJu0YxjInPyNeVeqcVqtwuRaxi2aFVcwfOjdWsLmz0twdDsXtf1KMFd
-	F/HgPK1qA7tsv2Lnb14Hv/7n9d+kzrBv5ZGrM/fre6ZXmziX0heq1ldyJ99feMtawZDwXpJEqgQ
-	vrOr0KdLv6sWQF8a6DDlhBu+oSH1TimS9newXewqvfcz6tF3J+rtRPrlDkO0HTbatIIaUZR+mLf
-	/88m02cada4U+K2R3yX+JtpK49BzkhmbpjbopjN4VL9ATCvcbOlvM=
-X-Gm-Gg: AeBDieuZV3wbOptmoyGHibeRw9sk9LwQCHdArvsMHTWi9p2F0YG2yP3DaXv6FbbfxnG
-	hnEBemNwc+9bnuxZQjRg7CZWQuSrYxXqlNhxkftG+uQKczED/DsiMI7jVYdjnux22+VKKWzIePP
-	U7R1evK5F53uyBkSLQ4dsZlWpTQ7fY+7WoKkLt5nt36ei1qsSB65JYlKD1wOrNFSX82MKNmi2Sv
-	mm4PKbOu5PCvgITZ5X8ynbSmQpIXRTDSiEA9fKMewVedGJgNc+yUUMMXjfEYBcS2grV+md4s+Ac
-	nlmM/vkLE4i9
-X-Received: by 2002:a05:6512:12c4:b0:5a4:1687:a32 with SMTP id 2adb3069b0e04-5a4172e47damr7674245e87.33.1776851905462;
-        Wed, 22 Apr 2026 02:58:25 -0700 (PDT)
-X-Received: by 2002:a05:6512:12c4:b0:5a4:1687:a32 with SMTP id
- 2adb3069b0e04-5a4172e47damr7674230e87.33.1776851904853; Wed, 22 Apr 2026
- 02:58:24 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1776878238; x=1777483038;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=deqUl/0DmpTgTWRSS3T6H4sZGghf3sR2Je/I0n4Iar8=;
+        b=cfs9hYHVZoDbBkaaNDPbNW7MOM8BBMNXeo9W1HGAHQorwfiIYS0xVD9OiWtT8M9IbB
+         pBGRn+nIwv0xO961zIQO1nkX+jfy1g2QibytWWneRTW6p+51A37A/dijSZTDIuNsUkVj
+         4q862XsGaSGGao2MVahM2OUeB16z8z6ryj27o8NlPV4XHBAh4xqF8K8kEkbVrL2pHksb
+         zUQaekbx4tfQ/1lds8DMskjUOkVwFHRpHdBG3T/NCXLhysXRGaoFVcTjhhFW+iZ1Da5j
+         w1xNG8dYcv8aB8ikbjKSEoogSNqU87UjuwwXCQ/M7ltviZ/9ysaiE6m9w90SP3qiTpXj
+         py5w==
+X-Forwarded-Encrypted: i=1; AFNElJ8yKB6lhI+iJYoWzEmRfJBsU4XJMsCwpe5jqia8KA3L00RCV1sbbiLWdLjPI0aTPBzM7knZ+xRzccvs@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyh0UDFjveDtM2cdxm8bXv28KfSLHrJoYyG8kpGvJQoNDgu2qbX
+	BkSL3bbwSp/nqHfD9ZthCto+5eyje+084XLWfET5l7DUhrsmZTVBDvn1WdNKy3DALhylH4dbgg=
+	=
+X-Received: from wmer5.prod.google.com ([2002:a05:600c:4345:b0:48a:5970:2007])
+ (user=ardb job=prod-delivery.src-stubby-dispatcher) by 2002:a05:600c:8183:b0:488:ab26:8fe0
+ with SMTP id 5b1f17b1804b1-488fb765b1dmr277032245e9.15.1776878237613; Wed, 22
+ Apr 2026 10:17:17 -0700 (PDT)
+Date: Wed, 22 Apr 2026 19:16:57 +0200
+In-Reply-To: <20260422171655.3437334-10-ardb+git@google.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <ad6FNUtSCS_zTrHW@redhat.com> <20260414190350.1946406-1-bmarzins@redhat.com>
-In-Reply-To: <20260414190350.1946406-1-bmarzins@redhat.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Wed, 22 Apr 2026 17:58:11 +0800
-X-Gm-Features: AQROBzBrq25lZuxIRU48QL5iysCPWwrt42l70tafWZ7uVSy37zefF7nWrPHUtu8
-Message-ID: <CALTww295wXriSs0zWwS4bsYfQiJ0-xKLFYmqO5P2eLBxUe+yGg@mail.gmail.com>
-Subject: Re: [RFC PATCH] dm-raid: only requeue bios when dm is suspending.
-To: Benjamin Marzinski <bmarzins@redhat.com>
-Cc: Yang Xiuwei <yangxiuwei@kylinos.cn>, 
-	Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>, 
-	Li Nan <linan666@huaweicloud.com>, Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, 
-	dm-devel@lists.linux.dev, Nigel Croxon <ncroxon@redhat.com>
+Mime-Version: 1.0
+References: <20260422171655.3437334-10-ardb+git@google.com>
+X-Developer-Key: i=ardb@kernel.org; a=openpgp; fpr=F43D03328115A198C90016883D200E9CA6329909
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3447; i=ardb@kernel.org;
+ h=from:subject; bh=zwZvU5669f7aDZao7jQAWD9kIr1c+dLuC0i1hvVVKpM=;
+ b=owGbwMvMwCVmkMcZplerG8N4Wi2JIfMlU1fb9UNFytb8/R6yr4vqjz276L+i5vzFZq2Wf/tWX
+ 9rcrejRUcrCIMbFICumyCIw+++7nacnStU6z5KFmcPKBDKEgYtTACbSE8/IsLv09KSzW4LMjrcF
+ vT9w5UcO17XrYrsvqJgKT3Qy69N+wsXwT6MhqrhI3mZtitiK1Gsx4jVWPX92NrKk/To9cTZrxKU YLgA=
+X-Mailer: git-send-email 2.54.0.rc2.544.gc7ae2d5bb8-goog
+Message-ID: <20260422171655.3437334-11-ardb+git@google.com>
+Subject: [PATCH 1/8] ARM: Add a neon-intrinsics.h header like on arm64
+From: Ard Biesheuvel <ardb+git@google.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org, 
+	Ard Biesheuvel <ardb@kernel.org>, Christoph Hellwig <hch@lst.de>, Russell King <linux@armlinux.org.uk>, 
+	Arnd Bergmann <arnd@arndb.de>, Eric Biggers <ebiggers@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Apr 15, 2026 at 3:03=E2=80=AFAM Benjamin Marzinski <bmarzins@redhat=
-.com> wrote:
->
-> returning DM_MAPIO_REQUEUE from the target map() function only requeues
-> the bio during noflush suspends. During regular operations or during
-> flushing suspends, it fails the bio. Failing the bio during flushing
-> suspends is the correct behavior here. We cannot handle the bio, and we
-> cannot suspends while it is outstanding. But during normal operations,
-> we should not push the bio back to do. Instead, wait for the reshape
-> to be resumed.
->
-> Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
-> ---
->
-> Yang Xiuwei, if you are still able to see I/O errors during LVM testing,
-> does this patch fix them?
->
->  drivers/md/dm-raid.c | 7 +++++++
->  drivers/md/md.h      | 1 +
->  drivers/md/raid5.c   | 6 ++++--
->  3 files changed, 12 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-> index 4bacdc499984..cac61d57e7e2 100644
-> --- a/drivers/md/dm-raid.c
-> +++ b/drivers/md/dm-raid.c
-> @@ -3831,6 +3831,7 @@ static void raid_presuspend(struct dm_target *ti)
->          * resume, raid_postsuspend() is too late.
->          */
->         set_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
-> +       WRITE_ONCE(mddev->dm_suspending, 1);
->
->         if (!reshape_interrupted(mddev))
->                 return;
-> @@ -3847,6 +3848,9 @@ static void raid_presuspend(struct dm_target *ti)
->  static void raid_presuspend_undo(struct dm_target *ti)
->  {
->         struct raid_set *rs =3D ti->private;
-> +       struct mddev *mddev =3D &rs->md;
-> +
-> +       WRITE_ONCE(mddev->dm_suspending, 0);
->
->         clear_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
->  }
-> @@ -3854,6 +3858,7 @@ static void raid_presuspend_undo(struct dm_target *=
-ti)
->  static void raid_postsuspend(struct dm_target *ti)
->  {
->         struct raid_set *rs =3D ti->private;
-> +       struct mddev *mddev =3D &rs->md;
->
->         if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) =
-{
->                 /*
-> @@ -3864,6 +3869,8 @@ static void raid_postsuspend(struct dm_target *ti)
->                 mddev_suspend(&rs->md, false);
->                 rs->md.ro =3D MD_RDONLY;
->         }
-> +       WRITE_ONCE(mddev->dm_suspending, 0);
-> +
->  }
->
->  static void attempt_restore_of_faulty_devices(struct raid_set *rs)
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index ac84289664cd..e8d7332c5cb9 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -463,6 +463,7 @@ struct mddev {
->         int                             delta_disks, new_level, new_layou=
-t;
->         int                             new_chunk_sectors;
->         int                             reshape_backwards;
-> +       int                             dm_suspending;
->
->         struct md_thread __rcu          *thread;        /* management thr=
-ead */
->         struct md_thread __rcu          *sync_thread;   /* doing resync o=
-r reconstruct */
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 8854e024f311..d528263f92a3 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -6042,8 +6042,10 @@ static enum stripe_result make_stripe_request(stru=
-ct mddev *mddev,
->         raid5_release_stripe(sh);
->  out:
->         if (ret =3D=3D STRIPE_SCHEDULE_AND_RETRY && reshape_interrupted(m=
-ddev)) {
-> -               bi->bi_status =3D BLK_STS_RESOURCE;
-> -               ret =3D STRIPE_WAIT_RESHAPE;
-> +               if (!mddev_is_dm(mddev) || READ_ONCE(mddev->dm_suspending=
-)) {
-> +                       bi->bi_status =3D BLK_STS_RESOURCE;
-> +                       ret =3D STRIPE_WAIT_RESHAPE;
-> +               }
->                 pr_err_ratelimited("dm-raid456: io across reshape positio=
-n while reshape can't make progress");
->         }
->         return ret;
-> --
-> 2.50.1
->
+From: Ard Biesheuvel <ardb@kernel.org>
 
-Looks good to me.
-Reviewed-by: Xiao Ni <xni@redhat.com>
+Add a header asm/neon-intrinsics.h similar to the one that arm64 has.
+This makes it possible for NEON intrinsics code to be shared seamlessly
+between ARM and arm64.
+
+Signed-off-by: Ard Biesheuvel <ardb@kernel.org>
+---
+ Documentation/arch/arm/kernel_mode_neon.rst |  4 +-
+ arch/arm/include/asm/neon-intrinsics.h      | 60 ++++++++++++++++++++
+ 2 files changed, 63 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/arch/arm/kernel_mode_neon.rst b/Documentation/arch/arm/kernel_mode_neon.rst
+index 9bfb71a2a9b9..1efb6d35b7bd 100644
+--- a/Documentation/arch/arm/kernel_mode_neon.rst
++++ b/Documentation/arch/arm/kernel_mode_neon.rst
+@@ -121,4 +121,6 @@ observe the following in addition to the rules above:
+ * Compile the unit containing the NEON intrinsics with '-ffreestanding' so GCC
+   uses its builtin version of <stdint.h> (this is a C99 header which the kernel
+   does not supply);
+-* Include <arm_neon.h> last, or at least after <linux/types.h>
++* Do not include <arm_neon.h> directly: instead, include <asm/neon-intrinsics.h>,
++  which tweaks some macro definitions so that system headers can be included
++  safely.
+diff --git a/arch/arm/include/asm/neon-intrinsics.h b/arch/arm/include/asm/neon-intrinsics.h
+new file mode 100644
+index 000000000000..8b80c05ce1d7
+--- /dev/null
++++ b/arch/arm/include/asm/neon-intrinsics.h
+@@ -0,0 +1,60 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++
++#ifndef __ASM_NEON_INTRINSICS_H
++#define __ASM_NEON_INTRINSICS_H
++
++#ifndef __ARM_NEON__
++#error You should compile this file with '-march=armv7-a -mfloat-abi=softfp -mfpu=neon'
++#endif
++
++#include <asm-generic/int-ll64.h>
++
++/*
++ * The C99 types uintXX_t that are usually defined in 'stdint.h' are not as
++ * unambiguous on ARM as you would expect. For the types below, there is a
++ * difference on ARM between GCC built for bare metal ARM, GCC built for glibc
++ * and the kernel itself, which results in build errors if you try to build
++ * with -ffreestanding and include 'stdint.h' (such as when you include
++ * 'arm_neon.h' in order to use NEON intrinsics)
++ *
++ * As the typedefs for these types in 'stdint.h' are based on builtin defines
++ * supplied by GCC, we can tweak these to align with the kernel's idea of those
++ * types, so 'linux/types.h' and 'stdint.h' can be safely included from the
++ * same source file (provided that -ffreestanding is used).
++ *
++ *                    int32_t     uint32_t          intptr_t     uintptr_t
++ * bare metal GCC     long        unsigned long     int          unsigned int
++ * glibc GCC          int         unsigned int      int          unsigned int
++ * kernel             int         unsigned int      long         unsigned long
++ */
++
++#ifdef __INT32_TYPE__
++#undef __INT32_TYPE__
++#define __INT32_TYPE__		int
++#endif
++
++#ifdef __UINT32_TYPE__
++#undef __UINT32_TYPE__
++#define __UINT32_TYPE__		unsigned int
++#endif
++
++#ifdef __INTPTR_TYPE__
++#undef __INTPTR_TYPE__
++#define __INTPTR_TYPE__		long
++#endif
++
++#ifdef __UINTPTR_TYPE__
++#undef __UINTPTR_TYPE__
++#define __UINTPTR_TYPE__	unsigned long
++#endif
++
++/*
++ * genksyms chokes on the ARM NEON instrinsics system header, but we
++ * don't export anything it defines anyway, so just disregard when
++ * genksyms execute.
++ */
++#ifndef __GENKSYMS__
++#include <arm_neon.h>
++#endif
++
++#endif /* __ASM_NEON_INTRINSICS_H */
+-- 
+2.54.0.rc1.555.g9c883467ad-goog
 
