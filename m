@@ -1,127 +1,161 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from va-2-26.ptr.blmpb.com (va-2-26.ptr.blmpb.com [209.127.231.26])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E29AB37C118
-	for <linux-raid@vger.kernel.org>; Thu, 23 Apr 2026 10:13:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88C0713AF2
+	for <linux-raid@vger.kernel.org>; Fri, 24 Apr 2026 02:11:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.26
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776939212; cv=none; b=VUqDh5SbzF+zcuF5ZwE7hUTW9ZOPCeTVcOJ9BvIYqOBh7bccU5r1MQAgKUpW2pThviXrdic0c2kzdYqoYy2ci5P3yngQhK2s/3brWU37/RU3uqvopf9t3y/BN71PQHuvaNrDcRzy7HCh+0tKmBEZenOQyFPiCx/sEyhpBxnl/hM=
+	t=1776996700; cv=none; b=SAeWkv98BwXbYvGKhdEU42Azv+BPWKAHkNfAsHAgLrwDmQ1TbWRcHBrKldU6gVVRZZKO7rFoczIBYPYVywEBaYfy8neNNSj5eAJikKZhokvAQZMBloN1TBamZibdD4XHvDUOKF62gAsVAcXJiC/0vyzmx3jmD8n0Z5RGvCv794g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776939212; c=relaxed/simple;
-	bh=BFgSLuyGF45cFZJ5kjot3K10/DX2p6hJz1boGY1v0Nk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dbUhLOONLfzZrreKuSJ+gOdNTC7nsspNP8HILp5l5OWd6PTGkGSWRFH3zYAqoAfFiH9cITqvCOBluujsK0nXHYroEu/U6sHe+zoK6ksJa/B7MZpXzwcg8B3sjE8CbMyarvZ8JyTA7lQ9LjThngDZXWsUPGhb/QWMt6RJlrpaLtQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VZZrapHR; arc=none smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1776996700; c=relaxed/simple;
+	bh=8BeiSIKftjAqMsTbedJvrAZdtGSjomhEVgAcIXTimhc=;
+	h=From:Message-Id:In-Reply-To:References:Content-Type:
+	 Content-Disposition:Cc:Subject:Date:To:Mime-Version; b=GqtRIac/RoHiA15mh9kw0qOphX4fbOUcxULjWrYOf0AUeOA758iDeSTUfyjRqDEeTCIeSH71qNMmL0ZYUPvy8rHS+P89Jztz6Nj3KhhbdUFoInM7cdboUAKS/FnOUVGCKw0qb2t9x6BsmRRu/MzIJ525q+GR6pss8RQh2eS5PNs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=Gn8nlV3E; arc=none smtp.client-ip=209.127.231.26
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VZZrapHR"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4838c15e3cbso59843445e9.3
-        for <linux-raid@vger.kernel.org>; Thu, 23 Apr 2026 03:13:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776939208; x=1777544008; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QJJoHWfjIYcyVr3kqYM2gLBS1v38HSn5RQ7YXMRbXlc=;
-        b=VZZrapHRK74utgJ8+S4HLSoOj6j1Q2KrEFJOjUH6h51OCdTVVfpOOzfABZJ8fkDszq
-         lVQ3WO453FOh3Xr5Q3v3lPaZukeOQWzyw/HeFcN1Fr39QEw5CCO6dXCOW6drT73lQsQS
-         QhySNGgl6+9hYpmdbquHHEytg495qPi1vyEBEPBUYfN/hVkoYJXgK1AuTZeVbUSMN3u2
-         ev0QT66Qo95qfWnHTaUTxsLyWmwUROg7MLmP7T/E6NWVKv6j4SsGvu2W1H/WGtihnWqb
-         hc+ghd1PwElGJXmuVCH+VOtrAOBqazStTYESzsqSxArMFKeEWfkPAoAd+QMvMRLA/XNY
-         I0YQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776939208; x=1777544008;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=QJJoHWfjIYcyVr3kqYM2gLBS1v38HSn5RQ7YXMRbXlc=;
-        b=cj1saK/nTMVF2H2K35PCENkBKmQ7iJzwtHB8DkCjPrNRlGJXfQ5fykQSmeQriEkqnF
-         ms/a3X9FeGC5tdfPZbK/EbpFg8YIwDBNJA46mLT6WMSqt4AWfebs3PB66DLxvpPcCCpP
-         WUDMorQAduK3wyCa+IlTR8Ap/EvrFNRo2ejWD2YbWn8gkoBUC7z6cQoVlchxpEaNkCQu
-         4uqD4tI52fkD+Nt13uimH6is+gnIdu0OIEZDckJ1IjRag0HNHNp/3U1B1nFlI01z1ij0
-         oilPFjHjWF+OJbzHTaIp7eestuYY+cqdiLkfcWTCqFIzM8t9hQz3lftJ/tRMh3F4lYAw
-         lBlA==
-X-Gm-Message-State: AOJu0YzAjj4qTMpmK4zTR2ylbJvSThnQ1UeAfV2MxFI/TR5Caw7etq/M
-	GGjUXvj83XFJdjz8NduNEoN7gMRgHwjCZM1qkfQo7Y/2lOWzQ8WuCTU1
-X-Gm-Gg: AeBDieumMvBL2QOJANgz25KNmPaJsxzmJQrFf6i//z4hIQT2azPkAH8MTNjtBruP7tv
-	EakDoTPGZOU+PXfxpOsjgqGhFAelO16M5Vh7vDgXrg+ELHs97YpG2k95WmePk37+Dsq6+Mx5PzG
-	Fj/YTqqFTr968YgO66jUHO6Up2EsgyRZ2h3yauC/UGEKgbv0P62ckiCeQbIE4Iw+zZR7YOd7rBA
-	9RmasQKVTEZqFFifvgaOXECq30xbdl+JZaZ0PbHYi4e90Pc1RuP8mTM4r4ZaiDHJpkyh0st1WCY
-	l92/qjWuhaAjgsGZjWwN+LNIS3D8YF0L3lHP9jef6TvHP9wmdU/H6JqgnYd8AWvxf6nnPDZNM6+
-	mFP5AQvRwCEYjqcyG68ib274NwvX2Op0zj7J6ZGqFtz+ZFwcly0hGz7ZwD2l3Rj11uC4/92Pe8C
-	DjEpE1oHzF8RKN0qkMI5NBtouyr6tMv629HdlqjxBo79cw
-X-Received: by 2002:a05:600c:5294:b0:486:fa35:aef2 with SMTP id 5b1f17b1804b1-488fb73d53bmr349782545e9.4.1776939208169;
-        Thu, 23 Apr 2026 03:13:28 -0700 (PDT)
-Received: from yocto.. ([2a02:3037:60e:ee7d:34af:34c4:890b:2c47])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43fe4e4d525sm49741217f8f.31.2026.04.23.03.13.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Apr 2026 03:13:27 -0700 (PDT)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: song@kernel.org,
-	yukuai@fnnas.com
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-Subject: [PATCH 3/3] md: use ATTRIBUTE_GROUPS() for md default sysfs attributes
-Date: Thu, 23 Apr 2026 12:13:03 +0200
-Message-ID: <20260423101303.48196-4-abd.masalkhi@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260423101303.48196-1-abd.masalkhi@gmail.com>
-References: <20260423101303.48196-1-abd.masalkhi@gmail.com>
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="Gn8nlV3E"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1776996686;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=b3AythhQp67R21PdOExFx24M/GF/mchYoydZOIA2mZk=;
+ b=Gn8nlV3EX3TxmhMQtI7+RpZqtpD9vivqtLdVeXSC6ruoYTiNpRlxKTvSVncjPeV5oskYs0
+ Jp3BwcDayi4urJ8xZuz1PxFrOyV0ZQYOWFoU4f+TJsPHQAy68q100qBe82RGT+zSvLcUuS
+ E2jYj6lM9o0d82FCjdNDiI/dNee6aIEUhnSX7LOQtWfmFqOQFVZq4h/bHTN4GAGGr2/K2L
+ NJJ4YzEjj8twqosCmGKEflM1ezaGiizmQJ9exsetFbV/1c0NGBC5hsliiCl2ptWYwADuXR
+ //5aMwrDI4liIpitO6VJ3OL7nNE4ZK460b6pM5xUNUzist3UIhqCkLXnkow1ew==
+From: "Chen Cheng" <chencheng@fnnas.com>
+Content-Transfer-Encoding: quoted-printable
+X-Original-From: Chen Cheng <chencheng@fnnas.com>
+Message-Id: <aerQ-L00v3c-7rNv@fedora>
+In-Reply-To: <6e6e4340-2181-4a79-9284-7ed167aab807@molgen.mpg.de>
+References: <20260422023317.796326-1-chencheng@fnnas.com> <6e6e4340-2181-4a79-9284-7ed167aab807@molgen.mpg.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Disposition: inline
+X-Lms-Return-Path: <lba+269ead14c+dd5612+vger.kernel.org+chencheng@fnnas.com>
+Cc: <linux-raid@vger.kernel.org>, <yukuai@fnnas.com>, 
+	<chenchneg33@gmail.com>
+Subject: Re: [PATCH 1/4] md/raid10: prepare per-r10bio dev slot tracking
+Date: Fri, 24 Apr 2026 10:11:22 +0800
+To: "Paul Menzel" <pmenzel@molgen.mpg.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Received: from localhost ([113.111.140.53]) by smtp.feishu.cn with ESMTPS; Fri, 24 Apr 2026 10:11:23 +0800
 
-Replace the md_default_group and md_attr_groups with
-ATTRIBUTE_GROUPS().
+On Wed, Apr 22, 2026 at 08:40:42AM +0200, Paul Menzel wrote:
 
-Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
----
- drivers/md/md.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+Hi Paul,
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 346d071c1b8e..0e55639211f2 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6045,10 +6045,7 @@ static struct attribute *md_default_attrs[] = {
- 	&md_logical_block_size.attr,
- 	NULL,
- };
--
--static const struct attribute_group md_default_group = {
--	.attrs = md_default_attrs,
--};
-+ATTRIBUTE_GROUPS(md_default);
- 
- static struct attribute *md_redundancy_attrs[] = {
- 	&md_scan_mode.attr,
-@@ -6073,11 +6070,6 @@ static const struct attribute_group md_redundancy_group = {
- 	.attrs = md_redundancy_attrs,
- };
- 
--static const struct attribute_group *md_attr_groups[] = {
--	&md_default_group,
--	NULL,
--};
--
- static ssize_t
- md_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
- {
-@@ -6154,7 +6146,7 @@ static const struct sysfs_ops md_sysfs_ops = {
- static const struct kobj_type md_ktype = {
- 	.release	= md_kobj_release,
- 	.sysfs_ops	= &md_sysfs_ops,
--	.default_groups	= md_attr_groups,
-+	.default_groups	= md_default_groups,
- };
- 
- int mdp_major = 0;
--- 
-2.43.0
+> Dear Cheng,
+>
+>
+> Am 22.04.26 um 04:33 schrieb Chen Cheng:
+> > From: Chen Cheng <chencheng@fnnas.com>
+> >
+> > raid10 reuses r10bio objects from both r10bio_pool and r10buf_pool. Tra=
+ck
+> > the number of devs[] slots used by each request in the r10bio itself an=
+d
+> > initialize it whenever one of these objects is reused.
+> >
+> > No functional change yet. A later patch will use this width when reshap=
+e
+> > changes conf->geo.raid_disks.
+>
+> Your Signed-off-by: line is missing.
 
+Yes, i missed it, thanks for point-out;
+
+>
+> > ---
+> >   drivers/md/raid10.c | 4 ++++
+> >   drivers/md/raid10.h | 1 +
+> >   2 files changed, 5 insertions(+)
+> >
+> > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> > index 0653b5d8545a..e93933632893 100644
+> > --- a/drivers/md/raid10.c
+> > +++ b/drivers/md/raid10.c
+> > @@ -1540,6 +1540,7 @@ static void __make_request(struct mddev *mddev, s=
+truct bio *bio, int sectors)
+> >     r10_bio->sector =3D bio->bi_iter.bi_sector;
+> >     r10_bio->state =3D 0;
+> >     r10_bio->read_slot =3D -1;
+> > +   r10_bio->used_nr_devs =3D conf->geo.raid_disks;
+> >     memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) *
+> >                     conf->geo.raid_disks);
+> > @@ -1727,6 +1728,7 @@ static int raid10_handle_discard(struct mddev *md=
+dev, struct bio *bio)
+> >     r10_bio->mddev =3D mddev;
+> >     r10_bio->state =3D 0;
+> >     r10_bio->sectors =3D 0;
+> > +   r10_bio->used_nr_devs =3D geo->raid_disks;
+> >     memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) * geo->raid_disks=
+);
+> >     wait_blocked_dev(mddev, r10_bio);
+> > @@ -3061,6 +3063,8 @@ static struct r10bio *raid10_alloc_init_r10buf(st=
+ruct r10conf *conf)
+> >     else
+> >             nalloc =3D 2; /* recovery */
+> > +   r10bio->used_nr_devs =3D nalloc;
+> > +
+> >     for (i =3D 0; i < nalloc; i++) {
+> >             bio =3D r10bio->devs[i].bio;
+> >             rp =3D bio->bi_private;
+> > diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
+> > index ec79d87fb92f..92e8743023e6 100644
+> > --- a/drivers/md/raid10.h
+> > +++ b/drivers/md/raid10.h
+> > @@ -127,6 +127,7 @@ struct r10bio {
+> >      * if the IO is in READ direction, then this is where we read
+> >      */
+> >     int                     read_slot;
+> > +   unsigned int            used_nr_devs;
+>
+> Most entries have a comment describing the use. Maybe add one too, or at
+> least a blank line, so it=E2=80=99s clear that the existing comment is ju=
+st for
+> `read_slot`?
+
+Agreed.
+
+>
+> >     struct list_head        retry_list;
+> >     /*
+>
+> From a performance and resource usage point of view, will increasing the
+> struct have a negative impact?
+
+On 64-bit platform, doesn't have negative resource usage impact,
+the new field fits into the existing padding after read_slot, so
+offsetof(struct r10bio, devs) stays unchanged;
+
+On 32-bit platform, may increase by 4 bytes per r10bio, but that's
+negligible compared with the bios/pages allocated for each request;
+
+
+No negative performance impact, cause bottleneck is IO, and
+the IO path has no changed;
+
+>
+> The diff looks good.
+>
+> Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
+>
+
+Thanks for review;
+
+>
+> Kind regards,
+>
+> Paul
+
+
+Thanks,
+Cheng
