@@ -1,136 +1,95 @@
-Received: from va-2-54.ptr.blmpb.com (va-2-54.ptr.blmpb.com [209.127.231.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8D713242B0
-	for <linux-raid@vger.kernel.org>; Fri, 24 Apr 2026 07:04:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20C7C8462;
+	Sat, 25 Apr 2026 02:46:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777014290; cv=none; b=j5abKFGMxtusgBdio8uXB1O3hSwGWiKdldApSABi2IjpavSYke2140E8MKwJN1ClUTi+lvPpjEpSWs5uR7yDoUOV2MH2nF6ERcFwiX8d75udrcY/Ni7w+tvOjBonj7NHy1wvYw74r975WsuzF0iyy0YE32iwvvMGfZFMXNwPgiw=
+	t=1777085187; cv=none; b=kk8NGoXRtEs42z7b92I0Pgs7ktxbHWpY+L6tMc0kK+Mipm4Kz54h1H+vmT6jMuGF2sQC/mnCST3oV/V6M1x/EO5ZDOCENoxBHZ5LJmY/vqjDiqo8K2JG+yJXA9dxikMHvg0TSEPddXNU3tC2qpJU1ifDS/jVEdRGwtymnHNFyKo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777014290; c=relaxed/simple;
-	bh=fckn8rK0lIyrgv74sriDRd/xVjhcOPKTg3lkKdaug1Q=;
-	h=From:References:Content-Type:Mime-Version:To:Date:Cc:Subject:
-	 Message-Id:In-Reply-To; b=cD97dIR9UxwD92JUFIk2xsktR+KO+iCQSGRtc0hQblMgVsNlB1ehkJxpMzPqrdh43b/7EPNzvunUqEzkQQeY+C+y89sRq2/D/DhVhcxJxL6nEqfzLtaKc1treE65LyBl2fuzVxJGeQhQGqQvhFZ9n1D94+pFqNrsZG5GnKACzWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=jX9DjlNg; arc=none smtp.client-ip=209.127.231.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="jX9DjlNg"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1777014271;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=C/1PyJgQMGQlQwEd6BxGipN8aeFh8QjdSBEShKnYhOs=;
- b=jX9DjlNgYLX19xxZOQGzE3LWwdmfxV+4yRF5bi3Q7Pt8smVxC+sXVAewgyGP5zk5zKSG7I
- rbnePggRjaNm3OsI40zd08HgXRGTqOOd1zy07B1/8CwQdH48VGPWD33UD76wMxlUc8FQz/
- VQd1a3Q5gpbEfkNaWFiDduZ2pYH0w/yoafCExSRLjWqkwaCE/XpwUPmI1Ext3rJGLjSMop
- wVpvufAnL4rm3j4aM/bPrtd9lQfe/9mvL9bvKuU47oeQsAv8ay1VBMcrvKF68U633pQnyg
- eX+UFJjhMVl2oJZyv3Zq7GARf7/01R8XwqQcT0T4+BKgt2ykGMqVypQbyTwO7A==
-From: "Yu Kuai" <yukuai@fnnas.com>
-References: <20260422023317.796326-1-chencheng@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-Received: from [192.168.1.104] ([39.182.0.183]) by smtp.feishu.cn with ESMTPS; Fri, 24 Apr 2026 15:04:28 +0800
+	s=arc-20240116; t=1777085187; c=relaxed/simple;
+	bh=Bo5wKDZWcPUiUrGQmOATVB5c4/nfFezM8RuAMbh91+4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BeHP7mVaVh9EYACPZjH0aZatt+kmNzKG501UP5ZqsJTLluCczqCGOgU8Z4es2N12ww3zRDSEvIp2zx3mfljhwGzXtGJ3uFcbvE8pm0miD0SILbjgy8namT5u6sTKzio0H1Ah1iJ0vzp5K2Sgsi1b8GTQMx78BsWfZYYn5M5WzSw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A371C19425;
+	Sat, 25 Apr 2026 02:46:24 +0000 (UTC)
+From: Yu Kuai <yukuai@fnnas.com>
+To: Song Liu <song@kernel.org>
+Cc: glass.su@suse.com,
+	Yu Kuai <yukuai@fnnas.com>,
+	Li Nan <linan122@huawei.com>,
+	Xiao Ni <xiao@kernel.org>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v13 0/3] md/md-bitmap: restore bitmap grow through sysfs
+Date: Sat, 25 Apr 2026 10:46:12 +0800
+Message-ID: <20260425024615.1696892-1-yukuai@fnnas.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>, 
-	<yukuai@fnnas.com>
-Date: Fri, 24 Apr 2026 15:04:26 +0800
-X-Lms-Return-Path: <lba+269eb15fd+4cba6f+vger.kernel.org+yukuai@fnnas.com>
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-User-Agent: Mozilla Thunderbird
-Reply-To: yukuai@fnnas.com
-Cc: <chenchneg33@gmail.com>
-Subject: Re: [PATCH 1/4] md/raid10: prepare per-r10bio dev slot tracking
-Message-Id: <d9ac1717-47e7-48d3-9f59-bb3a4b23c578@fnnas.com>
-In-Reply-To: <20260422023317.796326-1-chencheng@fnnas.com>
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Hi,
+mdadm --grow adds an internal bitmap by writing bitmap/location for an
+array that currently has no bitmap. That requires the bitmap directory
+and location attribute to exist before the classic bitmap backend is
+created.
 
-=E5=9C=A8 2026/4/22 10:33, Chen Cheng =E5=86=99=E9=81=93:
-> From: Chen Cheng <chencheng@fnnas.com>
->
-> raid10 reuses r10bio objects from both r10bio_pool and r10buf_pool. Track
-> the number of devs[] slots used by each request in the r10bio itself and
-> initialize it whenever one of these objects is reused.
->
-> No functional change yet. A later patch will use this width when reshape
-> changes conf->geo.raid_disks.
-> ---
->   drivers/md/raid10.c | 4 ++++
->   drivers/md/raid10.h | 1 +
->   2 files changed, 5 insertions(+)
+This series separates bitmap backend lifetime from bitmap sysfs lifetime,
+splits the sysfs layout into common and backend-specific groups, and adds
+a small "none" bitmap backend. The none backend keeps bitmap/location
+available while no real bitmap is active, and the location store path can
+then switch between the none backend and the classic bitmap backend
+without tearing down the common bitmap sysfs directory.
 
-For patchset please also add a patch 0.
+Patch 1 factors bitmap creation and destruction into helpers that do not
+touch sysfs registration.
 
-This solution looks incorrect. The usage of r10bio_pool() is wrong in the f=
-irst
-place. Noted for mempool, it will preallocate elements and such elements ca=
-n be
-reused in following mempool allocation. Which means:
+Patch 2 splits the classic bitmap sysfs files into a common group and an
+internal-bitmap group, and converts bitmap backend operations to use a
+sysfs group array.
 
-1) preallocate elements with old raid disks;
-2) rehsape update raid disks;
-3) allocate new r10bio, elements from 1) can be used.
+Patch 3 adds the none backend and uses it to restore mdadm --grow bitmap
+addition through bitmap/location.
 
-The solution can refer to raid1.
+Changes since v12:
+- Keep the factoring patch focused on no-sysfs bitmap lifetime helpers.
+- Make bitmap operation lookup depend only on the current bitmap id
+  matching the installed backend.
+- Trim the none backend to only the operations required by the active
+  call paths.
+- Rework bitmap/location error handling with explicit cleanup labels.
+- Restore the none backend after bitmap removal and creation/load
+  failures so bitmap/location stays available.
 
-1) convert mempool to fixed size;
-2) during reshape, suspend/quiesce the array first to wait for all pralloca=
-ted
-r10bios to return first.
+Validation:
+  - create a RAID1 array with --bitmap=none
+  - verify /sys/block/md0/md/bitmap/location exists and reports "none"
+  - mdadm --grow /dev/md0 --bitmap=internal
+  - verify location switches to "+8", mdadm reports "Intent Bitmap:
+    Internal", and /proc/mdstat reports a bitmap
+  - mdadm --grow /dev/md0 --bitmap=none
+  - verify location switches back to "none" and only the common location
+    attribute remains under md/bitmap
+  - repeat the internal/none switch once more
+- Checked the QEMU serial log for panic, Oops, BUG, WARNING, Call Trace,
+  RCU stall, and hung-task patterns; none were found.
 
->
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 0653b5d8545a..e93933632893 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1540,6 +1540,7 @@ static void __make_request(struct mddev *mddev, str=
-uct bio *bio, int sectors)
->   	r10_bio->sector =3D bio->bi_iter.bi_sector;
->   	r10_bio->state =3D 0;
->   	r10_bio->read_slot =3D -1;
-> +	r10_bio->used_nr_devs =3D conf->geo.raid_disks;
->   	memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) *
->   			conf->geo.raid_disks);
->  =20
-> @@ -1727,6 +1728,7 @@ static int raid10_handle_discard(struct mddev *mdde=
-v, struct bio *bio)
->   	r10_bio->mddev =3D mddev;
->   	r10_bio->state =3D 0;
->   	r10_bio->sectors =3D 0;
-> +	r10_bio->used_nr_devs =3D geo->raid_disks;
->   	memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) * geo->raid_disks);
->   	wait_blocked_dev(mddev, r10_bio);
->  =20
-> @@ -3061,6 +3063,8 @@ static struct r10bio *raid10_alloc_init_r10buf(stru=
-ct r10conf *conf)
->   	else
->   		nalloc =3D 2; /* recovery */
->  =20
-> +	r10bio->used_nr_devs =3D nalloc;
-> +
->   	for (i =3D 0; i < nalloc; i++) {
->   		bio =3D r10bio->devs[i].bio;
->   		rp =3D bio->bi_private;
-> diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-> index ec79d87fb92f..92e8743023e6 100644
-> --- a/drivers/md/raid10.h
-> +++ b/drivers/md/raid10.h
-> @@ -127,6 +127,7 @@ struct r10bio {
->   	 * if the IO is in READ direction, then this is where we read
->   	 */
->   	int			read_slot;
-> +	unsigned int		used_nr_devs;
->  =20
->   	struct list_head	retry_list;
->   	/*
+Yu Kuai (3):
+  md: factor bitmap creation away from sysfs handling
+  md/md-bitmap: split bitmap sysfs groups
+  md/md-bitmap: add a none backend for bitmap grow
 
---=20
-Thansk,
-Kuai
+ drivers/md/md-bitmap.c   | 131 +++++++++++++++++++++++++++++++++++----
+ drivers/md/md-bitmap.h   |   2 +-
+ drivers/md/md-llbitmap.c |   7 ++-
+ drivers/md/md.c          | 125 ++++++++++++++++++++++++++-----------
+ drivers/md/md.h          |   3 +
+ 5 files changed, 218 insertions(+), 50 deletions(-)
+
+base-commit: c85d314b135ff569c1031f2ef8e40368bcfe72ac
+-- 
+2.51.0
