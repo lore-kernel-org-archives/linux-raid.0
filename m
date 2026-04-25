@@ -1,110 +1,148 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FCA32E282B
-	for <linux-raid@vger.kernel.org>; Sat, 25 Apr 2026 08:58:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777107531; cv=none; b=top4NAdHUYqtsUW5qYJqSqf1PZbnHZE4pPbrT2+Zb+epxTnf2btXXRurgqhXxe1bkNyeYkVlHh0cK3BruoZE+yIm5/dybzVCf0r3icv+FqfQO7UUcKapdR2Z4nzgwbUqXLCetptq2ghwor0jCmA+ErUU7kz9CR3vMKmD4fkgtco=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777107531; c=relaxed/simple;
-	bh=LzL75gFudJSPWi3FbVERpvmTGQyuI5o6kaORXGPetEI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aTdWZ/v24d6JI0KbwWkUNHWF74aNpyuOWnQSjBSfjm2QumTgb3+9MnKs3yFEeOcgA2RDLAweIEntzSgr9XAVCHtrUXR6zaBPxa2ckNAC+RIIob+wl+VKcBpQwRM3kT4DqrSAqfW71xN4dJwMQfcRT1inWRmJMOYn78US9FnPKoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KQGs5Yn0; arc=none smtp.client-ip=209.85.128.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDFCF22538F
+	for <linux-raid@vger.kernel.org>; Sat, 25 Apr 2026 11:46:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.46
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777117607; cv=pass; b=EWEI9xjrvlbbVrc8DQPzodNzrZVi9PkfKmYVc1HdrkW4Kt4YaxQvnmkmiJLruugTuDckX5I04iq5bFGhJwVNaTv8sfzYh2EoaAkl9ki+9GP9uqUVqyVlFRJklBItdsUAbHzu03E4p2oiKwK5h29E1zPPySdYSt9VjRXWctrNO58=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777117607; c=relaxed/simple;
+	bh=3dkh1EFFPOoHTF0hrtz2IDP6/Ng4A279gAaN+ttFAaY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=IasQeDkXJQwjl8SspqzvAmv/AzEO7LwMYtKXzbq8vfBj9zhOWlRMqa7WXRBRsEW7H9MYiV3PI0gnDRKzXtACeVegZpQMZ/ts7zfy2RNWfDm7zYETFiF9tu0zu955w5MjGJIO+PB5+4U2uybm3lXEQFvnnUvo3kznYGoNcOb88w8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=A2WryALJ; arc=pass smtp.client-ip=209.85.221.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KQGs5Yn0"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4891e5b9c1fso67745815e9.2
-        for <linux-raid@vger.kernel.org>; Sat, 25 Apr 2026 01:58:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A2WryALJ"
+Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-43d77f6092eso6010983f8f.2
+        for <linux-raid@vger.kernel.org>; Sat, 25 Apr 2026 04:46:45 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1777117604; cv=none;
+        d=google.com; s=arc-20240605;
+        b=RsAx8Ff8Y2aN3AhEdPSm8+h/nzfEp9uKAH0RhaBsXhpbEZ4n6CXdtOdp5EEmrtQDs5
+         rmLyg2PVLbU/Zz/j5n9SqgGNl1xUtS/UYdmLi/9oj9dgtgy/hVxX4aNmJQ5vkV5o07Xw
+         WDwpR149lkqvC3R/o+YzpTrBUXKD1WoWhFXAgwrq3+OLKK/o5R0f5T86qFrjMjCPsqYb
+         0p+o6iQ7wuaB8ZXJOU3qZiENzr+MCzA/MsN+lCfB9NVkinJhY/cujaKcWliwHH6nvg68
+         t8nAxLDODOuA5j6tUDjj5dUKVwYQvmPA8TPQR+IYUu8D7m4AXu4dE8cxGdItL7Z9dNn8
+         /qCg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=8FUrLXSCZqPqxFHXgAkOgwEVVen4UoluY1xOumnyhwo=;
+        fh=XVx51kCZWuc5DBvXTwhPvSf+YKDrHVFiOPuv/K0QVkY=;
+        b=NwVOOOCHS9SWHFEjYFWhr6xOCfsEO1yzQrWBCKl+KdRDjyC3OB6qhbLDLfDuA9KcoH
+         nwq9UaRck1C0JhBLU0eLy0nK0UfMktAf1OFtgREyU9Df7skphuwaxuaHD8M+Pzr7lF3D
+         YohBCjLRqH/aRBa8HhYalU9mMlNefOt6JkiPL70wWSqK0c+aO1uzVCdzxnbYHkfpY2wy
+         A3V2LZhVcuJB1+0thp9coBfIFHFq6JM7RSeXUb6mOoiBYjeBQczOXSM40gCg0TB/vstL
+         ktCxouH4uTijOUw11lJJZJQ1y0AncqCW+82amOo9rm0cyz7eyfZNfTE1LVu9Iiq2ScLv
+         2fiA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1777107528; x=1777712328; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=UaLrvDon/RLFQBkolNYXT9SBool/0OkIj4oLI1l6UsE=;
-        b=KQGs5Yn0C8VEvOVknsbsnjVCrMfoYGpRPitB/DpOHj+kqsMwCeiCxwkdTl5RFhcbNC
-         /+ZazyiTLelW1jLcj8QZ9HjaBMhuwpkGmdjxVJTvNf6b5hBtsEzeixQXj+DTjYyj0zCe
-         ZfQh0ebuyZtCAT0BRlMki1UsGmhOdeaHKNvh7r6s+zFdN6id5IoGAjFkDdzOjwhsnWDW
-         YH1If8lyxWgLgo4buNxkG4z5INCN+gUchOWOnfp8SI9SNlhtF+T6nAPdetb7VaaIX03h
-         wpj3Biv3vTLXMpyVTZiFgy92nSokl3mFsbLpVX8VA24THbkn/LhBjAcf31QTAotBf5KP
-         7c2g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777107528; x=1777712328;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1777117604; x=1777722404; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=UaLrvDon/RLFQBkolNYXT9SBool/0OkIj4oLI1l6UsE=;
-        b=ZxUYJP3qRktzWQaIHghpEJRyBcD2lZhEASl0wd9VGal3f5qto8nj3/mcY1meSBkt5t
-         9A6EwXZEQNf87bVzRR7hICkAP6xn4LJT4BzmHihL7/cHff76GVCUrgmBhDmfcwkbArg2
-         FyHHaRWZUYz3FS37dDYfkqLfXXSpCJSBxqcJMx6BRUVlh99DARSQZ0oOsGit3zuxxMc5
-         7ZxbZ+I6k5yL8EqERu+iF7/Z4g8iZ0OOAZ24F4+LMea5320dysBVz1dgtrzM9sCbJyD0
-         APO/mG4xkrdtNR6Nv79Ayemih23rMFCOadfnrBS6jlUjJ6FRIYcS8f5SXqQdLiVfl8Yq
-         Ni0g==
-X-Gm-Message-State: AOJu0YwWVL2iIMEuLeSeQfeWcCgOaKY6zuLRMxxeuSAaFJhf/ImbdRaO
-	6RkIDPcA7oO9ikQ12KyuVjfOfGIQ67SLszXYXyFIkQU4yYlrjcCJm2kA
-X-Gm-Gg: AeBDieu5EA7xDJF4jlUG4AIcUzdJlyfwlozZwPFZCat37bW0mRbQ8qh3JmV0ZZwqO9s
-	ElQqF+l9LfYbATOrDsibixekb1MobqjmwMast5+TnAl+9tRvvGBT6GuzCXWZmTlIc77RRJyOn1c
-	NxSflvYzyCEeuGVyoeap/b/Rjtp76DRWNuNhr9evIyPJfJM1+G/5QckQfKa09SDZafdaNPHH8vy
-	wOm2HX75JhN4dqBvaxj8GADhOIZkdC3Fy8oA5y/shVHsN2/Q3NdtXJK9aHPmdr30qXkL0+yBcSZ
-	nTwF2eWAXFofUq8vVvc99KXDTVuP/URea1to2qjv/D/w26TNWNJK19wXMJNrlg6Ouh9WppsNUIi
-	+JYeuIM0pfxs/47/sngZCRPvxbp9uIBth+03rLvhJS7e3xRQmbAExyyKqUkXa6QbPjfDwaBQy1K
-	Yw8PeOBfgWQemDFEcHx/vj8IXQmRmuWAitEQ==
-X-Received: by 2002:a05:600c:5254:b0:488:8bdd:cfcc with SMTP id 5b1f17b1804b1-488fb6e62a8mr535804645e9.0.1777107528340;
-        Sat, 25 Apr 2026 01:58:48 -0700 (PDT)
-Received: from yocto.. ([2a02:3037:66c:7629:ce5b:4236:52ab:dfe8])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48a525a0b1asm173524195e9.2.2026.04.25.01.58.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 25 Apr 2026 01:58:46 -0700 (PDT)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: song@kernel.org,
-	yukuai@fnnas.com
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-Subject: [PATCH] md: skip redundant raid_disks update when value is unchanged
-Date: Sat, 25 Apr 2026 10:58:43 +0200
-Message-ID: <20260425085843.3725-1-abd.masalkhi@gmail.com>
-X-Mailer: git-send-email 2.43.0
+        bh=8FUrLXSCZqPqxFHXgAkOgwEVVen4UoluY1xOumnyhwo=;
+        b=A2WryALJRhuvUEWbr6+nW2xVrv9XUXWGqMX9AVeEGSiEBUCwKFgVYnfebckyQV1aZc
+         FdaA+CZtfC0THIxawZezDl0D15oaid2LssoReoF8Xsoq7o0Mfzk97GUTNRfh3qM7YTWY
+         /ejngYPXQCHQu93lqLlGMGPp2KYZdRq5uceReEltTVZ/GB+AoRwagZjgiUkfNeVQx7MU
+         hejgrZsBVcJDFe79WczpNMD6DC+ft8uaOLtDPPXrvakz2JY8+DAO/yQBCJcVJ2ylY9yr
+         qqcdSdgutlaZg2Kyxk9JiK0qM098gOyIN1QCHrCmLX15xBFqUitCdJ9QNn89PGnpfTOk
+         dNJg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777117604; x=1777722404;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=8FUrLXSCZqPqxFHXgAkOgwEVVen4UoluY1xOumnyhwo=;
+        b=ZxC5P0SozPe/fS4PS8+WobPHPUsW2L+nGRjfYp7AbFd6LkdHdmWZIlQTqe2/s57r6G
+         v8ENfnLN1j7NnUVh3H8xq5GX5u8q0TJl3g7kUtm0MPmF65LbornqESUVWwf7Upv2OWTo
+         5mHHADa5v29Ro0DDKwXe07JkZBKu9fpoNw+sP8VLwFEQxtJO4lCDOgTLookq4bszLDun
+         A9eUbI5P+QJOi9k95YuUaEfvAHJ7GC++/zUgZAi3+6cuz8xZEfJKEJupT/P6BY1WzuQT
+         Mu7tMzUSvGvcuWmRGwOOAqYBI41DIyBSwUqQloIBoRSU0iaIqtTTdygo3zm2UgEJQ9rU
+         qYWQ==
+X-Forwarded-Encrypted: i=1; AFNElJ8nvogwAsubULs5YHTQ9iECeIjY82mbh0IaOggDkS4gImpS1cisYXJx2JY20xAZn/bV+S8CXbATCIFc@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw7CdkCmsa6bJVxJ0UXBTdKyb32Hwo6aE0Lq7Cv9H2rdrNHUcMb
+	jh/6me3iGaT7cUeSt08rbRJ57x8kbVG0JbQlecjZafzEJJWHrsMLFopbvD1Lp1eeYD8hPMcEUts
+	KE4pvJSymrxXEfTWqHB6ktLp7enHvM/o=
+X-Gm-Gg: AeBDieuGuXTX/gz1lLlLTHhbfsRAUgNxuVEVov/yXa0nBmE/PV5md+XP64vNur9H4/d
+	LRJZ8sijukCpYsyVdEt4VUnueMLsWHUppMqj++cCwdX0YaeflXudkJfBdwE85J/3QFa8pGsg7im
+	eTwz3CmiCd9+/2gLdRPbVzHlKIm1vHK+GLQbkdOKsOLsDEjidjMqCYOFzbBQ/7nNxB41MSa136f
+	3h6prHUbfgEF78BgefIo+ykQ3Ym3AUeHj0WFrgJzWKoy0EBorzTkcW9QlJYt/SnZFCI0rN8M6vJ
+	e6OCGySUr9JZIzev
+X-Received: by 2002:a05:6000:24c3:b0:43d:7868:21db with SMTP id
+ ffacd0b85a97d-43fe3dcc11amr55562078f8f.18.1777117603839; Sat, 25 Apr 2026
+ 04:46:43 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <acJhCCPfVxjFUZ5R@J2N7QTR9R3> <CAOLeWCsxhzdxQviizJ4X4VOp_28LCtO-RjWoCcZG29rQw86NVg@mail.gmail.com>
+ <9a12e043-8200-4650-bfe2-cbece57a4f87@app.fastmail.com> <20260331063659.GA2061@lst.de>
+ <CAOLeWCtnZz=kHGk4C2f9Mbfi3tEBE100iCkMBhcG47dmR9eDWw@mail.gmail.com>
+ <CAOLeWCtxPk7q_bVvrcKaipSKr+_=57Auobcj0cFRvXxXMdH58g@mail.gmail.com>
+ <5158e4e0-3275-4c29-a8fc-2dfabc13a69d@app.fastmail.com> <CAOLeWCtf2rZyPeJH-LuZ2A+c7mC9M2r-Ya0VjyOJFpun3TFMnw@mail.gmail.com>
+ <8db4defe-8b5e-4cc3-880b-72d46510b034@arm.com> <c9362db6-1fef-4e70-9525-29b2936f4887@app.fastmail.com>
+ <2c2eb793-c0a4-4b65-93f1-0ece5cf820d7@sirena.org.uk>
+In-Reply-To: <2c2eb793-c0a4-4b65-93f1-0ece5cf820d7@sirena.org.uk>
+From: Demian Shulhan <demyansh@gmail.com>
+Date: Sat, 25 Apr 2026 14:46:31 +0300
+X-Gm-Features: AQROBzCGKHu6guzCM7pwEyGOZ2XR-XPK9d42N7x5GVU_IgEZfJxb13D1ue9-s_0
+Message-ID: <CAOLeWCv56Zz9Ns8APm+Q6+gpGPqni7GWvAfVYnvrYjRU0EZHfg@mail.gmail.com>
+Subject: Re: [PATCH v2] raid6: arm64: add SVE optimized implementation for
+ syndrome generation
+To: Mark Brown <broonie@kernel.org>
+Cc: Ard Biesheuvel <ardb@kernel.org>, Robin Murphy <robin.murphy@arm.com>, 
+	Christoph Hellwig <hch@lst.de>, Mark Rutland <mark.rutland@arm.com>, Song Liu <song@kernel.org>, 
+	Yu Kuai <yukuai@fnnas.com>, Will Deacon <will@kernel.org>, 
+	Catalin Marinas <catalin.marinas@arm.com>, linux-arm-kernel@lists.infradead.org, 
+	Li Nan <linan122@huawei.com>, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Calling update_raid_disks() with the same value as the current one
-can trigger unnecessary work. For example, RAID1 will reallocate
-resources such as the mempool for r1bio.
+Hi all!
 
-Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
----
-It returns -EINVAL for the same value. If silent success is preferred
-instead, please let me know so I adjust its behavior.
----
- drivers/md/md.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+In the future I will try to look at optimisation of current algorithms
+instead of SVE realisation, looks like there are few interesting
+cases, I will share details in future changes.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0e55639211f2..cb66c4ebbafa 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4409,9 +4409,12 @@ raid_disks_store(struct mddev *mddev, const char *buf, size_t len)
- 	err = mddev_suspend_and_lock(mddev);
- 	if (err)
- 		return err;
--	if (mddev->pers)
--		err = update_raid_disks(mddev, n);
--	else if (mddev->reshape_position != MaxSector) {
-+	if (mddev->pers) {
-+		if (n != mddev->raid_disks)
-+			err = update_raid_disks(mddev, n);
-+		else
-+			err = -EINVAL;
-+	} else if (mddev->reshape_position != MaxSector) {
- 		struct md_rdev *rdev;
- 		int olddisks = mddev->raid_disks - mddev->delta_disks;
- 
--- 
-2.43.0
+Thanks all for the discussion!
 
+=D0=BF=D1=82, 17 =D0=BA=D0=B2=D1=96=D1=82. 2026=E2=80=AF=D1=80. =D0=BE 18:3=
+6 Mark Brown <broonie@kernel.org> =D0=BF=D0=B8=D1=88=D0=B5:
+>
+> On Fri, Apr 17, 2026 at 04:43:06PM +0200, Ard Biesheuvel wrote:
+>
+> > On arm64, kernel mode NEON is mostly used to gain access to AES and SHA
+> > instructions, and only to a lesser degree to speed up ordinary
+> > arithmetic, and so XOR is somewhat of an outlier here.
+>
+> > Given that Neoverse V1 apparently already carves up ordinary arithmetic
+> > performed on 256-bit vectors and operates on 128 bits at a time, I am
+> > rather skeptical that we're likely to see any SVE implementations of th=
+e
+> > crypto extensions soon that are meaningfully faster, given that these
+> > are presumably much costlier to implement in terms of gate count, and
+> > therefore likely to be split up even on SVE implementations that can
+> > perform ordinary arithmetic on 256+ bit vectors in a single cycle. Note
+> > that even the arm64 SIMD accelerated CRC implementations rely heavily o=
+n
+> > 64x64->128 polynomial multiplication.
+>
+> I'd not be surprised to see something that delivers useful benefits
+> using SVE at some point.
+>
+> > IOW, before we consider kernel mode SVE, I'd like to see some benchmark=
+s
+> > for other algorithms too.
+>
+> Definitely, it needs a solid win to merge anything.  I do want to get
+> back to the situation where we've got out of tree infrastructure patches
+> so that people working on algorithms have something to base their work
+> on (and see the overheads using SVE incurs) but unless theres's a
+> practical user they should stay out of tree.
