@@ -1,148 +1,98 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDFCF22538F
-	for <linux-raid@vger.kernel.org>; Sat, 25 Apr 2026 11:46:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777117607; cv=pass; b=EWEI9xjrvlbbVrc8DQPzodNzrZVi9PkfKmYVc1HdrkW4Kt4YaxQvnmkmiJLruugTuDckX5I04iq5bFGhJwVNaTv8sfzYh2EoaAkl9ki+9GP9uqUVqyVlFRJklBItdsUAbHzu03E4p2oiKwK5h29E1zPPySdYSt9VjRXWctrNO58=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777117607; c=relaxed/simple;
-	bh=3dkh1EFFPOoHTF0hrtz2IDP6/Ng4A279gAaN+ttFAaY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=IasQeDkXJQwjl8SspqzvAmv/AzEO7LwMYtKXzbq8vfBj9zhOWlRMqa7WXRBRsEW7H9MYiV3PI0gnDRKzXtACeVegZpQMZ/ts7zfy2RNWfDm7zYETFiF9tu0zu955w5MjGJIO+PB5+4U2uybm3lXEQFvnnUvo3kznYGoNcOb88w8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=A2WryALJ; arc=pass smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1AED35CB76
+	for <linux-raid@vger.kernel.org>; Sat, 25 Apr 2026 14:29:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777127383; cv=none; b=rvwBXZpZIWPy4/1tIxgoTuqkWCnIUOa+hk04l4VwKTEv3pauMa8Y2McSygrp9mpQ7b3LeIRlVaKzfLCjyq1e+2gzEXNLLrolcwbLcJLe26T+0Gm0rtej37CjS+iK6HnhIVWj3BOLWOpMMXYsGupGxmnYS2PgGZEvGXzt7MadmQc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777127383; c=relaxed/simple;
+	bh=A6VOulTgouZzEeQe94awfpSmoyzktcwG85H4rcHLhTo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=njfo3hizI+dXU9oylH5ZN18Ddp0jTKcSBF/TM4Evtz031ZDN5aVLEsIN8E4UgDVJXPnjPT4nceCwirq9gU6VjaBxM8HI1bKs0+DB8VEi1gHVk/bgG+JQWaBsjwKTZL/iZbjsBoU1rpkQT+X8myHtjDnsvZojK/KdAY9VoUrWoQ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HERi3/yt; arc=none smtp.client-ip=209.85.128.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A2WryALJ"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-43d77f6092eso6010983f8f.2
-        for <linux-raid@vger.kernel.org>; Sat, 25 Apr 2026 04:46:45 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1777117604; cv=none;
-        d=google.com; s=arc-20240605;
-        b=RsAx8Ff8Y2aN3AhEdPSm8+h/nzfEp9uKAH0RhaBsXhpbEZ4n6CXdtOdp5EEmrtQDs5
-         rmLyg2PVLbU/Zz/j5n9SqgGNl1xUtS/UYdmLi/9oj9dgtgy/hVxX4aNmJQ5vkV5o07Xw
-         WDwpR149lkqvC3R/o+YzpTrBUXKD1WoWhFXAgwrq3+OLKK/o5R0f5T86qFrjMjCPsqYb
-         0p+o6iQ7wuaB8ZXJOU3qZiENzr+MCzA/MsN+lCfB9NVkinJhY/cujaKcWliwHH6nvg68
-         t8nAxLDODOuA5j6tUDjj5dUKVwYQvmPA8TPQR+IYUu8D7m4AXu4dE8cxGdItL7Z9dNn8
-         /qCg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=8FUrLXSCZqPqxFHXgAkOgwEVVen4UoluY1xOumnyhwo=;
-        fh=XVx51kCZWuc5DBvXTwhPvSf+YKDrHVFiOPuv/K0QVkY=;
-        b=NwVOOOCHS9SWHFEjYFWhr6xOCfsEO1yzQrWBCKl+KdRDjyC3OB6qhbLDLfDuA9KcoH
-         nwq9UaRck1C0JhBLU0eLy0nK0UfMktAf1OFtgREyU9Df7skphuwaxuaHD8M+Pzr7lF3D
-         YohBCjLRqH/aRBa8HhYalU9mMlNefOt6JkiPL70wWSqK0c+aO1uzVCdzxnbYHkfpY2wy
-         A3V2LZhVcuJB1+0thp9coBfIFHFq6JM7RSeXUb6mOoiBYjeBQczOXSM40gCg0TB/vstL
-         ktCxouH4uTijOUw11lJJZJQ1y0AncqCW+82amOo9rm0cyz7eyfZNfTE1LVu9Iiq2ScLv
-         2fiA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HERi3/yt"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-488d2079582so102469865e9.2
+        for <linux-raid@vger.kernel.org>; Sat, 25 Apr 2026 07:29:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1777117604; x=1777722404; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8FUrLXSCZqPqxFHXgAkOgwEVVen4UoluY1xOumnyhwo=;
-        b=A2WryALJRhuvUEWbr6+nW2xVrv9XUXWGqMX9AVeEGSiEBUCwKFgVYnfebckyQV1aZc
-         FdaA+CZtfC0THIxawZezDl0D15oaid2LssoReoF8Xsoq7o0Mfzk97GUTNRfh3qM7YTWY
-         /ejngYPXQCHQu93lqLlGMGPp2KYZdRq5uceReEltTVZ/GB+AoRwagZjgiUkfNeVQx7MU
-         hejgrZsBVcJDFe79WczpNMD6DC+ft8uaOLtDPPXrvakz2JY8+DAO/yQBCJcVJ2ylY9yr
-         qqcdSdgutlaZg2Kyxk9JiK0qM098gOyIN1QCHrCmLX15xBFqUitCdJ9QNn89PGnpfTOk
-         dNJg==
+        d=gmail.com; s=20251104; t=1777127380; x=1777732180; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=v1GLAZ6Q4eu4pOonAVDQr61KWdkIrk9c4bRT7Wa1sec=;
+        b=HERi3/ytQvd+/s06j8ExAB491e/+zySQHA8Zolpy5Akmfh3tFP24ryxEXkedEJAHVJ
+         /Mz1T/iOam/90384E/b2i+EmqCZZJdW052TL8MnQUS7u7efFWPcLraXzle6CQPWxWoe8
+         ltWtDF69D/tfWt2pnx4KpUULNH0Sk15C7EEeXTtxCpPPSFucS1n5NFnrvMqkG7YU6Cbv
+         PqTHsuxT3isL9AL1/UEkBZsYLTq+xEPVVLs8vjP0MClbQJkL9CvVIFsUFo036RMSJCDe
+         VsWzWB/EzThTaTEKP3c6lSF5FXiyV6AmfZWD6AQPJaVKrsYVGGAi8Tq1XdoXo/0Bdn4R
+         Zn2Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777117604; x=1777722404;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=8FUrLXSCZqPqxFHXgAkOgwEVVen4UoluY1xOumnyhwo=;
-        b=ZxC5P0SozPe/fS4PS8+WobPHPUsW2L+nGRjfYp7AbFd6LkdHdmWZIlQTqe2/s57r6G
-         v8ENfnLN1j7NnUVh3H8xq5GX5u8q0TJl3g7kUtm0MPmF65LbornqESUVWwf7Upv2OWTo
-         5mHHADa5v29Ro0DDKwXe07JkZBKu9fpoNw+sP8VLwFEQxtJO4lCDOgTLookq4bszLDun
-         A9eUbI5P+QJOi9k95YuUaEfvAHJ7GC++/zUgZAi3+6cuz8xZEfJKEJupT/P6BY1WzuQT
-         Mu7tMzUSvGvcuWmRGwOOAqYBI41DIyBSwUqQloIBoRSU0iaIqtTTdygo3zm2UgEJQ9rU
-         qYWQ==
-X-Forwarded-Encrypted: i=1; AFNElJ8nvogwAsubULs5YHTQ9iECeIjY82mbh0IaOggDkS4gImpS1cisYXJx2JY20xAZn/bV+S8CXbATCIFc@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw7CdkCmsa6bJVxJ0UXBTdKyb32Hwo6aE0Lq7Cv9H2rdrNHUcMb
-	jh/6me3iGaT7cUeSt08rbRJ57x8kbVG0JbQlecjZafzEJJWHrsMLFopbvD1Lp1eeYD8hPMcEUts
-	KE4pvJSymrxXEfTWqHB6ktLp7enHvM/o=
-X-Gm-Gg: AeBDieuGuXTX/gz1lLlLTHhbfsRAUgNxuVEVov/yXa0nBmE/PV5md+XP64vNur9H4/d
-	LRJZ8sijukCpYsyVdEt4VUnueMLsWHUppMqj++cCwdX0YaeflXudkJfBdwE85J/3QFa8pGsg7im
-	eTwz3CmiCd9+/2gLdRPbVzHlKIm1vHK+GLQbkdOKsOLsDEjidjMqCYOFzbBQ/7nNxB41MSa136f
-	3h6prHUbfgEF78BgefIo+ykQ3Ym3AUeHj0WFrgJzWKoy0EBorzTkcW9QlJYt/SnZFCI0rN8M6vJ
-	e6OCGySUr9JZIzev
-X-Received: by 2002:a05:6000:24c3:b0:43d:7868:21db with SMTP id
- ffacd0b85a97d-43fe3dcc11amr55562078f8f.18.1777117603839; Sat, 25 Apr 2026
- 04:46:43 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1777127380; x=1777732180;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=v1GLAZ6Q4eu4pOonAVDQr61KWdkIrk9c4bRT7Wa1sec=;
+        b=GT2oiM4OUBlvJ07iB5zvSAT/SQE02w+T7a7B/LApkpCpMxMOFRv86L0C7n7x+hT93b
+         6O+GtcLzjqu4wfYvTbGfPE/vGvvqcUz9sTfYroFFY565W+1VUfWgmhr769QulMD0PCGr
+         asTFEGDhOkGxA5vbzDIGYX+10eZX8+84O9j4OZbA/gWwPUDprCwJ2YoXxWKi/od4Nvl3
+         abU8j2DzTGmo56O+F3/2OIDyKhjioaYlksRtVjfstdj8mFrSm/9LhBBz7jNTQ5ensOGL
+         3Ckp168nNNK/16Vy2A57oXQu/DYrB+sdYmtY6oTVoSnT6uPEuTg6iNbQl5HdQvsQlNTm
+         fPHQ==
+X-Gm-Message-State: AOJu0Yw0Qj3b2vuzE66hW/azxPdJmmns89FJzdBlVEqYmYQehx4GWqs4
+	poHTF99cBJZrkGulyXqr2l1nbWvITMmTPQwOkKY0GstPkGHOgOVCYt2AysNNMA==
+X-Gm-Gg: AeBDietWme3qwp8je0Gvg0FIvJEQVzFfdhyVJ8PGRNRjqjD6fZTndM4VBoNjGfib7tW
+	5D4/p5aZg9zIotaeXHSxtjQC74Gft6bEnlaM48iW1v+MH9wiYg03jGQI7O/4uedkOwjaOypD4eA
+	oUr1dbQF4UZtoz/eMX0/WU1stoo+8tlET8mS9/jZSbBUnH/j+FnHU/nd6ilRC/+a2BbElJrqwb2
+	ACbIAoTWUYYNV99JsC8O6stz0HrUnSaTzAo58TW5rLM4YoLw9GJqtTlAIOVl3xqOCHG4mGErMyo
+	jZ8FTarHz+koZt+/52xfBQp8tW8CJmkiNC8Oqldjhxtib7tHo8LVj6/pQYR66kggmjZU0ohn/qI
+	1uV3GSMdF1RumvfDPkV5siBVA5TTs032CenyrK4LKuySlpjIuwCNX/R7efLr+3GBhBDIRTaXK6l
+	kBRSMbePIepyjMO3gXV0mj3pafkD5gyQiSzzJ5nz1iEPHf4XDsrpry3gIubF4StFmDtf6bo4qzJ
+	f1tPY/bMaBCQxMh2rTkovF+Vg==
+X-Received: by 2002:a05:600c:2d09:b0:489:c57:7836 with SMTP id 5b1f17b1804b1-4890c5778ffmr231039785e9.27.1777127380144;
+        Sat, 25 Apr 2026 07:29:40 -0700 (PDT)
+Received: from yocto.. (dynamic-176-007-212-220.176.7.pool.telefonica.de. [176.7.212.220])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488fb7b2716sm209489945e9.30.2026.04.25.07.29.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 25 Apr 2026 07:29:39 -0700 (PDT)
+From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+To: song@kernel.org,
+	yukuai@fnnas.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [RFC] md/raid1: possible deadlock introduced in raid1_read_request()
+Date: Sat, 25 Apr 2026 16:29:38 +0200
+Message-ID: <20260425142938.5555-1-abd.masalkhi@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <acJhCCPfVxjFUZ5R@J2N7QTR9R3> <CAOLeWCsxhzdxQviizJ4X4VOp_28LCtO-RjWoCcZG29rQw86NVg@mail.gmail.com>
- <9a12e043-8200-4650-bfe2-cbece57a4f87@app.fastmail.com> <20260331063659.GA2061@lst.de>
- <CAOLeWCtnZz=kHGk4C2f9Mbfi3tEBE100iCkMBhcG47dmR9eDWw@mail.gmail.com>
- <CAOLeWCtxPk7q_bVvrcKaipSKr+_=57Auobcj0cFRvXxXMdH58g@mail.gmail.com>
- <5158e4e0-3275-4c29-a8fc-2dfabc13a69d@app.fastmail.com> <CAOLeWCtf2rZyPeJH-LuZ2A+c7mC9M2r-Ya0VjyOJFpun3TFMnw@mail.gmail.com>
- <8db4defe-8b5e-4cc3-880b-72d46510b034@arm.com> <c9362db6-1fef-4e70-9525-29b2936f4887@app.fastmail.com>
- <2c2eb793-c0a4-4b65-93f1-0ece5cf820d7@sirena.org.uk>
-In-Reply-To: <2c2eb793-c0a4-4b65-93f1-0ece5cf820d7@sirena.org.uk>
-From: Demian Shulhan <demyansh@gmail.com>
-Date: Sat, 25 Apr 2026 14:46:31 +0300
-X-Gm-Features: AQROBzCGKHu6guzCM7pwEyGOZ2XR-XPK9d42N7x5GVU_IgEZfJxb13D1ue9-s_0
-Message-ID: <CAOLeWCv56Zz9Ns8APm+Q6+gpGPqni7GWvAfVYnvrYjRU0EZHfg@mail.gmail.com>
-Subject: Re: [PATCH v2] raid6: arm64: add SVE optimized implementation for
- syndrome generation
-To: Mark Brown <broonie@kernel.org>
-Cc: Ard Biesheuvel <ardb@kernel.org>, Robin Murphy <robin.murphy@arm.com>, 
-	Christoph Hellwig <hch@lst.de>, Mark Rutland <mark.rutland@arm.com>, Song Liu <song@kernel.org>, 
-	Yu Kuai <yukuai@fnnas.com>, Will Deacon <will@kernel.org>, 
-	Catalin Marinas <catalin.marinas@arm.com>, linux-arm-kernel@lists.infradead.org, 
-	Li Nan <linan122@huawei.com>, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hi all!
+hi,
 
-In the future I will try to look at optimisation of current algorithms
-instead of SVE realisation, looks like there are few interesting
-cases, I will share details in future changes.
+The raid1_read_request() function splits a bio regardless of whether it
+is an original bio or an md-cloned bio (regardless of the r1bio_existed
+value).
 
-Thanks all for the discussion!
+When an md_cloned_bio is resubmitted, raid1_read_request() treats it as a
+new original bio instead of recognizing it as an md_cloned_bio.
 
-=D0=BF=D1=82, 17 =D0=BA=D0=B2=D1=96=D1=82. 2026=E2=80=AF=D1=80. =D0=BE 18:3=
-6 Mark Brown <broonie@kernel.org> =D0=BF=D0=B8=D1=88=D0=B5:
->
-> On Fri, Apr 17, 2026 at 04:43:06PM +0200, Ard Biesheuvel wrote:
->
-> > On arm64, kernel mode NEON is mostly used to gain access to AES and SHA
-> > instructions, and only to a lesser degree to speed up ordinary
-> > arithmetic, and so XOR is somewhat of an outlier here.
->
-> > Given that Neoverse V1 apparently already carves up ordinary arithmetic
-> > performed on 256-bit vectors and operates on 128 bits at a time, I am
-> > rather skeptical that we're likely to see any SVE implementations of th=
-e
-> > crypto extensions soon that are meaningfully faster, given that these
-> > are presumably much costlier to implement in terms of gate count, and
-> > therefore likely to be split up even on SVE implementations that can
-> > perform ordinary arithmetic on 256+ bit vectors in a single cycle. Note
-> > that even the arm64 SIMD accelerated CRC implementations rely heavily o=
-n
-> > 64x64->128 polynomial multiplication.
->
-> I'd not be surprised to see something that delivers useful benefits
-> using SVE at some point.
->
-> > IOW, before we consider kernel mode SVE, I'd like to see some benchmark=
-s
-> > for other algorithms too.
->
-> Definitely, it needs a solid win to merge anything.  I do want to get
-> back to the situation where we've got out of tree infrastructure patches
-> so that people working on algorithms have something to base their work
-> on (and see the overheads using SVE incurs) but unless theres's a
-> practical user they should stay out of tree.
+If I understand this correctly, this results in allocating a new r1bio,
+etc. More importantly, this may lead to a deadlock if we tried to 
+suspended the array before the md driver calls percpu_ref_tryget_live()
+(&mddev->active_io) on the path down to pers->make_request().
+
+I am considering two possible approaches, ending the bio if max_sectors
+is smaller than bio_sectors(bio), or modifing read_balance() to select
+a disk that can handle the full bio if r1bio_existed was set.
+
+Is this understanding correct? and What might be the preferred approach
+in this case?
+
+Thanks,
+Abd-Alrhman
