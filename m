@@ -1,111 +1,149 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from m16.mail.126.com (m16.mail.126.com [117.135.210.9])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6715234973
-	for <linux-raid@vger.kernel.org>; Sun, 26 Apr 2026 09:35:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F8A52BEC43;
+	Sun, 26 Apr 2026 14:01:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777196114; cv=none; b=FlNEPDQLK69dQq/1cleVnpfEbZHodG7yeD1JIwxDxUb6c7OuuQRlDmQ6Rl4Mi+kaLEiIaXKD9DCbd8wDnWFU31vTFKBeAeTD6Rt4mBUj7Z1ooJotcQ4+IMe9avdngsYEaVWl0mpthhyX9UCsNsdFSrH3IysrS012s3kBhUWab0A=
+	t=1777212101; cv=none; b=fNnxC8e632xyBtRjul6WKexVSm1iRXuWMiB0cSshCoYsBqKAQ/E/K1CUXzjHCnyCYjPyf5qOvpP+qmZZ63HLjOkzfvuphtEm8lhovqgW72NGcpAgGEeRFkMyEEEjUWgK4W7AoMkn7LtNG39pQn+8PWCXOrYOyu441ayAL42zkqg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777196114; c=relaxed/simple;
-	bh=zo624SWXuhPM4Qqrrddsot980vhyyvBwEm1SghzN+zk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jGb5T+7eKTUKWWcqPZNR3SlmLVQLyediL3FhFBck4uT3OyRvkZdc6JvL1DeAsr2nXbmOGEWxXBSxanL/BjuAqJ8ECBi940oySXBBYmiVBI7JDl6vXSF23FGcx+azKUq28JTFS7dXyc7yE1IK0bkeGJgQVeaKbHfJvQXdD24XHPQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OMlHaW5s; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1777212101; c=relaxed/simple;
+	bh=1EWd3FHK/NUyYRjrPUv26hddlhWeaeFiowafrqz4J6I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PQ3YRqbiWlw5FZ7K5ZFEGH8ys41/9ZkPkKTZQUMeRfJuRZqizloPsX8zsInnqNLdizKEcCqA0ja41TNAvs4ziBMVmKPwd8zbrX1oY6aID1/szGjLjaGVtBKzmhCI9bfHY5gSFZif51/hZCDtRIhJRYMGUJmT/PB2Mpvd0J0iPQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com; spf=pass smtp.mailfrom=126.com; dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b=Gfz8tGph; arc=none smtp.client-ip=117.135.210.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OMlHaW5s"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4852b81c73aso76515115e9.3
-        for <linux-raid@vger.kernel.org>; Sun, 26 Apr 2026 02:35:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1777196111; x=1777800911; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=xxoJ7/yROVN+x+XZWhCqJyIdDhBLXxU+umFFNtD2wEg=;
-        b=OMlHaW5sphs4ZbaVoT/qgmK3Z/UEaNrm6Ljo6tXPihrBuhD92yA49cXXro6nHwcBaZ
-         S2P+YoXrD2dfgPgzCkX8sWY34vGwPlkNWXILu0/1Q4RRyBpMNktLJCb05epbE8+hVSo8
-         MQnlCzL7DanIdH2mb/gAHtw0WUT/N88dK4G8+dx2DdA9RRWC5uHwATcCg5Qzgbw/v1Pu
-         F5yB2t3fl//eshF+qgEckyAunty8uTwNvHlAS15/vNpXChmayq/kFVfWZtdRbIpKFBCH
-         c7Sdv7F7UNM5MKlFSfINsUoknnslS1yPuCznJ/O/EHRtjFuSnDwFEDuh7P1tpy6aFLuI
-         1Xqw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777196111; x=1777800911;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xxoJ7/yROVN+x+XZWhCqJyIdDhBLXxU+umFFNtD2wEg=;
-        b=sV44UWsI62nnREcOd3LTu8K98xDPYCDywGi2HxZynFozvjvfnFKKnvsiqFoijVIJVL
-         yQ4BUZAqBfLe5uv46HKKcil23sPqrPDflk73Dj8WUHKIjmkvsph2LwIUdfFBM8syah+j
-         vztNcPAIcyTZ140N6xDmcX3KVbZZ/KTOb2giRiHfQBXOy7w5Wx9ydDRbrQcdnpH5hFVT
-         xNy65tlvZPWDcUs8sbrrZHKO2+e5NjcH5gpmW5K7JNTQjaoYS/oGXEvvVM/DRNfUexFS
-         cEbtleyB02l4Pwxx38hkUVLRSOeTsfm1WA1S5SAwXyxUvP0CASVwAHBVjQP8ORaIIE9v
-         oxBQ==
-X-Gm-Message-State: AOJu0Yyx7omPQ6F5doNpnK65Fl11n69erIHorbC0Ki0Jc11eezRKXjtZ
-	tqXiWnFBKXkyYOD9lmbzx4up8mIWEZqydku595ovb2X03Ukm91MpVqlL
-X-Gm-Gg: AeBDieslB2jjUHx5ZnBk/i2TRLc3qQCjm1L/QPiYC3IMc8cyxwc+znJ0U8ghPrPPUmG
-	Eh8e80Z8CqlAEGp2beYupHZLkCsKYad+whlQingh1K3/+uDI/IM94wQjlGzfiTH/7Oumq/fSqL7
-	vEGS/DkVR17b+4S1akDFApzFilld+qX8Qslw/Wac811p0wz0QkYUYETFc94cmNDs0tbj4HhIaQ/
-	NjIucSsPl3kTxSCkOVvlGOW43hbuX5l15wk6wv4wPo8uu4fSGJdSMJkAb9Xz7JQkZDQaqcFsBpH
-	h8bzsqLsoJx5Li38eVez8WiZs3KJEHmdWjP8SdOs3GXgW1LuX8PFwdhyMHUKWNfYhoWE5F+ECWz
-	1a1n1AVIST+JODzHKeC6sXQRujm6H3LnvPs5cfqWOX74XsBJKyQOHTonjPj4vDQRzBI/GR1UUtF
-	BdvAtnBR2VM/qYlRlgM8KO7HQY5POaSTvM+g==
-X-Received: by 2002:a05:600c:1389:b0:485:9a50:338d with SMTP id 5b1f17b1804b1-488fb739d3amr518469975e9.3.1777196111138;
-        Sun, 26 Apr 2026 02:35:11 -0700 (PDT)
-Received: from yocto.. ([2a02:3037:62d:99ab:d73c:851e:2ff6:71a5])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488fb74c7a2sm224904625e9.1.2026.04.26.02.35.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Apr 2026 02:35:10 -0700 (PDT)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: song@kernel.org,
-	yukuai@fnnas.com,
-	paul.e.luse@linux.intel.com,
-	xni@redhat.com
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-Subject: [PATCH] md/raid1: fix len reuse across rdevs in choose_first_rdev()
-Date: Sun, 26 Apr 2026 11:35:06 +0200
-Message-ID: <20260426093506.14316-1-abd.masalkhi@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="Gfz8tGph"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=VObAGbTW+9A0YlT8RDgNBAL8kbf8Bp4GNC/bJiVMM38=;
+	b=Gfz8tGph2KWgVIskV7kFH/2JPRot07G06I1K2xbCam83mOtshbvOugP3G7Jyqo
+	ai37Dr1ofQD7wUpqZRBL3mxeK1hyR12P/5uwp0yunrzAchjxANOPZenxC08kKLYx
+	5hJRvTmihsx0Vyjm1RkYPJzh1rEdFERh8U8wZYoIfh//U=
+Received: from [IPV6:2408:8210:480a:2590:ec66:74e8:68a7:a44b] (unknown [])
+	by gzsmtp4 (Coremail) with SMTP id PykvCgD3_9WEGe5pvjEhEA--.25861S2;
+	Sun, 26 Apr 2026 21:56:23 +0800 (CST)
+Message-ID: <30411bd3-2c92-495b-9d87-d6660b5cf3a3@126.com>
+Date: Sun, 26 Apr 2026 21:56:20 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH 1/2] kernel/notifier: replace single-linked list with
+ double-linked list for reverse traversal
+To: Petr Mladek <pmladek@suse.com>, Masami Hiramatsu <mhiramat@kernel.org>
+Cc: chensong_2000@189.cn, rafael@kernel.org, lenb@kernel.org,
+ mturquette@baylibre.com, sboyd@kernel.org, viresh.kumar@linaro.org,
+ agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
+ bmarzins@redhat.com, song@kernel.org, yukuai@fnnas.com, linan122@huawei.com,
+ jason.wessel@windriver.com, danielt@kernel.org, dianders@chromium.org,
+ horms@kernel.org, davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+ pabeni@redhat.com, paulmck@kernel.org, frederic@kernel.org,
+ mcgrof@kernel.org, petr.pavlu@suse.com, da.gomez@kernel.org,
+ samitolvanen@google.com, atomlin@atomlin.com, jpoimboe@kernel.org,
+ jikos@kernel.org, mbenes@suse.cz, joe.lawrence@redhat.com,
+ rostedt@goodmis.org, mark.rutland@arm.com, mathieu.desnoyers@efficios.com,
+ linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-clk@vger.kernel.org, linux-pm@vger.kernel.org,
+ live-patching@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-raid@vger.kernel.org, kgdb-bugreport@lists.sourceforge.net,
+ netdev@vger.kernel.org
+References: <20260415070137.17860-1-chensong_2000@189.cn>
+ <20260420144429.57b45f2beece690bceea96ec@kernel.org>
+ <aec90caYZDHDAHgw@pathway.suse.cz>
+Content-Language: en-US
+From: Song Chen <chensong_2000@126.com>
+In-Reply-To: <aec90caYZDHDAHgw@pathway.suse.cz>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:PykvCgD3_9WEGe5pvjEhEA--.25861S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxGr48trW5Xw1rurW8KFy5twb_yoW5Wry5pF
+	90gF4SkF4kJr92kFn2gw18WF1Y9FZ5GFWqqr18GrySkwn0grnFvrZrtw15uFykur48Ar12
+	vrWUXasru34DZaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UXyCJUUUUU=
+X-CM-SenderInfo: xfkh02prqjsjqqqqqiyswou0bp/xtbBpQd9-GnuGYeunwAA3L
 
-choose_first_rdev() initializes the variable len before iterating over
-all rdevs, but passes it by reference to raid1_check_read_range(), which
-it might update *len and return 0 depending on the layout of the bad
-block region. As a result, 'len' can be modified during the first
-iteration and reused for subsequent rdevs, causing later devices to be
-evaluated with an incorrect length value.
+Hi,
 
-Fixes: 31a73331752d3 ("md/raid1: factor out read_first_rdev() from read_balance()")
-Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
----
- drivers/md/raid1.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 4/21/26 17:05, Petr Mladek wrote:
+> On Mon 2026-04-20 14:44:29, Masami Hiramatsu wrote:
+>> Hi Song,
+>>
+>> On Wed, 15 Apr 2026 15:01:37 +0800
+>> chensong_2000@189.cn wrote:
+>>
+>>> From: Song Chen <chensong_2000@189.cn>
+>>>
+>>> The current notifier chain implementation uses a single-linked list
+>>> (struct notifier_block *next), which only supports forward traversal
+>>> in priority order. This makes it difficult to handle cleanup/teardown
+>>> scenarios that require notifiers to be called in reverse priority order.
+>>
+>> What about introducing a new notification callback API that allows you
+>> to describe dependencies between callback functions?
+>>
+>> For example, when registering a callback, you could register a string
+>> as an ID and specify whether to call it before or after that ID,
+>> or you could register a comparison function that is called when adding
+>> to a list. (I prefer @name and @depends fields so that it can be easily
+>> maintained.)
+> 
+> This looks too complex. It would make sense only
+> when this API has more users.
+> 
+> Also this won't be enough for the ftrace/livepatch callbacks.
+> They need to be ordered against against each other. But they
+> also need to be called before/after all other callbacks.
+> For example, when the module is loaded:
+> 
+>     + 1st frace
+>     + 2nd livepatch
+>     + then other notifiers
+> 
+> See the commit c1bf08ac26e92122 ("ftrace: Be first to run code
+> modification on modules").
+> 
+>> This would allow for better dependency building when adding to the list.
+>   
+>>>
+>>> A concrete example is the ordering dependency between ftrace and
+>>> livepatch during module load/unload. see the detail here [1].
+>>
+>> If this only concerns notification callback issues with the ftrace
+>> and livepatch modules, it's far more robust to simply call the
+>> necessary processing directly when the modules load and unload,
+>> rather than registering notification callbacks externally.
+>>
+>> There are fprobe, kprobe and its trace-events, all of them are using
+>> ftrace as its fundation layer. In this case, I always needs to
+>> consider callback order when a module is unloaded.
+>>
+>> If ftrace is working as a part of module callbacks, it will conflict
+>> with fprobe/kprobe module callback. Of course we can reorder it with
+>> modifying its priority. But this is ugly, because when we introduce
+>> a new other feature which depends on another layer, we need to
+>> reorder the callback's priority number on the list.
+>>
+>> Based on the above, I don't think this can be resolved simply by
+>> changing the list of notification callbacks to a bidirectional list.
+> 
+> I agree. I would keep it as is (hardcoded).
+> 
+> Best Regards,
+> Petr
+> 
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index b549be9174bb..5f5dbf79c903 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -591,12 +591,12 @@ static int choose_first_rdev(struct r1conf *conf, struct r1bio *r1_bio,
- 			     int *max_sectors)
- {
- 	sector_t this_sector = r1_bio->sector;
--	int len = r1_bio->sectors;
- 	int disk;
- 
- 	for (disk = 0 ; disk < conf->raid_disks * 2 ; disk++) {
- 		struct md_rdev *rdev;
- 		int read_len;
-+		int len = r1_bio->sectors;
- 
- 		if (r1_bio->bios[disk] == IO_BLOCKED)
- 			continue;
--- 
-2.43.0
+
+Thanks for the feedback, the necessity doesn't convincing enough. I will 
+try the proposal from Masami Hiramatsu.
+
+Best regards,
+
+Song
 
