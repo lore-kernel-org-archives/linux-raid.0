@@ -1,69 +1,71 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1AED35CB76
-	for <linux-raid@vger.kernel.org>; Sat, 25 Apr 2026 14:29:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6715234973
+	for <linux-raid@vger.kernel.org>; Sun, 26 Apr 2026 09:35:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777127383; cv=none; b=rvwBXZpZIWPy4/1tIxgoTuqkWCnIUOa+hk04l4VwKTEv3pauMa8Y2McSygrp9mpQ7b3LeIRlVaKzfLCjyq1e+2gzEXNLLrolcwbLcJLe26T+0Gm0rtej37CjS+iK6HnhIVWj3BOLWOpMMXYsGupGxmnYS2PgGZEvGXzt7MadmQc=
+	t=1777196114; cv=none; b=FlNEPDQLK69dQq/1cleVnpfEbZHodG7yeD1JIwxDxUb6c7OuuQRlDmQ6Rl4Mi+kaLEiIaXKD9DCbd8wDnWFU31vTFKBeAeTD6Rt4mBUj7Z1ooJotcQ4+IMe9avdngsYEaVWl0mpthhyX9UCsNsdFSrH3IysrS012s3kBhUWab0A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777127383; c=relaxed/simple;
-	bh=A6VOulTgouZzEeQe94awfpSmoyzktcwG85H4rcHLhTo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=njfo3hizI+dXU9oylH5ZN18Ddp0jTKcSBF/TM4Evtz031ZDN5aVLEsIN8E4UgDVJXPnjPT4nceCwirq9gU6VjaBxM8HI1bKs0+DB8VEi1gHVk/bgG+JQWaBsjwKTZL/iZbjsBoU1rpkQT+X8myHtjDnsvZojK/KdAY9VoUrWoQ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HERi3/yt; arc=none smtp.client-ip=209.85.128.42
+	s=arc-20240116; t=1777196114; c=relaxed/simple;
+	bh=zo624SWXuhPM4Qqrrddsot980vhyyvBwEm1SghzN+zk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jGb5T+7eKTUKWWcqPZNR3SlmLVQLyediL3FhFBck4uT3OyRvkZdc6JvL1DeAsr2nXbmOGEWxXBSxanL/BjuAqJ8ECBi940oySXBBYmiVBI7JDl6vXSF23FGcx+azKUq28JTFS7dXyc7yE1IK0bkeGJgQVeaKbHfJvQXdD24XHPQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OMlHaW5s; arc=none smtp.client-ip=209.85.128.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HERi3/yt"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-488d2079582so102469865e9.2
-        for <linux-raid@vger.kernel.org>; Sat, 25 Apr 2026 07:29:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OMlHaW5s"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4852b81c73aso76515115e9.3
+        for <linux-raid@vger.kernel.org>; Sun, 26 Apr 2026 02:35:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1777127380; x=1777732180; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1777196111; x=1777800911; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=v1GLAZ6Q4eu4pOonAVDQr61KWdkIrk9c4bRT7Wa1sec=;
-        b=HERi3/ytQvd+/s06j8ExAB491e/+zySQHA8Zolpy5Akmfh3tFP24ryxEXkedEJAHVJ
-         /Mz1T/iOam/90384E/b2i+EmqCZZJdW052TL8MnQUS7u7efFWPcLraXzle6CQPWxWoe8
-         ltWtDF69D/tfWt2pnx4KpUULNH0Sk15C7EEeXTtxCpPPSFucS1n5NFnrvMqkG7YU6Cbv
-         PqTHsuxT3isL9AL1/UEkBZsYLTq+xEPVVLs8vjP0MClbQJkL9CvVIFsUFo036RMSJCDe
-         VsWzWB/EzThTaTEKP3c6lSF5FXiyV6AmfZWD6AQPJaVKrsYVGGAi8Tq1XdoXo/0Bdn4R
-         Zn2Q==
+        bh=xxoJ7/yROVN+x+XZWhCqJyIdDhBLXxU+umFFNtD2wEg=;
+        b=OMlHaW5sphs4ZbaVoT/qgmK3Z/UEaNrm6Ljo6tXPihrBuhD92yA49cXXro6nHwcBaZ
+         S2P+YoXrD2dfgPgzCkX8sWY34vGwPlkNWXILu0/1Q4RRyBpMNktLJCb05epbE8+hVSo8
+         MQnlCzL7DanIdH2mb/gAHtw0WUT/N88dK4G8+dx2DdA9RRWC5uHwATcCg5Qzgbw/v1Pu
+         F5yB2t3fl//eshF+qgEckyAunty8uTwNvHlAS15/vNpXChmayq/kFVfWZtdRbIpKFBCH
+         c7Sdv7F7UNM5MKlFSfINsUoknnslS1yPuCznJ/O/EHRtjFuSnDwFEDuh7P1tpy6aFLuI
+         1Xqw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777127380; x=1777732180;
+        d=1e100.net; s=20251104; t=1777196111; x=1777800911;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=v1GLAZ6Q4eu4pOonAVDQr61KWdkIrk9c4bRT7Wa1sec=;
-        b=GT2oiM4OUBlvJ07iB5zvSAT/SQE02w+T7a7B/LApkpCpMxMOFRv86L0C7n7x+hT93b
-         6O+GtcLzjqu4wfYvTbGfPE/vGvvqcUz9sTfYroFFY565W+1VUfWgmhr769QulMD0PCGr
-         asTFEGDhOkGxA5vbzDIGYX+10eZX8+84O9j4OZbA/gWwPUDprCwJ2YoXxWKi/od4Nvl3
-         abU8j2DzTGmo56O+F3/2OIDyKhjioaYlksRtVjfstdj8mFrSm/9LhBBz7jNTQ5ensOGL
-         3Ckp168nNNK/16Vy2A57oXQu/DYrB+sdYmtY6oTVoSnT6uPEuTg6iNbQl5HdQvsQlNTm
-         fPHQ==
-X-Gm-Message-State: AOJu0Yw0Qj3b2vuzE66hW/azxPdJmmns89FJzdBlVEqYmYQehx4GWqs4
-	poHTF99cBJZrkGulyXqr2l1nbWvITMmTPQwOkKY0GstPkGHOgOVCYt2AysNNMA==
-X-Gm-Gg: AeBDietWme3qwp8je0Gvg0FIvJEQVzFfdhyVJ8PGRNRjqjD6fZTndM4VBoNjGfib7tW
-	5D4/p5aZg9zIotaeXHSxtjQC74Gft6bEnlaM48iW1v+MH9wiYg03jGQI7O/4uedkOwjaOypD4eA
-	oUr1dbQF4UZtoz/eMX0/WU1stoo+8tlET8mS9/jZSbBUnH/j+FnHU/nd6ilRC/+a2BbElJrqwb2
-	ACbIAoTWUYYNV99JsC8O6stz0HrUnSaTzAo58TW5rLM4YoLw9GJqtTlAIOVl3xqOCHG4mGErMyo
-	jZ8FTarHz+koZt+/52xfBQp8tW8CJmkiNC8Oqldjhxtib7tHo8LVj6/pQYR66kggmjZU0ohn/qI
-	1uV3GSMdF1RumvfDPkV5siBVA5TTs032CenyrK4LKuySlpjIuwCNX/R7efLr+3GBhBDIRTaXK6l
-	kBRSMbePIepyjMO3gXV0mj3pafkD5gyQiSzzJ5nz1iEPHf4XDsrpry3gIubF4StFmDtf6bo4qzJ
-	f1tPY/bMaBCQxMh2rTkovF+Vg==
-X-Received: by 2002:a05:600c:2d09:b0:489:c57:7836 with SMTP id 5b1f17b1804b1-4890c5778ffmr231039785e9.27.1777127380144;
-        Sat, 25 Apr 2026 07:29:40 -0700 (PDT)
-Received: from yocto.. (dynamic-176-007-212-220.176.7.pool.telefonica.de. [176.7.212.220])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488fb7b2716sm209489945e9.30.2026.04.25.07.29.39
+        bh=xxoJ7/yROVN+x+XZWhCqJyIdDhBLXxU+umFFNtD2wEg=;
+        b=sV44UWsI62nnREcOd3LTu8K98xDPYCDywGi2HxZynFozvjvfnFKKnvsiqFoijVIJVL
+         yQ4BUZAqBfLe5uv46HKKcil23sPqrPDflk73Dj8WUHKIjmkvsph2LwIUdfFBM8syah+j
+         vztNcPAIcyTZ140N6xDmcX3KVbZZ/KTOb2giRiHfQBXOy7w5Wx9ydDRbrQcdnpH5hFVT
+         xNy65tlvZPWDcUs8sbrrZHKO2+e5NjcH5gpmW5K7JNTQjaoYS/oGXEvvVM/DRNfUexFS
+         cEbtleyB02l4Pwxx38hkUVLRSOeTsfm1WA1S5SAwXyxUvP0CASVwAHBVjQP8ORaIIE9v
+         oxBQ==
+X-Gm-Message-State: AOJu0Yyx7omPQ6F5doNpnK65Fl11n69erIHorbC0Ki0Jc11eezRKXjtZ
+	tqXiWnFBKXkyYOD9lmbzx4up8mIWEZqydku595ovb2X03Ukm91MpVqlL
+X-Gm-Gg: AeBDieslB2jjUHx5ZnBk/i2TRLc3qQCjm1L/QPiYC3IMc8cyxwc+znJ0U8ghPrPPUmG
+	Eh8e80Z8CqlAEGp2beYupHZLkCsKYad+whlQingh1K3/+uDI/IM94wQjlGzfiTH/7Oumq/fSqL7
+	vEGS/DkVR17b+4S1akDFApzFilld+qX8Qslw/Wac811p0wz0QkYUYETFc94cmNDs0tbj4HhIaQ/
+	NjIucSsPl3kTxSCkOVvlGOW43hbuX5l15wk6wv4wPo8uu4fSGJdSMJkAb9Xz7JQkZDQaqcFsBpH
+	h8bzsqLsoJx5Li38eVez8WiZs3KJEHmdWjP8SdOs3GXgW1LuX8PFwdhyMHUKWNfYhoWE5F+ECWz
+	1a1n1AVIST+JODzHKeC6sXQRujm6H3LnvPs5cfqWOX74XsBJKyQOHTonjPj4vDQRzBI/GR1UUtF
+	BdvAtnBR2VM/qYlRlgM8KO7HQY5POaSTvM+g==
+X-Received: by 2002:a05:600c:1389:b0:485:9a50:338d with SMTP id 5b1f17b1804b1-488fb739d3amr518469975e9.3.1777196111138;
+        Sun, 26 Apr 2026 02:35:11 -0700 (PDT)
+Received: from yocto.. ([2a02:3037:62d:99ab:d73c:851e:2ff6:71a5])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488fb74c7a2sm224904625e9.1.2026.04.26.02.35.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 25 Apr 2026 07:29:39 -0700 (PDT)
+        Sun, 26 Apr 2026 02:35:10 -0700 (PDT)
 From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 To: song@kernel.org,
-	yukuai@fnnas.com
+	yukuai@fnnas.com,
+	paul.e.luse@linux.intel.com,
+	xni@redhat.com
 Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [RFC] md/raid1: possible deadlock introduced in raid1_read_request()
-Date: Sat, 25 Apr 2026 16:29:38 +0200
-Message-ID: <20260425142938.5555-1-abd.masalkhi@gmail.com>
+	linux-kernel@vger.kernel.org,
+	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+Subject: [PATCH] md/raid1: fix len reuse across rdevs in choose_first_rdev()
+Date: Sun, 26 Apr 2026 11:35:06 +0200
+Message-ID: <20260426093506.14316-1-abd.masalkhi@gmail.com>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -73,26 +75,37 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-hi,
+choose_first_rdev() initializes the variable len before iterating over
+all rdevs, but passes it by reference to raid1_check_read_range(), which
+it might update *len and return 0 depending on the layout of the bad
+block region. As a result, 'len' can be modified during the first
+iteration and reused for subsequent rdevs, causing later devices to be
+evaluated with an incorrect length value.
 
-The raid1_read_request() function splits a bio regardless of whether it
-is an original bio or an md-cloned bio (regardless of the r1bio_existed
-value).
+Fixes: 31a73331752d3 ("md/raid1: factor out read_first_rdev() from read_balance()")
+Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+---
+ drivers/md/raid1.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-When an md_cloned_bio is resubmitted, raid1_read_request() treats it as a
-new original bio instead of recognizing it as an md_cloned_bio.
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index b549be9174bb..5f5dbf79c903 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -591,12 +591,12 @@ static int choose_first_rdev(struct r1conf *conf, struct r1bio *r1_bio,
+ 			     int *max_sectors)
+ {
+ 	sector_t this_sector = r1_bio->sector;
+-	int len = r1_bio->sectors;
+ 	int disk;
+ 
+ 	for (disk = 0 ; disk < conf->raid_disks * 2 ; disk++) {
+ 		struct md_rdev *rdev;
+ 		int read_len;
++		int len = r1_bio->sectors;
+ 
+ 		if (r1_bio->bios[disk] == IO_BLOCKED)
+ 			continue;
+-- 
+2.43.0
 
-If I understand this correctly, this results in allocating a new r1bio,
-etc. More importantly, this may lead to a deadlock if we tried to 
-suspended the array before the md driver calls percpu_ref_tryget_live()
-(&mddev->active_io) on the path down to pers->make_request().
-
-I am considering two possible approaches, ending the bio if max_sectors
-is smaller than bio_sectors(bio), or modifing read_balance() to select
-a disk that can handle the full bio if r1bio_existed was set.
-
-Is this understanding correct? and What might be the preferred approach
-in this case?
-
-Thanks,
-Abd-Alrhman
