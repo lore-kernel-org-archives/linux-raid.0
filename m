@@ -1,146 +1,97 @@
-Received: from va-2-27.ptr.blmpb.com (va-2-27.ptr.blmpb.com [209.127.231.27])
+Received: from va-2-28.ptr.blmpb.com (va-2-28.ptr.blmpb.com [209.127.231.28])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC8EC3859C9
-	for <linux-raid@vger.kernel.org>; Tue, 28 Apr 2026 08:21:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.27
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AD1E2E717B
+	for <linux-raid@vger.kernel.org>; Tue, 28 Apr 2026 08:23:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.28
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777364518; cv=none; b=lClWqgZmMmOSQxQkUKdXbjPUAyH+lgaMdC0Yiy5l3vZqeysOUi0yIi2mlzK0lTarwP2A17rPkAOS1XfvmUyCy3pAKFa9Nujdlway4HtZY9fPK3GiGdVAjFX0B2K+czKHSJt5Oj7enlCpZ1HFn+xSvVhi/vWFejttmcq1C4hcsXc=
+	t=1777364639; cv=none; b=Lpc2ZtloIee4cXcNqInx5/m/XxkXw0TNZAe2WHW23nVGKhnAa+cmSeibTU06B4oTfqmGUzef/9c7NqzbtUzda3Rbbl+hBR/bHmV79S7Czs++IozNqIinUxBLbl+wrDY+UNs3d+QsgFF5ie2q/KxLh3OMZY1ZAARnfrkfJPkcE4U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777364518; c=relaxed/simple;
-	bh=m6WDakV2rlNWUW5uu54nROWRH2E6LOhDOlFmGfwNqls=;
-	h=From:In-Reply-To:Cc:Date:Content-Type:Subject:Message-Id:To:
-	 Mime-Version:References; b=VnEehQDAkuDvoU8hArHZnPGnZj/nuHaMFjMrDuDyIz/x51+UH8EUXupXF87s29ozbgy4YjAsQ4bfaERVXepPWICl7iXLg7yUFUre+VPnv1DeM2nhrXOx2W1hMOV62qQGnDaojZoZ+OPyot4phLyPOpiN+PlbiWsMwiAd0+Po9hM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=fMTGhF3R; arc=none smtp.client-ip=209.127.231.27
+	s=arc-20240116; t=1777364639; c=relaxed/simple;
+	bh=0WMjLvpKFjFuyhgu3Hq6lHSRCbGuAEa7X/eh+I3okqs=;
+	h=Content-Type:Date:Message-Id:References:Cc:Mime-Version:Subject:
+	 In-Reply-To:To:From; b=BIg/xKdruxcr/roIOgZrXAjGEPjSgJKo5EsFELgDygWpzG1I9HS9lavR+9IGHXR7+9Y2aF/+KqpxAz+mV8WZU2z5CEMMYY5kXSIAC4jtgs/7gQwQxkNw+xBOInwjA+CycUQI6sXikO1QdLo5f6uZEaaOPSdTMESX/xh1QCNU6NI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=ARX7Ns+c; arc=none smtp.client-ip=209.127.231.28
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="fMTGhF3R"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="ARX7Ns+c"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1777364504;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1777364633;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=m6WDakV2rlNWUW5uu54nROWRH2E6LOhDOlFmGfwNqls=;
- b=fMTGhF3Rs+AlzxuRaHVf5Qa4S2RDLYkyYlQVBLP0liSVd/2qeuqLEguBJjRT+GIvBentG1
- IRFOmCxIQnfv2dHHGChnPKfHLTkgYKCkLqbGDhJLdoywXB5TBRtyzGOXgrvBXYkrLoMn1K
- APAPNqNlzQsdUaMO9ffbW9GONanmRsUOYvmMb9OTHA5Toj8zVYam8UcFtGXp0LfGKnaMtQ
- Q8D5M+bTSNA6tDm96oMR8gtgUuLtpUeNeVxz4/vK6e5QfxqSqp1n36xjEhnU72LI4oBKBN
- cJrRNooOQmO868Di7gbYFiZpgnVXMxPe9G3Ng7S4E+WHUjniz2N0Qnv/lop7qQ==
-From: "Yu Kuai" <yukuai@fnnas.com>
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-In-Reply-To: <qzo35t50.fsf@damenly.org>
-Reply-To: yukuai@fnnas.com
-Cc: "Song Liu" <song@kernel.org>, <glass.su@suse.com>, 
-	"Li Nan" <linan122@huawei.com>, "Xiao Ni" <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<yukuai@fnnas.com>
-Date: Tue, 28 Apr 2026 16:21:39 +0800
-Content-Transfer-Encoding: quoted-printable
+ bh=2cMjZeoehSdSdvdUCQKVh3/LRI2Pjm9LjP2wUp6i41Y=;
+ b=ARX7Ns+c0oYDx01wHyqun4DqHtZWQw5PMfmZz2vZ4ZPj20aCZkt2CR6OpbYUF44mS/sWgl
+ f9+AMDuKnvlqmas6coV4kl360bJMalXH3SR5DQriZwEwczL4FuodatbEp93KaPvG7sCOnV
+ R1Y6L9JFFkqowMS3N/wlZ526F/xuJVeveW4tXjndbpLRArH+pg24f5J5ogxxUFviVlpNhP
+ vd8yNp8dirbprV32kpKIUAGP5c/Ar1BVTm5UsPoU+vN7OCLlFRgXuPkVLsHMKkK3ri0gBM
+ ogzVu1kA7bxsvJhW5zADHUnVWtrTLO4GxGsk1SuhwZzP+aA89fNUy8Q9es+eQw==
+Received: from [192.168.1.104] ([39.182.0.183]) by smtp.feishu.cn with ESMTPS; Tue, 28 Apr 2026 16:23:49 +0800
 Content-Type: text/plain; charset=UTF-8
-Received: from [192.168.1.104] ([39.182.0.183]) by smtp.feishu.cn with ESMTPS; Tue, 28 Apr 2026 16:21:41 +0800
-Subject: Re: [PATCH v13 0/3] md/md-bitmap: restore bitmap grow through sysfs
-Message-Id: <5b303e36-51ed-46cf-aa0d-29240822e94b@fnnas.com>
-Content-Language: en-US
-To: "Su Yue" <l@damenly.org>
+Date: Tue, 28 Apr 2026 16:23:47 +0800
+Message-Id: <5c71cb6b-d860-4bcb-a900-a27544be7a17@fnnas.com>
+References: <20260426093506.14316-1-abd.masalkhi@gmail.com>
+User-Agent: Mozilla Thunderbird
+X-Lms-Return-Path: <lba+269f06e97+0a40f1+vger.kernel.org+yukuai@fnnas.com>
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Reply-To: yukuai@fnnas.com
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Lms-Return-Path: <lba+269f06e16+e19024+vger.kernel.org+yukuai@fnnas.com>
-User-Agent: Mozilla Thunderbird
-References: <20260425024615.1696892-1-yukuai@fnnas.com> <qzo35t50.fsf@damenly.org>
+Subject: Re: [PATCH] md/raid1: fix len reuse across rdevs in choose_first_rdev()
+In-Reply-To: <20260426093506.14316-1-abd.masalkhi@gmail.com>
+Content-Language: en-US
+To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, <song@kernel.org>, 
+	<paul.e.luse@linux.intel.com>, <xni@redhat.com>, <yukuai@fnnas.com>
+From: "Yu Kuai" <yukuai@fnnas.com>
 
 Hi,
 
-=E5=9C=A8 2026/4/25 16:41, Su Yue =E5=86=99=E9=81=93:
-> On Sat 25 Apr 2026 at 10:46, Yu Kuai <yukuai@fnnas.com> wrote:
+=E5=9C=A8 2026/4/26 17:35, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
+> choose_first_rdev() initializes the variable len before iterating over
+> all rdevs, but passes it by reference to raid1_check_read_range(), which
+> it might update *len and return 0 depending on the layout of the bad
+> block region. As a result, 'len' can be modified during the first
+> iteration and reused for subsequent rdevs, causing later devices to be
+> evaluated with an incorrect length value.
 >
->> mdadm --grow adds an internal bitmap by writing bitmap/location for an
->> array that currently has no bitmap. That requires the bitmap directory
->> and location attribute to exist before the classic bitmap backend is
->> created.
->>
->> This series separates bitmap backend lifetime from bitmap sysfs=20
->> lifetime,
->> splits the sysfs layout into common and backend-specific groups, and=20
->> adds
->> a small "none" bitmap backend. The none backend keeps bitmap/location
->> available while no real bitmap is active, and the location store path=20
->> can
->> then switch between the none backend and the classic bitmap backend
->> without tearing down the common bitmap sysfs directory.
->>
->> Patch 1 factors bitmap creation and destruction into helpers that do not
->> touch sysfs registration.
->>
->> Patch 2 splits the classic bitmap sysfs files into a common group and an
->> internal-bitmap group, and converts bitmap backend operations to use a
->> sysfs group array.
->>
->> Patch 3 adds the none backend and uses it to restore mdadm --grow bitmap
->> addition through bitmap/location.
->>
->> Changes since v12:
->> - Keep the factoring patch focused on no-sysfs bitmap lifetime helpers.
->> - Make bitmap operation lookup depend only on the current bitmap id
->> =C2=A0 matching the installed backend.
->> - Trim the none backend to only the operations required by the active
->> =C2=A0 call paths.
->> - Rework bitmap/location error handling with explicit cleanup labels.
->> - Restore the none backend after bitmap removal and creation/load
->> =C2=A0 failures so bitmap/location stays available.
->>
->> Validation:
->> =C2=A0 - create a RAID1 array with --bitmap=3Dnone
->> =C2=A0 - verify /sys/block/md0/md/bitmap/location exists and reports =C2=
-=A0 "none"
->> =C2=A0 - mdadm --grow /dev/md0 --bitmap=3Dinternal
->> =C2=A0 - verify location switches to "+8", mdadm reports "Intent Bitmap:
->> =C2=A0=C2=A0=C2=A0 Internal", and /proc/mdstat reports a bitmap
->> =C2=A0 - mdadm --grow /dev/md0 --bitmap=3Dnone
->> =C2=A0 - verify location switches back to "none" and only the common =C2=
-=A0=20
->> location
->> =C2=A0=C2=A0=C2=A0 attribute remains under md/bitmap
->> =C2=A0 - repeat the internal/none switch once more
->> - Checked the QEMU serial log for panic, Oops, BUG, WARNING, Call Trace,
->> =C2=A0 RCU stall, and hung-task patterns; none were found.
->>
->> Yu Kuai (3):
->> =C2=A0 md: factor bitmap creation away from sysfs handling
->> =C2=A0 md/md-bitmap: split bitmap sysfs groups
->> =C2=A0 md/md-bitmap: add a none backend for bitmap grow
->>
+> Fixes: 31a73331752d3 ("md/raid1: factor out read_first_rdev() from read_b=
+alance()")
+> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+> ---
+>   drivers/md/raid1.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> Thanks for all.
-> Would you like to add tag Fixes: fb8cc3b0d9db for the whole series=20
-> while merging?
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index b549be9174bb..5f5dbf79c903 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -591,12 +591,12 @@ static int choose_first_rdev(struct r1conf *conf, s=
+truct r1bio *r1_bio,
+>   			     int *max_sectors)
+>   {
+>   	sector_t this_sector =3D r1_bio->sector;
+> -	int len =3D r1_bio->sectors;
+>   	int disk;
+>  =20
+>   	for (disk =3D 0 ; disk < conf->raid_disks * 2 ; disk++) {
+>   		struct md_rdev *rdev;
+>   		int read_len;
+> +		int len =3D r1_bio->sectors;
+>  =20
+>   		if (r1_bio->bios[disk] =3D=3D IO_BLOCKED)
+>   			continue;
 
-Sure, sorry that I forgot the fix tag.
-
->
-> --=20
-> Su
->
->> =C2=A0drivers/md/md-bitmap.c=C2=A0=C2=A0 | 131 =C2=A0+++++++++++++++++++=
-++++++++++++++++----
->> =C2=A0drivers/md/md-bitmap.h=C2=A0=C2=A0 |=C2=A0=C2=A0 2 +-
->> =C2=A0drivers/md/md-llbitmap.c |=C2=A0=C2=A0 7 ++-
->> =C2=A0drivers/md/md.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 | 125 =C2=A0++++++++++++++++++++++++++-----------
->> =C2=A0drivers/md/md.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 |=C2=A0=C2=A0 3 +
->> =C2=A05 files changed, 218 insertions(+), 50 deletions(-)
-
-Applied with following fix tag for patch 3:
-
-Fixes: fb8cc3b0d9db ("md/md-bitmap: delay registration of bitmap_ops until =
-creating bitmap")
-
->>
->> base-commit: c85d314b135ff569c1031f2ef8e40368bcfe72ac
+This patch is wrong, choose_first_rdev() is used when raid1_should_read_fir=
+st() is true,
+meaning the read overlaps an unsynced/resyncing area. Reset len can cause t=
+he problem that
+reading the same area can return different data.
 
 --=20
 Thansk,
