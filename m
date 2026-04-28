@@ -1,111 +1,158 @@
 Received: from va-2-36.ptr.blmpb.com (va-2-36.ptr.blmpb.com [209.127.231.36])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC71F3101C8
-	for <linux-raid@vger.kernel.org>; Tue, 28 Apr 2026 08:32:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59E0E2E5B1B
+	for <linux-raid@vger.kernel.org>; Tue, 28 Apr 2026 08:36:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.36
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777365170; cv=none; b=EuJmpTz8QVq8TrroOOYeD5kgjbDwgkscoNQFRgX9cUlS6P2Z5rhiXpj6ZhnbkiwPIJ0Y89xa17tGMO+jvv/gepHQOpMLGE0hGaoZr3gpmC82oU0jd71UytmsOQ2smWCpiKeY84cUW+9/qkQpKDeVTqer8oTpwn9/W2x0dF6Y3I4=
+	t=1777365363; cv=none; b=Wwq8LDb4AKWZV/pn5po6Hfad/GjBFOcjdq9bN0nHINdH7LZyFsSgBwCiCH79QSN7xcy1MuVSbzUwK5L4JVKi4I/eK4qXUQcV6wjJ5dPPTE5Yp1s5BAc41hCGLRUOzZqsnGvZopuuMBFm8e3M4VpPiZ3u+eKOvkQHAKCi0OXSiVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777365170; c=relaxed/simple;
-	bh=pIHABbnrYjWnvGwVzXPoI/1xvnAjltrRfmLWH7wlwzU=;
-	h=Date:Message-Id:Mime-Version:In-Reply-To:Cc:Subject:References:
-	 Content-Type:To:From; b=Tq4wuvXFNL6s+gtF6Im1F5o/SJ3k+4xk1oPzhpjeipBzQmLwQNimiLqxu3RXbAZ6N+dz4GkTX+iTPMr6PdBTuggKuqUlShFqdRiKH+0ynSk+S/ketolbop6g6f5ZFQDSkiKO52o3USVm0K02WhYeZSKnvGAHe09kuNiuTa8N3PQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=unl/eBBR; arc=none smtp.client-ip=209.127.231.36
+	s=arc-20240116; t=1777365363; c=relaxed/simple;
+	bh=mEkoZyVRKnDgwYNS3ydtXdpNVtYjMErvomVxhO9m5Zk=;
+	h=From:Subject:References:Content-Type:To:Date:Mime-Version:Cc:
+	 Message-Id:In-Reply-To; b=Qa9MIgi1mG10ldgtOUeXnzmtpzSnE3gGMfAv3UpuLe/CgvB3nTiD6T68uGH2z64nDBTzlw3Qv79ge6rwDifQmL8RRTAMPKIq/shI7BDChyFwo8lAH2l1J/PsTuG1RuqJWYyhu5YawHROpDUMo5KOloCpmp9FG0rBngsH/pn7KaE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=oqNwNAAf; arc=none smtp.client-ip=209.127.231.36
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="unl/eBBR"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="oqNwNAAf"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1777365159;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1777365357;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=BLxleqeaahmG3ULXVbRao6S+XTlDw3HS+ySLo7Slhn0=;
- b=unl/eBBRnYMyZHpS7qeIXppSb/qpiNdntf5Efnq+78WRHqSR7V2OPb/uaUgTy5GsLJDjl4
- P/KTBgN+ExPio6qwMlZdjYeR6zj3oFRMgDJsZrts5KeLMfIOIQ8Is5hamATsIQRNpbkubH
- 5cBdu+cZ/RVXf8XGUcNFvBBi+ULUlTmJgk+agScs6X8DgmfiMaU67EPSUp7YF5ek5hzerz
- iYuLOqvgHi7gUgfxFgz3aZcScBpO+1n4otom2QD0QEKKupSuY/hsdwIVQLyp59yEeJa5II
- bo/u0sCO3cwnFq40XFSvbjfUVyo0/GAnzkFiwdBq+2WS4PUHlmkhiGqPjK+Y4w==
-Date: Tue, 28 Apr 2026 16:32:33 +0800
-Message-Id: <282278bc-7d71-4049-89f4-a9f3968504dd@fnnas.com>
+ bh=WqOpI73oguuXxE77jncWiCP//wCNv+y8pygW9AIz84M=;
+ b=oqNwNAAf7DALDEfrPCktzy2byPviQ8BQePJXUfBbBkcE1vSWusieLpU3gggyNnuC/shFez
+ jKaOR5Z0Ns2eCxb8sda7ESPvxnIhIggYj1BCC4KE2FEiKqbc5UUYJc5bOtlmk0Ll1LUiei
+ JXaBJ6ZgUUPsJ7JHPWqZet2nGwpNdPZuqCSJ7ExALh5RTPQFZvPwoUKU311Rol00CIRWP1
+ NlDxrD2UqeZniKMVMO25qJ8psKM4A87nTmIJFfGU3E/ck3q0G6qcCfnsUjBL23ORE/yzR6
+ td8KfZ/NqPR3dH1vMmQDymuHAP2Vp2CUG4RtcdYCQvwZ2zlJg8UljNxLTMsQ3Q==
+From: "Yu Kuai" <yukuai@fnnas.com>
+Received: from [192.168.1.104] ([39.182.0.183]) by smtp.feishu.cn with ESMTPS; Tue, 28 Apr 2026 16:35:54 +0800
+X-Lms-Return-Path: <lba+269f0716b+52deae+vger.kernel.org+yukuai@fnnas.com>
+Subject: Re: [RFC PATCH] dm-raid: only requeue bios when dm is suspending.
+References: <ad6FNUtSCS_zTrHW@redhat.com> <20260414190350.1946406-1-bmarzins@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+To: "Benjamin Marzinski" <bmarzins@redhat.com>, 
+	"Yang Xiuwei" <yangxiuwei@kylinos.cn>
+Date: Tue, 28 Apr 2026 16:35:52 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Received: from [192.168.1.104] ([39.182.0.183]) by smtp.feishu.cn with ESMTPS; Tue, 28 Apr 2026 16:32:35 +0800
-In-Reply-To: <CAHYQsXRN6uof4yyDR6qGteQ=wZTt86VUx7km6k=LbNAQ3wxGiQ@mail.gmail.com>
-Reply-To: yukuai@fnnas.com
-Cc: "Junrui Luo" <moonafterrain@outlook.com>, "Song Liu" <song@kernel.org>, 
-	"Li Nan" <linan122@huawei.com>, "NeilBrown" <neil@brown.name>, 
-	"Jonathan Brassow" <jbrassow@redhat.com>, <linux-raid@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>, 
-	<yukuai@fnnas.com>
-Subject: Re: [PATCH] md/raid10: fix divide-by-zero in setup_geo() with zero far_copies
-Content-Transfer-Encoding: quoted-printable
-References: <SYBPR01MB7881A5E2556806CC1D318582AF232@SYBPR01MB7881.ausprd01.prod.outlook.com> <beca1657-0180-4f9b-8de1-ca7776c9614a@fnnas.com> <CAHYQsXRN6uof4yyDR6qGteQ=wZTt86VUx7km6k=LbNAQ3wxGiQ@mail.gmail.com>
 User-Agent: Mozilla Thunderbird
-Content-Language: en-US
+Reply-To: yukuai@fnnas.com
+Cc: "Yu Kuai" <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>, 
+	"Li Nan" <linan666@huaweicloud.com>, "Song Liu" <song@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <dm-devel@lists.linux.dev>, 
+	"Xiao Ni" <xni@redhat.com>, "Nigel Croxon" <ncroxon@redhat.com>, 
+	<yukuai@fnnas.com>
+Message-Id: <e98037c0-de70-4de4-b3ea-e2d67022a7fc@fnnas.com>
 X-Original-From: Yu Kuai <yukuai@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-To: "Yuhao Jiang" <danisjiang@gmail.com>
-From: "Yu Kuai" <yukuai@fnnas.com>
-X-Lms-Return-Path: <lba+269f070a5+597f3d+vger.kernel.org+yukuai@fnnas.com>
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20260414190350.1946406-1-bmarzins@redhat.com>
 
 Hi,
 
-=E5=9C=A8 2026/4/19 13:59, Yuhao Jiang =E5=86=99=E9=81=93:
-> Hi Kuai,
+=E5=9C=A8 2026/4/15 3:03, Benjamin Marzinski =E5=86=99=E9=81=93:
+> returning DM_MAPIO_REQUEUE from the target map() function only requeues
+> the bio during noflush suspends. During regular operations or during
+> flushing suspends, it fails the bio. Failing the bio during flushing
+> suspends is the correct behavior here. We cannot handle the bio, and we
+> cannot suspends while it is outstanding. But during normal operations,
+> we should not push the bio back to do. Instead, wait for the reshape
+> to be resumed.
 >
-> This report was reported by me, so Junrui added me as Reported-by.
+> Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+> ---
+>
+> Yang Xiuwei, if you are still able to see I/O errors during LVM testing,
+> does this patch fix them?
+>
+>   drivers/md/dm-raid.c | 7 +++++++
+>   drivers/md/md.h      | 1 +
+>   drivers/md/raid5.c   | 6 ++++--
+>   3 files changed, 12 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+> index 4bacdc499984..cac61d57e7e2 100644
+> --- a/drivers/md/dm-raid.c
+> +++ b/drivers/md/dm-raid.c
+> @@ -3831,6 +3831,7 @@ static void raid_presuspend(struct dm_target *ti)
+>   	 * resume, raid_postsuspend() is too late.
+>   	 */
+>   	set_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
+> +	WRITE_ONCE(mddev->dm_suspending, 1);
+>  =20
+>   	if (!reshape_interrupted(mddev))
+>   		return;
+> @@ -3847,6 +3848,9 @@ static void raid_presuspend(struct dm_target *ti)
+>   static void raid_presuspend_undo(struct dm_target *ti)
+>   {
+>   	struct raid_set *rs =3D ti->private;
+> +	struct mddev *mddev =3D &rs->md;
+> +
+> +	WRITE_ONCE(mddev->dm_suspending, 0);
+>  =20
+>   	clear_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
+>   }
+> @@ -3854,6 +3858,7 @@ static void raid_presuspend_undo(struct dm_target *=
+ti)
+>   static void raid_postsuspend(struct dm_target *ti)
+>   {
+>   	struct raid_set *rs =3D ti->private;
+> +	struct mddev *mddev =3D &rs->md;
+>  =20
+>   	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
+>   		/*
+> @@ -3864,6 +3869,8 @@ static void raid_postsuspend(struct dm_target *ti)
+>   		mddev_suspend(&rs->md, false);
+>   		rs->md.ro =3D MD_RDONLY;
+>   	}
+> +	WRITE_ONCE(mddev->dm_suspending, 0);
+> +
+>   }
+>  =20
+>   static void attempt_restore_of_faulty_devices(struct raid_set *rs)
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index ac84289664cd..e8d7332c5cb9 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -463,6 +463,7 @@ struct mddev {
+>   	int				delta_disks, new_level, new_layout;
+>   	int				new_chunk_sectors;
+>   	int				reshape_backwards;
+> +	int				dm_suspending;
 
-This is fine, however, please do not add downstream reported-by tag.
-If you want to add the reported-by tag, please report the problem to
-patchwork first. :)
+This patch looks fine, however, can you also optimize it by a new
+flag instead a new int field ?
 
->
-> Thanks,
->
-> On Sun, Apr 19, 2026 at 12:43=E2=80=AFAM Yu Kuai <yukuai@fnnas.com> wrote=
-:
->
->     Hi,
->
->     =E5=9C=A8 2026/4/16 11:39, Junrui Luo =E5=86=99=E9=81=93:
->     > setup_geo() extracts near_copies (nc) and far_copies (fc) from the
->     > user-provided layout parameter without checking for zero. When fc=
-=3D0
->     > with the "improved" far set layout selected, 'geo->far_set_size =3D
->     > disks / fc' triggers a divide-by-zero.
->     >
->     > Validate nc and fc immediately after extraction, returning -1 if
->     > either is zero.
->     >
->     > Fixes: 475901aff158 ("MD RAID10: Improve redundancy for 'far'
->     and 'offset' algorithms (part 1)")
->     > Reported-by: Yuhao Jiang<danisjiang@gmail.com>
->
->     So again I can't find a report, and Reported-by usually should be
->     followed
->     by a Closes link to the original report.
->
->     Applied with Reported-by tag removed.
->
->     > Cc:stable@vger.kernel.org <mailto:Cc%3Astable@vger.kernel.org>
->     > Signed-off-by: Junrui Luo<moonafterrain@outlook.com>
->     > ---
->     >=C2=A0 =C2=A0drivers/md/raid10.c | 2 ++
->     >=C2=A0 =C2=A01 file changed, 2 insertions(+)
->
->     --=20
->     Thansk,
->     Kuai
->
->
->
-> --=20
-> Yuhao Jiang
+>  =20
+>   	struct md_thread __rcu		*thread;	/* management thread */
+>   	struct md_thread __rcu		*sync_thread;	/* doing resync or reconstruct *=
+/
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 8854e024f311..d528263f92a3 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -6042,8 +6042,10 @@ static enum stripe_result make_stripe_request(stru=
+ct mddev *mddev,
+>   	raid5_release_stripe(sh);
+>   out:
+>   	if (ret =3D=3D STRIPE_SCHEDULE_AND_RETRY && reshape_interrupted(mddev)=
+) {
+> -		bi->bi_status =3D BLK_STS_RESOURCE;
+> -		ret =3D STRIPE_WAIT_RESHAPE;
+> +		if (!mddev_is_dm(mddev) || READ_ONCE(mddev->dm_suspending)) {
+> +			bi->bi_status =3D BLK_STS_RESOURCE;
+> +			ret =3D STRIPE_WAIT_RESHAPE;
+> +		}
+>   		pr_err_ratelimited("dm-raid456: io across reshape position while resh=
+ape can't make progress");
+>   	}
+>   	return ret;
 
 --=20
 Thansk,
