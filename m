@@ -1,122 +1,166 @@
-Received: from mail-oa1-f44.google.com (mail-oa1-f44.google.com [209.85.160.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14C013FF8AE
-	for <linux-raid@vger.kernel.org>; Tue, 28 Apr 2026 14:41:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C89E313539
+	for <linux-raid@vger.kernel.org>; Tue, 28 Apr 2026 23:20:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777387328; cv=none; b=lJJTLG20l+MPZjJYoMmKF5fC8ojDXzzaUDDl7uyPpJyr1+MEhE/EX9ZMeIa1DR/ZEQvDnJPshN4sCrIBRlRyDFjnHpYZUKACQAfZA5slUEvroUrI64f7CInOb8vMpiRO6peRP9aTvhGhKuXZ6sggEs22BH/A36Op1/NP0SUuGkM=
+	t=1777418424; cv=none; b=rv2gxqLD/++WCJOjjk1djBfxJjbgTR2PpqXiC6ILQlKu816LoE0fYfwsSOY1PwKIsgTJC1LpOXdR2W+ZiK2OXAUJNGDrysHZzY+/XtBjma0gHqTY9yegcc528Xkox6XBXaTQpuEB+ncaqAC8SOfzl/xDzI3Csd5jc5Pqvzilbdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777387328; c=relaxed/simple;
-	bh=2V0vjuyXy6kypG+oH5jFBocr0VPTC18fKm+B9G1R/N8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tUNeOrkK5Voqe58fK6LQuNAe7NRBH+1WoG1xSanHrZIO0/BX0n3GzeYaQfyrm57Vo05QNxy+UL3xlu1NM0dPj8ZXBJeYN5Nq7dhaI9hWfDuogQg9H6qj4iAI5h49SdIQAwP8suP4RkWQE+4D9TX6T6oNfCoC4H32QTzsyf16L1k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=nNpHN7By; arc=none smtp.client-ip=209.85.160.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1777418424; c=relaxed/simple;
+	bh=MUygkXLebJKUNNORN49qoiGYrdigq3CfCx6GdS+hXQE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AoW8P9dzJ7CB2Q/LJzjq3U9P2B6px454328TY9YXk8juannm878hUO60n0+x44JP66DRKC9bFZcI2yXUuP0YHwgLBhTI+CabMhvPn3tU+TPdefjWODwU5o3NfwB2vvH9F69HdhwReHejXvWZC771KFllaFh+sydiIZDhEWHYOiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QX7TKkWz; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="nNpHN7By"
-Received: by mail-oa1-f44.google.com with SMTP id 586e51a60fabf-42fc6923f38so3765080fac.1
-        for <linux-raid@vger.kernel.org>; Tue, 28 Apr 2026 07:41:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1777387316; x=1777992116; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=crdUSZaMOcLRVl8zoeEkk4g0iNo7njp/hRFe4REvY7o=;
-        b=nNpHN7ByVkqbD9hDMOQ8bifILBGqFTDMA0VESPvyBqcY1k2CAtycZjuNtPUBTeIJGi
-         hS/yVEDbHSl5mUlRfxvh8XbQCrNvnEUxNYBbHHU9GMmBbBnTHI67PwPDEbmPtB5AafIh
-         PHFbjIBqdagli2KdnuFVz0yacXJOcXpQ9VCivcLqOLry0bzydTES0piFdvUj//xSjfch
-         2qid6YyzLYVA3MIn6mBwCvtPaEqz+HNJugNFrmOISGcrlbjKGMU2PqP9Xh518/YM0oP4
-         +tmhijqGX3N4V6111JbB7R5oPbi7EBhkAwC5Vfvawl2XC65io9kuBC9DeXs2HeDK1BZN
-         svPQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777387316; x=1777992116;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=crdUSZaMOcLRVl8zoeEkk4g0iNo7njp/hRFe4REvY7o=;
-        b=kBwcBuJ4yqhZq3+7jNKXOmSYgn9KLWfZ2ZQPb+1HKyfyVF4zGVsQl3E5v8CxD2Vw6f
-         sWH1VJAf3EUii5avGmalmgU5GwSB6LJqVudx/pxG2AXLVpw/Xi4WR7ftYb/I5RTxyyp5
-         SV9J0CfwHoM5q6kpfUjSWSFrp21ZyyrwAN+o1cEvb3VprBMCZTRZ1O9CbY4JzSyx4myz
-         EwaIexBDwd1kB/ve8iq8K8OzzacYrk94xDUqLL1kXnPiNfQGbPNd/rnDi05b/WQRqYPa
-         DFFExLNLcT31eMGaqy/FmwPfF3j0ZLqOhMHcSC7FakDgn03VwErLBpD4G1UFIpelP7Ww
-         5kmg==
-X-Forwarded-Encrypted: i=1; AFNElJ8TzXCjZS8hwKQZCvEWY9E3RAwb6NTD09ZJFM+5AqS3WPGMMQyo4i5/cS1MJaRTrCGcnysy2OatGp4r@vger.kernel.org
-X-Gm-Message-State: AOJu0YymrZW5Z8LtJDtXqbq3YR4VoJpJgGvSw3xTNoPjQ7b3jJ8xNHLs
-	kmJTz6fK0dW8VWYqHnoeGNgyh8vbnE+2qPjLjUUYGmmV2fAE6Jj0yuLkGZMe4Abvpow=
-X-Gm-Gg: AeBDieuLrXzm3aSyaINzME5XCVupxIUYIGHra3aJa8i57xlIM3V809MlhavJn10kmn4
-	JHnvJv+xVJQDLWugfgtm8FELWsG5/Uj77nTG99uV99VLuT3wZpiLNOkJyuKVosEG4+Qn3J/IXdY
-	oQpL1v09lX9DnAB4yHjFRhLj2Pgp0S3GzkIGbPo93NpGGL2hQm3Dc/kV7X1mU61YGMCgzqgx4ec
-	UNHdTUwlWhyEhqeIbQ57Gyc8oi95mKIwHO0tlKTVmHgHOaRRx/nUEjVuDjJXpf88T4qo6ZqeR6g
-	88h6VOitisv6ticOPCWub3c4Pp2hVGb6MyN05+Uapd5hZXb+oM8e4+4oabXP2rrbhgYbAPVTzmY
-	IUKNGu83DR8K09XzRGvmrWX2/8Woc/z0iyx2zflHVNku/hEyxbxPhlp6qVUOONtFg1t1GwQCtvM
-	8nNc+ML5vWcsoXB9wSCQN0fC4hYi6f/GoqvVUPK5LoFf6ncPv3o3dxMxrSz29bqu/cIsYNVQu+w
-	UIoa8V/ySE0Y/PRsqfThSfl9qus6w==
-X-Received: by 2002:a05:6871:781b:b0:404:2e44:18b6 with SMTP id 586e51a60fabf-433f1f393e9mr1575881fac.16.1777387315738;
-        Tue, 28 Apr 2026 07:41:55 -0700 (PDT)
-Received: from [192.168.1.102] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-433efbf1d8dsm2015750fac.6.2026.04.28.07.41.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 28 Apr 2026 07:41:55 -0700 (PDT)
-Message-ID: <982f5bcc-8caf-465d-99c7-3b457cab20c7@kernel.dk>
-Date: Tue, 28 Apr 2026 08:41:53 -0600
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QX7TKkWz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1777418422;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Ch9Fpl2PF7WWGPGtx9SgS7sBArmGqVayqAhOWYb7zb0=;
+	b=QX7TKkWzCTpWJs1IyZq0QtLdAjqAuB6pD14A4RiTL+2OxjYnmbrkgNipjuY9UJRa3Mc4Fb
+	tfRvQTUiAHv3F/MOcrWmvJe6hN20LezorOmC3KCiEZgnfA4DKJXig3PT7tjZA8W3L1099N
+	tdHHFwsTNJDM9BLKx8FuTlfFZ3jw4AI=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-646-6r2CAUpYNNixlBnTLNu1ew-1; Tue,
+ 28 Apr 2026 19:20:16 -0400
+X-MC-Unique: 6r2CAUpYNNixlBnTLNu1ew-1
+X-Mimecast-MFC-AGG-ID: 6r2CAUpYNNixlBnTLNu1ew_1777418415
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 72449195608E;
+	Tue, 28 Apr 2026 23:20:14 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7EDCD1800352;
+	Tue, 28 Apr 2026 23:20:13 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 63SNKCqC2785523
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Tue, 28 Apr 2026 19:20:12 -0400
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 63SNKAUF2785522;
+	Tue, 28 Apr 2026 19:20:10 -0400
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>,
+        Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org, dm-devel@lists.linux.dev,
+        Yang Xiuwei <yangxiuwei@kylinos.cn>, Xiao Ni <xiao@kernel.org>,
+        Li Nan <linan122@huawei.com>, Nigel Croxon <ncroxon@redhat.com>
+Subject: [PATCH v2] dm-raid: only requeue bios when dm is suspending.
+Date: Tue, 28 Apr 2026 19:20:10 -0400
+Message-ID: <20260428232010.2785514-1-bmarzins@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-7.1-20260428
-To: Yu Kuai <yukuai@fnnas.com>
-Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
- Song Liu <song@kernel.org>, Li Nan <linan122@huawei.com>,
- Xiao Ni <xiao@kernel.org>, Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>,
- Benjamin Marzinski <bmarzins@redhat.com>,
- Junrui Luo <moonafterrain@outlook.com>, Keith Busch <kbusch@kernel.org>
-References: <20260428143340.1088943-1-yukuai@fnnas.com>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20260428143340.1088943-1-yukuai@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On 4/28/26 8:33 AM, Yu Kuai wrote:
-> Hi Jens,
-> 
-> Please consider pulling the following changes into your block-7.1
-> branch.
-> 
-> This pull request contains:
-> 
-> Bug Fixes:
-> - Fix a raid5 UAF on IO across the reshape position.
-> - Avoid failing RAID1/RAID10 devices for invalid IO errors.
-> - Fix RAID10 divide-by-zero when far_copies is zero.
-> - Restore bitmap grow through sysfs.
-> 
-> Cleanups:
-> - Use mddev_is_dm() instead of open-coding gendisk checks.
-> - Use ATTRIBUTE_GROUPS() for md default sysfs attributes.
-> - Replace open-coded wait loops with wait_event helpers.
-> 
-> Others:
-> - Add Xiao Ni as md/raid reviewer.
+returning DM_MAPIO_REQUEUE from the target map() function only requeues
+the bio during noflush suspends. During regular operations or during
+flushing suspends, it fails the bio. Failing the bio during flushing
+suspends is the correct behavior here. We cannot handle the bio, and we
+cannot suspends while it is outstanding. But during normal operations,
+we should not push the bio back to dm. Instead, wait for the reshape
+to be resumed.
 
-Two notes:
+Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+---
 
-1) Why are you rebasing the tree right before sending it? There
-   should be zero need to do that, please don't.
+Changes from v1:
+- Track the dm device's suspending state in mddev->flags instead of
+  adding a new integer to mddev.
 
-2) Please switch to https://patch.msgid.link/ for you Link tags,
-   if they are just links to the patch submission. That makes it
-   clear this is the case, just the patch. You can use lore for
-   actual bug reports etc.
+ drivers/md/dm-raid.c | 6 ++++++
+ drivers/md/md.h      | 2 ++
+ drivers/md/raid5.c   | 7 +++++--
+ 3 files changed, 13 insertions(+), 2 deletions(-)
 
-Pulled, but please change the above two things going forward.
-
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index c5dc083c7244..8f5a5e1342a9 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3831,6 +3831,7 @@ static void raid_presuspend(struct dm_target *ti)
+ 	 * resume, raid_postsuspend() is too late.
+ 	 */
+ 	set_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
++	set_bit(MD_DM_SUSPENDING, &mddev->flags);
+ 
+ 	if (!reshape_interrupted(mddev))
+ 		return;
+@@ -3847,13 +3848,16 @@ static void raid_presuspend(struct dm_target *ti)
+ static void raid_presuspend_undo(struct dm_target *ti)
+ {
+ 	struct raid_set *rs = ti->private;
++	struct mddev *mddev = &rs->md;
+ 
++	clear_bit(MD_DM_SUSPENDING, &mddev->flags);
+ 	clear_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
+ }
+ 
+ static void raid_postsuspend(struct dm_target *ti)
+ {
+ 	struct raid_set *rs = ti->private;
++	struct mddev *mddev = &rs->md;
+ 
+ 	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
+ 		/*
+@@ -3864,6 +3868,8 @@ static void raid_postsuspend(struct dm_target *ti)
+ 		mddev_suspend(&rs->md, false);
+ 		rs->md.ro = MD_RDONLY;
+ 	}
++	clear_bit(MD_DM_SUSPENDING, &mddev->flags);
++
+ }
+ 
+ static void attempt_restore_of_faulty_devices(struct raid_set *rs)
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 52c378086046..9e5100609d12 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -346,6 +346,7 @@ struct md_cluster_operations;
+  * @MD_HAS_SUPERBLOCK: There is persistence sb in member disks.
+  * @MD_FAILLAST_DEV: Allow last rdev to be removed.
+  * @MD_SERIALIZE_POLICY: Enforce write IO is not reordered, just used by raid1.
++ * @MD_DM_SUSPENDING: This DM raid device is suspending.
+  *
+  * change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is added
+  */
+@@ -365,6 +366,7 @@ enum mddev_flags {
+ 	MD_HAS_SUPERBLOCK,
+ 	MD_FAILLAST_DEV,
+ 	MD_SERIALIZE_POLICY,
++	MD_DM_SUSPENDING,
+ };
+ 
+ enum mddev_sb_flags {
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 0d76e82f4506..65ae7d8930fc 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6042,8 +6042,11 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
+ 	raid5_release_stripe(sh);
+ out:
+ 	if (ret == STRIPE_SCHEDULE_AND_RETRY && reshape_interrupted(mddev)) {
+-		bi->bi_status = BLK_STS_RESOURCE;
+-		ret = STRIPE_WAIT_RESHAPE;
++		if (!mddev_is_dm(mddev) ||
++		    test_bit(MD_DM_SUSPENDING, &mddev->flags)) {
++			bi->bi_status = BLK_STS_RESOURCE;
++			ret = STRIPE_WAIT_RESHAPE;
++		}
+ 		pr_err_ratelimited("dm-raid456: io across reshape position while reshape can't make progress");
+ 	}
+ 	return ret;
 -- 
-Jens Axboe
+2.53.0
 
