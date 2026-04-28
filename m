@@ -1,138 +1,105 @@
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5195C3F167C
-	for <linux-raid@vger.kernel.org>; Tue, 28 Apr 2026 11:53:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55F503AEF4C
+	for <linux-raid@vger.kernel.org>; Tue, 28 Apr 2026 13:05:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777377232; cv=none; b=Fr6Mypp6N3wy2bks2eBH26+4TfReOXp2AHY/TxOJYJGRHB92qreHFKn7f5diUv42+q2uS0JzorpAUt7haJN94bGHWp1r2ps8sjttfbdLg9IpyMfVHbyTztQXtz9CGimwNTe88unQoR8JlbjtH2lUVkrJxncP8ML7oSr2sAwM4nY=
+	t=1777381534; cv=none; b=iDglCwFkHGotB+l27X2d2lHEZrBwa5/L6hoLxEPmN3jR/wn5SPCDXTphYLpcwHdHdAklVdbihkuR9BjfY3mIJ+bXfLz8wvjQwvo6BrbHghFYi/owb14D9B+L48rdvk12e0F2nbnaHtCR7Ul/3X1600S3W0BP1fVq/NrZ7A0zKgA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777377232; c=relaxed/simple;
-	bh=HIeNz2q2rXQmvQzkjlBgBFTIjw/kD0Nh0R8BzB2/NFg=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=n5i/kW6ToRNtuC+Lz1fmB6QEgP20hwyCU07jW/LUX3wnT2Tdi0PlSKt1XcJtUcq87sYNJIFtiVz7tCJfjTJVoxO8g1mQXcKXN5y8n7d5zweFomtBzFK3GDcLhGfj290xpk4bOzxwpOENyU7BgekIzfTOGSNfp/QmKmLqYfKXgCQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IK43YmCO; arc=none smtp.client-ip=209.85.221.51
+	s=arc-20240116; t=1777381534; c=relaxed/simple;
+	bh=i38oEy/34KtFn6KM1kDImIRBAo0SP3gwiXhYFfsczWY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=asTOexqnF1diiZROdVGZSNbMgsW8em6xVqPxo/b2/4WJs5O4577UVIu8Xv6vd/xXYkWkJf/IDdMdeh+3z50baUtY3FDn4GCav5O5gGUMUVP3R75oKFPB3qoPgbMk7qwGWZgMHXKqwQ+FWM96Ef196lXYPPZi0saXRt94r1ECS9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VZfIweER; arc=none smtp.client-ip=209.85.128.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IK43YmCO"
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-43fe62837baso6585947f8f.3
-        for <linux-raid@vger.kernel.org>; Tue, 28 Apr 2026 04:53:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VZfIweER"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4891f625344so103444405e9.0
+        for <linux-raid@vger.kernel.org>; Tue, 28 Apr 2026 06:05:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1777377229; x=1777982029; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:references
-         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=h0g3fA6xiRCKrQErw65n6LndHkYc6MlHfp13kk54514=;
-        b=IK43YmCOUkXKnCDN8FrRHjoIF+igedDawSn7w/sp7g1jo5lPvNbjmeFu+D+F/0iAw6
-         80q8gMkEmpTpNNmTyS3wj6VW9K9JRY2kqNn77BTMUvj+fhEKk252zPgaPHzPbR3CSlDg
-         RM9/+UUFMQi1OStSDO/fwroeEz5oYicnkLWrck9d4SpFyo/49kqfNkcD6rSzzfum4Leq
-         9luwSC7vBRD8GpHM9DjZRaf/X0I4986GzmnQkUZhiEOEmLfC1MGAzVDXJmIL89WXw1FP
-         q7INwMsdJmVXR8PN2NmhpKaw9mopUXjKL38WO3TTAEEq/dOr34fQHleMBxA8PHsiTjY/
-         SaWA==
+        d=gmail.com; s=20251104; t=1777381532; x=1777986332; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=HhmXLpB2T3lygbBp1nmhNFuDYHFAB43CNPCB5Duufx0=;
+        b=VZfIweERfObs+6CIllo4q/80gfhmSVpQCXe8GZnYYZyV7VUbN3lSfa4zLVS2CH/1a3
+         FVwKAnUY9NE4UqAenMn0i9o0QVUJmguOsUcYsq9PYxPugaDxCchsr1/A+HvS3EWF3W12
+         ++8cfEFJlzDHiq8x/rlZ0OVeELV7GE0HBIih61THPyY+VPiaH+w2DRSRgp7hGl9T0Y6D
+         uZSOrEwVUUH95NR+iaTytpf9kTPM76Exqh/y6Hb+GjWLvDz0Y4rrP/pKwmRQEm7agEzH
+         1+MhWsE3j2hpqCOJa/ZGGY5XwQNrjR0GJL8oitQ9u/s9wNJM8F7Yju/oWVJxDPxnbZzA
+         Adyg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777377229; x=1777982029;
-        h=content-transfer-encoding:mime-version:message-id:date:references
-         :in-reply-to:subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=h0g3fA6xiRCKrQErw65n6LndHkYc6MlHfp13kk54514=;
-        b=nW7kfnHiJ/fz4qWNCuoSNI9az9cNouK27b6/KvAmvCitI4hgSI6QJZkTnh83dYW7LM
-         DsBW/vh5UpcsN16WmdHrzrIwYyAbZ0LSi0QeLbgdVeUCB2Xmrv09x4NoIyiyL92UbjMj
-         qCPL9hY51XkjwJCVKcTrxH6Lj9YccV+aBse+YwdvCRHr+G+FB6fIB7hAEyXSFS7Qx8/1
-         3XYQfziFYeiq0F8GMZPYbi4NYwMiM0Sfv2ZUico6VnEjNb8mSpx1RwCv2PdaaFKnKJ8m
-         5KKOyX9WgxUoO8F5GcFv2NVA7JPSyCWvq41q+k8VJN1+TWMwH5XHdWbSImMdhuKKGJT/
-         YngA==
-X-Gm-Message-State: AOJu0YzHH4jg26u8tcniIahTC7YHwkHsIYZATBIkhrqj0vjIBO4ODd4e
-	02NbXdFlwGohpRwaBOEhUEWowsmRCB397KVsrnEX23h1MvA2u+8sRn6DDR+FwA==
-X-Gm-Gg: AeBDietiVtfkTQT4YFnflbw+hp5Yi49cJo1yUZGMEK2dPWliwlKvHv1taQkWHwW3wFM
-	nZdNP55Sz4XlWDhGEpE9gXijy2xxR36ehR9KYQDOOzjjpCgJFA8npfl+5q3V35oM/9oZvKJ4CAo
-	JlaGAVwq3o2lko7s3bErrGh28ebEVcDHoFm3AJ/bV0ZkkU6SSAx/A89F927vbcIZl6mH5GDgQL1
-	Mwr4fT6aW/fzcQZOTpJ2tycux/sqy2TUAcNGeZvabk6D2WM701VQHk0WeJpDwuZMkljXMejZxRs
-	r/td7hxVQNW5+HsAI9tOEru1DKIPq2PiYZsbVETsVPQX0Nq3LyJGDuASBPcCl6w255Ep1AlpHU2
-	uxaBKxPHEgH4LIpbjlsplnk8j6nlYQknUAz74QyzwOAV+HpEQmOeESwivAH618wmtmc/6BKfXWr
-	NLyLX2hCZLC4zyRFC0gGeZxaKj5hDIGehoIyTlgIFv+7DCdAAbQdbzRY043vI2p4Uaw0OFdkPRj
-	XY=
-X-Received: by 2002:a05:6000:2f85:b0:43b:8f38:3b88 with SMTP id ffacd0b85a97d-446494ea255mr5380262f8f.25.1777377229214;
-        Tue, 28 Apr 2026 04:53:49 -0700 (PDT)
-Received: from Abds-MacBook-Air.local ([2a02:3037:60f:89ae:9923:b51e:6a1:7be2])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4463ff5a1acsm5655356f8f.33.2026.04.28.04.53.47
+        d=1e100.net; s=20251104; t=1777381532; x=1777986332;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=HhmXLpB2T3lygbBp1nmhNFuDYHFAB43CNPCB5Duufx0=;
+        b=KOOwXt0IUE6lw/WRm2uyK9Q895pdzxw77ZWFk3gUQOhQVORPdex5wFfAVxPhstI2/E
+         qs8Zij+DxcctkbMx1ZoOtE6oidte/TILOLLrc0d+KRqJeFKKny8auKFaEF+MJVzNFTbX
+         LR4oLJ7CYOIOYEiNCMWSNIRh4onkcaV07NLOL9mGkfE5SMz+zEZXqkbOC1S/9USaqkrR
+         5NSB+6S44wFDbpcpBDcz7kXXhejJE/Zm3wVSzIfxjca8wWK5d1UZv9QPzXcC6l8o2wU4
+         EA39Qdb4OVjPwsuNn2eI7wtH2Tdgj85DCT4ojAFB43GUSaHrpVlagW9qdv+WZasKD37W
+         kG9Q==
+X-Gm-Message-State: AOJu0YwKVMB7e1SCxWfSmwF1Y9K0nhqaOTM1qcbArtGOjuhJHirfd4ZB
+	cqu6wZvTKbNXVLYyyCj02YF0d53dEZPBcWk4NlUXkiYCjzIrNJr+31Jn
+X-Gm-Gg: AeBDiethYazNd/X6TFS1N8H6DQy05sQW9hnWXy6pINQohPvUOer81ITwrkbWmoNrg8W
+	kzFAW1F/rxk7yqnGp8o2sEDGT2PU7VhwJbsVukSJkPufQbbZIuKpLQJxuy2B7FSzUtC8iKdoyMC
+	FMHHQ5SBnJ6o08vbc7OCYK0R5X3AmvQJtOvf5+Nnqe9MZK7n+mWnodlLm+p2jteTf1/dBxyQSlL
+	Z2wjD+7lIT1hEmGesGDxXfjMCD8sz2hkc+eA7JhTI5l4YeKhI2H2i+hAjBLLiyUZPDh0zl3ljmO
+	JKfoNTEPzg+LcL+nh8LLbT8tUtgnJ0hPETS9rS1E6+NosmzbzD3FlVu3Q8EQ7bxi0vh60HARrrQ
+	aE0StbhMmx1ZWDLV5s6iDrAhhZuG+sZX7vXjnLiekD9ikFacIHliy/hEExVPmW6xjzRfmWJPWVh
+	bZ8uzED5JkZBdRbrtX55bcm6emYk2Z4d2nqw==
+X-Received: by 2002:a05:600c:4510:b0:489:32b:ac0b with SMTP id 5b1f17b1804b1-48a78ad9b56mr32604385e9.6.1777381531410;
+        Tue, 28 Apr 2026 06:05:31 -0700 (PDT)
+Received: from yocto.. ([2a02:3037:629:fd15:33bf:191b:faa5:2818])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48a774a4031sm33051185e9.2.2026.04.28.06.05.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Apr 2026 04:53:48 -0700 (PDT)
+        Tue, 28 Apr 2026 06:05:30 -0700 (PDT)
 From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: Yu Kuai <yukuai@fnnas.com>, song@kernel.org,
- paul.e.luse@linux.intel.com, xni@redhat.com, yukuai@fnnas.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] md/raid1: fix len reuse across rdevs in
- choose_first_rdev()
-In-Reply-To: <5c71cb6b-d860-4bcb-a900-a27544be7a17@fnnas.com>
-References: <20260426093506.14316-1-abd.masalkhi@gmail.com>
- <5c71cb6b-d860-4bcb-a900-a27544be7a17@fnnas.com>
-Date: Tue, 28 Apr 2026 13:53:45 +0200
-Message-ID: <m2fr4f47xy.fsf@gmail.com>
+To: song@kernel.org,
+	yukuai@fnnas.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+Subject: [PATCH v2] md: skip redundant raid_disks update when value is unchanged
+Date: Tue, 28 Apr 2026 15:05:24 +0200
+Message-ID: <20260428130524.448063-1-abd.masalkhi@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
+Calling update_raid_disks() with the same value as the current one
+can trigger unnecessary work. For example, RAID1 will reallocate
+resources such as the mempool for r1bio.
 
-Hi Kaui,
+Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+---
+ drivers/md/md.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-On Tue, Apr 28, 2026 at 16:23 +0800, Yu Kuai wrote:
-> Hi,
->
-> =E5=9C=A8 2026/4/26 17:35, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
->> choose_first_rdev() initializes the variable len before iterating over
->> all rdevs, but passes it by reference to raid1_check_read_range(), which
->> it might update *len and return 0 depending on the layout of the bad
->> block region. As a result, 'len' can be modified during the first
->> iteration and reused for subsequent rdevs, causing later devices to be
->> evaluated with an incorrect length value.
->>
->> Fixes: 31a73331752d3 ("md/raid1: factor out read_first_rdev() from read_=
-balance()")
->> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
->> ---
->>   drivers/md/raid1.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index b549be9174bb..5f5dbf79c903 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -591,12 +591,12 @@ static int choose_first_rdev(struct r1conf *conf, =
-struct r1bio *r1_bio,
->>   			     int *max_sectors)
->>   {
->>   	sector_t this_sector =3D r1_bio->sector;
->> -	int len =3D r1_bio->sectors;
->>   	int disk;
->>=20=20=20
->>   	for (disk =3D 0 ; disk < conf->raid_disks * 2 ; disk++) {
->>   		struct md_rdev *rdev;
->>   		int read_len;
->> +		int len =3D r1_bio->sectors;
->>=20=20=20
->>   		if (r1_bio->bios[disk] =3D=3D IO_BLOCKED)
->>   			continue;
->
-> This patch is wrong, choose_first_rdev() is used when raid1_should_read_f=
-irst() is true,
-> meaning the read overlaps an unsynced/resyncing area. Reset len can cause=
- the problem that
-> reading the same area can return different data.
->
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index ac71640ff3a8..21b8ad17685f 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4409,9 +4409,10 @@ raid_disks_store(struct mddev *mddev, const char *buf, size_t len)
+ 	err = mddev_suspend_and_lock(mddev);
+ 	if (err)
+ 		return err;
+-	if (mddev->pers)
+-		err = update_raid_disks(mddev, n);
+-	else if (mddev->reshape_position != MaxSector) {
++	if (mddev->pers) {
++		if (n != mddev->raid_disks)
++			err = update_raid_disks(mddev, n);
++	} else if (mddev->reshape_position != MaxSector) {
+ 		struct md_rdev *rdev;
+ 		int olddisks = mddev->raid_disks - mddev->delta_disks;
+ 
+-- 
+2.43.0
 
-Thank you for the detailed explanation. After carefully re-reading the
-code and your feedback, I understand why the patch is wrong.
-
-> --=20
-> Thansk,
-> Kuai
-
---=20
-Best Regards,
-Abd-Alrhman
