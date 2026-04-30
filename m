@@ -1,150 +1,261 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FCE333A014;
-	Thu, 30 Apr 2026 03:25:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AC73279917;
+	Thu, 30 Apr 2026 04:08:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777519544; cv=none; b=OzeGNLfqR2Wyw0s0vlX8nqiEgg8NHeRkdAqbBGRXhZrvZ0IQOJcE/uPbQX5lwwmlIRva10hGuTF6OP1CzGDELcN4ALXUbsU9xKqxu/7BIr3gL09lO5Sc8Z4/iCd8AcHvkd8u4cs+ESsrQkKymRag3gv89yhOWnEU/kBcsfrMl3c=
+	t=1777522125; cv=none; b=MKdiVvW3AKQL9SFylORTFkvPSb0Uv4beeRg8mlXVyAvF6Rs2bEjrO1LO8//nr0Dup2hCjX9m24YPIlgj/qCgEhw8QJHQuTb9y2WtLSB7o5LJGdobFQ15Z4OqDNFwHgNbeTbVZtbPey+51ZrvycU7GgrbwXSaXeXo0PO5qiPVVc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777519544; c=relaxed/simple;
-	bh=wBz7OM7TlHLm2WIVihmJBmiohjoSXyxgTPPi2XUGXGY=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=pv5PBTPYzaa9+eYPjyqxzPwEdlz4tO71YYGwHouilj5OJVsF1b4Ou7XoAYor1LlMcUFFgzSpBX13kLPL71kFV6zeRKyz0HD0KYgeAetSufzLVmgDFV54KAOT+n/GPA70DpQES/jQDlKZ7vSeB8fNsQlXNqXNbcDxckpwpL0NYl0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uTpJPZRC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777522125; c=relaxed/simple;
+	bh=yrgnrVp/sGWaMVInNNNWER3UGL76pVjewrfje7ywdvM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Jja4NihOfeYvbHz/XWWvHfIS34rfyMxDPL5SoNMzw/qKvSo5fDvAGjcDv0AVT6cu2oVFq2ZLV0ZHDg6M57F5XQcQKQ5sjxTAfCZJBwjuz3lJLf+XCOgqxUE7UCeShuc4HtPebwjvl7BQEFlHe0Pm8SMAEp8j1NPSRHVFYQ5ye/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Hb8HkTx0; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uTpJPZRC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F9AFC2BCC6;
-	Thu, 30 Apr 2026 03:25:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777519544;
-	bh=wBz7OM7TlHLm2WIVihmJBmiohjoSXyxgTPPi2XUGXGY=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-	b=uTpJPZRCgWp5AfDjLmVTacGdTqRQtgMVXovLDOgY5LJHM1kRJTcTAjAjlzCgBpZvp
-	 PVuwPlNReHlcJ1FQ9PgNdCrqANSuP5dIHOg1WFVE1UPqOFQrLsNyEaAv1TIimY3yJ6
-	 dNLJ1aTEBqXG6wIIAe+hTTilZEZmiRBioNt3vpRgGA7/f1YWR+zd1uAs2cIdkGAHSF
-	 MZVBM6p+H1jvCofKth5JZ3lRO/w2r49uSYovI3hCogvHxcTwqsMRM3nY6Ct3vVu9oR
-	 CmYp2PZ4xwBzwNein821COzMLGD6YCZFeFgtsAQGoLKs2+1jduSB39tglFke+SexZz
-	 n/9KGgA7orfhA==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 7D0473809A07;
-	Thu, 30 Apr 2026 03:25:00 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Hb8HkTx0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1777522122; x=1809058122;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=yrgnrVp/sGWaMVInNNNWER3UGL76pVjewrfje7ywdvM=;
+  b=Hb8HkTx0FYlnhClsUrL/ONJ2Hw4d9nUcKYjSQuE9l6U+7MvhnNC++jby
+   Wiz5uOrFSyxTFqPEKn/XDg98yAKNs/Us9EfgseUh8fI+iUwRcevTA47c/
+   hLumZK9id4O0Tiqe1e29Qss7na5Ut/FK5XTv1dJPwuZvj36I0hPKl32yB
+   WnYghxgNCFpPHk9FJdV54dxxuGTjl71dUxtrk60BecMipljAIkf29E1GL
+   s2aMYEuQIJQ03ZFcFw1pkR/laC+HWOMclKUK6C/AazZMrsTn4tfA1TDvD
+   u+IYm4xe4g1QrKufUS74bRqpJsHE2lEK4aRz2ZisNhzpAVD6D0T/6yQFk
+   w==;
+X-CSE-ConnectionGUID: RXG6UQ+oQz6tQvvcQvy9Eg==
+X-CSE-MsgGUID: 1OKm4MwCRp6g+DwU5u0cEA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11771"; a="78175093"
+X-IronPort-AV: E=Sophos;i="6.23,207,1770624000"; 
+   d="scan'208";a="78175093"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 21:08:41 -0700
+X-CSE-ConnectionGUID: O2VKKR0QTNCcA8BayGEetg==
+X-CSE-MsgGUID: gIr4xOSPTPmgdeywqXOVDw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,207,1770624000"; 
+   d="scan'208";a="233409658"
+Received: from lkp-server01.sh.intel.com (HELO aa799cca880d) ([10.239.97.150])
+  by orviesa006.jf.intel.com with ESMTP; 29 Apr 2026 21:08:40 -0700
+Received: from kbuild by aa799cca880d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wIIhZ-00000000BvG-1cgr;
+	Thu, 30 Apr 2026 04:08:37 +0000
+Date: Thu, 30 Apr 2026 12:07:54 +0800
+From: kernel test robot <lkp@intel.com>
+To: Yu Kuai <yukuai@fnnas.com>, linux-raid@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, linux-kernel@vger.kernel.org,
+	Li Nan <linan122@huawei.com>, Yu Kuai <yukuai@fnnas.com>,
+	Cheng Cheng <chencheng@fnnas.com>
+Subject: Re: [PATCH] md/raid5: split reshape bios before bitmap accounting
+Message-ID: <202604301127.hkMOIzHM-lkp@intel.com>
+References: <20260419030942.824195-20-yukuai@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH 01/28] xor: assert that xor_blocks is not call from
- interrupt
- context
-From: patchwork-bot+linux-riscv@kernel.org
-Message-Id: 
- <177751949930.2274119.9590297379331785751.git-patchwork-notify@kernel.org>
-Date: Thu, 30 Apr 2026 03:24:59 +0000
-References: <20260327061704.3707577-2-hch@lst.de>
-In-Reply-To: <20260327061704.3707577-2-hch@lst.de>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-riscv@lists.infradead.org, akpm@linux-foundation.org,
- richard.henderson@linaro.org, mattst88@gmail.com, linmag7@gmail.com,
- linux@armlinux.org.uk, catalin.marinas@arm.com, will@kernel.org,
- ardb@kernel.org, chenhuacai@kernel.org, kernel@xen0n.name,
- maddy@linux.ibm.com, mpe@ellerman.id.au, npiggin@gmail.com,
- chleroy@kernel.org, pjw@kernel.org, palmer@dabbelt.com,
- aou@eecs.berkeley.edu, alex@ghiti.fr, hca@linux.ibm.com, gor@linux.ibm.com,
- agordeev@linux.ibm.com, borntraeger@linux.ibm.com, svens@linux.ibm.com,
- davem@davemloft.net, andreas@gaisler.com, richard@nod.at,
- anton.ivanov@cambridgegreys.com, johannes@sipsolutions.net, tglx@kernel.org,
- mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
- hpa@zytor.com, herbert@gondor.apana.org.au, dan.j.williams@intel.com,
- clm@fb.com, dsterba@suse.com, arnd@arndb.de, song@kernel.org,
- yukuai@fnnas.com, linan122@huawei.com, tytso@mit.edu, Jason@zx2c4.com,
- linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev,
- linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
- sparclinux@vger.kernel.org, linux-um@lists.infradead.org,
- linux-crypto@vger.kernel.org, linux-btrfs@vger.kernel.org,
- linux-arch@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260419030942.824195-20-yukuai@fnnas.com>
 
-Hello:
+Hi Yu,
 
-This series was applied to riscv/linux.git (fixes)
-by Andrew Morton <akpm@linux-foundation.org>:
+kernel test robot noticed the following build errors:
 
-On Fri, 27 Mar 2026 07:16:33 +0100 you wrote:
-> Most of the optimized xor_blocks versions require FPU/vector registers,
-> which generally are not supported in interrupt context.
-> 
-> Both callers already are in user context, so enforce this at the highest
-> level.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> [...]
+[auto build test ERROR on linus/master]
+[also build test ERROR on v7.1-rc1 next-20260429]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Here is the summary with links:
-  - [01/28] xor: assert that xor_blocks is not call from interrupt context
-    https://git.kernel.org/riscv/c/d8593b8f9354
-  - [02/28] arm/xor: remove in_interrupt() handling
-    https://git.kernel.org/riscv/c/b7ca705758b9
-  - [03/28] arm64/xor: fix conflicting attributes for xor_block_template
-    https://git.kernel.org/riscv/c/675a0dd596e7
-  - [04/28] um/xor: cleanup xor.h
-    https://git.kernel.org/riscv/c/3ea16a98518a
-  - [05/28] xor: move to lib/raid/
-    https://git.kernel.org/riscv/c/9e229025e247
-  - [06/28] xor: small cleanups
-    https://git.kernel.org/riscv/c/7c6e6b2b48e8
-  - [07/28] xor: cleanup registration and probing
-    https://git.kernel.org/riscv/c/0471415f3fd6
-  - [08/28] xor: split xor.h
-    https://git.kernel.org/riscv/c/54e20be48fd4
-  - [09/28] xor: remove macro abuse for XOR implementation registrations
-    https://git.kernel.org/riscv/c/35ebc4de1059
-  - [10/28] xor: move generic implementations out of asm-generic/xor.h
-    https://git.kernel.org/riscv/c/c46928fdcfa0
-  - [11/28] alpha: move the XOR code to lib/raid/
-    https://git.kernel.org/riscv/c/503793b1340e
-  - [12/28] arm: move the XOR code to lib/raid/
-    https://git.kernel.org/riscv/c/0d64a24ec0c0
-  - [13/28] arm64: move the XOR code to lib/raid/
-    https://git.kernel.org/riscv/c/3786f2ad0095
-  - [14/28] loongarch: move the XOR code to lib/raid/
-    https://git.kernel.org/riscv/c/033bee3e4963
-  - [15/28] powerpc: move the XOR code to lib/raid/
-    https://git.kernel.org/riscv/c/3f276cece4dd
-  - [16/28] riscv: move the XOR code to lib/raid/
-    https://git.kernel.org/riscv/c/5265d55b2146
-  - [17/28] sparc: move the XOR code to lib/raid/
-    https://git.kernel.org/riscv/c/7f96362396ee
-  - [18/28] s390: move the XOR code to lib/raid/
-    https://git.kernel.org/riscv/c/95c104cc5571
-  - [19/28] x86: move the XOR code to lib/raid/
-    https://git.kernel.org/riscv/c/77fd47e57a09
-  - [20/28] xor: avoid indirect calls for arm64-optimized ops
-    https://git.kernel.org/riscv/c/352ebd066b62
-  - [21/28] xor: make xor.ko self-contained in lib/raid/
-    https://git.kernel.org/riscv/c/e20043b4765c
-  - [22/28] xor: add a better public API
-    (no matching commit)
-  - [23/28] xor: add a better public API
-    (no matching commit)
-  - [24/28] async_xor: use xor_gen
-    https://git.kernel.org/riscv/c/7c12c32b9f73
-  - [25/28] btrfs: use xor_gen
-    https://git.kernel.org/riscv/c/0f629e7283ad
-  - [26/28] xor: pass the entire operation to the low-level ops
-    https://git.kernel.org/riscv/c/80dcf0a7832a
-  - [27/28] xor: use static_call for xor_gen
-    https://git.kernel.org/riscv/c/a21921dd02d3
-  - [28/28] xor: add a kunit test case
-    https://git.kernel.org/riscv/c/af53e85ef797
+url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-raid5-split-reshape-bios-before-bitmap-accounting/20260425-083941
+base:   linus/master
+patch link:    https://lore.kernel.org/r/20260419030942.824195-20-yukuai%40fnnas.com
+patch subject: [PATCH] md/raid5: split reshape bios before bitmap accounting
+config: parisc64-defconfig (https://download.01.org/0day-ci/archive/20260430/202604301127.hkMOIzHM-lkp@intel.com/config)
+compiler: hppa64-linux-gcc (GCC) 15.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260430/202604301127.hkMOIzHM-lkp@intel.com/reproduce)
 
-You are awesome, thank you!
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202604301127.hkMOIzHM-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   drivers/md/raid5.c: In function 'raid5_make_request':
+>> drivers/md/raid5.c:6126:14: error: implicit declaration of function 'mddev_bio_split_at_reshape_offset' [-Wimplicit-function-declaration]
+    6126 |         bi = mddev_bio_split_at_reshape_offset(mddev, bi, NULL,
+         |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>> drivers/md/raid5.c:6126:12: error: assignment to 'struct bio *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+    6126 |         bi = mddev_bio_split_at_reshape_offset(mddev, bi, NULL,
+         |            ^
+
+
+vim +/mddev_bio_split_at_reshape_offset +6126 drivers/md/raid5.c
+
+  6083	
+  6084	static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+  6085	{
+  6086		DEFINE_WAIT_FUNC(wait, woken_wake_function);
+  6087		struct r5conf *conf = mddev->private;
+  6088		const int rw = bio_data_dir(bi);
+  6089		struct stripe_request_ctx *ctx;
+  6090		sector_t logical_sector;
+  6091		enum stripe_result res;
+  6092		int s, stripe_cnt;
+  6093		bool on_wq;
+  6094	
+  6095		if (unlikely(bi->bi_opf & REQ_PREFLUSH)) {
+  6096			int ret = log_handle_flush_request(conf, bi);
+  6097	
+  6098			if (ret == 0)
+  6099				return true;
+  6100			if (ret == -ENODEV) {
+  6101				if (md_flush_request(mddev, bi))
+  6102					return true;
+  6103			}
+  6104			/* ret == -EAGAIN, fallback */
+  6105		}
+  6106	
+  6107		md_write_start(mddev, bi);
+  6108		/*
+  6109		 * If array is degraded, better not do chunk aligned read because
+  6110		 * later we might have to read it again in order to reconstruct
+  6111		 * data on failed drives.
+  6112		 */
+  6113		if (rw == READ && mddev->degraded == 0 &&
+  6114		    mddev->reshape_position == MaxSector) {
+  6115			bi = chunk_aligned_read(mddev, bi);
+  6116			if (!bi)
+  6117				return true;
+  6118		}
+  6119	
+  6120		if (unlikely(bio_op(bi) == REQ_OP_DISCARD)) {
+  6121			make_discard_request(mddev, bi);
+  6122			md_write_end(mddev);
+  6123			return true;
+  6124		}
+  6125	
+> 6126		bi = mddev_bio_split_at_reshape_offset(mddev, bi, NULL,
+  6127						       &conf->bio_split);
+  6128		if (!bi) {
+  6129			if (rw == WRITE)
+  6130				md_write_end(mddev);
+  6131			return true;
+  6132		}
+  6133	
+  6134		logical_sector = bi->bi_iter.bi_sector & ~((sector_t)RAID5_STRIPE_SECTORS(conf)-1);
+  6135		bi->bi_next = NULL;
+  6136	
+  6137		ctx = mempool_alloc(conf->ctx_pool, GFP_NOIO);
+  6138		memset(ctx, 0, conf->ctx_size);
+  6139		ctx->first_sector = logical_sector;
+  6140		ctx->last_sector = bio_end_sector(bi);
+  6141		/*
+  6142		 * if r5l_handle_flush_request() didn't clear REQ_PREFLUSH,
+  6143		 * we need to flush journal device
+  6144		 */
+  6145		if (unlikely(bi->bi_opf & REQ_PREFLUSH))
+  6146			ctx->do_flush = true;
+  6147	
+  6148		stripe_cnt = DIV_ROUND_UP_SECTOR_T(ctx->last_sector - logical_sector,
+  6149						   RAID5_STRIPE_SECTORS(conf));
+  6150		bitmap_set(ctx->sectors_to_do, 0, stripe_cnt);
+  6151	
+  6152		pr_debug("raid456: %s, logical %llu to %llu\n", __func__,
+  6153			 bi->bi_iter.bi_sector, ctx->last_sector);
+  6154	
+  6155		/* Bail out if conflicts with reshape and REQ_NOWAIT is set */
+  6156		if ((bi->bi_opf & REQ_NOWAIT) &&
+  6157		    get_reshape_loc(mddev, conf, logical_sector) == LOC_INSIDE_RESHAPE) {
+  6158			bio_wouldblock_error(bi);
+  6159			if (rw == WRITE)
+  6160				md_write_end(mddev);
+  6161			mempool_free(ctx, conf->ctx_pool);
+  6162			return true;
+  6163		}
+  6164		md_account_bio(mddev, &bi);
+  6165	
+  6166		/*
+  6167		 * Lets start with the stripe with the lowest chunk offset in the first
+  6168		 * chunk. That has the best chances of creating IOs adjacent to
+  6169		 * previous IOs in case of sequential IO and thus creates the most
+  6170		 * sequential IO pattern. We don't bother with the optimization when
+  6171		 * reshaping as the performance benefit is not worth the complexity.
+  6172		 */
+  6173		if (likely(conf->reshape_progress == MaxSector)) {
+  6174			logical_sector = raid5_bio_lowest_chunk_sector(conf, bi);
+  6175			on_wq = false;
+  6176		} else {
+  6177			add_wait_queue(&conf->wait_for_reshape, &wait);
+  6178			on_wq = true;
+  6179		}
+  6180		s = (logical_sector - ctx->first_sector) >> RAID5_STRIPE_SHIFT(conf);
+  6181	
+  6182		while (1) {
+  6183			res = make_stripe_request(mddev, conf, ctx, logical_sector,
+  6184						  bi);
+  6185			if (res == STRIPE_FAIL || res == STRIPE_WAIT_RESHAPE)
+  6186				break;
+  6187	
+  6188			if (res == STRIPE_RETRY)
+  6189				continue;
+  6190	
+  6191			if (res == STRIPE_SCHEDULE_AND_RETRY) {
+  6192				WARN_ON_ONCE(!on_wq);
+  6193				/*
+  6194				 * Must release the reference to batch_last before
+  6195				 * scheduling and waiting for work to be done,
+  6196				 * otherwise the batch_last stripe head could prevent
+  6197				 * raid5_activate_delayed() from making progress
+  6198				 * and thus deadlocking.
+  6199				 */
+  6200				if (ctx->batch_last) {
+  6201					raid5_release_stripe(ctx->batch_last);
+  6202					ctx->batch_last = NULL;
+  6203				}
+  6204	
+  6205				wait_woken(&wait, TASK_UNINTERRUPTIBLE,
+  6206					   MAX_SCHEDULE_TIMEOUT);
+  6207				continue;
+  6208			}
+  6209	
+  6210			s = find_next_bit_wrap(ctx->sectors_to_do, stripe_cnt, s);
+  6211			if (s == stripe_cnt)
+  6212				break;
+  6213	
+  6214			logical_sector = ctx->first_sector +
+  6215				(s << RAID5_STRIPE_SHIFT(conf));
+  6216		}
+  6217		if (unlikely(on_wq))
+  6218			remove_wait_queue(&conf->wait_for_reshape, &wait);
+  6219	
+  6220		if (ctx->batch_last)
+  6221			raid5_release_stripe(ctx->batch_last);
+  6222	
+  6223		if (rw == WRITE)
+  6224			md_write_end(mddev);
+  6225	
+  6226		mempool_free(ctx, conf->ctx_pool);
+  6227		if (res == STRIPE_WAIT_RESHAPE) {
+  6228			md_free_cloned_bio(bi);
+  6229			return false;
+  6230		}
+  6231	
+  6232		bio_endio(bi);
+  6233		return true;
+  6234	}
+  6235	
+
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
