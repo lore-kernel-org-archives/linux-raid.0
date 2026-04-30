@@ -1,207 +1,320 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9FE41A9FA0
-	for <linux-raid@vger.kernel.org>; Thu, 30 Apr 2026 02:23:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777515830; cv=pass; b=SagfncnuaV0Kd3hXNsFIsgBdcwrgGajmqWc5EkPGPyAMkudRawR+5l4Vq7aVN1XC1MQ13u5h7ey9l3V1WKR8L+1oZvlUsIXJ3GOQDInkkdeQmjqzRaqS7fuezfRUB8s2pQKslKiQHkvY863E68Lg/vxzF6zskzVboBMHlZmb/YQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777515830; c=relaxed/simple;
-	bh=7vkOdTtCtVJYojZ5HX7HyCwQ0EwkKS3bmipDXPHEFSs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=SKC/JjpJlf14hfUgLMkVEeCs154aV4/jVCdrvTogSX3pocsD6QlwX1hhtmqoyFldWPL0qC4uIrhwEuYTXl1fxsSLkjjD6DpWCp0oUB088cOvh3VqipUq4YXXlS/hDKW2dOgom+i55H0TeglOFsDFiBV064nX0du2Lbfqg5ecj9o=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XQZZ/SXk; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=P6jzpH5p; arc=pass smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAA6026E142;
+	Thu, 30 Apr 2026 02:38:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777516711; cv=none; b=s5LcE27lLpkD0K//4DCycNvqdmo1mWPX/obF6sbmoVZ9vArLGjiAUO1Hk37RivOUb7syuXlgif8pMxnwTOeAGmbrACQ3zngy4OlYIy2GounAa8lKmX9fyGNp++tjv9bPVvPExA1xjyy4R4UUP7p+krpd9ArTzGLTHCzUGka8uuY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777516711; c=relaxed/simple;
+	bh=PkKOmBRTGLs12bBKng/adtfCsJNJYQSLMRRQ5O8w284=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HNHiTKs4Iz9NC0oA4ydM8ioHb1iW6LM0hKxUJ2/3b1HHRB8RLHQoq+Nzv6zK0NVPQ3QoL/2SjregqALYtcIl6PTXUgy0Fyr3c3cH1eBKJew+fGs0J1W+95VcZMjjZXFaETxiBUQJOhSb9hcf2ebeV7YXdUr6aNlG7wLFRI5EtRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hqqrxIaC; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XQZZ/SXk";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="P6jzpH5p"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1777515827;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=VJcTKEYq74ChheTIldNeXTTCr4nynWaYPf9BezwHQ0M=;
-	b=XQZZ/SXk00G9LllXY/Pk/mIalw6KW82KeT6JO8XyvMOE02TgAIVetbOijQtU9knJOlb4VG
-	umjggPg6E6+mGFWXR+9D0qxQMoYsGatLXCJ28YSX3XWl1SKnbznBMiWeTej775seRIzJWn
-	CNzXVIabNx3f7Dj/fxvnC3EQ+qGuZVY=
-Received: from mail-lf1-f69.google.com (mail-lf1-f69.google.com
- [209.85.167.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-539-lOCKUccBNc-xpDuxKS8vYQ-1; Wed, 29 Apr 2026 22:23:46 -0400
-X-MC-Unique: lOCKUccBNc-xpDuxKS8vYQ-1
-X-Mimecast-MFC-AGG-ID: lOCKUccBNc-xpDuxKS8vYQ_1777515824
-Received: by mail-lf1-f69.google.com with SMTP id 2adb3069b0e04-5a3ffc66760so158815e87.3
-        for <linux-raid@vger.kernel.org>; Wed, 29 Apr 2026 19:23:45 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1777515824; cv=none;
-        d=google.com; s=arc-20240605;
-        b=eQnJX7H0tRmTnW5eR/nxtsypFJETfi3CpqbPXAP1H8UC8MmTaj9a0DCUHzzg0g1eFx
-         VTg0LqydO8jCntdsC5iNx/0P6rZ77GGRYId5qHdEMbY7F/JJ9dy2wMbORszQ8D90Y4Q1
-         WCmJ1iGWQf4sHZQUbW8B+M1PRTjYt4a6QUD3uyWZxdB5CKGT0lPJcpSsWFL5/gy9Bfbq
-         QNiKs6lyi0p27KgLCMdPidjtc8comQU5Bfxl2jcUbc+p2GbryZE0PYQ75O5zcEYx/vHn
-         xXi8kC51YTfQRWlG25XmvG8QyZbkEyt5Qd7QSh0Hakm4/7GaCbj6JHgoT7LbQWm64thK
-         4Sag==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=VJcTKEYq74ChheTIldNeXTTCr4nynWaYPf9BezwHQ0M=;
-        fh=snDaGRS4HwoE1Fy3kxz5oSZYshZkjEXdJCa+B3ZYORI=;
-        b=ckzrfM+g4E0eqXx4IryUmr4F2wZQ1c/ArORU1uXy7l43ONs0ybPc7u2017FkahGLzv
-         lzJvvvPQpnBi0wIu5+wWS3PW2lNXarRBk6ER030PMJU+6l5ODhIUqFabldFCmff0UIeB
-         JyLojt2quA+Cw1gh+axopEFVnUPA/CHqAw7UTGbue6Hns5nZw2SpMWiFniKR529q7jYx
-         gAd42GNRcQygptDugJWzgOisvwBUJ5ZLpV456fOdIS9eVvH6SWI5oxaxcOmIrBl+to7F
-         N2o2qo3BeGyiq3o2JobfrhymM0M9CPDjizmfSuBnjg05S1IItUkR1944R51Fkhbzfjnc
-         416w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1777515824; x=1778120624; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VJcTKEYq74ChheTIldNeXTTCr4nynWaYPf9BezwHQ0M=;
-        b=P6jzpH5poexma0G6RtdcJcBP+GUkTxx3o9CiqWYpwZpJPrx8xIDysrjNHe+veWcR4y
-         s8bsTeoD2UOIC5XX5fV+zL1yiStvU3eA2+MWqjMLtx2vPmz7ZKAd5auqjBwE1PO1OY1l
-         XzNSOsd0aVqZoeSVOVwVqWNhY9hU853P7JpIJgfuIwfNhuurfh88BcgL/p/OkfAwT9kJ
-         6Is3vsWGu8eZ069tkyJMJoYNY2EBq5MbNC/s9lWiiZlCwl5SKP9UFo8mUfw6eAeg6a/4
-         53TborZsyrDOXTNIYhwjMa6seihPMncP/TBarotzelc2YvXPz2XNjb1xrf4jOX4aWKA3
-         1P2Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777515824; x=1778120624;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=VJcTKEYq74ChheTIldNeXTTCr4nynWaYPf9BezwHQ0M=;
-        b=eEIUG2cFF7xFFe+0iy2+sX6ZF8OgK/sE4XfW4tbeLKu+d70D2cXuaSxIpIs96KmB28
-         a2maZGN1HIxw2NgXqDPjOlxqVfMf0oqaJZtrhSnAjMsNLtugR8tnWW0Lv1CglOWr+KIn
-         +y3zph7YZMnkBtSiOi+Sg2vJ6WZOYxYkScuvEnbHF+d4m0tYPtFGiDXdB3jxlUyuX817
-         DFsBwJJK/WblHApa8GAo+fr+UQCc2eHLd0ZsiPz0rZ+yq5Hz0eUFa4P3kK7UnnwZA9WS
-         sVwG2qkqS3H1XZ0GHl6q5AKn9NumFltjNhvZ3q0hDRUeiQ7F7EMVIavrz0szHFiwX+hS
-         Vj5w==
-X-Forwarded-Encrypted: i=1; AFNElJ8MLhj+XNZSrCnSA4cx1WOAAW/fnCt1wAJKAE1d3JiSPCxddAda1tVmryeEOp1SIrogEX4KPW59McEz@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy2KRoDSaxouJL25jZ2PwdWLZmsXXkt/vWXAVSeqFBH+VSLj/3I
-	iR2+o/oV5JIM0ffA4wqehr3BBxSItrMNcd33T+wDnJO03HNjix8g1ZhaPfoQounkTt1+1EU2cq0
-	/ZwYrMT8eOI9q+kpBd4yAn8gESMhel04xTuDDepU3GNAfX9zJntLCBC0bAxM50hfxYivE4gvm0A
-	0wcZbDlxkZaVLF/5mhd8uT3hAkLGnko1wid5Ua6A==
-X-Gm-Gg: AeBDieuRz+dFFlqbNu7bRMVB6E+IVH1GuqnyqM+TDQMdEjt6DbaVg+pvJPk758Dg38v
-	lDn8T/dDerhy0RiDWt/NqvsyqAuyTTeIs+6rlmDCmsvPtv6Hmpk970Z406DzrVVa6lrbiiIU4ZJ
-	MKmgFPwqEIKz2SUBT90jSipsRHQ9jAfe/KczNBuu4p1WZ1YoI7SCoT/QCq40N2kFf+pJqoPbQ3l
-	eJ1tTrEFoe3V5JISjK63eND+X1xwY3F9j7S+PTCBaOIcPWjUBK4eeRzGXzxU7ljoSuIWWd00ilu
-	IegRdZOHTjOY
-X-Received: by 2002:a05:6512:308f:b0:5a7:42d6:529b with SMTP id 2adb3069b0e04-5a8522dc224mr255127e87.34.1777515824466;
-        Wed, 29 Apr 2026 19:23:44 -0700 (PDT)
-X-Received: by 2002:a05:6512:308f:b0:5a7:42d6:529b with SMTP id
- 2adb3069b0e04-5a8522dc224mr255112e87.34.1777515824046; Wed, 29 Apr 2026
- 19:23:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hqqrxIaC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1777516710; x=1809052710;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=PkKOmBRTGLs12bBKng/adtfCsJNJYQSLMRRQ5O8w284=;
+  b=hqqrxIaC04mrbTf0hLssikehQ92UXE7N7xgpb3imbIhkaPF95o1PAHP/
+   JbJc+s7dyg6yzF4rAM0uh8dr1UtoqQX9LZ+dfoGEgBGR8DZD5YWJRsXSb
+   tiyJV+6Pb8xrthOHBMqqo8uAnS7iaIFncTcBRa95Oemlt0NmW89xWaXDa
+   nKOcG9dHk/TDSRzvXX8F8cZW4hAGPd7aY3e93x5JWcNGBAc0Ez4vvPGMd
+   k/RLp1cQ05CHDaFpcyStjBImTayVFn8atvdi5OJEs9p4sI2V6dMvBFcyJ
+   vvn+p6AR3s3lBYRwABaT6vuDUdMuuUOfaKpv/6FK87vJfAi9cC+wytzad
+   A==;
+X-CSE-ConnectionGUID: OQJPQcKARueXMIHlimKeGg==
+X-CSE-MsgGUID: O8fYjpSbRi2gH/IV0IlWsA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11771"; a="78326859"
+X-IronPort-AV: E=Sophos;i="6.23,207,1770624000"; 
+   d="scan'208";a="78326859"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 19:38:29 -0700
+X-CSE-ConnectionGUID: nZLfWukqQiCrK8qlh1SBlA==
+X-CSE-MsgGUID: 2t/5erncQdKs5X5BtbJO1Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,207,1770624000"; 
+   d="scan'208";a="258031101"
+Received: from lkp-server01.sh.intel.com (HELO aa799cca880d) ([10.239.97.150])
+  by fmviesa001.fm.intel.com with ESMTP; 29 Apr 2026 19:38:27 -0700
+Received: from kbuild by aa799cca880d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wIHIG-00000000Bpk-3oHl;
+	Thu, 30 Apr 2026 02:38:24 +0000
+Date: Thu, 30 Apr 2026 10:37:47 +0800
+From: kernel test robot <lkp@intel.com>
+To: Yu Kuai <yukuai@fnnas.com>, linux-raid@vger.kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	linux-kernel@vger.kernel.org, Li Nan <linan122@huawei.com>,
+	Yu Kuai <yukuai@fnnas.com>, Cheng Cheng <chencheng@fnnas.com>
+Subject: Re: [PATCH] md/raid10: wire llbitmap reshape lifecycle
+Message-ID: <202604301028.uutGNSgD-lkp@intel.com>
+References: <20260419030942.824195-15-yukuai@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260416033801.786415-1-linan666@huaweicloud.com> <20260416033801.786415-9-linan666@huaweicloud.com>
-In-Reply-To: <20260416033801.786415-9-linan666@huaweicloud.com>
-From: Xiao Ni <xni@redhat.com>
-Date: Thu, 30 Apr 2026 10:23:30 +0800
-X-Gm-Features: AVHnY4I7LMDyr3yVgB5ZssH0sGdMyGv9UdedMu-cy3eolQBpJlJjyBuDTZXCvak
-Message-ID: <CALTww2_cU_kMCROQFOri6LvaTGipe_tMgsBmkaJdahCFizDoTw@mail.gmail.com>
-Subject: Re: [PATCH v3 8/8] md/raid10: fix IO error at logical block size granularity
-To: linan666@huaweicloud.com
-Cc: song@kernel.org, yukuai@fnnas.com, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, yangerkun@huawei.com, yi.zhang@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260419030942.824195-15-yukuai@fnnas.com>
 
-On Thu, Apr 16, 2026 at 11:51=E2=80=AFAM <linan666@huaweicloud.com> wrote:
->
-> From: Li Nan <linan122@huawei.com>
->
-> RAID10 currently fixes IO error at PAGE_SIZE granularity. Fix at smaller
-> granularity can handle more errors, and RAID will support logical block
-> sizes larger than PAGE_SIZE in the future, where PAGE_SIZE IO will fail.
->
-> Switch IO error fix granularity to logical block size.
->
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> Reviewed-by: Yu Kuai <yukuai@fnnas.com>
-> ---
->  drivers/md/raid10.c | 17 ++++-------------
->  1 file changed, 4 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 3638e00fe420..5b4ffd23211a 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -2454,7 +2454,7 @@ static void sync_request_write(struct mddev *mddev,=
- struct r10bio *r10_bio)
->  static void fix_recovery_read_error(struct r10bio *r10_bio)
->  {
->         /* We got a read error during recovery.
-> -        * We repeat the read in smaller page-sized sections.
-> +        * We repeat the read in smaller logical_block_sized sections.
->          * If a read succeeds, write it to the new device or record
->          * a bad block if we cannot.
->          * If a read fails, record a bad block on both old and
-> @@ -2470,14 +2470,11 @@ static void fix_recovery_read_error(struct r10bio=
- *r10_bio)
->         struct folio *folio =3D get_resync_folio(bio)->folio;
->
->         while (sectors) {
-> -               int s =3D sectors;
-> +               int s =3D min_t(int, sectors, mddev->logical_block_size >=
-> 9);
->                 struct md_rdev *rdev;
->                 sector_t addr;
->                 int ok;
->
-> -               if (s > (PAGE_SIZE>>9))
-> -                       s =3D PAGE_SIZE >> 9;
-> -
->                 rdev =3D conf->mirrors[dr].rdev;
->                 addr =3D r10_bio->devs[0].addr + sect;
->                 ok =3D sync_folio_io(rdev,
-> @@ -2621,14 +2618,11 @@ static void fix_read_error(struct r10conf *conf, =
-struct mddev *mddev, struct r10
->         }
->
->         while(sectors) {
-> -               int s =3D sectors;
-> +               int s =3D min_t(int, sectors, mddev->logical_block_size >=
-> 9);
->                 int sl =3D slot;
->                 int success =3D 0;
->                 int start;
->
-> -               if (s > (PAGE_SIZE>>9))
-> -                       s =3D PAGE_SIZE >> 9;
-> -
->                 do {
->                         d =3D r10_bio->devs[sl].devnum;
->                         rdev =3D conf->mirrors[d].rdev;
-> @@ -4926,13 +4920,10 @@ static int handle_reshape_read_error(struct mddev=
- *mddev,
->         __raid10_find_phys(&conf->prev, r10b);
->
->         while (sectors) {
-> -               int s =3D sectors;
-> +               int s =3D min_t(int, sectors, mddev->logical_block_size >=
-> 9);
->                 int success =3D 0;
->                 int first_slot =3D slot;
->
-> -               if (s > (PAGE_SIZE >> 9))
-> -                       s =3D PAGE_SIZE >> 9;
-> -
->                 while (!success) {
->                         int d =3D r10b->devs[slot].devnum;
->                         struct md_rdev *rdev =3D conf->mirrors[d].rdev;
-> --
-> 2.39.2
->
->
+Hi Yu,
 
-This patch looks good to me.
-Reviewed-by: Xiao Ni <xni@redhat.com>
+kernel test robot noticed the following build errors:
 
+[auto build test ERROR on linus/master]
+[also build test ERROR on song-md/md-next v7.1-rc1 next-20260429]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-raid10-wire-llbitmap-reshape-lifecycle/20260423-170302
+base:   linus/master
+patch link:    https://lore.kernel.org/r/20260419030942.824195-15-yukuai%40fnnas.com
+patch subject: [PATCH] md/raid10: wire llbitmap reshape lifecycle
+config: um-randconfig-001-20260430 (https://download.01.org/0day-ci/archive/20260430/202604301028.uutGNSgD-lkp@intel.com/config)
+compiler: clang version 23.0.0git (https://github.com/llvm/llvm-project 5bac06718f502014fade905512f1d26d578a18f3)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260430/202604301028.uutGNSgD-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202604301028.uutGNSgD-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> drivers/md/raid10.c:4370:25: error: no member named 'reshape_can_start' in 'struct bitmap_operations'
+    4370 |             mddev->bitmap_ops->reshape_can_start) {
+         |             ~~~~~~~~~~~~~~~~~  ^
+   drivers/md/raid10.c:4371:28: error: no member named 'reshape_can_start' in 'struct bitmap_operations'
+    4371 |                 ret = mddev->bitmap_ops->reshape_can_start(mddev);
+         |                       ~~~~~~~~~~~~~~~~~  ^
+>> drivers/md/raid10.c:4689:26: error: no member named 'reshape_mark' in 'struct bitmap_operations'
+    4689 |                     mddev->bitmap_ops->reshape_mark &&
+         |                     ~~~~~~~~~~~~~~~~~  ^
+   drivers/md/raid10.c:4691:23: error: no member named 'reshape_mark' in 'struct bitmap_operations'
+    4691 |                         mddev->bitmap_ops->reshape_mark(mddev, conf->reshape_safe,
+         |                         ~~~~~~~~~~~~~~~~~  ^
+   drivers/md/raid10.c:4899:25: error: no member named 'reshape_mark' in 'struct bitmap_operations'
+    4899 |             mddev->bitmap_ops->reshape_mark &&
+         |             ~~~~~~~~~~~~~~~~~  ^
+   drivers/md/raid10.c:4901:22: error: no member named 'reshape_mark' in 'struct bitmap_operations'
+    4901 |                 mddev->bitmap_ops->reshape_mark(mddev, conf->reshape_safe,
+         |                 ~~~~~~~~~~~~~~~~~  ^
+>> drivers/md/raid10.c:5043:37: error: no member named 'reshape_finish' in 'struct bitmap_operations'
+    5043 |         if (llbitmap && mddev->bitmap_ops->reshape_finish)
+         |                         ~~~~~~~~~~~~~~~~~  ^
+   drivers/md/raid10.c:5044:22: error: no member named 'reshape_finish' in 'struct bitmap_operations'
+    5044 |                 mddev->bitmap_ops->reshape_finish(mddev);
+         |                 ~~~~~~~~~~~~~~~~~  ^
+>> drivers/md/raid10.c:5107:3: error: field designator 'bitmap_sync_size' does not refer to any field in type 'struct md_personality'
+    5107 |         .bitmap_sync_size = raid10_bitmap_sync_size,
+         |         ~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>> drivers/md/raid10.c:5108:3: error: field designator 'bitmap_array_sectors' does not refer to any field in type 'struct md_personality'
+    5108 |         .bitmap_array_sectors = raid10_bitmap_sync_size,
+         |         ~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   10 errors generated.
+
+
+vim +4370 drivers/md/raid10.c
+
+  4345	
+  4346	static int raid10_start_reshape(struct mddev *mddev)
+  4347	{
+  4348		/* A 'reshape' has been requested. This commits
+  4349		 * the various 'new' fields and sets MD_RECOVER_RESHAPE
+  4350		 * This also checks if there are enough spares and adds them
+  4351		 * to the array.
+  4352		 * We currently require enough spares to make the final
+  4353		 * array non-degraded.  We also require that the difference
+  4354		 * between old and new data_offset - on each device - is
+  4355		 * enough that we never risk over-writing.
+  4356		 */
+  4357	
+  4358		unsigned long before_length, after_length;
+  4359		sector_t min_offset_diff = 0;
+  4360		int first = 1;
+  4361		struct geom new;
+  4362		struct r10conf *conf = mddev->private;
+  4363		struct md_rdev *rdev;
+  4364		int spares = 0;
+  4365		int ret;
+  4366	
+  4367		if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+  4368			return -EBUSY;
+  4369		if (md_bitmap_enabled(mddev, false) &&
+> 4370		    mddev->bitmap_ops->reshape_can_start) {
+  4371			ret = mddev->bitmap_ops->reshape_can_start(mddev);
+  4372			if (ret)
+  4373				return ret;
+  4374		}
+  4375	
+  4376		if (setup_geo(&new, mddev, geo_start) != conf->copies)
+  4377			return -EINVAL;
+  4378	
+  4379		before_length = ((1 << conf->prev.chunk_shift) *
+  4380				 conf->prev.far_copies);
+  4381		after_length = ((1 << conf->geo.chunk_shift) *
+  4382				conf->geo.far_copies);
+  4383	
+  4384		rdev_for_each(rdev, mddev) {
+  4385			if (!test_bit(In_sync, &rdev->flags)
+  4386			    && !test_bit(Faulty, &rdev->flags))
+  4387				spares++;
+  4388			if (rdev->raid_disk >= 0) {
+  4389				long long diff = (rdev->new_data_offset
+  4390						  - rdev->data_offset);
+  4391				if (!mddev->reshape_backwards)
+  4392					diff = -diff;
+  4393				if (diff < 0)
+  4394					diff = 0;
+  4395				if (first || diff < min_offset_diff)
+  4396					min_offset_diff = diff;
+  4397				first = 0;
+  4398			}
+  4399		}
+  4400	
+  4401		if (max(before_length, after_length) > min_offset_diff)
+  4402			return -EINVAL;
+  4403	
+  4404		if (spares < mddev->delta_disks)
+  4405			return -EINVAL;
+  4406	
+  4407		conf->offset_diff = min_offset_diff;
+  4408		spin_lock_irq(&conf->device_lock);
+  4409		if (conf->mirrors_new) {
+  4410			memcpy(conf->mirrors_new, conf->mirrors,
+  4411			       sizeof(struct raid10_info)*conf->prev.raid_disks);
+  4412			smp_mb();
+  4413			kfree(conf->mirrors_old);
+  4414			conf->mirrors_old = conf->mirrors;
+  4415			conf->mirrors = conf->mirrors_new;
+  4416			conf->mirrors_new = NULL;
+  4417		}
+  4418		setup_geo(&conf->geo, mddev, geo_start);
+  4419		smp_mb();
+  4420		if (mddev->reshape_backwards) {
+  4421			sector_t size = raid10_size(mddev, 0, 0);
+  4422			if (size < mddev->array_sectors) {
+  4423				spin_unlock_irq(&conf->device_lock);
+  4424				pr_warn("md/raid10:%s: array size must be reduce before number of disks\n",
+  4425					mdname(mddev));
+  4426				return -EINVAL;
+  4427			}
+  4428			mddev->resync_max_sectors = size;
+  4429			conf->reshape_progress = size;
+  4430		} else
+  4431			conf->reshape_progress = 0;
+  4432		conf->reshape_safe = conf->reshape_progress;
+  4433		spin_unlock_irq(&conf->device_lock);
+  4434	
+  4435		if (mddev->delta_disks && mddev->bitmap) {
+  4436			struct mdp_superblock_1 *sb = NULL;
+  4437			sector_t oldsize, newsize;
+  4438	
+  4439			oldsize = raid10_size(mddev, 0, 0);
+  4440			newsize = raid10_size(mddev, 0, conf->geo.raid_disks);
+  4441	
+  4442			if (!mddev_is_clustered(mddev) &&
+  4443			    md_bitmap_enabled(mddev, false)) {
+  4444				ret = mddev->bitmap_ops->resize(mddev, newsize, 0);
+  4445				if (ret)
+  4446					goto abort;
+  4447				else
+  4448					goto out;
+  4449			}
+  4450	
+  4451			rdev_for_each(rdev, mddev) {
+  4452				if (rdev->raid_disk > -1 &&
+  4453				    !test_bit(Faulty, &rdev->flags))
+  4454					sb = page_address(rdev->sb_page);
+  4455			}
+  4456	
+  4457			/*
+  4458			 * some node is already performing reshape, and no need to
+  4459			 * call bitmap_ops->resize again since it should be called when
+  4460			 * receiving BITMAP_RESIZE msg
+  4461			 */
+  4462			if ((sb && (le32_to_cpu(sb->feature_map) &
+  4463				    MD_FEATURE_RESHAPE_ACTIVE)) || (oldsize == newsize))
+  4464				goto out;
+  4465	
+  4466			/* cluster can't be setup without bitmap */
+  4467			ret = mddev->bitmap_ops->resize(mddev, newsize, 0);
+  4468			if (ret)
+  4469				goto abort;
+  4470	
+  4471			ret = mddev->cluster_ops->resize_bitmaps(mddev, newsize, oldsize);
+  4472			if (ret) {
+  4473				mddev->bitmap_ops->resize(mddev, oldsize, 0);
+  4474				goto abort;
+  4475			}
+  4476		}
+  4477	out:
+  4478		if (mddev->delta_disks > 0) {
+  4479			rdev_for_each(rdev, mddev)
+  4480				if (rdev->raid_disk < 0 &&
+  4481				    !test_bit(Faulty, &rdev->flags)) {
+  4482					if (raid10_add_disk(mddev, rdev) == 0) {
+  4483						if (rdev->raid_disk >=
+  4484						    conf->prev.raid_disks)
+  4485							set_bit(In_sync, &rdev->flags);
+  4486						else
+  4487							rdev->recovery_offset = 0;
+  4488	
+  4489						/* Failure here is OK */
+  4490						sysfs_link_rdev(mddev, rdev);
+  4491					}
+  4492				} else if (rdev->raid_disk >= conf->prev.raid_disks
+  4493					   && !test_bit(Faulty, &rdev->flags)) {
+  4494					/* This is a spare that was manually added */
+  4495					set_bit(In_sync, &rdev->flags);
+  4496				}
+  4497		}
+  4498		/* When a reshape changes the number of devices,
+  4499		 * ->degraded is measured against the larger of the
+  4500		 * pre and  post numbers.
+  4501		 */
+  4502		spin_lock_irq(&conf->device_lock);
+  4503		mddev->degraded = calc_degraded(conf);
+  4504		spin_unlock_irq(&conf->device_lock);
+  4505		mddev->raid_disks = conf->geo.raid_disks;
+  4506		mddev->reshape_position = conf->reshape_progress;
+  4507		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+  4508	
+  4509		clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+  4510		clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+  4511		clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
+  4512		set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+  4513		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+  4514		conf->reshape_checkpoint = jiffies;
+  4515		md_new_event();
+  4516		return 0;
+  4517	
+  4518	abort:
+  4519		mddev->recovery = 0;
+  4520		spin_lock_irq(&conf->device_lock);
+  4521		conf->geo = conf->prev;
+  4522		mddev->raid_disks = conf->geo.raid_disks;
+  4523		rdev_for_each(rdev, mddev)
+  4524			rdev->new_data_offset = rdev->data_offset;
+  4525		smp_wmb();
+  4526		conf->reshape_progress = MaxSector;
+  4527		conf->reshape_safe = MaxSector;
+  4528		mddev->reshape_position = MaxSector;
+  4529		spin_unlock_irq(&conf->device_lock);
+  4530		return ret;
+  4531	}
+  4532	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
