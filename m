@@ -1,124 +1,124 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DB8226E710
-	for <linux-raid@vger.kernel.org>; Thu, 30 Apr 2026 02:23:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9FE41A9FA0
+	for <linux-raid@vger.kernel.org>; Thu, 30 Apr 2026 02:23:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777515787; cv=pass; b=jgWS8rizIbtvIQg10UoWW4t2JJuASEeyYnBLhzH5xPs/WrnDN55MoQiX4QCtoKQkGMP8xIgnFNmHZybszIUEKCe/6Gacfx+KGfZ1c9H4S7xISGG/7+/rbV9ax9AUbBF5olY6D0jrwu+T3xhrdPeUhrMVvqHbDDZd4kgdrV4LJeM=
+	t=1777515830; cv=pass; b=SagfncnuaV0Kd3hXNsFIsgBdcwrgGajmqWc5EkPGPyAMkudRawR+5l4Vq7aVN1XC1MQ13u5h7ey9l3V1WKR8L+1oZvlUsIXJ3GOQDInkkdeQmjqzRaqS7fuezfRUB8s2pQKslKiQHkvY863E68Lg/vxzF6zskzVboBMHlZmb/YQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777515787; c=relaxed/simple;
-	bh=46KV7rw+OTjToH+MashOEWceTG76HMfw7qFom5Z693o=;
+	s=arc-20240116; t=1777515830; c=relaxed/simple;
+	bh=7vkOdTtCtVJYojZ5HX7HyCwQ0EwkKS3bmipDXPHEFSs=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=f/DaBDIMw9OX+VObB3edndSBZwomuif5y4aOu4ResKqHAmn3dW9f6i026+BNeEDOB7LuedZVjU6pfo4uLaNIEHcYSY8cZ2BLauFfbatNCwSSe5DHZawtAtTN/+cRpRciwLwJqwh08/k4O+6aOSxd3dr7+9BQ0IZNA+wi3GNdQZc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=W5uKXkZ3; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=sG2OWi4p; arc=pass smtp.client-ip=170.10.129.124
+	 To:Cc:Content-Type; b=SKC/JjpJlf14hfUgLMkVEeCs154aV4/jVCdrvTogSX3pocsD6QlwX1hhtmqoyFldWPL0qC4uIrhwEuYTXl1fxsSLkjjD6DpWCp0oUB088cOvh3VqipUq4YXXlS/hDKW2dOgom+i55H0TeglOFsDFiBV064nX0du2Lbfqg5ecj9o=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XQZZ/SXk; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=P6jzpH5p; arc=pass smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W5uKXkZ3";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="sG2OWi4p"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XQZZ/SXk";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="P6jzpH5p"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1777515784;
+	s=mimecast20190719; t=1777515827;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=TtSEVx7WDKYpSKx7Jq2cqkcxTmW0fNJcYF8EVOY9iWE=;
-	b=W5uKXkZ3qrL1ChTsTNtDpkkIhgBEAVTj9Glh/DL37Rwvt3ydJBStWvIgbKQAncPuhIkzS7
-	5hIUZgIz8I7WnuNKBSWFqI/V+L86Vk7YHDDfPhElVaL9yHw3k9aNuKPmo82pD8jw5pt+3t
-	0lAr1+CdJ77d+oIgT+9STOkho0uXWsw=
-Received: from mail-lf1-f72.google.com (mail-lf1-f72.google.com
- [209.85.167.72]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=VJcTKEYq74ChheTIldNeXTTCr4nynWaYPf9BezwHQ0M=;
+	b=XQZZ/SXk00G9LllXY/Pk/mIalw6KW82KeT6JO8XyvMOE02TgAIVetbOijQtU9knJOlb4VG
+	umjggPg6E6+mGFWXR+9D0qxQMoYsGatLXCJ28YSX3XWl1SKnbznBMiWeTej775seRIzJWn
+	CNzXVIabNx3f7Dj/fxvnC3EQ+qGuZVY=
+Received: from mail-lf1-f69.google.com (mail-lf1-f69.google.com
+ [209.85.167.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-619-8-Ve9y_DMpaweUX2RFnhGA-1; Wed, 29 Apr 2026 22:23:03 -0400
-X-MC-Unique: 8-Ve9y_DMpaweUX2RFnhGA-1
-X-Mimecast-MFC-AGG-ID: 8-Ve9y_DMpaweUX2RFnhGA_1777515782
-Received: by mail-lf1-f72.google.com with SMTP id 2adb3069b0e04-5a7437b4ff9so794858e87.0
-        for <linux-raid@vger.kernel.org>; Wed, 29 Apr 2026 19:23:02 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1777515780; cv=none;
+ us-mta-539-lOCKUccBNc-xpDuxKS8vYQ-1; Wed, 29 Apr 2026 22:23:46 -0400
+X-MC-Unique: lOCKUccBNc-xpDuxKS8vYQ-1
+X-Mimecast-MFC-AGG-ID: lOCKUccBNc-xpDuxKS8vYQ_1777515824
+Received: by mail-lf1-f69.google.com with SMTP id 2adb3069b0e04-5a3ffc66760so158815e87.3
+        for <linux-raid@vger.kernel.org>; Wed, 29 Apr 2026 19:23:45 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1777515824; cv=none;
         d=google.com; s=arc-20240605;
-        b=D6isZ7DIzCMoy2/Y+U6w08rR1FA7i9SVtPerO0r6ydvXn6mJBlS0ATjWgQLwCwzFQL
-         ayg0esyK1SJ/MnkHx0o77nGqpn1NW0iJ82nTRighl3tWwhLN+E63Dckxi3hi3Wctwcvj
-         kJ0VqF52UbQMkRRtJWVZvb9U+CHkeuXv9vWTv5gX/SSXa4m1TGs7uGmv2bOgkiHOQfdT
-         OHhaFmtw8zDUyTelX5FFvSkboNlQtKgA8UaJLrynFbP8PC6af3/RbXxoGMx6/GMSPh6W
-         7ePRAezDNp6UFR5pLYGZ4iZEGd6PE1uSHpIp+s403UD6IT+BgDu9xa8GvnKkwfgy+jOX
-         +UOw==
+        b=eQnJX7H0tRmTnW5eR/nxtsypFJETfi3CpqbPXAP1H8UC8MmTaj9a0DCUHzzg0g1eFx
+         VTg0LqydO8jCntdsC5iNx/0P6rZ77GGRYId5qHdEMbY7F/JJ9dy2wMbORszQ8D90Y4Q1
+         WCmJ1iGWQf4sHZQUbW8B+M1PRTjYt4a6QUD3uyWZxdB5CKGT0lPJcpSsWFL5/gy9Bfbq
+         QNiKs6lyi0p27KgLCMdPidjtc8comQU5Bfxl2jcUbc+p2GbryZE0PYQ75O5zcEYx/vHn
+         xXi8kC51YTfQRWlG25XmvG8QyZbkEyt5Qd7QSh0Hakm4/7GaCbj6JHgoT7LbQWm64thK
+         4Sag==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=TtSEVx7WDKYpSKx7Jq2cqkcxTmW0fNJcYF8EVOY9iWE=;
-        fh=13x98EdDYrQdK+DgWEfd8PyOVQaeC0kY3ReAPNWGgAE=;
-        b=C2oUGO7UXFAU8mz+DDL3I1NdPucN30wC1/XsW2tLdJKUgOx0mC7JId9PjEtWYETJSD
-         RfXTIZTB5RP/EXvlkyseU6kO6P+LU3XpmN53+pArtW3H0S2FkXw0XcG8BkJFe/LQR/cv
-         b5zvhwYirsvGusoqSIu6XLBvW5GpIIA7yJNP50MHllh/zSoWR92UUK7xsJ2Ar+YhGlu8
-         fmj5fza5doyTy15Wz/Z4WT8uVoSP5u0lJZzhDO1F0FpCSUfXHRvQUc45g7zBQU7A4lq9
-         /0uxwTL9AblP4CytVHuG86qkCPLA0KMkkhRpiZo6Fl2/Ypz4SYA7YBiauRHsmwNkgRM0
-         /NLw==;
+        bh=VJcTKEYq74ChheTIldNeXTTCr4nynWaYPf9BezwHQ0M=;
+        fh=snDaGRS4HwoE1Fy3kxz5oSZYshZkjEXdJCa+B3ZYORI=;
+        b=ckzrfM+g4E0eqXx4IryUmr4F2wZQ1c/ArORU1uXy7l43ONs0ybPc7u2017FkahGLzv
+         lzJvvvPQpnBi0wIu5+wWS3PW2lNXarRBk6ER030PMJU+6l5ODhIUqFabldFCmff0UIeB
+         JyLojt2quA+Cw1gh+axopEFVnUPA/CHqAw7UTGbue6Hns5nZw2SpMWiFniKR529q7jYx
+         gAd42GNRcQygptDugJWzgOisvwBUJ5ZLpV456fOdIS9eVvH6SWI5oxaxcOmIrBl+to7F
+         N2o2qo3BeGyiq3o2JobfrhymM0M9CPDjizmfSuBnjg05S1IItUkR1944R51Fkhbzfjnc
+         416w==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1777515780; x=1778120580; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1777515824; x=1778120624; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=TtSEVx7WDKYpSKx7Jq2cqkcxTmW0fNJcYF8EVOY9iWE=;
-        b=sG2OWi4p4DnUD0lL/W+ZnzL9Fekih3JGWE/oHZHsj85FZOYqCGaW/9iBkuj1gbU5Cu
-         9X9bSI8TlyEaw/gzQ3XZG7MvDELk5uVY8StMFttPKNhO193FOonKyFdcHs8OoktZ/6jA
-         ZTvQjn7GvWzyOmFKWaRmE2/ODou+J0ON9/Vy1NRMsT+IyenkMxGVKnmTNZdNpgMIBOA+
-         C/QVk1jWy9sBtABjFY+zU39wqhiZ7Fb9g4u1t6kP2gPwnptHzNVhjk+VAbu+USumzFbu
-         sblnGPq2UtnUNM4Sm85lHjpX0KDp1UsUkCz1135HiZqew8KKB4r71GmlNGVLNJTSqEnH
-         Ykuw==
+        bh=VJcTKEYq74ChheTIldNeXTTCr4nynWaYPf9BezwHQ0M=;
+        b=P6jzpH5poexma0G6RtdcJcBP+GUkTxx3o9CiqWYpwZpJPrx8xIDysrjNHe+veWcR4y
+         s8bsTeoD2UOIC5XX5fV+zL1yiStvU3eA2+MWqjMLtx2vPmz7ZKAd5auqjBwE1PO1OY1l
+         XzNSOsd0aVqZoeSVOVwVqWNhY9hU853P7JpIJgfuIwfNhuurfh88BcgL/p/OkfAwT9kJ
+         6Is3vsWGu8eZ069tkyJMJoYNY2EBq5MbNC/s9lWiiZlCwl5SKP9UFo8mUfw6eAeg6a/4
+         53TborZsyrDOXTNIYhwjMa6seihPMncP/TBarotzelc2YvXPz2XNjb1xrf4jOX4aWKA3
+         1P2Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777515780; x=1778120580;
+        d=1e100.net; s=20251104; t=1777515824; x=1778120624;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=TtSEVx7WDKYpSKx7Jq2cqkcxTmW0fNJcYF8EVOY9iWE=;
-        b=lzmDeFvk+DrFp+2A7qA9KoGKj6aoAqSev7Rky+3pTXY/fAJjV9pWPh7zenIPuGY1rF
-         mB0x29eJW3q7vKy1TnV6TExkn1PySRAgPOmoCH8YLCbaLhKS0RWQYxlKc7Fl7gtlgM92
-         SLyc0YOoqdTn+AUZ1d+XlPd1+QArkQ1Nc55RDR+zbbGJkfpauXhKzvqxWe7cFwS6XMJC
-         A0IOQHE5MDnTCbyzRrnKqXbmljfn3m5zib2bFUdUSHb/0TZmTwYnRmHpIulBgiBj7JLI
-         emCjvC4MRmm53QdGhZbwo338ZhwQS1q/uSAsc6LXJ6q++cJrRZOxdA/W2V10tt7qG0aB
-         qzSA==
-X-Forwarded-Encrypted: i=1; AFNElJ+Fj8upkaLlVx+abamEem1WijYDL6TIkHV553cvEg39rFFy80wkbHmhvgVbsPHKdOpTS+4bJjvRSWko@vger.kernel.org
-X-Gm-Message-State: AOJu0YxcqeJIuUBlkaFKHttVm+qE06JIMnyz0cZEYP5+E3gIdRqDWUWC
-	FshjYvcB1A5Qyehyj8oVlIoKmyCWexceCjIpSzmlAt2hoNUwf+S2/pUJuj7R4jPkt9qnkU6UcbM
-	nbwWdBSgWL5iHbbi1kXmYsTSHeQjw7fs/L5bCrUh7O64YL3nQ7lKM2VrQxJV7lLBLE6tTk32+TE
-	XSqHz1TsMHKeoIrkVetfJnk1qyK5YZctgPFxVsJSMBnlPZtw==
-X-Gm-Gg: AeBDietyGcgYTkhScvwVldW+5eTEyva3jMvCZnOvewVZ5XGO8h6OJyl5tT1qSy/akwN
-	IBcu9XA0Ge9jlcGsMvXbPfFG39I/Ts42eWMRb4BjFVIlKMFpd19Kne1cuP9/Jd7Ela0oBet9L/B
-	4kk4Bq3LT3VTJUQnUDcZb/cGITOVujfZdcXGbgexEynGAgzlg2nb7fbl+06hglyw+ywXLTRQr0R
-	bh+SRKLwWXhmcUvILDKT3IloK6rsjbVANh8pxYi5FNSjmsNpd1ZvtoxgsSi9tikA6RZskqZX2Dy
-	LcZgu+MpeHft
-X-Received: by 2002:a05:6512:10cf:b0:5a4:15ea:7b20 with SMTP id 2adb3069b0e04-5a85271cd12mr147532e87.3.1777515780407;
-        Wed, 29 Apr 2026 19:23:00 -0700 (PDT)
-X-Received: by 2002:a05:6512:10cf:b0:5a4:15ea:7b20 with SMTP id
- 2adb3069b0e04-5a85271cd12mr147520e87.3.1777515780015; Wed, 29 Apr 2026
- 19:23:00 -0700 (PDT)
+        bh=VJcTKEYq74ChheTIldNeXTTCr4nynWaYPf9BezwHQ0M=;
+        b=eEIUG2cFF7xFFe+0iy2+sX6ZF8OgK/sE4XfW4tbeLKu+d70D2cXuaSxIpIs96KmB28
+         a2maZGN1HIxw2NgXqDPjOlxqVfMf0oqaJZtrhSnAjMsNLtugR8tnWW0Lv1CglOWr+KIn
+         +y3zph7YZMnkBtSiOi+Sg2vJ6WZOYxYkScuvEnbHF+d4m0tYPtFGiDXdB3jxlUyuX817
+         DFsBwJJK/WblHApa8GAo+fr+UQCc2eHLd0ZsiPz0rZ+yq5Hz0eUFa4P3kK7UnnwZA9WS
+         sVwG2qkqS3H1XZ0GHl6q5AKn9NumFltjNhvZ3q0hDRUeiQ7F7EMVIavrz0szHFiwX+hS
+         Vj5w==
+X-Forwarded-Encrypted: i=1; AFNElJ8MLhj+XNZSrCnSA4cx1WOAAW/fnCt1wAJKAE1d3JiSPCxddAda1tVmryeEOp1SIrogEX4KPW59McEz@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy2KRoDSaxouJL25jZ2PwdWLZmsXXkt/vWXAVSeqFBH+VSLj/3I
+	iR2+o/oV5JIM0ffA4wqehr3BBxSItrMNcd33T+wDnJO03HNjix8g1ZhaPfoQounkTt1+1EU2cq0
+	/ZwYrMT8eOI9q+kpBd4yAn8gESMhel04xTuDDepU3GNAfX9zJntLCBC0bAxM50hfxYivE4gvm0A
+	0wcZbDlxkZaVLF/5mhd8uT3hAkLGnko1wid5Ua6A==
+X-Gm-Gg: AeBDieuRz+dFFlqbNu7bRMVB6E+IVH1GuqnyqM+TDQMdEjt6DbaVg+pvJPk758Dg38v
+	lDn8T/dDerhy0RiDWt/NqvsyqAuyTTeIs+6rlmDCmsvPtv6Hmpk970Z406DzrVVa6lrbiiIU4ZJ
+	MKmgFPwqEIKz2SUBT90jSipsRHQ9jAfe/KczNBuu4p1WZ1YoI7SCoT/QCq40N2kFf+pJqoPbQ3l
+	eJ1tTrEFoe3V5JISjK63eND+X1xwY3F9j7S+PTCBaOIcPWjUBK4eeRzGXzxU7ljoSuIWWd00ilu
+	IegRdZOHTjOY
+X-Received: by 2002:a05:6512:308f:b0:5a7:42d6:529b with SMTP id 2adb3069b0e04-5a8522dc224mr255127e87.34.1777515824466;
+        Wed, 29 Apr 2026 19:23:44 -0700 (PDT)
+X-Received: by 2002:a05:6512:308f:b0:5a7:42d6:529b with SMTP id
+ 2adb3069b0e04-5a8522dc224mr255112e87.34.1777515824046; Wed, 29 Apr 2026
+ 19:23:44 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260416033801.786415-1-linan666@huaweicloud.com> <20260416033801.786415-8-linan666@huaweicloud.com>
-In-Reply-To: <20260416033801.786415-8-linan666@huaweicloud.com>
+References: <20260416033801.786415-1-linan666@huaweicloud.com> <20260416033801.786415-9-linan666@huaweicloud.com>
+In-Reply-To: <20260416033801.786415-9-linan666@huaweicloud.com>
 From: Xiao Ni <xni@redhat.com>
-Date: Thu, 30 Apr 2026 10:22:48 +0800
-X-Gm-Features: AVHnY4L5M-ajczt8R3UlwaeEHd-3VmmxYGitI9Yy33H2zFWuC-zO8a3SQdBKJpo
-Message-ID: <CALTww28niren-AYKU3XEaAtz+Sa_CP7rHboittWymYudbDWRGQ@mail.gmail.com>
-Subject: Re: [PATCH v3 7/8] md/raid1: fix IO error at logical block size granularity
+Date: Thu, 30 Apr 2026 10:23:30 +0800
+X-Gm-Features: AVHnY4I7LMDyr3yVgB5ZssH0sGdMyGv9UdedMu-cy3eolQBpJlJjyBuDTZXCvak
+Message-ID: <CALTww2_cU_kMCROQFOri6LvaTGipe_tMgsBmkaJdahCFizDoTw@mail.gmail.com>
+Subject: Re: [PATCH v3 8/8] md/raid10: fix IO error at logical block size granularity
 To: linan666@huaweicloud.com
 Cc: song@kernel.org, yukuai@fnnas.com, linux-raid@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, yangerkun@huawei.com, yi.zhang@huawei.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Apr 16, 2026 at 11:55=E2=80=AFAM <linan666@huaweicloud.com> wrote:
+On Thu, Apr 16, 2026 at 11:51=E2=80=AFAM <linan666@huaweicloud.com> wrote:
 >
 > From: Li Nan <linan122@huawei.com>
 >
-> RAID1 currently fixes IO error at PAGE_SIZE granularity. Fix at smaller
+> RAID10 currently fixes IO error at PAGE_SIZE granularity. Fix at smaller
 > granularity can handle more errors, and RAID will support logical block
 > sizes larger than PAGE_SIZE in the future, where PAGE_SIZE IO will fail.
 >
@@ -127,60 +127,50 @@ On Thu, Apr 16, 2026 at 11:55=E2=80=AFAM <linan666@huaweicloud.com> wrote:
 > Signed-off-by: Li Nan <linan122@huawei.com>
 > Reviewed-by: Yu Kuai <yukuai@fnnas.com>
 > ---
->  drivers/md/raid1.c | 13 ++++---------
->  1 file changed, 4 insertions(+), 9 deletions(-)
+>  drivers/md/raid10.c | 17 ++++-------------
+>  1 file changed, 4 insertions(+), 13 deletions(-)
 >
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 724fd4f2cc3a..de8c964ca11d 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2116,7 +2116,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio=
-)
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 3638e00fe420..5b4ffd23211a 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -2454,7 +2454,7 @@ static void sync_request_write(struct mddev *mddev,=
+ struct r10bio *r10_bio)
+>  static void fix_recovery_read_error(struct r10bio *r10_bio)
 >  {
->         /* Try some synchronous reads of other devices to get
->          * good data, much like with normal read errors.  Only
-> -        * read into the pages we already have so we don't
-> +        * read into the block we already have so we don't
->          * need to re-issue the read request.
->          * We don't need to freeze the array, because being in an
->          * active sync request, there is no normal IO, and
-> @@ -2147,13 +2147,11 @@ static int fix_sync_read_error(struct r1bio *r1_b=
-io)
->         }
+>         /* We got a read error during recovery.
+> -        * We repeat the read in smaller page-sized sections.
+> +        * We repeat the read in smaller logical_block_sized sections.
+>          * If a read succeeds, write it to the new device or record
+>          * a bad block if we cannot.
+>          * If a read fails, record a bad block on both old and
+> @@ -2470,14 +2470,11 @@ static void fix_recovery_read_error(struct r10bio=
+ *r10_bio)
+>         struct folio *folio =3D get_resync_folio(bio)->folio;
 >
->         while(sectors) {
+>         while (sectors) {
 > -               int s =3D sectors;
 > +               int s =3D min_t(int, sectors, mddev->logical_block_size >=
 > 9);
->                 int d =3D r1_bio->read_disk;
->                 int success =3D 0;
->                 int start;
+>                 struct md_rdev *rdev;
+>                 sector_t addr;
+>                 int ok;
 >
 > -               if (s > (PAGE_SIZE>>9))
 > -                       s =3D PAGE_SIZE >> 9;
->                 do {
->                         if (r1_bio->bios[d]->bi_end_io =3D=3D end_sync_re=
-ad) {
->                                 /* No rcu protection needed here devices
-> @@ -2192,7 +2190,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio=
-)
->                         if (abort)
->                                 return 0;
->
-> -                       /* Try next page */
-> +                       /* Try next block */
->                         sectors -=3D s;
->                         sect +=3D s;
->                         off +=3D s << 9;
-> @@ -2390,14 +2388,11 @@ static void fix_read_error(struct r1conf *conf, s=
-truct r1bio *r1_bio)
+> -
+>                 rdev =3D conf->mirrors[dr].rdev;
+>                 addr =3D r10_bio->devs[0].addr + sect;
+>                 ok =3D sync_folio_io(rdev,
+> @@ -2621,14 +2618,11 @@ static void fix_read_error(struct r10conf *conf, =
+struct mddev *mddev, struct r10
 >         }
 >
 >         while(sectors) {
 > -               int s =3D sectors;
 > +               int s =3D min_t(int, sectors, mddev->logical_block_size >=
 > 9);
->                 int d =3D read_disk;
+>                 int sl =3D slot;
 >                 int success =3D 0;
 >                 int start;
 >
@@ -188,8 +178,25 @@ truct r1bio *r1_bio)
 > -                       s =3D PAGE_SIZE >> 9;
 > -
 >                 do {
+>                         d =3D r10_bio->devs[sl].devnum;
 >                         rdev =3D conf->mirrors[d].rdev;
->                         if (rdev &&
+> @@ -4926,13 +4920,10 @@ static int handle_reshape_read_error(struct mddev=
+ *mddev,
+>         __raid10_find_phys(&conf->prev, r10b);
+>
+>         while (sectors) {
+> -               int s =3D sectors;
+> +               int s =3D min_t(int, sectors, mddev->logical_block_size >=
+> 9);
+>                 int success =3D 0;
+>                 int first_slot =3D slot;
+>
+> -               if (s > (PAGE_SIZE >> 9))
+> -                       s =3D PAGE_SIZE >> 9;
+> -
+>                 while (!success) {
+>                         int d =3D r10b->devs[slot].devnum;
+>                         struct md_rdev *rdev =3D conf->mirrors[d].rdev;
 > --
 > 2.39.2
 >
