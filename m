@@ -1,62 +1,62 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC7B339D6C6
-	for <linux-raid@vger.kernel.org>; Fri,  1 May 2026 11:47:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9528B39D6C5
+	for <linux-raid@vger.kernel.org>; Fri,  1 May 2026 11:47:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777636030; cv=none; b=CoceUMtZAWuyNd/gZbckC6lX/vHKE9zuSjY0sdUyDVaDxqPSwOvaBq2xppX/JDfB9L+ESR6dKWk8iAuAwholZLXumLvHPMTMH7THbPOHcBNCg3DCE+A630uHH1oI43h2CpbCtGpmxhBT/Dwn8J+Newc7r6U3Zo2XBpaZmkIM0So=
+	t=1777636035; cv=none; b=LW6UNhZlzscODzFll+fwW+WTm/s6KQRhEW5UakXaSGFDVRmZkvXz0PnxxO+vOBl8zAWBU6BNdNM9qcEWUVkLGLlIQfxH8Eu48hf79iWn+DUy6KuBBDrIbvuzZ2rfV0+SiYgyqKXcWSh1WS8i/sJtzb5VKqfusM8BHEAL5ch2CYg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777636030; c=relaxed/simple;
-	bh=2tkshv6RNUHaw17n3hyMG/8cvdL2bnJSqh32+9Y18ps=;
+	s=arc-20240116; t=1777636035; c=relaxed/simple;
+	bh=nI2K72PB2NtpPwpeuHNMfMbO44D3urEqQcaji0c1x9g=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=by6yewtE1UPL0mHModtL2kYKB6bptugEoBwRCZNbR3qGjcT34+3UT5/XnDCDselrsuawYLbsY0KSHsyfvenK85FYmC+kmz4rNY3NBjhNHjcX0jrVB1Md5cPRMyHWHcaDkAA+ryefTw+kHhNxZXVmgCOT/elyziyyFLwkc0xe8Yg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AEwvxzYa; arc=none smtp.client-ip=209.85.128.42
+	 MIME-Version; b=SKLENZeT+uiYItwzgwxr5mwbj3YP7X8z7Em3cZ2XTZkrkyFx68sh0rZGU4A/eOsRoh4J3so4E42vPW7FCDLrff9kIHnI8D8TJLKFeX4pAogqH4yB6lX4y1lTC9uuQMY9quyHKzz1PKd9hrWvOusXAQYImGQG5EmV6+mxav/zLR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Szv3CjAA; arc=none smtp.client-ip=209.85.128.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AEwvxzYa"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-488ad135063so15509835e9.0
-        for <linux-raid@vger.kernel.org>; Fri, 01 May 2026 04:47:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Szv3CjAA"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-488b0e1b870so29949285e9.2
+        for <linux-raid@vger.kernel.org>; Fri, 01 May 2026 04:47:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1777636027; x=1778240827; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1777636032; x=1778240832; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=/AQMFflzu8Awj9MuV1XBDZv36TqZfHy0cYYLO/nHMK8=;
-        b=AEwvxzYaJ3PvUKKxKXH45HrIib2Y5iuF0tmEoQc+/Na8fzU0q0vJ6oTJDzs/zReMRv
-         nvoKGeE/ZfBYUtY2YvA40HSjxR+Ee/J223RbyMopsz4MSAm1/fQ5LWVcGXKuh7iqFRkO
-         YTP27y7+Qt+tkOgEcwO0QekfVa5nQnOcF/XNP2wI/DLhn97ZQsuPWIWt32navimOIpMg
-         PzjSEpe9PcNxBwdwv3sLi1MUxnfHQUG0BKfp9eqzpGAFupWrbfpF6+9AclN/cWHuB8hM
-         rvYqaaObp2Y9cXn2UXpwBurDpp7XKbEsMkx6ZBpUSezZh2tR0gwF7Xxa0XGpMYUTVyRR
-         02ow==
+        bh=yycJU3roRGwzwJP1s3LivQySTtrdat7N1ahieeEDuNU=;
+        b=Szv3CjAA86gjhYxztaP1m0bD6JaEAoljxXf7HIXVBUc8xykDHxQ7e+Up0+t20HOWBF
+         4MgwktfS/JasUvywqjhyuaGupGGg0NhKkz2gMu8HHsvRTrFttTHTTRcpDdfg7iLO1fAk
+         g0lMrgRxO/MCfslbRVslCVF2/RVjpzFgqBOx7FS4kIHX+s9LbiCg795mFajwcmgXFORY
+         6NWmAi8ooKXbEk1JsguKpnOIGa6VJncu8wQGBKXBeVp2uPnSEpqe2e9yoFVZZsjqw7Om
+         KbCdKv5FHo0w/0eRc77wIpuHsnZNV9lXCqXwF0r5Aji4Avvel2s6UaLHGIZjPEZKjaD5
+         A5Cg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777636027; x=1778240827;
+        d=1e100.net; s=20251104; t=1777636032; x=1778240832;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=/AQMFflzu8Awj9MuV1XBDZv36TqZfHy0cYYLO/nHMK8=;
-        b=TzkwmPOkXX4UVBtqFsdtuPGa2iL+sJNuZo7VvGKpCft4E2RMG13l/HzJRG5V+/6cqA
-         Id09w5bwQULWG3Ujz5vcrl23XsAtDSLUf+5UweDMVhWutV/bsep/jhz+GeL+D2Us07lU
-         6PXNnMtnqK9p6ee9SnpkKIhMeURLXCC7u949FKfuWvYexJdU/qLB05VLDXYy8ZzWMnq9
-         m11FockOrrqn1i+GWrv5RGqOc406CaUOd1UNt9X3PIRXV/wLb18FM0kjFHFQzyRHqRzf
-         pFDeJBTyrY/BOX8sgs0CfijTu5NWJKJrMy0PYCLg9SGmi/CptThCSWKIM3WEv0voC7be
-         bClA==
-X-Gm-Message-State: AOJu0Yxv4AF8qHTT1KhfvDOcnDwSUzbJLpe+5FvcCKxm8fGcW1acymRl
-	jSFspXTPoNNo5m1bR5ss4H5iMhqXRLfn2yhzZOTBi4hR3x35HX9GvRdy
-X-Gm-Gg: AeBDieslamQIkToKhBv3HIMciAXliX/MHqAblZka2KAzoizzX8HTNysiyjLopxPNDu/
-	vDX3siYbfsw3ckSCvA/sl4+cT1pD0xwubDqw0E3/z7HAredm0MB+ypoUNmBncDYtSs7IBKJ1HxR
-	ynnX7DCOgMTIubzkcM2bMBCIooqHn7LD8Uiyh0JzeErxqly/VwMhQhpbX4qYVYUZg8cpExdmOI9
-	CiXzqP9ubrX/JsubZyq+xB4guPnjHNhQFpch4uOhKlmAs3w8XrsdId/eSipFvndMR4iMd4SL83F
-	tZ+U3KKnR67Pjk7FlJQNNkwWQyWC1cFWuNMksuo2Y9deOKEMf+G9Y/FqoIcCEoMC/zhIL/A9FZ3
-	Kc+6KqeI1iCnHCdT9E7kl2a/+8IStzicdUbaNQ69taFTW4/5NY5JPOJ8O6WVATrGXrvjllAwJjo
-	xlvxjk15E4HmYWUUefhEVDm9LH+TrompoUKIVCJUroscze
-X-Received: by 2002:a05:600c:a40e:b0:488:fd7e:1063 with SMTP id 5b1f17b1804b1-48a84468524mr93816275e9.29.1777636026974;
-        Fri, 01 May 2026 04:47:06 -0700 (PDT)
+        bh=yycJU3roRGwzwJP1s3LivQySTtrdat7N1ahieeEDuNU=;
+        b=sdfcGylVSeZg4uXoAsvDiVBcb4FNVjiBZ2gp3UnpL6rvyY9r6MsyBwq7rsW4XeMK7e
+         jVJklmS14u+g+0LSr6QbcgDAZp1z0Z+VTf7pH8vK+Vky8Wz8AlNHKTGM03vHDHiGDrN/
+         KTMXuj7YvvrBPGU4APQ/CyGTbTjG7AbizIciTzqUzBL2HEoOSYUhZCyOdGW0eVfvBrJY
+         u/O6tMI73S+kt9IVkv4xFdg8+Ka5Sp1T3efhBuSWO9OEUrj7N1mwRepP/6JLJLaKik0M
+         NkjOZ10kcXoJ67TiG3sooF4j+qWJ9vQZvywR1N5jmtIyVCOL9OtZltlGqzo4KTn7NZUW
+         HcMA==
+X-Gm-Message-State: AOJu0Yy8VGFv3az4JfNl+Z+IzeLPyKbqDb1St+e2Zuu1a0fwfd2o41wb
+	GnkmRypKHdcdndTF8kUN8LY/l1C5M5o9h5dYCG9LBFrfY7YyLH+Fqj8z
+X-Gm-Gg: AeBDiesP6QJQi3GRGvYEgKgNdSDa0tcAHEnvacpPpp1QqIq/IICFq0287eSnGwGlPKT
+	GThsVTSx+tmqMoW8AXBPxOHVdp7TMP9r+hkxDVc8dF2V4KJe3W6g+F0cqzD0FGnYfwP8wLL8ACe
+	mK6ZoPu7lhIrlXajFC1zLov2cu0wQDjG1KqdGqEunQ0uu8bAcJZw7zlH3pqXwPmk0CvKwtrgEkz
+	3u0UkzfK8popZnSbZBTb0TjLfgaQ6BIX3kEee3rl4hBIG8H+//zl53f+F3FbdXTNIdR9uI6SLj9
+	K94Jz8YWysRll7uh/SsF6EZW58z0KDsLCLBVRJd8+2PzKBUfQh4O1Z7NA6SzpFXMK7pLdt63dfq
+	DuvU2bT0X0ZF33hQ0uywfOp6JI7KPuf/LsR7Q68YOBcVkL2wZD+C8kOcmGyJw7Dw47yUxXyHWVm
+	aY7Wi8wXVnAZ4/vvGT1UtJ+z6NdfywC6YR9Q==
+X-Received: by 2002:a05:600c:8010:b0:485:46fd:7887 with SMTP id 5b1f17b1804b1-48a8446d8a4mr111327165e9.13.1777636031973;
+        Fri, 01 May 2026 04:47:11 -0700 (PDT)
 Received: from yocto.. ([2a02:3037:621:7039:f080:d03a:2ee1:37d9])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48a8fee5033sm11797005e9.22.2026.05.01.04.47.05
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48a8fee5033sm11797005e9.22.2026.05.01.04.47.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 May 2026 04:47:06 -0700 (PDT)
+        Fri, 01 May 2026 04:47:11 -0700 (PDT)
 From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 To: song@kernel.org,
 	yukuai@fnnas.com,
@@ -66,9 +66,9 @@ To: song@kernel.org,
 Cc: linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-Subject: [PATCH v2 1/3] md/raid1,raid10: fix deadlock in read error recovery path
-Date: Fri,  1 May 2026 13:46:49 +0200
-Message-ID: <20260501114652.590037-2-abd.masalkhi@gmail.com>
+Subject: [PATCH v2 2/3] md/raid1,raid10: fix error-path detection with md_cloned_bio()
+Date: Fri,  1 May 2026 13:46:50 +0200
+Message-ID: <20260501114652.590037-3-abd.masalkhi@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260501114652.590037-1-abd.masalkhi@gmail.com>
 References: <20260501114652.590037-1-abd.masalkhi@gmail.com>
@@ -80,94 +80,92 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-raid1d and raid10d may resubmit a split md cloned bio while handling
-a read error. In this case, resubmitting the bio can lead to a deadlock
-if the array is suspended before md_handle_request() acquires an
-active_io reference via percpu_ref_tryget_live().
+Detect the error path using md_cloned_bio() instead of relying
+on r1_bio in raid1 or r10_bio->read_slot in raid10, which may be
+NULL or -1 after splitting and resubmitting a failed bio.
 
-Since the cloned bio already holds an active_io reference,
-trying to acquire another reference via percpu_ref_tryget_live()
-can lead to a deadlock while the array is suspended.
+As a result, the error path may not be recognized and memory
+allocations can incorrectly use GFP_NOIO instead of
+(GFP_NOIO | __GFP_HIGH), which can lead to a deadlock under
+memory pressure.
 
-Fix this by using percpu_ref_get() for md cloned bios.
-
-Fixes: bb2a9acefaf9 ("md/raid1: switch to use md_account_bio() for io accounting")
-Fixes: 820455238366 ("md/raid10: switch to use md_account_bio() for io accounting")
+Fixes: 689389a06ce7 ("md/raid1: simplify handle_read_error().")
+Fixes: 545250f24809 ("md/raid10: simplify handle_read_error()")
 Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 ---
+This patch depends on patch 1.
+
 Changes in v2:
- - Use md_cloned_bio() consistently to detect cloned bios.
- - Recognize that raid10 has the same issue and fix it in this series	
- - Allow splitting bios.
- - Handle md cloned bios explicitly in md_handle_request()
- - Link v1: https://lore.kernel.org/linux-raid/20260427103446.300378-1-abd.masalkhi@gmail.com/
-
-Please let me know if I should add a Suggested-by tag for Yu Kuai,
-as the solution approach was suggested during review.
-
-Link to Yu Kuai' email: https://lore.kernel.org/linux-raid/m2lde74dtw.fsf@gmail.com/T/#m714020a38b60fc5f84b9a24f0c46acbe5d7342d6
-
-Thanks
-Abd-alrhman
+ - New patch.
 ---
- drivers/md/md.c | 25 ++++++++++++++++---------
- drivers/md/md.h |  5 +++++
- 2 files changed, 21 insertions(+), 9 deletions(-)
+ drivers/md/raid1.c  | 13 ++++++++++---
+ drivers/md/raid10.c | 20 ++++++++++++++------
+ 2 files changed, 24 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e926aef9ec43..96db1e7850e9 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -396,17 +396,24 @@ static bool is_suspended(struct mddev *mddev, struct bio *bio)
- bool md_handle_request(struct mddev *mddev, struct bio *bio)
- {
- check_suspended:
--	if (is_suspended(mddev, bio)) {
--		/* Bail out if REQ_NOWAIT is set for the bio */
--		if (bio->bi_opf & REQ_NOWAIT) {
--			bio_wouldblock_error(bio);
--			return true;
-+	if (unlikely(md_cloned_bio(mddev, bio))) {
-+		/*
-+		 * This bio is an MD cloned bio and already holds an
-+		 * active_io reference, so percpu_ref_get() is safe here.
-+		 */
-+		percpu_ref_get(&mddev->active_io);
-+	} else {
-+		if (is_suspended(mddev, bio)) {
-+			/* Bail out if REQ_NOWAIT is set for the bio */
-+			if (bio->bi_opf & REQ_NOWAIT) {
-+				bio_wouldblock_error(bio);
-+				return true;
-+			}
-+			wait_event(mddev->sb_wait, !is_suspended(mddev, bio));
- 		}
--		wait_event(mddev->sb_wait, !is_suspended(mddev, bio));
-+		if (!percpu_ref_tryget_live(&mddev->active_io))
-+			goto check_suspended;
- 	}
--	if (!percpu_ref_tryget_live(&mddev->active_io))
--		goto check_suspended;
--
- 	if (!mddev->pers->make_request(mddev, bio)) {
- 		percpu_ref_put(&mddev->active_io);
- 		if (mddev_is_dm(mddev) && mddev->pers->prepare_suspend)
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 3bfbee595156..e44074d30cf9 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -1038,6 +1038,11 @@ void mddev_update_io_opt(struct mddev *mddev, unsigned int nr_stripes);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index cc9914bd15c1..c52ecd38c163 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1321,11 +1321,18 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 	bool r1bio_existed = !!r1_bio;
  
- extern const struct block_device_operations md_fops;
- 
-+static inline bool md_cloned_bio(struct mddev *mddev, struct bio *bio)
-+{
-+	return bio->bi_pool == &mddev->io_clone_set;
-+}
+ 	/*
+-	 * If r1_bio is set, we are blocking the raid1d thread
+-	 * so there is a tiny risk of deadlock.  So ask for
++	 * An md cloned bio indicates we are in the error path.
++	 * This is more reliable than checking r1_bio, which might
++	 * be NULL even in the error path if a failed bio was split.
++	 */
++	bool err_path = md_cloned_bio(mddev, bio);
 +
- /*
-  * MD devices can be used undeneath by DM, in which case ->gendisk is NULL.
-  */
++	/*
++	 * If we are in the error path, we are blocking the raid1d
++	 * thread so there is a tiny risk of deadlock.  So ask for
+ 	 * emergency memory if needed.
+ 	 */
+-	gfp_t gfp = r1_bio ? (GFP_NOIO | __GFP_HIGH) : GFP_NOIO;
++	gfp_t gfp = err_path ? (GFP_NOIO | __GFP_HIGH) : GFP_NOIO;
+ 
+ 	/*
+ 	 * Still need barrier for READ in case that whole
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 3a591e60a144..8c6fc398260e 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1155,7 +1155,20 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 	char b[BDEVNAME_SIZE];
+ 	int slot = r10_bio->read_slot;
+ 	struct md_rdev *err_rdev = NULL;
+-	gfp_t gfp = GFP_NOIO;
++
++	/*
++	 * An md cloned bio indicates we are in the error path.
++	 * This is more reliable than checking slot, which might
++	 * be -1 even in the error path if a failed bio was split.
++	 */
++	bool err_path = md_cloned_bio(mddev, bio);
++
++	/*
++	 * If we are in the error path, we are blocking the raid10d
++	 * thread so there is a tiny risk of deadlock.  So ask for
++	 * emergency memory if needed.
++	 */
++	gfp_t gfp = err_path ? (GFP_NOIO | __GFP_HIGH) : GFP_NOIO;
+ 
+ 	if (slot >= 0 && r10_bio->devs[slot].rdev) {
+ 		/*
+@@ -1166,11 +1179,6 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 		 * we lose the device name in error messages.
+ 		 */
+ 		int disk;
+-		/*
+-		 * As we are blocking raid10, it is a little safer to
+-		 * use __GFP_HIGH.
+-		 */
+-		gfp = GFP_NOIO | __GFP_HIGH;
+ 
+ 		disk = r10_bio->devs[slot].devnum;
+ 		err_rdev = conf->mirrors[disk].rdev;
 -- 
 2.43.0
 
