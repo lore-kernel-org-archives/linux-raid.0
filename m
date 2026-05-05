@@ -1,158 +1,317 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011029.outbound.protection.outlook.com [40.107.208.29])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 329B5EEBB
-	for <linux-raid@vger.kernel.org>; Tue,  5 May 2026 00:32:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.29
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777941174; cv=fail; b=aBFuekvf6YcM7qrbwVOCY7s33ZbgkhDBrDbArK60R3QQihsCivNn2Z2IV8vRj2mYCr/TYJQZLpTlUYE6HbeZGDYO7Ll4KCcamuD4TIe/3voq1gVVgA2S8RIAXMDJwGazdl06KGE07mhAlO9OCwBZjszx0M+TDYorfsG572kv8H8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777941174; c=relaxed/simple;
-	bh=aTxls/YzXqcihj21jYy/nyubIY901I9jUi48sqJs3pU=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=ZrIH+o2rSGDxLRHmVIv1UTKTOfHVJ3l0cwIU/pgsxe8Cb3v5E0ad1nkq1rNaPbfNw3kWJ3FaZqlLW3R0M4krSVi7z8sqfr2f3+0d9l0NXQeoWX22mS2RlyK3O20srQjcALP0NpTr51UD6c2EejLm1BDhDHEPsyhocsC19AOjSbQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=AgI/ViMl; arc=fail smtp.client-ip=40.107.208.29
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1AF034214A;
+	Tue,  5 May 2026 09:52:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777974772; cv=none; b=I9+qX7K3caTdIVQzwJ11wCNWZVexGoBiclcBBk/Kw3EbguOlYJFHFD83RcyndSngsrZzaq4MKSZMHQX5t3eGeHQzhCLLxHsvAqPC8lorX8ZyGLhtQKyHnFgX10/JaSX7D4AyoK8/cRiX7YixNRsOipk8bkfRZli1lYpAZf4hcpg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777974772; c=relaxed/simple;
+	bh=xWUVlSEXrrQTdEkyahofVZTTn5RdBOnBaLZeQTBm4uo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=KuOS5jV2GgIZ6LuJ/hCSmfzE7blXRWEyM8JUO5Qkhak1S/zrs85C9G8eCJIwiQBRxufPgQB5Yojhe8rj0l7DV+ChGny9DONEWnqd1EdRKi7XnBDeuqOeHCU18ec6IrTOO8BZsCz+KRg8F9R/yqDRqiimoA+GVozxor7vzPTQICU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SQKpCN2q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="AgI/ViMl"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=CyuJvXAXs09OiA1koRpEjhJvplneHFfB5/TnZXccUhahiTSLTeXe03Nug1wu2/xxLQQH+WS0iJJtmkTaoT5jxoKYmGoJZl3NMZVptecaNnVB+BHgL0D16c4vxnoemg1pNm2SAo/Z3jR1NRHL/HGtpCXpUlTTQRIQ2AXEbklYchFhhbVE7HS6MA3oDgHr/GhJenDqOtgy01Bxta/Rehi2P6mXmJiWnBsZBvbD1fet4Ze52skXlf7Nnuoa2knV9aoOO1vWiy86Gj7BFZIYKGYpTybzy7O0hzgA0/rDQSlI5MX6Ojqoj6ji6eXEiysGqif2QUsCOULt5oWqzWksT29fkw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=aTxls/YzXqcihj21jYy/nyubIY901I9jUi48sqJs3pU=;
- b=c4wfGXBrqysXwd53OwqDFmO45O51XD4tXT1IBEUCw88g30ixTCOQ38kvTqohMHpJz6rFG584YXP86e7D8fkYqLEdQdyfImriOCjDrOP1GerhbWtZ09oG2imvF6LgMsgXOI0jpwH4/9gcVBx02Yq/XFfbO5tI0OsBF2dm8zeRdqUGZWIQzF54Uq1ZesOKgYKPwBg+vyeA8gUs8IfscazQjgl/3ZIGgyOUrVrKQ9BZH7Sf9hwxOO6flR+4b1Oyw+tJv3wqfa35ydvoc+ZenC6kG9K9AuQaeHU14xHouG6OyQUrPj7ZC1duJHBm4DQySZOLIlKfk5twxlgcYepMZHdPnw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aTxls/YzXqcihj21jYy/nyubIY901I9jUi48sqJs3pU=;
- b=AgI/ViMlIitdIAzwShlatXIat5TvXKXgPLmpVuoDyMrqarvPG0jVfhWSe4lP3KCfP1qPbT7vVHm/z2RIIiEiGqfUQMNcbjd0CpQna9qdkLi6EB4OdC6QzX20T0dBZCxrfA85fIMH153n2qVxFS8HA7Uyjjg06tNz9kzB6JRjQnltg/E831gqtr+IfucKwOkUI2Y3bd8xqlrjJqXUL/5Pbv2xoqCSpU2sqvKdkTcKDNlkljw6K/wKlzMKcLtP7wxLESf2udqq0g6jrv2qyKmlqfR5DbEhE/VMAZgFJz6uCmkCTLt+xsGaJFV2nlnZDJUFyEmQG9ZYl5F+UztXL701Hw==
-Received: from LV3PR12MB9404.namprd12.prod.outlook.com (2603:10b6:408:219::9)
- by SA0PR12MB4349.namprd12.prod.outlook.com (2603:10b6:806:98::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.25; Tue, 5 May
- 2026 00:32:46 +0000
-Received: from LV3PR12MB9404.namprd12.prod.outlook.com
- ([fe80::2109:679c:3b3e:b008]) by LV3PR12MB9404.namprd12.prod.outlook.com
- ([fe80::2109:679c:3b3e:b008%6]) with mapi id 15.20.9870.023; Tue, 5 May 2026
- 00:32:45 +0000
-From: Chaitanya Kulkarni <chaitanyak@nvidia.com>
-To: Pranjal Shrivastava <praan@google.com>, Chaitanya Kulkarni
-	<chaitanyak@nvidia.com>
-CC: "song@kernel.org" <song@kernel.org>, "yukuai@fnnas.com"
-	<yukuai@fnnas.com>, "linan122@huawei.com" <linan122@huawei.com>,
-	"kbusch@kernel.org" <kbusch@kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>,
-	"hch@lst.de" <hch@lst.de>, "sagi@grimberg.me" <sagi@grimberg.me>,
-	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, Kiran
- Modukuri <kmodukuri@nvidia.com>
-Subject: Re: [PATCH V3 0/2] md/nvme: Enable PCI P2PDMA support for RAID0 and
- NVMe Multipath
-Thread-Topic: [PATCH V3 0/2] md/nvme: Enable PCI P2PDMA support for RAID0 and
- NVMe Multipath
-Thread-Index: AQHczefMw/2L6wnrAEunHJMvgSqt97X+fU6AgAA0RIA=
-Date: Tue, 5 May 2026 00:32:45 +0000
-Message-ID: <0be2a81b-239c-4b04-911c-ba4e50f2adcf@nvidia.com>
-References: <20260416212633.72650-1-kch@nvidia.com>
- <afkO1WExGV9-jv8b@google.com>
-In-Reply-To: <afkO1WExGV9-jv8b@google.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-user-agent: Mozilla Thunderbird
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: LV3PR12MB9404:EE_|SA0PR12MB4349:EE_
-x-ms-office365-filtering-correlation-id: 026c28cb-751b-43eb-65a8-08deaa3dd3ec
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|366016|7416014|376014|10070799003|18002099003|22082099003|56012099003|38070700021;
-x-microsoft-antispam-message-info:
- UBKaJmlAC7Gnl0AlF9xZ17bwTfWig73Wo/sKt+pDtQFw8DhcVWYsZ7iVmXy8Hzr5CzcoTMpSH5fXZUBGR+Vk+IldYP2Ax7ECj92lggyZHR8KlwcXKgQSY1lN6skiHF8ekrJ1lKUfTZK4ze5quvpAD4EO0PiY3oS9Ly/rP3AQzoB5PF3Zjp6En1nk2MJpxk6cjNkYR7BY/q6sWQ7fhiJa3Ndx7qRqN+OiineZUhH1GPcEomVVtQQj7mKyOo5EFOpwQR1SBttkxIFgBUHHl/GRsTV1M8Cw5Wz5tRlbPhSSn1Pvu1gxwoJgsOl6QPz+iR0fcd0/72MX17WNz7Vi1QLNBnb2BVDrS8dqgy6O1Te2o6oE0jtUm7GTpqCI5DVpfAWu3DXZ1pd+rgMVrFbqtbrVxp3LxaaXhcj0kJhwEb1i+6V0nRKxjBm07EHsR6xHm442muVB/r9PNTW8iaGDRZRDgeE/u6A+NCPctQDDEh0p72a07QdTv/sPvmqY1LipwG7aSzbZQ7ixjhucXNy97sEzgXBy0/ZgqVvX/rUB7UfSFVpK2HbMdNB5IynhMyOVqNf9LEOprWi95r562U3y5X8YIxvFZqenbN/SHPP8RYbmJlWIq3cf02s4wZc8OWP+/7mP9FPWVakTueY+f9yaMBLNMKzbdyWDgg/YYLg16pocbXQZEevqJA0ARmNpe5r7fhrd1PJtR74dqqAYH10woaEOcSp7+QLoZpZDmOJ8lixLK/cefqCWUV+zgRWHTJIuBWEg
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR12MB9404.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(10070799003)(18002099003)(22082099003)(56012099003)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 2
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?RnJrL0x2K3NUMzFHVm44Z3lMYVgzUlZnRWZaOWovb25CTWNHVkorNFlyeVcv?=
- =?utf-8?B?YnR0UTQvbThvbWxFeHZMUGtDSWl3ZXJ6OStJNGRNWkIyYXJ5VDl4MnVWT3VJ?=
- =?utf-8?B?c0VoWk9FNW5MUHlYdnFBc3hEM2swQ3ZmajhMNnNidFFuRlBjd1RDQ2lvZ2NJ?=
- =?utf-8?B?SXozZ2NiM3dnNWdJWXZwSkNzMVZadUJCNWFVTmVDRTBTVFRPWUNxdk45VHdH?=
- =?utf-8?B?S21nMjBQdVM3TTRBRFBOTmxnMWIzM3dJRGpwYzJ1U2dMSG5mNlZFV0pVWHo0?=
- =?utf-8?B?bWpyL0w1QXNvMFVTSmlheHNNQ3M0R3kzV1hERmk0VFZidVI3eE55NmVUZjB1?=
- =?utf-8?B?OVlIaGpsRVNOMXp6K25EYmR4T3VyN24vbEx2NGtnZXpCcDNiemlyL1NtaDFM?=
- =?utf-8?B?ZnRyV0NwUDUwczN3Wnl3WTNPSnYyTWg4OXZ6MGhCY1didm52QVl3dTZOVFBF?=
- =?utf-8?B?bmJna2FzbldJVFVQTmh2SVlHVnh5OWJhY1NCN1lYemtxWGNaUDdRMXRHU0M5?=
- =?utf-8?B?d3plZW14M0lwRFh4eFBMMXpPTWNVY3hnaEZxWjMvU20vcktmWVRBaGtodm1k?=
- =?utf-8?B?RDY3RlFqK25jNVVMRzU0emFPRFlmQnQ4c1d1czZGT0tPV0NnUUpmd29TaUw4?=
- =?utf-8?B?ZGR4dzN2SC9hV245TE1LUDFmY1Jha2pXQ2lEd1ZMMWIzSzBqVHdjQjFwdWFL?=
- =?utf-8?B?VHRBOTVuUkxoNTYvd0l5dFJhNE1aSncrWU9wUlpUQjVsNzl3SklBUk5BNGhq?=
- =?utf-8?B?VXFHdFQ4bHRQSHVjZXc4Tk5td3R0MWRPSVNoM0ZkOGl4OTRpekFRTStBUXps?=
- =?utf-8?B?RkN6eWRjMzJZcWZKdzhva3JucThRTmRhaGFBeHpWa1dsUWxCdGV0Y2hlU0hW?=
- =?utf-8?B?YmdHZWQ2M3p4ck45VlEzR0ZxeURkOFMvVDBJdHQvM3pxc3F0RzNJL05CRTk4?=
- =?utf-8?B?TmlVMm5UVGZsK1JlNnd3L3ZnbTV3a2VRaWtva3drdjhnZ2RJaG1zRUN5YkpZ?=
- =?utf-8?B?VTYvaFZWdkMrVnhncnU1SkMreDlnWFJWUHY5S2l2VkF4VGFmTzhEY2hSbmNG?=
- =?utf-8?B?YWpkZ1pwWjMwdnVtUUUxMmJhajdCSFBlK3lQVWlQaE9XZXgwdXRJbld1ZjlM?=
- =?utf-8?B?OHBhTXhKbEtldHQwR1pLYWVpUThJcnlwaHdqZ2VEM1RPS1BVdmpIdDBrbEla?=
- =?utf-8?B?S2lXc1MrcE1MRnNHU0hQaFIxSFhWZ1k2VUttK1hyWk1rV3kyVFFBemxDVmQ4?=
- =?utf-8?B?R2t3WlRLb2FWTGZmMVQyYlRxMFV6T0E3UXVrV20rMzRsc0ZoUTNYUXRhN2RM?=
- =?utf-8?B?dzZEdFkxaUFnNlBnRnFDUllEVDc2SUlydUpuMklmQmYzOXBSSnRmeVEvU2kz?=
- =?utf-8?B?bWFLcTV2em1TdDlzMWY1VmxQYWE0ZmNyaTlOV0U2a1BYcHdPbURzcDhqT0hL?=
- =?utf-8?B?N1l5Y0JxSmU2RVBXNlBWZGZ5U1MrQ1dFdjJGamNqTGtiRGRDdFpnMEY1MXhl?=
- =?utf-8?B?cGNGWkZkSHRwUE5aZFJKRVA5cTJHbE9ZalVGN3lZK3FCN3dIOWlEZjhMNzZK?=
- =?utf-8?B?QXhHZ2J3b3ZCdzVTTWhOVy9hZ24rVVU2YWhCMVZMRkVGa3lRRzlGc21haTZR?=
- =?utf-8?B?RGJvR09xTzAyNlpSMzZuSFJ0YVl1SGowLzNsczRsL2FWQXJiclpCYzJvRVlB?=
- =?utf-8?B?aWVrVHNPZ1VDR0poNzB6Qlp6RzV4K2JNemFYVmVVbWVtcjNaaWJTRWJIQVZy?=
- =?utf-8?B?SW8zKzBDYmVYcHBUemZZY1FPMDZTZnlHZ1k4TS9pNXovUWp5TlI2dnQrVExX?=
- =?utf-8?B?ZlF5ZlNzVGg4RWJMYm8vd05oQWNTajZYVlVhTmRwbnhKUXVQTWpjVlRZd1pL?=
- =?utf-8?B?SXhQU3BOUmJremJReGNJaEhDcEdZRHVGeUNxdk83Z1lFRCtEdkR0MEhLaWYx?=
- =?utf-8?B?dGdmK2J0b016dkVqajRjeCtpTVlFUVFIdU82d296TEhwaXFLT1FVWUp0ektz?=
- =?utf-8?B?ZkRNOGJjVWloc042V2VhVlo3YW5QL3kxbldqeVliQkVHbTk0a2hSeEV5R1lP?=
- =?utf-8?B?Ym1zQzBKUFVDWUtiZnBKMDMrQlAyeDZYbDlqc21BNGE1V3ZxdU8zWUNvSFQ5?=
- =?utf-8?B?c2lXTEpDTGN4YmJMekxpUU5nZzMyQ2hKQjN0d1grV1ovM2QvRm1pWmFUZnVP?=
- =?utf-8?B?VW9CbDl6WFI2V013eHRiRW1IVGhyMm8xZUFhMnFwWjNkbnl6NFdVb1pKR2w4?=
- =?utf-8?B?Q0FkTGN5dkRnRnpvcUZkeFA0Skl1TWtxMzhUMm1QMy8xcFFMdXVqMXBYVUQ3?=
- =?utf-8?B?eFZManQ1UlhTZUZWUVk4WjlyYVNaaW5MQ1pKb2FWLzg4TGxNeVpMWEU2amlY?=
- =?utf-8?Q?8n/8hRmMOPiIHUEqd5IetxPqHL/wFipzC8P/ETgb6C1uO?=
-x-ms-exchange-antispam-messagedata-1: xgCzgoIwh/H8QA==
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <EEBB90CF347CCE42B3C11A700CED32AB@namprd12.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SQKpCN2q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B172C2BCB9;
+	Tue,  5 May 2026 09:52:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777974771;
+	bh=xWUVlSEXrrQTdEkyahofVZTTn5RdBOnBaLZeQTBm4uo=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=SQKpCN2qd3LMK5zFywiwy5yB71eO2EMwtehHJ4QsiuX/g03PPqDjNBPIvVgY6J8Cx
+	 2y/F2xye6gSboL0aba7WsCHWibbl+v86jfM92BT7BSbxbftXFX3gyLKLZ1nq+vAWXA
+	 //9bDCD7B8pBp8Zjkz+T/Dxt8aZwa/thhtgd+EO2lDkPpGAzImScbmCkf2ASxqjzeA
+	 pO2D406jFn6rUla9FXkY5FhyPngMFXVKcHlcaXVYMDdMOMoHPXtNgQGg56cmA0X0p7
+	 F5/u3vqdOo5LVeRzkeoD6HXi+VJBuUwG3UfMP4kmSknJObUv0quiXYP7a9CbWd2C5k
+	 VkSMuNcuudTDQ==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
+	stable@vger.kernel.org
+Cc: Benjamin Marzinski <bmarzins@redhat.com>,
+	Xiao Ni <xni@redhat.com>,
+	Yu Kuai <yukuai@fnnas.com>,
+	Sasha Levin <sashal@kernel.org>,
+	song@kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 7.0-6.18] md/raid5: Fix UAF on IO across the reshape position
+Date: Tue,  5 May 2026 05:51:35 -0400
+Message-ID: <20260505095149.512052-19-sashal@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260505095149.512052-1-sashal@kernel.org>
+References: <20260505095149.512052-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: LV3PR12MB9404.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 026c28cb-751b-43eb-65a8-08deaa3dd3ec
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 May 2026 00:32:45.8357
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: jP5Hvm5k90NdMotSN3/lLZ1LV1I20RYsXZI8AjmPqkmjsDLCYUqwSIWNOEqeff7AMxp1USsDIrFukXtUpkxnEg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4349
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 7.0.3
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-UHJhbmphbCwNCg0KT24gNS80LzI2IDI6MjUgUE0sIFByYW5qYWwgU2hyaXZhc3RhdmEgd3JvdGU6
-DQo+PiBDaGFpdGFueWEgS3Vsa2FybmkgKDEpOg0KPj4gICAgYmxvY2s6IGNsZWFyIEJMS19GRUFU
-X1BDSV9QMlBETUEgaW4gYmxrX3N0YWNrX2xpbWl0cygpIGZvcg0KPj4gICAgICBub24tc3VwcG9y
-dGluZyBkZXZpY2VzDQo+Pg0KPj4gS2lyYW4gS3VtYXIgTW9kdWt1cmkgKDIpOg0KPj4gICAgbWQ6
-IHByb3BhZ2F0ZSBCTEtfRkVBVF9QQ0lfUDJQRE1BIGZyb20gbWVtYmVyIGRldmljZXMgdG8gUkFJ
-RCBkZXZpY2UNCj4+ICAgIG52bWUtbXVsdGlwYXRoOiBlbmFibGUgUENJIFAyUERNQSBmb3IgbXVs
-dGlwYXRoIGRldmljZXMNCj4+DQo+PiAgIGJsb2NrL2Jsay1zZXR0aW5ncy5jICAgICAgICAgIHwg
-MiArKw0KPj4gICBkcml2ZXJzL21kL3JhaWQwLmMgICAgICAgICAgICB8IDEgKw0KPj4gICBkcml2
-ZXJzL21kL3JhaWQxLmMgICAgICAgICAgICB8IDEgKw0KPj4gICBkcml2ZXJzL21kL3JhaWQxMC5j
-ICAgICAgICAgICB8IDEgKw0KPj4gICBkcml2ZXJzL252bWUvaG9zdC9tdWx0aXBhdGguYyB8IDIg
-Ky0NCj4+ICAgNSBmaWxlcyBjaGFuZ2VkLCA2IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkN
-Cj4+DQo+IFRlc3RlZCB3aXRoIE5WTWUtb0YgKFJETUEpLg0KPg0KPiBUZXN0ZWQ9Ynk6IFByYW5q
-YWwgU2hyaXZhc3RhdmE8cHJhYW5AZ29vZ2xlLmNvbT4NCj4NCj4gVGhhbmtzLA0KPiBQcmFhbg0K
-DQpUaGFua3MgYSBsb3QgZm9yIHRlc3RpbmcuDQoNCi1jaw0KDQoNCg==
+From: Benjamin Marzinski <bmarzins@redhat.com>
+
+[ Upstream commit 418b3e64e4459feb3f75979de9ec89e085745343 ]
+
+If make_stripe_request() returns STRIPE_WAIT_RESHAPE,
+raid5_make_request() will free the cloned bio. But raid5_make_request()
+can call make_stripe_request() multiple times, writing to the various
+stripes. If that bio got added to the toread or towrite lists of a
+stripe disk in an earlier call to make_stripe_request(), then it's not
+safe to just free the bio if a later part of it is found to cross the
+reshape position. Doing so can lead to a UAF error, when bio_endio()
+is called on the bio for the earlier stripes.
+
+Instead, raid5_make_request() needs to wait until all parts of the bio
+have called bio_endio(). To do this, bios that cross the reshape
+position while the reshape can't make progress are flagged as needing to
+wait for all parts to complete. When raid5_make_request() has a bio that
+failed make_stripe_request() with STRIPE_WAIT_RESHAPE, it sets
+bi->bi_private to a completion struct and waits for completion after
+ending the bio.  When the bio_endio() is called for the last time on a
+clone bio with bi->bi_private set, it wakes up the waiter. This
+guarantees that raid5_make_request() doesn't return until the cloned bio
+needing a retry for io across the reshape boundary is safely cleaned up.
+
+There is a simple reproducer available at [1]. Compile the kernel with
+KASAN for more useful reporting when the error is triggered (this is not
+necessary to see the bug).
+
+[1] https://gist.github.com/bmarzins/e48598824305cf2171289e47d7241fa5
+
+Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+Reviewed-by: Xiao Ni <xni@redhat.com>
+Link: https://lore.kernel.org/r/20260408043548.1695157-1-bmarzins@redhat.com
+Signed-off-by: Yu Kuai <yukuai@fnnas.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+
+LLM Generated explanations, may be completely bogus:
+
+## Phase Walkthrough
+1. Commit message forensics
+Record: subsystem `md/raid5`; action verb `Fix`; intent is to prevent a
+use-after-free when RAID5 IO crosses a reshape position and
+`make_stripe_request()` returns `STRIPE_WAIT_RESHAPE`. Tags found:
+`Signed-off-by: Benjamin Marzinski`, `Reviewed-by: Xiao Ni`, lore
+`Link`, `Signed-off-by: Yu Kuai`; no `Fixes:`, `Reported-by:`, `Tested-
+by`, or `Cc: stable`. Body describes a real UAF, a KASAN-aided
+reproducer, and the root cause: a cloned bio can already be linked into
+earlier stripe `toread`/`towrite` lists when a later stripe path frees
+it.
+
+2. Diff analysis
+Record: 3 files, `14 insertions/25 deletions`; functions changed are
+`md_end_clone_io()`, `md_clone_bio()`, removed `md_free_cloned_bio()`,
+and `raid5_make_request()`. Before: `STRIPE_WAIT_RESHAPE` directly
+called `md_free_cloned_bio(bi)`. After: it sets `bi_private` to a stack
+completion, calls `bio_endio(bi)`, and waits until the cloned bio’s
+final endio completes. Bug category: memory safety/UAF, caused by
+freeing a clone still referenced by stripe bio chains. Fix is small and
+contained.
+
+3. Git history investigation
+Record: upstream commit is `418b3e64e4459`. Blame shows the problematic
+`STRIPE_WAIT_RESHAPE`/`md_free_cloned_bio()` path came from
+`41425f96d7aa` (`dm-raid456, md/raid456: fix a deadlock...`), first
+contained in `v6.9-rc1`/`v6.9`. That introducing commit was itself
+stable-marked for `v6.7+` and is present in checked stable branches
+`6.12.y`, `6.18.y`, `6.19.y`, and `7.0.y`; the specific buggy
+helper/path was not found in `6.6.y` or `6.1.y`. No `Fixes:` tag exists,
+so blame was used instead.
+
+4. Mailing list and external research
+Record: `b4 dig -c 418b3e64e4459` found `[PATCH v2]` at
+`https://patch.msgid.link/20260408043548.1695157-1-bmarzins@redhat.com`.
+`b4 dig -a` found v1 RFC and v2; committed patch matches v2. `b4 dig -w`
+shows `linux-raid`, `dm-devel`, Song Liu, Yu Kuai, Li Nan, Xiao Ni, and
+Red Hat participants were included. Thread review: Xiao Ni gave
+`Reviewed-by`; Yu Kuai replied “Applied.” Reviewer asked about
+`WRITE_ONCE`; author explained it was unnecessary but harmless on the
+slow path, and Xiao accepted keeping it. No NAKs found. WebFetch for
+lore was blocked by Anubis, but b4 retrieved the mbox. The gist
+reproducer uses dmsetup/LVM RAID5 reshape loops.
+
+5. Code semantic analysis
+Record: `md_submit_bio()` reaches `md_handle_request()`, which calls the
+RAID personality `.make_request = raid5_make_request` for RAID4/5/6.
+`raid5_make_request()` calls `make_stripe_request()` repeatedly over
+stripe bits. `add_all_stripe_bios()` calls `__add_stripe_bio()`, which
+links the cloned bio into `toread`/`towrite` and calls
+`bio_inc_remaining()`. `bio_endio()` only invokes `bi_end_io` after
+`__bi_remaining` reaches zero, so the completion wait correctly waits
+for all earlier stripe references to drain.
+
+6. Stable tree analysis
+Record: buggy code exists in `stable/linux-7.0.y`, `6.19.y`, `6.18.y`,
+and `6.12.y`; not in checked `6.6.y`/`6.1.y`. Patch applies cleanly to
+current `7.0.y` with `git apply --check`. Direct upstream patch does not
+apply cleanly to `6.19.y` and `6.12.y` because nearby context differs
+(`ctx` allocation/field access and older bitmap helpers), but the same
+core code is present, so a small backport adjustment is needed.
+
+7. Subsystem context
+Record: subsystem is software RAID / MD, `drivers/md`; MAINTAINERS lists
+Song Liu and Yu Kuai as maintainers and `linux-raid@vger.kernel.org` as
+the list. Criticality: important storage subsystem, with data
+availability and kernel memory-safety impact during RAID reshape.
+Activity level is high; recent logs show multiple md/raid fixes and
+refactors.
+
+8. Impact and risk assessment
+Record: affected users are md/dm RAID4/5/6 users doing IO while reshape
+is blocked/interrupted. Trigger is specialized but real; reproducer
+exists. Admin privileges are generally needed to create/reshape the
+array, but ordinary IO can hit the path once the system is in that
+state. Failure mode is UAF after freeing a cloned bio still referenced
+by stripe lists; severity HIGH/CRITICAL because it can crash or corrupt
+memory. Benefit is high for affected stable users; risk is low to
+medium: small fix, no API change, but it touches bio completion
+semantics in a storage path.
+
+9. Final synthesis
+Record: Evidence for backporting: explicit UAF, reproducer, KASAN
+usefulness, small contained patch, reviewed by linux-raid reviewer,
+applied by md maintainer, buggy code present in active stable trees from
+`6.12.y` upward. Evidence against: not applicable to older
+`6.6.y`/`6.1.y`; older applicable trees need a manual backport rather
+than direct cherry-pick. Stable rules: obviously correct by code
+inspection and review; fixes a real serious bug; small and contained; no
+new features/APIs; applies cleanly to `7.0.y`, needs minor backport for
+older affected branches. Exception categories: none needed.
+
+## Verification
+- Phase 1: `git show --format=fuller --stat 418b3e64e4459` verified
+  subject, body, tags, reviewer, lore link, and line counts.
+- Phase 2: `git show --no-ext-diff 418b3e64e4459` verified exact changes
+  to `drivers/md/md.c`, `drivers/md/md.h`, and `drivers/md/raid5.c`.
+- Phase 3: `git blame` verified `41425f96d7aa` introduced
+  `STRIPE_WAIT_RESHAPE` freeing via `md_free_cloned_bio()`.
+- Phase 3: `git describe --contains 41425f96d7aa` and tag checks
+  verified first mainline containment around `v6.9`.
+- Phase 4: `b4 dig -c/-a/-w/-m 418b3e64e4459` verified v1/v2 series,
+  recipients, review, and applied response.
+- Phase 4: WebFetch verified the raw gist reproducer content; lore
+  WebFetch was blocked by Anubis.
+- Phase 5: `rg`/file reads verified call chain, stripe list insertion,
+  `bio_inc_remaining()`, and `bio_endio()` final-callback semantics.
+- Phase 6: `git grep` verified buggy code in `6.12.y`, `6.18.y`,
+  `6.19.y`, and `7.0.y`, absent from checked `6.6.y` and `6.1.y`.
+- Phase 6: `git apply --check` verified clean apply to `7.0.y`; worktree
+  checks showed direct patch conflicts on `6.19.y` and `6.12.y`.
+- Unverified: I did not run the reproducer locally or test a built
+  kernel.
+
+This is stable material for affected trees, especially `6.12.y+`, with
+backport adjustment where context differs.
+
+**YES**
+
+ drivers/md/md.c    | 31 ++++++++-----------------------
+ drivers/md/md.h    |  1 -
+ drivers/md/raid5.c |  7 ++++++-
+ 3 files changed, 14 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 3ce6f9e9d38e6..4318d875a5f63 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9215,9 +9215,11 @@ static void md_bitmap_end(struct mddev *mddev, struct md_io_clone *md_io_clone)
+ 
+ static void md_end_clone_io(struct bio *bio)
+ {
+-	struct md_io_clone *md_io_clone = bio->bi_private;
++	struct md_io_clone *md_io_clone = container_of(bio, struct md_io_clone,
++						       bio_clone);
+ 	struct bio *orig_bio = md_io_clone->orig_bio;
+ 	struct mddev *mddev = md_io_clone->mddev;
++	struct completion *reshape_completion = bio->bi_private;
+ 
+ 	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev, false))
+ 		md_bitmap_end(mddev, md_io_clone);
+@@ -9229,7 +9231,10 @@ static void md_end_clone_io(struct bio *bio)
+ 		bio_end_io_acct(orig_bio, md_io_clone->start_time);
+ 
+ 	bio_put(bio);
+-	bio_endio(orig_bio);
++	if (unlikely(reshape_completion))
++		complete(reshape_completion);
++	else
++		bio_endio(orig_bio);
+ 	percpu_ref_put(&mddev->active_io);
+ }
+ 
+@@ -9254,7 +9259,7 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
+ 	}
+ 
+ 	clone->bi_end_io = md_end_clone_io;
+-	clone->bi_private = md_io_clone;
++	clone->bi_private = NULL;
+ 	*bio = clone;
+ }
+ 
+@@ -9265,26 +9270,6 @@ void md_account_bio(struct mddev *mddev, struct bio **bio)
+ }
+ EXPORT_SYMBOL_GPL(md_account_bio);
+ 
+-void md_free_cloned_bio(struct bio *bio)
+-{
+-	struct md_io_clone *md_io_clone = bio->bi_private;
+-	struct bio *orig_bio = md_io_clone->orig_bio;
+-	struct mddev *mddev = md_io_clone->mddev;
+-
+-	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev, false))
+-		md_bitmap_end(mddev, md_io_clone);
+-
+-	if (bio->bi_status && !orig_bio->bi_status)
+-		orig_bio->bi_status = bio->bi_status;
+-
+-	if (md_io_clone->start_time)
+-		bio_end_io_acct(orig_bio, md_io_clone->start_time);
+-
+-	bio_put(bio);
+-	percpu_ref_put(&mddev->active_io);
+-}
+-EXPORT_SYMBOL_GPL(md_free_cloned_bio);
+-
+ /* md_allow_write(mddev)
+  * Calling this ensures that the array is marked 'active' so that writes
+  * may proceed without blocking.  It is important to call this before
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index ac84289664cd7..5d57fee22901f 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -917,7 +917,6 @@ extern void md_finish_reshape(struct mddev *mddev);
+ void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
+ 			struct bio *bio, sector_t start, sector_t size);
+ void md_account_bio(struct mddev *mddev, struct bio **bio);
+-void md_free_cloned_bio(struct bio *bio);
+ 
+ extern bool __must_check md_flush_request(struct mddev *mddev, struct bio *bio);
+ void md_write_metadata(struct mddev *mddev, struct md_rdev *rdev,
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index a8e8d431071ba..dc0c680ca199b 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6217,7 +6217,12 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 
+ 	mempool_free(ctx, conf->ctx_pool);
+ 	if (res == STRIPE_WAIT_RESHAPE) {
+-		md_free_cloned_bio(bi);
++		DECLARE_COMPLETION_ONSTACK(done);
++		WRITE_ONCE(bi->bi_private, &done);
++
++		bio_endio(bi);
++
++		wait_for_completion(&done);
+ 		return false;
+ 	}
+ 
+-- 
+2.53.0
+
