@@ -1,93 +1,169 @@
-Received: from out203-205-221-221.mail.qq.com (out203-205-221-221.mail.qq.com [203.205.221.221])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30AAC35C1B1;
-	Fri,  8 May 2026 09:55:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.221
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B2D31D54FA
+	for <linux-raid@vger.kernel.org>; Sat,  9 May 2026 09:19:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778234124; cv=none; b=YxhPvaYxdNf76SCHDrc29+sQrvEmEOypDrxo9FrMV3I3VeiRlR2RvZdefs7giiLJkg050TIWbkMZulnvXPQjvJ6e93CxMJj6wBMYVbvlQkqegU6wtE58KRTGoE0fs1ugrYHRbVD/dM2O0J7UaIWXKqk55zGk+TsikzB0bukBSmk=
+	t=1778318349; cv=none; b=OAqbji9/TqGK96LI1f/tjPL9dGTxYsJw5sBIEHCHvU9fyTTv/wtZ2+jBEcrXM3xMqHe/UNTqSfF4e2RrpMstSE27o7+guPwLbakNCuARJjFRPmRtVXtvfncABloRH87karayTLiT6bpqLWYY3eQIMG9+YBACAnDkU2ObF0ucQPw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778234124; c=relaxed/simple;
-	bh=VEIo+a9bH1FvnLtjwwcjrS9rWhkyMy3s8kSYBdTK6cs=;
-	h=Message-ID:From:To:Cc:Subject:Date:MIME-Version; b=cVrp32E1wmQHGCcK+sgmr9IoVZuuVGS6o3SqDzdM/d9xcx0t4Ql6CA/qw6jvs+nOsC/H5Kfr9V7He9RvAjknL1+G2qq75aGWeV1eIs0YZ/ofyEdXfcLnEwIIIzgJnIRBjsD1t5DIpSXKW0We959W+cAbEbA9CzjeKipfYBAtCRM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com; spf=pass smtp.mailfrom=foxmail.com; dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b=tWgQ0p9r; arc=none smtp.client-ip=203.205.221.221
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foxmail.com
+	s=arc-20240116; t=1778318349; c=relaxed/simple;
+	bh=GAmfihzwBx8UlSMVGuHe/To1/SPfWGuDi3zQirtTis0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=WDPM+f1gDpbzuUMJq/UkBh1JgElfstKxdXYEJbiatHDjo26jI5GqAFpsgHLa+GTYE7G+Dfr+uFZddjYU3GML7oUj3q35ctyBkDBD/TFwnCrhZwcxW8Gvp46fbi6akGGaPNoTZUQSwT9/WHuXwLl/KMIBxbH4YmQy88YejBapc+A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CrMy9uzi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b="tWgQ0p9r"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-	s=s201512; t=1778234116;
-	bh=sBHRkGOPB1wtVMmwNJhx8RKcr5TsnMv+aslzWn4G3Ac=;
-	h=From:To:Cc:Subject:Date;
-	b=tWgQ0p9rmBh1UTqxGxWj7Qr7VvqcgwzSn/+y81RZaAO+OAFqTLW+GUd2F8vxqdE9N
-	 SNuzjL70+wL3xWVi6tiR4PFDmCq2+7veJ8dYXkOg01AMlaUYWu4dQL5LbAbRo/mGF1
-	 urt6LbLl3kzIJsoU3HlTKapm9HoEfaIERe+Q7854=
-Received: from localhost.localdomain ([183.134.211.52])
-	by newxmesmtplogicsvrszc56-0.qq.com (NewEsmtp) with SMTP
-	id DCDA4884; Fri, 08 May 2026 17:55:13 +0800
-X-QQ-mid: xmsmtpt1778234113tm4udyc07
-Message-ID: <tencent_8F8173BEDF20E98550D5429DF802F34A7108@qq.com>
-X-QQ-XMAILINFO: NZwiJlOqZeNMt79RYoTCOiQpWucZ35jznKSwDxF9HBe5ojw+zdg9mbpFs2aqig
-	 eaOGivOiRxTtLySPyZOYBQSeE2P/SLcYNEdwRSZWOxpQ4AQEz/LsnmEzDYavM+eoyPrkgbn4a5Yd
-	 akw9KxSUc0yKneZql8OLDDM9onuuYlJDPdWNSo95Vm9RR/EUq3wR79tmwW576c746bxnnSnNdrsf
-	 Xtj0ilahD0APbyE5HgGGsYWvjsCXlWmEBAXCuKOqGGaD3GTK7WJmJOzuatBaRQszMn4tpaT8j2Uc
-	 QxVKvUXha3C1cWN7V/KkOkSo8at0uywqHfuQdKHKVaTuZnmzzN3la9cN4KqtUQBfTArWN3CfxZov
-	 Q4js4VPVyuP+r+Dt/2Kfr7EtUMwOE57sPwPFOHUFjG8uJjqmaPSIvVG/dK/rdM47iXFIvxZdCUYy
-	 orQEbt2xsCzn13+bmQwShrcRO8w7GLWPFZT5E1/9Ozcyi0b7GMDKAI0ft9+abs0dkLyf3dDoaYCb
-	 +5SrInCTWHX24GhMTuaaZgXoAqZtnVvCUo6XmMvZ7DFq7lXaEwusRSOmVQxAiL86oLmbnm5Es07i
-	 SuIMb/TLbL077fge4Zgrdy7tBSRcsD19T2ehIw6V8q0Oz+jAZCiFcy5f7NCWSYsiKu7Yz0gJRuMp
-	 TUdurGqZS34OOPkleor2jZjcoQ4F8e1Lm+nGJsSco7JxVFIn6FqgUr1vi5hB/+Uhs1fdTj4XMQdJ
-	 tZS+wLE+rzFFixrQ29hgcwroZeBIy85sfBhbGegWPyXiByCLQCmW9mWhNr4Pl89QjwkTMK+ynytc
-	 nW6S0yxJAxkGSLhJU8BFOsHxXdJ1W1rG2PbgxHJtuokGDF9maEexg8frmB73P1Z+84gLi5uScufq
-	 qMwUKbfC/zrAIkd0DJyYKoIJ0SHnMWAmUwBrQxl/D9cjzlpYL+F4XeVgfGHiISGOwmNWAjHP5936
-	 eoMeESkJGjDkVBz3fKU5By8lA2USArgsSODHa1g06coRNH500NX/hRdGOL/MMeuPMvjZCz4wWLFv
-	 I9qE3q4hK7tClPgyzZC4xxCym3Rf96VwspjB6X9NTsfjuaP//nuCWE7SyKeDEL+O1Yq9mmFithu2
-	 SmuxbCZgNmMY4HwmOCwuWni0I8gsOia4XpJJ9fg35gUAMAe/oVo1z953KXKOpgfKojIuMR
-X-QQ-XMRINFO: M/715EihBoGS47X28/vv4NpnfpeBLnr4Qg==
-From: Li Nan <magiclinan@foxmail.com>
-To: song@kernel.org,
-	yukuai@fnnas.com
-Cc: zhangtonghao@didiglobal.com,
-	linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	xiao@kernel.org,
-	magiclinan@didiglobal.com
-Subject: [PATCH RESEND] MAINTAINERS: Update Li Nan's E-mail address
-Date: Fri,  8 May 2026 17:55:13 +0800
-X-OQ-MSGID: <20260508095513.94980-1-magiclinan@foxmail.com>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CrMy9uzi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C076C2BCF4
+	for <linux-raid@vger.kernel.org>; Sat,  9 May 2026 09:19:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778318349;
+	bh=GAmfihzwBx8UlSMVGuHe/To1/SPfWGuDi3zQirtTis0=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=CrMy9uzidZ/luDhoiN3Ec85H8qAcXyVpzmwdUv8KK4NBSB46fHpeCEHBbmFP6yF3f
+	 abaPIu9ZPlrS6OVytP+vUh++Uepcvt/XPT+0Zj2ZXJ7UE3AWFlijMZpYN6GarAyxNu
+	 g6pyF0WVJihjh03jG4apz5jkSGIsaiZu3NCD8bWQinXIZqkuDhscjUymqTktmaCBPd
+	 iY8R9Lpx/YN570D/ahiPmP5W09Pf8cMLxk52XlMpviv/2s2XqFv02tkDZKivFgealv
+	 1qKF+bw6l4bdnx4FvAQWoftygultEwuk9ndaiw6b92AC8Dg0xlJ//tdhivHWqWAxeF
+	 442sABnN9YvAg==
+Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-50e5c7eb565so26537311cf.3
+        for <linux-raid@vger.kernel.org>; Sat, 09 May 2026 02:19:09 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ/UOeVTY+bDf4dyZtyD2lcsJ+OKBLciwc/i64QG7YPAA3Hy7Ql706TLANhZSXN8sp0ImMlWka7hxY8W@vger.kernel.org
+X-Gm-Message-State: AOJu0YwK7HlLxlUohFP9geEre2hzc8nk06q9HdBPh37xQAD1SBjntuge
+	5Qa8LJH7YBTUts589MW8BLXUN5s55UEvhi3coCWDNzmx0uK3HgbTYkkFi43jtoNUl1FelumS0Kj
+	FUAqqlmwvtG/fBM6kPJMwL3ebZd+wng==
+X-Received: by 2002:ac8:6f09:0:b0:50f:135d:9508 with SMTP id
+ d75a77b69052e-514621dd852mr221575831cf.55.1778318348481; Sat, 09 May 2026
+ 02:19:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260428232010.2785514-1-bmarzins@redhat.com>
+In-Reply-To: <20260428232010.2785514-1-bmarzins@redhat.com>
+From: Xiao Ni <xiao@kernel.org>
+Date: Sat, 9 May 2026 17:18:57 +0800
+X-Gmail-Original-Message-ID: <CAF-RUYVNd42=g7qSZPJKEndqk4EjjHWcdpByFN1qGkGSGQF53Q@mail.gmail.com>
+X-Gm-Features: AVHnY4JlceJXW-oWxLURieRKh-TK859p6YpIIiSYVXUrDSdTmw5CyeoScb-wW1k
+Message-ID: <CAF-RUYVNd42=g7qSZPJKEndqk4EjjHWcdpByFN1qGkGSGQF53Q@mail.gmail.com>
+Subject: Re: [PATCH v2] dm-raid: only requeue bios when dm is suspending.
+To: Benjamin Marzinski <bmarzins@redhat.com>
+Cc: Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>, 
+	Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, dm-devel@lists.linux.dev, 
+	Yang Xiuwei <yangxiuwei@kylinos.cn>, Li Nan <linan122@huawei.com>, 
+	Nigel Croxon <ncroxon@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Li Nan <magiclinan@didiglobal.com>
-
-Change to my new email address on didiglobal.com.
-
-Signed-off-by: Li Nan <magiclinan@didiglobal.com>
----
-add cc linux-raid
-
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 06c00e40999f..96702de58cc1 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -24763,7 +24763,7 @@ F:	include/linux/property.h
- SOFTWARE RAID (Multiple Disks) SUPPORT
- M:	Song Liu <song@kernel.org>
- M:	Yu Kuai <yukuai@fnnas.com>
--R:	Li Nan <linan122@huawei.com>
-+R:	Li Nan <magiclinan@didiglobal.com>
- R:	Xiao Ni <xiao@kernel.org>
- L:	linux-raid@vger.kernel.org
- S:	Supported
--- 
-2.50.1 (Apple Git-155)
-
+On Wed, Apr 29, 2026 at 7:20=E2=80=AFAM Benjamin Marzinski <bmarzins@redhat=
+.com> wrote:
+>
+> returning DM_MAPIO_REQUEUE from the target map() function only requeues
+> the bio during noflush suspends. During regular operations or during
+> flushing suspends, it fails the bio. Failing the bio during flushing
+> suspends is the correct behavior here. We cannot handle the bio, and we
+> cannot suspends while it is outstanding. But during normal operations,
+> we should not push the bio back to dm. Instead, wait for the reshape
+> to be resumed.
+>
+> Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+> ---
+>
+> Changes from v1:
+> - Track the dm device's suspending state in mddev->flags instead of
+>   adding a new integer to mddev.
+>
+>  drivers/md/dm-raid.c | 6 ++++++
+>  drivers/md/md.h      | 2 ++
+>  drivers/md/raid5.c   | 7 +++++--
+>  3 files changed, 13 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+> index c5dc083c7244..8f5a5e1342a9 100644
+> --- a/drivers/md/dm-raid.c
+> +++ b/drivers/md/dm-raid.c
+> @@ -3831,6 +3831,7 @@ static void raid_presuspend(struct dm_target *ti)
+>          * resume, raid_postsuspend() is too late.
+>          */
+>         set_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
+> +       set_bit(MD_DM_SUSPENDING, &mddev->flags);
+>
+>         if (!reshape_interrupted(mddev))
+>                 return;
+> @@ -3847,13 +3848,16 @@ static void raid_presuspend(struct dm_target *ti)
+>  static void raid_presuspend_undo(struct dm_target *ti)
+>  {
+>         struct raid_set *rs =3D ti->private;
+> +       struct mddev *mddev =3D &rs->md;
+>
+> +       clear_bit(MD_DM_SUSPENDING, &mddev->flags);
+>         clear_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
+>  }
+>
+>  static void raid_postsuspend(struct dm_target *ti)
+>  {
+>         struct raid_set *rs =3D ti->private;
+> +       struct mddev *mddev =3D &rs->md;
+>
+>         if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) =
+{
+>                 /*
+> @@ -3864,6 +3868,8 @@ static void raid_postsuspend(struct dm_target *ti)
+>                 mddev_suspend(&rs->md, false);
+>                 rs->md.ro =3D MD_RDONLY;
+>         }
+> +       clear_bit(MD_DM_SUSPENDING, &mddev->flags);
+> +
+>  }
+>
+>  static void attempt_restore_of_faulty_devices(struct raid_set *rs)
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 52c378086046..9e5100609d12 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -346,6 +346,7 @@ struct md_cluster_operations;
+>   * @MD_HAS_SUPERBLOCK: There is persistence sb in member disks.
+>   * @MD_FAILLAST_DEV: Allow last rdev to be removed.
+>   * @MD_SERIALIZE_POLICY: Enforce write IO is not reordered, just used by=
+ raid1.
+> + * @MD_DM_SUSPENDING: This DM raid device is suspending.
+>   *
+>   * change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is add=
+ed
+>   */
+> @@ -365,6 +366,7 @@ enum mddev_flags {
+>         MD_HAS_SUPERBLOCK,
+>         MD_FAILLAST_DEV,
+>         MD_SERIALIZE_POLICY,
+> +       MD_DM_SUSPENDING,
+>  };
+>
+>  enum mddev_sb_flags {
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 0d76e82f4506..65ae7d8930fc 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -6042,8 +6042,11 @@ static enum stripe_result make_stripe_request(stru=
+ct mddev *mddev,
+>         raid5_release_stripe(sh);
+>  out:
+>         if (ret =3D=3D STRIPE_SCHEDULE_AND_RETRY && reshape_interrupted(m=
+ddev)) {
+> -               bi->bi_status =3D BLK_STS_RESOURCE;
+> -               ret =3D STRIPE_WAIT_RESHAPE;
+> +               if (!mddev_is_dm(mddev) ||
+> +                   test_bit(MD_DM_SUSPENDING, &mddev->flags)) {
+> +                       bi->bi_status =3D BLK_STS_RESOURCE;
+> +                       ret =3D STRIPE_WAIT_RESHAPE;
+> +               }
+>                 pr_err_ratelimited("dm-raid456: io across reshape positio=
+n while reshape can't make progress");
+>         }
+>         return ret;
+> --
+> 2.53.0
+>
+This patch looks good to me.
+Reviewed-by: Xiao Ni <xiao@kernel.org>
