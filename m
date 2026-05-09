@@ -1,169 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B2D31D54FA
-	for <linux-raid@vger.kernel.org>; Sat,  9 May 2026 09:19:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22D783AC00;
+	Sat,  9 May 2026 20:05:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778318349; cv=none; b=OAqbji9/TqGK96LI1f/tjPL9dGTxYsJw5sBIEHCHvU9fyTTv/wtZ2+jBEcrXM3xMqHe/UNTqSfF4e2RrpMstSE27o7+guPwLbakNCuARJjFRPmRtVXtvfncABloRH87karayTLiT6bpqLWYY3eQIMG9+YBACAnDkU2ObF0ucQPw=
+	t=1778357128; cv=none; b=ZRnLPqcZLkIThyLNhYadf1lLJziyom6bxw/PW2EaE++zXmOhVu9eg3CIgjvEnIT7cMtqaBV8DJ9EIi7VFPnYCJc/7mS787bkxNLVbeXoilRh2gBERYxJwBMphbjUpw1dSo+zUjIs9nyGq+qlGh8oKL8TUvmKlpReaGEyzrA7f+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778318349; c=relaxed/simple;
-	bh=GAmfihzwBx8UlSMVGuHe/To1/SPfWGuDi3zQirtTis0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=WDPM+f1gDpbzuUMJq/UkBh1JgElfstKxdXYEJbiatHDjo26jI5GqAFpsgHLa+GTYE7G+Dfr+uFZddjYU3GML7oUj3q35ctyBkDBD/TFwnCrhZwcxW8Gvp46fbi6akGGaPNoTZUQSwT9/WHuXwLl/KMIBxbH4YmQy88YejBapc+A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CrMy9uzi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778357128; c=relaxed/simple;
+	bh=gvCfoipjvFSyuB+Z6RDe06egz90snb/tb6jiKwmbmKk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=D/sFpuJVEChj1c8J/j6nSEA+DoFXjd/SrKk7yljuPv0W/0afb5auFToEB+AHF7b/W9eZtDv/oVQwoYknFCqkqRA1CDQCUnlkxj7u02pjgb+b2KKcW6pDd6BPhSA7QFXfE2Vo2Hiv2bnOJNFsHiUevOn9+p5FRNE/Ju9iZnpz/QA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dL+hgRhy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CrMy9uzi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C076C2BCF4
-	for <linux-raid@vger.kernel.org>; Sat,  9 May 2026 09:19:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dL+hgRhy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B6A4C2BCC4;
+	Sat,  9 May 2026 20:05:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778318349;
-	bh=GAmfihzwBx8UlSMVGuHe/To1/SPfWGuDi3zQirtTis0=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=CrMy9uzidZ/luDhoiN3Ec85H8qAcXyVpzmwdUv8KK4NBSB46fHpeCEHBbmFP6yF3f
-	 abaPIu9ZPlrS6OVytP+vUh++Uepcvt/XPT+0Zj2ZXJ7UE3AWFlijMZpYN6GarAyxNu
-	 g6pyF0WVJihjh03jG4apz5jkSGIsaiZu3NCD8bWQinXIZqkuDhscjUymqTktmaCBPd
-	 iY8R9Lpx/YN570D/ahiPmP5W09Pf8cMLxk52XlMpviv/2s2XqFv02tkDZKivFgealv
-	 1qKF+bw6l4bdnx4FvAQWoftygultEwuk9ndaiw6b92AC8Dg0xlJ//tdhivHWqWAxeF
-	 442sABnN9YvAg==
-Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-50e5c7eb565so26537311cf.3
-        for <linux-raid@vger.kernel.org>; Sat, 09 May 2026 02:19:09 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ/UOeVTY+bDf4dyZtyD2lcsJ+OKBLciwc/i64QG7YPAA3Hy7Ql706TLANhZSXN8sp0ImMlWka7hxY8W@vger.kernel.org
-X-Gm-Message-State: AOJu0YwK7HlLxlUohFP9geEre2hzc8nk06q9HdBPh37xQAD1SBjntuge
-	5Qa8LJH7YBTUts589MW8BLXUN5s55UEvhi3coCWDNzmx0uK3HgbTYkkFi43jtoNUl1FelumS0Kj
-	FUAqqlmwvtG/fBM6kPJMwL3ebZd+wng==
-X-Received: by 2002:ac8:6f09:0:b0:50f:135d:9508 with SMTP id
- d75a77b69052e-514621dd852mr221575831cf.55.1778318348481; Sat, 09 May 2026
- 02:19:08 -0700 (PDT)
+	s=k20201202; t=1778357128;
+	bh=gvCfoipjvFSyuB+Z6RDe06egz90snb/tb6jiKwmbmKk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=dL+hgRhySxvqBvd+CeLOETC9BXBE66RyuUS1bGENnBgeC4+xBbGhzL0VAy5fkUXKs
+	 wkWg3HHJlGUUXAegTxBYQTJpmhlIEs796fBoARee4ClWIx61D2SegbFrL7eD9mfFsV
+	 Cr6CmpBZ++mgxVGSco7m+zemEbpOPw4QzL/9fnRfYSv66sbI2Urx+pAXp6aDTIFPUE
+	 C017ypxymB8L9MxDL/b6rHRtgIU20gJHDG1Jd3VKu7PHa+0j4glxGz/SPDS18CgYiP
+	 sEw3VAzmGfA9UPVoYMMgl8Uvpbgp5e5ir3Wdp2biSQOQfrNgTOVNMQgW4ZjB3tvHWe
+	 bTX7P0/myIb5g==
+Date: Sat, 9 May 2026 13:05:03 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: Ard Biesheuvel <ardb+git@google.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-raid@vger.kernel.org, Ard Biesheuvel <ardb@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Russell King <linux@armlinux.org.uk>, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 8/8] ARM: Remove hacked-up asm/types.h header
+Message-ID: <20260509200503.GC11883@quark>
+References: <20260422171655.3437334-10-ardb+git@google.com>
+ <20260422171655.3437334-18-ardb+git@google.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260428232010.2785514-1-bmarzins@redhat.com>
-In-Reply-To: <20260428232010.2785514-1-bmarzins@redhat.com>
-From: Xiao Ni <xiao@kernel.org>
-Date: Sat, 9 May 2026 17:18:57 +0800
-X-Gmail-Original-Message-ID: <CAF-RUYVNd42=g7qSZPJKEndqk4EjjHWcdpByFN1qGkGSGQF53Q@mail.gmail.com>
-X-Gm-Features: AVHnY4JlceJXW-oWxLURieRKh-TK859p6YpIIiSYVXUrDSdTmw5CyeoScb-wW1k
-Message-ID: <CAF-RUYVNd42=g7qSZPJKEndqk4EjjHWcdpByFN1qGkGSGQF53Q@mail.gmail.com>
-Subject: Re: [PATCH v2] dm-raid: only requeue bios when dm is suspending.
-To: Benjamin Marzinski <bmarzins@redhat.com>
-Cc: Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>, 
-	Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, dm-devel@lists.linux.dev, 
-	Yang Xiuwei <yangxiuwei@kylinos.cn>, Li Nan <linan122@huawei.com>, 
-	Nigel Croxon <ncroxon@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260422171655.3437334-18-ardb+git@google.com>
 
-On Wed, Apr 29, 2026 at 7:20=E2=80=AFAM Benjamin Marzinski <bmarzins@redhat=
-.com> wrote:
->
-> returning DM_MAPIO_REQUEUE from the target map() function only requeues
-> the bio during noflush suspends. During regular operations or during
-> flushing suspends, it fails the bio. Failing the bio during flushing
-> suspends is the correct behavior here. We cannot handle the bio, and we
-> cannot suspends while it is outstanding. But during normal operations,
-> we should not push the bio back to dm. Instead, wait for the reshape
-> to be resumed.
->
-> Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+On Wed, Apr 22, 2026 at 07:17:04PM +0200, Ard Biesheuvel wrote:
+> From: Ard Biesheuvel <ardb@kernel.org>
+> 
+> ARM has a special version of asm/types.h which contains overrides for
+> certain #define's related to the C types used to back C99 types such as
+> uint32_t and uintptr_t.
+> 
+> This is only needed when pulling in system headers such as stdint.h
+> during the build, and this only happens when using NEON intrinsics,
+> for which there is now a dedicated header file.
+> 
+> So drop this header entirely, and revert to the asm-generic one.
+> 
+> Signed-off-by: Ard Biesheuvel <ardb@kernel.org>
 > ---
->
-> Changes from v1:
-> - Track the dm device's suspending state in mddev->flags instead of
->   adding a new integer to mddev.
->
->  drivers/md/dm-raid.c | 6 ++++++
->  drivers/md/md.h      | 2 ++
->  drivers/md/raid5.c   | 7 +++++--
->  3 files changed, 13 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-> index c5dc083c7244..8f5a5e1342a9 100644
-> --- a/drivers/md/dm-raid.c
-> +++ b/drivers/md/dm-raid.c
-> @@ -3831,6 +3831,7 @@ static void raid_presuspend(struct dm_target *ti)
->          * resume, raid_postsuspend() is too late.
->          */
->         set_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
-> +       set_bit(MD_DM_SUSPENDING, &mddev->flags);
->
->         if (!reshape_interrupted(mddev))
->                 return;
-> @@ -3847,13 +3848,16 @@ static void raid_presuspend(struct dm_target *ti)
->  static void raid_presuspend_undo(struct dm_target *ti)
->  {
->         struct raid_set *rs =3D ti->private;
-> +       struct mddev *mddev =3D &rs->md;
->
-> +       clear_bit(MD_DM_SUSPENDING, &mddev->flags);
->         clear_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
->  }
->
->  static void raid_postsuspend(struct dm_target *ti)
->  {
->         struct raid_set *rs =3D ti->private;
-> +       struct mddev *mddev =3D &rs->md;
->
->         if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) =
-{
->                 /*
-> @@ -3864,6 +3868,8 @@ static void raid_postsuspend(struct dm_target *ti)
->                 mddev_suspend(&rs->md, false);
->                 rs->md.ro =3D MD_RDONLY;
->         }
-> +       clear_bit(MD_DM_SUSPENDING, &mddev->flags);
-> +
->  }
->
->  static void attempt_restore_of_faulty_devices(struct raid_set *rs)
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 52c378086046..9e5100609d12 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -346,6 +346,7 @@ struct md_cluster_operations;
->   * @MD_HAS_SUPERBLOCK: There is persistence sb in member disks.
->   * @MD_FAILLAST_DEV: Allow last rdev to be removed.
->   * @MD_SERIALIZE_POLICY: Enforce write IO is not reordered, just used by=
- raid1.
-> + * @MD_DM_SUSPENDING: This DM raid device is suspending.
->   *
->   * change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is add=
-ed
->   */
-> @@ -365,6 +366,7 @@ enum mddev_flags {
->         MD_HAS_SUPERBLOCK,
->         MD_FAILLAST_DEV,
->         MD_SERIALIZE_POLICY,
-> +       MD_DM_SUSPENDING,
->  };
->
->  enum mddev_sb_flags {
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 0d76e82f4506..65ae7d8930fc 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -6042,8 +6042,11 @@ static enum stripe_result make_stripe_request(stru=
-ct mddev *mddev,
->         raid5_release_stripe(sh);
->  out:
->         if (ret =3D=3D STRIPE_SCHEDULE_AND_RETRY && reshape_interrupted(m=
-ddev)) {
-> -               bi->bi_status =3D BLK_STS_RESOURCE;
-> -               ret =3D STRIPE_WAIT_RESHAPE;
-> +               if (!mddev_is_dm(mddev) ||
-> +                   test_bit(MD_DM_SUSPENDING, &mddev->flags)) {
-> +                       bi->bi_status =3D BLK_STS_RESOURCE;
-> +                       ret =3D STRIPE_WAIT_RESHAPE;
-> +               }
->                 pr_err_ratelimited("dm-raid456: io across reshape positio=
-n while reshape can't make progress");
->         }
->         return ret;
-> --
-> 2.53.0
->
-This patch looks good to me.
-Reviewed-by: Xiao Ni <xiao@kernel.org>
+>  arch/arm/include/uapi/asm/types.h | 41 --------------------
+>  1 file changed, 41 deletions(-)
+> 
+
+This is actually a UAPI header.  I guess it got put there accidentally
+and isn't actually needed there?
+
+- Eric
