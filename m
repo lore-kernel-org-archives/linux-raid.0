@@ -1,127 +1,70 @@
-Received: from fout-b3-smtp.messagingengine.com (fout-b3-smtp.messagingengine.com [202.12.124.146])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E67E2F8E8F;
-	Sat,  9 May 2026 20:33:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.146
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ACEF284682
+	for <linux-raid@vger.kernel.org>; Sun, 10 May 2026 21:16:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778358822; cv=none; b=I15Q0l0N3Y3lNF2QHejF49lQJCIZeA/F7AVvURashR69jTbnU8ZorMSMRthB6f2WkCOqNsErrf7mUpd8w7ENip0TTFnkaNMY0OP0cUdvdsTVpCgqBk8MYCtOKPJgLBI3x6mEWQVLvbJ4J/jPOSpmsITYLSjFIiBRidVgs65hdro=
+	t=1778447814; cv=none; b=a1u2Qe+6gm6k3tM2FFRP2qYKO65SgO6XXR9TmOkDpjrPaH/1w7JANbhJSRqBdFmIKRhyxCe66PVq/AEz+ge/0E7g38AEiScAgkPf/uGbNDSNvXrw7e6saJxJqZ10SLsSwn44jfYqOqA3RulE5gn75KmT2dIK6HW6ad+/CZ2eOac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778358822; c=relaxed/simple;
-	bh=Lscc/e8hk4rSAJ5u+A++9jIfii2y6AHTLuko/R6Ox0w=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=cS632qxXcBo6m08wAPOVCJxbI4VOf4xUSXpdlYwsNWv053lZV1ygLFPoeSTSHeRhvVWeO6nlM8FuZXASOnfycZmt+8AM7FNwhs/AXgbLjjmiW5ZlHWSMWRT9y/we52+JyPVSlJws+zkNyNCK0dLA4jDFigIlOEvLRznln/hcwrw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=V/JOr9Oa; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=ArOyGU3l; arc=none smtp.client-ip=202.12.124.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="V/JOr9Oa";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="ArOyGU3l"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfout.stl.internal (Postfix) with ESMTP id AF7881D00054;
-	Sat,  9 May 2026 16:33:38 -0400 (EDT)
-Received: from phl-imap-12 ([10.202.2.86])
-  by phl-compute-04.internal (MEProxy); Sat, 09 May 2026 16:33:39 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1778358818;
-	 x=1778445218; bh=xxb1o17JXihaenZdPmnSQRmPxQEVKPEXTDoHbn1RBpU=; b=
-	V/JOr9OaQTLYVW30NndG+L7VPvlDy+LYm0Kub7u5v+zTWlpcyJB3tWKB9mLgASNB
-	t7yASuCpNTdS4VT6bvfNidW2pfH7v6NRmqELVMlP6Nuy08kn7WQJFJ0AJKo697sS
-	9Lh/fFeGABnrwN4GMlkmGb0ZRgt4J/2La7FWi+DKMlXCwAXpFLTbQmzj+JtxCglM
-	KNWkT9ucLLOcOFVY2tN1W7t9UyGaWWHL7hwn8dAGeubDc4nw2kRMmRtQ5T3jFwLo
-	JGm6SYEDegUKLvawIF1wmQV7KLbq79GPT+Y3j1DCdrq/m3z9m7ObAYdrpxxHUtTi
-	jN9nULWQN3n2/SnhoTIjXA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1778358818; x=
-	1778445218; bh=xxb1o17JXihaenZdPmnSQRmPxQEVKPEXTDoHbn1RBpU=; b=A
-	rOyGU3lg3s7Oa9hIJdX1gEEuJHLGgkz8URgShUpQ++b9xrtOVJnVzwtJBajqaFYl
-	rTqXNpNkEZyl1w36VUGBhSVN64FqBVl5xC+BiIE/WelFAv/MLnxQnYmvLCtvllyz
-	wPeq7GSitO10m4ds2o/PgvqPz32QYw41DJxvxLi0/+ICIXfHRRcCYsJ8WAJD0iqP
-	XQqqwwWm0syh50ID+haOb+AKQyv37d9p3QLOI/2RMZfCVkjnXrtx/xRkFeYSSvAU
-	G4OdIlznTg5MnWE/9CVpC2snBT9oHNRPnhNF+XKP+TraS5MpucciCsDjpFfem5aY
-	6esuAmHFZ5zvZp2xexIKQ==
-X-ME-Sender: <xms:IZr_aSYyVLr1lEdt-Gm2P8Gxt5Q5WQ8LbqazMtbn97_SErFV5BuAGg>
-    <xme:IZr_aQNSfgXMzTn6gG142F1Pjx0xW6tmyv07wrpTz6h2NIShP56sB1JO9TRlZm9r8
-    RKSHoJn71PbqJnxRjohUEMx_fvSHshPaxbZnCaxOaYr_hsYKW0rVrg>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduudegvddtucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepofggfffhvfevkfgjfhfutgfgsehtjeertdertddtnecuhfhrohhmpedftehrnhgu
-    uceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrthhtvg
-    hrnhephfdthfdvtdefhedukeetgefggffhjeeggeetfefggfevudegudevledvkefhvdei
-    necuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprghrnh
-    gusegrrhhnuggsrdguvgdpnhgspghrtghpthhtohepkedpmhhouggvpehsmhhtphhouhht
-    pdhrtghpthhtoheplhhinhhugiesrghrmhhlihhnuhigrdhorhhgrdhukhdprhgtphhtth
-    hopegrrhgusgdoghhithesghhoohhglhgvrdgtohhmpdhrtghpthhtoheprghruggssehk
-    vghrnhgvlhdrohhrghdprhgtphhtthhopegvsghighhgvghrsheskhgvrhhnvghlrdhorh
-    hgpdhrtghpthhtoheplhhinhhugidqrghrmhdqkhgvrhhnvghlsehlihhsthhsrdhinhhf
-    rhgruggvrggurdhorhhgpdhrtghpthhtohephhgthheslhhsthdruggvpdhrtghpthhtoh
-    eplhhinhhugidqtghrhihpthhosehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthht
-    oheplhhinhhugidqrhgrihgusehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:IZr_adXCKy0GpMA5JKBwLMRuse8SnWXWqhxlWF3Gt6zxQO0aATds2Q>
-    <xmx:IZr_aSgIluwNYEA91ntGjHKaZylH6MZA_vG2GsolEDJDupm6GMWTWQ>
-    <xmx:IZr_adqYlT3jL70lFcrV5NNAN478l2if8Dou0Ca-rSho7kEpeuC5yQ>
-    <xmx:IZr_aQGnn6Yq0DOw06lTUl9FpRh8OlvfN7oAcCgolbErfkz3ymGGcw>
-    <xmx:Ipr_aSth5EOCKrcaIGlIw60wUuOES_f8MxJr1yk8m8JSA3zISh7AJplW>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id A6FF41060065; Sat,  9 May 2026 16:33:37 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	s=arc-20240116; t=1778447814; c=relaxed/simple;
+	bh=nWpDQmZNg8zKVk12QskQ7NNS05C4fI/JmZBKLdKyu8Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=oaHRA3zeWcHCZE7Gbzdy+muHT0DaAsitLjFy6Yx9zyeAELOr0apALd+Ujz4elAyNxG80ODccJ0OIYD1toeopbYccxGpsV5adeL6JQxurtkZX5Gcg9nnUsimVRfk8qGq6UED97UBlUEj/qDHDTJ6/gm5nhzqyB+2gN3JJsbUty3M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grimberg.me; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grimberg.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4890d945eb4so27467655e9.0
+        for <linux-raid@vger.kernel.org>; Sun, 10 May 2026 14:16:52 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778447811; x=1779052611;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=nWpDQmZNg8zKVk12QskQ7NNS05C4fI/JmZBKLdKyu8Q=;
+        b=PFYG3BWSJjD/gc4NkcYhCogK229jnk4PQQT1MptdMpn8FmHNj19ThCyof6E6Woycpv
+         FAN5yRZME1uUO6D6Q3Xu06RO8T6tTHEwP9VK1LY94/pZCz7P3ZwI0IXbCNHwDAW59AvH
+         msT/zKrH4PbRNJZP248CkwZt2LDD6RyePINA2mL2A0m0Lwjs5J0tLH6Lox77rqYAmDQL
+         at1VfphvnIDvorVESq8jAjzyaTIe9qjT7s21CLtbMfeQqnVPWMH0IcFqDIkdmh1KkbjK
+         R7HAOxdaQ0tJLlTqykibmkf9XaIJIFr8N2A9/KntcwEboj/kczhVjTqYgrVBs97RSFL/
+         6Q8Q==
+X-Gm-Message-State: AOJu0YzVQ0ezlslQw+qDOelk9S7DtaPWmNm27lQF6o1vzbTiYLT0L++C
+	HQJk5oYaaCoDQUV7okFYgyzM674Ws9xBh8nck5SjrQarBJNqACx0AVmIA2e66g==
+X-Gm-Gg: Acq92OHqUZS017VaouIYo5K3KhAVpXVlkhsHV81wUKVH5fR2f0ayDuK5Igz0/fSk6dH
+	zfG5DJ1znfLybeo4cwpRXSDFodXUaJoI3bweIhqGdD1qpSy0eqN0JvoG31dWjSY7sP+NvUT1Htf
+	ogodb/zU1EH/86MO/dYrxfeQz7q8NO0PWk8PwDraHMo84U8fg4+HdFEwa5gp6dCfsZcfIIYqSWu
+	edASgLucH/LuVNAed7Kq7RJbf7CbxWDysz347JkG1ZGWJZKknfIeXki0myuQwQ/hmNOLov+CNW4
+	HfDyPOXtV/fu/iog2xQewulanNd/fl51t7FJWFnAk/9kYGj6grwqEbL08j2ytNCxKdWrZCGMydU
+	LXpmuwo3fmvNwS6+pBfovnnB9uV0W1OY0FmIw06nxPq4q6SS8g93TJKz4ZN/2JnN6mDO0tD7KNr
+	2iIww+z3z1VMJ3b8rXurEfXohCB43KtA==
+X-Received: by 2002:a05:600c:444f:b0:489:32b:ac0b with SMTP id 5b1f17b1804b1-48e5dfd6a6amr242969865e9.6.1778447811464;
+        Sun, 10 May 2026 14:16:51 -0700 (PDT)
+Received: from [10.100.102.74] ([89.138.75.0])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48e6d895781sm87643525e9.0.2026.05.10.14.16.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 10 May 2026 14:16:51 -0700 (PDT)
+Message-ID: <adf158da-9488-4979-9fc5-73febeb965ba@grimberg.me>
+Date: Mon, 11 May 2026 00:16:49 +0300
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: AUyVbQhJqVtJ
-Date: Sat, 09 May 2026 22:33:17 +0200
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "Eric Biggers" <ebiggers@kernel.org>,
- "Ard Biesheuvel" <ardb+git@google.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
- linux-raid@vger.kernel.org, "Ard Biesheuvel" <ardb@kernel.org>,
- "Christoph Hellwig" <hch@lst.de>, "Russell King" <linux@armlinux.org.uk>
-Message-Id: <75f5e8ce-e61b-4cca-ba8b-8ddf03310527@app.fastmail.com>
-In-Reply-To: <20260509200503.GC11883@quark>
-References: <20260422171655.3437334-10-ardb+git@google.com>
- <20260422171655.3437334-18-ardb+git@google.com>
- <20260509200503.GC11883@quark>
-Subject: Re: [PATCH 8/8] ARM: Remove hacked-up asm/types.h header
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V3 1/3] block: clear BLK_FEAT_PCI_P2PDMA in
+ blk_stack_limits() for non-supporting devices
+To: Chaitanya Kulkarni <kch@nvidia.com>, song@kernel.org, yukuai@fnnas.com,
+ linan122@huawei.com, kbusch@kernel.org, axboe@kernel.dk, hch@lst.de
+Cc: linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+ kmodukuri@nvidia.com
+References: <20260416212633.72650-1-kch@nvidia.com>
+ <20260416212633.72650-2-kch@nvidia.com>
+Content-Language: en-US
+From: Sagi Grimberg <sagi@grimberg.me>
+In-Reply-To: <20260416212633.72650-2-kch@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On Sat, May 9, 2026, at 22:05, Eric Biggers wrote:
-> On Wed, Apr 22, 2026 at 07:17:04PM +0200, Ard Biesheuvel wrote:
->> From: Ard Biesheuvel <ardb@kernel.org>
->> 
->> ARM has a special version of asm/types.h which contains overrides for
->> certain #define's related to the C types used to back C99 types such as
->> uint32_t and uintptr_t.
->> 
->> This is only needed when pulling in system headers such as stdint.h
->> during the build, and this only happens when using NEON intrinsics,
->> for which there is now a dedicated header file.
->> 
->> So drop this header entirely, and revert to the asm-generic one.
->> 
->> Signed-off-by: Ard Biesheuvel <ardb@kernel.org>
-
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
-
-> This is actually a UAPI header.  I guess it got put there accidentally
-> and isn't actually needed there?
-
-Yes, commit ed79c9d34f4f ("ARM: put types.h in uapi") has some
-explanations.
-
-I can't think of any case where this would actually be used
-from userland, and lots of ways it could cause trouble in
-theory, even if it never has in practice.
-
-      Arnd
+Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
