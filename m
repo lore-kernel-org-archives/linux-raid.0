@@ -1,207 +1,268 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-26.ptr.blmpb.com (va-2-26.ptr.blmpb.com [209.127.231.26])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E327F3A3E84;
-	Mon, 18 May 2026 05:23:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADC3240DFC2
+	for <linux-raid@vger.kernel.org>; Mon, 18 May 2026 12:35:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.26
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779081795; cv=none; b=ibJwRLH0CXl9aEnJdH02eHH6AJOjYUZgWWpZv/CcyjKI09AXkD0oqBsaPdIEz7q14bqCLG/xMcQs5gl8c5Ed5A3LdAQMQKwH9aV47e2wP0G9Zjj7PsDUIqZIbjGsblqQmYKxTRnkkf+oF71U64YURlEJSwhxjV9lo2brY/PedlE=
+	t=1779107718; cv=none; b=OSX88WvPBxR4Irk2pZZOhPi3j9KQmDwQsR+epq+mpwnRRFhHo6SYYCMztN4eJ71EylYeqzRwl3AievQWHi1sdOxTPyfrDRhhY/ocbTGWoj3r15TDwU+UfcHXSvxjpTL00A3cNpGhpKBEXj2VoiedSUoYgm/nYQ2uQ0V5hnc0NWc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779081795; c=relaxed/simple;
-	bh=LXimcR5gIrhc7Ja9lMnRXbnWWKmMZAfemq2OZySt2vs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pPJfSG0UOCX6UVpBen/jVveM/+mjExbnWhOfwZ0X/8cSKoSDwaDMcwz4TA/nfsrhu8ujEtQG7tJKpUelhgXyq33XW7uXGIfQqKnrhqqZrhxwH79KJys+ezu9p2vVZvhYGynlujx5WKRSajnKLQU+78JKVWO5IQCXDQyLJkaG0Nw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=cN+bAsg8; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1779107718; c=relaxed/simple;
+	bh=lynFoJ+/ZLbDXGB4eiwgXl7enLvKwtO1pbn24ZFIUqA=;
+	h=Message-Id:Content-Type:To:Cc:Mime-Version:From:Subject:Date; b=epOOxURMcq9HgnoIVRPqzEwdxCJgJUOGnhBXpX/fjqcL57ijvqdoO0fuJHTFlHKe0yFQhwHO0Q9PQAVnKg31LYUJOgeA3VhWkaDXhaCS8XSuZ2scb88CbrkGvZi92U6fHUA7Opukj8tOXMewNjhOVTTooKYx5nu/a5ppuBtoaxo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=RPGZzr7s; arc=none smtp.client-ip=209.127.231.26
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cN+bAsg8"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="RPGZzr7s"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=TUDBo9mJANsgA73DQyJ8kF+exXqX/GsyGWAfqYV6YAM=; b=cN+bAsg8yfx0NrYdBtuwk+NdJw
-	5dyD4ypIeZQ5a1P94iQ7KZrQJB7LYNNJT8rzKpM9SazFc+gkcEGcV9gE+t3Jj1RNwchZpXw5nqE8a
-	cJlBsDsZadvIOIWgThLZtGMb6DDChULMTDc2c54FVfgUyCL48ZHUB4NbQAxAlcYevr1GOM9HzUN2G
-	njymcwbqFde7bppHF0vfeccleKLEh0O9qCBbTG+Y6+jRwWykMxDjWz6oAf8wabBERWknTDlLCT0xA
-	MmDVY9Ng/W9laPrY/fXpjScQ8u/6hzQbtpL6dHM0sYfnKzWjLQ5X9GCTh1eLkEQfXr1acT+WgFKE5
-	H4ew+Qlg==;
-Received: from [2001:4bb8:2d1:6fdb:d67d:128c:34ba:85b8] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wOqRD-0000000EIZD-1P94;
-	Mon, 18 May 2026 05:22:47 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	Ard Biesheuvel <ardb@kernel.org>,
-	Huacai Chen <chenhuacai@kernel.org>,
-	WANG Xuerui <kernel@xen0n.name>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
-	Paul Walmsley <pjw@kernel.org>,
-	Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>,
-	Alexandre Ghiti <alex@ghiti.fr>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Chris Mason <clm@fb.com>,
-	David Sterba <dsterba@suse.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fnnas.com>,
-	Li Nan <linan122@huawei.com>,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	loongarch@lists.linux.dev,
-	linuxppc-dev@lists.ozlabs.org,
-	linux-riscv@lists.infradead.org,
-	linux-s390@vger.kernel.org,
-	linux-crypto@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	linux-raid@vger.kernel.org
-Subject: [PATCH 18/18] raid6_kunit: randomize buffer alignment
-Date: Mon, 18 May 2026 07:18:01 +0200
-Message-ID: <20260518051804.462141-19-hch@lst.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260518051804.462141-1-hch@lst.de>
-References: <20260518051804.462141-1-hch@lst.de>
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1779107703;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=TB5CVr9Q+j8gBFtee1Atbjc80cuhGP/LRPH7Zu0w5bw=;
+ b=RPGZzr7sQxxm/EpVWJfQm8Ma3AemPbuIGdhKVCv4DnguUi7PC9q7Zky7ohyeDXXucBoDnr
+ wM7acVkwsxdmSEzTz4SuOkH8yvfC2LmIeDUXJOziD0cX/LwykWletwK4M2r8J8eQNfD9cO
+ 7kgWTCOuWlX0BchHAgp03HCJ/QHeilSQK6OA0TUlxqDMvVbUu4u77U4RH5ULd/wIl3RP/C
+ hjUJ1HuanKytfjJoavWoALxYhOohXhn+tHAAVRADlJuWK2fQFvu26KGI64N73yAhmDeIA8
+ ZnmuS8f4zmWtPqJIxjAJ0+kU4k/gjgvQVyeUvqx//M92E9CGzUiy7zqNTP7jCg==
+Message-Id: <20260518123449.534287-1-chencheng@fnnas.com>
+X-Original-From: chencheng@fnnas.com
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+To: "Yu Kuai" <yukuai@fnnas.com>, <linux-raid@vger.kernel.org>
+Cc: "Chen Cheng" <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Mime-Version: 1.0
+Received: from localhost.localdomain ([113.111.0.25]) by smtp.feishu.cn with ESMTPS; Mon, 18 May 2026 20:35:00 +0800
+X-Mailer: git-send-email 2.54.0
+From: "Chen Cheng" <chencheng@fnnas.com>
+Subject: [PATCH] md/raid5: cleanup reshape stripes when too many devices fail
+Date: Mon, 18 May 2026 20:34:49 +0800
+X-Lms-Return-Path: <lba+26a0b0775+4dc8ed+vger.kernel.org+chencheng@fnnas.com>
 
-Add code to add random alignment to the buffers to test the case where
-they are not page aligned, and to move the buffers to the end of the
-allocation so that they are next to the vmalloc guard page.
+From: Chen Cheng <chencheng@fnnas.com>
 
-This does not include the recovery buffers as the recovery requires
-page alignment.
+When a raid5/6 reshape is in progress and the array loses more than
+max_degraded devices, raid5_error() sets MD_BROKEN and MD_RECOVERY_INTR,
+but the reshape stripes reshape_request() handed out are never released.
+The "s.failed > conf->max_degraded" branch of handle_stripe() calls
+handle_failed_stripe() / handle_failed_sync() for user IO and resync,
+but has no equivalent for the expand case, so three kinds of stripes
+leak conf->reshape_stripes and mddev->recovery_active:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Ard Biesheuvel <ardb@kernel.org>
-Tested-by: Ard Biesheuvel <ardb@kernel.org> # kunit only on arm64
+  1. Destination stripes with skipped_disk == 0: STRIPE_EXPANDING +
+     STRIPE_EXPAND_READY set, but on a broken array the normal
+     completion at "s.expanded && !reconstruct_state && s.locked == 0"
+     may never fire.
+
+  2. Destination stripes with skipped_disk == 1: only STRIPE_EXPANDING
+     set, no STRIPE_HANDLE.  They sit idle in the cache waiting for
+     source data that can no longer be read; handle_stripe() is never
+     called on them directly.
+
+  3. Source stripes (STRIPE_EXPAND_SOURCE) hit the failure branch but
+     the bit is never cleared and the destinations they feed are never
+     released.
+
+md_do_sync() exits its main loop on MD_RECOVERY_INTR but then blocks
+forever at
+
+    wait_event(mddev->recovery_wait,
+               !atomic_read(&mddev->recovery_active));
+
+A concurrent "echo frozen > sync_action" then blocks in
+stop_sync_thread() waiting for MD_RECOVERY_RUNNING to clear, and the
+array becomes unstoppable without a reboot.
+
+Reproducer:
+
+    DEVS=(/dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf)
+    for i in 0 1 2 3 4; do
+        s=$(blockdev --getsz ${DEVS[$i]})
+        dmsetup create dust$i --table "0 $s dust ${DEVS[$i]} 0 4096"
+        dmsetup message dust$i 0 quiet
+    done
+    mdadm -C /dev/md0 -e 1.2 -l 5 -n 4 -c 64 --assume-clean \
+        /dev/mapper/dust{0..3}
+    for b in $(seq 0 8191); do
+        dmsetup message dust0 0 addbadblock $b
+        dmsetup message dust1 0 addbadblock $b
+    done
+    mdadm --manage /dev/md0 --add /dev/mapper/dust4
+    mdadm --grow /dev/md0 -n 5 --backup-file=/tmp/grow.backup &
+    while [[ $(cat /sys/block/md0/md/sync_action) != reshape ]]; do
+        sleep 0.1
+    done
+    dmsetup message dust0 0 enable
+    dmsetup message dust1 0 enable
+    sleep 5
+    echo frozen > /sys/block/md0/md/sync_action     # hangs forever
+
+Before the fix, the two tasks deadlock against each other:
+
+    task:md0_reshape  state:D
+      schedule
+      md_do_sync.cold+0x818/0xc25       # wait_event(recovery_wait,
+      md_thread                         #            !recovery_active)
+      kthread
+
+    task:bash         state:D
+      schedule
+      stop_sync_thread+0x1a3/0x350      # wait_event(resync_wait,
+      action_store                      #            !MD_RECOVERY_RUNNING)
+      md_attr_store
+      kernfs_fop_write_iter
+      vfs_write
+      ksys_write
+
+After the fix handle_stripe() releases the leaked reshape stripes via
+the new handle_failed_reshape(), recovery_active drains to zero,
+md_do_sync() prints
+
+    md/raid:md0: Cannot continue operation (2/5 failed).
+    md: md0: reshape interrupted.
+
+clears MD_RECOVERY_RUNNING and returns; the "echo frozen" write
+returns in <1s; "mdadm --stop /dev/md0" completes normally and no
+task is left in D state.
+
+Fix it by adding handle_failed_reshape(), called from handle_stripe()
+when the failure branch fires on a reshape stripe.  If sh is a
+destination, the helper drops STRIPE_EXPANDING / STRIPE_EXPAND_READY,
+decrements conf->reshape_stripes, wakes wait_for_reshape and calls
+md_done_sync() to return the sectors reshape_request() accounted on
+recovery_active.  If sh is a source, the helper drops
+STRIPE_EXPAND_SOURCE and walks sh's non-parity data disks using the
+same raid5_compute_blocknr() / raid5_compute_sector() mapping
+handle_stripe_expansion() uses to forward data, looks up each matching
+destination with R5_GAS_NOBLOCK | R5_GAS_NOQUIESCE and applies the
+destination cleanup to it.
+
+Signed-off-by: Chen Cheng <chencheng@fnnas.com>
 ---
- lib/raid/raid6/tests/raid6_kunit.c | 41 +++++++++++++++++++++++++-----
- 1 file changed, 35 insertions(+), 6 deletions(-)
+ drivers/md/raid5.c | 91 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 91 insertions(+)
 
-diff --git a/lib/raid/raid6/tests/raid6_kunit.c b/lib/raid/raid6/tests/raid6_kunit.c
-index 71adf8932e93..9f3e671a1224 100644
---- a/lib/raid/raid6/tests/raid6_kunit.c
-+++ b/lib/raid/raid6/tests/raid6_kunit.c
-@@ -21,6 +21,7 @@ MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
- 
- static struct rnd_state rng;
- static void *test_buffers[RAID6_KUNIT_MAX_BUFFERS];
-+static void *aligned_buffers[RAID6_KUNIT_MAX_BUFFERS];
- static void *test_recov_buffers[RAID6_KUNIT_MAX_FAILURES];
- static size_t test_buflen;
- 
-@@ -50,6 +51,14 @@ static unsigned int random_nr_buffers(void)
- 			RAID6_MIN_DISKS;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 0d76e82f4506..f7d159b46a01 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4594,10 +4594,96 @@ static void handle_stripe_expansion(struct r5conf *conf, struct stripe_head *sh)
+ 		}
+ 	/* done submitting copies, wait for them to complete */
+ 	async_tx_quiesce(&tx);
  }
  
-+/* Generate a random alignment that is a multiple of 64. */
-+static unsigned int random_alignment(unsigned int max_alignment)
++/*
++ * handle_failed_reshape - drop reshape state when too many devices have failed
++ *
++ * Called from handle_stripe() in the "s.failed > conf->max_degraded" branch
++ * when sh is participating in a reshape. raid5_error() has set MD_BROKEN
++ * and MD_RECOVERY_INTR); The reshape stripes that reshape_request() handed out
++ * must be released, otherwise they leak conf->reshape_stripes and
++ * mddev->recovery_active, and md_do_sync() hangs forever at
++ * wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active)).
++ *
++ * Three kinds of stripes can reach this path:
++ *
++ *  1. Destination stripes with skipped_disk = 0 in reshape_request()
++ *     - the new stripe maps entirely past the old array end, so its
++ *     blocks are zero-filled in place without any source read.
++ *     STRIPE_EXPANDING, STRIPE_EXPAND_READY and STRIPE_HANDLE are all set, 
++ *     handle_stripe() sees them with s.expanded == 1.
++ *
++ *  2. Destination stripes with skipped_disk = 1 - the new stripe
++ *     overlaps existing data and still needs source blocks copied in by
++ *     handle_stripe_expansion().  Only STRIPE_EXPANDING is set, *not*
++ *     STRIPE_HANDLE, so they sit idle in the stripe cache until a successful
++ *     source expand re-handles them.  In the failure path no one ever does,
++ *     so handle_stripe() will never see them on its own; they are cleaned up
++ *     from the source side in step (b) below.
++ *
++ *  3. Source stripes (STRIPE_EXPAND_SOURCE) - reach handle_stripe() via the
++ *     read-error path once the source members start returning EIO and
++ *     raid5_error() marks them Faulty.
++ *
++ * Handling:
++ *
++ *  (a) If STRIPE_EXPANDING is set on sh, clear it together with
++ *      STRIPE_EXPAND_READY, atomic_dec conf->reshape_stripes, wake
++ *      wait_for_reshape and md_done_sync(RAID5_STRIPE_SECTORS) to return
++ *      the sectors reshape_request() accounted on recovery_active.
++ *
++ *  (b) If STRIPE_EXPAND_SOURCE is set on sh, clear it and walk sh's
++ *      non-parity disks the same way handle_stripe_expansion() does
++ *      (raid5_compute_blocknr previous=1 -> raid5_compute_sector previous=0)
++ *      to find each destination, look it up with
++ *      R5_GAS_NOBLOCK | R5_GAS_NOQUIESCE and apply step (a) to it.
++ *      A NULL lookup means the destination never contributed to
++ *      reshape_stripes - nothing to release.
++ */
++static void handle_failed_reshape(struct r5conf *conf, struct stripe_head *sh)
 +{
-+	if (max_alignment == 0)
-+		return 0;
-+	return (rand32() % (max_alignment + 1)) & ~63;
-+}
-+
- static void makedata(int start, int stop)
- {
- 	int i;
-@@ -80,7 +89,7 @@ static void test_recover_one(struct kunit *test, unsigned int nr_buffers,
- 	for (i = 0; i < RAID6_KUNIT_MAX_FAILURES; i++)
- 		memset(test_recov_buffers[i], 0xf0, test_buflen);
- 
--	memcpy(dataptrs, test_buffers, sizeof(dataptrs));
-+	memcpy(dataptrs, aligned_buffers, sizeof(dataptrs));
- 	dataptrs[faila] = test_recov_buffers[0];
- 	dataptrs[failb] = test_recov_buffers[1];
- 
-@@ -102,13 +111,13 @@ static void test_recover_one(struct kunit *test, unsigned int nr_buffers,
- 		ta->recov->data2(nr_buffers, len, faila, failb, dataptrs);
- 	}
- 
--	KUNIT_EXPECT_MEMEQ_MSG(test, test_buffers[faila], test_recov_buffers[0],
-+	KUNIT_EXPECT_MEMEQ_MSG(test, aligned_buffers[faila], dataptrs[faila],
- 			len,
- 			"faila miscompared: %3d[%c] buffers %u len %u (failb=%3d[%c])\n",
- 			faila, member_type(nr_buffers, faila),
- 			nr_buffers, len,
- 			failb, member_type(nr_buffers, failb));
--	KUNIT_EXPECT_MEMEQ_MSG(test, test_buffers[failb], test_recov_buffers[1],
-+	KUNIT_EXPECT_MEMEQ_MSG(test, aligned_buffers[failb], dataptrs[failb],
- 			len,
- 			"failb miscompared: %3d[%c] buffers %u len %u (faila=%3d[%c])\n",
- 			failb, member_type(nr_buffers, failb),
-@@ -152,9 +161,9 @@ static void test_rmw_one(struct kunit *test, unsigned int nr_buffers,
- {
- 	const struct test_args *ta = test->param_value;
- 
--	ta->gen->xor_syndrome(nr_buffers, p1, p2, len, test_buffers);
-+	ta->gen->xor_syndrome(nr_buffers, p1, p2, len, aligned_buffers);
- 	makedata(p1, p2);
--	ta->gen->xor_syndrome(nr_buffers, p1, p2, len, test_buffers);
-+	ta->gen->xor_syndrome(nr_buffers, p1, p2, len, aligned_buffers);
- 	test_recover(test, nr_buffers, len);
- }
- 
-@@ -178,13 +187,33 @@ static void raid6_test_one(struct kunit *test)
- 	const struct test_args *ta = test->param_value;
- 	unsigned int nr_buffers = random_nr_buffers();
- 	unsigned int len = random_length(RAID6_KUNIT_MAX_BYTES);
-+	unsigned int max_alignment;
 +	int i;
- 
- 	/* Nuke syndromes */
- 	memset(test_buffers[nr_buffers - 2], 0xee, test_buflen);
- 	memset(test_buffers[nr_buffers - 1], 0xee, test_buflen);
- 
-+	/*
-+	 * If we're not using the entire buffer size, inject randomize alignment
-+	 * into the buffer.
-+	 */
-+	max_alignment = RAID6_KUNIT_MAX_BYTES - len;
-+	if (rand32() % 2 == 0) {
-+		/* Use random alignments mod 64 */
-+		for (i = 0; i < nr_buffers; i++)
-+			aligned_buffers[i] = test_buffers[i] +
-+				random_alignment(max_alignment);
-+	} else {
-+		/* Go up to the guard page, to catch buffer overreads */
-+		unsigned int align = test_buflen - len;
 +
-+		for (i = 0; i < nr_buffers; i++)
-+			aligned_buffers[i] = test_buffers[i] + align;
++	if (test_and_clear_bit(STRIPE_EXPANDING, &sh->state)) {
++		atomic_dec(&conf->reshape_stripes);
++		wake_up(&conf->wait_for_reshape);
++		md_done_sync(conf->mddev, RAID5_STRIPE_SECTORS(conf));
 +	}
 +
- 	/* Generate assumed good syndrome */
--	ta->gen->gen_syndrome(nr_buffers, len, test_buffers);
-+	ta->gen->gen_syndrome(nr_buffers, len, aligned_buffers);
++	clear_bit(STRIPE_EXPAND_READY, &sh->state);
++
++	if (test_and_clear_bit(STRIPE_EXPAND_SOURCE, &sh->state)) {
++		for (i = 0; i < sh->disks; i++) {
++			int dd_idx;
++			struct stripe_head *sh2;
++			sector_t bn, sec;
++
++			if (i == sh->pd_idx)
++				continue;
++			if (conf->level == 6 && i == sh->qd_idx)
++				continue;
++
++			bn = raid5_compute_blocknr(sh, i, 1);
++			sec = raid5_compute_sector(conf, bn, 0, &dd_idx, NULL);
++			sh2 = raid5_get_active_stripe(conf, NULL, sec,
++					R5_GAS_NOBLOCK | R5_GAS_NOQUIESCE);
++			if (!sh2)
++				continue;
++			if (test_and_clear_bit(STRIPE_EXPANDING, &sh2->state)) {
++				atomic_dec(&conf->reshape_stripes);
++				wake_up(&conf->wait_for_reshape);
++				md_done_sync(conf->mddev,
++					     RAID5_STRIPE_SECTORS(conf));
++			}
++			clear_bit(STRIPE_EXPAND_READY, &sh2->state);
++			raid5_release_stripe(sh2);
++		}
++	}
++}
++
+ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
+ {
+ 	struct r5conf *conf = sh->raid_conf;
+ 	int disks = sh->disks;
+ 	struct r5dev *dev;
+@@ -5001,10 +5087,15 @@ static void handle_stripe(struct stripe_head *sh)
+ 		break_stripe_batch_list(sh, 0);
+ 		if (s.to_read+s.to_write+s.written)
+ 			handle_failed_stripe(conf, sh, &s, disks);
+ 		if (s.syncing + s.replacing)
+ 			handle_failed_sync(conf, sh, &s);
++		if (s.expanding || s.expanded) {
++			handle_failed_reshape(conf, sh);
++			s.expanding = 0;
++			s.expanded = 0;
++		}
+ 	}
  
- 	test_recover(test, nr_buffers, len);
- 
+ 	/* Now we check to see if any write operations have recently
+ 	 * completed
+ 	 */
 -- 
-2.53.0
-
+2.54.0
