@@ -1,164 +1,158 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E7C33DC4B3
-	for <linux-raid@vger.kernel.org>; Tue, 19 May 2026 07:46:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3F43DFC67
+	for <linux-raid@vger.kernel.org>; Tue, 19 May 2026 08:12:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779176791; cv=none; b=BVBvdubh4ogHHOaY+rjq6BbgDQ+qj83goosu7q2CSjmrXKHs1ERehv66QCh8ZoqJwvkRx6LANpnKsS+r1OOQIGTlTdecyXLdR6c5qCQp798t3Hmy2tJgpsOBQwke0l4Y0C9FCqxGPPE/0ooXlvDYQtG/cGs4sUSbr48WNlFzsmg=
+	t=1779178328; cv=none; b=nP3aKFxP/fegRSvSEIBFLj1Moxzk+41VFSuO01oayIvZeboI5WIy6daKVRoVj3Aoe3+PpOOJR0woouvnKitxQQOSuVnexUdFbtAMxQ1aUm+rxmEFhlw4Mxg/r7xLQDio6J0V2FVj9oOpRumHPFkGECPNfhQvpTqcF+pZNkAzGus=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779176791; c=relaxed/simple;
-	bh=/kki4pUMbbjg/smlR2G3j9ZQHJGTCaNsd9IqOcVwmsE=;
+	s=arc-20240116; t=1779178328; c=relaxed/simple;
+	bh=VcNfN1Pnu4900jOAuUKzawF2h+SQNsk/K42BGQrmElU=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FuCKqaQt0FJJJlkrdbLHZ52D5Tld4a248juYndFqLRqFLes8j8zaPIYKnyjD6p9wJ7VgRrLZhw5BbLk+zlUxVlmsBCqJFZ24rph2z/pIBqdPhilZafj/Yb2I7Tdxl7pGMKOY3F3PYdf7MUFU3HKaUrQMjcyrRFHgpQJQijFSCBo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jwlvt3G+; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=uNefphYG5M8e5NnCpSAseYlwhLVM0J8VZ4xdijJA1G+dOPR8DqFepBbuflftMAPvyJLLp+ijolDJrwGkBxsYAf7/KD4xXkmWrwayg0RU9w3Tl99aZQc/bsq/IZ+1DCrxVx00kIatW1buDgieI8axhlbdjsj5wcU9r1skKOxkVP4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NB7NAYCF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jwlvt3G+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E508C2BCF5
-	for <linux-raid@vger.kernel.org>; Tue, 19 May 2026 07:46:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NB7NAYCF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93B7BC2BCC6
+	for <linux-raid@vger.kernel.org>; Tue, 19 May 2026 08:12:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779176791;
-	bh=/kki4pUMbbjg/smlR2G3j9ZQHJGTCaNsd9IqOcVwmsE=;
+	s=k20201202; t=1779178327;
+	bh=VcNfN1Pnu4900jOAuUKzawF2h+SQNsk/K42BGQrmElU=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=jwlvt3G+XI+GQQhhQ7pN7fw9XH7pAdlJwvYGxCGfeOczs/co090c2msTYm1EUzPg5
-	 i3xDqQ8LjLfAJYa6XbTz1y1W01msIdIz+2Rcl5VjVAzcnqJZwwNNEg4gH1Bjs6aEyO
-	 1Kc/4NibKRECE35B4Yh5BovXAts4MA8h7Dkkq2FWQQh1tt+CxOb207lPdxPXG2O8qV
-	 5CGKZV7Pg0CQbgZBOAUGckJmy5XpFEeng8/QaKSBRc+v5ro5w878+oBqSN/CgExkMH
-	 fiMDhXhjYyHHNQ/6Vfmlk6XHoPsscqWdoyVF/yOTr4H3DhLhfW9Z/LwJII32xscxt2
-	 j3gg6RRCkv1eQ==
-Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-50e63771d91so35479831cf.0
-        for <linux-raid@vger.kernel.org>; Tue, 19 May 2026 00:46:31 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ+WcEx7cf2UN+2qMMnBkZQJToc95H+jlmi3woNsjZkOaAO3DSFGonk9waZjIOCMnmQq7Qn7qvi8Pno0@vger.kernel.org
-X-Gm-Message-State: AOJu0YyOCSGj77aaAAKnBezngfP6Vif5k1z27P5gc4bnwz65VEXI9dGt
-	yov9eYhHEfJrwyejiNgPuxG6BcSbwP3ixTUwa+lDSrNaMX5udG6VXhCTJIe8EBo/fJ0jkiJPE4T
-	7bTX/tRosiecGZSyHFLLLvzxPRVewLg==
-X-Received: by 2002:ac8:5f14:0:b0:50d:8b5a:1317 with SMTP id
- d75a77b69052e-5165a027da1mr253883421cf.13.1779176790711; Tue, 19 May 2026
- 00:46:30 -0700 (PDT)
+	b=NB7NAYCFHf6ruI62op+e7icyp1metQZTDLzcP6Nbj0i9lB6hWfNtNHFd6YieGoksk
+	 nLgAVmMIjRIaWF8YMvm18mLLMvnMKkCp67xGPdeQrVHmMwhDXlDcc70mfc2p118cUo
+	 B2j6Hm7Va3l3brOBknRDtMAM6MSj4tManI2U6ADBXm5KDnPA5jSWHraD+54zp9Gme/
+	 QDk19Cu2BLJlpBX+3nd1WkfSY6CdD2Efl9DVbdEjmT8efBwCod643XgdU6cwr9wBvF
+	 AWiFk7jtwLONyJvq1iecMmvwdL+4FcpUJDiMASsxTv3EsTDrnKPXZz8+VZ5vwvNCEh
+	 rANac1Olxl+fg==
+Received: by mail-qk1-f180.google.com with SMTP id af79cd13be357-90d13fa59e8so342345985a.2
+        for <linux-raid@vger.kernel.org>; Tue, 19 May 2026 01:12:07 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ9PWx1+wg5GUFfOWT7tyjYDS34rwbXvPgVDKgknI3SFN7yG5zDr/DLFhRm/Z8qQqNRiLOKNzMK6Fp/P@vger.kernel.org
+X-Gm-Message-State: AOJu0YwV8Zs7eNUuCGXfW580OZulOw/x1LCJ+hYXvJNB4cQsA6I/VvK+
+	haXBQYur4vyl5ZEgHf4gUYDEM4pdiVehzfaVq6fSDdzZh/Wfu44ainB3jhH1OIzAAl2bs2BLWHu
+	gLiccFvUubJ4CH2TosCoRgnjkwDJXSw==
+X-Received: by 2002:a05:622a:480b:b0:50e:df54:c36d with SMTP id
+ d75a77b69052e-5165a057fd4mr268574231cf.18.1779178326790; Tue, 19 May 2026
+ 01:12:06 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260501114652.590037-1-abd.masalkhi@gmail.com> <20260501114652.590037-2-abd.masalkhi@gmail.com>
-In-Reply-To: <20260501114652.590037-2-abd.masalkhi@gmail.com>
+References: <20260501114652.590037-1-abd.masalkhi@gmail.com> <20260501114652.590037-3-abd.masalkhi@gmail.com>
+In-Reply-To: <20260501114652.590037-3-abd.masalkhi@gmail.com>
 From: Xiao Ni <xiao@kernel.org>
-Date: Tue, 19 May 2026 15:46:17 +0800
-X-Gmail-Original-Message-ID: <CAF-RUYXNAYhtQsz0e6-zRC4a02+aXn6_mr4+6SSeBrTJ-KZxbA@mail.gmail.com>
-X-Gm-Features: AVHnY4KM_3LoUon71YXOXzRnSjkx23F2dSU9JjiJGM-jSehd72UH9VM-4ESGFbM
-Message-ID: <CAF-RUYXNAYhtQsz0e6-zRC4a02+aXn6_mr4+6SSeBrTJ-KZxbA@mail.gmail.com>
-Subject: Re: [PATCH v2 1/3] md/raid1,raid10: fix deadlock in read error
- recovery path
+Date: Tue, 19 May 2026 16:11:54 +0800
+X-Gmail-Original-Message-ID: <CAF-RUYUsppiHu0v2gZCRYLoHRCPqJbtiass07EJJUmaLD6oz1Q@mail.gmail.com>
+X-Gm-Features: AVHnY4IJa5UNF1IGQMJdIz8Hf719LHivN_VXlqR5jvulTZhEU2JRAAvyFjq96Xw
+Message-ID: <CAF-RUYUsppiHu0v2gZCRYLoHRCPqJbtiass07EJJUmaLD6oz1Q@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] md/raid1,raid10: fix error-path detection with md_cloned_bio()
 To: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 Cc: song@kernel.org, yukuai@fnnas.com, xni@redhat.com, neilb@suse.com, 
 	shli@fb.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, May 1, 2026 at 7:47=E2=80=AFPM Abd-Alrhman Masalkhi
+On Fri, May 1, 2026 at 7:48=E2=80=AFPM Abd-Alrhman Masalkhi
 <abd.masalkhi@gmail.com> wrote:
 >
-> raid1d and raid10d may resubmit a split md cloned bio while handling
-> a read error. In this case, resubmitting the bio can lead to a deadlock
-> if the array is suspended before md_handle_request() acquires an
-> active_io reference via percpu_ref_tryget_live().
+> Detect the error path using md_cloned_bio() instead of relying
+> on r1_bio in raid1 or r10_bio->read_slot in raid10, which may be
+> NULL or -1 after splitting and resubmitting a failed bio.
 >
-> Since the cloned bio already holds an active_io reference,
-> trying to acquire another reference via percpu_ref_tryget_live()
-> can lead to a deadlock while the array is suspended.
+> As a result, the error path may not be recognized and memory
+> allocations can incorrectly use GFP_NOIO instead of
+> (GFP_NOIO | __GFP_HIGH), which can lead to a deadlock under
+> memory pressure.
 >
-> Fix this by using percpu_ref_get() for md cloned bios.
->
-> Fixes: bb2a9acefaf9 ("md/raid1: switch to use md_account_bio() for io acc=
-ounting")
-> Fixes: 820455238366 ("md/raid10: switch to use md_account_bio() for io ac=
-counting")
+> Fixes: 689389a06ce7 ("md/raid1: simplify handle_read_error().")
+> Fixes: 545250f24809 ("md/raid10: simplify handle_read_error()")
 > Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 > ---
+> This patch depends on patch 1.
+>
 > Changes in v2:
->  - Use md_cloned_bio() consistently to detect cloned bios.
->  - Recognize that raid10 has the same issue and fix it in this series
->  - Allow splitting bios.
->  - Handle md cloned bios explicitly in md_handle_request()
->  - Link v1: https://lore.kernel.org/linux-raid/20260427103446.300378-1-ab=
-d.masalkhi@gmail.com/
->
-> Please let me know if I should add a Suggested-by tag for Yu Kuai,
-> as the solution approach was suggested during review.
->
-> Link to Yu Kuai' email: https://lore.kernel.org/linux-raid/m2lde74dtw.fsf=
-@gmail.com/T/#m714020a38b60fc5f84b9a24f0c46acbe5d7342d6
->
-> Thanks
-> Abd-alrhman
+>  - New patch.
 > ---
->  drivers/md/md.c | 25 ++++++++++++++++---------
->  drivers/md/md.h |  5 +++++
->  2 files changed, 21 insertions(+), 9 deletions(-)
+>  drivers/md/raid1.c  | 13 ++++++++++---
+>  drivers/md/raid10.c | 20 ++++++++++++++------
+>  2 files changed, 24 insertions(+), 9 deletions(-)
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index e926aef9ec43..96db1e7850e9 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -396,17 +396,24 @@ static bool is_suspended(struct mddev *mddev, struc=
-t bio *bio)
->  bool md_handle_request(struct mddev *mddev, struct bio *bio)
->  {
->  check_suspended:
-> -       if (is_suspended(mddev, bio)) {
-> -               /* Bail out if REQ_NOWAIT is set for the bio */
-> -               if (bio->bi_opf & REQ_NOWAIT) {
-> -                       bio_wouldblock_error(bio);
-> -                       return true;
-> +       if (unlikely(md_cloned_bio(mddev, bio))) {
-> +               /*
-> +                * This bio is an MD cloned bio and already holds an
-> +                * active_io reference, so percpu_ref_get() is safe here.
-> +                */
-> +               percpu_ref_get(&mddev->active_io);
-> +       } else {
-> +               if (is_suspended(mddev, bio)) {
-> +                       /* Bail out if REQ_NOWAIT is set for the bio */
-> +                       if (bio->bi_opf & REQ_NOWAIT) {
-> +                               bio_wouldblock_error(bio);
-> +                               return true;
-> +                       }
-> +                       wait_event(mddev->sb_wait, !is_suspended(mddev, b=
-io));
->                 }
-> -               wait_event(mddev->sb_wait, !is_suspended(mddev, bio));
-> +               if (!percpu_ref_tryget_live(&mddev->active_io))
-> +                       goto check_suspended;
->         }
-> -       if (!percpu_ref_tryget_live(&mddev->active_io))
-> -               goto check_suspended;
-> -
->         if (!mddev->pers->make_request(mddev, bio)) {
->                 percpu_ref_put(&mddev->active_io);
->                 if (mddev_is_dm(mddev) && mddev->pers->prepare_suspend)
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 3bfbee595156..e44074d30cf9 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -1038,6 +1038,11 @@ void mddev_update_io_opt(struct mddev *mddev, unsi=
-gned int nr_stripes);
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index cc9914bd15c1..c52ecd38c163 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1321,11 +1321,18 @@ static void raid1_read_request(struct mddev *mdde=
+v, struct bio *bio,
+>         bool r1bio_existed =3D !!r1_bio;
 >
->  extern const struct block_device_operations md_fops;
->
-> +static inline bool md_cloned_bio(struct mddev *mddev, struct bio *bio)
-> +{
-> +       return bio->bi_pool =3D=3D &mddev->io_clone_set;
-> +}
+>         /*
+> -        * If r1_bio is set, we are blocking the raid1d thread
+> -        * so there is a tiny risk of deadlock.  So ask for
+> +        * An md cloned bio indicates we are in the error path.
+> +        * This is more reliable than checking r1_bio, which might
+> +        * be NULL even in the error path if a failed bio was split.
+> +        */
+> +       bool err_path =3D md_cloned_bio(mddev, bio);
 > +
->  /*
->   * MD devices can be used undeneath by DM, in which case ->gendisk is NU=
-LL.
->   */
+> +       /*
+> +        * If we are in the error path, we are blocking the raid1d
+> +        * thread so there is a tiny risk of deadlock.  So ask for
+>          * emergency memory if needed.
+>          */
+> -       gfp_t gfp =3D r1_bio ? (GFP_NOIO | __GFP_HIGH) : GFP_NOIO;
+> +       gfp_t gfp =3D err_path ? (GFP_NOIO | __GFP_HIGH) : GFP_NOIO;
+
+Hi
+
+This patch looks good to me.
+Reviewed-by: Xiao Ni <xiao@kernel.org>
+>
+>         /*
+>          * Still need barrier for READ in case that whole
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 3a591e60a144..8c6fc398260e 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1155,7 +1155,20 @@ static void raid10_read_request(struct mddev *mdde=
+v, struct bio *bio,
+>         char b[BDEVNAME_SIZE];
+>         int slot =3D r10_bio->read_slot;
+>         struct md_rdev *err_rdev =3D NULL;
+> -       gfp_t gfp =3D GFP_NOIO;
+> +
+> +       /*
+> +        * An md cloned bio indicates we are in the error path.
+> +        * This is more reliable than checking slot, which might
+> +        * be -1 even in the error path if a failed bio was split.
+> +        */
+> +       bool err_path =3D md_cloned_bio(mddev, bio);
+> +
+> +       /*
+> +        * If we are in the error path, we are blocking the raid10d
+> +        * thread so there is a tiny risk of deadlock.  So ask for
+> +        * emergency memory if needed.
+> +        */
+> +       gfp_t gfp =3D err_path ? (GFP_NOIO | __GFP_HIGH) : GFP_NOIO;
+>
+>         if (slot >=3D 0 && r10_bio->devs[slot].rdev) {
+>                 /*
+> @@ -1166,11 +1179,6 @@ static void raid10_read_request(struct mddev *mdde=
+v, struct bio *bio,
+>                  * we lose the device name in error messages.
+>                  */
+>                 int disk;
+> -               /*
+> -                * As we are blocking raid10, it is a little safer to
+> -                * use __GFP_HIGH.
+> -                */
+> -               gfp =3D GFP_NOIO | __GFP_HIGH;
+>
+>                 disk =3D r10_bio->devs[slot].devnum;
+>                 err_rdev =3D conf->mirrors[disk].rdev;
 > --
 > 2.43.0
 >
 >
-
-This patch looks good to me.
-Reviewed-by: Xiao Ni <xiao@kernel.org>
