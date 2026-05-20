@@ -1,75 +1,76 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A69E83D76
-	for <linux-raid@vger.kernel.org>; Wed, 20 May 2026 13:00:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F3E9346AC2
+	for <linux-raid@vger.kernel.org>; Wed, 20 May 2026 13:07:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779282028; cv=none; b=IegtZBDHDRNMAK7hoJtioJBuKQi5xvihpv8wX0fwvn2vqKNTx4Oy7vrnAtpSkZAa3N92E6FSjBo24SeMG/2NFfLeEP1Q0nKdzHAjyyf5GC+R2JTnAth2yDEh0roi3a3UzLj9jXRgrXTtF4oGJksEsY1Xq8VR9qkB+oMfyuQJOUg=
+	t=1779282422; cv=none; b=UrmeXrsYDN/VuVkL+Kt8DNfwaN60i7P6wDrd4Bvl82xk2zXWfc9fOz8YRIOQ821Hhx4R34cluZ9UZzC8zrQx9KET4NTy6N/SE8XvwWA8/keLiPlKbBRkO87SWFNft+44cyuWPshnYpacjqwvYAXebyOjy2RFf9e+HyTssvGNTM8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779282028; c=relaxed/simple;
-	bh=yC7d2+7mmczzqAaA3iSgC5WYrl3+G5bH2ZE9/gsmyck=;
+	s=arc-20240116; t=1779282422; c=relaxed/simple;
+	bh=3pE7FwjMhrFLZ047m9z+vjvMVv5nChg0KsI2fRW7T6k=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UEdgw19pTQf6spefluYs3xAtGUtJY710A2hX801fePZFJm/f5ACkdd68uWgKoa4O5UVkV3cnDaKlGKJHYyWYwD9pM3l8LlCntDkGMhZcTPstU71NgAK/gejLeQqgBMi2RmQwVusG8nyRILn6dEjejlIN8Cn96ZpEO5vYTKKAUZg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ntjLy5nk; arc=none smtp.client-ip=209.85.128.51
+	 MIME-Version:Content-Type; b=H+1K9LpztYPil8kvjqL0YoKDnFofDS5l6dYla2NWzuvuubWQGaOV7NeX7Qv9Z0NvDeSrrAZRO0V6cYxUARBdtFPZO4F7BJDqncKVHqh/T6qhgjz4akwUW7afJSl5AWcHaPCKf0ubT9Cu7lkW07gMwdxCegiFhW74LxDa6CdFtjc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Bl7KNaDA; arc=none smtp.client-ip=209.85.221.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ntjLy5nk"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-48fde648a71so35627855e9.0
-        for <linux-raid@vger.kernel.org>; Wed, 20 May 2026 06:00:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Bl7KNaDA"
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-44a044cb827so3495897f8f.0
+        for <linux-raid@vger.kernel.org>; Wed, 20 May 2026 06:07:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779282025; x=1779886825; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1779282419; x=1779887219; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:subject:cc:to:from:date:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=VBgKpCt1/7Dv0saCawyTFbR0vQ6ctxhe2NKjIH0ysvE=;
-        b=ntjLy5nk3+7qXUn+gdYzFwLA76EJBpiV0hC58PDAhT8F+RLtHbMPtzYM9tQRBVAqVV
-         YBBRCcX78JGZAqk9Q1aBjyPf6tSd8YpopX1ZAIjJC7kpi4nClGTO5muTLNoSMoBikArj
-         AQql3s0dX4sdqWQNbZJ9zkWERTHAA3jM9QySq8ahKSANmlDg42/HZbd4eTOUj/FBH31p
-         kPs6BAhhWXNOMYY8sIUaUPVe1FljAs1/Eg3KG6nXdrJohkeQ9c+XRtGJ/NSU1DEDtZqz
-         gjoyKXEXPLDIeMci41y4kkb3rMcpHjCjULl11awTu1YSUMNMjkJVMRfvyCmJ9hmoZRal
-         ZUcw==
+        bh=5gunmBLjCjS6Gti7CYJba8OZxUFE4BT2dND5fh8wPSA=;
+        b=Bl7KNaDA5U697R9al84oXEzdD004vzuEA67t/l8SkmJX75Dv0vBSAbry0XSED1nemE
+         jVV5P8KSVbORS7mC6lODs1pqwyla5pLxaNsRNTFb0fAIl3OvIshGwB2S77pbNXxaoSjw
+         5jLyUw1tyIN+e1wFivhdWSahIYjeCoj/FXgH1DVKWPiXOqjqO9CfqTptnRdKO/bRu/w1
+         jnubOwniR0RNBTnHLBfT4OubIcJKmCMl24Oi8J/Orki0eR9skVHNZOyxL6maBSydfRVA
+         sK09Os/4fCJE62+jTv3dCPbaZPSeqhJlnJ7UgCt48bFvidq9j7rd0jkU1y4t766c+Bv4
+         AeAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779282025; x=1779886825;
+        d=1e100.net; s=20251104; t=1779282419; x=1779887219;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=VBgKpCt1/7Dv0saCawyTFbR0vQ6ctxhe2NKjIH0ysvE=;
-        b=jeEX/pLKjpkuJTrgGtBgL8Jr77XpLyGZkVcPQfoxm6kLsqujLRRutWzrcGrLOCkuyP
-         CF+rqBAmEZtgvTpMmG0J9obO3K9DbbJWkenDePZmUtEty1glDDIE0J7wC3Csv7rhgMxT
-         bdFf082UUrSy+BBwg5PqKmVvkdeXsVL8JVZ9UgK9xmidow3a7+heJUmGLG1VwbcWutpS
-         MqET9Kx3j2xthzpgT1nRX9XQi4auTBjpJoor9bUR/WfUc80gXELWw8kzMI4gsAqq1QFx
-         dzhJvCyivd/atwyo+cCI4oN4ObRdl9tyPbHnhvzR1NhkWaQ8bRma3M8DfDeCe8oPfkTj
-         u1yQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9qgBJKc6oWnX16xzRg6MOW4A1CJmvU8j2jYqWki+996jQ/rDgqjm5M3Ab4m2pJSNQYZQcHuUUQa0A/@vger.kernel.org
-X-Gm-Message-State: AOJu0YxmzUSgZdbC5AGThS66B7FY+0WmvQiizj0Q6p7g3RbCAqkeIzfS
-	5vr+zT+v4fOfjNXEjbZt1jSVJgwBaHQanruAx2TOzOdFsJWzt+/McWU/
-X-Gm-Gg: Acq92OHxb6U1C/C1V+fPNXl0DlJVW6n6vE19R3Utbvs8c2UbEkVkoBtB0xZStLFtXgr
-	9rJ/WJNRE1Ci9bGnEG0DpVxoSEg2jsh/xRtwXUgkWqci5INkO5I39WJkRrSQC3Et8NLCOq+TSqJ
-	LI5nV+Kyb9+cmv9XUu0v9zWbiXmrQJ2khLPeozC8KZonw+zxONlgNQPMSh09+Omprq61EeDQhtt
-	HsAOXmWSqvp2CKoxdC2EIZb0y5SKzdvXQo2O7eFBrKeOG/CJ2lrHyTSAwZFALUDzfmsexsRxWuQ
-	sQwjIaScu3oKtvQ/w19UUskYFzrnK5kdfvRj8kjohR9TZkkJvDWLtJwzS6NbJ5kzbpPztT15BQ0
-	thRPqCNUt+Rv3U3V+YuKccYtkmujEihCcdYuTx6HxxO5x3ls2afb2MOHopm7wkHfPYyh+xonrSH
-	uGhl7K9gs42g2M4XhKeVSpREDxXoLrPhfGUa6HHXFRkiPkbqtP7MG44gjXSusC4gyW
-X-Received: by 2002:a05:600c:83c7:b0:48f:e230:29f5 with SMTP id 5b1f17b1804b1-48fe53a8eccmr362118815e9.16.1779282023422;
-        Wed, 20 May 2026 06:00:23 -0700 (PDT)
+        bh=5gunmBLjCjS6Gti7CYJba8OZxUFE4BT2dND5fh8wPSA=;
+        b=Vkv4cmEpZzfZT1D0QHXDBia8QmgH+jvUQ9hKmog5t8FrTijwi4NVPqG3CADcArak4n
+         QWMyKMqdhWK+pTH423IG62YIJ+EtH9RdYR7eoLimFq5MyZw1uxWXWZF9DAhz5jU9yKf4
+         9KykWB4qCEenoddWktCYH8N15jFN2lQwY9sj32bjbm/ISvSLXdy1K7bPKUH5BdRcraNV
+         f4q6MMsYEjFj/uXwDAqoMxz5yy26AU1dnimjcbh3cCsBZo7rDRPYOiEVbhaUK1XBvrV8
+         wpPXBwqyLW1PJpryCn9X265cM63JKuXFsGWr1glN9U4LpHDBfyWamQdi8YWDC8fWIr6G
+         4O4g==
+X-Forwarded-Encrypted: i=1; AFNElJ/KIRsU9SBO8wNSsjocvfKLRlIXT0yYqeWxFYKEy0OkBeiokvdAFW4qWYpEm0zPD9JI4pMJm3ljLcyX@vger.kernel.org
+X-Gm-Message-State: AOJu0YzLXtzfYAGGhvs6jnadaB63l/u5RfxBjADloeUkznNycMGBO0Gj
+	wky/K7dpx+Ig4gEg+5ZTpp6jRKW2iiybqC34YQTebSxVG4wR6xZ21IRh
+X-Gm-Gg: Acq92OGMjLHjwiFpW85ZfMDnMUpMQNNiPvcGPGsj+ubYscMvbFGl8914N4FzgmG4Gdb
+	M9FAcT5IQx3O3r6kXHEhDUX7lgVl9HphQNbVfYNHLM2KGEjSeG6BclzgRO8czaqVZMpZnpG+rUY
+	Tbg4P3C5+BKoV8kWYfPnDhy2UcESwwo21S7wWELc7beKEvGT6vM3L/O/z+1wzg+hvv6BJZ68spJ
+	sCIPo20EkhIMEAfafXwVXkZnV8GGdsv1YPtVNj99erTltxNiPDzGX1hBb1BQuQv9leJCIvdTTtx
+	PV4xFWbVJscUTmQ5GGwAiTj/sSwHNRis3gONCqt0VB9axF4dBxLNLDSuA68/fvogmLWfFKTEGcz
+	tbDNpBn7nDCEa3gUKtB2I/DMowNK/cPq8mua1xzQ99X5JMm5Wmo1v1sSCS6ymhWw+1muHgUBCy8
+	d3LRJu/O0NP9N6Opehx5Px2OgpPd5gPILuSmYFjvvdMXgDspTOEGrpPAQ0M6jZ44wZXAbycFp18
+	Fk=
+X-Received: by 2002:a05:6000:2207:b0:45e:73eb:2a75 with SMTP id ffacd0b85a97d-45e73eb2ab3mr27313880f8f.16.1779282418850;
+        Wed, 20 May 2026 06:06:58 -0700 (PDT)
 Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48fe53804aesm376693965e9.15.2026.05.20.06.00.22
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45d9e768bcesm56306140f8f.4.2026.05.20.06.06.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 May 2026 06:00:23 -0700 (PDT)
-Date: Wed, 20 May 2026 14:00:21 +0100
+        Wed, 20 May 2026 06:06:58 -0700 (PDT)
+Date: Wed, 20 May 2026 14:06:57 +0100
 From: David Laight <david.laight.linux@gmail.com>
 To: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
 Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>, Li Nan
  <linan122@huawei.com>, Xiao Ni <xiao@kernel.org>,
  linux-kernel@vger.kernel.org, linux-mm@kvack.org,
  linux-raid@vger.kernel.org
-Subject: Re: [PATCH 1/2] lib/raid: use kmalloc() in calibrate_xor_blocks()
-Message-ID: <20260520140021.1d36c0b4@pumpkin>
-In-Reply-To: <20260520-lib-v1-1-cb3045bef2d8@kernel.org>
+Subject: Re: [PATCH 2/2] lib/raid6: use kmalloc() in raid6_select_algo()
+Message-ID: <20260520140657.2b5b5f3b@pumpkin>
+In-Reply-To: <20260520-lib-v1-2-cb3045bef2d8@kernel.org>
 References: <20260520-lib-v1-0-cb3045bef2d8@kernel.org>
-	<20260520-lib-v1-1-cb3045bef2d8@kernel.org>
+	<20260520-lib-v1-2-cb3045bef2d8@kernel.org>
 X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -80,59 +81,66 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Wed, 20 May 2026 11:17:51 +0300
+On Wed, 20 May 2026 11:17:52 +0300
 "Mike Rapoport (Microsoft)" <rppt@kernel.org> wrote:
 
-> The xor benchmark allocates an order 2 (4 pages) scratch buffer that is
-> used purely as a CPU-only XOR working area.
+> raid6_select_algo() allocates an order 3 (8 pages) buffer that is used
+> as a scratch area for selection of the best algorithm.
+
+Should this code really be using a 4k buffer rather than a PAGE_SIZE one?
+
+-- David
+
 > 
 > For such large allocations kmalloc() would fall back to alloc_pages() but
 > still kmalloc() is a better API as it does not require unnecessary
 > castings and may provide more debugging possibilities.
 > 
 > Replace __get_free_pages() call with kmalloc().
-
-You might want to use kvalloc() here.
-It is less likely to fail.
-
--- David
-
 > 
 > Link: https://lore.kernel.org/all/635405e4-9423-4a25-a6e7-e03c8ea0bcbe@redhat.com
 > Signed-off-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
 > ---
->  lib/raid/xor/xor-core.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+>  lib/raid6/algos.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> diff --git a/lib/raid/xor/xor-core.c b/lib/raid/xor/xor-core.c
-> index bd4e6e434418..50931fbf0324 100644
-> --- a/lib/raid/xor/xor-core.c
-> +++ b/lib/raid/xor/xor-core.c
-> @@ -8,6 +8,7 @@
+> diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
+> index 799e0e5eac26..89e627c62e30 100644
+> --- a/lib/raid6/algos.c
+> +++ b/lib/raid6/algos.c
+> @@ -12,6 +12,7 @@
+>   */
 >  
->  #include <linux/module.h>
->  #include <linux/gfp.h>
+>  #include <linux/raid/pq.h>
 > +#include <linux/slab.h>
->  #include <linux/raid/xor.h>
->  #include <linux/jiffies.h>
->  #include <linux/preempt.h>
-> @@ -114,7 +115,7 @@ static int __init calibrate_xor_blocks(void)
->  	if (forced_template)
->  		return 0;
+>  #ifndef __KERNEL__
+>  #include <sys/mman.h>
+>  #include <stdio.h>
+> @@ -129,7 +130,6 @@ const struct raid6_recov_calls *const raid6_recov_algos[] = {
+>  #endif
 >  
-> -	b1 = (void *) __get_free_pages(GFP_KERNEL, 2);
-> +	b1 = kmalloc(PAGE_SIZE * 4, GFP_KERNEL);
->  	if (!b1) {
->  		pr_warn("xor: Yikes!  No memory available.\n");
+>  #define RAID6_TEST_DISKS	8
+> -#define RAID6_TEST_DISKS_ORDER	3
+>  
+>  static inline const struct raid6_recov_calls *raid6_choose_recov(void)
+>  {
+> @@ -250,7 +250,7 @@ int __init raid6_select_algo(void)
+>  	int i, cycle;
+>  
+>  	/* prepare the buffer and fill it circularly with gfmul table */
+> -	disk_ptr = (char *)__get_free_pages(GFP_KERNEL, RAID6_TEST_DISKS_ORDER);
+> +	disk_ptr = kmalloc(PAGE_SIZE * RAID6_TEST_DISKS, GFP_KERNEL);
+>  	if (!disk_ptr) {
+>  		pr_err("raid6: Yikes!  No memory available.\n");
 >  		return -ENOMEM;
-> @@ -132,7 +133,7 @@ static int __init calibrate_xor_blocks(void)
->  	pr_info("xor: using function: %s (%d MB/sec)\n",
->  	       fastest->name, fastest->speed);
+> @@ -275,7 +275,7 @@ int __init raid6_select_algo(void)
+>  	/* select raid recover functions */
+>  	rec_best = raid6_choose_recov();
 >  
-> -	free_pages((unsigned long)b1, 2);
-> +	kfree(b1);
->  	return 0;
+> -	free_pages((unsigned long)disk_ptr, RAID6_TEST_DISKS_ORDER);
+> +	kfree(disk_ptr);
+>  
+>  	return gen_best && rec_best ? 0 : -EINVAL;
 >  }
->  
 > 
 
