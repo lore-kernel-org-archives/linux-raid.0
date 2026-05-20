@@ -1,146 +1,195 @@
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+Received: from mail-dl1-f47.google.com (mail-dl1-f47.google.com [74.125.82.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F3E9346AC2
-	for <linux-raid@vger.kernel.org>; Wed, 20 May 2026 13:07:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779282422; cv=none; b=UrmeXrsYDN/VuVkL+Kt8DNfwaN60i7P6wDrd4Bvl82xk2zXWfc9fOz8YRIOQ821Hhx4R34cluZ9UZzC8zrQx9KET4NTy6N/SE8XvwWA8/keLiPlKbBRkO87SWFNft+44cyuWPshnYpacjqwvYAXebyOjy2RFf9e+HyTssvGNTM8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779282422; c=relaxed/simple;
-	bh=3pE7FwjMhrFLZ047m9z+vjvMVv5nChg0KsI2fRW7T6k=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=H+1K9LpztYPil8kvjqL0YoKDnFofDS5l6dYla2NWzuvuubWQGaOV7NeX7Qv9Z0NvDeSrrAZRO0V6cYxUARBdtFPZO4F7BJDqncKVHqh/T6qhgjz4akwUW7afJSl5AWcHaPCKf0ubT9Cu7lkW07gMwdxCegiFhW74LxDa6CdFtjc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Bl7KNaDA; arc=none smtp.client-ip=209.85.221.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D4D539C00B
+	for <linux-raid@vger.kernel.org>; Wed, 20 May 2026 16:43:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.47
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779295429; cv=pass; b=hH273BqWeIAWMDj5Vv/aZPymCVlwpAYxyc56Km/DxWMye4G7fafck2rMRiBbYO32KM+pqzCmZw5GD1GWZWD/vL+8OTpHHZqDpGjWUxTwJVFhc8LC9M6SHaA/V5OZlsjhNb3W+bWVZwAlgR4FfKZUHlfVroAjbQ9JAwMeQjEh1sA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779295429; c=relaxed/simple;
+	bh=K0SmBd3i+Evg01AmybdJImEVnXbgwxW02OAxKC+QiMs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=kCUIHfKjHtnH3SbA7ptYd6PGISuvXue8y8t7mtNPJt1jkskNJCU/WLUtRDcAnLmeScgIDT9+E6tdhseP6Stuils1Izmu8dsHRy630IwVumRs/J3uCriQnYOuxbldZiwNeRtDlytmSN4BRhwiyHfDnmPtJfqxjhHQgZpmyRIGTsQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XGEVYHYp; arc=pass smtp.client-ip=74.125.82.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Bl7KNaDA"
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-44a044cb827so3495897f8f.0
-        for <linux-raid@vger.kernel.org>; Wed, 20 May 2026 06:07:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XGEVYHYp"
+Received: by mail-dl1-f47.google.com with SMTP id a92af1059eb24-12c1a170a50so6446271c88.0
+        for <linux-raid@vger.kernel.org>; Wed, 20 May 2026 09:43:47 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1779295426; cv=none;
+        d=google.com; s=arc-20240605;
+        b=C4MHmCTFRPy/YGBQiVPn7oo3hfCnHpe3iSztZ8qaaF4In63VgjXmw6xh/KqQ5ls7I8
+         6dSlqwH0eTRLtUrIVrwSTL3DnHnvFL9ZL1tXRWdkzL7iGiaUQclUhAOVuh+n5Qv3ckRB
+         pS8NLKKX3u550SQQeVx+QcTECFxVIMaK5BuVzMwIhQtYO/h/YFmHvmhOklt2lVVlnUM0
+         fwN1chhitKOzYtakDvPJQMxIBKn1gSvpNnWAob76zfPPh/NI0lxjnLvXP/Tcg/TRG8Ix
+         IEaDMHWlgp4mi8/4ne/7CoZfjWiO+Igkveedv945LeeJ/WKsHum7844ryKZitJr3HrkE
+         MpnA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=awmx7wqZavYrfGTB2OHvccP0wAddCGzaOcms0KgYzqw=;
+        fh=tmKlnE0QnvEISqtzhl2F8IkqTz4udM0AhiO+XhXT8XE=;
+        b=EiQODV0MUfua+gE2/1ElGnjnzMtkLaBq1Zb8RXYD+KHlw7R9BZjNg9nVBd2gDHazGd
+         ADnNHXub65EjdBuXmxtoqp8jjaZYN+zNQjLUGBhtXHOv4DytaJpuVLBP0eSop3Nf68HH
+         PCJsjbB0rajkSX706K5zNhmfXAHg6A1vJgWj4anTrZ4gC/w7QLhrIZtKXeDq6lAhm143
+         POiWeUXqQ/ez3C6lmZVM41apTSMiQKkEcXD5DLgblOrI41/UI3+qcuUWYiimxSlT3HSh
+         i4q0ZUXytGMVDYlshGyrxcVDggmx+hryBxMqmk75UNdKi8O9uX+teK0Sz8Q7H+z/y89x
+         o32g==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779282419; x=1779887219; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1779295426; x=1779900226; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=5gunmBLjCjS6Gti7CYJba8OZxUFE4BT2dND5fh8wPSA=;
-        b=Bl7KNaDA5U697R9al84oXEzdD004vzuEA67t/l8SkmJX75Dv0vBSAbry0XSED1nemE
-         jVV5P8KSVbORS7mC6lODs1pqwyla5pLxaNsRNTFb0fAIl3OvIshGwB2S77pbNXxaoSjw
-         5jLyUw1tyIN+e1wFivhdWSahIYjeCoj/FXgH1DVKWPiXOqjqO9CfqTptnRdKO/bRu/w1
-         jnubOwniR0RNBTnHLBfT4OubIcJKmCMl24Oi8J/Orki0eR9skVHNZOyxL6maBSydfRVA
-         sK09Os/4fCJE62+jTv3dCPbaZPSeqhJlnJ7UgCt48bFvidq9j7rd0jkU1y4t766c+Bv4
-         AeAQ==
+        bh=awmx7wqZavYrfGTB2OHvccP0wAddCGzaOcms0KgYzqw=;
+        b=XGEVYHYpEk86uK0aEWdS6+bAG1fijNZQXwmdqVlua5G5j1OIoTFS/OjXfmBzIypqp2
+         Wrth8ovNUxl0n1ymgTETqkTlwcKPmWGYxLDpRnmZ6yilRiRUJCqvdiYPFP6CPgNBnbCO
+         MKshDq0weY7mpUA1xjx/ldIjyFMRUtoU71GQUiHGmX/GevzzJGBnhGVrq+utrBOP49be
+         F9e3f1+d0uu/ZxVJOcyd6ZxpOcTb42vVDeDNj/ug7MyVg8JH0tiNFdfj6Va9vSDazvmD
+         AsDDYCk32PBb9ZNo8iF/ONW5OAkt7P0PSCLyVRZDcVZGpFJ3nJTiapTZRbJNBtNLk9Gn
+         QLmQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779282419; x=1779887219;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+        d=1e100.net; s=20251104; t=1779295426; x=1779900226;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=5gunmBLjCjS6Gti7CYJba8OZxUFE4BT2dND5fh8wPSA=;
-        b=Vkv4cmEpZzfZT1D0QHXDBia8QmgH+jvUQ9hKmog5t8FrTijwi4NVPqG3CADcArak4n
-         QWMyKMqdhWK+pTH423IG62YIJ+EtH9RdYR7eoLimFq5MyZw1uxWXWZF9DAhz5jU9yKf4
-         9KykWB4qCEenoddWktCYH8N15jFN2lQwY9sj32bjbm/ISvSLXdy1K7bPKUH5BdRcraNV
-         f4q6MMsYEjFj/uXwDAqoMxz5yy26AU1dnimjcbh3cCsBZo7rDRPYOiEVbhaUK1XBvrV8
-         wpPXBwqyLW1PJpryCn9X265cM63JKuXFsGWr1glN9U4LpHDBfyWamQdi8YWDC8fWIr6G
-         4O4g==
-X-Forwarded-Encrypted: i=1; AFNElJ/KIRsU9SBO8wNSsjocvfKLRlIXT0yYqeWxFYKEy0OkBeiokvdAFW4qWYpEm0zPD9JI4pMJm3ljLcyX@vger.kernel.org
-X-Gm-Message-State: AOJu0YzLXtzfYAGGhvs6jnadaB63l/u5RfxBjADloeUkznNycMGBO0Gj
-	wky/K7dpx+Ig4gEg+5ZTpp6jRKW2iiybqC34YQTebSxVG4wR6xZ21IRh
-X-Gm-Gg: Acq92OGMjLHjwiFpW85ZfMDnMUpMQNNiPvcGPGsj+ubYscMvbFGl8914N4FzgmG4Gdb
-	M9FAcT5IQx3O3r6kXHEhDUX7lgVl9HphQNbVfYNHLM2KGEjSeG6BclzgRO8czaqVZMpZnpG+rUY
-	Tbg4P3C5+BKoV8kWYfPnDhy2UcESwwo21S7wWELc7beKEvGT6vM3L/O/z+1wzg+hvv6BJZ68spJ
-	sCIPo20EkhIMEAfafXwVXkZnV8GGdsv1YPtVNj99erTltxNiPDzGX1hBb1BQuQv9leJCIvdTTtx
-	PV4xFWbVJscUTmQ5GGwAiTj/sSwHNRis3gONCqt0VB9axF4dBxLNLDSuA68/fvogmLWfFKTEGcz
-	tbDNpBn7nDCEa3gUKtB2I/DMowNK/cPq8mua1xzQ99X5JMm5Wmo1v1sSCS6ymhWw+1muHgUBCy8
-	d3LRJu/O0NP9N6Opehx5Px2OgpPd5gPILuSmYFjvvdMXgDspTOEGrpPAQ0M6jZ44wZXAbycFp18
-	Fk=
-X-Received: by 2002:a05:6000:2207:b0:45e:73eb:2a75 with SMTP id ffacd0b85a97d-45e73eb2ab3mr27313880f8f.16.1779282418850;
-        Wed, 20 May 2026 06:06:58 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45d9e768bcesm56306140f8f.4.2026.05.20.06.06.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 May 2026 06:06:58 -0700 (PDT)
-Date: Wed, 20 May 2026 14:06:57 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
-Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>, Li Nan
- <linan122@huawei.com>, Xiao Ni <xiao@kernel.org>,
- linux-kernel@vger.kernel.org, linux-mm@kvack.org,
- linux-raid@vger.kernel.org
-Subject: Re: [PATCH 2/2] lib/raid6: use kmalloc() in raid6_select_algo()
-Message-ID: <20260520140657.2b5b5f3b@pumpkin>
-In-Reply-To: <20260520-lib-v1-2-cb3045bef2d8@kernel.org>
-References: <20260520-lib-v1-0-cb3045bef2d8@kernel.org>
-	<20260520-lib-v1-2-cb3045bef2d8@kernel.org>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+        bh=awmx7wqZavYrfGTB2OHvccP0wAddCGzaOcms0KgYzqw=;
+        b=Avl+2axXLWivobuOmRX2nQYtpuxcv8wcEXIjcWauWYuXeAkBhSX5ajGnSMK/9pl9KJ
+         iEqOTjhJHfHd685z0JdU5sHofoc1oxTnSFuDVlRU2EgE80FrPOJ1UpmU2WM1tPFkxlQa
+         oJGc5YVjSWLZjMdCHXeNHl4ehSWHy3l0Y9+BZ4CjU4ZMJZtqqu23Wm9S+yabII5yHEMt
+         RBaqC3qvbOQFCUTDoKTtvP04hZrd8rcAm5LDNsQByumdM5lkbysJxr0apJP0RxL8Mpid
+         avDfw8nKk5BEUsxMGllGbXeveA9ONf7pRJ/QQSpoTb52/Zixyf4TTqEM4QpGDw6+bmW1
+         IZrQ==
+X-Forwarded-Encrypted: i=1; AFNElJ8wq0zsiSw/ohx88Qylc9MgWrz//8Tv7gIAbLE8qZKmG89Hp9ioJioF2DW7u1ZXDCSrUTbBS6+GfIqY@vger.kernel.org
+X-Gm-Message-State: AOJu0YzFGcqCiDq4P/O0aEu+i1Fa312aOKr46b97pZd1KyZryglG0ToB
+	9JlgIhQIu7YZXd7kfHyTDdG6KVphtB/AATLjPslDNrDkSfjMxCqTnaRmD5J9KD9v9f7ZNbLSHjS
+	Ymv5RpOiSt7oVaVQWWoR+oGrdIVq3El0=
+X-Gm-Gg: Acq92OGleTP9tHLoPHhDEDA86WWRm26N2U0rTndWTZkIClk3rTmN8Orw+h2LOfGMBMO
+	9Ai/ncHBwTmnuIT2Eec5/KWDBgf3obatAUdaxHtbtJ+0UzxFx/B7Sc8bThIVER3VbsNSgLfXAQT
+	IyGNYK9K6F2eUdb+3ovDdK/MupTWOoIYiWvMJwXymQJBLxCldNWVw5YRiQLwKsMizb6M4vziNqx
+	HeVmvazu63Nc7kKumCnzhzGB9PVemy30bm8dwnZ278l7RwaNMMXBQvBq7DAaonddwSb1CLVyIIU
+	wbQymYOa3nLQCWwF3Gr2T3YyD3I5ttlGsq76BLg9m7PRzbOvPW0=
+X-Received: by 2002:a05:7022:311:b0:12d:b396:eaed with SMTP id
+ a92af1059eb24-1350440ae04mr11257475c88.9.1779295426034; Wed, 20 May 2026
+ 09:43:46 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <SYBPR01MB7881A5E2556806CC1D318582AF232@SYBPR01MB7881.ausprd01.prod.outlook.com>
+ <beca1657-0180-4f9b-8de1-ca7776c9614a@fnnas.com> <CAHYQsXRN6uof4yyDR6qGteQ=wZTt86VUx7km6k=LbNAQ3wxGiQ@mail.gmail.com>
+ <282278bc-7d71-4049-89f4-a9f3968504dd@fnnas.com> <CAHYQsXQhTn905RGCrw-qeb--VHsRGR2KEWm5X0ZJEW+krTJaNA@mail.gmail.com>
+ <6224b47c-9a7e-4bbf-90ce-4b98691ceaa3@fygo.com>
+In-Reply-To: <6224b47c-9a7e-4bbf-90ce-4b98691ceaa3@fygo.com>
+From: Yuhao Jiang <danisjiang@gmail.com>
+Date: Wed, 20 May 2026 11:43:34 -0500
+X-Gm-Features: AVHnY4KDm-qnXxJ9KW6U_J1BC5ffsE8cI5knCTNO8d5QEmcndtCLxjNThpU5ufo
+Message-ID: <CAHYQsXSy09tmOKok3O-PqJqVKXBFMZB0M4E=s5AQbnbdagCLQg@mail.gmail.com>
+Subject: Re: [PATCH] md/raid10: fix divide-by-zero in setup_geo() with zero far_copies
+To: yukuai@fygo.com
+Cc: yukuai@fnnas.com, Junrui Luo <moonafterrain@outlook.com>, Song Liu <song@kernel.org>, 
+	Li Nan <linan122@huawei.com>, NeilBrown <neil@brown.name>, 
+	Jonathan Brassow <jbrassow@redhat.com>, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, 20 May 2026 11:17:52 +0300
-"Mike Rapoport (Microsoft)" <rppt@kernel.org> wrote:
+Hi Kuai,
 
-> raid6_select_algo() allocates an order 3 (8 pages) buffer that is used
-> as a scratch area for selection of the best algorithm.
+So in this case, how should my name be shown on this security patch?
+Because I reported this bug. Most maintainers added my name in the
+reported-by tag.
 
-Should this code really be using a 4k buffer rather than a PAGE_SIZE one?
+Thanks,
+Yuhao
 
--- David
+On Wed, May 20, 2026 at 6:52=E2=80=AFAM Yu Kuai <yukuai@fnnas.com> wrote:
+>
+> Hi,
+>
+> =E5=9C=A8 2026/4/28 16:37, Yuhao Jiang =E5=86=99=E9=81=93:
+> > Hi Kuai,
+> >
+> > Looks like different maintainers have different rules. :(
+> > Can you send me the patchwork resource?
+>
+> Usually just a link to lore url is enough.
+>
+> >
+> > Thanks.
+> >
+> > On Tue, Apr 28, 2026 at 4:32=E2=80=AFPM Yu Kuai <yukuai@fnnas.com> wrot=
+e:
+> >> Hi,
+> >>
+> >> =E5=9C=A8 2026/4/19 13:59, Yuhao Jiang =E5=86=99=E9=81=93:
+> >>> Hi Kuai,
+> >>>
+> >>> This report was reported by me, so Junrui added me as Reported-by.
+> >> This is fine, however, please do not add downstream reported-by tag.
+> >> If you want to add the reported-by tag, please report the problem to
+> >> patchwork first. :)
+> >>
+> >>> Thanks,
+> >>>
+> >>> On Sun, Apr 19, 2026 at 12:43=E2=80=AFAM Yu Kuai <yukuai@fnnas.com> w=
+rote:
+> >>>
+> >>>      Hi,
+> >>>
+> >>>      =E5=9C=A8 2026/4/16 11:39, Junrui Luo =E5=86=99=E9=81=93:
+> >>>      > setup_geo() extracts near_copies (nc) and far_copies (fc) from=
+ the
+> >>>      > user-provided layout parameter without checking for zero. When=
+ fc=3D0
+> >>>      > with the "improved" far set layout selected, 'geo->far_set_siz=
+e =3D
+> >>>      > disks / fc' triggers a divide-by-zero.
+> >>>      >
+> >>>      > Validate nc and fc immediately after extraction, returning -1 =
+if
+> >>>      > either is zero.
+> >>>      >
+> >>>      > Fixes: 475901aff158 ("MD RAID10: Improve redundancy for 'far'
+> >>>      and 'offset' algorithms (part 1)")
+> >>>      > Reported-by: Yuhao Jiang<danisjiang@gmail.com>
+> >>>
+> >>>      So again I can't find a report, and Reported-by usually should b=
+e
+> >>>      followed
+> >>>      by a Closes link to the original report.
+> >>>
+> >>>      Applied with Reported-by tag removed.
+> >>>
+> >>>      > Cc:stable@vger.kernel.org <mailto:Cc%3Astable@vger.kernel.org>
+> >>>      > Signed-off-by: Junrui Luo<moonafterrain@outlook.com>
+> >>>      > ---
+> >>>      >   drivers/md/raid10.c | 2 ++
+> >>>      >   1 file changed, 2 insertions(+)
+> >>>
+> >>>      --
+> >>>      Thansk,
+> >>>      Kuai
+> >>>
+> >>>
+> >>>
+> >>> --
+> >>> Yuhao Jiang
+> >> --
+> >> Thansk,
+> >> Kuai
+> >
+> >
+> --
+> Thansk,
+> Kuai
 
-> 
-> For such large allocations kmalloc() would fall back to alloc_pages() but
-> still kmalloc() is a better API as it does not require unnecessary
-> castings and may provide more debugging possibilities.
-> 
-> Replace __get_free_pages() call with kmalloc().
-> 
-> Link: https://lore.kernel.org/all/635405e4-9423-4a25-a6e7-e03c8ea0bcbe@redhat.com
-> Signed-off-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
-> ---
->  lib/raid6/algos.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
-> index 799e0e5eac26..89e627c62e30 100644
-> --- a/lib/raid6/algos.c
-> +++ b/lib/raid6/algos.c
-> @@ -12,6 +12,7 @@
->   */
->  
->  #include <linux/raid/pq.h>
-> +#include <linux/slab.h>
->  #ifndef __KERNEL__
->  #include <sys/mman.h>
->  #include <stdio.h>
-> @@ -129,7 +130,6 @@ const struct raid6_recov_calls *const raid6_recov_algos[] = {
->  #endif
->  
->  #define RAID6_TEST_DISKS	8
-> -#define RAID6_TEST_DISKS_ORDER	3
->  
->  static inline const struct raid6_recov_calls *raid6_choose_recov(void)
->  {
-> @@ -250,7 +250,7 @@ int __init raid6_select_algo(void)
->  	int i, cycle;
->  
->  	/* prepare the buffer and fill it circularly with gfmul table */
-> -	disk_ptr = (char *)__get_free_pages(GFP_KERNEL, RAID6_TEST_DISKS_ORDER);
-> +	disk_ptr = kmalloc(PAGE_SIZE * RAID6_TEST_DISKS, GFP_KERNEL);
->  	if (!disk_ptr) {
->  		pr_err("raid6: Yikes!  No memory available.\n");
->  		return -ENOMEM;
-> @@ -275,7 +275,7 @@ int __init raid6_select_algo(void)
->  	/* select raid recover functions */
->  	rec_best = raid6_choose_recov();
->  
-> -	free_pages((unsigned long)disk_ptr, RAID6_TEST_DISKS_ORDER);
-> +	kfree(disk_ptr);
->  
->  	return gen_best && rec_best ? 0 : -EINVAL;
->  }
-> 
 
+
+--=20
+Yuhao Jiang
