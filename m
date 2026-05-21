@@ -1,98 +1,99 @@
-Received: from va-2-36.ptr.blmpb.com (va-2-36.ptr.blmpb.com [209.127.231.36])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCDF02D0C89
-	for <linux-raid@vger.kernel.org>; Thu, 21 May 2026 01:28:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.36
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF50B322DAF
+	for <linux-raid@vger.kernel.org>; Thu, 21 May 2026 02:10:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779326914; cv=none; b=sko9yP8K85r4f1cbgfXY5NF5GcF3xFBt2oCD+BqvwvfuVAJIcsgRhh4qDzDgqMn867UIERcLk0jIrxVYauJXup/+2aMQOLa6vUbFo9VkrjmaJCs5Igy6qwVGc63JpeoaZyEYZ7yWTo5POAAnDvRF6u/fId56cg6G0TPZb77XOxs=
+	t=1779329423; cv=none; b=rx6qlGL+Y9OkRwJgFQX7rveYuClCQx0TgTJkt6HJE4Nzvd5U9Y6gfulSqlVg28H3Aw1cC35KXcNVmvdOD0Sh1n2EvvEj3ygfBTtjfqR05Qk0+NNJUkMj1ilJ4fYCTNRLffpUwjsATNpULjmcX0BH8OGrjBYL6sZi7LrErh7x2p4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779326914; c=relaxed/simple;
-	bh=r1jXqHAxFPXVVqtvI4DBitP8oZ4BpAa1NPQZPNxkO1A=;
-	h=To:References:Content-Type:Message-Id:Cc:In-Reply-To:From:Subject:
-	 Date:Mime-Version; b=iuKqqa9d1bIJ4Nsd2djeu/XiVJ3RkThc6jQsw0Aj2MBXpR7KTGmX11unIv/6fkuHd+aVOT5sSgQtPuVzpBTcO7omf6Wyvhrj4SrZIQAcuqMWdeOTymc3KmXS7btF2qgI7b2ueAdq4xzr/BjmewLJvBbKRab8PFoSBRnLg951CbU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=HJI0he8t; arc=none smtp.client-ip=209.127.231.36
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1779329423; c=relaxed/simple;
+	bh=eCM/KsjgvQjtD0/6RY50AQwFmdj+fBMZ3WgVIdrchsg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=p3oQBYy29m200cCmCxKAZ/0aRzLYIKU9P1qW2zYKq1PcnEvBA5OViuvYqxSkNXC8ATqUwv1lKKoSmwyMo1tEvlvcsKteAUnju1mbpN54DOphEiGhKmjDuJeuv1Fi0kUAQJFwPz+OTfbORy1JW2ai8L4rrPe/x7Fd3x4SMVyAhUE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aGj9SvcP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="HJI0he8t"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1779326899;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=qFuJdayaz0Rc63OK0MVpyRuRO1dQDQj3W1wWjzTRHfk=;
- b=HJI0he8t47kiH5ATcPuuHzXysUwqRQs8VDtDcUYZKhATuJwudXlgnmkOtp+BVzsRVpV+Pn
- hP5zFgINnQuQqwsaC/wIJgLiDzptl6OZ+G1e7vTC/0UvTtge7OGd0m1O0AV1kWsPVxfONS
- Ufn4GMXYRXG5hCuZswbY6bCwWi79wz7lHcwR5EvkKLocq4JDMgjCnnoBFvJpqDMRHayHZs
- If2CDX9WlPmGBylfEL2vaNRISUZPZU/U3FZodlqBcXZLa1oQZxIRNqs/5hlWgasEB6F81T
- 0Q+AeIOyYITyhUKjgGIg8nwISEQx/TUCfbNyhAN+IWA+6y4cwIOP4ttoW6CptA==
-To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, <song@kernel.org>, 
-	<xni@redhat.com>, <neilb@suse.com>, <shli@fb.com>
-References: <20260501114652.590037-1-abd.masalkhi@gmail.com> <20260501114652.590037-2-abd.masalkhi@gmail.com>
-X-Lms-Return-Path: <lba+26a0e5fb1+45a6c6+vger.kernel.org+yukuai@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-Message-Id: <80f129b1-908b-401c-9dee-c85822b6b700@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.188]) by smtp.feishu.cn with ESMTPS; Thu, 21 May 2026 09:28:16 +0800
-Reply-To: yukuai@fygo.io
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<yukuai@fygo.io>
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <20260501114652.590037-2-abd.masalkhi@gmail.com>
-From: "Yu Kuai" <yukuai@fnnas.com>
-Subject: Re: [PATCH v2 1/3] md/raid1,raid10: fix deadlock in read error recovery path
-Date: Thu, 21 May 2026 09:28:14 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aGj9SvcP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B44241F00A3D
+	for <linux-raid@vger.kernel.org>; Thu, 21 May 2026 02:10:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779329421;
+	bh=bqYaTbUqFf2++o3cGLQjA7/41h55AFv4bdRMdEYifi4=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=aGj9SvcPMASFNYWOQuCtPYghx0gqIrZXdsHkPVhptfBW0snu3vZ1G8uiSKQmv/Fkj
+	 M/hjft9Pll2Bf+iNE3YAVFe2kq2O9IEGgPJF34nBj97hWttfV7dxiCaGDtN66gQT2C
+	 p3O9nXMbz1GRkGC5rZAsr0Snxc5uwoHukHMDYN4z/LyKQPc6ZOfg47MppKRnPsLke7
+	 mpZWYP3qy7tbkqGdhuzBL62o1iDU+HcsmLEm06eHJrY2x5xWy6+hK6QrpgjgP5pRh8
+	 GLQvBGpz8MRWxqoyY6tDSqQN4v4ZCyrxONBsHabn1VzB52BofQQzMAb0iMcDuFeblk
+	 3ltZFpmcL+ReQ==
+Received: by mail-qt1-f181.google.com with SMTP id d75a77b69052e-51306c9f2e1so67649141cf.0
+        for <linux-raid@vger.kernel.org>; Wed, 20 May 2026 19:10:21 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ9CMA7B708DyuT+MUYSA7iUb0VotSAJXxZ2GnE9tgFD2WpxnXNiYn9HsN0SJT/0v/phIsxlSfy6cbxG@vger.kernel.org
+X-Gm-Message-State: AOJu0YxFlMmkxWG3N/E4RCHC7DlEUW7rTI3R2GlFVPSUCZWFUi2Foqv1
+	S+5Mt0pF9ve4zAR3SJOzjdRWutbPkRodXilt1vpTeaWKviD9+ynNx0L+0hL5Af5oq8HRSv4FXHe
+	FUCIZe8di3HvHWGAzB6KAQSqTnGogbw==
+X-Received: by 2002:a05:622a:488e:b0:50d:a088:b9cb with SMTP id
+ d75a77b69052e-516c55e67afmr13352101cf.57.1779329421145; Wed, 20 May 2026
+ 19:10:21 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Original-From: Yu Kuai <yukuai@fygo.io>
-User-Agent: Mozilla Thunderbird
+MIME-Version: 1.0
+References: <20260515093019.3436882-1-chencheng@fnnas.com>
+In-Reply-To: <20260515093019.3436882-1-chencheng@fnnas.com>
+From: Xiao Ni <xiao@kernel.org>
+Date: Thu, 21 May 2026 10:10:08 +0800
+X-Gmail-Original-Message-ID: <CAF-RUYXx6rG4A4kOwoW2oG+FkBGfQToyk91UBm6wruDyL7WaTg@mail.gmail.com>
+X-Gm-Features: AVHnY4I_rYyRwBMlfMzS0LSINk2cIqoBBIWy_l4AC8xjQwgJfnNqOrXJx_vkx0A
+Message-ID: <CAF-RUYXx6rG4A4kOwoW2oG+FkBGfQToyk91UBm6wruDyL7WaTg@mail.gmail.com>
+Subject: Re: [PATCH] raid10_handle_discard() reuses r10bio objects from r10bio_pool.
+To: Chen Cheng <chencheng@fnnas.com>
+Cc: Yu Kuai <yukuai@fnnas.com>, linux-raid@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-=E5=9C=A8 2026/5/1 19:46, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
-
-> raid1d and raid10d may resubmit a split md cloned bio while handling
-> a read error. In this case, resubmitting the bio can lead to a deadlock
-> if the array is suspended before md_handle_request() acquires an
-> active_io reference via percpu_ref_tryget_live().
+On Fri, May 15, 2026 at 6:11=E2=80=AFPM Chen Cheng <chencheng@fnnas.com> wr=
+ote:
 >
-> Since the cloned bio already holds an active_io reference,
-> trying to acquire another reference via percpu_ref_tryget_live()
-> can lead to a deadlock while the array is suspended.
+> From: Chen Cheng <chencheng@fnnas.com>
 >
-> Fix this by using percpu_ref_get() for md cloned bios.
+> put_all_bios() always drops devs[i].bio, but it only drops
+> devs[i].repl_bio when r10_bio->read_slot < 0. If discard reuses an
+> r10bio that was previously used for a read, read_slot can still be
+> non-negative, and discard cleanup can skip bio_put() on repl_bio.
 >
-> Fixes: bb2a9acefaf9 ("md/raid1: switch to use md_account_bio() for io acc=
-ounting")
-> Fixes: 820455238366 ("md/raid10: switch to use md_account_bio() for io ac=
-counting")
-> Signed-off-by: Abd-Alrhman Masalkhi<abd.masalkhi@gmail.com>
+> Reset read_slot to -1 when preparing an r10bio for discard so the
+> replacement bio is always released correctly.
+>
+> Signed-off-by: Chen Cheng <chencheng@fnnas.com>
 > ---
-> Changes in v2:
->   - Use md_cloned_bio() consistently to detect cloned bios.
->   - Recognize that raid10 has the same issue and fix it in this series=09
->   - Allow splitting bios.
->   - Handle md cloned bios explicitly in md_handle_request()
->   - Link v1:https://lore.kernel.org/linux-raid/20260427103446.300378-1-ab=
-d.masalkhi@gmail.com/
+>  drivers/md/raid10.c | 1 +
+>  1 file changed, 1 insertion(+)
 >
-> Please let me know if I should add a Suggested-by tag for Yu Kuai,
-> as the solution approach was suggested during review.
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 39085e7dd6d2..7dc2a5a127e8 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1727,6 +1727,7 @@ static int raid10_handle_discard(struct mddev *mdde=
+v, struct bio *bio)
+>         r10_bio->mddev =3D mddev;
+>         r10_bio->state =3D 0;
+>         r10_bio->sectors =3D 0;
+> +       r10_bio->read_slot =3D -1;
+>         memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) * geo->raid_dis=
+ks);
+>         wait_blocked_dev(mddev, r10_bio);
 >
-> Link to Yu Kuai' email:https://lore.kernel.org/linux-raid/m2lde74dtw.fsf@=
-gmail.com/T/#m714020a38b60fc5f84b9a24f0c46acbe5d7342d6
+> --
+> 2.54.0
 >
-> Thanks
-> Abd-alrhman
-> ---
->   drivers/md/md.c | 25 ++++++++++++++++---------
->   drivers/md/md.h |  5 +++++
->   2 files changed, 21 insertions(+), 9 deletions(-)
 
-Reviewed-by: Yu Kuai <yukuai@fygo.io>
+Hi Chen
 
---=20
-Thansk,
-Kuai
+The title usually uses a format such as md/raid10: xxxx
+
+This patch looks good to me.
+Reviewed-by: Xiao Ni <xiao@kernel.org>
