@@ -1,75 +1,79 @@
-Received: from va-2-29.ptr.blmpb.com (va-2-29.ptr.blmpb.com [209.127.231.29])
+Received: from va-2-27.ptr.blmpb.com (va-2-27.ptr.blmpb.com [209.127.231.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C19D1F2B8D
-	for <linux-raid@vger.kernel.org>; Thu, 21 May 2026 01:25:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5620D2D877A
+	for <linux-raid@vger.kernel.org>; Thu, 21 May 2026 01:26:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.27
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779326708; cv=none; b=qIjTurd54NTFOESO3GxSaQUslSTjLScvxMTEanjLuPN5LNkxRFYCVfBaaIt5gX+RsKglYj/R+6SBsOV9B+yr1XhrxGnhLZcyIEmx4wX4inPH/mVaC06jN6ndHao5CeriaxXc5FEoOeLYi5L2JncouCBm06No2ULzvb0Ds/td0aQ=
+	t=1779326824; cv=none; b=byktZ6BX4NUYTlICZl15Vpo18qESI/du+V6YoOh5KQ0YXfsBsQEZ9rlRpDKgQn1c/JQUcng0C+VmVkKkJKOx74+nOCHCeUYmP6msoaEOZh2NYJTu4UezPWGeV521U64slqZlXayjZGRl+D8hVFNYD7smMfbU4APNpHD6OmjiiDk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779326708; c=relaxed/simple;
-	bh=U/WjruAKohq6rINxtu4KmSLp08jRLIMuOC2HDx+bp28=;
-	h=From:Mime-Version:In-Reply-To:References:To:Cc:Subject:
-	 Content-Type:Date:Message-Id; b=OHZN7iDCjiS3UlUck9lP0lX4TS9cq9fl9Y5SC0iQhACcOQGDJjNWbeZQYYRfdsTNSNqPeCh36VevCOR6dCYG/oAFzqjYBl0N9QQ6imk2Vn03L539L5bBlXJgXBbSzGGUOPUY5L0OvIdU0AogCYdO6fWr4O9xnEqjypWQmnqIOsE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=AiANEJQP; arc=none smtp.client-ip=209.127.231.29
+	s=arc-20240116; t=1779326824; c=relaxed/simple;
+	bh=a9mJ+MH707TZjUz2syJ3icq1fx1VtbSptaN9k9O8eR4=;
+	h=In-Reply-To:Cc:Content-Type:From:References:To:Date:Subject:
+	 Message-Id:Mime-Version; b=WUfvBKdmLWiWUFYfJPYXZq92N645fiY6a6LQXy+UxVQ4eq4YiJgcctSvq310Rc23fbxphWcA1ng78EQUp0PPInFExzEERhdShRTkRK8I2i+koNEg+Wpuitw2FjV+EZn7ryMae3QeAQkEtiBlh7namlktvJUifbetUTIm29q88ZM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=vbwGuDd4; arc=none smtp.client-ip=209.127.231.27
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="AiANEJQP"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="vbwGuDd4"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1779326701;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1779326812;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=B8AmDtAxEMMKZavYMUG7prsupaSll5A2/AvG/8OM7gE=;
- b=AiANEJQPdMnFBagmFZM8WJ389PdfWnmoQ0Hl6tpQ6W2izNioqYrKIMZIM1Ka2q0UndtxER
- gGmiySTrs158Z/igBt8oQElWU4+x3DI7Gh/pST7wSVnlrLfxbbcRA9Lq+uA/TP4c0HsmoQ
- BcafLmUcmmywlGg1wYHcoLTQCAcJcNOfqYkSAJla3eC7oF6s9Sd+dJ3Eqcb+NVUIO4BnNt
- CDkse77gJTD2cKebC2HQ3mGMiDNJh0Ge+6gBF8iyUtONbDVkddlhtIMOyCzMd+yCNyPueT
- bkSym9/nwas2LUTqab2lxIfBp0ocFSzGS3BWclFjfGtC5kKtNuYOkWA3l2a1pA==
+ bh=SV9lPPfmxwDbBbTudG+ZBkbt0ONvISG4IKYcaMt5zOo=;
+ b=vbwGuDd4lAGPWDYR/t0DhxUVIhLhmni0O0KutTSBoIp3LCm6IPAxT1zuJqbS6wWOdUabZv
+ 51+nIe6ZF+p7c/dMy+amd2nHofPtd0tjH61iPOsjgMc3v+TtnMC7lbAmhHEaMMEsoBKdWn
+ FY9/VG44y5rJoh2sWXLvrf1R+EZZc/00MT1y7LWJo+c7mHC4G7sUX/NG9uzENZRy1WOna5
+ UdM0Gz9f+B3zHlLFM9bttodk0eGrGY2bsWJQnn5UUgvNgeVEK213po0FkD1IYihwGCy5WM
+ tVljc2fL9mNwFpaI/BxeR+8PboajviUEuIdSvoRJwrXr7b/BOG/s4n8e83rxjw==
+In-Reply-To: <20260501114652.590037-4-abd.masalkhi@gmail.com>
+Reply-To: yukuai@fygo.io
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.188]) by smtp.feishu.cn with ESMTPS; Thu, 21 May 2026 09:26:49 +0800
+Content-Type: text/plain; charset=UTF-8
 From: "Yu Kuai" <yukuai@fnnas.com>
+References: <20260501114652.590037-1-abd.masalkhi@gmail.com> <20260501114652.590037-4-abd.masalkhi@gmail.com>
+Content-Language: en-US
+To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, <song@kernel.org>, 
+	<xni@redhat.com>, <neilb@suse.com>, <shli@fb.com>
+Date: Thu, 21 May 2026 09:26:48 +0800
+X-Lms-Return-Path: <lba+26a0e5f5b+3e2751+vger.kernel.org+yukuai@fnnas.com>
+Content-Transfer-Encoding: quoted-printable
+X-Original-From: Yu Kuai <yukuai@fygo.io>
+Subject: Re: [PATCH v2 3/3] md/raid1,raid10: fix bio accounting for split md cloned bios
+Message-Id: <e0a1bfe1-f106-4587-9433-117fbd8e65ec@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-In-Reply-To: <20260501114652.590037-3-abd.masalkhi@gmail.com>
-References: <20260501114652.590037-1-abd.masalkhi@gmail.com> <20260501114652.590037-3-abd.masalkhi@gmail.com>
 User-Agent: Mozilla Thunderbird
-Reply-To: yukuai@fygo.io
-Received: from [192.168.1.104] ([39.182.0.188]) by smtp.feishu.cn with ESMTPS; Thu, 21 May 2026 09:24:58 +0800
-X-Original-From: Yu Kuai <yukuai@fygo.io>
-X-Lms-Return-Path: <lba+26a0e5eeb+8a3aa9+vger.kernel.org+yukuai@fnnas.com>
-To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, <song@kernel.org>, 
-	<xni@redhat.com>, <neilb@suse.com>, <shli@fb.com>
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<yukuai@fygo.io>
-Subject: Re: [PATCH v2 2/3] md/raid1,raid10: fix error-path detection with md_cloned_bio()
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 21 May 2026 09:24:56 +0800
-Message-Id: <71990de4-1113-4b7d-8a50-ca1d82802a03@fygo.io>
-Content-Transfer-Encoding: quoted-printable
-Content-Language: en-US
 
 Hi,
 
 =E5=9C=A8 2026/5/1 19:46, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
-> Detect the error path using md_cloned_bio() instead of relying
-> on r1_bio in raid1 or r10_bio->read_slot in raid10, which may be
-> NULL or -1 after splitting and resubmitting a failed bio.
+> Use md_cloned_bio() to control bio accounting instead of relying
+> on r1bio_existed in raid1 or the io_accounting flag in raid10.
 >
-> As a result, the error path may not be recognized and memory
-> allocations can incorrectly use GFP_NOIO instead of
-> (GFP_NOIO | __GFP_HIGH), which can lead to a deadlock under
-> memory pressure.
-
-I don't think this patch will fix this problem. Because split bio
-is a new bio that will be resubmit by md_submit_bio(), such bio is
-not a md_cloned_bio yet until md_account_bio().
-
+> The previous logic does not reliably reflect whether a bio is an
+> md cloned bio. When a failed bio is split and resubmitted via
+> bio_submit_split_bioset() on the error path, this can lead to either
+> double accounting for md cloned bios, or missing accounting for bios
+> returned from bio_submit_split_bioset()
 >
-> Fixes: 689389a06ce7 ("md/raid1: simplify handle_read_error().")
-> Fixes: 545250f24809 ("md/raid10: simplify handle_read_error()")
+> Fix this by using md_cloned_bio() to detect md cloned bios and
+> skip accounting accordingly.
+>
+> Fixes: bb2a9acefaf9 ("md/raid1: switch to use md_account_bio() for io acc=
+ounting")
+> Fixes: 820455238366 ("md/raid10: switch to use md_account_bio() for io ac=
+counting")
+
+The same as patch 2, I don't think this patch fix any problem. And I
+think current IO accounting is correct.
+
 > Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 > ---
 > This patch depends on patch 1.
@@ -77,77 +81,68 @@ not a md_cloned_bio yet until md_account_bio().
 > Changes in v2:
 >   - New patch.
 > ---
->   drivers/md/raid1.c  | 13 ++++++++++---
->   drivers/md/raid10.c | 20 ++++++++++++++------
->   2 files changed, 24 insertions(+), 9 deletions(-)
+>   drivers/md/raid1.c  | 2 +-
+>   drivers/md/raid10.c | 8 ++++----
+>   2 files changed, 5 insertions(+), 5 deletions(-)
 >
 > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index cc9914bd15c1..c52ecd38c163 100644
+> index c52ecd38c163..dfaf34141325 100644
 > --- a/drivers/md/raid1.c
 > +++ b/drivers/md/raid1.c
-> @@ -1321,11 +1321,18 @@ static void raid1_read_request(struct mddev *mdde=
-v, struct bio *bio,
->   	bool r1bio_existed =3D !!r1_bio;
+> @@ -1396,7 +1396,7 @@ static void raid1_read_request(struct mddev *mddev,=
+ struct bio *bio,
+>   	}
 >  =20
->   	/*
-> -	 * If r1_bio is set, we are blocking the raid1d thread
-> -	 * so there is a tiny risk of deadlock.  So ask for
-> +	 * An md cloned bio indicates we are in the error path.
-> +	 * This is more reliable than checking r1_bio, which might
-> +	 * be NULL even in the error path if a failed bio was split.
-> +	 */
-> +	bool err_path =3D md_cloned_bio(mddev, bio);
-> +
-> +	/*
-> +	 * If we are in the error path, we are blocking the raid1d
-> +	 * thread so there is a tiny risk of deadlock.  So ask for
->   	 * emergency memory if needed.
->   	 */
-> -	gfp_t gfp =3D r1_bio ? (GFP_NOIO | __GFP_HIGH) : GFP_NOIO;
-> +	gfp_t gfp =3D err_path ? (GFP_NOIO | __GFP_HIGH) : GFP_NOIO;
->  =20
->   	/*
->   	 * Still need barrier for READ in case that whole
+>   	r1_bio->read_disk =3D rdisk;
+> -	if (!r1bio_existed) {
+> +	if (likely(!md_cloned_bio(mddev, bio))) {
+>   		md_account_bio(mddev, &bio);
+>   		r1_bio->master_bio =3D bio;
+>   	}
 > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 3a591e60a144..8c6fc398260e 100644
+> index 8c6fc398260e..93af7bbc9005 100644
 > --- a/drivers/md/raid10.c
 > +++ b/drivers/md/raid10.c
-> @@ -1155,7 +1155,20 @@ static void raid10_read_request(struct mddev *mdde=
-v, struct bio *bio,
->   	char b[BDEVNAME_SIZE];
->   	int slot =3D r10_bio->read_slot;
->   	struct md_rdev *err_rdev =3D NULL;
-> -	gfp_t gfp =3D GFP_NOIO;
-> +
-> +	/*
-> +	 * An md cloned bio indicates we are in the error path.
-> +	 * This is more reliable than checking slot, which might
-> +	 * be -1 even in the error path if a failed bio was split.
-> +	 */
-> +	bool err_path =3D md_cloned_bio(mddev, bio);
-> +
-> +	/*
-> +	 * If we are in the error path, we are blocking the raid10d
-> +	 * thread so there is a tiny risk of deadlock.  So ask for
-> +	 * emergency memory if needed.
-> +	 */
-> +	gfp_t gfp =3D err_path ? (GFP_NOIO | __GFP_HIGH) : GFP_NOIO;
+> @@ -1146,7 +1146,7 @@ static bool regular_request_wait(struct mddev *mdde=
+v, struct r10conf *conf,
+>   }
 >  =20
->   	if (slot >=3D 0 && r10_bio->devs[slot].rdev) {
->   		/*
-> @@ -1166,11 +1179,6 @@ static void raid10_read_request(struct mddev *mdde=
-v, struct bio *bio,
->   		 * we lose the device name in error messages.
->   		 */
->   		int disk;
-> -		/*
-> -		 * As we are blocking raid10, it is a little safer to
-> -		 * use __GFP_HIGH.
-> -		 */
-> -		gfp =3D GFP_NOIO | __GFP_HIGH;
+>   static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+> -				struct r10bio *r10_bio, bool io_accounting)
+> +				struct r10bio *r10_bio)
+>   {
+>   	struct r10conf *conf =3D mddev->private;
+>   	struct bio *read_bio;
+> @@ -1226,7 +1226,7 @@ static void raid10_read_request(struct mddev *mddev=
+, struct bio *bio,
+>   	}
+>   	slot =3D r10_bio->read_slot;
 >  =20
->   		disk =3D r10_bio->devs[slot].devnum;
->   		err_rdev =3D conf->mirrors[disk].rdev;
+> -	if (io_accounting) {
+> +	if (likely(!md_cloned_bio(mddev, bio))) {
+>   		md_account_bio(mddev, &bio);
+>   		r10_bio->master_bio =3D bio;
+>   	}
+> @@ -1552,7 +1552,7 @@ static void __make_request(struct mddev *mddev, str=
+uct bio *bio, int sectors)
+>   			conf->geo.raid_disks);
+>  =20
+>   	if (bio_data_dir(bio) =3D=3D READ)
+> -		raid10_read_request(mddev, bio, r10_bio, true);
+> +		raid10_read_request(mddev, bio, r10_bio);
+>   	else
+>   		raid10_write_request(mddev, bio, r10_bio);
+>   }
+> @@ -2872,7 +2872,7 @@ static void handle_read_error(struct mddev *mddev, =
+struct r10bio *r10_bio)
+>  =20
+>   	rdev_dec_pending(rdev, mddev);
+>   	r10_bio->state =3D 0;
+> -	raid10_read_request(mddev, r10_bio->master_bio, r10_bio, false);
+> +	raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
+>   	/*
+>   	 * allow_barrier after re-submit to ensure no sync io
+>   	 * can be issued while regular io pending.
 
 --=20
 Thansk,
