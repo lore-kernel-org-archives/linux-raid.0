@@ -1,312 +1,100 @@
-Received: from va-2-28.ptr.blmpb.com (va-2-28.ptr.blmpb.com [209.127.231.28])
+Received: from sg-3-30.ptr.tlmpb.com (sg-3-30.ptr.tlmpb.com [101.45.255.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AF582030A
-	for <linux-raid@vger.kernel.org>; Fri, 22 May 2026 04:58:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.28
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04E363115A5
+	for <linux-raid@vger.kernel.org>; Fri, 22 May 2026 05:24:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.45.255.30
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779425901; cv=none; b=BBdOekeAzJnokcpGRI72HX2YsqMwlKG5nkqw9kKa+AoM6drNn5gMmAcWG3Bv9Nqt4G/S9JBqSdTKYdZxUmj3G+FCxrCAOCCJEIA2/KaQ53So4cTBAtTfd/J7Jt9NjgNguJsmzEv+NOAf8b7BDjH5LFEIvZWy3tws7m9uJh3qZKo=
+	t=1779427483; cv=none; b=OcFDtvzDSUg5kwnR6I3b/yNYO345TKEOqM9pUNdzuJS6RbItBnaPy3X9oOTp572pKNYLGna0AdoVkctZeVEQ4/XGAShCp8b6mLqi4Rnntn1lxaCyIyx32goTazClB12io54bbZlx9K5wVOj8LWLIM5SvTK0sHDurNMdZAYRzXys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779425901; c=relaxed/simple;
-	bh=/FOz+Vu81gB3pnZ3NKZFq/XkrZ05c3Kx++ZM1B/1J+U=;
-	h=Cc:Mime-Version:Date:References:Content-Type:In-Reply-To:To:From:
-	 Subject:Message-Id; b=J2mytM3xH+8A6FDq6dyrvIzFib8qc+psGi+wWeYMQMOg8+laABZRGHhlqWh/eDKAGjBCjxFx38HvFnC99KXEuMu2/9sSTVw/TqeEZxQZcb6kT9+LakELKHhy0JT06EuQZWYMfku74R5dFANOhSeZmjrA/bD8Q74GsFLxQMHbuPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=HgqdD1Av; arc=none smtp.client-ip=209.127.231.28
+	s=arc-20240116; t=1779427483; c=relaxed/simple;
+	bh=fZLplu0qARg3rWmqZD/l4xsjhyX+5i3qNtyv2kBSyf8=;
+	h=To:Message-Id:Subject:Date:References:Cc:Mime-Version:From:
+	 In-Reply-To:Content-Type; b=sAfz6zURi1Q9ZwT/h9xIOjV7EjSbG0KrZTgQfoNp+2vYv/mgV3gTy2LGUyI0/L3a4/h8v+4jgvUGgBx81xMS5TzQy84iVceBh+F1fF+wy3llU+SK9Y7+Daf6p5jkdXPzsz8gUooW/pI0XDHSOfFMHXN4eYOdXWQNUp7oAcSjPCE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=bTSmlbjt; arc=none smtp.client-ip=101.45.255.30
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="HgqdD1Av"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="bTSmlbjt"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1779425887;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1779427431;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=F5joeOKTMAzcxyAh1ZDjsP3i88477QztNVKQopcSfDM=;
- b=HgqdD1AvYAYI+jQ70ZNyQvbSaVOCJvsajFx9c48D0Dp4hVD89CEDcRrhIZrT9Em0gNqlS5
- y/u7nnZPQSy7xTG6oa1fKd5iDbuk2Hf3AP9PdHxtYETLKNrlsPnzFIbfmTS9rhbEKvHZ+6
- QFFO/P4yiC15mjyDqMm4XESlKSDxjFRdyQM84SyRNse/y+YY+zk49tM81Sx39JaQRsYRYa
- rBagAk0Z2JSHPd12JRroVdrwNzKN4Ge94kj2mSKIRwFouNPMuTf8KURW89iHqOdKz5edNf
- P0hmZUGZlkv/amCPuxFLLEA9+s/DKaJpPYQSkahpZQC7+4+JNvMXcLLfWaYvZQ==
-Cc: <linux-kernel@vger.kernel.org>
+ bh=AnKZF3Q2HpQjUsMKtbca+rRnkqV2Eb6xS0IGaJc3kqM=;
+ b=bTSmlbjtnWHE7JLc+TUrZi1aR29oO8PVKdK8T3qRHkVpiBf3+cnB9bvh0bMkxEzSQQfv74
+ KwurbqS/pGBoFzltfK9+akgvEOXt36VGh7pYwBGtA8N7BhUMo06FE0Y2BFO2QiuLBidORE
+ zhjyQ+pdaf7cdqkYfd8IF5TBDz3Xu3frq2njucMvPiJ4FX1K7Gyb4y0kNBcPfE/XQE8vGX
+ Kd4ieVQ6aZxI2IaOZesni7tMezPVjqjiHcnliA2pGrdUP3ZgMDE9MH0aSXfTsySg++UWsq
+ 5cE1ztfWjfzgj/aTDf4IFyYx5we4XTep/zFa8dF5Oq5mPAxlP4ZWmpQ2ppzVsw==
+To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, <song@kernel.org>, 
+	<xni@redhat.com>, <neilb@suse.com>, <shli@fb.com>, <yukuai@fygo.io>
+Message-Id: <9ec6fd21-5977-4308-8c58-b84f6332b012@fygo.io>
+X-Original-From: Yu Kuai <yukuai@fygo.io>
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v2 0/3] md/raid1,raid10: fix deadlock and bio accounting in read error path
+Date: Fri, 22 May 2026 13:23:46 +0800
+References: <20260501114652.590037-1-abd.masalkhi@gmail.com>
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Received: from [192.168.1.104] ([39.182.0.188]) by smtp.feishu.cn with ESMTPS; Fri, 22 May 2026 12:58:04 +0800
 User-Agent: Mozilla Thunderbird
-X-Original-From: Yu Kuai <yukuai@fygo.io>
-Reply-To: yukuai@fygo.io
-Date: Fri, 22 May 2026 12:58:02 +0800
-References: <20260518123449.534287-1-chencheng@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <20260518123449.534287-1-chencheng@fnnas.com>
-X-Lms-Return-Path: <lba+26a0fe25d+2d5c2c+vger.kernel.org+yukuai@fnnas.com>
 Content-Language: en-US
-To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>, 
-	<yukuai@fygo.io>
+Reply-To: yukuai@fygo.io
 From: "Yu Kuai" <yukuai@fnnas.com>
-Subject: Re: [PATCH] md/raid5: cleanup reshape stripes when too many devices fail
-Message-Id: <a8db05df-b7b5-4fed-bb3f-1b68f65e0989@fygo.io>
+X-Lms-Return-Path: <lba+26a0fe865+c1a2ea+vger.kernel.org+yukuai@fnnas.com>
+In-Reply-To: <20260501114652.590037-1-abd.masalkhi@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Received: from [192.168.1.104] ([39.182.0.188]) by smtp.feishu.cn with ESMTPS; Fri, 22 May 2026 13:23:48 +0800
 
-Hi,
+=E5=9C=A8 2026/5/1 19:46, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
 
-=E5=9C=A8 2026/5/18 20:34, Chen Cheng =E5=86=99=E9=81=93:
-> From: Chen Cheng <chencheng@fnnas.com>
+> Hi,
 >
-> When a raid5/6 reshape is in progress and the array loses more than
-> max_degraded devices, raid5_error() sets MD_BROKEN and MD_RECOVERY_INTR,
-> but the reshape stripes reshape_request() handed out are never released.
-> The "s.failed > conf->max_degraded" branch of handle_stripe() calls
-> handle_failed_stripe() / handle_failed_sync() for user IO and resync,
-> but has no equivalent for the expand case, so three kinds of stripes
-> leak conf->reshape_stripes and mddev->recovery_active:
+> This series revisits an issue in the read error recovery path for
+> raid1 and raid10 when bios are split and resubmitted.
 >
->    1. Destination stripes with skipped_disk =3D=3D 0: STRIPE_EXPANDING +
->       STRIPE_EXPAND_READY set, but on a broken array the normal
->       completion at "s.expanded && !reconstruct_state && s.locked =3D=3D =
-0"
->       may never fire.
+> In v1, the approach was to avoid splitting bios in the raid1 thread
+> to prevent recursion and potential deadlocks. However, this was not
+> ideal and too restrictive.
 >
->    2. Destination stripes with skipped_disk =3D=3D 1: only STRIPE_EXPANDI=
-NG
->       set, no STRIPE_HANDLE.  They sit idle in the cache waiting for
->       source data that can no longer be read; handle_stripe() is never
->       called on them directly.
+> As suggested by Yu Kuai, this series instead handles the problem in
+> md_handle_request() and allows bio splitting.
 >
->    3. Source stripes (STRIPE_EXPAND_SOURCE) hit the failure branch but
->       the bit is never cleared and the destinations they feed are never
->       released.
+> Link to Yu Kuai' email: https://lore.kernel.org/linux-raid/m2lde74dtw.fsf=
+@gmail.com/T/#m714020a38b60fc5f84b9a24f0c46acbe5d7342d6
 >
-> md_do_sync() exits its main loop on MD_RECOVERY_INTR but then blocks
-> forever at
+> This series fixes the above by:
+>   - handling md cloned bios explicitly in md_handle_request()
+>   - using md_cloned_bio() to reliably detect the error path
+>   - fixing bio accounting to avoid double/missing accounting
 >
->      wait_event(mddev->recovery_wait,
->                 !atomic_read(&mddev->recovery_active));
+> Changes in v2:
+>   - Split fixes into separate patches for clarity.
+>   - Use md_cloned_bio() consistently to detect cloned bios.
+>   - Recognize that raid10 has the same issue and fix it in this series=09
+>   - Allow splitting bios.
+>   - Handle md cloned bios explicitly in md_handle_request()
+>   - Link v1: https://lore.kernel.org/linux-raid/20260427103446.300378-1-a=
+bd.masalkhi@gmail.com/
 >
-> A concurrent "echo frozen > sync_action" then blocks in
-> stop_sync_thread() waiting for MD_RECOVERY_RUNNING to clear, and the
-> array becomes unstoppable without a reboot.
+> Abd-Alrhman Masalkhi (3):
+>    md/raid1,raid10: fix deadlock in read error recovery path
+>    md/raid1,raid10: fix error-path detection with md_cloned_bio()
+>    md/raid1,raid10: fix bio accounting for split md cloned bios
 >
-> Reproducer:
->
->      DEVS=3D(/dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf)
->      for i in 0 1 2 3 4; do
->          s=3D$(blockdev --getsz ${DEVS[$i]})
->          dmsetup create dust$i --table "0 $s dust ${DEVS[$i]} 0 4096"
->          dmsetup message dust$i 0 quiet
->      done
->      mdadm -C /dev/md0 -e 1.2 -l 5 -n 4 -c 64 --assume-clean \
->          /dev/mapper/dust{0..3}
->      for b in $(seq 0 8191); do
->          dmsetup message dust0 0 addbadblock $b
->          dmsetup message dust1 0 addbadblock $b
->      done
->      mdadm --manage /dev/md0 --add /dev/mapper/dust4
->      mdadm --grow /dev/md0 -n 5 --backup-file=3D/tmp/grow.backup &
->      while [[ $(cat /sys/block/md0/md/sync_action) !=3D reshape ]]; do
->          sleep 0.1
->      done
->      dmsetup message dust0 0 enable
->      dmsetup message dust1 0 enable
->      sleep 5
->      echo frozen > /sys/block/md0/md/sync_action     # hangs forever
->
-> Before the fix, the two tasks deadlock against each other:
->
->      task:md0_reshape  state:D
->        schedule
->        md_do_sync.cold+0x818/0xc25       # wait_event(recovery_wait,
->        md_thread                         #            !recovery_active)
->        kthread
->
->      task:bash         state:D
->        schedule
->        stop_sync_thread+0x1a3/0x350      # wait_event(resync_wait,
->        action_store                      #            !MD_RECOVERY_RUNNIN=
-G)
->        md_attr_store
->        kernfs_fop_write_iter
->        vfs_write
->        ksys_write
->
-> After the fix handle_stripe() releases the leaked reshape stripes via
-> the new handle_failed_reshape(), recovery_active drains to zero,
-> md_do_sync() prints
->
->      md/raid:md0: Cannot continue operation (2/5 failed).
->      md: md0: reshape interrupted.
->
-> clears MD_RECOVERY_RUNNING and returns; the "echo frozen" write
-> returns in <1s; "mdadm --stop /dev/md0" completes normally and no
-> task is left in D state.
->
-> Fix it by adding handle_failed_reshape(), called from handle_stripe()
-> when the failure branch fires on a reshape stripe.  If sh is a
-> destination, the helper drops STRIPE_EXPANDING / STRIPE_EXPAND_READY,
-> decrements conf->reshape_stripes, wakes wait_for_reshape and calls
-> md_done_sync() to return the sectors reshape_request() accounted on
-> recovery_active.  If sh is a source, the helper drops
-> STRIPE_EXPAND_SOURCE and walks sh's non-parity data disks using the
-> same raid5_compute_blocknr() / raid5_compute_sector() mapping
-> handle_stripe_expansion() uses to forward data, looks up each matching
-> destination with R5_GAS_NOBLOCK | R5_GAS_NOQUIESCE and applies the
-> destination cleanup to it.
->
-> Signed-off-by: Chen Cheng <chencheng@fnnas.com>
-> ---
->   drivers/md/raid5.c | 91 ++++++++++++++++++++++++++++++++++++++++++++++
->   1 file changed, 91 insertions(+)
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 0d76e82f4506..f7d159b46a01 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -4594,10 +4594,96 @@ static void handle_stripe_expansion(struct r5conf=
- *conf, struct stripe_head *sh)
->   		}
->   	/* done submitting copies, wait for them to complete */
->   	async_tx_quiesce(&tx);
->   }
->  =20
-> +/*
-> + * handle_failed_reshape - drop reshape state when too many devices have=
- failed
-> + *
-> + * Called from handle_stripe() in the "s.failed > conf->max_degraded" br=
-anch
-> + * when sh is participating in a reshape. raid5_error() has set MD_BROKE=
-N
-> + * and MD_RECOVERY_INTR); The reshape stripes that reshape_request() han=
-ded out
-> + * must be released, otherwise they leak conf->reshape_stripes and
-> + * mddev->recovery_active, and md_do_sync() hangs forever at
-> + * wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active=
-)).
-> + *
-> + * Three kinds of stripes can reach this path:
-> + *
-> + *  1. Destination stripes with skipped_disk =3D 0 in reshape_request()
-> + *     - the new stripe maps entirely past the old array end, so its
-> + *     blocks are zero-filled in place without any source read.
-> + *     STRIPE_EXPANDING, STRIPE_EXPAND_READY and STRIPE_HANDLE are all s=
-et,
-> + *     handle_stripe() sees them with s.expanded =3D=3D 1.
-> + *
-> + *  2. Destination stripes with skipped_disk =3D 1 - the new stripe
-> + *     overlaps existing data and still needs source blocks copied in by
-> + *     handle_stripe_expansion().  Only STRIPE_EXPANDING is set, *not*
-> + *     STRIPE_HANDLE, so they sit idle in the stripe cache until a succe=
-ssful
-> + *     source expand re-handles them.  In the failure path no one ever d=
-oes,
-> + *     so handle_stripe() will never see them on its own; they are clean=
-ed up
-> + *     from the source side in step (b) below.
-> + *
-> + *  3. Source stripes (STRIPE_EXPAND_SOURCE) - reach handle_stripe() via=
- the
-> + *     read-error path once the source members start returning EIO and
-> + *     raid5_error() marks them Faulty.
-> + *
-> + * Handling:
-> + *
-> + *  (a) If STRIPE_EXPANDING is set on sh, clear it together with
-> + *      STRIPE_EXPAND_READY, atomic_dec conf->reshape_stripes, wake
-> + *      wait_for_reshape and md_done_sync(RAID5_STRIPE_SECTORS) to retur=
-n
-> + *      the sectors reshape_request() accounted on recovery_active.
-> + *
-> + *  (b) If STRIPE_EXPAND_SOURCE is set on sh, clear it and walk sh's
-> + *      non-parity disks the same way handle_stripe_expansion() does
-> + *      (raid5_compute_blocknr previous=3D1 -> raid5_compute_sector prev=
-ious=3D0)
-> + *      to find each destination, look it up with
-> + *      R5_GAS_NOBLOCK | R5_GAS_NOQUIESCE and apply step (a) to it.
-> + *      A NULL lookup means the destination never contributed to
-> + *      reshape_stripes - nothing to release.
-> + */
-> +static void handle_failed_reshape(struct r5conf *conf, struct stripe_hea=
-d *sh)
-> +{
-> +	int i;
-> +
-> +	if (test_and_clear_bit(STRIPE_EXPANDING, &sh->state)) {
-> +		atomic_dec(&conf->reshape_stripes);
-> +		wake_up(&conf->wait_for_reshape);
-> +		md_done_sync(conf->mddev, RAID5_STRIPE_SECTORS(conf));
-> +	}
-> +
-> +	clear_bit(STRIPE_EXPAND_READY, &sh->state);
+>   drivers/md/md.c     | 25 ++++++++++++++++---------
+>   drivers/md/md.h     |  5 +++++
+>   drivers/md/raid1.c  | 15 +++++++++++----
+>   drivers/md/raid10.c | 28 ++++++++++++++++++----------
+>   4 files changed, 50 insertions(+), 23 deletions(-)
 
-I feel this is not that simple, can you first describe reshape sh lifetime
-first? And then we can check in each state the handle is correct, for examp=
-le:
+Applied to md-7.2
 
-After setting STRIPE_EXPAND_READY, and new writes submitted, the STRIPE_EXP=
-ANDING
-is cleared while STRIPE_EXPAND_READY is still set.
-
-Normally if write succeed, the STRIPE_EXPAND_READY will be cleared, also
-reshape_stripes and recovery_active counters will be decreased. However,
-If the array is broken in this case, and above write failed, then is it pos=
-sible
-the sh will be analysed again and the above checking miss this case.
-
-> +
-> +	if (test_and_clear_bit(STRIPE_EXPAND_SOURCE, &sh->state)) {
-> +		for (i =3D 0; i < sh->disks; i++) {
-> +			int dd_idx;
-> +			struct stripe_head *sh2;
-> +			sector_t bn, sec;
-> +
-> +			if (i =3D=3D sh->pd_idx)
-> +				continue;
-> +			if (conf->level =3D=3D 6 && i =3D=3D sh->qd_idx)
-> +				continue;
-> +
-> +			bn =3D raid5_compute_blocknr(sh, i, 1);
-> +			sec =3D raid5_compute_sector(conf, bn, 0, &dd_idx, NULL);
-> +			sh2 =3D raid5_get_active_stripe(conf, NULL, sec,
-> +					R5_GAS_NOBLOCK | R5_GAS_NOQUIESCE);
-> +			if (!sh2)
-> +				continue;
-> +			if (test_and_clear_bit(STRIPE_EXPANDING, &sh2->state)) {
-> +				atomic_dec(&conf->reshape_stripes);
-> +				wake_up(&conf->wait_for_reshape);
-> +				md_done_sync(conf->mddev,
-> +					     RAID5_STRIPE_SECTORS(conf));
-> +			}
-> +			clear_bit(STRIPE_EXPAND_READY, &sh2->state);
-> +			raid5_release_stripe(sh2);
-> +		}
-> +	}
-> +}
-> +
->   static void analyse_stripe(struct stripe_head *sh, struct stripe_head_s=
-tate *s)
->   {
->   	struct r5conf *conf =3D sh->raid_conf;
->   	int disks =3D sh->disks;
->   	struct r5dev *dev;
-> @@ -5001,10 +5087,15 @@ static void handle_stripe(struct stripe_head *sh)
->   		break_stripe_batch_list(sh, 0);
->   		if (s.to_read+s.to_write+s.written)
->   			handle_failed_stripe(conf, sh, &s, disks);
->   		if (s.syncing + s.replacing)
->   			handle_failed_sync(conf, sh, &s);
-> +		if (s.expanding || s.expanded) {
-> +			handle_failed_reshape(conf, sh);
-> +			s.expanding =3D 0;
-> +			s.expanded =3D 0;
-> +		}
->   	}
->  =20
->   	/* Now we check to see if any write operations have recently
->   	 * completed
->   	 */
-
+>
 --=20
 Thansk,
 Kuai
