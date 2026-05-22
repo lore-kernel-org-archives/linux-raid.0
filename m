@@ -1,178 +1,79 @@
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+Received: from va-2-37.ptr.blmpb.com (va-2-37.ptr.blmpb.com [209.127.231.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 859CE1C862D
-	for <linux-raid@vger.kernel.org>; Fri, 22 May 2026 00:27:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC3E818EFD1
+	for <linux-raid@vger.kernel.org>; Fri, 22 May 2026 04:24:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.37
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779409642; cv=none; b=mRNQ6ROwvw5ufF7jcPQp1mTSxnlKPZxnqnTb1DrOxXjs4tQsOM+FsVATzqu0pusDwa5eNWdK/+VeGmv4T4NDAK3IPk2tzyjbCsivpM15eOUrTSRX56EnDmkuDN6mWarMExPDo8VkyQGyk1ru6BOkRtcLmx5UYKSN2iQrwezoang=
+	t=1779423844; cv=none; b=JHd7FpkNDuMV6X7WlYnwKr+W9zwjIfENASgZzOLI88DkLPfgb3SuKB9T+bROT+YgE20zz3lXqkHR+1AXGjDHgqr79DzVs57nKAaddF/x9GBmgLt/w6qAEIiTHp0VByCX6X8pQx2FfmPSv5DiMfYssIpTnbZ+z0elIVx2G9J9tpQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779409642; c=relaxed/simple;
-	bh=OeaBJnpyh+HO3KMXuAPZK5iYCsIl+yzigcjSPICIOXM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cM8bhMaW/V2UvN8umRN9N5gZAyQ1TGhq91qLdq1j03CQ5UQGadOtuJpNKT/rC91FNVxcq4DA0gZa7b19SK5BSkNZQPavyJP3SwWwsWHftJMqzpXFnwGcIrv5bdcKpX1ylT/kCgIGwLRVU5loM8QgPHKsBYqn33cKhxdqaFqZRFM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=PuX/S8HZ; arc=none smtp.client-ip=209.85.128.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1779423844; c=relaxed/simple;
+	bh=41wQLllRkSTT07fDvVF6oznjhrkdXK+OV1JQH22iYg0=;
+	h=To:Mime-Version:Content-Type:Message-Id:In-Reply-To:Subject:Date:
+	 Cc:From:References; b=lcPMdvEx6iOsI6TyPo/HuNyGw5tNfXe8wi+lB4+gbmFnaCud5rajZbz8g7/t6Ok0AuGN1MWobXozXzMTlGPF/93sK83nafYSOIw41glgmtvPVkfUdrwiSlGC1tbwUOn1dx5uxB50QALZtcpk5oPbnY6XArJOzizXxLbDhkdqN8M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=HQU464Gg; arc=none smtp.client-ip=209.127.231.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="PuX/S8HZ"
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-48fe26a177cso50695675e9.1
-        for <linux-raid@vger.kernel.org>; Thu, 21 May 2026 17:27:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1779409639; x=1780014439; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=6Ay5nOcwCJCKL9kJTKSvIioIW4guYTs+JXkN6Y689XM=;
-        b=PuX/S8HZNBG3rGmZb7jXpJY1TmOL6BM1XdZimuQ1Mo3sF1iQd1S+OSvIPpCNoJiRxP
-         ciYUxB+qCCeeiIVtYpCG6xYka03V3TYWGFAXmw6LSRvoRlY8P1HSsPqdN2vgYw+8+cV2
-         YbOorhIREcPpjLYESezzhxI6qhSwn/si/LgXHWjgb25pFgJW4wHAHA4oLh0S/8nSc9L7
-         nr5pQEAchCVDR6gk/vJzRuYg9H3tFchalPQkCtO64xf1/f3GQ7gL/zKWYkgnxIEjepd7
-         yoXnxlib59p3hr0/MhzefrNawh+lCo3Jda+C+8l3P6xklkK5ajky5yBhZBuHER90rsCd
-         JSzA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779409639; x=1780014439;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=6Ay5nOcwCJCKL9kJTKSvIioIW4guYTs+JXkN6Y689XM=;
-        b=n4nlH5YThOD3t2ieQBW2osh67W4+JrOrzbdiJ32R9HvOfptfA3eyTpEvSgcA7Fe8l8
-         0QBg0gvADTp0LqbqqKq+bEJhew6Af+OoVy80PB5vUsLvwvSvWy9xB9hwH6XPAq9tslXQ
-         vxBS8u0XVQT7mFvIKg+gGnXsROytO9ioY8q1h0HeRlBR3CsdICg0Fm2UgI7n9KheTQFm
-         Ga6ab024Bvexo/hIyRPIlNZvx0Z/0jH8jw29tnX8Y8kMBpxJoyIzs3zOgeBFK68Zyh13
-         nzAoLV3bZ69u5HbRGuJ8QKuyWTpUH4yYcty8udj0lmu9nP+fQKqtMO5yRT0sf4JPr4iB
-         WYYQ==
-X-Forwarded-Encrypted: i=1; AFNElJ/wp1lE3qyyX6vPbeGhi4t5aUml2ZPd9sup8shgsy8M7ViDul3ITxipyrx/8ng4nYelWEhiPpWCr0wl@vger.kernel.org
-X-Gm-Message-State: AOJu0YzdufEVPaLJY8MR82skF5kYgA7wXwJMnnBrm17GQxU39bvmLMgl
-	2wS/B6DEdXE2LsNs+NXHhh5dvWHp1g/k3su5c5bW2aEAy47HxCp5Ke1F3whCrM73trs=
-X-Gm-Gg: Acq92OEzLXVbAqTrFgiX2ik0yHCayt6FAX9FQMLnRNYXs6Sju4XvaLHW6bzmMGeLtPA
-	vsRpWIk003GGREqF1SkFeN8w+g4Mb6F8rc8wPr0W8Xb+HZIPZtlMri+bRQflmbkXTrfyA+mOxYM
-	LJ2pao2CN6Pxq1WAMm5qKvmX3t5j6n8JEmYtuOoVkRktZwVNnj1yaFjplkM9F0bqn9tA6es6Ylt
-	Inn/eV7/xibLohf1ln12/uj1ZGOPSMFu+5r6kDDMAsij3C79BgEcys9FdA1cbzCNYS2uqXovWj+
-	55C22HrG8jFC6sqScQUIZtVmREmCxcyUpgf+f/YLLWdWoKwDHW4F6tSs8UbBJydfU4kU8DP+s49
-	lF8tUsYQenq7E9spE6d2ZoD/Fpt3ssZuaFihgZlpI0ukSQWfST7U2ukkeqW+C+6kYNRQ+uhokTt
-	6GEcHP6zvuc2ZsbkraUxiQT0+Q5iLIJYLFBhEdl3tWuEe1jPSF59NGX+jJJvmiRHeuWcD+E+Fzj
-	yvh8jQh8gwCcyi0eFRYrlYFutgXe62Qav5GBx8GD+9lYvfWhgAhIz7dbQ==
-X-Received: by 2002:a05:600c:4ecc:b0:490:3c90:2cda with SMTP id 5b1f17b1804b1-490426cef73mr10709345e9.20.1779409638952;
-        Thu, 21 May 2026 17:27:18 -0700 (PDT)
-Received: from ?IPV6:2403:580d:fda1:0:2bb5:f164:6e6a:38d8? (2403-580d-fda1-0-2bb5-f164-6e6a-38d8.ip6.aussiebb.net. [2403:580d:fda1:0:2bb5:f164:6e6a:38d8])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2beb0f91bccsm4187125ad.36.2026.05.21.17.27.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 May 2026 17:27:17 -0700 (PDT)
-Message-ID: <cced8d26-d846-470d-b112-344e53ec1b9c@suse.com>
-Date: Fri, 22 May 2026 09:57:00 +0930
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="HQU464Gg"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1779423837;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=41wQLllRkSTT07fDvVF6oznjhrkdXK+OV1JQH22iYg0=;
+ b=HQU464GgJiJnktYX2iYT98JOIou7BnBnAJqO5kfcvRSBI279BfFDBjKLkfN44pYWkWIVqZ
+ aEersChJdTJj9H+Un2ukwajZyiGozYHfauCsN7SuMTklZu9JC6bKfgjx9LF0Ticf6+fctT
+ J9rVVAaTuwCcQxMGumxKDl0c8rDKo2ytrPr4BDNgnUWfDVOsFmE26rfH2h9JU0eMmiLI2V
+ feCnipLR4s7ztCfKluYFN9wyELllEtVckRKQMJnc8gWo5IxXsSXzyghWfa0e/8Thx71FgM
+ DaXajvgC0OrOfueslgP6I+htQZD4D5e76OZZGzX/SBYxHOahVR4LGrCjLeT8QQ==
+To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, 
+	"Xiao Ni" <xiao@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
+X-Lms-Return-Path: <lba+26a0fda5c+735016+vger.kernel.org+yukuai@fygo.io>
+Content-Type: text/plain; charset=UTF-8
+Message-Id: <aab7e7ea-737a-4bc6-a50c-f6ed7b38c37d@fygo.io>
+In-Reply-To: <m2pl2pkttv.fsf@gmail.com>
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/19] btrfs: require at least 4 devices for RAID 6
-To: Andrew Morton <akpm@linux-foundation.org>,
- Qu Wenruo <quwenruo.btrfs@gmx.com>
-Cc: Christoph Hellwig <hch@lst.de>, "H. Peter Anvin" <hpa@zytor.com>,
- kreijack@inwind.it, David Sterba <dsterba@suse.cz>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>,
- Ard Biesheuvel <ardb@kernel.org>, Huacai Chen <chenhuacai@kernel.org>,
- WANG Xuerui <kernel@xen0n.name>, Madhavan Srinivasan <maddy@linux.ibm.com>,
- Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>,
- "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
- Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
- Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
- Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
- Alexander Gordeev <agordeev@linux.ibm.com>,
- Christian Borntraeger <borntraeger@linux.ibm.com>,
- Sven Schnelle <svens@linux.ibm.com>, Thomas Gleixner <tglx@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
- Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
- Herbert Xu <herbert@gondor.apana.org.au>,
- Dan Williams <dan.j.williams@intel.com>, Chris Mason <clm@fb.com>,
- David Sterba <dsterba@suse.com>, Arnd Bergmann <arnd@arndb.de>,
- Song Liu <song@kernel.org>,
- Yu Kuai <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>,
- Li Nan <linan122@huawei.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev,
- linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
- linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org,
- linux-btrfs@vger.kernel.org, linux-arch@vger.kernel.org,
- linux-raid@vger.kernel.org
-References: <20260512052230.2947683-1-hch@lst.de>
- <20260512052230.2947683-2-hch@lst.de> <20260512114231.GG2558453@suse.cz>
- <20260513054742.GA1018@lst.de>
- <0a8d1ff4-f5a2-49e9-aa45-d25dbe4ded40@libero.it>
- <20260515043705.GA3855@lst.de>
- <34C16854-1065-4542-8836-DDED58EC1844@zytor.com>
- <20260518051207.GB9374@lst.de> <f46636c8-80ba-4802-a6a0-74cbc35e7bee@gmx.com>
- <20260521171730.7872482df453975cf60ce7dc@linux-foundation.org>
+Content-Transfer-Encoding: quoted-printable
+Reply-To: yukuai@fygo.io
+Subject: Re: [PATCH v2 2/3] md/raid1,raid10: fix error-path detection with md_cloned_bio()
+Date: Fri, 22 May 2026 12:23:52 +0800
+Received: from [192.168.1.104] ([39.182.0.188]) by smtp.larksuite.com with ESMTPS; Fri, 22 May 2026 04:23:56 +0000
+X-Original-From: Yu Kuai <yukuai@fygo.io>
+Cc: <song@kernel.org>, <xni@redhat.com>, <neilb@suse.com>, <shli@fb.com>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<yukuai@fygo.io>
+From: "Yu Kuai" <yukuai@fygo.io>
+References: <20260501114652.590037-1-abd.masalkhi@gmail.com> <20260501114652.590037-3-abd.masalkhi@gmail.com> <71990de4-1113-4b7d-8a50-ca1d82802a03@fygo.io> <CAF-RUYVK34e4ShHLd4nYGBdB3yxX4BBkS-woxBnmCuj_6vUisg@mail.gmail.com> <4ff43e8f-6405-4ce8-8cdf-f71e0bce4d3f@fygo.io> <m2pl2pkttv.fsf@gmail.com>
 Content-Language: en-US
-From: Qu Wenruo <wqu@suse.com>
-Autocrypt: addr=wqu@suse.com; keydata=
- xsBNBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
- 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
- 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
- 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
- gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
- AAHNGFF1IFdlbnJ1byA8d3F1QHN1c2UuY29tPsLAlAQTAQgAPgIbAwULCQgHAgYVCAkKCwIE
- FgIDAQIeAQIXgBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXVgBQkQ/lqxAAoJEMI9kfOh
- Jf6o+jIH/2KhFmyOw4XWAYbnnijuYqb/obGae8HhcJO2KIGcxbsinK+KQFTSZnkFxnbsQ+VY
- fvtWBHGt8WfHcNmfjdejmy9si2jyy8smQV2jiB60a8iqQXGmsrkuR+AM2V360oEbMF3gVvim
- 2VSX2IiW9KERuhifjseNV1HLk0SHw5NnXiWh1THTqtvFFY+CwnLN2GqiMaSLF6gATW05/sEd
- V17MdI1z4+WSk7D57FlLjp50F3ow2WJtXwG8yG8d6S40dytZpH9iFuk12Sbg7lrtQxPPOIEU
- rpmZLfCNJJoZj603613w/M8EiZw6MohzikTWcFc55RLYJPBWQ+9puZtx1DopW2jOwE0EWdWB
- rwEIAKpT62HgSzL9zwGe+WIUCMB+nOEjXAfvoUPUwk+YCEDcOdfkkM5FyBoJs8TCEuPXGXBO
- Cl5P5B8OYYnkHkGWutAVlUTV8KESOIm/KJIA7jJA+Ss9VhMjtePfgWexw+P8itFRSRrrwyUf
- E+0WcAevblUi45LjWWZgpg3A80tHP0iToOZ5MbdYk7YFBE29cDSleskfV80ZKxFv6koQocq0
- vXzTfHvXNDELAuH7Ms/WJcdUzmPyBf3Oq6mKBBH8J6XZc9LjjNZwNbyvsHSrV5bgmu/THX2n
- g/3be+iqf6OggCiy3I1NSMJ5KtR0q2H2Nx2Vqb1fYPOID8McMV9Ll6rh8S8AEQEAAcLAfAQY
- AQgAJgIbDBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXWBBQkQ/lrSAAoJEMI9kfOhJf6o
- cakH+QHwDszsoYvmrNq36MFGgvAHRjdlrHRBa4A1V1kzd4kOUokongcrOOgHY9yfglcvZqlJ
- qfa4l+1oxs1BvCi29psteQTtw+memmcGruKi+YHD7793zNCMtAtYidDmQ2pWaLfqSaryjlzR
- /3tBWMyvIeWZKURnZbBzWRREB7iWxEbZ014B3gICqZPDRwwitHpH8Om3eZr7ygZck6bBa4MU
- o1XgbZcspyCGqu1xF/bMAY2iCDcq6ULKQceuKkbeQ8qxvt9hVxJC2W3lHq8dlK1pkHPDg9wO
- JoAXek8MF37R8gpLoGWl41FIUb3hFiu3zhDDvslYM4BmzI18QgQTQnotJH8=
-In-Reply-To: <20260521171730.7872482df453975cf60ce7dc@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 
+Hi,
 
+=E5=9C=A8 2026/5/21 17:14, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
+> The original bio resubmitted via bio_list is not executing in the raid1d
+> thread context, so blocking on is_suspended() is correct and will not
+> cause a deadlock. The suspension deadlock risk only exists for
+> md_cloned_bio executing in the raid1d thread context in the error path.
+> And in this case it is always true that if we are executing in the
+> raid1d thread context the bio will already be a md_cloned_bio on entry
+> to md_handle_request(), even if current->bio_list was set, because (and a=
+s
+> @Xiao has mentioned) every time we split a bio in the error path we are
+> resubmitting the md_cloned_bio remainder, never the original bio.
 
-在 2026/5/22 09:47, Andrew Morton 写道:
-> On Wed, 20 May 2026 18:11:09 +0930 Qu Wenruo <quwenruo.btrfs@gmx.com> wrote:
-> 
->>
->>
->> 在 2026/5/18 14:42, Christoph Hellwig 写道:
->>> On Fri, May 15, 2026 at 12:59:34PM -0700, H. Peter Anvin wrote:
->>>> I don't think this is a good idea. Error out; it is the btrfs maintainers' job to ensure user data isn't lost.
->>>>
->>>> The RAID-6 code has *never* supported only 3 units, and if it ever worked for *any* of the implementations it was purely by accident. Speaking as the original author I should know; this was deliberate as in some cases the degenerate case (3) would have required extra trays in the code to no user benefit.
->>>>
->>>> I would not be surprised if the kernel crashed or corrupted the page cache in that case.
->>>
->>> It does, that's why I wanted to exclude it.  Anyway, for the about to be
->>> resent version I'll drop this btrfs patch over the stated objection and
->>> will otherwise not change anything.  This means the (IMHO hypothetical)
->>> users of this configuration will get a WARN_ON_ONCE triggered, but
->>> otherwise keep working (or rather not working) as before.
->>>
->>
->> For the btrfs part, I believe I can get the current 2-disk-raid5 and
->> 3-disk-raid6 to fallback to raid1 inside btrfs.
->>
->> I hope the btrfs part can be finished and reach the next merge window,
->> but I'm not 100% sure.
->>
->> What is the planned cycle to merge this raid5/6 cleanup?
-> 
-> At present it's on track for the 7.2-rc1 merge window.  Does that suit?
+I do understand this, if original bio or resubmitted bio only split at
+raid1_read_request, there is no problem. What I feel is not safe is that
+bio can split somewhere else.
 
-The current btrfs fix (*) is pretty small, I believe we can get it into 
-the next merge window, as long as we got enough review on it.
+This is possible for raid5, However, take a closer look at raid1/10, I
+feel it's not possible for resubmitted io to split in bio_split_to_limits.
+Even if it happens, it's probably someone else to blame.
 
-*: 
-https://lore.kernel.org/linux-btrfs/a1d63733465229936351804f3760803d5894a962.1779274630.git.wqu@suse.com/T/#u
-
-
-
+--=20
+Thansk,
+Kuai
