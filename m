@@ -1,226 +1,103 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B1033655F0
-	for <linux-raid@vger.kernel.org>; Thu, 21 May 2026 09:14:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9F162030A;
+	Fri, 22 May 2026 00:17:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779354888; cv=none; b=g8LaqNcROAGUykea6RbxIW4yqcv6UpKekesrNSDg0fz4R3MgHLXcd7NtOtIpOg1wavGgQf/+4yo2XTDHOqrevBgioAd/LpZj9D2LuDY1VoY3I5PB2KlimIPocIlfh6Sv31V7l8Lnk+CSKNCvM0YYK1Qz5aWRw++16meN2NpGKCA=
+	t=1779409053; cv=none; b=AOR+BXe3FHwLYwCLvOj0qQ+4R+tWu9zFrLjVZy6KgS0TaGVHDGcNruesKWw4UTYEjYU29JO6IbPq1+V3zwDFZir3gee6jzkaH2gHNprUtPhshe0ddxeiXfpUgib4aTJHwm4kKTn3pafGA2zOHKZkUEp429Fi8jsFErr5UhQHth8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779354888; c=relaxed/simple;
-	bh=11TOhBThyaFqatFbKkDggL/V/hCy1o9LVQxdy+MS0QY=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=Kict/psS4CwmoYkv9TDDm07lXy7Weu+zYVC0na99LNatkaI+TYUuoLj5+Rz0GF1TMgtgpPzxNZ18HGznrGfNJGoEyo059ukjHinHHUbTWJe1N+6dXBG5Q/106hRL2/bRvWR9bTtUVANCVGJ7nAtgWNOOhq3SxYG9R4zyTIrXnJY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K7sa8heI; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779409053; c=relaxed/simple;
+	bh=PZ642L4eiA5l0jaQb3SS62Q9ow/D8RsHXSgUbtVcVqs=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=eMt5XKsllH8vAmv/NRMcJnE4wJfu0/wWhCRzRKrNddXnxjhiu+V8ALZzONPAjVMjGnj/AqZD5uE5MFRhboj02A07uc8x3t1Q3yYRw3uGEE3POopxW4ChOUVIJVYaubAswegUcsBhgxBXwF7Pj6aTgDZ3YVKtobiJufkpPTwG8qY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=tEOlAwj1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K7sa8heI"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-48fe26a177cso43671975e9.1
-        for <linux-raid@vger.kernel.org>; Thu, 21 May 2026 02:14:44 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="tEOlAwj1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AB491F000E9;
+	Fri, 22 May 2026 00:17:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779354883; x=1779959683; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:references
-         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=/oRmnfvuiPx8cdoY/Q+DT96EWfnmml5NIWEe45HHm0g=;
-        b=K7sa8heIHdb5shfVezjOVbXbCCdzhLgp8L8XYOczfMeONMeqV/AVZEsJYRU4Gg2ylW
-         WsqnT3YqeCAWJJEhYtQncslnx4FywrDrjq7MBsARi2gY/Vx1ZEy1iV3wgnbvjqVJMl6A
-         AwrTkwOt3VBxOWv8YRzx/iqurNA8H85dv9p1QdEy83wLwgg8ber5es9zMEmWM0BnO2EL
-         Hxd9naedgSsoKFWi1t2r2lEdKY2mwhkKvDFl56oVDbiXP8cHK+U7nvm8tWUA5XkooDGq
-         XdCCt4HYfKUzrIgNYVoBxL3yerz8kg3xg+RqOuUdCmZriOULv/e4Igs2lhzoWWV2NgnG
-         MVCQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779354883; x=1779959683;
-        h=content-transfer-encoding:mime-version:message-id:date:references
-         :in-reply-to:subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=/oRmnfvuiPx8cdoY/Q+DT96EWfnmml5NIWEe45HHm0g=;
-        b=qZruv62LwnFSKOmqiL7htT+4IiNYmLj9Kz/EBL89SgwwlqOAzBhmQJJIw9x4wsUcrm
-         RU6o8s2dSzx6tJGw01mAacqxOIb4b3zR1bDcgv7ln+m8LBEvFJ0pUEPyuxpqBcBqZh+Z
-         q/4NHgu61iwLVt2IfqoDjO0VHC4ZcDr/v7SpgW2mALf9qGcWy+/680odLCrwbyJay5FA
-         DVnsstFWzHsLCRcnLg0j3PDhoaHGYgupPTFloNfKccC2NDcZrdq4yvF7TWUs0rPVCgy+
-         3hA2IdUqPo5LCWSYvZpHR0ImcQQvbrBrIQQWdIBhVZu+Zm1EmxCur8qWCDOURjpNv+Ca
-         Ixvw==
-X-Forwarded-Encrypted: i=1; AFNElJ+jWOMb5GpnpcGkfVB2heYQvtJVbNuVIeQRovWPxjU4oorJ8QqTg1fKvDwf8wEydDvhRQlom66/rE2+@vger.kernel.org
-X-Gm-Message-State: AOJu0YyqnNvYu+mFXVGQNlKqerJMPJha/6WmRSVnVjxEHqmZSmbuiNYs
-	F1Zh4UqK+rsb7qJrcRbS4vA4znpzsFX+61jIvXrSuHeFh3Hg0ntIWCRP73uwMQ==
-X-Gm-Gg: Acq92OFLtOj1sB0aMjKUsaN0w979Gzr463rOoX4r3dOL+rtT/8Zzv7kKN4NKUnnWPED
-	qcgdshaQnF9ML4M63Gz02oJL9uChC58zEEZqeIBABZiblaeUv8oHD4mZnsHosrMtanjk19U1sO6
-	weE4hcshVf0KCJj9Zs41Gqof25lxqySbmdgigFv7Q7NFWqjuv2Pua+dUfpLJHNNHXljtP7qq/Tm
-	KwTbVjrtwk0J37Yc4abBZ64brNA3Y4q79R/DavWw15ArEivObtI4M57iHOR8F+Wmmx0EQSf3TMQ
-	S/TCEbxxpC9RdKgvc9WHslxTR7yz8eniDw3/Cu7/NeJ3eo3ZoA9+YmRu7ZhjozvWgnvtmUmzOL4
-	O8dKpeddIwt9E2ltrUzFR6qkOmBIlbENfheBVJeG7GSClCxw0nJb7uplB63VZm6dzBo74vD1KQM
-	F25BiCu4hVK32L1O5orcMLxV70ya2juk0bJjYHrOXKUZ3Vhs1rIeiX24fmRJEUd1VLPpno9N4XP
-	ulmjlX8TRE7aw==
-X-Received: by 2002:a05:600c:450c:b0:490:320:949 with SMTP id 5b1f17b1804b1-490360e3332mr24941675e9.27.1779354883020;
-        Thu, 21 May 2026 02:14:43 -0700 (PDT)
-Received: from Abds-MacBook-Air.local ([2a02:3037:623:1f9e:495:7d00:e34a:1c98])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4903c995f13sm12648805e9.3.2026.05.21.02.14.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 May 2026 02:14:42 -0700 (PDT)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: Yu Kuai <yukuai@fygo.io>, Xiao Ni <xiao@kernel.org>
-Cc: song@kernel.org, xni@redhat.com, neilb@suse.com, shli@fb.com,
- linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai@fygo.io
-Subject: Re: [PATCH v2 2/3] md/raid1,raid10: fix error-path detection with
- md_cloned_bio()
-In-Reply-To: <4ff43e8f-6405-4ce8-8cdf-f71e0bce4d3f@fygo.io>
-References: <20260501114652.590037-1-abd.masalkhi@gmail.com>
- <20260501114652.590037-3-abd.masalkhi@gmail.com>
- <71990de4-1113-4b7d-8a50-ca1d82802a03@fygo.io>
- <CAF-RUYVK34e4ShHLd4nYGBdB3yxX4BBkS-woxBnmCuj_6vUisg@mail.gmail.com>
- <4ff43e8f-6405-4ce8-8cdf-f71e0bce4d3f@fygo.io>
-Date: Thu, 21 May 2026 11:14:36 +0200
-Message-ID: <m2pl2pkttv.fsf@gmail.com>
+	d=linux-foundation.org; s=korg; t=1779409052;
+	bh=CU1uL6EPLGCDhveEV6q88XhXLU9G2F321bQb4+LouN4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=tEOlAwj1g8LscGq036JIP92ztTOZa0Zgac7ekTv/50pIaaEK2W4Kh2iSs9mjKKeU3
+	 0E+2P+EF9NE/33lqS+qb4XkzDA6GlEgAvB+jA6sk+cyej3pym+Q94Vs41XiDgm/F+z
+	 FHXvYWEtcRfRDonE2oSvzPrH33/ywop/mXaGAjBA=
+Date: Thu, 21 May 2026 17:17:30 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Qu Wenruo <quwenruo.btrfs@gmx.com>
+Cc: Christoph Hellwig <hch@lst.de>, "H. Peter Anvin" <hpa@zytor.com>,
+ kreijack@inwind.it, David Sterba <dsterba@suse.cz>, Catalin Marinas
+ <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, Ard Biesheuvel
+ <ardb@kernel.org>, Huacai Chen <chenhuacai@kernel.org>, WANG Xuerui
+ <kernel@xen0n.name>, Madhavan Srinivasan <maddy@linux.ibm.com>, Michael
+ Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>,
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, Paul Walmsley
+ <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou
+ <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>, Heiko Carstens
+ <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev
+ <agordeev@linux.ibm.com>, Christian Borntraeger
+ <borntraeger@linux.ibm.com>, Sven Schnelle <svens@linux.ibm.com>, Thomas
+ Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov
+ <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+ Herbert Xu <herbert@gondor.apana.org.au>, Dan Williams
+ <dan.j.williams@intel.com>, Chris Mason <clm@fb.com>, David Sterba
+ <dsterba@suse.com>, Arnd Bergmann <arnd@arndb.de>, Song Liu
+ <song@kernel.org>, Yu Kuai
+ <yukuai@alb-78bjiv52429oh8qptp.cn-shenzhen.alb.aliyuncs.com>, Li Nan
+ <linan122@huawei.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev,
+ linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
+ linux-s390@vger.kernel.org, linux-crypto@vger.kernel.org,
+ linux-btrfs@vger.kernel.org, linux-arch@vger.kernel.org,
+ linux-raid@vger.kernel.org
+Subject: Re: [PATCH 01/19] btrfs: require at least 4 devices for RAID 6
+Message-Id: <20260521171730.7872482df453975cf60ce7dc@linux-foundation.org>
+In-Reply-To: <f46636c8-80ba-4802-a6a0-74cbc35e7bee@gmx.com>
+References: <20260512052230.2947683-1-hch@lst.de>
+	<20260512052230.2947683-2-hch@lst.de>
+	<20260512114231.GG2558453@suse.cz>
+	<20260513054742.GA1018@lst.de>
+	<0a8d1ff4-f5a2-49e9-aa45-d25dbe4ded40@libero.it>
+	<20260515043705.GA3855@lst.de>
+	<34C16854-1065-4542-8836-DDED58EC1844@zytor.com>
+	<20260518051207.GB9374@lst.de>
+	<f46636c8-80ba-4802-a6a0-74cbc35e7bee@gmx.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+On Wed, 20 May 2026 18:11:09 +0930 Qu Wenruo <quwenruo.btrfs@gmx.com> wrote:
 
-Hi Kuai
+> 
+> 
+> 在 2026/5/18 14:42, Christoph Hellwig 写道:
+> > On Fri, May 15, 2026 at 12:59:34PM -0700, H. Peter Anvin wrote:
+> >> I don't think this is a good idea. Error out; it is the btrfs maintainers' job to ensure user data isn't lost.
+> >>
+> >> The RAID-6 code has *never* supported only 3 units, and if it ever worked for *any* of the implementations it was purely by accident. Speaking as the original author I should know; this was deliberate as in some cases the degenerate case (3) would have required extra trays in the code to no user benefit.
+> >>
+> >> I would not be surprised if the kernel crashed or corrupted the page cache in that case.
+> > 
+> > It does, that's why I wanted to exclude it.  Anyway, for the about to be
+> > resent version I'll drop this btrfs patch over the stated objection and
+> > will otherwise not change anything.  This means the (IMHO hypothetical)
+> > users of this configuration will get a WARN_ON_ONCE triggered, but
+> > otherwise keep working (or rather not working) as before.
+> > 
+> 
+> For the btrfs part, I believe I can get the current 2-disk-raid5 and 
+> 3-disk-raid6 to fallback to raid1 inside btrfs.
+> 
+> I hope the btrfs part can be finished and reach the next merge window, 
+> but I'm not 100% sure.
+> 
+> What is the planned cycle to merge this raid5/6 cleanup?
 
-On Thu, May 21, 2026 at 15:29 +0800, Yu Kuai wrote:
-> Hi,
->
-> =E5=9C=A8 2026/5/21 15:08, Xiao Ni =E5=86=99=E9=81=93:
->> On Thu, May 21, 2026 at 9:25=E2=80=AFAM Yu Kuai <yukuai@fnnas.com> wrote:
->>> Hi,
->>>
->>> =E5=9C=A8 2026/5/1 19:46, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
->>>> Detect the error path using md_cloned_bio() instead of relying
->>>> on r1_bio in raid1 or r10_bio->read_slot in raid10, which may be
->>>> NULL or -1 after splitting and resubmitting a failed bio.
->>>>
->>>> As a result, the error path may not be recognized and memory
->>>> allocations can incorrectly use GFP_NOIO instead of
->>>> (GFP_NOIO | __GFP_HIGH), which can lead to a deadlock under
->>>> memory pressure.
->>> I don't think this patch will fix this problem. Because split bio
->>> is a new bio that will be resubmit by md_submit_bio(), such bio is
->>> not a md_cloned_bio yet until md_account_bio().
->> Hi Kuai
->>
->>          bio =3D bio_submit_split_bioset(bio, max_sectors,
->>                            &conf->bio_split);
->> bio_submit_split_bioset returns the split bio and the remainder bio
->> will be submitted again which is already a md_cloned_bio.
->
-> Okay, I understand now this is a special case that current->bio_list is
-> NULL. However, the problem still exist in the case original IO split again
-> while resubmitting, and in this case current->bio_list will be set so new
-> split io will be resubmit by md_submit_bio(). Which means patch 1 can't
-> fix this case as well.
-
-The original bio resubmitted via bio_list is not executing in the raid1d
-thread context, so blocking on is_suspended() is correct and will not
-cause a deadlock. The suspension deadlock risk only exists for
-md_cloned_bio executing in the raid1d thread context in the error path.
-And in this case it is always true that if we are executing in the
-raid1d thread context the bio will already be a md_cloned_bio on entry
-to md_handle_request(), even if current->bio_list was set, because (and as
-@Xiao has mentioned) every time we split a bio in the error path we are
-resubmitting the md_cloned_bio remainder, never the original bio.
-
->
-> Perhaps it's better to check task_struct instead of bio_set.
->
->>
->> Regards
->> Xiao
->>>> Fixes: 689389a06ce7 ("md/raid1: simplify handle_read_error().")
->>>> Fixes: 545250f24809 ("md/raid10: simplify handle_read_error()")
->>>> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
->>>> ---
->>>> This patch depends on patch 1.
->>>>
->>>> Changes in v2:
->>>>    - New patch.
->>>> ---
->>>>    drivers/md/raid1.c  | 13 ++++++++++---
->>>>    drivers/md/raid10.c | 20 ++++++++++++++------
->>>>    2 files changed, 24 insertions(+), 9 deletions(-)
->>>>
->>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->>>> index cc9914bd15c1..c52ecd38c163 100644
->>>> --- a/drivers/md/raid1.c
->>>> +++ b/drivers/md/raid1.c
->>>> @@ -1321,11 +1321,18 @@ static void raid1_read_request(struct mddev *m=
-ddev, struct bio *bio,
->>>>        bool r1bio_existed =3D !!r1_bio;
->>>>
->>>>        /*
->>>> -      * If r1_bio is set, we are blocking the raid1d thread
->>>> -      * so there is a tiny risk of deadlock.  So ask for
->>>> +      * An md cloned bio indicates we are in the error path.
->>>> +      * This is more reliable than checking r1_bio, which might
->>>> +      * be NULL even in the error path if a failed bio was split.
->>>> +      */
->>>> +     bool err_path =3D md_cloned_bio(mddev, bio);
->>>> +
->>>> +     /*
->>>> +      * If we are in the error path, we are blocking the raid1d
->>>> +      * thread so there is a tiny risk of deadlock.  So ask for
->>>>         * emergency memory if needed.
->>>>         */
->>>> -     gfp_t gfp =3D r1_bio ? (GFP_NOIO | __GFP_HIGH) : GFP_NOIO;
->>>> +     gfp_t gfp =3D err_path ? (GFP_NOIO | __GFP_HIGH) : GFP_NOIO;
->>>>
->>>>        /*
->>>>         * Still need barrier for READ in case that whole
->>>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->>>> index 3a591e60a144..8c6fc398260e 100644
->>>> --- a/drivers/md/raid10.c
->>>> +++ b/drivers/md/raid10.c
->>>> @@ -1155,7 +1155,20 @@ static void raid10_read_request(struct mddev *m=
-ddev, struct bio *bio,
->>>>        char b[BDEVNAME_SIZE];
->>>>        int slot =3D r10_bio->read_slot;
->>>>        struct md_rdev *err_rdev =3D NULL;
->>>> -     gfp_t gfp =3D GFP_NOIO;
->>>> +
->>>> +     /*
->>>> +      * An md cloned bio indicates we are in the error path.
->>>> +      * This is more reliable than checking slot, which might
->>>> +      * be -1 even in the error path if a failed bio was split.
->>>> +      */
->>>> +     bool err_path =3D md_cloned_bio(mddev, bio);
->>>> +
->>>> +     /*
->>>> +      * If we are in the error path, we are blocking the raid10d
->>>> +      * thread so there is a tiny risk of deadlock.  So ask for
->>>> +      * emergency memory if needed.
->>>> +      */
->>>> +     gfp_t gfp =3D err_path ? (GFP_NOIO | __GFP_HIGH) : GFP_NOIO;
->>>>
->>>>        if (slot >=3D 0 && r10_bio->devs[slot].rdev) {
->>>>                /*
->>>> @@ -1166,11 +1179,6 @@ static void raid10_read_request(struct mddev *m=
-ddev, struct bio *bio,
->>>>                 * we lose the device name in error messages.
->>>>                 */
->>>>                int disk;
->>>> -             /*
->>>> -              * As we are blocking raid10, it is a little safer to
->>>> -              * use __GFP_HIGH.
->>>> -              */
->>>> -             gfp =3D GFP_NOIO | __GFP_HIGH;
->>>>
->>>>                disk =3D r10_bio->devs[slot].devnum;
->>>>                err_rdev =3D conf->mirrors[disk].rdev;
->>> --
->>> Thansk,
->>> Kuai
->>>
-> --=20
-> Thansk,
-> Kuai
-
---=20
-Best Regards,
-Abd-Alrhman
+At present it's on track for the 7.2-rc1 merge window.  Does that suit?
