@@ -1,107 +1,116 @@
-Received: from mr5.vodafonemail.de (mr5.vodafonemail.de [145.253.228.165])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-27.ptr.blmpb.com (va-2-27.ptr.blmpb.com [209.127.231.27])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7889C2BE7BE
-	for <linux-raid@vger.kernel.org>; Sun, 24 May 2026 10:35:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=145.253.228.165
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58307343890
+	for <linux-raid@vger.kernel.org>; Mon, 25 May 2026 01:55:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.27
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779618911; cv=none; b=NQNg+rVBEeoz9Oy2Pq5emCa/XvGzai8WroI8M/vtZDKcdWlDaECrRbC/6z2E2nVq+Tt00YY42pspd7UMnVqNUARfkhXCqHKH8lYG0myafOPk05YarHNLm7JoEMVyZGjT2IVrPZhARq+yRpeQ8ttMl8noauqNfHN/ucwpQ+9W+Fg=
+	t=1779674148; cv=none; b=kSKouf8V91N3iCRAZ13h7e0/Ao+kNDWf51YUD0ZRgsTkhVUNYHELxXyzQsXIjoADyTXbreEwRjoiFzPrwKE5Ki29Tr3s7NrVPnI/Yvj+j68dy5UyRg6ivOT1uYeMOmrJpupQaho4IaxPcYNMn0StaFsOqRLasPjC2BPAIe9bf/E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779618911; c=relaxed/simple;
-	bh=XTsdlfnOu0UOWMm83mO1JZsns0lbb4TEMld9nAhhe1c=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=ZYQJ0D+hfasLkRKfa9KOvntdT2dmpivd8JABnBb5R6+QufRDrB+YBqG7VmNzkXU/d11R5BK9TO4k3o7zmt3udY0MWS/l+D4Syxf7mPB1I0GGbBUUNipSVGaZsmGnvsBtbAOejJLZlcEO23ePK0j4KNBKU81CCYj0oUhwmpXfy5s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nexgo.de; spf=pass smtp.mailfrom=nexgo.de; dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b=L+JMdZSH; arc=none smtp.client-ip=145.253.228.165
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nexgo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nexgo.de
+	s=arc-20240116; t=1779674148; c=relaxed/simple;
+	bh=dM8iXq2DfZWpt+uJuTJTttU/PN+OhSXC7Ieeiw35748=;
+	h=Message-Id:Mime-Version:Cc:From:Subject:Date:Content-Type:To; b=rhIgptorXqy7jKbax+B6D6z4eeDeORYOMiX4n5u/N4OU+dmFUDYi7zHo8ccy4fQJOeEsKL5fW9J/w2q1Bb4wNf++Tp9aDysXQ70lvVDYSUPfI8LcsnkkGcXDWIEEHX2XpK7A/FnW3FJE4HkbFKkQlFLr5uf8QgwtIdXHXjpwusk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=QBKNscJf; arc=none smtp.client-ip=209.127.231.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b="L+JMdZSH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nexgo.de;
-	s=vfde-mb-mr2-23sep; t=1779618451;
-	bh=19aAJ3ej2Wa8Rd/4Vm+Mu/DaHHVHBvGWC6AgiQu+x9o=;
-	h=Date:From:To:Subject:Message-ID:Content-Type:From;
-	b=L+JMdZSHmrD+ie+DHUutgoaFRhAzF/meol887JzwYFefXhReuDZFkaBcMcyCvlazU
-	 +cL2F/Ioxp+Xa4hjfDmHGqQvn6IITCNwjDGx/3Y3Wk5cA2t8O+F+xBi3qWbZ4rKNpk
-	 BUVLeS1fEQRCSHhyGvS2D6ZSxZ79q8AGKWPj+lOU=
-Received: from smtp.vodafone.de (unknown [10.0.0.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
-	(No client certificate requested)
-	by mr5.vodafonemail.de (Postfix) with ESMTPS id 4gNZvl59y7z3sVG9
-	for <linux-raid@vger.kernel.org>; Sun, 24 May 2026 10:27:31 +0000 (UTC)
-Received: from lazy.lzy (p579d7386.dip0.t-ipconnect.de [87.157.115.134])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.vodafone.de (Postfix) with ESMTPSA id 4gNZvl38pwz9047
-	for <linux-raid@vger.kernel.org>; Sun, 24 May 2026 10:27:28 +0000 (UTC)
-Received: from lazy.lzy (localhost [127.0.0.1])
-	by lazy.lzy (8.18.2/8.14.5) with ESMTP id 64OARR4b007849
-	for <linux-raid@vger.kernel.org>; Sun, 24 May 2026 12:27:27 +0200
-Received: (from red@localhost)
-	by lazy.lzy (8.18.2/8.18.1/Submit) id 64OARR8w007848
-	for linux-raid@vger.kernel.org; Sun, 24 May 2026 12:27:27 +0200
-Date: Sun, 24 May 2026 12:27:27 +0200
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-To: linux-raid@vger.kernel.org
-Subject: LBS setup
-Message-ID: <ahLSj1Ua5WJ0GTgY@lazy.lzy>
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="QBKNscJf"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1779674136;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=YGkdgFaUWQtfE9l3Cq8p9cufQpnERd3G2lsJbta8k8U=;
+ b=QBKNscJfpYmIK1szrkiNhUmfR1RtOzpfTV+bT6NXm2EfXtkbg0ZRfM5HmVaDbtt1ppmqO1
+ sVaIkwc/dhJSyF74Audy7FvUFLCTm6Bm19Ox329ey5Bj8fnKad9WZ9uAvfZNse5fQCXQUi
+ t+DRCRK/+FEUeE3F7nchEOQ6zDTT86r59ZrbTEIdpx3GscJuoOWTMhoJGSzbwfw1TmpHD5
+ g0TCZrhGe2prQNQ6QqslGVhZtCt5+sFm3+2qkln0dhGP2RWwmkwEvPHwM40bOdXkPdjn53
+ N7WHNMS9bckQECYXJb+cjF7vmuJ33Ee+27TGuRrFyDwALoGjAquHuE8Nq+iLbw==
+Message-Id: <20260525015520.2565423-1-chencheng@fnnas.com>
+X-Original-From: chencheng@fnnas.com
+X-Lms-Return-Path: <lba+26a13ac16+16e726+vger.kernel.org+chencheng@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-purgate-server: smtpa03
-X-purgate-type: clean
-X-purgate: clean
-X-purgate-size: 963
-X-purgate-ID: 155817::1779618451-5B44D64C-C116A9E1/0/0
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.54.0
+Content-Transfer-Encoding: 7bit
+Cc: "Chen Cheng" <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
+From: "Chen Cheng" <chencheng@fnnas.com>
+Subject: [PATCH v3 0/2] md/raid10: fix r10bio width mismatches across reshape
+Date: Mon, 25 May 2026 09:55:18 +0800
+Received: from localhost.localdomain ([113.111.141.72]) by smtp.feishu.cn with ESMTPS; Mon, 25 May 2026 09:55:33 +0800
+Content-Type: text/plain; charset=UTF-8
+To: "Yu Kuai" <yukuai@fnnas.com>, <linux-raid@vger.kernel.org>
 
-Hi all,
+From: Chen Cheng <chencheng@fnnas.com>
 
-I've some questions about some recent
-report from kernel.
-I assume from 7.x.y, from what I understood.
-Not sure about the <= 6.18 reported.
+Hi,
 
-In the boot log there is:
+This series fixes slab out-of-bounds accesses in raid10 when reshape changes
+the number of raid disks while regular I/O is still reusing r10bio objects
+allocated under the previous geometry.
 
-md0: echo current LBS to md/logical_block_size to prevent data loss issues from LBS changes.
-      Note: After setting, array will not be assembled in old kernels (<= 6.18)
+The bug is reproducible with a simple 4-disk to 5-disk reshape under write
+load, for example:
 
-I found the docs stating:
+  mdadm -C /dev/md777 -l10 -n4 /dev/sda /dev/sdb /dev/sdc /dev/sdd
+  mkfs.ext4 /dev/md777
+  mount /dev/md777 /mnt/test
+  fsstress -d /mnt/test -n 24000 -p 8 -l 24 &
+  mdadm /dev/md777 --add /dev/sde
+  mdadm --grow /dev/md777 --raid-devices=5 \
+    --backup-file=/tmp/md-reshape-backup
 
-logical_block_size
-	... Write the value before starting array. ...
+Without these changes, an r10bio allocated under the old geometry can later be
+reused, initialized, or freed after conf->geo.raid_disks has switched to the
+new geometry. This creates width mismatches between the object and the current
+devs[] walk/initialization width, which can trigger KASAN reports such as
+slab-out-of-bounds in __make_request(), put_all_bios(), or find_bio_disk().
 
-Now, should we really copy the value from:
+This series addresses the problem in two steps:
 
-/sys/class/block/md0/queue/logical_block_size
+  1. make the regular r10bio pool fixed-size across reshape transitions, and
+     move the pool rebuild into the freeze window before the live geometry
+     switch;
 
-to:
+  2. track the number of valid devs[] entries in each reused r10bio and use
+     that recorded width when walking devs[] after reshape.
 
-/sys/class/block/md0/md/logical_block_size
 
-???
+Changes in v3:
+   - Replace freeze_array()/unfreeze_array() in raid10_start_reshape() with
+     mddev_suspend_and_lock_nointr()/mddev_unlock_and_resume(). freeze_array()
+     returns when nr_pending == nr_queued, which still allows retry-list items
+     to hold pool objects; mddev_suspend() provides the correct upper-layer
+     quiesce interface. (Suggested by Yu Kuai)
 
-Note, the first in my system is 512, the
-second is 0.
 
-Second, the docs says "before starting array".
-In case this is due (copy the value), how to do
-for a system array?
-I mean, the array where the whole OS lies.
+Changes in v2:
+  - add this cover letter
+  - convert r10bio_pool to a fixed-size kmalloc mempool
+  - rebuild r10bio_pool inside the freeze window before switching live reshape
+    geometry
+  - switch raid10_quiesce() to freeze_array()/unfreeze_array()
 
-If needed, is there any way to do this automatically?
-Using mdadm or something?
+
+Testing:
+  - reproduced the original KASAN slab-out-of-bounds on 4-disk -> 5-disk
+    raid10 reshape with fsstress
+  - verified that this series fixes that reproducer
+  - exercised the 5-disk -> 4-disk reshape direction as well
 
 Thanks,
+Chen Cheng
 
-bye,
+Chen Cheng (2):
+  md/raid10: make r10bio_pool use fixed-size objects
+  md/raid10: bound reused r10bio devs[] walks by used_nr_devs
+
+ drivers/md/raid10.c | 65 ++++++++++++++++++++++++++++++++++-----------
+ drivers/md/raid10.h |  4 ++-
+ 2 files changed, 53 insertions(+), 16 deletions(-)
 
 -- 
-
-piergiorgio
+2.54.0
