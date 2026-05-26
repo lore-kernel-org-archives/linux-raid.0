@@ -1,122 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f46.google.com (mail-oo1-f46.google.com [209.85.161.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1364B413245;
-	Tue, 26 May 2026 17:34:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23D113BC668
+	for <linux-raid@vger.kernel.org>; Tue, 26 May 2026 21:51:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779816867; cv=none; b=rVCTQFsf8w6nYaL8mECo/2qZYOpds50aaEpqudY9h4MQweiTkBxmqXPztZgNPJgXLWYv2XyTqwHBZQ+PM/cZ/AUcbCT86cRER6Z7v++a/4LVBRqHZXnqW1i+SZapFke/w9TrRdeQ7qSFvBoxcJ4//xV2m2fu1LSExeSZO5PaNxI=
+	t=1779832304; cv=none; b=DXci9L2JYuD4y7bcnNzVb+rsosB71rDvvUnct2B8Bq7JzrRZhtrZWg1DfVbrQ16rQS6nYqnFky5GxR7fXxu6Z/qslvHAxmZ/MNHNBoaS1FElMMJChqFl29kEfnV6oOenHqrKlD0l1HGtX32Aa5RMxDIW0L/CaRb+hoX4rRWmcaQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779816867; c=relaxed/simple;
-	bh=+kVEEPad4p9E6wfWh3wuCSowb33rj8HAypBNzhGd1EI=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=E25Hm0c0YdB5skwiznN8ddMCWV+geBZmmoRq20tq1J7VMuFdnES62k50myX4NezmYRMmFDPdfzNlTeKDDqRRRLZubmG3SIUahhJ3pZMe3zloYliigDnqw4bYXk0c4IPTyVhCzdcREgRadLdxrTeMN2IRj2ty0sKC1moy6P+eFqs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=KzZJJvMW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779832304; c=relaxed/simple;
+	bh=/JQM2OwPOrXvBPoLMhF6DhSJJg9UVNCh2Y3F7mDsZq0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Bjk8ZHL4BZKI7pLttJGQ5xjxeD5oSV3/ChgHMCxV3V2a3V7WYfthQ12F+VvSpgAziNZJiqQwulv1L68HxJ7p3D9nYa0fpGX5/Ody5n4K6wHFVu+forrlxk9SUw3NyG05A3GZz1wpBN6jXcZehRwoezFzrzYcYTX9GBrnSO25uv0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=ner3lzy2; arc=none smtp.client-ip=209.85.161.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="KzZJJvMW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D6661F000E9;
-	Tue, 26 May 2026 17:34:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="ner3lzy2"
+Received: by mail-oo1-f46.google.com with SMTP id 006d021491bc7-69d7f4cc61aso1854475eaf.0
+        for <linux-raid@vger.kernel.org>; Tue, 26 May 2026 14:51:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1779816865;
-	bh=Vqxs1I5bdTAYH0V+dlG6/NnYH/vhR2cqVACl9PGhZ/k=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=KzZJJvMWPr5/qGRanYp6AyRxaSY6hs+mRVemb7s5u6BuaI84G91vRRoUA50a+ohct
-	 a2aHo91a7jMToNT7aeZL0kWz3x78nIZxrSs2EQhHai4fDdaZ6Qy7WEedc6yy8gy6ch
-	 tzohsl5Uqxi9Qq9Uc8dwprEFu19U0WtcsjZH1yag=
-Date: Tue, 26 May 2026 10:34:24 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
-Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>, Li Nan
- <linan122@huawei.com>, Xiao Ni <xiao@kernel.org>, David Laight
- <david.laight.linux@gmail.com>, linux-kernel@vger.kernel.org,
- linux-mm@kvack.org, linux-raid@vger.kernel.org, Christoph Hellwig
- <hch@lst.de>
-Subject: Re: [PATCH v2 2/2] lib/raid6: use kvmalloc() in raid6_select_algo()
-Message-Id: <20260526103424.0d884374dee8cbc4f9f17c3a@linux-foundation.org>
-In-Reply-To: <20260526-lib-v2-2-ca3f0fc24b14@kernel.org>
-References: <20260526-lib-v2-0-ca3f0fc24b14@kernel.org>
-	<20260526-lib-v2-2-ca3f0fc24b14@kernel.org>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1779832301; x=1780437101; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=RA7cD0bS7vuj5BqYOqhUb3Pso3HctOE2AcDFDnLY8ug=;
+        b=ner3lzy2tdEv1Y/7W5mtK5dtfav0oSsR9OiUqlPJLcC0O+ywc4xMZQoNHax44doTKU
+         Zdlc26o5D44p6HTSABZc2rgkjd1RWgyYQ4LIgv+quzMV/NAtMg4daffhdr314hu0TJ2i
+         lNSWVpZsBWv8H+BbyY78yhYdAc0k8KdvQMLNYCeFgAcwL9o+8NwKekcl3m68UBWxERJg
+         u1jTbf6YjO2ViMIP8mzSgd0djfNI/y0ljXHug+j+ss/AvDqTjYVakEGm12KsmCWxHp+n
+         /BlxxIfeEQDgSOg0bByHMHRw71o1TuVyt9g7QuHkTOYEQpmzIdXxHHbyqDDHtlWeyn4c
+         MGBQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779832301; x=1780437101;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=RA7cD0bS7vuj5BqYOqhUb3Pso3HctOE2AcDFDnLY8ug=;
+        b=DK3tlSp9mI09W71YgwHTE+0TKBP3KB0iE4PPranZvK99mnjR38S1b3V29LNlenI9Wy
+         j0ZGynKWHLZNcU3q1HIzN8mmKDjCgda4UAK/dHPWMNkIPc7HS/ezsEVB8HoKggaqIdOR
+         QHOu/H8VH7qQ0tpbcJRBjbZb6GGPlq4tLNY69wLiOXknTGKRvo6qhhI25+Z/QnSCaw18
+         ykqKlh6pvpa9Bt0zHumcj6xUuef3Bv7ydNgl2jDCPTtWDL6Eup2PGorshNOqOXNvkLvN
+         EomWQe2fDzM9DCpe/Kx/Qff4t/29dEupFAj2ucjCmS9ngEJ3dmO1339fBgcdqAO0R/0s
+         dEKA==
+X-Forwarded-Encrypted: i=1; AFNElJ9n1eXh3BhpYPixKO5Z9dNnSofkphd4w3jOQc9WflGM4x3HL4OKYs2BDZyKZ3cOFpFJltPUBZHEsr1O@vger.kernel.org
+X-Gm-Message-State: AOJu0YzmJ+ssDiUxVBBRwZMyv2oW5dQIHd3TW7fhcZ02yKhtudm3fhrN
+	p8ADk7cgrBWdNzi9kljlEuY+4XyVF9sr8BVRG7Xv6yBX7wdyivTI3pl1jyuQokwwyLU=
+X-Gm-Gg: Acq92OE3W2wy4/SjjkoSaaLi54QOAXjlmaxojqaRPWsHbBcmY8TDIjQ7k2rjbY1P8jI
+	CLuvLFhCbP5SWKV7m17wZNeFAiGr9WMzK6y0W1wP8ffafmYctFua5yrtz2wp+uz23V/wMnJKF2p
+	/cafPMEY503Zmi6lF1iYRMlw3UDpbpxql6RmrjjnLYyRaisZpe6adT8cfkedusPF1Bmnx2Y7M1P
+	f5hIXHZFsEcuZp7z5SxYZew/PvbEuX20BQBNh6BZTAPJjBLAuSuvsJyrDCYnP9AeU1UZOfNfUQK
+	2Y1hjNukFp2QLKq9CfeS+ev6GetTnCeuoF2yj8mn1Rh5r0vyEIPLm2lpwnkhhmswg1iCIuhn2DV
+	1h8JWdd5oqQIycf4fFUfJYNs2ympKsld6gTtKdHT2xSPMefcz4Nj7QhPyZWVXcVXd9gsiPGOOZI
+	RFHGEnKJ6VwU7WSVt91nNhpII6t2baLEmu6vVfjgbdjt9VoOV0X1Y63LDOzhbAQ0UscvWp3UhC8
+	0iUsohCHPyz43wVXwM=
+X-Received: by 2002:a05:6820:1995:b0:69b:bf80:2db5 with SMTP id 006d021491bc7-69d7ecbfda4mr11748930eaf.52.1779832301111;
+        Tue, 26 May 2026 14:51:41 -0700 (PDT)
+Received: from [192.168.1.102] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id 006d021491bc7-69d83aa422fsm6396077eaf.14.2026.05.26.14.51.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 26 May 2026 14:51:40 -0700 (PDT)
+Message-ID: <b89e372e-3068-4c26-9552-13e6853ba000@kernel.dk>
+Date: Tue, 26 May 2026 15:51:39 -0600
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V4 0/3] md/nvme: Enable PCI P2PDMA support for RAID0 and
+ NVMe Multipath
+To: Chaitanya Kulkarni <chaitanyak@nvidia.com>
+Cc: "song@kernel.org" <song@kernel.org>, "yukuai@fnnas.com"
+ <yukuai@fnnas.com>, Christoph Hellwig <hch@lst.de>,
+ "linan122@huawei.com" <linan122@huawei.com>,
+ "kbusch@kernel.org" <kbusch@kernel.org>, "sagi@grimberg.me"
+ <sagi@grimberg.me>, "linux-block@vger.kernel.org"
+ <linux-block@vger.kernel.org>,
+ "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ Kiran Modukuri <kmodukuri@nvidia.com>
+References: <20260513185153.95552-1-kch@nvidia.com>
+ <20260515043535.GB3756@lst.de>
+ <4ed83782-04cf-45b5-93a0-05a08e61b82e@nvidia.com>
+ <053b99b2-c994-42ff-af63-6e63ab468557@nvidia.com>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <053b99b2-c994-42ff-af63-6e63ab468557@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On Tue, 26 May 2026 15:50:39 +0300 "Mike Rapoport (Microsoft)" <rppt@kernel.org> wrote:
-
-> raid6_select_algo() allocates an order 3 (8 pages) buffer that is used
-> as a scratch area for selection of the best algorithm.
+On 5/26/26 11:09 AM, Chaitanya Kulkarni wrote:
+> Jens,
 > 
-> This buffer does not need to be physically contiguous and can be
-> allocated with kvmalloc().
-> 
-> Replace __get_free_pages() call with kvmalloc().
+> On 5/19/26 17:11, Chaitanya Kulkarni wrote:
+>> Jens,
+>>
+>>
+>> On 5/14/26 9:35 PM, Christoph Hellwig wrote:
+>>> Still looks good to me as per the reviews.
+>>>
+>> If there no objection, can we merge this ?
+>>
+>> -Chaitanya
+>>
+>>
+> There is outstanding work I want to send out based on this one.
 
-This one needed some massaging due to hch's "cleanup the RAID6 P/Q
-library" in mm-nonmm-unstable
-(https://lore.kernel.org/20260518051804.462141-1-hch@lst.de)
+Out standing, outstanding, or both? :-)
 
+> May I please request you to merge this patch series ?
 
-From: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
-Subject: lib/raid6: use kvmalloc() in raid6_select_algo()
-Date: Tue, 26 May 2026 15:50:39 +0300
+Was waiting on the md parts to get reviewed, by I missed that Xiao Ni
+already did. I'll queue it up.
 
-raid6_select_algo() allocates an order 3 (8 pages) buffer that is used
-as a scratch area for selection of the best algorithm.
-
-This buffer does not need to be physically contiguous and can be
-allocated with kvmalloc().
-
-Replace __get_free_pages() call with kvmalloc().
-
-Link: https://lore.kernel.org/all/635405e4-9423-4a25-a6e7-e03c8ea0bcbe@redhat.com
-Link: https://lore.kernel.org/20260526-lib-v2-2-ca3f0fc24b14@kernel.org
-Signed-off-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- lib/raid/raid6/algos.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
---- a/lib/raid/raid6/algos.c~lib-raid6-use-kvmalloc-in-raid6_select_algo
-+++ a/lib/raid/raid6/algos.c
-@@ -7,6 +7,7 @@
- 
- #include <linux/module.h>
- #include <linux/gfp.h>
-+#include <linux/slab.h>
- #include <linux/raid/pq.h>
- #include <linux/static_call.h>
- #include <kunit/visibility.h>
-@@ -153,7 +154,6 @@ EXPORT_SYMBOL_GPL(raid6_recov_datap);
- 
- #define RAID6_TIME_JIFFIES_LG2	4
- #define RAID6_TEST_DISKS	8
--#define RAID6_TEST_DISKS_ORDER	3
- 
- static int raid6_choose_gen(void *(*const dptrs)[RAID6_TEST_DISKS],
- 		const int disks)
-@@ -247,7 +247,7 @@ static int __init raid6_select_algo(void
- 	}
- 
- 	/* prepare the buffer and fill it circularly with gfmul table */
--	disk_ptr = (char *)__get_free_pages(GFP_KERNEL, RAID6_TEST_DISKS_ORDER);
-+	disk_ptr = kvmalloc(PAGE_SIZE * RAID6_TEST_DISKS, GFP_KERNEL);
- 	if (!disk_ptr) {
- 		pr_err("raid6: Yikes!  No memory available.\n");
- 		return -ENOMEM;
-@@ -269,7 +269,7 @@ static int __init raid6_select_algo(void
- 	/* select raid gen_syndrome function */
- 	error = raid6_choose_gen(&dptrs, disks);
- 
--	free_pages((unsigned long)disk_ptr, RAID6_TEST_DISKS_ORDER);
-+	kvfree(disk_ptr);
- 
- 	return error;
- }
-_
-
+-- 
+Jens Axboe
