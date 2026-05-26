@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08D1123E320;
-	Tue, 26 May 2026 12:50:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE6D7282F1D;
+	Tue, 26 May 2026 12:50:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779799849; cv=none; b=POE3VBcwSiuPV/D18G0KGeCVoDd4WIv/xINDOCzY2h4GrJ4UVFR2lJq2kyWyDrbUC8CUm0PncCzspUHch+dejGz3NoliQklpDo7tyEojfUgfcTj7Qxdqo/5UFYrtMNikL4/CZz6W1nIwqHln6hn1u89mhvMkuWmSljpj45dnvmE=
+	t=1779799851; cv=none; b=SeL0nJXHmANl/VnVkqsKZ7BaS5Ti+l8SWUCWF1NmK0Zi+vQZ7XK4gGzj6BOiD2k5/0AtvosE+/Wz+5ONoxGLh7CBO9QI3sgyqHhcEcZSmtpbySjxpBX1tWWDjKfd0o2LihMWsQnfLdQzWzv6XdKBWJZEWcJEzQoFGIkaeNLgT50=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779799849; c=relaxed/simple;
-	bh=EqdsgzZUQfKmB18TqBHXZJ9Y28iWnSY2mbUxQq90Egg=;
+	s=arc-20240116; t=1779799851; c=relaxed/simple;
+	bh=waOpvh1dKixEiq+Rh+Oy1qMbpXxxRNDHAhq17n30t8Q=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=QkIcx9K0uLZVDbf2rJbsjkHQ1MJ/y+4y6TcJRGa+6oVk/nYCouoZJ+uyACSE/wqMbdCux7212H0x/VFZHbGdICdKKLkL8AQz7xTeBWSSSHpBxyrq3uEye1/5lDZlyOfIdneCOIz0c0Se+AzhFE0ZheZa/S6j8i8BNlLC0NJmTdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IQ1b9wxi; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=nUA8u9kSN7pmPKk8hG5+CHgDFVlIBs1n6tgWYDcD3l+19lWFXHkhmBTTxUNtp8DgirIJMK8NzXrqxirWEhZoivXc9mj/kioA4vKbls1nPVLu+AzVfICvc+kRV/i7bDwppiXcz4kAp167DJd10geVP3OBuNHpXCjRadqxnxD7Z5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kzRvk5e2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IQ1b9wxi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70A701F000E9;
-	Tue, 26 May 2026 12:50:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kzRvk5e2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 322511F00A3A;
+	Tue, 26 May 2026 12:50:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779799847;
-	bh=QS3zRW8grvktqu3cBj8ik+A7ULBupIIqXCgnBPaCvWo=;
+	s=k20260515; t=1779799850;
+	bh=gG3agpilQ4MpstT87zE1nTk6qyo1jydMxmD6GEu/XHw=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=IQ1b9wxiRyLWKHqw+KxnzMq43qjljDVqd/WO/+7KPyig4hWPh1VKmjmKKkWy8lH5Y
-	 dqKRK+jjsUHHhYgbLrv68HFDOiXsmfAYvck2KGHGI+hVLxDrgYgsQ8VKFM8cxqR+0F
-	 agAQkMh9sr4/WIiGPgSSFwO6QqjX+DTIE0L/eoYfp2Bs5w423vU6Rr3jNWjheX+Mf9
-	 EE6vu3kBG+pApECzc+82V1HH2lH0QMY3JsLrv9lhQfNNUFSgShmWLiIZFgr9hvumIL
-	 hUX++I+joboSxouM4uH4nkcJxIThVoLfkamIptxo3bwdgLdx7cH0DYcviSVYt8pht6
-	 UGhc+KlmTbMlw==
+	b=kzRvk5e2BuxIoYvQBIBHk0zrhimZ69ezYEbWKQnDRvl+hWoHZlCvC1utbNfSVFlDg
+	 g+gt5jlLpowccZktUJNPftQgbnlbbYSrRqSxf4BHHILI2oSn5goR7MuohL6wIqpngL
+	 /uDAi9axGu4c4o92x8enOa6G028OeH1L8T1pxnWiHD9Yn3lzuKREi/sp1xo2BuSxFL
+	 M/UBFB0KeVeioL7xSQeU290fo4vNvp23LGZjEELBmWydJuc+Kn2zwZsaH9UjvVlw6l
+	 AiaN5Rpd2gAiV+mGetKbZwGx6Bxi1PNhxwienG7NUc7I+FMAG1ktlZq/qwPMvFiY+g
+	 XKIZeEkADdl2w==
 From: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
-Date: Tue, 26 May 2026 15:50:38 +0300
-Subject: [PATCH v2 1/2] lib/raid: use kvmalloc() in calibrate_xor_blocks()
+Date: Tue, 26 May 2026 15:50:39 +0300
+Subject: [PATCH v2 2/2] lib/raid6: use kvmalloc() in raid6_select_algo()
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260526-lib-v2-1-ca3f0fc24b14@kernel.org>
+Message-Id: <20260526-lib-v2-2-ca3f0fc24b14@kernel.org>
 References: <20260526-lib-v2-0-ca3f0fc24b14@kernel.org>
 In-Reply-To: <20260526-lib-v2-0-ca3f0fc24b14@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, Song Liu <song@kernel.org>, 
@@ -48,8 +48,8 @@ Cc: David Laight <david.laight.linux@gmail.com>,
  linux-mm@kvack.org, linux-raid@vger.kernel.org
 X-Mailer: b4 0.15.2
 
-The xor benchmark allocates an order 2 (4 pages) scratch buffer that is
-used purely as a CPU-only XOR working area.
+raid6_select_algo() allocates an order 3 (8 pages) buffer that is used
+as a scratch area for selection of the best algorithm.
 
 This buffer does not need to be physically contiguous and can be
 allocated with kvmalloc().
@@ -59,39 +59,47 @@ Replace __get_free_pages() call with kvmalloc().
 Link: https://lore.kernel.org/all/635405e4-9423-4a25-a6e7-e03c8ea0bcbe@redhat.com
 Signed-off-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
 ---
- lib/raid/xor/xor-core.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ lib/raid6/algos.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/lib/raid/xor/xor-core.c b/lib/raid/xor/xor-core.c
-index bd4e6e434418..9f90620617cd 100644
---- a/lib/raid/xor/xor-core.c
-+++ b/lib/raid/xor/xor-core.c
-@@ -8,6 +8,7 @@
+diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
+index 799e0e5eac26..1f565c3b63ce 100644
+--- a/lib/raid6/algos.c
++++ b/lib/raid6/algos.c
+@@ -12,6 +12,7 @@
+  */
  
- #include <linux/module.h>
- #include <linux/gfp.h>
+ #include <linux/raid/pq.h>
 +#include <linux/slab.h>
- #include <linux/raid/xor.h>
- #include <linux/jiffies.h>
- #include <linux/preempt.h>
-@@ -114,7 +115,7 @@ static int __init calibrate_xor_blocks(void)
- 	if (forced_template)
- 		return 0;
+ #ifndef __KERNEL__
+ #include <sys/mman.h>
+ #include <stdio.h>
+@@ -129,7 +130,6 @@ const struct raid6_recov_calls *const raid6_recov_algos[] = {
+ #endif
  
--	b1 = (void *) __get_free_pages(GFP_KERNEL, 2);
-+	b1 = kvmalloc(PAGE_SIZE * 4, GFP_KERNEL);
- 	if (!b1) {
- 		pr_warn("xor: Yikes!  No memory available.\n");
+ #define RAID6_TEST_DISKS	8
+-#define RAID6_TEST_DISKS_ORDER	3
+ 
+ static inline const struct raid6_recov_calls *raid6_choose_recov(void)
+ {
+@@ -250,7 +250,7 @@ int __init raid6_select_algo(void)
+ 	int i, cycle;
+ 
+ 	/* prepare the buffer and fill it circularly with gfmul table */
+-	disk_ptr = (char *)__get_free_pages(GFP_KERNEL, RAID6_TEST_DISKS_ORDER);
++	disk_ptr = kvmalloc(PAGE_SIZE * RAID6_TEST_DISKS, GFP_KERNEL);
+ 	if (!disk_ptr) {
+ 		pr_err("raid6: Yikes!  No memory available.\n");
  		return -ENOMEM;
-@@ -132,7 +133,7 @@ static int __init calibrate_xor_blocks(void)
- 	pr_info("xor: using function: %s (%d MB/sec)\n",
- 	       fastest->name, fastest->speed);
+@@ -275,7 +275,7 @@ int __init raid6_select_algo(void)
+ 	/* select raid recover functions */
+ 	rec_best = raid6_choose_recov();
  
--	free_pages((unsigned long)b1, 2);
-+	kvfree(b1);
- 	return 0;
+-	free_pages((unsigned long)disk_ptr, RAID6_TEST_DISKS_ORDER);
++	kvfree(disk_ptr);
+ 
+ 	return gen_best && rec_best ? 0 : -EINVAL;
  }
- 
 
 -- 
 2.53.0
