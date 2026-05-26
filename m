@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57A572222A9;
-	Tue, 26 May 2026 12:50:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08D1123E320;
+	Tue, 26 May 2026 12:50:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779799846; cv=none; b=ujPcD7K0/UA7wgpHlZrm1Wt6N+rt0jTPmZB9Oe6n81RPdX6YgA0QE7CK6pxcVwwQcdAPeQABECEjX7pvSrHSHPFxaBvcryW2WJIH6SjbXPZ1HbMscZ0H4HYH+tzXmn4LhVuF86vKuGhDW8DUyR3s3hJrDn0KTr8ko1zkfX1Mh+o=
+	t=1779799849; cv=none; b=POE3VBcwSiuPV/D18G0KGeCVoDd4WIv/xINDOCzY2h4GrJ4UVFR2lJq2kyWyDrbUC8CUm0PncCzspUHch+dejGz3NoliQklpDo7tyEojfUgfcTj7Qxdqo/5UFYrtMNikL4/CZz6W1nIwqHln6hn1u89mhvMkuWmSljpj45dnvmE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779799846; c=relaxed/simple;
-	bh=ejVtaH6AdQoDXFCEg9bQ+j9z4Z8Fti+7Nr/QXGssyyw=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=uLEzT8xdKcTk6hCgnOridObw9yZkzD3838lv8EPHiH+213xpavEIDsd7qgXYFD0psSbiKTgnljTe3fAWd0wWOR+HBXWGu95s5Ux12ncl3rOp7qp/X/uHspvay+uxSPuKfQwCGEC+OgpcCih8nrXP3jsK1jvrk76b2w/tfI7SeJY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dWqZVU54; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779799849; c=relaxed/simple;
+	bh=EqdsgzZUQfKmB18TqBHXZJ9Y28iWnSY2mbUxQq90Egg=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=QkIcx9K0uLZVDbf2rJbsjkHQ1MJ/y+4y6TcJRGa+6oVk/nYCouoZJ+uyACSE/wqMbdCux7212H0x/VFZHbGdICdKKLkL8AQz7xTeBWSSSHpBxyrq3uEye1/5lDZlyOfIdneCOIz0c0Se+AzhFE0ZheZa/S6j8i8BNlLC0NJmTdo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IQ1b9wxi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dWqZVU54"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE6C31F00A3A;
-	Tue, 26 May 2026 12:50:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IQ1b9wxi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70A701F000E9;
+	Tue, 26 May 2026 12:50:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779799844;
-	bh=219z+BDksYR9TcZV2QFuw4jLlAsViJqU3lt1lm7RVNw=;
-	h=From:Subject:Date:To:Cc;
-	b=dWqZVU548wiXJRd0+EH8cd6qHs/0bKwbd4Fv5fVBTkVs88GKjnxKpyExRAWFBfmva
-	 O4AK96zJ0S5b7oJl3NGp/jRshlrnLsgDjQD5+rjVFKbUrolYb8fySwu1g0QCC4F2dH
-	 1HMPxqWJhILkftPX0ck/H9bW/N7NjBeYpM8mX5v6ecb8CATZQaPOs6UFRwHrd7T+xp
-	 jb8p3a4/h4NGHV7VrZXATgvmZukgF4ni989Shrm3avmwdkHrwjrtd/BSm1SRi+pK1W
-	 ioEz/MwxyRv5r74PICbjnG1I0BZeyVwGamHD8SFL17dS6V3abd4oTujr1T7qi9B0xE
-	 SryGvoavXBX0A==
+	s=k20260515; t=1779799847;
+	bh=QS3zRW8grvktqu3cBj8ik+A7ULBupIIqXCgnBPaCvWo=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc;
+	b=IQ1b9wxiRyLWKHqw+KxnzMq43qjljDVqd/WO/+7KPyig4hWPh1VKmjmKKkWy8lH5Y
+	 dqKRK+jjsUHHhYgbLrv68HFDOiXsmfAYvck2KGHGI+hVLxDrgYgsQ8VKFM8cxqR+0F
+	 agAQkMh9sr4/WIiGPgSSFwO6QqjX+DTIE0L/eoYfp2Bs5w423vU6Rr3jNWjheX+Mf9
+	 EE6vu3kBG+pApECzc+82V1HH2lH0QMY3JsLrv9lhQfNNUFSgShmWLiIZFgr9hvumIL
+	 hUX++I+joboSxouM4uH4nkcJxIThVoLfkamIptxo3bwdgLdx7cH0DYcviSVYt8pht6
+	 UGhc+KlmTbMlw==
 From: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
-Subject: [PATCH v2 0/2] lib/raid: replace __get_free_pages() call with
- kvmalloc()
-Date: Tue, 26 May 2026 15:50:37 +0300
-Message-Id: <20260526-lib-v2-0-ca3f0fc24b14@kernel.org>
+Date: Tue, 26 May 2026 15:50:38 +0300
+Subject: [PATCH v2 1/2] lib/raid: use kvmalloc() in calibrate_xor_blocks()
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -38,11 +37,9 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAB2XFWoC/1WOwRKCMAxEf4XJ2WopoOjJ/3A4NCVAlClOiowOw
- 79L8eTxbXY3O0MgYQpwSWYQmjjw4FcwuwRcZ31LiuuVwWhz1IXRqmdUpW3wbNIsz/QJVudTqOH
- 31nKrfhxeeCc3xmh0oA2kUKx3XZQwP7DnMV46DuMgn23AlMaG/19TqrRymOm8QGpMXV4fJJ76/
- SAtVMuyfAEoTHZGwwAAAA==
-X-Change-ID: 20260520-lib-8afb92134307
+Message-Id: <20260526-lib-v2-1-ca3f0fc24b14@kernel.org>
+References: <20260526-lib-v2-0-ca3f0fc24b14@kernel.org>
+In-Reply-To: <20260526-lib-v2-0-ca3f0fc24b14@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, Song Liu <song@kernel.org>, 
  Yu Kuai <yukuai@fnnas.com>, Li Nan <linan122@huawei.com>, 
  Xiao Ni <xiao@kernel.org>
@@ -51,32 +48,51 @@ Cc: David Laight <david.laight.linux@gmail.com>,
  linux-mm@kvack.org, linux-raid@vger.kernel.org
 X-Mailer: b4 0.15.2
 
-This is a (tiny) part of larger work of replacing page allocator calls
-with k*malloc:
+The xor benchmark allocates an order 2 (4 pages) scratch buffer that is
+used purely as a CPU-only XOR working area.
 
-Also in git:
-https://git.kernel.org/pub/scm/linux/kernel/git/rppt/linux.git gfp-to-kmalloc/lib
+This buffer does not need to be physically contiguous and can be
+allocated with kvmalloc().
 
+Replace __get_free_pages() call with kvmalloc().
+
+Link: https://lore.kernel.org/all/635405e4-9423-4a25-a6e7-e03c8ea0bcbe@redhat.com
+Signed-off-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
 ---
-v2 changes:
-* replace kmalloc() with kvmalloc()
-
-v1: https://patch.msgid.link/20260520-lib-v1-0-cb3045bef2d8@kernel.org
-
----
-Mike Rapoport (Microsoft) (2):
-      lib/raid: use kvmalloc() in calibrate_xor_blocks()
-      lib/raid6: use kvmalloc() in raid6_select_algo()
-
  lib/raid/xor/xor-core.c | 5 +++--
- lib/raid6/algos.c       | 6 +++---
- 2 files changed, 6 insertions(+), 5 deletions(-)
----
-base-commit: 5d6919055dec134de3c40167a490f33c74c12581
-change-id: 20260520-lib-8afb92134307
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Best regards,
---  
-Sincerely yours,
-Mike.
+diff --git a/lib/raid/xor/xor-core.c b/lib/raid/xor/xor-core.c
+index bd4e6e434418..9f90620617cd 100644
+--- a/lib/raid/xor/xor-core.c
++++ b/lib/raid/xor/xor-core.c
+@@ -8,6 +8,7 @@
+ 
+ #include <linux/module.h>
+ #include <linux/gfp.h>
++#include <linux/slab.h>
+ #include <linux/raid/xor.h>
+ #include <linux/jiffies.h>
+ #include <linux/preempt.h>
+@@ -114,7 +115,7 @@ static int __init calibrate_xor_blocks(void)
+ 	if (forced_template)
+ 		return 0;
+ 
+-	b1 = (void *) __get_free_pages(GFP_KERNEL, 2);
++	b1 = kvmalloc(PAGE_SIZE * 4, GFP_KERNEL);
+ 	if (!b1) {
+ 		pr_warn("xor: Yikes!  No memory available.\n");
+ 		return -ENOMEM;
+@@ -132,7 +133,7 @@ static int __init calibrate_xor_blocks(void)
+ 	pr_info("xor: using function: %s (%d MB/sec)\n",
+ 	       fastest->name, fastest->speed);
+ 
+-	free_pages((unsigned long)b1, 2);
++	kvfree(b1);
+ 	return 0;
+ }
+ 
+
+-- 
+2.53.0
 
