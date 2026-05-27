@@ -1,34 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D67B3CCFA8
-	for <linux-raid@vger.kernel.org>; Wed, 27 May 2026 07:45:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6893E3CCFB2
+	for <linux-raid@vger.kernel.org>; Wed, 27 May 2026 07:45:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779867948; cv=none; b=lp483l5LKKgY3LULOVlYVU1L1hFgUbvP6AcYJZdBcYtdsDeMk7284IcGV0PdAA0BaBf438qh1jAD4qkMX4ePetX+5GQToggiN9raKDcKalK1nzzNacodbk965WfQrtCX2iw4LqapHkCqrNEcM+Iu/plPpiuyubLeiXPerlGXjeU=
+	t=1779867949; cv=none; b=BfuId6+002HbASc7WIHiWV5ou3bl+rpIB/m2I59yIZm+FTVpbxkFuthoqAg3FgIt8eX3QhGfaEtor+JalDr36l7cKGR++92OHvzToTRLjpN3k1AIlaBSL7HpFMuJrDS8Qp/rQAv2x0xSBj3eCb71wyU+3Mu5AAOmISdg3sM/uXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779867948; c=relaxed/simple;
-	bh=eY5wIZahothmZtggu0Dz6m15xfQqODqo/yyURMIO1Zg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=q6YXBWNJmrYvOnkbOH9xesiHIw9bf8QzlF3MevHfcsVFkbugc75zua0Zt/dLAF+lzhKNJ0NvsWhhhcmwU9SA3QxRd/H9JO53IGXLxAnERAQ8qRANh2r3Pki6CQBesSKO2uGwGgO173RNuIUxFm2eg2dHNi9GlniITx0OjnRgDYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WIW7NOH3; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1779867949; c=relaxed/simple;
+	bh=6oVbglKwRZ9eFK6YsV7ImiHnyNQX0Z4xgkfhCSjk9v0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=EQoq5mdF6GXYBIHmkl+9vC5N7Bm5hyK91zRTvwuGuJXkljwmUUNP4IcyQ6HRVIbUr905wtrgxaWQqCmVepb/svKxUfKRpQXGS9YnQqbxk+qEf8pcOKHsdZyTW81n/FPURej4qsRN4zgK5wihCbQx8GNwPAQ5Ash8WYtClCRcQZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=afBEhvoD; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WIW7NOH3"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="afBEhvoD"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=rBR3ku19PFFpA6igZtvB2p4ArxVhWwndaHLK+KrGOYg=; b=WIW7NOH3Xlrp/mdzJLm7te4C3w
-	TjSs3BGHj9F9hxL22OwwlVeO6LzhpjCMXxhdIGxuSueDRc5LOJk6cgRtRE8LRF8RFKHD9t7xd0yNU
-	9Dlykd/JZcOxiDzPr+VUW0ofVdo+Ffuzijjdezw1a3P0nTRe1Tj3ljGa2HIRXr1BeMFWn5nmMQtC5
-	5XCamJevFuAA8MVrJ1GJFxdW5ixxfYOmYkftKhYQQkU0gF0qZGoeg17nNZBj294t5Tpa8II91JQYx
-	X4BS+JfW0v3MauNrD7lGkiLfqEr087s3kurQzNQX9UhXwToZg91OfapS0S/MmF9Wf9tteB7QqKaqR
-	wvaLXlUA==;
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=xzJX3L5AqwqjTheC2uG+aqd/PjiGMTPaV9a9vt2VDdU=; b=afBEhvoDj73vb+YdeTGqSAjVud
+	x9KitYLtgFJ6A7MLYgEvu93T8FL89fmzFr+rhsvUJ87/BeagGj5WTtUcOxUPQvJ2OnqpjCVeQIc7D
+	JOUfkPI1bsoSxMesQocl820dWi20YcLEE8S3A3u544PYP4/EasVNLYZ2fLwk5jp9Hp3G0tEDIiGni
+	R86PgUnZKxv2eyC0dP5mMMlXlXAHdrq3l4VpD8geO9OgQCLO7GCYARG2vlX+YDCn2gG0h14QnKUS5
+	hbT3Qb5SvOvQ3zG68LNZuEcQfp/GSYtlIopnuWa14eRp5j594FdiMZW4WsSXMyUOILWVTvo9dCw8F
+	AK+xesWw==;
 Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wS8xT-00000003ULN-1T7a;
-	Wed, 27 May 2026 07:45:43 +0000
+	id 1wS8xX-00000003ULV-0uDq;
+	Wed, 27 May 2026 07:45:47 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Song Liu <song@kernel.org>,
@@ -36,10 +37,12 @@ Cc: Song Liu <song@kernel.org>,
 	Li Nan <linan122@huawei.com>,
 	Xiao Ni <xiao@kernel.org>,
 	linux-raid@vger.kernel.org
-Subject: incremental fixes for "cleanup the RAID6 P/Q library v3"
-Date: Wed, 27 May 2026 09:45:24 +0200
-Message-ID: <20260527074539.2292913-1-hch@lst.de>
+Subject: [PATCH 1/2] raid6: remove duplicate ccflags-y line
+Date: Wed, 27 May 2026 09:45:25 +0200
+Message-ID: <20260527074539.2292913-2-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260527074539.2292913-1-hch@lst.de>
+References: <20260527074539.2292913-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -49,13 +52,26 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi Andrew,
+This was added by a mismerge when rebasing, remove it.
 
-here are two incremental fixes for above series.  They could be folded
-into "raid6: hide internals" and "raid6: rework registration of optimized
-algorithms" respectively if desired.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ lib/raid/raid6/Makefile | 2 --
+ 1 file changed, 2 deletions(-)
 
-Diffstat:
- Makefile      |    2 --
- x86/pq_arch.h |    8 ++++----
- 2 files changed, 4 insertions(+), 6 deletions(-)
+diff --git a/lib/raid/raid6/Makefile b/lib/raid/raid6/Makefile
+index 1d79b76b320e..038d6c74d1ba 100644
+--- a/lib/raid/raid6/Makefile
++++ b/lib/raid/raid6/Makefile
+@@ -2,8 +2,6 @@
+ 
+ ccflags-y			+= -I $(src)
+ 
+-ccflags-y			+= -I $(src)
+-
+ ifeq ($(CONFIG_RAID6_PQ_ARCH),y)
+ CFLAGS_algos.o			+= -I$(src)/$(SRCARCH)
+ endif
+-- 
+2.53.0
+
