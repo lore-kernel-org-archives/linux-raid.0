@@ -1,58 +1,61 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA57D3603DB;
-	Wed, 27 May 2026 07:33:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D67B3CCFA8
+	for <linux-raid@vger.kernel.org>; Wed, 27 May 2026 07:45:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779867195; cv=none; b=Mwv4oLBD7xugGDtHqSLJFgQ0bhpydpdNbHn/3zvrYhP39gXiZF+HOamvAfbGRT8gIkyNJAHnb8vxcnqlejK5lNi1hqlACfyCh49ccFrsUIZXc0ddIVJE1kH0yKAUMT5o6ESiTTH5n3SwevFM9/CuXeQFUXd/7IxmaNyPO8lSJ38=
+	t=1779867948; cv=none; b=lp483l5LKKgY3LULOVlYVU1L1hFgUbvP6AcYJZdBcYtdsDeMk7284IcGV0PdAA0BaBf438qh1jAD4qkMX4ePetX+5GQToggiN9raKDcKalK1nzzNacodbk965WfQrtCX2iw4LqapHkCqrNEcM+Iu/plPpiuyubLeiXPerlGXjeU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779867195; c=relaxed/simple;
-	bh=CaR6k388gQ4mgCsIMny1yKyYgs9PsCBspKn5KTEv2ys=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uknkVsaiR24scWCwMV1V99hQlBnDL6GqVpaLGhZX/TwTtvMaM7ufHsbf4rsoSsRnQsnRZXGNtEpEAUSFPkbKns3Uws4Jsu3Nm9ujXAUcuA11U8kwzrD5d64ytf2yxOWrJDGgK1OGPqE//MvMsWYon6AIQpaQlf1QGZRr/nnYFes=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=U6snnG1n; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+	s=arc-20240116; t=1779867948; c=relaxed/simple;
+	bh=eY5wIZahothmZtggu0Dz6m15xfQqODqo/yyURMIO1Zg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=q6YXBWNJmrYvOnkbOH9xesiHIw9bf8QzlF3MevHfcsVFkbugc75zua0Zt/dLAF+lzhKNJ0NvsWhhhcmwU9SA3QxRd/H9JO53IGXLxAnERAQ8qRANh2r3Pki6CQBesSKO2uGwGgO173RNuIUxFm2eg2dHNi9GlniITx0OjnRgDYQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WIW7NOH3; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="U6snnG1n"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WIW7NOH3"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=CaR6k388gQ4mgCsIMny1yKyYgs9PsCBspKn5KTEv2ys=; b=U6snnG1nOqO34XUk5lvYXxxT8Q
-	t4Yt5NBhocvasjjbqCxsAWA1lLEnYlxmvJQ+F5kjflsnRvNRbbn77zvy67zivP0DprdLP5b/et29M
-	oJH7+KCLcafkpcp9jZRUUcjDcGD4+9O6ivrMhOJ0V6R9/CBl3JZ/RiBSe6blU5CREZbi+LxJeoQkT
-	zMCRfsjDd7Dr0UpDg7LyymYigasthG6H//cX4lqKGRBTYLIHJyYR4xRmt0Glut56MJXQuiLusnsVl
-	UrJgcGmku2fvUStnI7U8lJkOVxpVgmkPfXHtGn6SadITL6aYXuf0oOvSU/ToQC+SX4pzKKOWtCCuw
-	BPIfaRBw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wS8lM-00000003TEw-1GDi;
-	Wed, 27 May 2026 07:33:12 +0000
-Date: Wed, 27 May 2026 00:33:12 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fnnas.com>, Li Nan <linan122@huawei.com>,
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=rBR3ku19PFFpA6igZtvB2p4ArxVhWwndaHLK+KrGOYg=; b=WIW7NOH3Xlrp/mdzJLm7te4C3w
+	TjSs3BGHj9F9hxL22OwwlVeO6LzhpjCMXxhdIGxuSueDRc5LOJk6cgRtRE8LRF8RFKHD9t7xd0yNU
+	9Dlykd/JZcOxiDzPr+VUW0ofVdo+Ffuzijjdezw1a3P0nTRe1Tj3ljGa2HIRXr1BeMFWn5nmMQtC5
+	5XCamJevFuAA8MVrJ1GJFxdW5ixxfYOmYkftKhYQQkU0gF0qZGoeg17nNZBj294t5Tpa8II91JQYx
+	X4BS+JfW0v3MauNrD7lGkiLfqEr087s3kurQzNQX9UhXwToZg91OfapS0S/MmF9Wf9tteB7QqKaqR
+	wvaLXlUA==;
+Received: from 2a02-8389-2341-5b80-decc-1a96-daaa-a2cc.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:decc:1a96:daaa:a2cc] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wS8xT-00000003ULN-1T7a;
+	Wed, 27 May 2026 07:45:43 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fnnas.com>,
+	Li Nan <linan122@huawei.com>,
 	Xiao Ni <xiao@kernel.org>,
-	David Laight <david.laight.linux@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
 	linux-raid@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] lib/raid6: use kvmalloc() in raid6_select_algo()
-Message-ID: <ahaeOOkuVZmIXFpN@infradead.org>
-References: <20260526-lib-v2-0-ca3f0fc24b14@kernel.org>
- <20260526-lib-v2-2-ca3f0fc24b14@kernel.org>
+Subject: incremental fixes for "cleanup the RAID6 P/Q library v3"
+Date: Wed, 27 May 2026 09:45:24 +0200
+Message-ID: <20260527074539.2292913-1-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260526-lib-v2-2-ca3f0fc24b14@kernel.org>
+Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Please stick to the raid6: prefix used for all commits since the move
-and most before that.
+Hi Andrew,
 
+here are two incremental fixes for above series.  They could be folded
+into "raid6: hide internals" and "raid6: rework registration of optimized
+algorithms" respectively if desired.
+
+Diffstat:
+ Makefile      |    2 --
+ x86/pq_arch.h |    8 ++++----
+ 2 files changed, 4 insertions(+), 6 deletions(-)
