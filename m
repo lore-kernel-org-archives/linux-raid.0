@@ -1,60 +1,127 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DF423ECBE3;
-	Thu, 28 May 2026 12:47:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52CCD3FF1B1;
+	Thu, 28 May 2026 17:32:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779972468; cv=none; b=AmXytJVOLh8ofwQTZYqbnT5tnyKdeQoEEV85hb0aWARSL/Fmnve1EIPJWAlBZ3qezthxG1CpxM77H0ESxC77aG0LxiJMgkxev9jHAw96bL4cJeAEae+4+ssynvpoZG9RfNhNN+HoYdfCNrDuHqf59fIj5+x46bm3z1XaQQ7NJ/c=
+	t=1779989524; cv=none; b=VM8PL4Br5l6ee4k+3zxTS3ueg7DmvXcjYZ8zIediqehtpsm2lwvQ0VDX3QBJGLcFyRFTDghCT7sFOihs0MV+/4ZiJtH67ZajDyDz9cYpF2M1soxfmN9+zGHlGfyquY1LrUHJEfWYeh88wT5U90RYpZiCXRE9JY7GVcuy75CFA74=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779972468; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iFAc4RdB+JCCXIU6M+YPTnX49qdNgRdclJ8/ABr2r1LWPfGDhFHePjwDkBm+7HSgvcBUy7ZLj77K70uwHsjJToF/XszRc5Y7cSn9OGRMpfAhj6qv9fEYhjSh0BwpkWP09LJr7yU0eWjb7We745I7S3zIyYtEY20//nXVipLCTuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Rpt0pUFA; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1779989524; c=relaxed/simple;
+	bh=SzMS9LEpdkQ6cMGj8G9iDkS0Ty05ZWFqs322J8ebLbo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=tyq8aKy3w+5lSZQmlV6QT7efpzEg2g8bkCYeROs5FYA3hzkQId0HiUFahF7oQ6Ua+eaizonAmeFN4N4nv8H0HoHnwRJpASw60bMTkD7jcoZA8tPjzLe7UyFstnmIAILMJL9lVZW8B25RLPj3/sS0u3jCpFfpO/bdZAsoM16gap4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=SW5PdkDr; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Rpt0pUFA"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SW5PdkDr"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=Rpt0pUFAIa9nSS9CGU3dMqfeCD
-	a8YQU/79H2ACOklJuXj3Kr08pgWJTpsUATRMMilHXk/G636/TgZxl0KEBgIiCQjzA7ChSl20tvool
-	jAbbZ+flzyZwAm3cLqtxb2g3qH+QnXiXHy7wreQq28hjJaRaho2LGzdMvkb4Ef6leddHK7T7j2eHU
-	rvI9o8evYJ5MBhuyGy4UN1akBx4npkn3nDNJ0mG90orlcjaicbduuN7jjT6dPuAJUAFuF/c5yEuzq
-	DDp6RLQ6bup0ExTOSFen2ax3tUhDJs3O9Wo+7SWR4PvT5JKgxHZGfqwqBCHO2esd6govgamAvH+5m
-	QFR7lv3w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wSa9F-00000005jo6-3Cxr;
-	Thu, 28 May 2026 12:47:41 +0000
-Date: Thu, 28 May 2026 05:47:41 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
+	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:
+	Content-Type:Content-ID:Content-Description;
+	bh=Xw4oW2uGNm8P/cZNk+OjpJqdmTXKB0NFPSKrisQo1d8=; b=SW5PdkDrV2q7jt29dd2bFVqAjR
+	eSNxo2c787FJs49sIbGx4gNOqGEI99nZMj2rwClL1r/HoIRj7rZA+tchbnoztb/At+s6lgxFOga8Y
+	AlsQkaxDjAD4vjeg9+VwIkGaL876FnrzViDQW5/PQmTOvJxcmkKVGO2W2rKxyR4jofZntEtxeC3ZA
+	5hZJP8ALYtWowsqHUC4hglmOzMvShf4khdDMHrugicgj7hTGvGTL3f9DQAmhFXyW2WjONw6K2LHaT
+	AqVlt2HncrvNy9Wot0aUqkN/1Yl+qphalr5X95jo5GudxMMaIek3D/r6ThX+lUro/vD1BCuR65wWi
+	btSe8VWw==;
+Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wSeaM-00000004abO-0olV;
+	Thu, 28 May 2026 17:31:58 +0000
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+To: Jan Kara <jack@suse.cz>
+Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	Christian Brauner <brauner@kernel.org>,
 	Christoph Hellwig <hch@infradead.org>,
-	David Laight <david.laight.linux@gmail.com>,
-	Li Nan <linan122@huawei.com>, Song Liu <song@kernel.org>,
-	Xiao Ni <xiao@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-fsdevel@vger.kernel.org,
 	linux-raid@vger.kernel.org
-Subject: Re: [PATCH v4 1/2] xor: use kmalloc() in calibrate_xor_blocks()
-Message-ID: <ahg5bR2IZma0pB9i@infradead.org>
-References: <20260528-lib-v4-0-4e3ad1277279@kernel.org>
- <20260528-lib-v4-1-4e3ad1277279@kernel.org>
+Subject: [PATCH v2 30/34] md-bitmap: Convert read_file_page and write_file_page to bh_submit()
+Date: Thu, 28 May 2026 18:31:43 +0100
+Message-ID: <20260528173150.1093780-31-willy@infradead.org>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260528173150.1093780-1-willy@infradead.org>
+References: <20260528173150.1093780-1-willy@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260528-lib-v4-1-4e3ad1277279@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 
-Looks good:
+Avoid an extra indirect function call by using bh_submit() instead of
+submit_bh().
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Cc: linux-raid@vger.kernel.org
+---
+ drivers/md/md-bitmap.c | 27 ++++++++++++++-------------
+ 1 file changed, 14 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 028b9ca8ce52..7d778fe1c47c 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -502,6 +502,18 @@ static void write_sb_page(struct bitmap *bitmap, unsigned long pg_index,
+ static void md_bitmap_file_kick(struct bitmap *bitmap);
+ 
+ #ifdef CONFIG_MD_BITMAP_FILE
++static void end_bitmap_write(struct bio *bio)
++{
++	struct buffer_head *bh;
++	bool uptodate = bio_endio_bh(bio, &bh);
++	struct bitmap *bitmap = bh->b_private;
++
++	if (!uptodate)
++		set_bit(BITMAP_WRITE_ERROR, &bitmap->flags);
++	if (atomic_dec_and_test(&bitmap->pending_writes))
++		wake_up(&bitmap->write_wait);
++}
++
+ static void write_file_page(struct bitmap *bitmap, struct page *page, int wait)
+ {
+ 	struct buffer_head *bh = page_buffers(page);
+@@ -510,7 +522,7 @@ static void write_file_page(struct bitmap *bitmap, struct page *page, int wait)
+ 		atomic_inc(&bitmap->pending_writes);
+ 		set_buffer_locked(bh);
+ 		set_buffer_mapped(bh);
+-		submit_bh(REQ_OP_WRITE | REQ_SYNC, bh);
++		bh_submit(bh, REQ_OP_WRITE | REQ_SYNC, end_bitmap_write);
+ 		bh = bh->b_this_page;
+ 	}
+ 
+@@ -519,16 +531,6 @@ static void write_file_page(struct bitmap *bitmap, struct page *page, int wait)
+ 			   atomic_read(&bitmap->pending_writes) == 0);
+ }
+ 
+-static void end_bitmap_write(struct buffer_head *bh, int uptodate)
+-{
+-	struct bitmap *bitmap = bh->b_private;
+-
+-	if (!uptodate)
+-		set_bit(BITMAP_WRITE_ERROR, &bitmap->flags);
+-	if (atomic_dec_and_test(&bitmap->pending_writes))
+-		wake_up(&bitmap->write_wait);
+-}
+-
+ static void free_buffers(struct page *page)
+ {
+ 	struct buffer_head *bh;
+@@ -592,12 +594,11 @@ static int read_file_page(struct file *file, unsigned long index,
+ 			else
+ 				count -= blocksize;
+ 
+-			bh->b_end_io = end_bitmap_write;
+ 			bh->b_private = bitmap;
+ 			atomic_inc(&bitmap->pending_writes);
+ 			set_buffer_locked(bh);
+ 			set_buffer_mapped(bh);
+-			submit_bh(REQ_OP_READ, bh);
++			bh_submit(bh, REQ_OP_READ, end_bitmap_write);
+ 		}
+ 		blk_cur++;
+ 		bh = bh->b_this_page;
+-- 
+2.47.3
 
