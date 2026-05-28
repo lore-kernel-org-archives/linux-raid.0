@@ -1,115 +1,168 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A37373B6346;
-	Thu, 28 May 2026 09:53:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C39583B47F9
+	for <linux-raid@vger.kernel.org>; Thu, 28 May 2026 09:55:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779961997; cv=none; b=qnV8BNZ6RZdl0nzv6Hz41vBZ3NrUsYFU6TJ6PqHDeisJkuh2R3aHj9XnpkCSLdUD8rmJ0Zvjc0jUiyZ7O94H3t1/41cirbr2a09l3l3LozM75g44ApjLhZ/unafm8t70H9goesaUWxQAQXSwuiAvRNBbQEZ1UNMz+xPQajI0rd4=
+	t=1779962127; cv=none; b=SNkmkK6I14l7MP/kYEczPE53KA/Oc76c0+whzvwGCWKYVX8oOGb90NbWjksnKyrBw4S/bnA9RtdIX+LmyCt+LKUrmV9uUnT1svDzWKnh26ZSQ90qj02WxSBcV+CdElxzAKulgxKpQOgDRaz5Mlj/Gr8en45dtUvbjaMVNGtVcW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779961997; c=relaxed/simple;
-	bh=DJA39YJldJC0EahsoGyUjOm+muY3fu6WBaRd4TOEwDA=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=FAAENlmoUkmCiusNvaRDXvM0qenjc8CuBZ/oF/aOWXA4Ub8FF04sS8J7/5vVUXEbcGrunUpgVq0n336NyYdvIRRkSV2DxuraVdZnwzBbSNDav4j06YyNaN9XGbRV6UBLpZaIq4hcOB19jKwAcSQh5HHSTJ0Ek7+J+u9+6t/tFJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UFAb6hli; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779962127; c=relaxed/simple;
+	bh=QdAMF5cWbayIfoQLLliElAD+q7jyAvyF0u9F7/vRAv4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=DLo81qjYhhEq2nDv4zsamZUBw+/2BqGV9UXYBqIJfd5Xm1zKxmfHVT+XHkQcM6rX1gf3JhWF2hp6aRclYn7mA4zwltOlkO9RM6BQZeVEoQI9h4R2pz39U5w2/yYU6kb92Bi8Yu3TOn3LubBTTfnvSI+zEWdIkb6YZGl7O66zw60=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=BF5pBjQa; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=gtEmH9yd; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MfkimMzQ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=eWcZZWs8; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UFAb6hli"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9ACD41F00A3C;
-	Thu, 28 May 2026 09:53:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779961996;
-	bh=nsDtOl3cQ8re9LG+iRAo65uWQwcKMxb80zOtaLHEWdM=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=UFAb6hliRTB3p+BbANMRHD8BOvyxRcxNLa02dbMyduid7xiapuqLcTzcMu+XIAgJ4
-	 /alyAWeWIgmMLhjbMT7quBrjg6uMKDiXCs2a0ep3tAPT7IIsC5CtnpHyO8yWUx4gVk
-	 jK4PCHCm9tZ6XS970c9AEHUrSJFjbrkAb+wNHhrNvRfpvZOTj5eCV4H/WHuSzdsWsD
-	 8WHvUr0q3HjZsj9/LaFfSGY+0pnucT58pHjCmwQlyGaBmIkRzNtZiIwlMBWwg1Ivj+
-	 5YnTG4uq+55/t6bz1O4JFHuAIFXvvmJochXb7E7Vpi5567mlcy98q8f0nVl7cztVPr
-	 m9gNygNDfkcSQ==
-From: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
-Date: Thu, 28 May 2026 12:53:01 +0300
-Subject: [PATCH v4 2/2] raid6: use kmalloc() in raid6_select_algo()
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="BF5pBjQa";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="gtEmH9yd";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MfkimMzQ";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="eWcZZWs8"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id DD9066B13A;
+	Thu, 28 May 2026 09:55:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1779962124; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=j0st/q00EgR/xOpxFqktmgI0ClPAoSUk9OzRlxpLPQA=;
+	b=BF5pBjQaCl2e1Rm8D+C+apxY1lOd/N58rwkBf5jv/216FwXdroWEjeZmPLmTKojKt3eR2Z
+	aydpArZ5tRp7vUT35rbUO+WTXFRT4xhMoDDHvbt//K6lb2TR+MHyIRb2NNeN/quBM4Vnrg
+	pA3CrFpw3LlKVYqN4tzENaUpeXCo43I=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1779962124;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=j0st/q00EgR/xOpxFqktmgI0ClPAoSUk9OzRlxpLPQA=;
+	b=gtEmH9yd1llte+EHO3fqErzp7rmioNwyJsOMXvUqMC9+eppCro3Z+06jCWPXGpxvqOBXVF
+	rH2itovxFNZ8p4Aw==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=MfkimMzQ;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=eWcZZWs8
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1779962123; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=j0st/q00EgR/xOpxFqktmgI0ClPAoSUk9OzRlxpLPQA=;
+	b=MfkimMzQMNvrw+Vgdg0ivpq8Gmkgeg9Q6Q1uMy5Zz9SBJSnl50fuDbaSqCL2pfY0V5hr0I
+	9sVOzn9fe4yl2EpWD+4MbJI8cUJ2PNJdscx7Z6snLamed1dLvau5xSndCxLYkdpLshf5v1
+	2wghgXxixlMhg0rJr2HC/EBVEOmJ/e8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1779962123;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=j0st/q00EgR/xOpxFqktmgI0ClPAoSUk9OzRlxpLPQA=;
+	b=eWcZZWs82aMKWWk3/yQ8+ZvriQyMgUB26C/K88sIBhrDvCqJCuCjZiX/bJYBu0L8w2LDJX
+	JtV9oK3q3wOlGRDw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id AA0F55AD12;
+	Thu, 28 May 2026 09:55:23 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 0sLaKAsRGGq/YgAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 28 May 2026 09:55:23 +0000
+Message-ID: <9e491e1f-b544-4cbc-9319-8f75cf0b2130@suse.de>
+Date: Thu, 28 May 2026 11:55:23 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260528-lib-v4-2-4e3ad1277279@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 1/2] xor: use kmalloc() in calibrate_xor_blocks()
+To: "Mike Rapoport (Microsoft)" <rppt@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+ David Laight <david.laight.linux@gmail.com>, Li Nan <linan122@huawei.com>,
+ Song Liu <song@kernel.org>, Xiao Ni <xiao@kernel.org>,
+ Yu Kuai <yukuai@fnnas.com>, linux-kernel@vger.kernel.org,
+ linux-mm@kvack.org, linux-raid@vger.kernel.org
 References: <20260528-lib-v4-0-4e3ad1277279@kernel.org>
-In-Reply-To: <20260528-lib-v4-0-4e3ad1277279@kernel.org>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, 
- David Laight <david.laight.linux@gmail.com>, Li Nan <linan122@huawei.com>, 
- Mike Rapoport <rppt@kernel.org>, Song Liu <song@kernel.org>, 
- Xiao Ni <xiao@kernel.org>, Yu Kuai <yukuai@fnnas.com>, 
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
- linux-raid@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-X-Mailer: b4 0.15.2
+ <20260528-lib-v4-1-4e3ad1277279@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260528-lib-v4-1-4e3ad1277279@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: DD9066B13A
+X-Rspamd-Action: no action
+X-Spamd-Result: default: False [-3.01 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	RCVD_TLS_ALL(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_COUNT_TWO(0.00)[2];
+	MID_RHS_MATCH_FROM(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[infradead.org,gmail.com,huawei.com,kernel.org,fnnas.com,vger.kernel.org,kvack.org];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	TAGGED_RCPT(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	DKIM_TRACE(0.00)[suse.de:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,suse.de:mid,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Flag: NO
+X-Spam-Score: -3.01
 
-raid6_select_algo() allocates 8 pages for buffer that is used
-as a scratch area for selection of the best algorithm.
+On 5/28/26 11:53, Mike Rapoport (Microsoft) wrote:
+> The xor benchmark allocates 4 pages for a scratch buffer that is used
+> purely as a CPU-only XOR working area.
+> 
+> This buffer can be allocated with kmalloc() as there's nothing special
+> about it to go directly to the page allocator.
+> 
+> kmalloc() provides a better API than ancient __get_free_pages().
+> kmalloc() does not require ugly casts and kfree() does not need to know the
+> size of the freed object.
+> 
+> There is no performance difference because kmalloc() redirects allocations
+> of such size to the page allocator.
+> 
+> Replace __get_free_pages() call with kmalloc().
+> 
+> Link: https://lore.kernel.org/all/635405e4-9423-4a25-a6e7-e03c8ea0bcbe@redhat.com
+> Signed-off-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
+> ---
+>   lib/raid/xor/xor-core.c | 5 +++--
+>   1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-This buffer can be allocated with kmalloc() as there's nothing special
-about it to go directly to the page allocator.
+Cheers,
 
-kmalloc() provides a better API than ancient __get_free_pages().
-kmalloc() does not require ugly casts and kfree() does not need to know the
-size of the freed object.
-
-There is no performance difference because kmalloc() redirects allocations
-of such size to the page allocator.
-
-Replace __get_free_pages() call with kmalloc().
-
-Link: https://lore.kernel.org/all/635405e4-9423-4a25-a6e7-e03c8ea0bcbe@redhat.com
-Signed-off-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- lib/raid6/algos.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
-index 799e0e5eac26..89e627c62e30 100644
---- a/lib/raid6/algos.c
-+++ b/lib/raid6/algos.c
-@@ -12,6 +12,7 @@
-  */
- 
- #include <linux/raid/pq.h>
-+#include <linux/slab.h>
- #ifndef __KERNEL__
- #include <sys/mman.h>
- #include <stdio.h>
-@@ -129,7 +130,6 @@ const struct raid6_recov_calls *const raid6_recov_algos[] = {
- #endif
- 
- #define RAID6_TEST_DISKS	8
--#define RAID6_TEST_DISKS_ORDER	3
- 
- static inline const struct raid6_recov_calls *raid6_choose_recov(void)
- {
-@@ -250,7 +250,7 @@ int __init raid6_select_algo(void)
- 	int i, cycle;
- 
- 	/* prepare the buffer and fill it circularly with gfmul table */
--	disk_ptr = (char *)__get_free_pages(GFP_KERNEL, RAID6_TEST_DISKS_ORDER);
-+	disk_ptr = kmalloc(PAGE_SIZE * RAID6_TEST_DISKS, GFP_KERNEL);
- 	if (!disk_ptr) {
- 		pr_err("raid6: Yikes!  No memory available.\n");
- 		return -ENOMEM;
-@@ -275,7 +275,7 @@ int __init raid6_select_algo(void)
- 	/* select raid recover functions */
- 	rec_best = raid6_choose_recov();
- 
--	free_pages((unsigned long)disk_ptr, RAID6_TEST_DISKS_ORDER);
-+	kfree(disk_ptr);
- 
- 	return gen_best && rec_best ? 0 : -EINVAL;
- }
-
+Hannes
 -- 
-2.53.0
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
