@@ -1,202 +1,118 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 582643AC0FA
-	for <linux-raid@vger.kernel.org>; Sat, 30 May 2026 11:58:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08FE42F8EAD
+	for <linux-raid@vger.kernel.org>; Sat, 30 May 2026 15:14:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780142305; cv=none; b=gPpTsYqTUOFaBObhLvQ0TCM7tEqjtDDsmHZs1ydmrH+o0EJpusljtz42BuB4pYzpUQmwn5mnecNRhgMwOlBmaI8S2nU+fyPOT36c5S0XJXzd7zHZRX0SBU0c/C/DFvl5OV880UdcsOhy1wH9gsqX+ilP0cM1YKTio94oaOoE6Fc=
+	t=1780154058; cv=none; b=G1YpNHd8bbvWxoaiojbUVpQvECD3HOhMSIp7Iz/v5Y7lVQOo+kotsrIjh5VkhA8fALqFALsaf1cytvAE1Ur4Nz74kAIraTIIOgxgwMfrWjreyjc++GplWe78Zx6RPTz/JG/ZmUGN8ITMS+0n5UzMI6CFtLByNcIkfDGoUHMpTe4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780142305; c=relaxed/simple;
-	bh=8bzO5cTFMO0Kp0T/hIYtP3TlvEIKTh6DrvZhXhFROzI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OTVkKwNt0t1UWhww3DctbLLxqKUQRjM6vHeCotu/91NRA4JKlPebTOz43blDDR0GgHtzHa3jOi1C2xr7SJncLeq6jkSg80Eti0rh+LlGJOGmoPeQqlK/KFfAFfApUhGrxqFAT2he+Ok0moBEH19mSZYHhPIMKA8aNu/6ndammU0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=NWsL0z3N; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=dkYxoZCW; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=ba32gy7G; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=DwTeCX6x; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	s=arc-20240116; t=1780154058; c=relaxed/simple;
+	bh=DXWVCZysxKD9gfXEdslRTOa4j3AnF6pQmITytnjmAb4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rrNhYxwlMLQKSkNnLnlnyfOIW6AoMVZtj3l+kQqNRSGSp94t0+68XkqXfZMxT4WeLQWkevCOfvvmMGrjkTndGCmIMgK5U8d4QTJGn7Qj0n0clqbHa1kizbNJVU0hPaSY81wK2T2dTTwG1osMJ1bK3LxkKFqYdC5hAUyOrqX5kfE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rLw40wt0; arc=none smtp.client-ip=209.85.221.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="NWsL0z3N";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="dkYxoZCW";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="ba32gy7G";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="DwTeCX6x"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 8C74B6B8DD;
-	Sat, 30 May 2026 11:58:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1780142302; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=KpLOPb3zkhvAiTOtwrhUxobUkKnE1nhcJgSSWUvtXhs=;
-	b=NWsL0z3NH3KmmKer+blRkDPyfse0AB+obt0G/Y1LXoHEL8VhoNIKNbqMGZaPZNZrlrx4Ca
-	4mByaFTLQ0Tm6dfKWu6mFYt9SyTJno7bh332p5TDoB0tifGZY7749F5Y1czmrUBDVEFXlA
-	E/xZCBDHwWxpxd4AKAuxQ1SNYP4mq4g=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1780142302;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=KpLOPb3zkhvAiTOtwrhUxobUkKnE1nhcJgSSWUvtXhs=;
-	b=dkYxoZCWPMDZSdVbIPiI0f0qDRGM35WeOZTfDXlPATyfom7RQKng+NgZmCapOokGhQFgpi
-	JhqLvJG6R2BxJmDw==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1780142301; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=KpLOPb3zkhvAiTOtwrhUxobUkKnE1nhcJgSSWUvtXhs=;
-	b=ba32gy7GXE/UDUPTq21AQfrKZiQ+ONoI0rhGu6Eup6gVJY1yDnDOJoTS4o0vjrSDPdyZoY
-	pfxQEHAtxXkkfjzHiKSB5UD/CCw0PYCy7TnbAVyecNn+7NJrbcIQmqZJcETXv7BwmspnaP
-	UfN0TNYWvLyBzxSpGp+D6YweamFvPMM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1780142301;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=KpLOPb3zkhvAiTOtwrhUxobUkKnE1nhcJgSSWUvtXhs=;
-	b=DwTeCX6xWPCK+w+DUE+6xG7Mm4j8f/8FZ7F4TB3k5RMcVS/z6IvlHYkvJ8Ewl9UrS4o50Y
-	ZcDQQ5VnFe+FTpBw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 823F1779A7;
-	Sat, 30 May 2026 11:58:21 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 6NXJH93QGmrVSwAAD6G6ig
-	(envelope-from <jack@suse.cz>); Sat, 30 May 2026 11:58:21 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 42FFCA0EBD; Sat, 30 May 2026 13:58:17 +0200 (CEST)
-Date: Sat, 30 May 2026 13:58:17 +0200
-From: Jan Kara <jack@suse.cz>
-To: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, Christian Brauner <brauner@kernel.org>, 
-	Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH v2 30/34] md-bitmap: Convert read_file_page and
- write_file_page to bh_submit()
-Message-ID: <y73arbgifpvnmcmg5uzznfbrlhv3pfblayrbsfyzsjzuhccqpn@bijdwd3szzrg>
-References: <20260528173150.1093780-1-willy@infradead.org>
- <20260528173150.1093780-31-willy@infradead.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rLw40wt0"
+Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-45eedcdaeaaso1772393f8f.3
+        for <linux-raid@vger.kernel.org>; Sat, 30 May 2026 08:14:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1780154055; x=1780758855; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=+5ipmyFXNMCUBMZJUA0wkXx6dJbNhAJkRdCthVvgCPQ=;
+        b=rLw40wt0syxzHw7Es+3eBz1HvoHdAkE5xgH89nZSMNRjGQlm0vKT+lkxeuR8N8p7Hy
+         8WQjEq9WbAso2xdQB6m7z5ig/yg+bWbiwynyy8EvYFM/fMFGl9BRo4BehG+vUd85zeJH
+         E4zrfV7MlyEMMm1ow2cQj4mC9PyNbnLse9XCDwqvt8glD+qSV5mMsNwyLuUj6ytYypDl
+         pjLAs4LtLuul2cfIqJpjB+XQKUOB3B6LG0/JBtp1HLEbiN6dchWc1Q3/LATr4NwZuc1g
+         tEnA3C5/Es+K8zqKlPlvKfy48+8XaWmCR0HuqCWvxUjtndVq8bRn3LOCRC6ZQNsgWQxS
+         CweQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780154055; x=1780758855;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+5ipmyFXNMCUBMZJUA0wkXx6dJbNhAJkRdCthVvgCPQ=;
+        b=skjBL/cpuJLM2P6CSfuFudlCCA36usIHrPtUqlFZKQbiDuOBbmqUweVqt9Bb0o4DxD
+         ADuZVZLUAqjyg0at512mLF40uggQO7qbGbYNz+dUuhbt44sHZ5uePxPal0PQru/8KIC7
+         BI+sDrLCa/6ubtFQ36ggmxXx6tnngSzRF+o//cYYpjr6WuLxSnUs+O+YPS4esxF8/A7b
+         rtCPc72m/FQ0uBzC4BGhG5MkIGuWCXxuZnovnnLc8o+4DFZZ3Bw6dAfJXvthSnGp0Tli
+         +klpT6BNBgw0Ar6Q9E0AgMUiC9xdqZfk8+u9gk+96l7lyP/EO1jiJ2WTQwBiNtWGNEhX
+         VRmw==
+X-Gm-Message-State: AOJu0Yyps1av/dInhl6FXSIeEGTXrtJswu96oVyg7ATnRebtBCwVhDyL
+	jTS4omlN5ktLl5dpHKpLHeMckvQfBlT8gTUUa3CW7OPEuCoVMuDTgk2W
+X-Gm-Gg: Acq92OEueg1yI1SALeeoL0mnsYUfPm43RsQddUgg0smHMKJA02A/XDuR85PHzfGQvHH
+	ony4kSOOgsm87xbQi1lwC2v3H7a3/ydNwrO39UYLnC1Hc4FeaENHzFKAZurnj8/SbtJyNxvqWAh
+	5GGtzH/fXVxWh9ZgJyMhfXXuHQnFUHI204tOjygyf2/ixqZVtFZGwCCDPIsvjFd+sYx9gpqDCH7
+	/dLdk1gAdrnoRNelz8Lh2aO/dp3bli7bTZey3qvY1bhb8gO3Uy4XASIi52BvJPr4BY/tqkyyBat
+	IC50ywJhsaZ+6ktJuF8q8uDPwkarfy0f+/tjpqWvTXDIG8j3O3sPrtD+vFGYcgokaZa6az3tN7h
+	rnb17uuTRtp12WMqACP6+bzXtlR/w9ceV4Ma22AEj+1zEpEAe2A3ZEjRyzs+XDqQ8z5q7bVOo9m
+	u2g8Uc4uqPdemZ2xEHxZcPEHQ2YTxhScNiOX60yVFOZQvYqGXZUUhIZpCf8xniTbRdTn/X8i2kl
+	GMl7z+7fDU=
+X-Received: by 2002:adf:e84c:0:b0:45e:ec17:430a with SMTP id ffacd0b85a97d-45ef6afbf37mr6298090f8f.11.1780154055307;
+        Sat, 30 May 2026 08:14:15 -0700 (PDT)
+Received: from yocto.. (dynamic-176-007-201-005.176.7.pool.telefonica.de. [176.7.201.5])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45ef35874b7sm11878817f8f.35.2026.05.30.08.14.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 30 May 2026 08:14:14 -0700 (PDT)
+From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+To: song@kernel.org,
+	yukuai@fnnas.com,
+	linan122@huawei.com,
+	john.g.garry@oracle.com,
+	martin.petersen@oracle.com,
+	axboe@kernel.dk
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+Subject: [PATCH] raid1: fix nr_pending leak in REQ_ATOMIC bad-block error path
+Date: Sat, 30 May 2026 15:14:11 +0000
+Message-ID: <20260530151411.4119-1-abd.masalkhi@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260528173150.1093780-31-willy@infradead.org>
-X-Spam-Level: 
-X-Spam-Score: -3.80
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-3.80 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_COUNT_THREE(0.00)[3];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_TLS_LAST(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[6];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:email,imap1.dmz-prg2.suse.org:helo,infradead.org:email]
+Content-Transfer-Encoding: 8bit
 
-On Thu 28-05-26 18:31:43, Matthew Wilcox (Oracle) wrote:
-> Avoid an extra indirect function call by using bh_submit() instead of
-> submit_bh().
-> 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> Cc: linux-raid@vger.kernel.org
+In raid1_write_request(), each per-mirror loop iteration begins by
+incrementing rdev->nr_pending. If a REQ_ATOMIC write encounters a
+badblock within the requested range, the code jumps to err_handle
+without dropping the reference taken for the current mirror.
 
-Looks good. Feel free to add:
+err_handle's cleanup loop will only decrements for k < i and
+r1_bio->bios[k] is non-NULL. The current slot is therefore skipped,
+leaving its nr_pending reference leaked permanently. The reference
+prevents the rdev from ever being removed, since raid1_remove_conf()
+refuses to remove an rdev with nr_pending > 0.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Fix this by calling rdev_dec_pending() before jumping to err_handle.
 
-								Honza
+Fixes: f2a38abf5f1c ("md/raid1: Atomic write support")
+Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+---
+ drivers/md/raid1.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-> ---
->  drivers/md/md-bitmap.c | 27 ++++++++++++++-------------
->  1 file changed, 14 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 028b9ca8ce52..7d778fe1c47c 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -502,6 +502,18 @@ static void write_sb_page(struct bitmap *bitmap, unsigned long pg_index,
->  static void md_bitmap_file_kick(struct bitmap *bitmap);
->  
->  #ifdef CONFIG_MD_BITMAP_FILE
-> +static void end_bitmap_write(struct bio *bio)
-> +{
-> +	struct buffer_head *bh;
-> +	bool uptodate = bio_endio_bh(bio, &bh);
-> +	struct bitmap *bitmap = bh->b_private;
-> +
-> +	if (!uptodate)
-> +		set_bit(BITMAP_WRITE_ERROR, &bitmap->flags);
-> +	if (atomic_dec_and_test(&bitmap->pending_writes))
-> +		wake_up(&bitmap->write_wait);
-> +}
-> +
->  static void write_file_page(struct bitmap *bitmap, struct page *page, int wait)
->  {
->  	struct buffer_head *bh = page_buffers(page);
-> @@ -510,7 +522,7 @@ static void write_file_page(struct bitmap *bitmap, struct page *page, int wait)
->  		atomic_inc(&bitmap->pending_writes);
->  		set_buffer_locked(bh);
->  		set_buffer_mapped(bh);
-> -		submit_bh(REQ_OP_WRITE | REQ_SYNC, bh);
-> +		bh_submit(bh, REQ_OP_WRITE | REQ_SYNC, end_bitmap_write);
->  		bh = bh->b_this_page;
->  	}
->  
-> @@ -519,16 +531,6 @@ static void write_file_page(struct bitmap *bitmap, struct page *page, int wait)
->  			   atomic_read(&bitmap->pending_writes) == 0);
->  }
->  
-> -static void end_bitmap_write(struct buffer_head *bh, int uptodate)
-> -{
-> -	struct bitmap *bitmap = bh->b_private;
-> -
-> -	if (!uptodate)
-> -		set_bit(BITMAP_WRITE_ERROR, &bitmap->flags);
-> -	if (atomic_dec_and_test(&bitmap->pending_writes))
-> -		wake_up(&bitmap->write_wait);
-> -}
-> -
->  static void free_buffers(struct page *page)
->  {
->  	struct buffer_head *bh;
-> @@ -592,12 +594,11 @@ static int read_file_page(struct file *file, unsigned long index,
->  			else
->  				count -= blocksize;
->  
-> -			bh->b_end_io = end_bitmap_write;
->  			bh->b_private = bitmap;
->  			atomic_inc(&bitmap->pending_writes);
->  			set_buffer_locked(bh);
->  			set_buffer_mapped(bh);
-> -			submit_bh(REQ_OP_READ, bh);
-> +			bh_submit(bh, REQ_OP_READ, end_bitmap_write);
->  		}
->  		blk_cur++;
->  		bh = bh->b_this_page;
-> -- 
-> 2.47.3
-> 
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 181400e147c0..0084bbc24076 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1580,8 +1580,10 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 				 * complexity of supporting that is not worth
+ 				 * the benefit.
+ 				 */
+-				if (bio->bi_opf & REQ_ATOMIC)
++				if (bio->bi_opf & REQ_ATOMIC) {
++					rdev_dec_pending(rdev, mddev);
+ 					goto err_handle;
++				}
+ 
+ 				good_sectors = first_bad - r1_bio->sector;
+ 				if (good_sectors < max_sectors)
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.43.0
+
