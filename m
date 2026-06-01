@@ -1,113 +1,196 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA77D246BCD;
-	Mon,  1 Jun 2026 05:47:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780292840; cv=none; b=GokW469Lrbm7LH0oT5WC0RukTrCfbMQSu/yLvnS9+X2TIA0myostmgOtPOA6bIDWuBw/3cP+ngZQbbAV97xe69cIl/u+kf7YJxRTsTopzpIrGKkEAETrhr2cHOd4khNqBZwyGMt8WLHOiIF/XF77XNOSMdeByCSXWuZRru2YkGE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780292840; c=relaxed/simple;
-	bh=Pus1GLdfo4/EOp3A0PEFO2dbbZ0eqscbyJ5kfhQJsZM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=hy5I3VOqIHLOpX6sMS4/hoLe78QqD/5tv4p55DKJ9GagKh1pgQ/N4yeIfTxY/GlH4yjGba8RavqOvdBaCcnbPRp7CzQGHvSqkY45SbEIKLuY676ky+ygY0tgVuaSACOjZ4sOGipVYizi55Jr6ZOKYDbc6crb2j+/6SYxbYggL5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=kXhN9SuF; arc=none smtp.client-ip=220.197.31.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E7C11509AB
+	for <linux-raid@vger.kernel.org>; Mon,  1 Jun 2026 05:51:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780293119; cv=pass; b=i8voTluY+hzOpHA0B//2uo4N3Un1Vh0qB1IVJXLc+/DJQkNCwBzypItZOIawUcPyW47UMF3AcBVZ6qZ8mbVoyo7oDL9xzI8qrRNi+ow1FccipSNxGqN70qLRXHt2g1/5uHuCzTRAJJQ2mT+YciaGSjzPwKrfKUwLSUyGEuUKtXQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780293119; c=relaxed/simple;
+	bh=kDoDlHKjd3Z56PG40nf4Zg7CiExwtev+XZn+3B6UGPQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=dTrarszrrv55+PDogUEMVkVrz0MB3Be5pqIg8EIYvDldlIN4Mwjxnb7dDwkjWP1wnkyfnDdKknFwCBkaqZTHCcOmYGnJnBTDtm0I1OpmKCIjzOWB/gSViGFiupB/DMNbK0O+Vnfhs1lrk3M3kKsftKbVzwCAxt0LtUUiODi36CY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FbY16wLd; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=kwKtFcrR; arc=pass smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="kXhN9SuF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=E/
-	YwQN+ccMKXOQsnHhimMbnPI2PYG3xKcSIRNPQwiY8=; b=kXhN9SuFuDBEhUtnot
-	BQQ/jbljG2SkLBhE5/cQEIa8WNZGlGHN5dcPlOvjOOG85UFcc/v6dddwBMlAuVaF
-	4r+R984LmbwyKgh/J26oFpvAijqwk6BLDmP/QYlDyo79QPLK4jbfVF+FEJ63mJLD
-	0A1dMS8d8gAX14jF/f0EWYCzs=
-Received: from localhost.localdomain (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgAnFPS5HB1qgaKPFQ--.61S2;
-	Mon, 01 Jun 2026 13:46:36 +0800 (CST)
-From: ghuicao@163.com
-To: song@kernel.org,
-	yukuai@fnnas.com
-Cc: linan122@huawei.com,
-	xiao@kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Cao Guanghui <caoguanghui@kylinos.cn>
-Subject: [PATCH] raid10: badblock-aware reshape write error handling
-Date: Mon,  1 Jun 2026 13:46:30 +0800
-Message-Id: <20260601054630.74483-1-ghuicao@163.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FbY16wLd";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="kwKtFcrR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1780293117;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nrzBtbcForKR5c5MwYYteuxOpqRrxaKnM3GmTaITGVg=;
+	b=FbY16wLd3RtZVBqb1MS6lp4B/ygWKGe2JxGExYLIZe3gZ2lx/FFvOoLZA6iDZjQZHIA96/
+	IaGnTz5coSOVL1Hi3xY7rLMHMHdNk7+3qZdNStAcpBzUnnvyZ7Rz0Olxw7kAcGZwIepQLV
+	VX9DMyMS3LCU2KazYMAdYLMYlgOLC18=
+Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
+ [209.85.208.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-472-auZ9cP31NGW_KuaqTUOTVw-1; Mon, 01 Jun 2026 01:51:55 -0400
+X-MC-Unique: auZ9cP31NGW_KuaqTUOTVw-1
+X-Mimecast-MFC-AGG-ID: auZ9cP31NGW_KuaqTUOTVw_1780293114
+Received: by mail-lj1-f197.google.com with SMTP id 38308e7fff4ca-395ce2d20c2so52854131fa.3
+        for <linux-raid@vger.kernel.org>; Sun, 31 May 2026 22:51:55 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1780293114; cv=none;
+        d=google.com; s=arc-20240605;
+        b=GS/Qhk9Vu++haa2CxKH1Tu6Kvn2qabMvAxXmeIv/cfsqGrpB97Zk7d4+gLKR+FpZpX
+         gJk9Uj8Ynt4i21+wvxgwIGRNDx4yK3b3PRv3p0+VUb+tcJ093IEKlcItLPVV82IMvRNS
+         xDcnJVvPW6tvRyjpJYJHON4FxoLDlAOGHFK8bx22Ef+32MelAyPjswxb8/nzOkWiQ3w4
+         s84WEe6qVjNSSymeWNZaxqxpE8T7teEyKoc7znecq9pBoQ2DPl7qnS7SppzbkPMXCVa1
+         zfOg6MzBnM+NZwB6H8lxXiHLDKk64TlVAZjqu5qan6b+0CwufJKqze1DODHPFerZimx0
+         Z3Jw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=nrzBtbcForKR5c5MwYYteuxOpqRrxaKnM3GmTaITGVg=;
+        fh=YxCaRjF9eEJ9Xg+LuyK0BszzBIgkQ/uZOKVUskkfJsI=;
+        b=ZaIUURyGa0tYS21eKraNP0d+8S97jBs3AchDD9leHrvGnU2cKEVZekZfVbtFDcv9qq
+         VKGoRQIOQdD59xaQOxy3XlGCCinWhJDVh4uBrN1goDccVcY/2cca5qfX40MkErjQPb4x
+         Mdku4/pe2m3W6gz2sRWsW4RipKBBYu6lwiHSXwukclrCBOw0X3QAJSDSdN74166cAEn9
+         ON88IlxlVemzk+mmdFNhFGdyezHaEZ1zc/x2VTK82yThn0u/EwxvuvA6B8KG1Aa1LuAd
+         /2Azj5nvKyjiEW52TwJqST9Ze3nVErKh8taNY4EA5LiHakel8SzdcqtWatPW6Vta/C6h
+         MgwA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1780293114; x=1780897914; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=nrzBtbcForKR5c5MwYYteuxOpqRrxaKnM3GmTaITGVg=;
+        b=kwKtFcrRtI99y0P3hIF+A3kKNuQuDb5FfODeekv6/e3AwTwOyTXFWXQnHZu3K09ako
+         UO0BYjaYqEMmOkBCqIRbn7u6qo5UPg/62ktcSwT/CuL3lAOMKkQ49C0tI/kUGpzSHt5t
+         osqgYd03LutHENaPRFiZ9DZu6me9VHS+o4L0LTmYRSl0GQn096XkWMX9T5qy9HKIdv9W
+         WwpH0GXe0V3c6oonxU0REUK63fbiy3wepmuKUQCMEMpnV9JzdE/ZHYWHjmG0U6ITlvhG
+         H1i2IJltBJZsAb0gfc7CYbXrt08UKgjIuhgELpDubapqkl6SBnbVal+Rkc+c13S/oeTw
+         syxA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780293114; x=1780897914;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=nrzBtbcForKR5c5MwYYteuxOpqRrxaKnM3GmTaITGVg=;
+        b=HHWxw5kovEdrBejsG2SdFDy1QtlUXXxHnC9I8MjfbYxey8Ozylh95PJ5DJMdMzsGUX
+         Jwi8gUNms2G5BxPZQ+X9ImmXzKx4Mtm1LuG44qFArDqe//xuo9pnyCyUfDM8uEy/mWJS
+         iZv6hxe8lLJoCMMzcjZpV4o840Y/tdXCPv5fevEbXMXUC+vsYoKROkNo/IcRez9SwEXg
+         iD+PTM1XcDYT65t0/pO9BygN3HX6v1ZyGpgPqlA9wSrvkgwzDb4AeWnkRKFL4ao6tGd1
+         nCFpFWYEkG2dcs4RH6oPFUV59760d3ePPd78qodTo7/zm8D7vpwk1K9qP0xiPHniqumR
+         FCtg==
+X-Forwarded-Encrypted: i=1; AFNElJ9vqmQH1mUY+xB5YzkeLKMq5cpNbRt02N/bqKZXYkV5uohkeQxcamF2w3HuNXHtEWKJI54cxIvXH/cQ@vger.kernel.org
+X-Gm-Message-State: AOJu0YxJ5tvPi/YyV9f2+ixUC0RQKanvMbxQaVY6ilm3+Gvf7T2HH/MX
+	+AnnZUxntSuD7wNLENAc4N7T5ZQkK76T5iyay/rs5dKEhgQjGDb0Vv/yTYMD9SI00d/oSXbPXxr
+	0IWpu0KEmOJcYO3psqa1KkvjCXFkNtf756Wjw+rcqpyqHhXkWP0Jjg0GUzSWfce40XW8lCrJ/NA
+	EQLGzazVv4F42FSka8P/hrW9vqmHzANAunxegNj0htv7UZIg==
+X-Gm-Gg: Acq92OHwSRd9H1BcuuHPHJlJZT+5Pak394nvNVlEyW3YcVON+xKVxyxqQWWarGgxbp0
+	wMnADOHZ0yG/KgDL4oDhKNgYS7YUwrRPl0q/g78JDmRzD5qVWAuWTbq/vDsaz71XX84j5FUXB1c
+	UAZFWLyfOvZLiBuF5wXuG9OdnVgXuLnf/LjctTVuxb3+R/E+zzzfjQFhzdTesrmBpGppfurXb8D
+	FeNWlODeN2JDK70QbtXpx75DKlnDKAL7WQwd8gMdwdUXUV3Wnvl5LqLQxPj6SN0rfehdOTnUMiS
+	sASTnx/hKH4m
+X-Received: by 2002:a05:6512:39d5:b0:5aa:65a3:467f with SMTP id 2adb3069b0e04-5aa65a348e8mr2108558e87.0.1780293114206;
+        Sun, 31 May 2026 22:51:54 -0700 (PDT)
+X-Received: by 2002:a05:6512:39d5:b0:5aa:65a3:467f with SMTP id
+ 2adb3069b0e04-5aa65a348e8mr2108542e87.0.1780293113787; Sun, 31 May 2026
+ 22:51:53 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PigvCgAnFPS5HB1qgaKPFQ--.61S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7CrWfJFyxAF1rKr13ur1Utrb_yoW8Zw45pr
-	WDGasYyrWDGwn2yw4qvayDWa4Fk392yFWYyrsxXw13W34YqrWSyFWUWryDWw4qqrWaqa1F
-	qF1jgFWDur1UKaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jzuWLUUUUU=
-X-CM-SenderInfo: 5jkxxuldr6il2tof0z/xtbC3xwYqmodHLwo4wAA3t
+References: <20260529054308.2720300-1-hch@lst.de> <20260529054308.2720300-2-hch@lst.de>
+In-Reply-To: <20260529054308.2720300-2-hch@lst.de>
+From: Xiao Ni <xni@redhat.com>
+Date: Mon, 1 Jun 2026 13:51:39 +0800
+X-Gm-Features: AVHnY4LDd8B4ZYFQmWOJdCwY0XAZIkWRFEAw_bIny7HvPBKGoaqnr9oILNPNAL4
+Message-ID: <CALTww2-29Pf_rzmx8FR6eaDp=11SRKEQ+UhbEKXLBMCKTjN8Ow@mail.gmail.com>
+Subject: Re: [PATCH 1/2] md/raid1: cleanup handle_read_error
+To: Christoph Hellwig <hch@lst.de>
+Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>, Li Nan <linan122@huawei.com>, 
+	Xiao Ni <xiao@kernel.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Cao Guanghui <caoguanghui@kylinos.cn>
+On Fri, May 29, 2026 at 1:46=E2=80=AFPM Christoph Hellwig <hch@lst.de> wrot=
+e:
+>
+> Unwind the main conditional with duplicate conditions and initialize
+> variables at initialization time where possible.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/md/raid1.c | 34 ++++++++++++++++------------------
+>  1 file changed, 16 insertions(+), 18 deletions(-)
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 64d970e2ef50..8fad1692cf66 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -2627,35 +2627,33 @@ static void handle_write_finished(struct r1conf *=
+conf, struct r1bio *r1_bio)
+>
+>  static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+>  {
+> +       struct md_rdev *rdev =3D conf->mirrors[r1_bio->read_disk].rdev;
+> +       struct bio *bio =3D r1_bio->bios[r1_bio->read_disk];
+>         struct mddev *mddev =3D conf->mddev;
+> -       struct bio *bio;
+> -       struct md_rdev *rdev;
+>         sector_t sector;
+>
+>         clear_bit(R1BIO_ReadError, &r1_bio->state);
+> -       /* we got a read error. Maybe the drive is bad.  Maybe just
+> -        * the block and we can fix it.
+> -        * We freeze all other IO, and try reading the block from
+> -        * other devices.  When we find one, we re-write
+> -        * and check it that fixes the read error.
+> -        * This is all done synchronously while the array is
+> -        * frozen
+> -        */
+>
+> -       bio =3D r1_bio->bios[r1_bio->read_disk];
+>         bio_put(bio);
+>         r1_bio->bios[r1_bio->read_disk] =3D NULL;
+>
+> -       rdev =3D conf->mirrors[r1_bio->read_disk].rdev;
+> -       if (mddev->ro =3D=3D 0
+> -           && !test_bit(FailFast, &rdev->flags)) {
+> +       /*
+> +        * We got a read error. Maybe the drive is bad.  Maybe just the b=
+lock
+> +        * and we can fix it.
+> +        *
+> +        * If allowed, freeze all other IO, and try reading the block fro=
+m other
+> +        * devices.  If we find one, we re-write and check it that fixes =
+the
+> +        * read error.  This is all done synchronously while the array is
+> +        * frozen.
+> +        */
+> +       if (mddev->ro) {
+> +               r1_bio->bios[r1_bio->read_disk] =3D IO_BLOCKED;
+> +       } else if (test_bit(FailFast, &rdev->flags)) {
+> +               md_error(mddev, rdev);
+> +       } else {
+>                 freeze_array(conf, 1);
+>                 fix_read_error(conf, r1_bio);
+>                 unfreeze_array(conf);
+> -       } else if (mddev->ro =3D=3D 0 && test_bit(FailFast, &rdev->flags)=
+) {
+> -               md_error(mddev, rdev);
+> -       } else {
+> -               r1_bio->bios[r1_bio->read_disk] =3D IO_BLOCKED;
+>         }
+>
+>         rdev_dec_pending(rdev, conf->mddev);
+> --
+> 2.53.0
+>
+>
 
-Replace the FIXME in end_reshape_write(). Instead of failing the device
-immediately on write errors during reshape, attempt to record badblocks
-using new_data_offset with is_new=1.
-
-rdev_set_badblocks() returns true on success. On failure (e.g., badblocks
-table full), it has already called md_error() internally to degrade the
-device. Queue WantReplacement for member devices regardless of badblock
-recording success, but skip this for replacement devices to avoid
-replacement loops.
-
-On successful write, clear stale badblock records at the new location
-since data has migrated.
-
-Signed-off-by: Cao Guanghui <caoguanghui@kylinos.cn>
----
- drivers/md/raid10.c | 27 ++++++++++++++++++++++++---
- 1 file changed, 24 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 4901ebe45c87..08d58a1c680e 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -4991,9 +4991,30 @@ static void end_reshape_write(struct bio *bio)
- 		      conf->mirrors[d].rdev;
- 
- 	if (bio->bi_status) {
--		/* FIXME should record badblock */
--		md_error(mddev, rdev);
--	}
-+		set_bit(WriteErrorSeen, &rdev->flags);
-+
-+		/* rdev_set_badblocks returns true on success.
-+		 * On failure, it has already called md_error() internally.
-+		 * Use is_new=1 as reshape writes target the new layout
-+		 * (new_data_offset).
-+		 */
-+		if (rdev_set_badblocks(rdev, r10_bio->devs[slot].addr,
-+				       r10_bio->sectors, 1)) {
-+			/* Queue async replacement for member devices
-+			 * For replacement devices, do not trigger WantReplacement
-+			 * to avoid circular replacement storms.
-+			 */
-+			if (!repl) {
-+				if (!test_and_set_bit(WantReplacement, &rdev->flags))
-+					set_bit(MD_RECOVERY_NEEDED,
-+						&rdev->mddev->recovery);
-+			}
-+		}
-+	} else {
-+		/* Write succeeded, clear stale badblock records */
-+		rdev_clear_badblocks(rdev, r10_bio->devs[slot].addr,
-+				     r10_bio->sectors, 1);
-+	}
- 
- 	rdev_dec_pending(rdev, mddev);
- 	end_reshape_request(r10_bio);
--- 
-2.25.1
+Yes, it's more readable. This patch is good to me.
+Reviewed-by: Xiao Ni <xiao@kernel.org>
 
