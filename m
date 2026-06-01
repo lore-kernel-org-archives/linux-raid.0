@@ -1,110 +1,118 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from mail-oo1-f49.google.com (mail-oo1-f49.google.com [209.85.161.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F013D38D3EC
-	for <linux-raid@vger.kernel.org>; Mon,  1 Jun 2026 09:13:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14C992DF144
+	for <linux-raid@vger.kernel.org>; Mon,  1 Jun 2026 18:55:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780305195; cv=none; b=aoet9PxxNPSqhLrRTAsOos0ro5wRDPWaQHWspH26/JJU/NJN5w8NyEFe4jlAqH2SgAz+odoOhaCL0V5SB+iDWouxmN/lDIsIv2UlCDODQbns29Fhgskx1G+EUNEwEiBzXCNQvU30JjRMB/Df8vmHeotZLDQ/cGCK7zVhpWY0Ouk=
+	t=1780340128; cv=none; b=seF+b4aFE8tLMFhxvheTcm3/z/XFycdl2RJCdkomtBpBjvDqFSGFpyz1nN/sR0F1MHpBwKp1lVJU0RYuD/ptr49TSnNaYt4WdW/Ew3qhXcmQqhrL6enSGDjO6kbqMwKMI9tljawLEtbHdwyiX+MywWgFaoN8KCWgx74UAirLzTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780305195; c=relaxed/simple;
-	bh=YP9TT/jDK1Wv0mZG1HcXOJxjDg6boiyeKaCJrTSv6wY=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=ZvmDB+Mip1Uf+K8IJ7WRDtwrr5b/q4AFVSc149d0EfkJhEMRtl06sO+/kkyAm3qZDie5NwXrblI0MNlC7R954o4/Hu96m66NqJSLEH1M1ALbsWfU7PZbHjFV+yPSt9PXyAfbhpZBfHwrAaD8qBrLVsV+5QlSqWnS7QZSnwbxMTA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=s88oa40d; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1780340128; c=relaxed/simple;
+	bh=92Odugj+uqpqoYzi39SNfTycubqdCPubhM2crY0//Ec=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=kRTTOWJeK8KPrZMF2JGpd2U3fmyNLif9u0eLyk1GqzO8pq/0dxjPUcPwAo8sfGKkWfRjog8sTQPgONT6u0VFXI9KxEgW4FIQQk/GDoDpLwmk/sWKLraDWPh0g9ErYE/rsmQCRsIXpxm0XQBQToZAlUGhjLcgxYXNVitwczTHX5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=QV2T7QNL; arc=none smtp.client-ip=209.85.161.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="s88oa40d"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-490a7876f8cso9609845e9.3
-        for <linux-raid@vger.kernel.org>; Mon, 01 Jun 2026 02:13:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="QV2T7QNL"
+Received: by mail-oo1-f49.google.com with SMTP id 006d021491bc7-69de16f5f79so2681132eaf.0
+        for <linux-raid@vger.kernel.org>; Mon, 01 Jun 2026 11:55:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780305192; x=1780909992; darn=vger.kernel.org;
-        h=mime-version:message-id:date:references:in-reply-to:subject:cc:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=VUZNHEKSSA2/z4oJjIxKqeXkvJAdwb6U4k7XSheRW0k=;
-        b=s88oa40dOM0y0Cps1aD0PjRqs9Rt7ojdBxYO1Ww5EeC+yNV2CWUUmT5WCCX/zZ/Bi5
-         QYavvLZmENAiZPtEQ3iS+8UnYtyVP+uDLvrJGPCEzVxOs99m9gQE6sPg8yn6L6PMBJkI
-         /+PxuUVSDCE/RlDNMjgOpax6nwfidTNFJ06neFPNnflBd9hZAi9UKsNP0vclN19/Bf+D
-         tt6cVmtGBJguM1dVUqlNljh1/X3ezJ6+69S4pcW5WVdkQd1zcCrnnhw6z2kyMOPcaZFa
-         rEOvmeLaUvmxW861/P8K4J6eYcuOaG7vfO6rIoS5eXG4cR9WaiqfQIzHC738YxkXGz+U
-         LoOg==
+        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1780340125; x=1780944925; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=on/PdQMM/Rm6Fk0z4T5hTZtddcW3TdPodKG2MMd3qBY=;
+        b=QV2T7QNLc9vB/Oirl/z89JlU0PFtHyj9FJ9EgseLNPSjxtcNXloLZcSyZ0bN8Ktxaa
+         ZoOXXwRA/wR2Q6m8+zPzihH2PejLkVl+75QhId1IQLTFaeL/i7GwzfY0BHbaHs4Huq6H
+         IM40udvJAUZNNbIPal0HyuYvhbSmFuX/zngpTiY6CRYDyM9eItC5Ib8BR/Rwaj0NESJ6
+         1jtrv01wAfLzbv2yoiIpy35KOehNWUVMuItaH6JE0iZbOTv80FeaKVWjGVklbRUpxFXf
+         5AXKLPHIONNbUBB6IgdZ8z3CXDjWYW1KPxj5WmMVpi73VxwOIvLzMUbpdXYDCEMvxh8q
+         mWEg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780305192; x=1780909992;
-        h=mime-version:message-id:date:references:in-reply-to:subject:cc:to
-         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=1e100.net; s=20251104; t=1780340125; x=1780944925;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=VUZNHEKSSA2/z4oJjIxKqeXkvJAdwb6U4k7XSheRW0k=;
-        b=Dx2RXSMrgZmVlQWBLDf3CPifWrPgNObrKuInkfHnpcS98A6IJ/yXUlINk9pVnyoN+w
-         zUKkVMMKaEtb/ZSkfZzFN/9Rp+rpAb0kWlIAceOx8KH1OTL3J7qdbzgPaIghXtLCJHlN
-         mgmCdNSovGIty7hvsuXZ8xbPMveTT3n8pGcsJm5gl0PNWksdVpYnZjFES432QdiG7I6f
-         g13Zo/uur5nBjFNx8A8Xkwn/o5wLMC6kqIdRTgGPBrw1ej6ZgDywCT33Wymw83j5i6y9
-         AHVHDZ1werSwS0ju/vdryRRbfeQ7Pa9dXzH3LvLsWTQkzmT+0S03wnLvjSRPMcwoyHrZ
-         UVnA==
-X-Gm-Message-State: AOJu0YwAsPZv+qbiLQZiiktKxvfZWWSIEM+gb+bwqE8eZWpyCA2AYmCQ
-	0zpWF7m2KdwXtf1ieW51dmRU2qYarRYCSl6lP+QfZ/eK+VWzzyWdbIl15DtI3bUf
-X-Gm-Gg: Acq92OGPlCasIkHT3D+ElglyzNLbUOq0uGcwl3yL7VHPV+ltxGAcLCvXEejgykRX7im
-	A43NUn5AppeoYzArKqaSnvsDnks0NH5hwjq2iAkqpepoUGSbLeMcHFVhPv+x6nOHYulZuYf6OCI
-	wtxpJG2bAkdFnA60m66EOAV9qaqQXVE0F9ydMGHyBf6HW6ZlCXEEs5OATAr8lQzGmuDLz2Q2Dok
-	naZXcdlt45ucvK6WZATN8Oo1EOxeGTMyDCsMwcrsWVkqBn/kJsAKMvT12WhglnaqsMoA6kkRfO4
-	pHRvpAdPY+gznEYf+lbMnuqZKkvB4e7do2TIC7Pd04DZQKzotBf4LWI50MHGJ8xI0GDmxE9hFHb
-	cKzMTIpj5F2291fd6cRYKYQGQOpt6Ql1tHpKvBwOw0YMsdKasrB8aJrp5PdyoAFlbcWcM397TNk
-	Hq9ghmylfRO/KCBwS0agommOaoic+CKpUQC0zyWh0DkByZp6o+NFpdt64cmIAYg0BO/LrRYCqmW
-	nE=
-X-Received: by 2002:a05:600c:4f89:b0:490:4717:970f with SMTP id 5b1f17b1804b1-490a292ec27mr193701855e9.14.1780305192290;
-        Mon, 01 Jun 2026 02:13:12 -0700 (PDT)
-Received: from Abds-MacBook-Air.local ([2a02:3037:60b:2e65:8d3:ed5d:6174:8946])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45ef354b7edsm23704665f8f.22.2026.06.01.02.13.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Jun 2026 02:13:11 -0700 (PDT)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: John Garry <john.g.garry@oracle.com>, song@kernel.org, yukuai@fnnas.com,
- linan122@huawei.com, martin.petersen@oracle.com, axboe@kernel.dk
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] raid1: fix nr_pending leak in REQ_ATOMIC bad-block
- error path
-In-Reply-To: <8f8ca66c-aaa6-4b51-bcd7-54203603ba8a@oracle.com>
-References: <20260530151411.4119-1-abd.masalkhi@gmail.com>
- <d9c769f5-19a3-4724-b805-3e2f30541c64@oracle.com>
- <m2h5nmljj6.fsf@gmail.com>
- <8f8ca66c-aaa6-4b51-bcd7-54203603ba8a@oracle.com>
-Date: Mon, 01 Jun 2026 11:13:09 +0200
-Message-ID: <m2eciqlj2y.fsf@gmail.com>
+        bh=on/PdQMM/Rm6Fk0z4T5hTZtddcW3TdPodKG2MMd3qBY=;
+        b=l7ILDq9MaWqJ9YNF40X4FoMA+23GDoBG6g2oxOn1wg1Jf8lJdwiL7cs+nJcEdSAD4r
+         KNx8Vf7+C6XtHHblsLF8sPMwowEJ01n8d5vx9mpQGhMArmSUZ2e+V+rOaohR9Ppjeqjy
+         TMxnt85erKZcaq8RWqexD79czUNxXm1mZKt3pIrKTZtx22BY7Wl+jvDEI5ajwdxFU4E5
+         k8RDeVVkz7Qgc2Q+Lq1j3Qn2QU5pPfuy6iqTKmoZfpnQpqXHQiwHe0qnit/hDHBXTbfX
+         gNkv4vLcVuAW8UKv6B8U5qMPKDeQ8C0O7s0upjgpAqwuGS/uNmn7P6VH9CAgnjazGOko
+         b5uQ==
+X-Gm-Message-State: AOJu0Yx1oZuJzi9qVScqfXMCJdn/PG7HVNKK2XKs9dv+CaahqCsevLOU
+	mC6CDQfHFExe8ozurazL2+aiwGMAG5yhipbifSCl0GIzRbUT869HC+ubXLI3tU6XtOk=
+X-Gm-Gg: Acq92OGKEYgQixhcpwDc332TroBkqPXxhOXCaTZG0i4Q+/XKztkMRO6eNxX4dVbtPCg
+	U/YBILj2RJGADImFGnryDk/4gEJ97l4jPgl+b7pJtZr8J48ID75YvKngOGvMPaNGE9Jhaiql0eo
+	4FAQYu2WyMvKh59qHa32UdTTNFxNms6ODqqdEbtZFcB0ANImLz4TNeChL+NzY/vqY8dRwPNRU9+
+	/zqYhQpKOw19KZVWdPJMXvYAGwMndbwWP/lEJsfN8rVe6VRW76YKj5abW07bV+H3GAlcqxEt55b
+	RpYPPPjAHFPi5kGGbikKXnMlibjAreURvvWIhpZpaN6/njMAP+ivjDQcp6DwxhO9zi/IaPC366N
+	64F9j2zpm72dgbWziQQZ+RnuZ4pDzHPVVm6SPHAsbd+6pSYdOzFrgMBzgYbaVAW/RJKvV7HNSiu
+	Nn/+m3zGCZMq9Xy6ryjx18Rt0l7UrhlGUhftk6x9O1Z5FCyDNKir8WWIsJUYj1yayCCTe/+uydG
+	AOR9swP37/dm/Kai+0=
+X-Received: by 2002:a4a:d191:0:b0:69e:2da0:c1e2 with SMTP id 006d021491bc7-69e2da0c366mr1336452eaf.26.1780340124939;
+        Mon, 01 Jun 2026 11:55:24 -0700 (PDT)
+Received: from [192.168.1.102] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id 006d021491bc7-69e067de2b8sm6985070eaf.4.2026.06.01.11.55.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 01 Jun 2026 11:55:24 -0700 (PDT)
+Message-ID: <753dfdb4-7d68-4183-af3f-d51e92d4dd31@kernel.dk>
+Date: Mon, 1 Jun 2026 12:55:23 -0600
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [GIT PULL] md-7.2-20260531
+To: Yu Kuai <yukuai@fygo.io>
+Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
+ Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>,
+ Benjamin Marzinski <bmarzins@redhat.com>, Chen Cheng <chencheng@fnnas.com>,
+ Christoph Hellwig <hch@lst.de>, Li Nan <magiclinan@didiglobal.com>,
+ Thorsten Blum <thorsten.blum@linux.dev>
+References: <20260531112618.160409-1-yukuai@fygo.io>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20260531112618.160409-1-yukuai@fygo.io>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
+On 5/31/26 5:26 AM, Yu Kuai wrote:
+> Hi Jens,
+> 
+> Please consider pulling the following changes into your for-7.2/block
+> branch.
+> 
+> This pull request contains:
+> 
+> Bug Fixes:
+> - Only requeue dm-raid bios when dm is suspending. (Benjamin Marzinski)
+> - Reset raid10 read_slot when reusing r10bio for discard. (Chen Cheng)
+> - Fix raid1/raid10 deadlock in read error recovery path. (Abd-Alrhman Masalkhi)
+> - Fix raid1/raid10 error-path detection with md_cloned_bio(). (Abd-Alrhman Masalkhi)
+> - Fix raid1/raid10 bio accounting for split md cloned bios. (Abd-Alrhman Masalkhi)
+> - Fix raid1 nr_pending leak in REQ_ATOMIC bad-block path. (Abd-Alrhman Masalkhi)
+> 
+> Improvements:
+> - Skip redundant raid_disks updates when the value is unchanged. (Abd-Alrhman Masalkhi)
+> 
+> Cleanups:
+> - Update MAINTAINERS email addresses. (Yu Kuai, Li Nan)
+> - Clean up raid1 read error handling. (Christoph Hellwig)
+> - Move the exceed_read_errors condition out of fix_read_error(). (Christoph Hellwig)
+> - Use str_plural() in raid0 dump_zones(). (Thorsten Blum)
 
-hi,
+Pulled, thanks.
 
-On Mon, Jun 01, 2026 at 10:05 +0100, John Garry wrote:
-> On 01/06/2026 10:03, Abd-Alrhman Masalkhi wrote:
->>>> +++ b/drivers/md/raid1.c
->>>> @@ -1580,8 +1580,10 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->>>>    				 * complexity of supporting that is not worth
->>>>    				 * the benefit.
->>>>    				 */
->>>> -				if (bio->bi_opf & REQ_ATOMIC)
->>>> +				if (bio->bi_opf & REQ_ATOMIC) {
->>>> +					rdev_dec_pending(rdev, mddev);
->>> It's not so nice that we have 2x locations that does the
->>> rdev_dec_pending work
->>>
->> Are you suggesting deferring atomic_inc(&rdev->nr_pending) until after
->> the if (test_bit(WriteErrorSeen, &rdev->flags)) {..} block? The patch
->> is already in md-7.2; should I send a separate cleanup patch?
->
-> I'm not suggesting any further change. I am just mentioning that it is 
-> unfortunate that we have 2x locations which does the decrement, which 
-> makes error handling harder to follow.
-
-You are absolutely right. Having two decrement paths makes the error
-handling harder to follow. Thanks for pointing that out.
+Side note - emails from you with the new email address all end up in
+spam. I just noticed some of them this morning. But I think you want to
+ensure that the DKIM etc part of your email is all kosher, gmail flags
+all of it.
 
 -- 
-Best Regards,
-Abd-Alrhman
+Jens Axboe
