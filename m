@@ -1,33 +1,34 @@
-Received: from va-2-28.ptr.blmpb.com (va-2-28.ptr.blmpb.com [209.127.231.28])
+Received: from va-2-37.ptr.blmpb.com (va-2-37.ptr.blmpb.com [209.127.231.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF2EB3DC4B7
-	for <linux-raid@vger.kernel.org>; Wed,  3 Jun 2026 03:59:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.28
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A2BA3EDAAE
+	for <linux-raid@vger.kernel.org>; Wed,  3 Jun 2026 04:01:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.37
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780459197; cv=none; b=nU5XMKBzoeorAquhJ2HfxE7Y6eJKrQ9xAoRd7+G3ZJ2gboXnI6u9ginW0qUWUxbm+BbTftMIoLyryH3Grdu59UmKhg+BwxhY2UFYwzLo+CeGQ78vN5H0SJ1uf5DZmSI706aX8zOyWVSQjZA3MeyxTZPZJglvdPqPVkFXekdle5w=
+	t=1780459313; cv=none; b=Ja0WdPoYmsR5W6OE/BeNqQZU2IvkTNNTZuZLzMcgzRd4k6+Ujc1d6EVKjFVHExopIjna57S1IcN3q6blhGis+Mi2eVm6Uxzwe80HuM4wl8ts14ytQcTXJS/PJ+MbmzgYFpOkXu/+AWBAt46BNSCaUAuj22UoJ9pdVGZxSLhIj8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780459197; c=relaxed/simple;
-	bh=7U8HfoAy8wDyXDEoyJIBrNl5azBMM2mS3ZEUlvpdgWQ=;
-	h=To:Cc:Message-Id:Mime-Version:From:Subject:Date:Content-Type; b=Y41aiuQIxxN1CniUm8XZLBQScUBjKslz3u0nhRcXK43XOPpMYCzcY90u8wRk73nRiDBYNr/N7NegRal6S6wUSIGDT8yj8FeJ/18ivUZZNkIxPgSQEk8xzRRnF9yRimsVwNyqUUFh4EuisCeQMMtuTL2VDvVjp59mISRWeJNYs/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=asW3zf6i; arc=none smtp.client-ip=209.127.231.28
+	s=arc-20240116; t=1780459313; c=relaxed/simple;
+	bh=dngVXY/Qf1Rg2F39aEyQlAaD9iic53HYsdKk3HDT1bY=;
+	h=To:References:Mime-Version:Message-Id:In-Reply-To:Content-Type:
+	 Subject:Date:Cc:From; b=SkamLA4eorfrB3Mr2enAdlm65+51EDBclNlsVT5QEPQ3UyeijSNqOjObDjLdVeOh6UIBVsnBlimUkxWEJ+yl1ViXY/gdqHAU6QXIr/ipx5q8F/yQ1ll8km27m20K2s3vY8+GqrKbgWVrknjkiTQjzEhfbyxkkIaHW7CFvMI1qZw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=P89aTiOT; arc=none smtp.client-ip=209.127.231.37
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="asW3zf6i"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="P89aTiOT"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1780459181;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1780459186;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=Ty5p76NS9VVsfsnwWtt/phXtMPFZVLY3p58UrSRthp4=;
- b=asW3zf6ipktNn3ieOaGSRNyxwYZaR8Rx2mQZmWICtnKv0DXcuDtm3P581UJoZJfZHlQoQS
- AGy/fgGMMrc8RTakqaq9twjQQCr9YjVmmTLtgSQLY5wsISN7k/nqIisewZ/imLwV4umSox
- EymMCHCrBT+E/+mRCEvYjpP11KkOqzxAvguZovI6FQ6z9IwnHG6tigS47+IElVy9E5/9lG
- Dax/AnRIXQqeigg25Ic+IJRpDNEo9aNu6bJh/1gGrla4pdW4dMOfC3uy6M2NCWmdsJWqo/
- gPV88upN2ClJW2u69MTZ9Vq5DS/vfcy5eegq1eR6dEw+M/6ClFUtGb3YMAZULA==
+ bh=rp1ZNRgyfojlQ5/e3lweNUa6nJunZToOQ7CDEDBOUuE=;
+ b=P89aTiOTuHfesyhtCSd85/dliwog/rdeHRiD8L1AcQTpxC1QxW9SzZt/lr6W2DpwZvwpzg
+ WXzC2WQ+QNfHQtPXCG/BwENfuxyNVAeD6dfQO1kx5TZUC6zexFQdND7tfpW4pQXZ3n5xS7
+ dft6YFoaOo4x9zVMJkyuzFvdwRav+PfIrDUPM6gndw69aZEO/L4+8rEdZfy3ukOgg32U/b
+ E2lgaZJJExy4bKf1rIeNgH+vOJXG5wTSi3K8z9DJHcuMDLWz+ibv8KyXYJ5UUmZHrUhKPg
+ NYHgYIi4Y+YFDjdFAxhv1TvfvjoVRVj1+QrKey+wO00EvAajAXgr7QkYOnzcjA==
 To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>
-Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
-Message-Id: <20260603035925.217847-1-chencheng@fnnas.com>
+References: <20260603035925.217847-1-chencheng@fnnas.com>
+Received: from localhost.localdomain ([183.34.161.59]) by smtp.feishu.cn with ESMTPS; Wed, 03 Jun 2026 11:59:43 +0800
 X-Original-From: chencheng@fnnas.com
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -35,95 +36,213 @@ List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Received: from localhost.localdomain ([183.34.161.59]) by smtp.feishu.cn with ESMTPS; Wed, 03 Jun 2026 11:59:39 +0800
-X-Lms-Return-Path: <lba+26a1fa6ab+e2851c+vger.kernel.org+chencheng@fnnas.com>
-Content-Transfer-Encoding: 7bit
 X-Mailer: git-send-email 2.54.0
-From: "Chen Cheng" <chencheng@fnnas.com>
-Subject: [PATCH v4 0/3] md/raid10: fix r10bio width mismatches across reshape
-Date: Wed,  3 Jun 2026 11:59:22 +0800
+Message-Id: <20260603035925.217847-3-chencheng@fnnas.com>
+X-Lms-Return-Path: <lba+26a1fa6b0+95469e+vger.kernel.org+chencheng@fnnas.com>
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <20260603035925.217847-1-chencheng@fnnas.com>
 Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v4 2/3] md/raid10: make r10bio_pool use fixed-size objects
+Date: Wed,  3 Jun 2026 11:59:24 +0800
+Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
+From: "Chen Cheng" <chencheng@fnnas.com>
 
 From: Chen Cheng <chencheng@fnnas.com>
 
-Hi,
+raid10 currently sizes regular r10bio_pool objects from
+conf->geo.raid_disks, which makes the mempool element width depend on
+the current geometry.
 
-This series fixes slab out-of-bounds accesses in raid10 when reshape changes
-the number of raid disks while regular I/O is still reusing r10bio objects
-allocated under the previous geometry.
+That breaks across reshape. Regular r10bio objects are preallocated and
+reused, so after a geometry change the pool may still contain objects
+allocated for the old width. A later request under the new geometry can
+then reuse an r10bio whose devs[] array is still sized for the previous
+raid_disks value.
 
-The bug is reproducible with a simple 4-disk to 5-disk reshape under write
-load, for example:
+Fix this by backing r10bio_pool with a fixed-size kmalloc mempool sized
+for the maximum width needed across the current reshape transition.
+Apply the same sizing rule to standalone r10bio objects allocated from
+r10buf_pool_alloc().
 
-  mdadm -C /dev/md777 -l10 -n4 /dev/sda /dev/sdb /dev/sdc /dev/sdd
-  mkfs.ext4 /dev/md777
-  mount /dev/md777 /mnt/test
-  fsstress -d /mnt/test -n 24000 -p 8 -l 24 &
-  mdadm /dev/md777 --add /dev/sde
-  mdadm --grow /dev/md777 --raid-devices=5 \
-    --backup-file=/tmp/md-reshape-backup
+This removes the geometry-dependent allocation width from regular
+r10bio_pool objects and prevents reshape from reusing pool entries that
+are too small for the new layout.
 
-Without these changes, an r10bio allocated under the old geometry can later be
-reused, initialized, or freed after conf->geo.raid_disks has switched to the
-new geometry. This creates width mismatches between the object and the current
-devs[] walk/initialization width, which can trigger KASAN reports such as
-slab-out-of-bounds in __make_request(), put_all_bios(), or find_bio_disk().
+Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+---
+ drivers/md/raid10.c | 48 +++++++++++++++++++++++++++++++++------------
+ drivers/md/raid10.h |  2 +-
+ 2 files changed, 36 insertions(+), 14 deletions(-)
 
-This series addresses the problem in three steps:
-
-  1. ensure the sync_action=reshape caller suspends and locks before start_reshape
-
-  2. make the regular r10bio pool fixed-size across reshape transitions, and
-     move the pool rebuild into the freeze window before the live geometry
-     switch;
-
-  3. track the number of valid devs[] entries in each reused r10bio and use
-     that recorded width when walking devs[] after reshape.
-
-
-Changes in v4:
-   - The sync_action=reshape path, caller now invokes
-     mddev_suspend_and_lock() before calling start_reshape()
-   - The md-cluster and dm-raid paths are unchanged, that is reach
-     start_reshape() with the mddev locked but without suspended.
-
-
-Changes in v3:
-   - Replace freeze_array()/unfreeze_array() in raid10_start_reshape() with
-     mddev_suspend_and_lock_nointr()/mddev_unlock_and_resume(). freeze_array()
-     returns when nr_pending == nr_queued, which still allows retry-list items
-     to hold pool objects; mddev_suspend() provides the correct upper-layer
-     quiesce interface. (Suggested by Yu Kuai)
-
-
-Changes in v2:
-  - add this cover letter
-  - convert r10bio_pool to a fixed-size kmalloc mempool
-  - rebuild r10bio_pool inside the freeze window before switching live reshape
-    geometry
-  - switch raid10_quiesce() to freeze_array()/unfreeze_array()
-
-
-Testing:
-  - reproduced the original KASAN slab-out-of-bounds on 4-disk -> 5-disk
-    raid10 reshape with fsstress
-  - verified that this series fixes that reproducer
-  - exercised the 5-disk -> 4-disk reshape direction as well
-
-Thanks,
-Chen Cheng
-
-
-
-Chen Cheng (3):
-  md: suspend array before raid10 reshape via sync_action
-  md/raid10: make r10bio_pool use fixed-size objects
-  md/raid10: bound reused r10bio devs[] walks by used_nr_devs
-
- drivers/md/md.c     | 22 ++++++++++++++----
- drivers/md/raid10.c | 56 +++++++++++++++++++++++++++++++++------------
- drivers/md/raid10.h |  4 +++-
- 3 files changed, 61 insertions(+), 21 deletions(-)
-
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index cee5a253a281..5eca34432e63 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -101,17 +101,32 @@ static void end_reshape(struct r10conf *conf);
+ static inline struct r10bio *get_resync_r10bio(struct bio *bio)
+ {
+ 	return get_resync_pages(bio)->raid_bio;
+ }
+ 
+-static void * r10bio_pool_alloc(gfp_t gfp_flags, void *data)
++static inline unsigned int calc_r10bio_pool_disks(struct mddev *mddev)
+ {
+-	struct r10conf *conf = data;
+-	int size = offsetof(struct r10bio, devs[conf->geo.raid_disks]);
++	/* If delta_disks < 0, use bigger r10bio->devs[] is ok. */
++	return mddev->raid_disks + max(0, mddev->delta_disks);
++}
++
++static inline int calc_r10bio_size(struct mddev *mddev)
++{
++	return offsetof(struct r10bio, devs[calc_r10bio_pool_disks(mddev)]);
++}
++
++static mempool_t *create_r10bio_pool(struct mddev *mddev)
++{
++	int size = calc_r10bio_size(mddev);
++
++	return mempool_create_kmalloc_pool(NR_RAID_BIOS, size);
++}
++
++static struct r10bio *alloc_r10bio(struct mddev *mddev, gfp_t gfp_flags)
++{
++	int size = calc_r10bio_size(mddev);
+ 
+-	/* allocate a r10bio with room for raid_disks entries in the
+-	 * bios array */
+ 	return kzalloc(size, gfp_flags);
+ }
+ 
+ #define RESYNC_SECTORS (RESYNC_BLOCK_SIZE >> 9)
+ /* amount of memory to reserve for resync requests */
+@@ -135,11 +150,11 @@ static void * r10buf_pool_alloc(gfp_t gfp_flags, void *data)
+ 	struct bio *bio;
+ 	int j;
+ 	int nalloc, nalloc_rp;
+ 	struct resync_pages *rps;
+ 
+-	r10_bio = r10bio_pool_alloc(gfp_flags, conf);
++	r10_bio = alloc_r10bio(conf->mddev, gfp_flags);
+ 	if (!r10_bio)
+ 		return NULL;
+ 
+ 	if (test_bit(MD_RECOVERY_SYNC, &conf->mddev->recovery) ||
+ 	    test_bit(MD_RECOVERY_RESHAPE, &conf->mddev->recovery))
+@@ -275,11 +290,11 @@ static void put_all_bios(struct r10conf *conf, struct r10bio *r10_bio)
+ static void free_r10bio(struct r10bio *r10_bio)
+ {
+ 	struct r10conf *conf = r10_bio->mddev->private;
+ 
+ 	put_all_bios(conf, r10_bio);
+-	mempool_free(r10_bio, &conf->r10bio_pool);
++	mempool_free(r10_bio, conf->r10bio_pool);
+ }
+ 
+ static void put_buf(struct r10bio *r10_bio)
+ {
+ 	struct r10conf *conf = r10_bio->mddev->private;
+@@ -1537,11 +1552,11 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
+ {
+ 	struct r10conf *conf = mddev->private;
+ 	struct r10bio *r10_bio;
+ 
+-	r10_bio = mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
++	r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
+ 
+ 	r10_bio->master_bio = bio;
+ 	r10_bio->sectors = sectors;
+ 
+ 	r10_bio->mddev = mddev;
+@@ -1729,11 +1744,11 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
+ 		last_stripe_index *= geo->far_copies;
+ 	end_disk_offset = (bio_end & geo->chunk_mask) +
+ 				(last_stripe_index << geo->chunk_shift);
+ 
+ retry_discard:
+-	r10_bio = mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
++	r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
+ 	r10_bio->mddev = mddev;
+ 	r10_bio->state = 0;
+ 	r10_bio->sectors = 0;
+ 	r10_bio->read_slot = -1;
+ 	memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) * geo->raid_disks);
+@@ -3830,11 +3845,11 @@ static int setup_geo(struct geom *geo, struct mddev *mddev, enum geo_type new)
+ static void raid10_free_conf(struct r10conf *conf)
+ {
+ 	if (!conf)
+ 		return;
+ 
+-	mempool_exit(&conf->r10bio_pool);
++	mempool_destroy(conf->r10bio_pool);
+ 	kfree(conf->mirrors);
+ 	kfree(conf->mirrors_old);
+ 	kfree(conf->mirrors_new);
+ 	safe_put_page(conf->tmppage);
+ 	bioset_exit(&conf->bio_split);
+@@ -3877,13 +3892,12 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 	if (!conf->tmppage)
+ 		goto out;
+ 
+ 	conf->geo = geo;
+ 	conf->copies = copies;
+-	err = mempool_init(&conf->r10bio_pool, NR_RAID_BIOS, r10bio_pool_alloc,
+-			   rbio_pool_free, conf);
+-	if (err)
++	conf->r10bio_pool = create_r10bio_pool(mddev);
++	if (!conf->r10bio_pool)
+ 		goto out;
+ 
+ 	err = bioset_init(&conf->bio_split, BIO_POOL_SIZE, 0, 0);
+ 	if (err)
+ 		goto out;
+@@ -4373,10 +4387,11 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 	struct geom new;
+ 	struct r10conf *conf = mddev->private;
+ 	struct md_rdev *rdev;
+ 	int spares = 0;
+ 	int ret;
++	mempool_t *new_pool;
+ 
+ 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+ 		return -EBUSY;
+ 
+ 	if (setup_geo(&new, mddev, geo_start) != conf->copies)
+@@ -4409,10 +4424,17 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 
+ 	if (spares < mddev->delta_disks)
+ 		return -EINVAL;
+ 
+ 	conf->offset_diff = min_offset_diff;
++	if (mddev->delta_disks > 0) {
++		new_pool = create_r10bio_pool(mddev);
++		if (!new_pool)
++			return -ENOMEM;
++		mempool_destroy(conf->r10bio_pool);
++		conf->r10bio_pool = new_pool;
++	}
+ 	spin_lock_irq(&conf->device_lock);
+ 	if (conf->mirrors_new) {
+ 		memcpy(conf->mirrors_new, conf->mirrors,
+ 		       sizeof(struct raid10_info)*conf->prev.raid_disks);
+ 		smp_mb();
+diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
+index ec79d87fb92f..b711626a5db7 100644
+--- a/drivers/md/raid10.h
++++ b/drivers/md/raid10.h
+@@ -85,11 +85,11 @@ struct r10conf {
+ 	int			have_replacement; /* There is at least one
+ 						   * replacement device.
+ 						   */
+ 	wait_queue_head_t	wait_barrier;
+ 
+-	mempool_t		r10bio_pool;
++	mempool_t		*r10bio_pool;
+ 	mempool_t		r10buf_pool;
+ 	struct page		*tmppage;
+ 	struct bio_set		bio_split;
+ 
+ 	/* When taking over an array from a different personality, we store
 -- 
 2.54.0
