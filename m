@@ -1,102 +1,134 @@
-Received: from va-2-56.ptr.blmpb.com (va-2-56.ptr.blmpb.com [209.127.231.56])
+Received: from va-2-27.ptr.blmpb.com (va-2-27.ptr.blmpb.com [209.127.231.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC10327F19F
-	for <linux-raid@vger.kernel.org>; Tue,  2 Jun 2026 03:41:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6803C3E5A2C
+	for <linux-raid@vger.kernel.org>; Wed,  3 Jun 2026 03:59:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.27
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780371681; cv=none; b=J8n/1zOD5TYo2LD7L3sZz+9LASBd2M0ZhPQ3uUEz/VzIeFnXjlNDxEbWOn8bFPbAlUyrnh0RGiQTDKffuhg+Mcaf6AFdgcyyV5zhdPC8Pk/3RAhJDiBwieeaK3LZ2RMmR5MqG7nvFB/LG5xGzBJpR3WNdxaq4W3r17omp69lKW4=
+	t=1780459190; cv=none; b=Hp2iQPEk3PUwTwkfaAElxxQkk5Toz3aD6VsBYl2i9NQFPuHDfw+26JaVmObbO8Tgq7+GJF39kq73x66MGwja0uVU/cfl7yZC5N+OtHUSsK6HP8BQU4KfVKDw1xxVc4pfyBeT3a7K1cbCQ8+Opex4sQ1zECXGh3UZM/gBwZLrF9w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780371681; c=relaxed/simple;
-	bh=TYbTK+1pZKxSIOHaFVEQ0H0lKRBtMbTz3gFI+nBSXig=;
-	h=To:Mime-Version:From:Subject:Date:Cc:Message-Id:Content-Type:
-	 In-Reply-To:References; b=JsHV0gJCKjIhSmW+W3LRh8VwSSlgyPWuIr2QM6PMAXMdz90x9Y74MH3e1PUJ2uWbJ4jHJvoqUGHImhPUoXczLctEhTMxxJMRsVLixFT31wkHci17KINVV7ndPZ8MuHa7iIeCtl6ZzSbG/uWzHR6PsFZgtY3j8egycAOEWlomTQQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=CuXbA23L; arc=none smtp.client-ip=209.127.231.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1780459190; c=relaxed/simple;
+	bh=c5BQbYqejQFjB1Dvwa0j3DWOXNYbfrN5zfd9/TpBc+4=;
+	h=Cc:Subject:Date:References:Message-Id:Mime-Version:In-Reply-To:
+	 Content-Type:To:From; b=Pf+VK6YqX3O7e0uLXyVI9KPTkRMaFzo0P3eiXunofdfIWJYXjFEl0gVjhZk2Wr0mC6QjmJkbOPjhFsOf7/EdxzUe5VDEPsMxXAseRNrBFZzkfs1TJ3qmXQsxKQ/r/DJRW4y0QeXMjJSSKzkOI1gvzf8C2VImpUVRcb46S6L5Qxg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=GEgNS1Dx; arc=none smtp.client-ip=209.127.231.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="CuXbA23L"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="GEgNS1Dx"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1780371667;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1780459184;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=TYbTK+1pZKxSIOHaFVEQ0H0lKRBtMbTz3gFI+nBSXig=;
- b=CuXbA23Lo711oK9Irg1+ckVhiECd+m9hb+/7l5ELnsCa2kJ5EK/OgE4pvIerp9HuGSkYHk
- Xf1VfyIP16se8NT2QjaRuI8W8FpKVJ9A5Jv+n5syScs68ML4mOgruF3ie5lW/Et3rjg+XB
- Zutuh/wnQzNEPNAzxG0aJXLbfXJRYqueXRFBqwTHVr9t3mFmZwjfv5rdg+kMpf5YwwNx2d
- KVuHf5hd/j7C1WzV2cczIO4Kah/QDl0tv72tfkPx0Fb3j8ukq9ltWSmQSiLtgRcPAGvJ+7
- Pr1yR+1Xwvm0e61YIeN+VMkgn25+bK5aDeG/YCoRZ8HvslZj0WkRudOFpPhOfQ==
-To: "Jens Axboe" <axboe@kernel.dk>
-Received: from smtpclient.apple ([120.245.64.106]) by smtp.larksuite.com with ESMTPS; Tue, 02 Jun 2026 03:41:06 +0000
+ bh=rDqvK++FuXr4+qMneJDGiyKGgBn60HyAFWmj1wid1EI=;
+ b=GEgNS1DxyQBXouYfl2kDSa+L5XWlJHGpRdbkMDBBwzyTudQKzoVp+mT3ekDIIyRttrtWHI
+ f5Z+AjkT7rVygxxga+5b+f3k/v6JiXyyR/T2r9TPrp8ax1YoUAUikaXaMEbvcqa8ITViEx
+ nuU29D4z9u9VS1BvU2m6LZpAvXoG6lgMyeUrl5Sa+Uzq2iGIprhHHMsh7WrauOg7pkW61B
+ nYBybezIZmkSBji1znG7uE4icEPec+5LqBbrJls/GaY5NcwIs3l5KUjHVtKTe2bZ7PnNdu
+ GjLrGfuVwVyrMLvEQu7pENxS+vV9K+RLeZQdKO91rbPzg4RwxNJDjE1tOJ/9gw==
+Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v4 1/3] md: suspend array before raid10 reshape via sync_action
+Date: Wed,  3 Jun 2026 11:59:23 +0800
+References: <20260603035925.217847-1-chencheng@fnnas.com>
+Message-Id: <20260603035925.217847-2-chencheng@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-From: "Coly Li" <colyli@fygo.io>
-Subject: Re: [GIT PULL] md-7.2-20260531
-Date: Tue, 2 Jun 2026 11:40:53 +0800
-X-Mailer: Apple Mail (2.3864.600.51.1.1)
-Cc: "Yu Kuai" <yukuai@fygo.io>, <linux-raid@vger.kernel.org>, 
-	<linux-block@vger.kernel.org>, 
-	"linux-bcache" <linux-bcache@vger.kernel.org>
-Message-Id: <74048F79-FAD4-4C63-A885-31467EA60530@fygo.io>
+In-Reply-To: <20260603035925.217847-1-chencheng@fnnas.com>
+X-Original-From: chencheng@fnnas.com
+X-Lms-Return-Path: <lba+26a1fa6ae+1408ea+vger.kernel.org+chencheng@fnnas.com>
 Content-Type: text/plain; charset=UTF-8
-X-Original-From: Coly Li <colyli@fygo.io>
-X-Lms-Return-Path: <lba+26a1e50d2+0d729a+vger.kernel.org+colyli@fygo.io>
-In-Reply-To: <753dfdb4-7d68-4183-af3f-d51e92d4dd31@kernel.dk>
-References: <20260531112618.160409-1-yukuai@fygo.io> <753dfdb4-7d68-4183-af3f-d51e92d4dd31@kernel.dk>
+To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>
+From: "Chen Cheng" <chencheng@fnnas.com>
+Received: from localhost.localdomain ([183.34.161.59]) by smtp.feishu.cn with ESMTPS; Wed, 03 Jun 2026 11:59:41 +0800
+Content-Transfer-Encoding: 7bit
+X-Mailer: git-send-email 2.54.0
 
-Hi Jens,
+From: Chen Cheng <chencheng@fnnas.com>
 
-> 2026=E5=B9=B46=E6=9C=882=E6=97=A5 02:55=EF=BC=8CJens Axboe <axboe@kernel.=
-dk> =E5=86=99=E9=81=93=EF=BC=9A
->=20
-> On 5/31/26 5:26 AM, Yu Kuai wrote:
->> Hi Jens,
->>=20
->> Please consider pulling the following changes into your for-7.2/block
->> branch.
->>=20
->> This pull request contains:
->>=20
->> Bug Fixes:
->> - Only requeue dm-raid bios when dm is suspending. (Benjamin Marzinski)
->> - Reset raid10 read_slot when reusing r10bio for discard. (Chen Cheng)
->> - Fix raid1/raid10 deadlock in read error recovery path. (Abd-Alrhman Ma=
-salkhi)
->> - Fix raid1/raid10 error-path detection with md_cloned_bio(). (Abd-Alrhm=
-an Masalkhi)
->> - Fix raid1/raid10 bio accounting for split md cloned bios. (Abd-Alrhman=
- Masalkhi)
->> - Fix raid1 nr_pending leak in REQ_ATOMIC bad-block path. (Abd-Alrhman M=
-asalkhi)
->>=20
->> Improvements:
->> - Skip redundant raid_disks updates when the value is unchanged. (Abd-Al=
-rhman Masalkhi)
->>=20
->> Cleanups:
->> - Update MAINTAINERS email addresses. (Yu Kuai, Li Nan)
->> - Clean up raid1 read error handling. (Christoph Hellwig)
->> - Move the exceed_read_errors condition out of fix_read_error(). (Christ=
-oph Hellwig)
->> - Use str_plural() in raid0 dump_zones(). (Thorsten Blum)
->=20
-> Pulled, thanks.
->=20
-> Side note - emails from you with the new email address all end up in
-> spam. I just noticed some of them this morning. But I think you want to
-> ensure that the DKIM etc part of your email is all kosher, gmail flags
-> all of it.
+The sync_action=reshape path currently enters mddev_start_reshape() with
+reconfig_mutex held but without suspending the array first. For raid10,
+that means raid10_start_reshape() has to drop reconfig_mutex and reacquire
+the array through mddev_suspend_and_lock_nointr() before it can safely
+switch geometry-dependent state.
 
-Could you please check my patch to change my email address go fygo.io in yo=
-ur spam emails?
-I guess similar situation may also happen on my patch sent from fygo.io.
-And yes, we are looking into this DKIM issue now.
+Use mddev_suspend_and_lock() for ACTION_RESHAPE in action_store(), so
+the sysfs reshape path reaches mddev_start_reshape() with the array
+already suspended and locked.
 
-Thanks.
+Other sync_action operations keep using mddev_lock() unchanged.
 
-Coly Li
+Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+---
+ drivers/md/md.c | 22 +++++++++++++++++-----
+ 1 file changed, 17 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 096bb64e87bd..5bc937e149ac 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5256,30 +5256,39 @@ static int mddev_start_reshape(struct mddev *mddev)
+ 
+ static ssize_t
+ action_store(struct mddev *mddev, const char *page, size_t len)
+ {
+ 	int ret;
++	bool suspended = false;
+ 	enum sync_action action;
+ 
+ 	if (!mddev->pers || !mddev->pers->sync_request)
+ 		return -EINVAL;
+ 
++	action = md_sync_action_by_name(page);
+ retry:
+ 	if (work_busy(&mddev->sync_work))
+ 		flush_work(&mddev->sync_work);
+ 
+-	ret = mddev_lock(mddev);
++	if (action == ACTION_RESHAPE) {
++		ret = mddev_suspend_and_lock(mddev);
++		suspended = true;
++	} else {
++		ret = mddev_lock(mddev);
++		suspended = false;
++	}
+ 	if (ret)
+ 		return ret;
+ 
+ 	if (work_busy(&mddev->sync_work)) {
+-		mddev_unlock(mddev);
++		if (suspended)
++			mddev_unlock_and_resume(mddev);
++		else
++			mddev_unlock(mddev);
+ 		goto retry;
+ 	}
+ 
+-	action = md_sync_action_by_name(page);
+-
+ 	/* TODO: mdadm rely on "idle" to start sync_thread. */
+ 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+ 		switch (action) {
+ 		case ACTION_FROZEN:
+ 			md_frozen_sync_thread(mddev);
+@@ -5344,11 +5353,14 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+ 	md_wakeup_thread(mddev->thread);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+ 	ret = len;
+ 
+ out:
+-	mddev_unlock(mddev);
++	if (suspended)
++		mddev_unlock_and_resume(mddev);
++	else
++		mddev_unlock(mddev);
+ 	return ret;
+ }
+ 
+ static struct md_sysfs_entry md_scan_mode =
+ __ATTR_PREALLOC(sync_action, S_IRUGO|S_IWUSR, action_show, action_store);
+-- 
+2.54.0
