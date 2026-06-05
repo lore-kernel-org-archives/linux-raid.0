@@ -1,44 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59D973E4C70;
-	Fri,  5 Jun 2026 03:22:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EC6F478E23;
+	Fri,  5 Jun 2026 07:26:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780629736; cv=none; b=Ej1cdmf7F/QmolE7ui95u+BDpN8Xru+0PJU5ybeT6wZhIZNCAby0Pb8CTfZvZ2kP+Ybkan6uIgKy2dXtfuf3EBxbI+2QhpitkXpJOaspXYVepy9jOELY/qMY+Fi1ZhI93legDeMPofyP9aANcFvRKJvELcz4wZLvMqYHeBnVK5A=
+	t=1780644405; cv=none; b=BVar6ceF7yTKI4RmQU8KpqlMCwTfaTJ8OssvGb8eWmWR/VfXqDNFAlOhu0u+YdECriMHQ+IWKJSBUkOzLFRmKi0J2paO55heMpNYG6h7FgLrvjtTUpFvXrJLybd6MN1c4jtRz9CxIUBCfhN/M/gjs0ACerEiTDggdER4RfgqxeQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780629736; c=relaxed/simple;
-	bh=sFZdfWOe0Y44AxjLe05J00ib+1VEgmwl3sCVBEZtCUE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sC4P2XbSU4F2WMBAdnxY7hHTYwNEQ7Bu9kGw10GC0xHXKRpIO0FrSAfzsJlmFfYkOtBZMT3+/qz/VvWEB+FKReQzTalUixkaoW/Gs7jGVGlITGdJcbvTkXCIEE7FDbxZeVDrLYgCTweuku5xLeWp5zBJs5NCwMKupcUmUMBG9vs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gFK+Vt7l; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780644405; c=relaxed/simple;
+	bh=7aTNcSBBFMcW7E7JpXDFYfPVrNMGI6GaXp6LQytR0OA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Gh5libb1FEp/8/pUnEzVIwXkOF4V89IqBNKJXhDZ2WsJ5koe2nUr2l8z3eMdMcHLT3YbDZiNydQLem7AGCPCV8iEYUCBy94lTPVXloPHdQQeGZGk2pzDGMENCJaGq5VME0dnuFSLmAiy217sPU1vzUG6ddPGdxia54K4jVKXV2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=likrt9dc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gFK+Vt7l"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3121A1F00899;
-	Fri,  5 Jun 2026 03:22:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="likrt9dc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC4651F00898;
+	Fri,  5 Jun 2026 07:26:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780629733;
-	bh=v66bTfehFWEt48mRp0lqMgVYHC92SMhbb+XEPoZlJio=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=gFK+Vt7leNMu3U+FqAMJjNfN0eyV9yRulxXRREshLcihbuPbazgRDrOjWB6Ajngl5
-	 fY56Jyj1nbJNB/YLEc67QEEbaWfI9s3SzpKhTi3UBcsU02baAxuY+3y1KwOstjHsiB
-	 TlyfDKMzmkk05rbAJpSCEKZawGoKO6M5kD96L+iNAASbEuDaNiCW2IL3QsB9bS9v6f
-	 7TJm9LtS8fHehP0ha/jCiL97scnWnWt8QEK7PF3GzN9RdBr6VVyM2zYDgpNVxympYS
-	 Ft9n3zY81AzQQ2iGTBBgi0jaqX611vQVIOzP0aH8SZTTdJDPRlCfytH2LLEGG36l0s
-	 1EYk4Z4jAQI7w==
+	s=k20260515; t=1780644403;
+	bh=o69lYzBAHuLvryGwJjweQQKyBkaS2b5wXE+I0FQq4M0=;
+	h=From:To:Cc:Subject:Date;
+	b=likrt9dcSwgDqNkt7CFURbYLbpDvuDwbzhh71TxqIr9X3Sd6fqV0tzIPwcFRFZhfO
+	 AIFoF3DKpWaHXD/w8n7UyNsbSYg3raOvhJCXgiveXEJgdKgZlr1krjTqtUdDtWNqoV
+	 i0lbxl+wrT4/njtGNMfxVJuCgX/r03MD5qwYrZQxuKViMG6cMWz2m6C/dD7f8NzH8o
+	 b2IgQWsyNdM6ddZQhjtjDXOY3wuLLHE0sa3FzYXnsUcRhiHYrSFZNlUGJ4CA8FnhFQ
+	 LmxRSX+RAprgeZ9gcwv3L3jWHjtdC4pkN6ruL9m7v3yIReS85mQZ46tbvnsR5R9UNj
+	 if7TjBVbP1HjA==
 From: Yu Kuai <yukuai@kernel.org>
-To: Song Liu <song@kernel.org>
-Cc: Yu Kuai <yukuai@fygo.io>,
-	Li Nan <magiclinan@didiglobal.com>,
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>,
 	Xiao Ni <xiao@kernel.org>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH] md/raid5: allow discard with llbitmap
-Date: Fri,  5 Jun 2026 11:22:05 +0800
-Message-ID: <20260605032205.2376714-3-yukuai@kernel.org>
+Subject: [PATCH v2 0/3] md/raid5: discard accounting and llbitmap support
+Date: Fri,  5 Jun 2026 15:26:36 +0800
+Message-ID: <20260605072639.2434847-1-yukuai@kernel.org>
 X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260605032205.2376714-1-yukuai@kernel.org>
-References: <20260605032205.2376714-1-yukuai@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -49,45 +46,54 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai@fygo.io>
 
-Raid5 disables discard unless devices_handle_discard_safely is set
-because lower devices that do not return zeroes after discard can
-leave a discarded stripe inconsistent. A later partial write can then
-reconstruct bad data if a member fails.
+Hi,
 
-The legacy bitmap needs this restriction because it only records
-write-intent dirty ranges. It cannot distinguish discarded data from
-valid data, so discard can make data inconsistent after later partial
-writes and failures.
+This series fixes raid5 discard IO accounting and lets llbitmap arrays
+use discard to convert llbitmap bits even when lower member devices do
+not support discard.
 
-llbitmap records discarded ranges as unwritten. Raid5 already consults
-llbitmap state to force RCW or lazy recovery before using parity for
-unwritten data. Therefore non-zeroing discard is safe with llbitmap
-while the existing full-stripe granularity and lower-device
-discard-size checks still apply.
+Patch 1 accounts the full-stripe range that raid5 handles before discard
+is split.
 
-Signed-off-by: Yu Kuai <yukuai@fygo.io>
----
- drivers/md/raid5.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Patch 2 advertises a UINT_MAX discard limit from raid5. Lower discard
+support is cached in r5conf when raid5 sets queue limits, and unsupported
+discard bios are rejected before stripe work is queued.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index debf35342ae0..4e9a758a8cc9 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7829,11 +7829,12 @@ static int raid5_set_limits(struct mddev *mddev)
- 	 * We only allow DISCARD if the sysadmin has confirmed that only safe
- 	 * devices are in use by setting a module parameter.  A better idea
- 	 * might be to turn DISCARD into WRITE_ZEROES requests, as that is
- 	 * required to be safe.
- 	 */
--	if (!devices_handle_discard_safely ||
-+	if ((!devices_handle_discard_safely &&
-+	     mddev->bitmap_id != ID_LLBITMAP) ||
- 	    lim.max_discard_sectors < (stripe >> 9) ||
- 	    lim.discard_granularity < stripe)
- 		lim.max_hw_discard_sectors = 0;
- 
- 	/*
+Patch 3 lets llbitmap discard bypass the lower-device support check. If
+lower discard is not supported, raid5 completes the accounted clone after
+md_account_bio(), so llbitmap conversion callbacks run without issuing
+member discard bios.
+
+Changes since v1:
+- Account the exact full-stripe range handled by raid5 before converting
+  llbitmap bits.
+- Always advertise raid5 discard limits and move lower-device support
+  validation to the request path.
+- Cache unsupported lower discard state in r5conf as
+  raid5_discard_unsupported.
+- Keep llbitmap discard useful even when lower member devices cannot safely
+  handle discard.
+
+Validation:
+- QEMU RAID5 discard test with devices_handle_discard_safely=N:
+  llbitmap bit conversion matched full-stripe aligned and unaligned discard
+  ranges, md discard iostat advanced for handled llbitmap discards, lower
+  member discard counters stayed at zero, and normal RAID5 discarded no IO
+  when lower discard was unsupported.
+
+Thanks,
+Kuai
+
+Yu Kuai (3):
+  md/raid5: account discard IO
+  md/raid5: validate discard support at request time
+  md/raid5: always convert llbitmap bits for discard
+
+ drivers/md/raid5.c | 74 +++++++++++++++++++++++++++++++---------------
+ drivers/md/raid5.h |  1 +
+ 2 files changed, 51 insertions(+), 24 deletions(-)
+
+
+base-commit: 717359a168bb66ac95f6161715d17e491ee86ca7
 -- 
 2.51.0
-
