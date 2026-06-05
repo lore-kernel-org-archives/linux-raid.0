@@ -1,31 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E31547D922;
-	Fri,  5 Jun 2026 07:26:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA229253F13;
+	Fri,  5 Jun 2026 09:15:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780644411; cv=none; b=ojX3FkUf0/rgcyGinb00+KY23+GokFhVcJgl3ZonOHBoz0T849/3nbZ4SB5Ek0GVAyNNehaH++8lHta0ydbYAPaN8cgQc4Ska2agv+K0EnBw9wysonYSosBCsJtthkpIqQrUcE/FXLr95LgwtiAZkupjXXVyS/Zi9oMblZ/NaVc=
+	t=1780650932; cv=none; b=JaOC4p2Rt6b2T5WBIsmRRvBA1Dkswbd0yV0+b2rnrykGCRJAyKJZGbpfntTdHW9PjoewNHiusMgOSMyWnbzpYhY31s3bNsn3Ky2try6agtmtOMIij/8KjWUebWO3Bxy/rhAr/kInp9tOpGMgEGiYCMT3J2uxReOJmYUbUyeBUo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780644411; c=relaxed/simple;
-	bh=X5zPx8AaczLpYI+wT+Fancgh3HTrYISPlYf3dPPokDg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AD7Y7fqbxl1hYwiJFWTQOsZqFyX2gVDLo0aGt9ii9yFvhUmQPdY8kz2KisZjZ2sDedclh33Ad8TGV0+MYSug0XevQrU8h7V4eTnXlb2r43Sd2lgkCaInWxH1EgTPZk8GVpkk14jdNAv5/qiLS7fXeXQZokjYrNJY1d39I2xHBOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=edz8X+9z; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780650932; c=relaxed/simple;
+	bh=kKYnh1KTfzKKVVYk4xKBk4AFMuOaqxOlClU8fj/GTN8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=onM9p0RvhfcnXQZxu7waAkfAp0a2wjaiwLjuj0RZ+VkIXTOuBjUhMwD3tjnYynbRt5CjuAPsU60+NdZLb9+/vkvhAl/bUC6nd3Uynqj6rLc8gUVBSNCaXEi4Z+Y7/voPuLLNWfc+VfhbXBx1h4VrzGN/nGFSB+rJc6pKWzvtjpk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b7ao523N; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="edz8X+9z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80D4D1F00893;
-	Fri,  5 Jun 2026 07:26:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b7ao523N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2A331F00893;
+	Fri,  5 Jun 2026 09:15:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780644410;
-	bh=YB9jvAFrKIidDpZBfqQVx0rYEerO4lsJ66X/tMi2qVk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=edz8X+9zuZJ8OvqAisw0Q4HevaimXXm4Oya/UZQiiVRkH4QijA8btDMqbe9Md6biO
-	 ajozUgXcUwE9IFvMNUT5sXyVem+2CpWmwPcCnHQuNVUtK1t/9VhAXwG6d0K5SK0P+z
-	 7/yPdAFc/0y/hc/7Lgs9ekjq80Gowy5XQCV+SBILdqq4hvsxwv+NRwFi+Z9BlpRxUw
-	 z7UirzYOBkIx8mjkbBAwpAnxnMi5XTkYvpL+d/7GlNOlOMuvAOxYTn95DbDJTsVHIY
-	 w9cc3fbmGntzsoO8iBed1EYGAXZ58iz+Tl0ZFPhn3GgcEI6bOuQglanAbO/QgxNjQM
-	 d3eDEPsqXuiyA==
+	s=k20260515; t=1780650931;
+	bh=ZLOMwTOaiORIb7yIrkAsJ0xVILItBha8esl3l9FqfOE=;
+	h=From:To:Cc:Subject:Date;
+	b=b7ao523Nm2ZTOLkb67ScPFwqyrxp4rEXsExGtpO2XDB3SH5iI8JnZCsSEyUxU0UxA
+	 PNjqEQf4x23R3V9CuuxxeL1nrnZNHJEe13nN2jal3NvdB+Rgt02+Hjj80plF2WzbMR
+	 qEOT7LdKPL8go5ISlFsPlju9i1W+KTWVN4CHvn51DgGQM1f5SkwV9aBmP7l2qs5USL
+	 tdduVYe7IMybQQ2T8KvRCWBcaV6jI8u0SrZubDk575b7ZdEEbLiW8FE4AdeQ4FMiAW
+	 WFuMbZuWercP8O1m2ciIgzIpYxEK3uEURvgp+j02t6F1BdokMr+bHckxKpuLRCOwAi
+	 DRT9D4Em2ooSQ==
 From: Yu Kuai <yukuai@kernel.org>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fygo.io>
@@ -33,12 +32,10 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	Xiao Ni <xiao@kernel.org>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 3/3] md/raid5: always convert llbitmap bits for discard
-Date: Fri,  5 Jun 2026 15:26:39 +0800
-Message-ID: <20260605072639.2434847-4-yukuai@kernel.org>
+Subject: [PATCH 00/20] md/md-llbitmap: support reshape for RAID10 and RAID5
+Date: Fri,  5 Jun 2026 17:15:07 +0800
+Message-ID: <20260605091527.2463539-1-yukuai@kernel.org>
 X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260605072639.2434847-1-yukuai@kernel.org>
-References: <20260605072639.2434847-1-yukuai@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -49,55 +46,84 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai@fygo.io>
 
-llbitmap discard is useful even when no underlying member device supports
-it. The discard still converts the llbitmap range to unwritten, so later
-reads and recovery do not rely on stale parity for that range.
+Hi,
 
-Let llbitmap discard bypass the raid5 lower discard support check. If lower
-discard is not safe or not supported, complete the accounted clone after
-md_account_bio() so the llbitmap conversion callbacks run without member
-discard bios.
+This series adds llbitmap support for online reshape in RAID10 and RAID5.
 
-Signed-off-by: Yu Kuai <yukuai@fygo.io>
----
- drivers/md/raid5.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+llbitmap has a different set of constraints from the existing bitmap code:
+there is one live bitmap instance, each bit state has richer semantics, and
+reshape can change the mapping from logical array ranges to bitmap ranges.
+The series therefore adds exact bitmap range mapping hooks, tracks old and
+new llbitmap geometry during reshape, remaps checkpointed bits as reshape
+progresses, and wires the reshape lifecycle into RAID10 and RAID5.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 76e736ee48d3..180ff0660b6a 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1136,10 +1136,13 @@ static void defer_issue_bios(struct r5conf *conf, sector_t sector,
- 
- static bool raid5_discard_limits(struct mddev *mddev, struct bio *bi)
- {
- 	struct r5conf *conf = mddev->private;
- 
-+	if (mddev->bitmap_id == ID_LLBITMAP)
-+		return true;
-+
- 	if (!conf->raid5_discard_unsupported)
- 		return true;
- 
- 	bi->bi_status = BLK_STS_NOTSUPP;
- 	bio_endio(bi);
-@@ -5738,10 +5741,16 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
- 	md_account_bio(mddev, &bi);
- 	orig_bi->bi_iter = bi_iter;
- 	bi->bi_iter = bi_iter;
- 	bi->bi_next = NULL;
- 
-+	if (mddev->bitmap_id == ID_LLBITMAP &&
-+	    conf->raid5_discard_unsupported) {
-+		bio_endio(bi);
-+		return;
-+	}
-+
- 	logical_sector = first_stripe * conf->chunk_sectors;
- 	last_sector = last_stripe * conf->chunk_sectors;
- 
- 	for (; logical_sector < last_sector;
- 	     logical_sector += RAID5_STRIPE_SECTORS(conf)) {
+The main rules are:
+
+1. split bios at the reshape position before bitmap accounting, so one bio
+   is never accounted with mixed old/new geometry;
+2. do not skip reshape ranges from stale llbitmap state, because reshape
+   progress is checkpointed by array metadata;
+3. remap llbitmap bits when reshape progress is checkpointed;
+4. reject llbitmap reshape if mddev->chunk_sectors shrinks, because the
+   effective data range represented by existing bitmap bits can shrink.
+
+The first group of patches prepares generic bitmap and llbitmap
+infrastructure.  The second group wires RAID10.  The last group wires
+RAID5, including exact old/new stripe mapping.
+
+Validation:
+* RAID5 llbitmap test:
+  - created 3-disk RAID5 with --bitmap=lockless
+  - wrote 96 MiB of random data
+  - reshaped to 4 disks
+  - llbitmap bits changed from clean=1024 dirty=1024 to
+    unwritten=448 clean=1600 dirty=0
+  - all sync-related llbitmap counters were zero after reshape
+  - data hash was unchanged after reshape
+  - replaced one disk, waited for recovery, hash was unchanged
+  - failed another old disk and verified degraded reads still matched
+* RAID10 llbitmap test:
+  - created 4-disk RAID10 n2 with --bitmap=lockless
+  - wrote 128 MiB of random data
+  - reshaped to 6 disks
+  - llbitmap bits changed from clean=2048 dirty=2048 to
+    unwritten=2048 clean=4096 dirty=0
+  - all sync-related llbitmap counters were zero after reshape
+  - data hash was unchanged after reshape
+  - replaced one disk, waited for recovery, hash was unchanged
+  - failed the rebuilt disk's mirror mate and verified degraded reads still
+    matched
+
+Yu Kuai (20):
+  md: add exact bitmap mapping and reshape hooks
+  md: skip bitmap accounting for empty write ranges
+  md: add helper to split bios at reshape offset
+  md/md-llbitmap: track bitmap sync_size explicitly
+  md/md-llbitmap: allocate page controls independently
+  md/md-llbitmap: grow the page cache in place for reshape
+  md/md-llbitmap: track target reshape geometry fields
+  md/md-llbitmap: finish reshape geometry
+  md/md-llbitmap: refuse reshape while llbitmap still needs sync
+  md/md-llbitmap: add reshape range mapping helpers
+  md/md-llbitmap: don't skip reshape ranges from bitmap state
+  md/md-llbitmap: remap checkpointed bits as reshape progresses
+  md/md-llbitmap: clamp state-machine walks to tracked bits
+  md/raid10: reject llbitmap reshape when md chunk shrinks
+  md/raid10: wire llbitmap reshape lifecycle
+  md/raid10: split reshape bios before bitmap accounting
+  md/raid5: add exact old and new llbitmap mapping helpers
+  md/raid5: reject llbitmap reshape when md chunk shrinks
+  md/raid5: wire llbitmap reshape lifecycle
+  md/raid5: split reshape bios before bitmap accounting
+
+ drivers/md/md-bitmap.c   |   8 +
+ drivers/md/md-bitmap.h   |   8 +
+ drivers/md/md-llbitmap.c | 616 +++++++++++++++++++++++++++++++++++----
+ drivers/md/md.c          |  60 +++-
+ drivers/md/md.h          |   8 +
+ drivers/md/raid10.c      |  50 +++-
+ drivers/md/raid5.c       | 118 ++++++--
+ 7 files changed, 793 insertions(+), 75 deletions(-)
+
 -- 
 2.51.0
-
