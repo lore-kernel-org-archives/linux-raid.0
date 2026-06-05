@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48B824C6F18;
-	Fri,  5 Jun 2026 09:15:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D0994C77A0;
+	Fri,  5 Jun 2026 09:15:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780650935; cv=none; b=M1kNPPx+3bG0lZpukyQEjFeH8OVVAbFeMeTQSYdb1R+piaZwodWPaTFPfpAROshD3iBBAU4QxwQ8B0gf0g3fFpT2dnATjZBTSIcoe+xh41WRf3uM2wz1f7vfMj0bo+OD1GTqa9k7J1MfL86yZqRGnU8augcbsWVuocpKhVOdoWk=
+	t=1780650937; cv=none; b=TNRYrhIgnwFF0MX6avnJCTbeO2Uljk6sS268Lb8D0KyKXdFaLqWsI0F1JmfeBpiT2ciUnofGOoYe22cPs/2SOQcftnG5O41bZsyIy1AozwIs2/SmW7bvCMUPvSEOTl4OKp8i+GpOqh0YPPNz0CYWgUSfcZohpYEM8H1MgrhXIF4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780650935; c=relaxed/simple;
-	bh=6TWKgVCLN+ZtQxMRpFB3X7CM5C4b3tz9RfhbkysMtzI=;
+	s=arc-20240116; t=1780650937; c=relaxed/simple;
+	bh=NfeFQ5c7xS1HT33OlwtulEh/DnHm2VZSeqJvDHMdAXU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Klh/rBVGG8cR0oeHc1MM0ZGLvqlyaw83U2iUGdRg3V+XKQ+ovP4/xudHAb22AGK5cNF0tcDV5bFtOKcf3U2kqAHNif+P2EFif8B5UkXP5482Q7CeZf3ZnJ6JPDxcBCy/O9xW5dN2Owq8PHDyxoydWljxHe6pQa6t1OaqgJr0BD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MsR14doP; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=myIH6QBgn3yeoK874xDnuMDzpmsR5LBsylXSRDkG+SnxqwBeowZYA0eXmYkCBUCq7UEJElShdCNH805kqQhy7grkQEFbBpBEnGQ0OvNBSZIa9AdMAjINqCDJDNOA91doOSgC/Or3JaoMvQu9F7sDIasuvb56lQkNOP7Or/76lk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nbG2Pfo8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MsR14doP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D90381F00898;
-	Fri,  5 Jun 2026 09:15:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nbG2Pfo8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FB121F00893;
+	Fri,  5 Jun 2026 09:15:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780650933;
-	bh=igZA1XcYA/kYv/zfHEqFkoYAL+LZa3ydhAHjKfT7rGo=;
+	s=k20260515; t=1780650936;
+	bh=Iunclv6O0yezJRv0NhUXtZC4ADeNsTZXzX2/AFXKdMA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=MsR14doPEKlqlXNDN20NdGiw07UA2eEH5puMymTddM1Roncxdk+fCo5g156a+Df/4
-	 NW9iR7Ia3l4jn70REaajqqVlYcJHQmYg14HR5RAjoYLhhysjF/3sj6gE9CbMhglDUt
-	 3co7eRisX8m8g6gMESQHS0WqdHKJ1mPfR/FDS7jDBEyyjqhWRzIsbski3AhHR9obhp
-	 JeTj45C0BADRXYyBX5lAhbYoaPeQlleMtOQY7pHJrAbyASnrzRx5MRlEJ+u3/t9UY8
-	 ZE2dERlxhwTj7zq7Xu0QvDwXc5cwOfJCbH57s5p2AfZRWYAvCl1qV48MMjAQpM3sIe
-	 X+9dTn5d/AHsQ==
+	b=nbG2Pfo8PADoG8UWV/awLvZSTjSXv8+ix91OAb7p23UbhKwN+1lLr1EFWUqw9/kTT
+	 RN65Y54Ky/OEO4ZrXpAhX0crug56/0k5pJSFTufPqntYBD1Og+4PU5GjYePWcBVchs
+	 I8P9jm8wPt3/t8DEh6aeq7w9Pifr/2N6EK7s0jePCf7BjLGCTdfBkw3QLnsE385m/2
+	 4QW6rNDL62xOJRukc7ili7eDbiSgatuZrdxmFRNdNxd8vBQ/qQeo6GPRVkqQAxR1LE
+	 y8Rjg22x4aSBUD732NaQuEIpR2PwluO7nuKdH2v4yWAWP7rbs8ENPdGAUEWw5njfSb
+	 uOcaqDdD8gExw==
 From: Yu Kuai <yukuai@kernel.org>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fygo.io>
@@ -33,9 +33,9 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	Xiao Ni <xiao@kernel.org>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH] md: add exact bitmap mapping and reshape hooks
-Date: Fri,  5 Jun 2026 17:15:08 +0800
-Message-ID: <20260605091527.2463539-2-yukuai@kernel.org>
+Subject: [PATCH] md: skip bitmap accounting for empty write ranges
+Date: Fri,  5 Jun 2026 17:15:09 +0800
+Message-ID: <20260605091527.2463539-3-yukuai@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260605091527.2463539-1-yukuai@kernel.org>
 References: <20260605091527.2463539-1-yukuai@kernel.org>
@@ -49,166 +49,73 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai@fygo.io>
 
-Add bitmap mapping and reshape hooks needed by llbitmap reshape
-support without teaching md core to account a single bio against
-multiple bitmap ranges.
+mkfs.ext4 can submit zero-sector flush/FUA bios. These bios are WRITE
+bios for md_write_start() purposes, but they do not cover any data sector
+and must not dirty bitmap bits.
 
-This also adds the old/new bitmap geometry helpers used by
-personalities to describe reshape mapping to llbitmap.
+md bitmap accounting currently passes such bios to bitmap start_write().
+For llbitmap this reaches llbitmap_start_write() with sectors == 0,
+which underflows the end chunk calculation.
+
+The new bitmap prepare_range() hook can also turn a non-empty bio into an
+empty bitmap range when the requested sectors are outside the active
+bitmap geometry. Treat both cases as not started, so the completion path
+will not call end_write() for an empty range.
 
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 ---
- drivers/md/md-bitmap.c   |  8 ++++++++
- drivers/md/md-bitmap.h   |  8 ++++++++
- drivers/md/md-llbitmap.c |  8 ++++++++
- drivers/md/md.c          | 12 ++++++++----
- drivers/md/md.h          |  4 ++++
- 5 files changed, 36 insertions(+), 4 deletions(-)
+ drivers/md/md.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 028b9ca8ce52..e10296788cdd 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -1727,10 +1727,17 @@ static void bitmap_start_write(struct mddev *mddev, sector_t offset,
- 		else
- 			sectors = 0;
- 	}
- }
- 
-+static void bitmap_prepare_range(struct mddev *mddev, sector_t *offset,
-+				 unsigned long *sectors)
-+{
-+	if (mddev->pers->bitmap_sector)
-+		mddev->pers->bitmap_sector(mddev, offset, sectors);
-+}
-+
- static void bitmap_end_write(struct mddev *mddev, sector_t offset,
- 			     unsigned long sectors)
- {
- 	struct bitmap *bitmap = mddev->bitmap;
- 
-@@ -3075,10 +3082,11 @@ static struct bitmap_operations bitmap_ops = {
- 	.load			= bitmap_load,
- 	.destroy		= bitmap_destroy,
- 	.flush			= bitmap_flush,
- 	.write_all		= bitmap_write_all,
- 	.dirty_bits		= bitmap_dirty_bits,
-+	.prepare_range		= bitmap_prepare_range,
- 	.unplug			= bitmap_unplug,
- 	.daemon_work		= bitmap_daemon_work,
- 
- 	.start_behind_write	= bitmap_start_behind_write,
- 	.end_behind_write	= bitmap_end_behind_write,
-diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
-index 214f623c7e79..f0136fc02feb 100644
---- a/drivers/md/md-bitmap.h
-+++ b/drivers/md/md-bitmap.h
-@@ -91,10 +91,18 @@ struct bitmap_operations {
- 	void (*destroy)(struct mddev *mddev);
- 	void (*flush)(struct mddev *mddev);
- 	void (*write_all)(struct mddev *mddev);
- 	void (*dirty_bits)(struct mddev *mddev, unsigned long s,
- 			   unsigned long e);
-+	/* Prepare a range for this bitmap implementation. */
-+	void (*prepare_range)(struct mddev *mddev,
-+			      sector_t *offset,
-+			      unsigned long *sectors);
-+	void (*reshape_finish)(struct mddev *mddev);
-+	int (*reshape_can_start)(struct mddev *mddev);
-+	void (*reshape_mark)(struct mddev *mddev, sector_t old_pos,
-+			     sector_t new_pos);
- 	void (*unplug)(struct mddev *mddev, bool sync);
- 	void (*daemon_work)(struct mddev *mddev);
- 
- 	void (*start_behind_write)(struct mddev *mddev);
- 	void (*end_behind_write)(struct mddev *mddev);
-diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-index 1adc5b117821..bcf34f0c9af6 100644
---- a/drivers/md/md-llbitmap.c
-+++ b/drivers/md/md-llbitmap.c
-@@ -1186,10 +1186,17 @@ static void llbitmap_destroy(struct mddev *mddev)
- 	llbitmap_free_pages(llbitmap);
- 	kfree(llbitmap);
- 	mutex_unlock(&mddev->bitmap_info.mutex);
- }
- 
-+static void llbitmap_prepare_range(struct mddev *mddev, sector_t *offset,
-+				   unsigned long *sectors)
-+{
-+	if (mddev->pers->bitmap_sector)
-+		mddev->pers->bitmap_sector(mddev, offset, sectors);
-+}
-+
- static void llbitmap_start_write(struct mddev *mddev, sector_t offset,
- 				 unsigned long sectors)
- {
- 	struct llbitmap *llbitmap = mddev->bitmap;
- 	unsigned long start = offset >> llbitmap->chunkshift;
-@@ -1775,10 +1782,11 @@ static struct bitmap_operations llbitmap_ops = {
- 	.cond_end_sync		= llbitmap_cond_end_sync,
- 
- 	.update_sb		= llbitmap_update_sb,
- 	.get_stats		= llbitmap_get_stats,
- 	.dirty_bits		= llbitmap_dirty_bits,
-+	.prepare_range		= llbitmap_prepare_range,
- 	.write_all		= llbitmap_write_all,
- 
- 	.groups			= md_llbitmap_groups,
- };
- 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 096bb64e87bd..08eabc7e5a71 100644
+index 08eabc7e5a71..ccc4180d2c1d 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -9359,21 +9359,25 @@ void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
- 	mddev_trace_remap(mddev, discard_bio, bio->bi_iter.bi_sector);
- 	submit_bio_noacct(discard_bio);
- }
- EXPORT_SYMBOL_GPL(md_submit_discard_bio);
- 
-+static void md_bitmap_prepare_range(struct mddev *mddev, sector_t *offset,
-+				    unsigned long *sectors)
-+{
-+	mddev->bitmap_ops->prepare_range(mddev, offset, sectors);
-+}
-+
- static void md_bitmap_start(struct mddev *mddev,
- 			    struct md_io_clone *md_io_clone)
- {
- 	md_bitmap_fn *fn = unlikely(md_io_clone->rw == STAT_DISCARD) ?
+@@ -9374,10 +9374,12 @@ static void md_bitmap_start(struct mddev *mddev,
  			   mddev->bitmap_ops->start_discard :
  			   mddev->bitmap_ops->start_write;
  
--	if (mddev->pers->bitmap_sector)
--		mddev->pers->bitmap_sector(mddev, &md_io_clone->offset,
--					   &md_io_clone->sectors);
--
-+	md_bitmap_prepare_range(mddev, &md_io_clone->offset,
-+				&md_io_clone->sectors);
+ 	md_bitmap_prepare_range(mddev, &md_io_clone->offset,
+ 				&md_io_clone->sectors);
++	if (!md_io_clone->sectors)
++		return;
  	fn(mddev, md_io_clone->offset, md_io_clone->sectors);
  }
  
  static void md_bitmap_end(struct mddev *mddev, struct md_io_clone *md_io_clone)
  {
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index d8daf0f75cbb..110cf0f8b107 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -796,10 +796,14 @@ struct md_personality
- 	/* Changes the consistency policy of an active array. */
- 	int (*change_consistency_policy)(struct mddev *mddev, const char *buf);
- 	/* convert io ranges from array to bitmap */
- 	void (*bitmap_sector)(struct mddev *mddev, sector_t *offset,
- 			      unsigned long *sectors);
-+	void (*bitmap_sector_map)(struct mddev *mddev, sector_t *offset,
-+				  unsigned long *sectors, bool previous);
-+	sector_t (*bitmap_sync_size)(struct mddev *mddev, bool previous);
-+	sector_t (*bitmap_array_sectors)(struct mddev *mddev, bool previous);
- };
+@@ -9394,11 +9396,12 @@ static void md_end_clone_io(struct bio *bio)
+ 						       bio_clone);
+ 	struct bio *orig_bio = md_io_clone->orig_bio;
+ 	struct mddev *mddev = md_io_clone->mddev;
+ 	struct completion *reshape_completion = bio->bi_private;
  
- struct md_sysfs_entry {
- 	struct attribute attr;
- 	ssize_t (*show)(struct mddev *, char *);
+-	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev, false))
++	if (bio_data_dir(orig_bio) == WRITE && md_io_clone->sectors &&
++	    md_bitmap_enabled(mddev, false))
+ 		md_bitmap_end(mddev, md_io_clone);
+ 
+ 	if (bio->bi_status && !orig_bio->bi_status)
+ 		orig_bio->bi_status = bio->bi_status;
+ 
+@@ -9421,14 +9424,16 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
+ 		bio_alloc_clone(bdev, *bio, GFP_NOIO, &mddev->io_clone_set);
+ 
+ 	md_io_clone = container_of(clone, struct md_io_clone, bio_clone);
+ 	md_io_clone->orig_bio = *bio;
+ 	md_io_clone->mddev = mddev;
++	md_io_clone->sectors = 0;
+ 	if (blk_queue_io_stat(bdev->bd_disk->queue))
+ 		md_io_clone->start_time = bio_start_io_acct(*bio);
+ 
+-	if (bio_data_dir(*bio) == WRITE && md_bitmap_enabled(mddev, false)) {
++	if (bio_data_dir(*bio) == WRITE && bio_sectors(*bio) &&
++	    md_bitmap_enabled(mddev, false)) {
+ 		md_io_clone->offset = (*bio)->bi_iter.bi_sector;
+ 		md_io_clone->sectors = bio_sectors(*bio);
+ 		md_io_clone->rw = op_stat_group(bio_op(*bio));
+ 		md_bitmap_start(mddev, md_io_clone);
+ 	}
 -- 
 2.51.0
 
