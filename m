@@ -1,61 +1,61 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EF093655CF;
-	Fri,  5 Jun 2026 17:28:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5B21FA272;
+	Sat,  6 Jun 2026 02:15:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780680504; cv=none; b=C0sp5R/R1p504gILOYIEUIZRfx6gHlCzjHh3JHVh1CX6GxGrUsLmyJg/g55Sv4QhR0nG3nJtqe4hWv/ryGQGbnStj8h2ka5jy2OTpvyo9vJsd0sNPaLvBnK5h5BuUS6oWRSZmZXs9tE59C5fLCNIqPmROH3Uyv0x+CbPuf49yCU=
+	t=1780712134; cv=none; b=S+xAYj1/AZxyB0j8N4YhJv+DOHTJ+hDc1VCWeOffm+2Y7z1esO99HxhSXm5mZyfOwRGFqEyihgaLWBzKNWuLBnhby9gwJEN1rgoTNmdOSewpgHirZhp8wV9tKTH4u+tIxwYMtS7s7pZPg2bJyUt682tcpt2wquY0Z3ilnC9wkP4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780680504; c=relaxed/simple;
-	bh=XiuF971PQZgpVQW9suL6sN/+XwRYoVGoZgxE5xeqltw=;
+	s=arc-20240116; t=1780712134; c=relaxed/simple;
+	bh=4u4RuYGzxCDvy476KDNeypvl9Ecy/DtIB/KxwU4zghs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fJlr7SlVKhckd6NrJfA+0ronNAhdkEBE/P3LREqrq/J12IRNDxn18/Rvgu6rUKvsUD5srAffiF7SI2q03j8HmDzA2fGxt2wAsevZ/GTY1aPcINsKjeCfzgU11YxJ/aoX+GoBp5JluW+wFFFPsqBgX3Y1b9XEIfZvqkiAd8oxQ4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aSz/gqT1; arc=none smtp.client-ip=192.198.163.19
+	 Content-Type:Content-Disposition:In-Reply-To; b=dZNB3dFwy1ErQg14DqusObieqvdH2uGtR5PDBd+tZoRyh95VtYHsE2CC7UHjosvyTagygbKE91fTsKoMLcLnV0zkWLXJeaoG77p3qL/yHafJ3pQ824ZcG6W7z3gPYKPk33r1FCkrBHPtGEzCnOAE0rHW7Zu4Ci6UIWdDu2FD8VI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KFsVZYF1; arc=none smtp.client-ip=192.198.163.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aSz/gqT1"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KFsVZYF1"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1780680502; x=1812216502;
+  t=1780712131; x=1812248131;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=XiuF971PQZgpVQW9suL6sN/+XwRYoVGoZgxE5xeqltw=;
-  b=aSz/gqT1J4Ln/iC4hWhqFHQ81xPjXBVCngJ58/DnedlcFila76GNmQ3q
-   cYHg5oEuDb/x/RRruDaTrQDRBiTQfdjrxNp7iCDaw1FpcXwbdC7D5Xl0D
-   1jLlToLTkpmtgv/zedaCCb+QHsKeTsU1mo+HERdom+qAwuX1/x+lzbGPS
-   Avwftpe/v2Qnzn7bllniWThKNOx/UYy1B7wr+dvR9fMeRXLaPhXadVKnA
-   NI0GblrepBZWLDeXcdYCPdBfTBdHTOzH5W1llx0PEkqJgiBa9NWZUdy5u
-   jgGWg3YYugBg2yUvoEchLK7E6dld3mr/dzkFUOzWpd1ftgWV7Pw7qseVz
-   w==;
-X-CSE-ConnectionGUID: 1p1hTYGvShi402zyBPyKkg==
-X-CSE-MsgGUID: 1pdR5ejTSKKbOjp4aZU9Sw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11808"; a="80552784"
+  bh=4u4RuYGzxCDvy476KDNeypvl9Ecy/DtIB/KxwU4zghs=;
+  b=KFsVZYF1dp/tLYcNMXJgt3ZbtQQ+o0GLYOTDQiEXnENzLeTLkFsX6Gi7
+   F170BMwOTYd/Bs/RbSGKq4cnJUYhehAO0VaeNbOWECyynFihJO7Rxs9lS
+   Y0xPP3pHI1bJvcuuvoTTaFYsGTxncf1CeotcaLBki8lb0KDvj/nlBYqph
+   4ftZJThebsSjDqk9eY89ktFfZ7twKVkq3pWif4zixaR4Ew/9lGLE+lwHo
+   ghiwCgpzYGKz/M919hA9C++6uChunUB9c1r+I9wIiP52cnbq6Oh6l1Rbb
+   qUJic0qO2I8BVBR+78Pavc5fHsUiRWf69bszji82XmR4vw5Ubl9XbsTLN
+   g==;
+X-CSE-ConnectionGUID: KMSJLsm0RN+SBdxhHXl5qg==
+X-CSE-MsgGUID: SHu60az1QrC5eFmSyqRvyQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11808"; a="84123626"
 X-IronPort-AV: E=Sophos;i="6.24,189,1774335600"; 
-   d="scan'208";a="80552784"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jun 2026 10:28:22 -0700
-X-CSE-ConnectionGUID: ORf4pc2nRa2PMAduwSKwEg==
-X-CSE-MsgGUID: ff40pEPXTZy4h2zDthabAg==
+   d="scan'208";a="84123626"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jun 2026 19:15:31 -0700
+X-CSE-ConnectionGUID: 0lsdpTOtQjuHvQtIL+FyYA==
+X-CSE-MsgGUID: eokPIww8SJ+B6DVm/1612A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.24,189,1774335600"; 
-   d="scan'208";a="248825404"
+   d="scan'208";a="268943267"
 Received: from igk-lkp-server01.igk.intel.com (HELO 892db79562d4) ([10.211.93.152])
-  by orviesa003.jf.intel.com with ESMTP; 05 Jun 2026 10:28:19 -0700
+  by fmviesa001.fm.intel.com with ESMTP; 05 Jun 2026 19:15:29 -0700
 Received: from kbuild by 892db79562d4 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1wVYLA-000000002cL-10lh;
-	Fri, 05 Jun 2026 17:28:16 +0000
-Date: Fri, 5 Jun 2026 19:27:48 +0200
+	id 1wVgZL-000000002jZ-10Il;
+	Sat, 06 Jun 2026 02:15:27 +0000
+Date: Sat, 6 Jun 2026 04:15:25 +0200
 From: kernel test robot <lkp@intel.com>
 To: Yu Kuai <yukuai@kernel.org>, Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fygo.io>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
-	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>, linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Subject: Re: [PATCH] md/raid5: split reshape bios before bitmap accounting
-Message-ID: <202606051933.yVCn4DIj-lkp@intel.com>
+Message-ID: <202606060443.UZIDPAEF-lkp@intel.com>
 References: <20260605091527.2463539-21-yukuai@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -72,38 +72,33 @@ Hi Yu,
 kernel test robot noticed the following build errors:
 
 [auto build test ERROR on linus/master]
-[also build test ERROR on v6.16-rc1 next-20260605]
+[also build test ERROR on v7.1-rc6 next-20260605]
 [If your patch is applied to the wrong git tree, kindly drop us a note.
 And when submitting patch, we suggest to use '--base' as documented in
 https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-raid5-split-reshape-bios-before-bitmap-accounting/20260605-173848
+url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-raid5-split-reshape-bios-before-bitmap-accounting/20260605-214540
 base:   linus/master
 patch link:    https://lore.kernel.org/r/20260605091527.2463539-21-yukuai%40kernel.org
 patch subject: [PATCH] md/raid5: split reshape bios before bitmap accounting
-config: x86_64-kexec (https://download.01.org/0day-ci/archive/20260605/202606051933.yVCn4DIj-lkp@intel.com/config)
-compiler: clang version 22.0.0git (https://github.com/llvm/llvm-project f43d6834093b19baf79beda8c0337ab020ac5f17)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260605/202606051933.yVCn4DIj-lkp@intel.com/reproduce)
+config: x86_64-rhel-9.4 (https://download.01.org/0day-ci/archive/20260606/202606060443.UZIDPAEF-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260606/202606060443.UZIDPAEF-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202606051933.yVCn4DIj-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202606060443.UZIDPAEF-lkp@intel.com/
 
 All errors (new ones prefixed by >>):
 
-   drivers/md/raid5.c:4221:7: warning: variable 'qread' set but not used [-Wunused-but-set-variable]
-    4221 |                 int qread =0;
-         |                     ^
->> drivers/md/raid5.c:6126:7: error: call to undeclared function 'mddev_bio_split_at_reshape_offset'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+   drivers/md/raid5.c: In function 'raid5_make_request':
+>> drivers/md/raid5.c:6126:14: error: implicit declaration of function 'mddev_bio_split_at_reshape_offset' [-Wimplicit-function-declaration]
     6126 |         bi = mddev_bio_split_at_reshape_offset(mddev, bi, NULL,
-         |              ^
->> drivers/md/raid5.c:6126:5: error: incompatible integer to pointer conversion assigning to 'struct bio *' from 'int' [-Wint-conversion]
+         |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>> drivers/md/raid5.c:6126:12: error: assignment to 'struct bio *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
     6126 |         bi = mddev_bio_split_at_reshape_offset(mddev, bi, NULL,
-         |            ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    6127 |                                                &conf->bio_split);
-         |                                                ~~~~~~~~~~~~~~~~~
-   1 warning and 2 errors generated.
+         |            ^
 
 
 vim +/mddev_bio_split_at_reshape_offset +6126 drivers/md/raid5.c
