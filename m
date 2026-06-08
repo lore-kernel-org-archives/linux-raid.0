@@ -1,112 +1,183 @@
-Received: from mailtransmit04.runbox.com (mailtransmit04.runbox.com [185.226.149.37])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 534FD3B83FC
-	for <linux-raid@vger.kernel.org>; Mon,  8 Jun 2026 09:55:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.226.149.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F22452D3ECF
+	for <linux-raid@vger.kernel.org>; Mon,  8 Jun 2026 17:40:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780912551; cv=none; b=ud3dHkyvjDFsui0zNUfi07TfxkD86dW+NASTREjStZA1KwZNCW4k1tC0YzRfImKCySCg46ZpvTZPaXn5xadW9lk13Kl8YxoMcl2w5APxU6jLcukJ+SPwikUs+WuxlOEC1k592Oi8r5d2ZOQ7Z+TDzV4EX9mYYrH2xn/vpSv5Zwg=
+	t=1780940415; cv=none; b=HCabA6GJM9WyDwC0pP82QeKqO9T3y2IF1zAd6SuCEQ40wkTFPicqmLLDZ2dq+ey/DbvP3mGHf7iT9yUmmWGkoq8CSt2PZAvVaZiFktXlLe5kjGefjBd+ZPi9hstqMzYzQ/OilYbTNBXT1Shx1uF6nI2UczC9/4NDdh7VWIYj88M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780912551; c=relaxed/simple;
-	bh=PgGqQfOnvs46FVfNjcIxC0EmsUixMJe8Z5BxVUrZc9g=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gKdxcQFb8vtvswd3af4PvcenY5pEZ5Q7oS/xRBBM9wsMewcC522Bm1ta9sUW99PlKzk3iBUOJELPISf7+/llLw5KU/cCOw4H1df6muFRzsvF/Vmdz5zZPmVLddzJA/XrSIfaojWttVlOXzIUGpH9i3FGS9N7n7pvMZI5W/ioH7I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=runbox.com; dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b=XWHRMoVT; arc=none smtp.client-ip=185.226.149.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=runbox.com
+	s=arc-20240116; t=1780940415; c=relaxed/simple;
+	bh=8mba+JRPoF7PwZsAk1Pvzgzq4hJpwycUnSkIr57ApFA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=tH6xWN+WmW5FCAFXCoc/SkEiv5/uuZmJdaYczIWiMfekIbi0Ij92n5uAln0HlLC9uTRtZXzgW0n+rWRcKmyG2VatU5EqQJ9rqKTOIBNv2LzJtcJMVwGr36qfkVgSVP7CDufiZea2NimMHohrCreSpBi5XShDSGBLqWZ2PvyXjW8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j44r5+da; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b="XWHRMoVT"
-Received: from mailtransmit03.runbox ([10.9.9.163] helo=aibo.runbox.com)
-	by mailtransmit04.runbox.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.93)
-	(envelope-from <david.laight.linux_spam@runbox.com>)
-	id 1wWWho-00BRwm-9A; Mon, 08 Jun 2026 11:55:40 +0200
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=runbox.com;
-	 s=selector1; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:
-	Subject:Cc:To:From; bh=ns7GQYXa/xXbn02IqMUE5zju+Fs+k86iB6j0ZJqhncM=; b=XWHRMo
-	VTaNjNomq8djVhdHQ0J/vA7wSl5WX4mqBD1/+amkX/J3WQRdqUBrmZjPWu4+DNjGVD+klG5epVyyF
-	39/YGs8RFk6Ll8hs60rmYyY+2bmkIsJ1DxcsCa2wBFmW6V+Zyyi9D34x/mFdwnkzMyU/hKdLD2FAn
-	zr6MujZjNcki0fHOz2HtW8tyvWPtaNzj2VdQa4AZNaeGh5s83tB+5iBF/iN/rUGF14r+WkQfmbH8r
-	M/QZ6tc1HEzkQyzGxdCHTFIKvEz8LpUa/L+V/9CAnB1lJbMZpIyQlE0/lOxTUNmiriaZ3DWg1RVvd
-	6xcf2nDWpEiIyufTW/nFDqHhu28w==;
-Received: from [10.9.9.73] (helo=submission02.runbox)
-	by mailtransmit03.runbox with esmtp (Exim 4.86_2)
-	(envelope-from <david.laight.linux_spam@runbox.com>)
-	id 1wWWhn-0003c1-6n; Mon, 08 Jun 2026 11:55:39 +0200
-Received: by submission02.runbox with esmtpsa  [Authenticated ID (1493616)]  (TLS1.2:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.95)
-	id 1wWWhk-00Ag6G-2i;
-	Mon, 08 Jun 2026 11:55:36 +0200
-From: david.laight.linux@gmail.com
-To: Kees Cook <kees@kernel.org>,
-	linux-hardening@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org
-Cc: Arnd Bergmann <arnd@kernel.org>,
-	Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fnnas.com>,
-	David Laight <david.laight.linux@gmail.com>
-Subject: [PATCH next] drivers/md/md: Use bounded strings ops when setting disk->disk_name
-Date: Mon,  8 Jun 2026 10:55:10 +0100
-Message-Id: <20260608095523.2606-26-david.laight.linux@gmail.com>
-X-Mailer: git-send-email 2.39.5
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j44r5+da"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79EB41F00893;
+	Mon,  8 Jun 2026 17:40:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780940413;
+	bh=B+hOPsXe5WGPXeP/+ec8ixbp/U4JZPXlXU4lDIq8VdM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=j44r5+dab3SgoUy5gsRRNTrSWb3QwCIv/8ev6mUJ4ubs2YCEZxG3zMRdcE6cE8wtN
+	 aHrqhw7vAGMFxFmbJanZE1WVJC3E1V9/ZgtICMqwDNanuv8voZVvmg17HzxeAPlQY7
+	 nyDwYtdMAorHZtBmBHC5N+5AR8vPbYOwKlCrUJRWHOSCO6aE9px6bgzscoduz4IXu7
+	 +hlBozfT2eO0w9skz5Ep60cywYpgOij4wm0EDClEUXFeHjmERgBdJiQ+upJl4ijF6q
+	 pSAA4wK4DaPr9olDZr9+3kVH23xY9fjI3KDQtd5m1rFBaRdXLsq96g0kLD8TdCQBdk
+	 q5I8orYteDmnQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 2/2] md/raid1: move the exceed_read_errors condition out
+ of fix_read_error
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Christoph Hellwig" <hch@lst.de>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260529054308.2720300-3-hch@lst.de>
+References: <20260529054308.2720300-3-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 08 Jun 2026 17:40:13 +0000
+Message-Id: <20260608174013.79EB41F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-From: David Laight <david.laight.linux@gmail.com>
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
 
-Replace strcpy() with strscpy() and sprintf() with snprintf() for safety.
+New issues:
+- [Low] The initialization of `rdev` at the beginning of `fix_read_error()`=
+ is a dead store.
 
-Signed-off-by: David Laight <david.laight.linux@gmail.com>
----
-This is one of a group of patches that remove potentially unbounded
-strcpy() calls.
+Pre-existing issues:
+- [High] Memory leak of `r1_bio` when retrying `REQ_NOWAIT` reads during an=
+ array freeze or resync barrier.
+- [High] Infinite loop of read retries on a `FailFast` device when it is th=
+e last good device.
+- [High] Lockless access to `conf->mirrors[d].rdev` in `fix_read_error` wit=
+hout RCU protection or `reconfig_mutex` leads to a Use-After-Free race cond=
+ition.
+--
 
-They are mostly replaced by strscpy() or, when strlen() has just been
-called, with memcpy() (usually including the '\0').
+commit 8f0f2f192596802d5deb747f4831c98556fe83cc
+Author: Christoph Hellwig <hch@lst.de>
 
-Calls with copy string literals into arrays are left unchanged.
-They are safe and easily detected as such.
+md/raid1: move the exceed_read_errors condition out of fix_read_error
 
-The changes were made by getting the compiler to detect the calls and
-then fixing the code by hand.
+This commit moves the exceed_read_errors() check from fix_read_error() to
+its caller, handle_read_error(). This restricts fix_read_error() to only
+fixing up data devices after a read error.
 
-Note that all the changes are only compile tested.
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -2411,11 +2411,6 @@ static void fix_read_error(struct r1conf *conf, st=
+ruct r1bio *r1_bio)
+>  	struct mddev *mddev =3D conf->mddev;
+>  	struct md_rdev *rdev =3D conf->mirrors[read_disk].rdev;
 
-Some Makefiles were changed to allow files to contain strcpy().
-As well as 'difficult to fix' files, this included 'show' functions
-as they really need to use sysfs_emit() or seq_printf().
+[Severity: Low]
+Is this initialization of rdev a dead store? Since the exceed_read_errors()
+check was moved out of fix_read_error(), this initial assignment of rdev
+is no longer used before being unconditionally reassigned inside the while
+loop.
 
-All the patches are being sent individually to avoid very long cc lists.
-Apologies for the terse commit messages and likely unexpected tags.
-(There are about 100 patches in total.)
+> -	if (exceed_read_errors(mddev, rdev)) {
+> -		r1_bio->bios[r1_bio->read_disk] =3D IO_BLOCKED;
+> -		return;
+> -	}
+> -
+>  	while(sectors) {
+>  		int s =3D sectors;
+>  		int d =3D read_disk;
 
- drivers/md/md.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+[Severity: High]
+This isn't a bug introduced by this patch, but does the lockless access to
+conf->mirrors[d].rdev inside the while(sectors) loop lead to a
+Use-After-Free race condition?
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8b568eee8743..4b659d10fa4d 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6346,11 +6346,11 @@ struct mddev *md_alloc(dev_t dev, char *name)
- 	disk->first_minor = unit << shift;
- 	disk->minors = 1 << shift;
- 	if (name)
--		strcpy(disk->disk_name, name);
-+		strscpy(disk->disk_name, name);
- 	else if (partitioned)
--		sprintf(disk->disk_name, "md_d%d", unit);
-+		snprintf(disk->disk_name, sizeof (disk->disk_name), "md_d%d", unit);
- 	else
--		sprintf(disk->disk_name, "md%d", unit);
-+		snprintf(disk->disk_name, sizeof (disk->disk_name), "md%d", unit);
- 	disk->fops = &md_fops;
- 	disk->private_data = mddev;
- 
--- 
-2.39.5
+Looking at fix_read_error(), the code iterates over mirror indices and
+dereferences rdev without holding rcu_read_lock():
 
+    do {
+        rdev =3D conf->mirrors[d].rdev;
+        if (rdev &&
+            (test_bit(In_sync, &rdev->flags) ||
+             (!test_bit(Faulty, &rdev->flags) &&
+              rdev->recovery_offset >=3D sect + s)) &&
+            rdev_has_badblock(rdev, sect, s) =3D=3D 0) {
+            atomic_inc(&rdev->nr_pending);
+
+If a concurrent management thread executes hot_remove_disk ->
+raid1_remove_disk() -> raid1_remove_conf(), it can check nr_pending
+(seeing 0 for mirrors where d !=3D read_disk), set the pointer to NULL, and
+kick the device. Since md_kick_rdev_from_array uses synchronize_rcu() and
+fix_read_error() holds no RCU lock, can rdev be freed while
+fix_read_error() continues to access it?
+
+[ ... ]
+
+> @@ -2652,7 +2647,10 @@ static void handle_read_error(struct r1conf *conf,=
+ struct r1bio *r1_bio)
+>  		md_error(mddev, rdev);
+>  	} else {
+
+[Severity: High]
+This isn't a bug introduced by this patch, but can the FailFast branch
+cause an infinite loop of read retries when it is the last good device?
+
+In handle_read_error(), if a read error occurs on an rdev with the FailFast
+flag set, md_error(mddev, rdev) is called and the else branch is completely
+skipped. If this rdev happens to be the last good device, raid1_error()
+refuses to set the Faulty bit.
+
+Because the else branch is skipped, r1_bio->bios[r1_bio->read_disk] is not
+set to IO_BLOCKED. Since the device is neither Faulty nor IO_BLOCKED,
+raid1_read_request() considers the same device readable and selects it
+again, causing an immediate failure and re-queuing that hangs the thread.
+
+>  		freeze_array(conf, 1);
+> -		fix_read_error(conf, r1_bio);
+> +		if (exceed_read_errors(mddev, rdev))
+> +			r1_bio->bios[r1_bio->read_disk] =3D IO_BLOCKED;
+> +		else
+> +			fix_read_error(conf, r1_bio);
+>  		unfreeze_array(conf);
+>  	}
+
+[Severity: High]
+This is a pre-existing issue, but does retrying a REQ_NOWAIT read during an
+array freeze or resync barrier leak r1_bio?
+
+When handle_read_error() queues a retry for a read request with REQ_NOWAIT,
+it calls raid1_read_request() and passes the existing r1_bio:
+
+drivers/md/raid1.c:handle_read_error() {
+    ...
+    r1_bio->state =3D 0;
+    raid1_read_request(mddev, bio, r1_bio->sectors, r1_bio);
+    allow_barrier(conf, sector);
+}
+
+If there is an active barrier, wait_read_barrier() correctly identifies the
+nowait flag and returns false. raid1_read_request() handles this by calling
+bio_wouldblock_error() and returning early:
+
+drivers/md/raid1.c:raid1_read_request() {
+    ...
+    if (!wait_read_barrier(conf, bio->bi_iter.bi_sector,
+                           bio->bi_opf & REQ_NOWAIT)) {
+        bio_wouldblock_error(bio);
+        return;
+    }
+    ...
+}
+
+Does this early return bypass the cleanup, permanently leaking the mempool
+allocated r1_bio and potentially causing a system deadlock?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260529054308.2720=
+300-1-hch@lst.de?part=3D2
