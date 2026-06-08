@@ -1,267 +1,112 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from mailtransmit04.runbox.com (mailtransmit04.runbox.com [185.226.149.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5B21FA272;
-	Sat,  6 Jun 2026 02:15:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 534FD3B83FC
+	for <linux-raid@vger.kernel.org>; Mon,  8 Jun 2026 09:55:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.226.149.37
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780712134; cv=none; b=S+xAYj1/AZxyB0j8N4YhJv+DOHTJ+hDc1VCWeOffm+2Y7z1esO99HxhSXm5mZyfOwRGFqEyihgaLWBzKNWuLBnhby9gwJEN1rgoTNmdOSewpgHirZhp8wV9tKTH4u+tIxwYMtS7s7pZPg2bJyUt682tcpt2wquY0Z3ilnC9wkP4=
+	t=1780912551; cv=none; b=ud3dHkyvjDFsui0zNUfi07TfxkD86dW+NASTREjStZA1KwZNCW4k1tC0YzRfImKCySCg46ZpvTZPaXn5xadW9lk13Kl8YxoMcl2w5APxU6jLcukJ+SPwikUs+WuxlOEC1k592Oi8r5d2ZOQ7Z+TDzV4EX9mYYrH2xn/vpSv5Zwg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780712134; c=relaxed/simple;
-	bh=4u4RuYGzxCDvy476KDNeypvl9Ecy/DtIB/KxwU4zghs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dZNB3dFwy1ErQg14DqusObieqvdH2uGtR5PDBd+tZoRyh95VtYHsE2CC7UHjosvyTagygbKE91fTsKoMLcLnV0zkWLXJeaoG77p3qL/yHafJ3pQ824ZcG6W7z3gPYKPk33r1FCkrBHPtGEzCnOAE0rHW7Zu4Ci6UIWdDu2FD8VI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KFsVZYF1; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1780912551; c=relaxed/simple;
+	bh=PgGqQfOnvs46FVfNjcIxC0EmsUixMJe8Z5BxVUrZc9g=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gKdxcQFb8vtvswd3af4PvcenY5pEZ5Q7oS/xRBBM9wsMewcC522Bm1ta9sUW99PlKzk3iBUOJELPISf7+/llLw5KU/cCOw4H1df6muFRzsvF/Vmdz5zZPmVLddzJA/XrSIfaojWttVlOXzIUGpH9i3FGS9N7n7pvMZI5W/ioH7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=runbox.com; dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b=XWHRMoVT; arc=none smtp.client-ip=185.226.149.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=runbox.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KFsVZYF1"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1780712131; x=1812248131;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=4u4RuYGzxCDvy476KDNeypvl9Ecy/DtIB/KxwU4zghs=;
-  b=KFsVZYF1dp/tLYcNMXJgt3ZbtQQ+o0GLYOTDQiEXnENzLeTLkFsX6Gi7
-   F170BMwOTYd/Bs/RbSGKq4cnJUYhehAO0VaeNbOWECyynFihJO7Rxs9lS
-   Y0xPP3pHI1bJvcuuvoTTaFYsGTxncf1CeotcaLBki8lb0KDvj/nlBYqph
-   4ftZJThebsSjDqk9eY89ktFfZ7twKVkq3pWif4zixaR4Ew/9lGLE+lwHo
-   ghiwCgpzYGKz/M919hA9C++6uChunUB9c1r+I9wIiP52cnbq6Oh6l1Rbb
-   qUJic0qO2I8BVBR+78Pavc5fHsUiRWf69bszji82XmR4vw5Ubl9XbsTLN
-   g==;
-X-CSE-ConnectionGUID: KMSJLsm0RN+SBdxhHXl5qg==
-X-CSE-MsgGUID: SHu60az1QrC5eFmSyqRvyQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11808"; a="84123626"
-X-IronPort-AV: E=Sophos;i="6.24,189,1774335600"; 
-   d="scan'208";a="84123626"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jun 2026 19:15:31 -0700
-X-CSE-ConnectionGUID: 0lsdpTOtQjuHvQtIL+FyYA==
-X-CSE-MsgGUID: eokPIww8SJ+B6DVm/1612A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,189,1774335600"; 
-   d="scan'208";a="268943267"
-Received: from igk-lkp-server01.igk.intel.com (HELO 892db79562d4) ([10.211.93.152])
-  by fmviesa001.fm.intel.com with ESMTP; 05 Jun 2026 19:15:29 -0700
-Received: from kbuild by 892db79562d4 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wVgZL-000000002jZ-10Il;
-	Sat, 06 Jun 2026 02:15:27 +0000
-Date: Sat, 6 Jun 2026 04:15:25 +0200
-From: kernel test robot <lkp@intel.com>
-To: Yu Kuai <yukuai@kernel.org>, Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>
-Cc: oe-kbuild-all@lists.linux.dev, Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>, linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] md/raid5: split reshape bios before bitmap accounting
-Message-ID: <202606060443.UZIDPAEF-lkp@intel.com>
-References: <20260605091527.2463539-21-yukuai@kernel.org>
+	dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b="XWHRMoVT"
+Received: from mailtransmit03.runbox ([10.9.9.163] helo=aibo.runbox.com)
+	by mailtransmit04.runbox.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.93)
+	(envelope-from <david.laight.linux_spam@runbox.com>)
+	id 1wWWho-00BRwm-9A; Mon, 08 Jun 2026 11:55:40 +0200
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=runbox.com;
+	 s=selector1; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:
+	Subject:Cc:To:From; bh=ns7GQYXa/xXbn02IqMUE5zju+Fs+k86iB6j0ZJqhncM=; b=XWHRMo
+	VTaNjNomq8djVhdHQ0J/vA7wSl5WX4mqBD1/+amkX/J3WQRdqUBrmZjPWu4+DNjGVD+klG5epVyyF
+	39/YGs8RFk6Ll8hs60rmYyY+2bmkIsJ1DxcsCa2wBFmW6V+Zyyi9D34x/mFdwnkzMyU/hKdLD2FAn
+	zr6MujZjNcki0fHOz2HtW8tyvWPtaNzj2VdQa4AZNaeGh5s83tB+5iBF/iN/rUGF14r+WkQfmbH8r
+	M/QZ6tc1HEzkQyzGxdCHTFIKvEz8LpUa/L+V/9CAnB1lJbMZpIyQlE0/lOxTUNmiriaZ3DWg1RVvd
+	6xcf2nDWpEiIyufTW/nFDqHhu28w==;
+Received: from [10.9.9.73] (helo=submission02.runbox)
+	by mailtransmit03.runbox with esmtp (Exim 4.86_2)
+	(envelope-from <david.laight.linux_spam@runbox.com>)
+	id 1wWWhn-0003c1-6n; Mon, 08 Jun 2026 11:55:39 +0200
+Received: by submission02.runbox with esmtpsa  [Authenticated ID (1493616)]  (TLS1.2:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.95)
+	id 1wWWhk-00Ag6G-2i;
+	Mon, 08 Jun 2026 11:55:36 +0200
+From: david.laight.linux@gmail.com
+To: Kees Cook <kees@kernel.org>,
+	linux-hardening@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org
+Cc: Arnd Bergmann <arnd@kernel.org>,
+	Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fnnas.com>,
+	David Laight <david.laight.linux@gmail.com>
+Subject: [PATCH next] drivers/md/md: Use bounded strings ops when setting disk->disk_name
+Date: Mon,  8 Jun 2026 10:55:10 +0100
+Message-Id: <20260608095523.2606-26-david.laight.linux@gmail.com>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260605091527.2463539-21-yukuai@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-Hi Yu,
+From: David Laight <david.laight.linux@gmail.com>
 
-kernel test robot noticed the following build errors:
+Replace strcpy() with strscpy() and sprintf() with snprintf() for safety.
 
-[auto build test ERROR on linus/master]
-[also build test ERROR on v7.1-rc6 next-20260605]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Signed-off-by: David Laight <david.laight.linux@gmail.com>
+---
+This is one of a group of patches that remove potentially unbounded
+strcpy() calls.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/md-raid5-split-reshape-bios-before-bitmap-accounting/20260605-214540
-base:   linus/master
-patch link:    https://lore.kernel.org/r/20260605091527.2463539-21-yukuai%40kernel.org
-patch subject: [PATCH] md/raid5: split reshape bios before bitmap accounting
-config: x86_64-rhel-9.4 (https://download.01.org/0day-ci/archive/20260606/202606060443.UZIDPAEF-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260606/202606060443.UZIDPAEF-lkp@intel.com/reproduce)
+They are mostly replaced by strscpy() or, when strlen() has just been
+called, with memcpy() (usually including the '\0').
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202606060443.UZIDPAEF-lkp@intel.com/
+Calls with copy string literals into arrays are left unchanged.
+They are safe and easily detected as such.
 
-All errors (new ones prefixed by >>):
+The changes were made by getting the compiler to detect the calls and
+then fixing the code by hand.
 
-   drivers/md/raid5.c: In function 'raid5_make_request':
->> drivers/md/raid5.c:6126:14: error: implicit declaration of function 'mddev_bio_split_at_reshape_offset' [-Wimplicit-function-declaration]
-    6126 |         bi = mddev_bio_split_at_reshape_offset(mddev, bi, NULL,
-         |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> drivers/md/raid5.c:6126:12: error: assignment to 'struct bio *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
-    6126 |         bi = mddev_bio_split_at_reshape_offset(mddev, bi, NULL,
-         |            ^
+Note that all the changes are only compile tested.
 
+Some Makefiles were changed to allow files to contain strcpy().
+As well as 'difficult to fix' files, this included 'show' functions
+as they really need to use sysfs_emit() or seq_printf().
 
-vim +/mddev_bio_split_at_reshape_offset +6126 drivers/md/raid5.c
+All the patches are being sent individually to avoid very long cc lists.
+Apologies for the terse commit messages and likely unexpected tags.
+(There are about 100 patches in total.)
 
-  6083	
-  6084	static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
-  6085	{
-  6086		DEFINE_WAIT_FUNC(wait, woken_wake_function);
-  6087		struct r5conf *conf = mddev->private;
-  6088		const int rw = bio_data_dir(bi);
-  6089		struct stripe_request_ctx *ctx;
-  6090		sector_t logical_sector;
-  6091		enum stripe_result res;
-  6092		int s, stripe_cnt;
-  6093		bool on_wq;
-  6094	
-  6095		if (unlikely(bi->bi_opf & REQ_PREFLUSH)) {
-  6096			int ret = log_handle_flush_request(conf, bi);
-  6097	
-  6098			if (ret == 0)
-  6099				return true;
-  6100			if (ret == -ENODEV) {
-  6101				if (md_flush_request(mddev, bi))
-  6102					return true;
-  6103			}
-  6104			/* ret == -EAGAIN, fallback */
-  6105		}
-  6106	
-  6107		md_write_start(mddev, bi);
-  6108		/*
-  6109		 * If array is degraded, better not do chunk aligned read because
-  6110		 * later we might have to read it again in order to reconstruct
-  6111		 * data on failed drives.
-  6112		 */
-  6113		if (rw == READ && mddev->degraded == 0 &&
-  6114		    mddev->reshape_position == MaxSector) {
-  6115			bi = chunk_aligned_read(mddev, bi);
-  6116			if (!bi)
-  6117				return true;
-  6118		}
-  6119	
-  6120		if (unlikely(bio_op(bi) == REQ_OP_DISCARD)) {
-  6121			make_discard_request(mddev, bi);
-  6122			md_write_end(mddev);
-  6123			return true;
-  6124		}
-  6125	
-> 6126		bi = mddev_bio_split_at_reshape_offset(mddev, bi, NULL,
-  6127						       &conf->bio_split);
-  6128		if (!bi) {
-  6129			if (rw == WRITE)
-  6130				md_write_end(mddev);
-  6131			return true;
-  6132		}
-  6133	
-  6134		logical_sector = bi->bi_iter.bi_sector & ~((sector_t)RAID5_STRIPE_SECTORS(conf)-1);
-  6135		bi->bi_next = NULL;
-  6136	
-  6137		ctx = mempool_alloc(conf->ctx_pool, GFP_NOIO);
-  6138		memset(ctx, 0, conf->ctx_size);
-  6139		ctx->first_sector = logical_sector;
-  6140		ctx->last_sector = bio_end_sector(bi);
-  6141		/*
-  6142		 * if r5l_handle_flush_request() didn't clear REQ_PREFLUSH,
-  6143		 * we need to flush journal device
-  6144		 */
-  6145		if (unlikely(bi->bi_opf & REQ_PREFLUSH))
-  6146			ctx->do_flush = true;
-  6147	
-  6148		stripe_cnt = DIV_ROUND_UP_SECTOR_T(ctx->last_sector - logical_sector,
-  6149						   RAID5_STRIPE_SECTORS(conf));
-  6150		bitmap_set(ctx->sectors_to_do, 0, stripe_cnt);
-  6151	
-  6152		pr_debug("raid456: %s, logical %llu to %llu\n", __func__,
-  6153			 bi->bi_iter.bi_sector, ctx->last_sector);
-  6154	
-  6155		/* Bail out if conflicts with reshape and REQ_NOWAIT is set */
-  6156		if ((bi->bi_opf & REQ_NOWAIT) &&
-  6157		    get_reshape_loc(mddev, conf, logical_sector) == LOC_INSIDE_RESHAPE) {
-  6158			bio_wouldblock_error(bi);
-  6159			if (rw == WRITE)
-  6160				md_write_end(mddev);
-  6161			mempool_free(ctx, conf->ctx_pool);
-  6162			return true;
-  6163		}
-  6164		md_account_bio(mddev, &bi);
-  6165	
-  6166		/*
-  6167		 * Lets start with the stripe with the lowest chunk offset in the first
-  6168		 * chunk. That has the best chances of creating IOs adjacent to
-  6169		 * previous IOs in case of sequential IO and thus creates the most
-  6170		 * sequential IO pattern. We don't bother with the optimization when
-  6171		 * reshaping as the performance benefit is not worth the complexity.
-  6172		 */
-  6173		if (likely(conf->reshape_progress == MaxSector)) {
-  6174			logical_sector = raid5_bio_lowest_chunk_sector(conf, bi);
-  6175			on_wq = false;
-  6176		} else {
-  6177			add_wait_queue(&conf->wait_for_reshape, &wait);
-  6178			on_wq = true;
-  6179		}
-  6180		s = (logical_sector - ctx->first_sector) >> RAID5_STRIPE_SHIFT(conf);
-  6181	
-  6182		while (1) {
-  6183			res = make_stripe_request(mddev, conf, ctx, logical_sector,
-  6184						  bi);
-  6185			if (res == STRIPE_FAIL || res == STRIPE_WAIT_RESHAPE)
-  6186				break;
-  6187	
-  6188			if (res == STRIPE_RETRY)
-  6189				continue;
-  6190	
-  6191			if (res == STRIPE_SCHEDULE_AND_RETRY) {
-  6192				WARN_ON_ONCE(!on_wq);
-  6193				/*
-  6194				 * Must release the reference to batch_last before
-  6195				 * scheduling and waiting for work to be done,
-  6196				 * otherwise the batch_last stripe head could prevent
-  6197				 * raid5_activate_delayed() from making progress
-  6198				 * and thus deadlocking.
-  6199				 */
-  6200				if (ctx->batch_last) {
-  6201					raid5_release_stripe(ctx->batch_last);
-  6202					ctx->batch_last = NULL;
-  6203				}
-  6204	
-  6205				wait_woken(&wait, TASK_UNINTERRUPTIBLE,
-  6206					   MAX_SCHEDULE_TIMEOUT);
-  6207				continue;
-  6208			}
-  6209	
-  6210			s = find_next_bit_wrap(ctx->sectors_to_do, stripe_cnt, s);
-  6211			if (s == stripe_cnt)
-  6212				break;
-  6213	
-  6214			logical_sector = ctx->first_sector +
-  6215				(s << RAID5_STRIPE_SHIFT(conf));
-  6216		}
-  6217		if (unlikely(on_wq))
-  6218			remove_wait_queue(&conf->wait_for_reshape, &wait);
-  6219	
-  6220		if (ctx->batch_last)
-  6221			raid5_release_stripe(ctx->batch_last);
-  6222	
-  6223		if (rw == WRITE)
-  6224			md_write_end(mddev);
-  6225	
-  6226		mempool_free(ctx, conf->ctx_pool);
-  6227		if (res == STRIPE_WAIT_RESHAPE) {
-  6228			DECLARE_COMPLETION_ONSTACK(done);
-  6229			WRITE_ONCE(bi->bi_private, &done);
-  6230	
-  6231			bio_endio(bi);
-  6232	
-  6233			wait_for_completion(&done);
-  6234			return false;
-  6235		}
-  6236	
-  6237		bio_endio(bi);
-  6238		return true;
-  6239	}
-  6240	
+ drivers/md/md.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 8b568eee8743..4b659d10fa4d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6346,11 +6346,11 @@ struct mddev *md_alloc(dev_t dev, char *name)
+ 	disk->first_minor = unit << shift;
+ 	disk->minors = 1 << shift;
+ 	if (name)
+-		strcpy(disk->disk_name, name);
++		strscpy(disk->disk_name, name);
+ 	else if (partitioned)
+-		sprintf(disk->disk_name, "md_d%d", unit);
++		snprintf(disk->disk_name, sizeof (disk->disk_name), "md_d%d", unit);
+ 	else
+-		sprintf(disk->disk_name, "md%d", unit);
++		snprintf(disk->disk_name, sizeof (disk->disk_name), "md%d", unit);
+ 	disk->fops = &md_fops;
+ 	disk->private_data = mddev;
+ 
+-- 
+2.39.5
+
