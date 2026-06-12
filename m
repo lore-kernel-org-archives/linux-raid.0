@@ -1,188 +1,113 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out203-205-221-209.mail.qq.com (out203-205-221-209.mail.qq.com [203.205.221.209])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B0BE3A6F1C
-	for <linux-raid@vger.kernel.org>; Fri, 12 Jun 2026 05:28:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F50534F24A;
+	Fri, 12 Jun 2026 06:22:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.209
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781242082; cv=none; b=jo4EjlKwDqzcHoXmchR0e4ycfC2mJyXWGNlKjI0Km9lWZELWVa6E9moMKjdR6g3y7ddB+18CrcyZC3Vs1soGFbIhIMCGUYAPdlemYc9AL59hgx9Nm4zy4Ihhd1hnklY/E/L6FhSfji9LVzuVQlbdFcV5LKeRxF5kqT4sdc5iGY4=
+	t=1781245357; cv=none; b=KmgOu6b5rzWVFXijKheAt9l5q/l6bzsoDUnn2xJEL209LMYKY1Q9+F77oZlkDwDrReJqw3om5OGKBufrx7GhG8o2MXv1O6jz0o/RbOItaKnneIXZ1/P8I4b2GVN9bAaOKsLCOg0EMxhKNURTpFBU0LX491wIn+Ef00UID20Fio8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781242082; c=relaxed/simple;
-	bh=rdXPLTFUgYIy0frkdpv9H0elzJlKyrrYcklSjkxA7DE=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=rBPe1AZ7rJ9SM9NDTGPS3b1tXjNBLEgzvxWpwKUm+u66GZfarj4crbmSz7bzdgGiEr0rJciYr54PB63//FjzD9uEZRSzPdGysptBvDt7LmeEhRSRHhocT2HDPEDCruPH3r+6VGn6d6qKMSH90b5+7bUrGT2ms5JPKPOP/dDno8M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hSCnMcYQ; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1781245357; c=relaxed/simple;
+	bh=WMik9pL4MeGFzj//lquOqWDkMajn6hiwrobghb+GSOo=;
+	h=Message-ID:Mime-Version:Content-Type:Date:Subject:Cc:From:To:
+	 References:In-Reply-To; b=P09ROebGv61sjnFv867O/W+V+HfFaJEzelDlNXDiyeDhLiHBcdYpmz9du+smM3BpDFQdccsZQww9oGk/bRXObEcDqpjpPrawbcPkpngS99iZtr/hSAdgDic8JYKgJx8DaG2/3/tmjiE0oBoW4mWMQGd/vA4q5gNTzX79/o3qx9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com; spf=pass smtp.mailfrom=foxmail.com; dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b=UF7G8Cm6; arc=none smtp.client-ip=203.205.221.209
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foxmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hSCnMcYQ"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-490acbb0f89so3097845e9.0
-        for <linux-raid@vger.kernel.org>; Thu, 11 Jun 2026 22:28:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781242080; x=1781846880; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:references
-         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=V2amOK/xSJHghV7y5jK8dUWQNl2Cve6eXEqKCPHjYc0=;
-        b=hSCnMcYQhf3hoNOfvR+XJPzOkDBF338qU5x99s7CSNRmNvVJXyK9EhLxgOmv8lesqG
-         6TpRuEhM6CHwmqGNtwjjunJaICbSQvijGK55fpE5jTVa8kd59WRU9KCoPFCNLiuLp0Ak
-         nbIIaAO6gTvIG7j76Dn5E4ga2hq1uRNJat4vNHkvbULtOdcutgg/TD72nfe6KCMiLrZM
-         pQCXAScoPE+lutiBOysAP0unqxTxR0hM9HT6T/TxEqlqrvHLOAaVWMKieTlO0dr7XSC3
-         AVXLpNPuFImxOk3nqml/sSTb838UOUDhxohEqvChzAPawuMC365qO0Ph9IXbmF3dm1Fy
-         TI9A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781242080; x=1781846880;
-        h=content-transfer-encoding:mime-version:message-id:date:references
-         :in-reply-to:subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=V2amOK/xSJHghV7y5jK8dUWQNl2Cve6eXEqKCPHjYc0=;
-        b=bUIfQ7+fkV2/vOE1bEwmKRhFyQ9NeWp4E631CqwE8mUl/e6ZdXO++EiBN/Qi8Ctr8v
-         uztQfXSmFIGmNua9VIonfkdIPXLnzKFq8ioZUeMNEzeH3hYP/2+gS2WRSYfagmHZ/gAH
-         SR04UoTJooWxrvqEBH68KUKupSDsw9RGEOeexEHBq37Sbo824N7KhvpUsYRorF4HRczU
-         oZuwJC9Zkyf5HRyYWz57FQO+YRxTdBZRDnt8BnRpwGJkqBbWHINtPI4GhyEU3uESQGhP
-         9tsMTypN7trle9JaD5VRtA70Q4N1jZwp4iceBxcd4dUJQ2OM49G6SCqWFVNNCIkQTssI
-         wHmA==
-X-Forwarded-Encrypted: i=1; AFNElJ83l2oV4wh4LQ4xjg7PiWD70Zv06IWxxoDAX3TzdX/OKB6PQN57127F9PTdPt6dTGjfJmS/v1heJDF7@vger.kernel.org
-X-Gm-Message-State: AOJu0YwmVSOTaatnuXiZlsQM0BgD2bsk06YKiaBrDrjTW2lFpOP0bUvY
-	pQ/fb2wY7DSEIn8qhkmNq+LqV031mMdp8OEMXe0kh+FKNDk8t8WxXekShxkBig==
-X-Gm-Gg: Acq92OHcwbPMQd3r37YHaTvomHJundV53cOWVtr1upaHjVHqSyqHFRx3ujqqcsr3LKi
-	VzeTRNy5zq0ySgZig/2Vt8Ijtabhpb5+3ZLDi7ypDqpBcoZBJCg+V999X14+56uiVMD7JPPJuVQ
-	sefHIVV5QJYJ5LIPRet2mvwCtB4iune8kpkf5U/xt1iB1+ZyY2qcm/imgUnbt/Aez86Pj6bZOxH
-	IjjfIl3quhxIsL0IxJNJ5Rkl2vMmrkoajJy0nsDVOvgbzVU7tIgtKtoWmRCbQzt8zZUEtJzqVGZ
-	8W5MxJLrcIVOuMqsUAebKQ27wp2WGdZ9NcRWNfnzrSPFkWEj7a4POeFowL7LRa4ii02tuTwYMLD
-	S8rUxWwiwLDs/3gdfkVoc/KNRyv4HQB0TF7xKigs9yrP5dkeLlv6YapO0C+2hFYb4xJ3a63eJGf
-	wKTMYgXxAsC+fzkJWZz0d7MamIKbt8YYojly8Cj8gDC9d8dvhcJiNpadmvYXH0G+JZ
-X-Received: by 2002:a05:600d:6451:10b0:485:3abe:ab86 with SMTP id 5b1f17b1804b1-490ec480989mr7282255e9.4.1781242079515;
-        Thu, 11 Jun 2026 22:27:59 -0700 (PDT)
-Received: from Abds-MacBook-Air.local ([2a02:3037:612:1ff:bc98:79f0:79a6:5f77])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-490ea7c0960sm33027605e9.3.2026.06.11.22.27.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Jun 2026 22:27:59 -0700 (PDT)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-Subject: Re: [PATCH] md/raid1: release barrier when REQ_NOWAIT write would
- block
-In-Reply-To: <20260611134130.B4E911F00893@smtp.kernel.org>
-References: <20260611132500.763528-1-abd.masalkhi@gmail.com>
- <20260611134130.B4E911F00893@smtp.kernel.org>
-Date: Fri, 12 Jun 2026 07:27:54 +0200
-Message-ID: <m24ij8xr8l.fsf@gmail.com>
+	dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b="UF7G8Cm6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
+	s=s201512; t=1781245352;
+	bh=E822EMdhQUnvD7bulWCf0qfNe8vhG8Ff8vgqBAPVX5U=;
+	h=Date:Subject:Cc:From:To:References:In-Reply-To;
+	b=UF7G8Cm6YRy/r3NLnIQ+NixVGLBqfCtMb5zpkyWVcNe3POV03HS28clSL+5FO1SpS
+	 6xPZEwMHRjAsFTOjtyLKZdGrNzz2/Z/H39G2Nso+Tdzb613z2Q5UHAcN9gsgNPr69C
+	 6zcxWANwoTlFmm8ZREnQacmEqawjuIkxHcjcjz4Q=
+Received: from MacBook-Pro.local ([183.134.211.52])
+	by newxmesmtplogicsvrszc50-0.qq.com (NewEsmtp) with SMTP
+	id 5992A89A; Fri, 12 Jun 2026 14:22:25 +0800
+X-QQ-mid: xmsmtpt1781245345t6es7kli9
+Message-ID: <tencent_FC2A050632F9FE8144160E5727753208CC0A@qq.com>
+X-QQ-XMAILINFO: N/WmRbclY25GWzE5ajnLdNS+4hfpAUXx6Bvtjp03eBFFA35WIxKvqZ5anvknTF
+	 XtP4HJRvJfB88Xs68psHeb+HfKDguonbQU1oCbPMPSq0SeZdnysCEGAihdYU1SQ9w3cczEW86Ggh
+	 iY7Il1Da75vASfVQMMHcD0x0GHaT7ni0+HNfM8wV7khXZA87Sap8Q11vFs2ntZyOwKwLtZ58R8P+
+	 /0+CNWlQtwiIWV4jwFNfRzaCKskPatJZOwkQ+tAXZ2OMGz0vyPQqHFnHd+hfBpdk52YsqifoIxXf
+	 43fL7URAgqkiFRSJZ1NtTVB+cX60Ll4tu4BwOfs59vlgOD+f5sBdJtZhKv+CeODpS0P895fWI01e
+	 tly+YYBRAEVxT4c/m7OScfu7bnk0u2r1UU/voWOZ+abtbIjlCrsaMMW9gzDQWmgAVkMLh7hJBz//
+	 MmCGh6anULSVwN1QS8agXs6+jJHO07K98JEvGbpQVv0LStVpSNuSi97F+frOtGkbuuRXOMQ1FbxJ
+	 pq8yy+fj91KXt4W8t3LOm2y4OiPyIa5/co+vsAnemGuG+KSdO1T34h3ohM758sVhFGR8d2ypcTfz
+	 Z7eXsbxBVlM0wM7p5m9LOs92+CfHRzlF97/e+zzV3wgL/8jr66oCBQL0XdfHQ5YRjAFiF8y8Xhwx
+	 Q7DpgCC4Y0h+HjhWT6bW+oSm50Cai2dWtgG/hHlqUVyIao8ELez1T6WDJt1pauc3zbBLac0hp/NN
+	 7hVb+sZXqbRQE0/b1CafQBko6vcsbLsoc1hUV0lx9fFpbo6hQ27lFDg4DGEScy1igiwGIAft0+96
+	 kggNYGXyFA08X3SbgM0gOhvrrtm/TV1h+bGnYe7yuAyGnFui2z/hJaK1KEe4CH/xF6PsL4W5VrFb
+	 DZtIrgD263CAciw8H28VnAHSX2za3uqKwnluhsWlEGEaiVp2j7JiXSVR6JoovgaeYPPV6vdei+6A
+	 qbHfc8cfKLs47WiPwtKh3cr7+jTEQSBssxwZE+8Lz8zO+tT0FoMuwIZ/TQ3NDP5E9TdSdtfhwdeN
+	 VFVAVP3Q9wKi7lg7aLRURVlnpJ9sphz4d0gLc/27B0TswymFgBCIypRC+2XWI=
+X-QQ-XMRINFO: M/715EihBoGS47X28/vv4NpnfpeBLnr4Qg==
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 12 Jun 2026 14:22:24 +0800
+X-OQ-MSGID: <DJ6URYSQMK5K.1031WP17GIX62@foxmail.com>
+Subject: Re: [PATCH] md: use READ_ONCE() for rdev_attr_show() mddev check
+Cc: <lilingfeng3@huawei.com>, <linux-kernel@vger.kernel.org>,
+ <jianhao.xu@seu.edu.cn>
+From: "Li Nan" <magiclinan@foxmail.com>
+To: "Runyu Xiao" <runyu.xiao@seu.edu.cn>, <song@kernel.org>,
+ <yukuai3@huawei.com>, <linux-raid@vger.kernel.org>
+X-Mailer: aerc 0.21.0
+References: <20260611083510.476945-1-runyu.xiao@seu.edu.cn>
+In-Reply-To: <20260611083510.476945-1-runyu.xiao@seu.edu.cn>
 
-On Thu, Jun 11, 2026 at 13:41 +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 3 potential issu=
-e(s) to consider:
+On Thu Jun 11, 2026 at 4:35 PM CST, Runyu Xiao wrote:
+> md_kick_rdev_from_array() clears rdev->mddev with
+> WRITE_ONCE(rdev->mddev, NULL), and rdev_attr_store() already snapshots
+> that same shared pointer with READ_ONCE(rdev->mddev). rdev_attr_show()
+> still tests the pointer with a plain lockless `if (!rdev->mddev)` before
+> calling entry->show().
 >
-> Pre-existing issues:
-> - [Critical] Missing RCU read lock around `conf->mirrors[i].rdev` access =
-in `wait_blocked_rdev()`.
-I'm not quite sure whether this is a real bug.
+> A running system can reach this by reading rdev sysfs attributes while a
+> device removal path is tearing the same md_rdev down. In that window,
+> rdev_attr_show() can pass a stale plain guard while sibling
+> rdev_attr_store() already observes NULL and returns -ENODEV, leaving the
+> show path to operate after the shared mddev pointer has been revoked.
+>
+> Use READ_ONCE() in rdev_attr_show() so this sysfs read side matches the
+> existing visibility contract on rdev->mddev.
+>
+> Fixes: 9cfcf99e7ed6 ("md: get rdev->mddev with READ_ONCE()")
+> Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
+> ---
+>  drivers/md/md.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 92ec4be20db8..a021cf4a798d 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -3704,7 +3704,7 @@ rdev_attr_show(struct kobject *kobj, struct attribu=
+te *attr, char *page)
+> =20
+>  	if (!entry->show)
+>  		return -EIO;
+> -	if (!rdev->mddev)
+> +	if (!READ_ONCE(rdev->mddev))
+>  		return -ENODEV;
+>  	return entry->show(rdev, page);
+>  }
 
-> - [High] Early failure paths in `raid1_write_request()` leak the `mddev->=
-writes_pending` reference.
-I'll submit a v2 containing this fix, along with the fix for the
-mddev->writes_pending
+LGTM
 
-> - [High] Allocating bios and r1bios can sleep even when the `REQ_NOWAIT` =
-flag is set.
-@kuai, Should I handle this issue as well, or should I just ignore it
-for now?
+Reviewed-by: Li Nan <magiclinan@didiglobal.com>
 
-> --
->
-> commit 3db9da0ec804800aa3afb93361ccd18de39ce5f0
-> Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
->
-> md/raid1: release barrier when REQ_NOWAIT write would block
->
-> raid1_write_request() leaks the barrier reference taken by wait_barrier()
-> if wait_blocked_rdev() fails for a REQ_NOWAIT write. This patch releases
-> the barrier on this failure path to prevent array freeze hangs.
->
-> Closes: https://sashiko.dev/#/patchset/20260611083514.754922-1-abd.masalk=
-hi@gmail.com?part=3D1
->
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index 5b9368bd9e700..f3cc30932ba2b 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -1512,6 +1512,7 @@ static void raid1_write_request(struct mddev *mdde=
-v, struct bio *bio,
->>  	int max_sectors;
->>  	bool write_behind =3D false;
->>  	bool is_discard =3D (bio_op(bio) =3D=3D REQ_OP_DISCARD);
->> +	sector_t sector =3D bio->bi_iter.bi_sector;
->>=20=20
->>  	if (mddev_is_clustered(mddev) &&
->>  	    mddev->cluster_ops->area_resyncing(mddev, WRITE,
->> @@ -1540,6 +1541,7 @@ static void raid1_write_request(struct mddev *mdde=
-v, struct bio *bio,
->>=20=20
->>  	if (!wait_blocked_rdev(mddev, bio)) {
->>  		bio_wouldblock_error(bio);
->> +		allow_barrier(conf, sector);
->
-> [Severity: High]
-> This is a pre-existing issue, but does this early return path also leak t=
-he
-> mddev->writes_pending reference?
->
-> In raid1_make_request(), md_write_start() unconditionally takes a per-cpu
-> reference on mddev->writes_pending before calling raid1_write_request().
-> Normally, this is released via md_write_end() inside close_write().
->
-> By directly returning here after bio_wouldblock_error(bio), we never call
-> md_write_end(). Does this permanently leak the writes_pending counter and
-> prevent the array from transitioning to a clean state?
->
-> It looks like this same leak exists on the clustered area_resyncing and
-> wait_barrier REQ_NOWAIT failure paths earlier in this function, as well as
-> the err_handle path if bio_submit_split_bioset() fails.
->
->>  		return;
->>  	}
->
-> [Severity: Critical]
-> This is a pre-existing issue, but is it safe to call wait_blocked_rdev()
-> here without holding the RCU read lock?
->
-> Looking at wait_blocked_rdev():
->
-> 	for (i =3D 0; i < disks; i++) {
-> 		struct md_rdev *rdev =3D conf->mirrors[i].rdev;
->
-> 		if (!rdev)
-> 			continue;
->
-> 		/* don't write here until the bad block is acknowledged */
-> 		if (test_bit(WriteErrorSeen, &rdev->flags) &&
->
-> It accesses the rdev pointer and its fields without rcu_read_lock().
-> Could a concurrent device removal (via md_ioctl -> raid1_remove_conf)
-> replace the pointer with NULL and free the rdev structure while we are
-> dereferencing it here, resulting in a use-after-free?
->
-> [Severity: High]
-> This is also a pre-existing issue, but if we proceed past this point for a
-> REQ_NOWAIT bio, we call alloc_r1bio() and eventually bio_alloc_clone(),
-> both of which use GFP_NOIO.
->
-> Since memory pool allocations with GFP_NOIO can block when the mempool is
-> exhausted under memory pressure, could this cause REQ_NOWAIT writes to
-> sleep, defeating the purpose of the REQ_NOWAIT flag?
->
-> --=20
-> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611132500.76=
-3528-1-abd.masalkhi@gmail.com?part=3D1
+
 
 --=20
-Best Regards,
-Abd-Alrhman
+Thanks,
+Nan
+
