@@ -1,113 +1,155 @@
-Received: from out203-205-221-209.mail.qq.com (out203-205-221-209.mail.qq.com [203.205.221.209])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F50534F24A;
-	Fri, 12 Jun 2026 06:22:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.209
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FBBD3659F9;
+	Fri, 12 Jun 2026 08:05:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781245357; cv=none; b=KmgOu6b5rzWVFXijKheAt9l5q/l6bzsoDUnn2xJEL209LMYKY1Q9+F77oZlkDwDrReJqw3om5OGKBufrx7GhG8o2MXv1O6jz0o/RbOItaKnneIXZ1/P8I4b2GVN9bAaOKsLCOg0EMxhKNURTpFBU0LX491wIn+Ef00UID20Fio8=
+	t=1781251526; cv=none; b=QnRrHJWordq4eL66wgPCPXxD5d4jyC0gvM2RjsAxmw8MmGu7iMlnacFv5a7Bm4OtLDOZ93ICO/c6OtLRMRM+6zL2TLKrkMo/N/0cpNZIK2++wk09gC4qbfipcDKniWofzhGWLDHRpEcPCt+ftcest1+NDD+A7ql94T680b/Ocms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781245357; c=relaxed/simple;
-	bh=WMik9pL4MeGFzj//lquOqWDkMajn6hiwrobghb+GSOo=;
-	h=Message-ID:Mime-Version:Content-Type:Date:Subject:Cc:From:To:
-	 References:In-Reply-To; b=P09ROebGv61sjnFv867O/W+V+HfFaJEzelDlNXDiyeDhLiHBcdYpmz9du+smM3BpDFQdccsZQww9oGk/bRXObEcDqpjpPrawbcPkpngS99iZtr/hSAdgDic8JYKgJx8DaG2/3/tmjiE0oBoW4mWMQGd/vA4q5gNTzX79/o3qx9g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com; spf=pass smtp.mailfrom=foxmail.com; dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b=UF7G8Cm6; arc=none smtp.client-ip=203.205.221.209
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foxmail.com
+	s=arc-20240116; t=1781251526; c=relaxed/simple;
+	bh=enh4Zi0E3JX3/7uiXATuVib1imY3TN3wgKiQdK4bqWI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:Cc:From:
+	 In-Reply-To:Content-Type; b=e40MkQH41kac2qVwL/WjZisy3HvMJGdXnLRZl+S2YO/SMmNicYKcmSsaGstwKBcXqw2PpAJav6HziXlZGmQW1mezJNiPFKzYtkMISRPBmocnaMe5t4Uh+eHRde3bJUmHaXVLo0mia/6Zdj9cIUCCcH93OUp3D7b5bNPu6+YuuDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=d7iAjO2C; arc=none smtp.client-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b="UF7G8Cm6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-	s=s201512; t=1781245352;
-	bh=E822EMdhQUnvD7bulWCf0qfNe8vhG8Ff8vgqBAPVX5U=;
-	h=Date:Subject:Cc:From:To:References:In-Reply-To;
-	b=UF7G8Cm6YRy/r3NLnIQ+NixVGLBqfCtMb5zpkyWVcNe3POV03HS28clSL+5FO1SpS
-	 6xPZEwMHRjAsFTOjtyLKZdGrNzz2/Z/H39G2Nso+Tdzb613z2Q5UHAcN9gsgNPr69C
-	 6zcxWANwoTlFmm8ZREnQacmEqawjuIkxHcjcjz4Q=
-Received: from MacBook-Pro.local ([183.134.211.52])
-	by newxmesmtplogicsvrszc50-0.qq.com (NewEsmtp) with SMTP
-	id 5992A89A; Fri, 12 Jun 2026 14:22:25 +0800
-X-QQ-mid: xmsmtpt1781245345t6es7kli9
-Message-ID: <tencent_FC2A050632F9FE8144160E5727753208CC0A@qq.com>
-X-QQ-XMAILINFO: N/WmRbclY25GWzE5ajnLdNS+4hfpAUXx6Bvtjp03eBFFA35WIxKvqZ5anvknTF
-	 XtP4HJRvJfB88Xs68psHeb+HfKDguonbQU1oCbPMPSq0SeZdnysCEGAihdYU1SQ9w3cczEW86Ggh
-	 iY7Il1Da75vASfVQMMHcD0x0GHaT7ni0+HNfM8wV7khXZA87Sap8Q11vFs2ntZyOwKwLtZ58R8P+
-	 /0+CNWlQtwiIWV4jwFNfRzaCKskPatJZOwkQ+tAXZ2OMGz0vyPQqHFnHd+hfBpdk52YsqifoIxXf
-	 43fL7URAgqkiFRSJZ1NtTVB+cX60Ll4tu4BwOfs59vlgOD+f5sBdJtZhKv+CeODpS0P895fWI01e
-	 tly+YYBRAEVxT4c/m7OScfu7bnk0u2r1UU/voWOZ+abtbIjlCrsaMMW9gzDQWmgAVkMLh7hJBz//
-	 MmCGh6anULSVwN1QS8agXs6+jJHO07K98JEvGbpQVv0LStVpSNuSi97F+frOtGkbuuRXOMQ1FbxJ
-	 pq8yy+fj91KXt4W8t3LOm2y4OiPyIa5/co+vsAnemGuG+KSdO1T34h3ohM758sVhFGR8d2ypcTfz
-	 Z7eXsbxBVlM0wM7p5m9LOs92+CfHRzlF97/e+zzV3wgL/8jr66oCBQL0XdfHQ5YRjAFiF8y8Xhwx
-	 Q7DpgCC4Y0h+HjhWT6bW+oSm50Cai2dWtgG/hHlqUVyIao8ELez1T6WDJt1pauc3zbBLac0hp/NN
-	 7hVb+sZXqbRQE0/b1CafQBko6vcsbLsoc1hUV0lx9fFpbo6hQ27lFDg4DGEScy1igiwGIAft0+96
-	 kggNYGXyFA08X3SbgM0gOhvrrtm/TV1h+bGnYe7yuAyGnFui2z/hJaK1KEe4CH/xF6PsL4W5VrFb
-	 DZtIrgD263CAciw8H28VnAHSX2za3uqKwnluhsWlEGEaiVp2j7JiXSVR6JoovgaeYPPV6vdei+6A
-	 qbHfc8cfKLs47WiPwtKh3cr7+jTEQSBssxwZE+8Lz8zO+tT0FoMuwIZ/TQ3NDP5E9TdSdtfhwdeN
-	 VFVAVP3Q9wKi7lg7aLRURVlnpJ9sphz4d0gLc/27B0TswymFgBCIypRC+2XWI=
-X-QQ-XMRINFO: M/715EihBoGS47X28/vv4NpnfpeBLnr4Qg==
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="d7iAjO2C"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=z309+93AHboJ8kiQZj7wFOdICj/bj7Ritu4UcUIfpWI=;
+	b=d7iAjO2CHGURw9rRIfXhyih1b74QmQJxjkM3l8BKJNdzsI8M1ALgnUHblk/Aym
+	Hc8l1CvKxbrDpZC/ZLrQcTm94K7B3coE9/dflyC0SlS9Lnls0bjLlt/p/bDduK2I
+	AaSJNC97db9/wYMiC0PKUIhFc4DsGWQL7VQ5hxEkMOY/M=
+Received: from [192.168.3.184] (unknown [])
+	by gzsmtp3 (Coremail) with SMTP id PigvCgAHLgWxvStqzQi6Bw--.60351S2;
+	Fri, 12 Jun 2026 16:05:05 +0800 (CST)
+Message-ID: <8da26fc1-d582-4e93-8c00-d545b8558fb2@163.com>
+Date: Fri, 12 Jun 2026 16:05:04 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 12 Jun 2026 14:22:24 +0800
-X-OQ-MSGID: <DJ6URYSQMK5K.1031WP17GIX62@foxmail.com>
-Subject: Re: [PATCH] md: use READ_ONCE() for rdev_attr_show() mddev check
-Cc: <lilingfeng3@huawei.com>, <linux-kernel@vger.kernel.org>,
- <jianhao.xu@seu.edu.cn>
-From: "Li Nan" <magiclinan@foxmail.com>
-To: "Runyu Xiao" <runyu.xiao@seu.edu.cn>, <song@kernel.org>,
- <yukuai3@huawei.com>, <linux-raid@vger.kernel.org>
-X-Mailer: aerc 0.21.0
-References: <20260611083510.476945-1-runyu.xiao@seu.edu.cn>
-In-Reply-To: <20260611083510.476945-1-runyu.xiao@seu.edu.cn>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] raid10: badblock-aware reshape write error handling
+To: Li Nan <magiclinan@foxmail.com>
+References: <20260601054630.74483-1-ghuicao@163.com>
+ <tencent_1A4057A928F0CDF70F24A070B03ABFB34A05@qq.com>
+Content-Language: en-US
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+ song@kernel.org, xiao@kernel.org, yukuai@fnnas.com
+From: caogh <ghuicao@163.com>
+In-Reply-To: <tencent_1A4057A928F0CDF70F24A070B03ABFB34A05@qq.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PigvCgAHLgWxvStqzQi6Bw--.60351S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxGw4kJrWDZFy7Jr1xZr1rtFb_yoW5KFW3pr
+	4DKas0yw4DCwsF9anrZa98Aa4S9392krW5Ar4aqw13C3s8trWSyryDW345u3yUZrsxXa1F
+	qrWjgrZ8u3s0kaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U2JPiUUUUU=
+X-CM-SenderInfo: 5jkxxuldr6il2tof0z/xtbC-BEBk2orvbFlKQAA3+
 
-On Thu Jun 11, 2026 at 4:35 PM CST, Runyu Xiao wrote:
-> md_kick_rdev_from_array() clears rdev->mddev with
-> WRITE_ONCE(rdev->mddev, NULL), and rdev_attr_store() already snapshots
-> that same shared pointer with READ_ONCE(rdev->mddev). rdev_attr_show()
-> still tests the pointer with a plain lockless `if (!rdev->mddev)` before
-> calling entry->show().
+Nan, thanks for the review.
+
+You're right that the current code chains several mechanisms (badblock 
+recording, WantReplacement, md_error) together, which hurts readability. 
+I'll refactor in the next version to make the logic clearer.
+
+However, regarding your suggested logic:
+
+> The correct logic might be:
+>    1. If there is a replacement, fail directly with md_error
+>    2. If not, mark the badblock and set WantReplacement
+
+I have some questions.
+
+If a replacement device hits a write error, calling md_error directly 
+will mark it Faulty and kick it out of the array. But it may just be a 
+few bad sectors — recording the badblock and continuing the reshape is 
+sufficient. Is it really necessary to call md_error directly in this case?
+
+The current patch does:
+     1、Try to record the badblock first
+     2、On success:
+          a) member device: set WantReplacement to trigger a replacement
+          b) replacement device: skip WantReplacement to avoid a 
+replacement loop
+     3、On failure: rdev_set_badblocks has already called md_error 
+internally, no further action needed
+
+Does this approach seem reasonable?
+
+
+在 2026/6/12 11:42, Li Nan 写道:
+> On Mon Jun 1, 2026 at 1:46 PM CST, ghuicao wrote:
+>> From: Cao Guanghui<caoguanghui@kylinos.cn>
+>>
+>> Replace the FIXME in end_reshape_write(). Instead of failing the device
+>> immediately on write errors during reshape, attempt to record badblocks
+>> using new_data_offset with is_new=1.
+>>
+>> rdev_set_badblocks() returns true on success. On failure (e.g., badblocks
+>> table full), it has already called md_error() internally to degrade the
+>> device. Queue WantReplacement for member devices regardless of badblock
+>> recording success, but skip this for replacement devices to avoid
+>> replacement loops.
+>>
+>> On successful write, clear stale badblock records at the new location
+>> since data has migrated.
+>>
+>> Signed-off-by: Cao Guanghui<caoguanghui@kylinos.cn>
+>> ---
+>>   drivers/md/raid10.c | 27 ++++++++++++++++++++++++---
+>>   1 file changed, 24 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index 4901ebe45c87..08d58a1c680e 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -4991,9 +4991,30 @@ static void end_reshape_write(struct bio *bio)
+>>   		      conf->mirrors[d].rdev;
+>>   
+>>   	if (bio->bi_status) {
+>> -		/* FIXME should record badblock */
+>> -		md_error(mddev, rdev);
+>> -	}
+>> +		set_bit(WriteErrorSeen, &rdev->flags);
+>> +
+>> +		/* rdev_set_badblocks returns true on success.
+>> +		 * On failure, it has already called md_error() internally.
+>> +		 * Use is_new=1 as reshape writes target the new layout
+>> +		 * (new_data_offset).
+>> +		 */
+>> +		if (rdev_set_badblocks(rdev, r10_bio->devs[slot].addr,
+>> +				       r10_bio->sectors, 1)) {
+>> +			/* Queue async replacement for member devices
+>> +			 * For replacement devices, do not trigger WantReplacement
+>> +			 * to avoid circular replacement storms.
+>> +			 */
+>> +			if (!repl) {
+>> +				if (!test_and_set_bit(WantReplacement, &rdev->flags))
+>> +					set_bit(MD_RECOVERY_NEEDED,
+>> +						&rdev->mddev->recovery);
+> The logic here seems a bit odd — several mechanisms are chained together.
 >
-> A running system can reach this by reading rdev sysfs attributes while a
-> device removal path is tearing the same md_rdev down. In that window,
-> rdev_attr_show() can pass a stale plain guard while sibling
-> rdev_attr_store() already observes NULL and returns -ENODEV, leaving the
-> show path to operate after the shared mddev pointer has been revoked.
+> The correct logic might be:
+>    1. If there is a replacement, fail directly with md_error
+>    2. If not, mark the badblock and set WantReplacement
 >
-> Use READ_ONCE() in rdev_attr_show() so this sysfs read side matches the
-> existing visibility contract on rdev->mddev.
->
-> Fixes: 9cfcf99e7ed6 ("md: get rdev->mddev with READ_ONCE()")
-> Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
-> ---
->  drivers/md/md.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 92ec4be20db8..a021cf4a798d 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -3704,7 +3704,7 @@ rdev_attr_show(struct kobject *kobj, struct attribu=
-te *attr, char *page)
-> =20
->  	if (!entry->show)
->  		return -EIO;
-> -	if (!rdev->mddev)
-> +	if (!READ_ONCE(rdev->mddev))
->  		return -ENODEV;
->  	return entry->show(rdev, page);
->  }
+>> +			}
+>> +		}
+>> +	} else {
+>> +		/* Write succeeded, clear stale badblock records */
+>> +		rdev_clear_badblocks(rdev, r10_bio->devs[slot].addr,
+>> +				     r10_bio->sectors, 1);
+>> +	}
+>>   
+>>   	rdev_dec_pending(rdev, mddev);
+>>   	end_reshape_request(r10_bio);
+>>
 
-LGTM
-
-Reviewed-by: Li Nan <magiclinan@didiglobal.com>
-
-
-
---=20
-Thanks,
-Nan
+Thanks, Cao Guanghui
 
