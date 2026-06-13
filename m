@@ -1,95 +1,129 @@
-Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1096933F399
-	for <linux-raid@vger.kernel.org>; Fri, 12 Jun 2026 16:19:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781281189; cv=pass; b=TfSAxMxz3Bi1tlQAA50NeX5sNfAlJUVfIQ48E592SYG0gsYIPuVe7PWA1Af9WFAoW+pqWsn61RQg00t0oCp86VyXY6SjCvLyfNvDPoLoidaNjEKaX+GveYorIfu7A7XdgVOp5PS+j0jB6ltlMPtE8HiFNcmIqa5CNqWS8SSnoGo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781281189; c=relaxed/simple;
-	bh=lneOiyv0gwKIduIIbPK6ifsYgDWd2qr/ZZL2BZRVBjk=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=MpU1CdvzyYZvMMnWt/AYU1YVXubbloSjxptNmAxiV+aOfudzL6QhOx2fXcLxbRZe8ITjM273T2weM6vQjBbk/XgMRWWMZYf5LOk54rKRtL1aQsOPV3dPacEElZk4AAh2TYZwoZPkbpfOLrEqQLYOHNVF7fMhb6GBkZ+nH9gdpkE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=b7talsod; arc=pass smtp.client-ip=209.85.208.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7CFD2C3768
+	for <linux-raid@vger.kernel.org>; Sat, 13 Jun 2026 18:28:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781375298; cv=none; b=jS7E/t0/hFMAucFFErsrtHLJto1PbEIA3gShL7Lok093yaahGT2UZ7xust+YT8krZznN5OIy0lNAKulqE3YlWsG3xtCSsbHfiQNvonxYIKNUkIZ5cpuc5Fi6jyYdRyou2xk1tZjiIvvAt5jlrxVnKBf+iqIWtnwvanWmoYsgKxc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781375298; c=relaxed/simple;
+	bh=Q0GYeJmRUoKFB+N+RJ/NIHvd2+jMAzoEgLLBDCsydw8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qweFKClCCc8WXTcz+BOeZXCgBQiHZhVCvlFZY3fLm7TbF3DmndutBfv69tj1CdzeQ3OALg4XlJnWO6J4mfDqp1EWzaH+0qB+EUSLBPrbZ3ltz2VvvON/Qta7X1sTAFgXaEy24zgV8LerPDKfrGz7tliv8olrCJnvxhaP9+P0w84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hdLgH0Ah; arc=none smtp.client-ip=209.85.221.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b7talsod"
-Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-68852b58d87so2102002a12.3
-        for <linux-raid@vger.kernel.org>; Fri, 12 Jun 2026 09:19:47 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781281186; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Sm1ybbT1aUJJxwmc4isytcFa8DPXb5I1I8gWLNGLd5Q0t5b+4wC/Hpi6iS1qviOtMW
-         P1H/OE8YuLhgqqL1MAmAGnPnTQuhqHO6+8nw+0nDBSXkr4YjB4S4IoRX1XqHR2gR1/cK
-         uoL5oaKNLzJL3wWdx8mP1hgWlV823CRUKofD454hqd77QPMrbNoxBTMb8PVdlZzI6H/m
-         DTL/LyvGNU3XDRMCkHOWAJ8KL9fe3HXhjMaOPHCFHbrzIeOzxRYqq6Mc9Cl060/7IuYi
-         rP274QgKXERyuxShwT2JZKPHRC7AOkH9DthCFmSZZiyp5yT9LjoBLqnGbgcxGEwv19u9
-         8U+g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=lneOiyv0gwKIduIIbPK6ifsYgDWd2qr/ZZL2BZRVBjk=;
-        fh=X3wQ2D3DBAZuXswHTOsYFcAief3bMBJ7HKWbj/5u/jo=;
-        b=NYxVKXUBzOwLZ/llEdADZpBnCBTyUsFOec2j1JMk+cCjkirDpdWpWvZJ7ETKRo03ro
-         OMWVkPgIl/WQj5r5uHlMm98aWZ1j08PE9LifEB8RyuuIP3ygiW/43F2Pg/6MnBmdSuUG
-         zOWrwgylZNrEJ3QtGUJTq73ZzWaV+/bpVuyCjSt79ykQ5l9LQ9DBx9IlZdL0Yfr6xnrk
-         IaDULQk2Fd4l8cx5YReECp9zpnstSw3JSpbDvCySmwEwjaxsWb2i853DKxAb+TBBcb4w
-         5zBs0t3Py+VP91DJj5RwDeAHyPzgZIOB9L1mqqCvIfE1DjNhjh4timbkgL4td83qbN9c
-         LlJQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hdLgH0Ah"
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-45eeba68948so1479354f8f.1
+        for <linux-raid@vger.kernel.org>; Sat, 13 Jun 2026 11:28:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781281186; x=1781885986; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=lneOiyv0gwKIduIIbPK6ifsYgDWd2qr/ZZL2BZRVBjk=;
-        b=b7talsodOg4tVRrIjMwwlQ62QoDR4mi528xL6678baaflOjuqilVZN/9wqQPeLRzpQ
-         nrsg4uRFv8ohWhIPD9SNrqZIMtEjp+FcsScDI8ZiwVmT30HLTgYmqJKv6H3FeRg7aKEL
-         w5U/0AjSIj+ZOA2eKwUnTUiBBDQQhQ/Y8gdfRSUiMrdrWAVKY3qQJTgGVuzpQYj328Wl
-         MGFYvxPMvurtjegA9muA6Yg+Umj7fRHqAOoO453k4py+wJxOEUu4JRmxKczquLMdBkAn
-         gHHKanHUq6uN7J+XUb56+T7Wif/CvmM5thhByKRTV8px6MszNvd3cjgAA8mIFG6wq++2
-         Jjkw==
+        d=gmail.com; s=20251104; t=1781375295; x=1781980095; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=O47NaPG6T229/D4oVnpkjOWn8TTRgLZzLm6av79AdGE=;
+        b=hdLgH0AhdvPBj53HFAddgQzSkJo81Qk0C5D3EXz0HH5YwEULrhOK9sca89biqWE6ya
+         6h45kwZYH9lzWUPMC/IyLRLJ+AhXvWJKwkBhxZC+8fF9ybynFaRM/Puvq3rG0UgI74GS
+         SnCGnXgx9YxxeCV5N3m9DSvjNgfsmLplvZaoqusyfAJHeQgBBSwsrPlFCsMOMnJW1cab
+         YX5x5tqthAMkZOE2sN6xo7N6luLVAaDxS5SzhIeD+6e6lVJugRHq7WdYvq/PAqdgMU4i
+         4pDHhjCoDQ3Gfjxg/Tq0YNsNqSuBZ0wVJm3Jvw58kN2XkgxSoNZH9iD5ByKr2BZwGN9r
+         vKWw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781281186; x=1781885986;
-        h=to:subject:message-id:date:from:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lneOiyv0gwKIduIIbPK6ifsYgDWd2qr/ZZL2BZRVBjk=;
-        b=CN5Q1IoYVvAWIIh+kuLIr3fvATk/RvHdkHZiH5fap35Io1NJDdjyCV8os36YCvZtIO
-         bgv6JOm1bZhnZYlPiEin9lUlJ9pJY+PASpwrBF6H5BnlRMVShKvKgFF5XY811NpVzROT
-         1uR+b4bevAz7oQqeevT2AqNIUcdwDaez9kwRsct6kWNROUTVszVQrz4GYvmy4lGzzgNY
-         T9G8KB2wYc2jT8RnjrCG8fDpGai0UpSDBnT4pdAkCR+wG5TCUT3qsBT9fwHycJsNcC4i
-         ZTXo/bR1N6dVI6e5ldfJIjrI0IuHdbBxVbpcrg3oICYXssSwqytYRMC0RZgk/LEjG0ih
-         RboA==
-X-Gm-Message-State: AOJu0YxbmEyRCQ70Km3kmLzr/cLJcE3KwTj3p5RdVX+eXG3G2+jQAnJT
-	savs4XaympCVM9m06bD1IVBBp6vs5Oo8w/fiseYhpq2zuaePwboHe/KGgy7Ecvq/khItMDphK76
-	NA2yfHAPM8tDDPBdNj9axYCPcb8kaLakS6WBq
-X-Gm-Gg: Acq92OGko90fMXchsicKhiyplZTCk71GtYgX39TXBxL8EmNCpmXmmyv6HvYOqjpJWky
-	GtufbXWAEWZpnRmHw1XM06Ne41dm+iqFsqckyWfJVPrYj2Ws6WXDWP+/cbxDEsWm9EZwKZ2osVU
-	fej9E8yKdfSYK6NCRimonaab97jYK5iMtxiIrnFmJjnd3FGKj/npjrdHuloM001924xwr9pupGy
-	ixaE7z8hm+fJXO7VGshvaJDE3vWkz6wYDKU8ZaKolxPaa/AaAKhzYWWLjEvVBby/DJN0QOgMaGZ
-	KZc6/i2R
-X-Received: by 2002:a05:6402:4494:b0:68d:642b:3d4c with SMTP id
- 4fb4d7f45d1cf-693788feeb8mr1660538a12.11.1781281185426; Fri, 12 Jun 2026
- 09:19:45 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1781375295; x=1781980095;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=O47NaPG6T229/D4oVnpkjOWn8TTRgLZzLm6av79AdGE=;
+        b=o6RpfEgMPQBVc6ZBwHgB4Kd8wEFA+uEN1hocS0mXZxURv8orPq9VzTQvSJv4h3LSyK
+         LU4GAmjYbLrEoRUs+jq40e+4VFwBUtBL9uwb9fm8LehpXaUz0nETgliDf/w6m2H9zRo5
+         NfoZk/OpeJNWMeLkRcD+SHRoEoIbNTJ/MnFPnvJTWDOW+PXbeIQsyBoPHEiMI3r25L9v
+         mimfDfCjv82Y78id9xL30wFrcpDPbHL1UsQU7FDlNjyU2rOnM4JBrcBLDYZvCwb0ztXH
+         sxQ5k5mrDdM27uTnE/lEcY74EN20Wvq+U3zYQ+buH4jwYj0gprc2Uuge2ciA9dYoyol2
+         YSyw==
+X-Gm-Message-State: AOJu0Yz+s8YhOg9kcvXm9h/XOvDpi4hwBqfT5E5e7sUPBaUYJCy8gQz+
+	YpnYBUynFCzpwAEliv0B93LUPG8Qpos64cy+6E+5BQ46+hYgPFKP6ha1
+X-Gm-Gg: Acq92OHAVYnhabpK1xmdJ3z0O5KhNiQRZGcfGnSlqQ+mhdgdnVGpk6vjqmFycYWxwZs
+	SxOvNI0ODSpqSE5Gz40rmtM3ZTeHNplK1YnnzyS058AnohLSciM8Alrp4D9fr2GPTW0Y0QB+YY6
+	j27ab98ho+XsWggdCzqQZtS494blb40pyQB8ZAleG0WMX/RaG522u6t9mqfSOJ9V62de9SHV/TW
+	jtHAMfb217dZi51lIvvZafh6VslBHMF6El0LJVhsGqn0H+KxplHg/R97qZ65cn/3V3nZPGb1VH0
+	nfhjnm+QteurJHe9oYsvBZ2tN/bN9omjep1FkPz/rdRPwSwYaDrz6uPKXLDW1oNlb++fWUgEY8B
+	43DmQWOEN8wZH4Mv6f4QKa0htEvtiFCx+2zb1AoEHKkuKC9epWtyroHTs6agHS0cljkM75Zt49/
+	qVzMUS8wYBAgevoaudDrZY1Hxs3NxuOsLqkWmVXmilKT57dNefQX2SbRJP4NddPGnxTvRkRujqA
+	Sz+q7F6JO2EDg==
+X-Received: by 2002:a05:6000:41d9:b0:45e:f381:cd8a with SMTP id ffacd0b85a97d-4606da695a3mr10455274f8f.2.1781375294808;
+        Sat, 13 Jun 2026 11:28:14 -0700 (PDT)
+Received: from yocto.. (dynamic-176-007-197-181.176.7.pool.telefonica.de. [176.7.197.181])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4606f2c3782sm15353944f8f.25.2026.06.13.11.28.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 13 Jun 2026 11:28:14 -0700 (PDT)
+From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+To: song@kernel.org,
+	yukuai@fygo.io,
+	magiclinan@didiglobal.com,
+	xiao@kernel.org,
+	axboe@kernel.dk,
+	hare@suse.de,
+	john.g.garry@oracle.com,
+	martin.petersen@oracle.com,
+	vverma@digitalocean.com
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+Subject: [PATCH v2 0/4] md/raid1,raid10: fix write-path reference leaks and clean up error handling
+Date: Sat, 13 Jun 2026 18:28:06 +0000
+Message-ID: <20260613182810.1317258-1-abd.masalkhi@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Anton Gavriliuk <antosha20xx@gmail.com>
-Date: Fri, 12 Jun 2026 19:19:33 +0300
-X-Gm-Features: AVVi8CdtH_xSBU8KRDIksVLZo1JXuouxGS42-tRZhdzHpNYeyUdKaKSdUP1tjZ0
-Message-ID: <CAAiJnjqmW9PWQGacci0pNi2uT59uS142kGtLs_C9d6R2=eR2UQ@mail.gmail.com>
-Subject: AVX-512 Optimization For Linux RAID Showing Up To 41% Improvement
-To: linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Hi
+Hi,
 
-https://www.phoronix.com/news/AVX-512-Linux-RAID-Optimization
+This series fixes several write-path failure handling issues in raid1 and
+raid10 and then follows up with a cleanup of raid1_write_request().
 
-I'm just want to clarify - will help to improve write performance and
-raid56 build/rebuid time on modern hardware - amd zen5 (9005 series)
-and pci5.0 nvme ssds ?
+The first two patches fix writes_pending leaks caused by failure paths
+that complete bios without reaching the normal write completion path.
+The raid1 fix also addresses a barrier reference leak when
+wait_blocked_rdev() fails after wait_barrier() succeeds.
 
-Anton
+The third patch fixes additional writes_pending and barrier reference
+leaks in raid10 discard handling.
+
+The final patch simplifies raid1_write_request() error handling.
+
+Patches:
+md/raid1: fix writes_pending and barrier reference leaks on write failures
+md/raid10: fix writes_pending leak on write request failures
+md/raid10: fix writes_pending and barrier reference leaks on discard failures
+md/raid1: simplify raid1_write_request() error handling
+
+Changes in v2:
+ - fix writes_pending leaks in addition to the barrier reference leaks
+ - add raid10 fixes for analogous write and discard failure paths
+ - add a follow-up cleanup patch to simplify raid1_write_request()
+ - simplifies raid1_write_request() error handling.
+ - Link v1: https://lore.kernel.org/linux-raid/20260611132500.763528-1-abd.masalkhi@gmail.com/
+
+Thanks,
+Abd-Alrhman
+
+Abd-Alrhman Masalkhi (4):
+  md/raid1: fix writes_pending and barrier reference leaks on write
+    failures
+  md/raid10: fix writes_pending leak on write request failures
+  md/raid10: fix writes_pending and barrier reference leaks on discard
+    failures
+  md/raid1: simplify raid1_write_request() error handling
+
+ drivers/md/raid1.c  | 74 ++++++++++++++++++++++++---------------------
+ drivers/md/raid10.c | 28 ++++++++++++-----
+ 2 files changed, 60 insertions(+), 42 deletions(-)
+
+-- 
+2.43.0
+
