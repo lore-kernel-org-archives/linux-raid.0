@@ -1,161 +1,287 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAFBF21257F
-	for <linux-raid@vger.kernel.org>; Sat, 13 Jun 2026 18:47:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B82B31E505;
+	Sun, 14 Jun 2026 01:06:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781376478; cv=none; b=OA/Jr/5q0m/KdiRzZZyXghKb3lg9l7lfROMTrBONz+dBk28uyP+kHTf1IPKCSipW/0BPjlU2mFlRzEw5+zJHFLqUm5zj52FOZ5vuyYrthFYR6TyVKIL6T0WvEMMNqJWDHqTdkAJAI9krJMLMKTrc0yPf8vq5V31FiGAnePHYBMI=
+	t=1781399215; cv=none; b=nENuMm+Kagj0uBH3MdT09dbYijc4JmcGNmqpGXxwkKUtRB80JSUCIjbp37nOEkDz/5F5bEaQIErG5xGhCcidnyrkjNqRvHp16RV3/PgeU1BbTiT/IUeStmxJIT3XJvhzhioTJTJzZy7AsXQ8CriiYHbYfSFfCyX5bG4fmeQQcsI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781376478; c=relaxed/simple;
-	bh=ytRjA7ljM4GMqKH9JNX0EBQRfG3hy9/NAcrYLMXXaWQ=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Yk90IC9SwfAM1sBojn8FA04id+gRH9ZYrEjRLYJOxAqqVesOTvgSeqk3g+PfGRyOpCrMPI6VVCLvqA/MWXgmEUz75yAHT68xrcBb221deZujC5MevzTLGesFa3rR72ijGtjFPcXYdFtBHSwjB9hDk0z29bT78gzQFe3OqiYQBM8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZcnFOJUn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781399215; c=relaxed/simple;
+	bh=7pkMSvAIm9lEAzJUqU7sGX5uCJ46jlr8r79xuzqazIo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XsT1J7GJos6U3k46/Np/v/O9kkYoZZW3yo0WmiIUd8dZMFjjod/1ZLDmeANcc8CC1XIODeeTIEums9Dzunjj5yChOmFC8T5fOsg+uZNSabMBRyyZySzhO3UR9tFecqWQyyW/NDIBJpsAnbVwCeTx92UHZ1t9uaKSzCRPKR81XQk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HXoTz7pL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZcnFOJUn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57BC51F000E9;
-	Sat, 13 Jun 2026 18:47:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HXoTz7pL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B8A71F000E9;
+	Sun, 14 Jun 2026 01:06:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781376477;
-	bh=3JIjanCdF89gfQdEYMz9LqKlRnoQ1GJuVt2+Fr6hbTU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZcnFOJUnc7xpEH/b5o8yn2X+xzgxF4OaEI5o+p/Cgv1ebByO07cPKrENyjHZLqzOv
-	 FxuOHvYc5uwlIwmhjbie1sI93lXmGosV3a90eXclvG03dV7Km/O4Ua70eN8SQoWDqt
-	 TYR9kqS8bMp1iuJb4gcVPa0wz7RUXylM0VdOyVGWHT4PUTdR2QL6Bx4N8p+tjbwsNW
-	 8dJ15T4vtADJH5+lh0TU9xQB3wEnW0xqg/KhCHu1VNXzjtzXv7IhHRwNrxV78bkpLW
-	 kY7ebmW1zHiuVYMMHVbQxzCJmhOf8t3zgK2dvzgTKe4uh3XP+zwfmS/saTBKxg8ioO
-	 bU4kJIhhLoXLA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 4/4] md/raid1: simplify raid1_write_request() error
- handling
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260613182810.1317258-5-abd.masalkhi@gmail.com>
-References: <20260613182810.1317258-5-abd.masalkhi@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 13 Jun 2026 18:47:56 +0000
-Message-Id: <20260613184757.57BC51F000E9@smtp.kernel.org>
+	s=k20260515; t=1781399214;
+	bh=7FppgrMT4VjbzojoqbCOy5N8h+QNAsk9BzIkoKxlCAM=;
+	h=From:To:Cc:Subject:Date;
+	b=HXoTz7pLyjxpIxiYIRz1r8z8RQKJZMBU9+aLcog19M9o9Ck6x2BmYXVrGKnouQfAx
+	 nGmmrYijSeU/EnoxDOC8EHSxTpF+SE+zbVwZR/vNPsj7XSan0KOLUd+EGEFzGm3q1y
+	 HxElRM2Iljnik9glD+yT8QbGdua/UmZXdQw312TxzCa/2PpDPWHFUZt5YUfKTJ1bNp
+	 fSTKPn4UVpYD9i24TrISHPQYnwPLB1HEaaU1bVYbLBGsRzePHPwA0p94s103N4757p
+	 3LzLYYHqr6z9rkT6FXLvvTe3Ua5xTnQFZ6uSca6yOHnQ+vV1xDkEiENe7vW+NUdfD+
+	 ecx7CmgKoLLqg==
+From: Eric Biggers <ebiggers@kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>,
+	linux-crypto@vger.kernel.org,
+	x86@kernel.org,
+	Eric Biggers <ebiggers@kernel.org>,
+	David Laight <david.laight.linux@gmail.com>,
+	linux-raid@vger.kernel.org
+Subject: [PATCH v2] lib/raid/xor: x86: Add AVX-512 optimized xor_gen()
+Date: Sat, 13 Jun 2026 18:03:57 -0700
+Message-ID: <20260614010357.69416-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Add an implementation of xor_gen() using AVX-512.
 
-New issues:
-- [Critical] Moving `atomic_inc(&rdev->nr_pending)` down opens a race windo=
-w with `hot_remove_disk`, leading to a NULL pointer dereference during erro=
-r handling or a Use-After-Free in clustered configurations.
+It uses 512-bit vectors, i.e. ZMM registers.  It also uses the
+vpternlogq instruction to do three-input XORs when applicable.
 
-Pre-existing issues:
-- [High] A `REQ_ATOMIC` write can be silently split if a bad block overlaps=
- the start of the write, violating atomicity guarantees.
---
+It's enabled on x86_64 CPUs that have AVX512F && !PREFER_YMM.  In
+practice that means:
 
-commit c334f57d91677f32131f21e50bb32b83136e5a60
-Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+    - AMD Zen 4 and later (client and server)
+    - Intel Sapphire Rapids and later (server)
+    - Intel Rocket Lake (client)
+    - Intel Nova Lake and later (client)
 
-md/raid1: simplify raid1_write_request() error handling
+The !PREFER_YMM condition excludes the older AVX-512 implementations in
+Intel Skylake Server and Intel Ice Lake.  They could run this code, but
+they're known to have overly-eager downclocking when ZMM registers are
+used.  This is the same policy that the crypto and CRC code uses.
 
-This commit delays the rdev->nr_pending increment until after badblocks
-are checked to avoid incrementing and immediately decrementing on skipped
-devices. It also consolidates error handling paths and modifies REQ_ATOMIC
-failures to complete with BLK_STS_NOTSUPP instead of I/O errors.
+Benchmark on AMD Ryzen 9 9950X (Zen 5):
 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 632d72607e11e..86d4f224ffb11 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-[ ... ]
-> @@ -1576,23 +1573,21 @@ static bool raid1_write_request(struct mddev *mdd=
-ev, struct bio *bio,
->  		if (!rdev || test_bit(Faulty, &rdev->flags))
->  			continue;
-> =20
-> -		atomic_inc(&rdev->nr_pending);
->  		if (test_bit(WriteErrorSeen, &rdev->flags)) {
->  			sector_t first_bad;
->  			sector_t bad_sectors;
->  			int is_bad;
-> =20
-> -			is_bad =3D is_badblock(rdev, r1_bio->sector, max_sectors,
-> +			is_bad =3D is_badblock(rdev, sector, max_sectors,
->  					     &first_bad, &bad_sectors);
-> -			if (is_bad && first_bad <=3D r1_bio->sector) {
-> +			if (is_bad && first_bad <=3D sector) {
->  				/* Cannot write here at all */
-> -				bad_sectors -=3D (r1_bio->sector - first_bad);
-> +				bad_sectors -=3D (sector - first_bad);
->  				if (bad_sectors < max_sectors)
->  					/* mustn't write more than bad_sectors
->  					 * to other devices yet
->  					 */
->  					max_sectors =3D bad_sectors;
-> -				rdev_dec_pending(rdev, mddev);
->  				continue;
+    src_cnt    avx          avx512       Improvement
+    =======    ==========   ==========   ===========
+    1          56353 MB/s   75388 MB/s   33%
+    2          54274 MB/s   68409 MB/s   26%
+    3          44649 MB/s   64042 MB/s   43%
+    4          41315 MB/s   55002 MB/s   33%
 
-[Severity: High]
-This is a pre-existing issue, but does this logic skip the rejection of
-REQ_ATOMIC bios if a bad block overlaps the start of the write?
+Note: for now I omitted the cpu_has_xfeatures() check that the AVX-512
+optimized crypto and CRC code does, since it's not implemented on
+User-Mode Linux and it's never been present in the RAID6 code either.
 
-When is_badblock() finds a bad block at or before the write sector, the
-code shrinks max_sectors to force a split at the boundary and then calls
-continue. Because of the continue, the REQ_ATOMIC bio skips the rejection
-logic below.
+Signed-off-by: Eric Biggers <ebiggers@kernel.org>
+---
 
-Could this silently split an atomic write into smaller pieces and submit
-them to the healthy mirrors via bio_submit_split_bioset(), violating
-block-level atomicity guarantees?
+Changed in v2:
+    - Fixed build on UML
+    - Reworked the implementation
 
->  			}
->  			if (is_bad) {
-[ ... ]
->  				if (bio->bi_opf & REQ_ATOMIC) {
-> -					rdev_dec_pending(rdev, mddev);
-> -					goto err_handle;
-> +					bio->bi_status =3D BLK_STS_NOTSUPP;
-> +					bio_endio(bio);
-> +					goto err_dec_pending;
->  				}
-> =20
-> -				good_sectors =3D first_bad - r1_bio->sector;
-> +				good_sectors =3D first_bad - sector;
->  				if (good_sectors < max_sectors)
->  					max_sectors =3D good_sectors;
->  			}
->  		}
-> +
-> +		atomic_inc(&rdev->nr_pending);
+ lib/raid/xor/Makefile         |   2 +-
+ lib/raid/xor/x86/xor-avx512.c | 121 ++++++++++++++++++++++++++++++++++
+ lib/raid/xor/x86/xor_arch.h   |  26 ++++----
+ 3 files changed, 137 insertions(+), 12 deletions(-)
+ create mode 100644 lib/raid/xor/x86/xor-avx512.c
 
-[Severity: Critical]
-Does moving atomic_inc(&rdev->nr_pending) down open a race window with
-hot_remove_disk()?
+diff --git a/lib/raid/xor/Makefile b/lib/raid/xor/Makefile
+index 4d633dfd5b90..4af945861a51 100644
+--- a/lib/raid/xor/Makefile
++++ b/lib/raid/xor/Makefile
+@@ -26,11 +26,11 @@ xor-$(CONFIG_ALTIVEC)		+= powerpc/xor_vmx.o powerpc/xor_vmx_glue.o
+ xor-$(CONFIG_RISCV_ISA_V)	+= riscv/xor.o riscv/xor-glue.o
+ xor-$(CONFIG_SPARC32)		+= sparc/xor-sparc32.o
+ xor-$(CONFIG_SPARC64)		+= sparc/xor-sparc64.o sparc/xor-sparc64-glue.o
+ xor-$(CONFIG_S390)		+= s390/xor.o
+ xor-$(CONFIG_X86_32)		+= x86/xor-avx.o x86/xor-sse.o x86/xor-mmx.o
+-xor-$(CONFIG_X86_64)		+= x86/xor-avx.o x86/xor-sse.o
++xor-$(CONFIG_X86_64)		+= x86/xor-avx.o x86/xor-sse.o x86/xor-avx512.o
+ obj-y				+= tests/
+ 
+ CFLAGS_arm/xor-neon.o		+= $(CC_FLAGS_FPU)
+ CFLAGS_REMOVE_arm/xor-neon.o	+= $(CC_FLAGS_NO_FPU)
+ 
+diff --git a/lib/raid/xor/x86/xor-avx512.c b/lib/raid/xor/x86/xor-avx512.c
+new file mode 100644
+index 000000000000..87b981d74c90
+--- /dev/null
++++ b/lib/raid/xor/x86/xor-avx512.c
+@@ -0,0 +1,121 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * AVX-512 optimized implementation of xor_gen()
++ *
++ * Copyright 2026 Google LLC
++ */
++
++#include <linux/types.h>
++#include <asm/fpu/api.h>
++#include "xor_impl.h"
++#include "xor_arch.h"
++
++/*
++ * Implementation notes:
++ *
++ * Unrolling by the number of buffers (2-5) is very important.
++ *
++ * Unrolling by length is less important, especially when using register-indexed
++ * addressing with negative indices from the end of the buffers.  That approach
++ * results in just two loop control instructions being needed per iteration,
++ * regardless of the number of buffers.
++ *
++ * In fact, benchmarks showed that the 2 and 3 buffer cases require only 2x
++ * unrolling by length, while the 4 and 5 buffer cases don't require any
++ * unrolling by length.  Benchmarks also showed that the register-indexed
++ * addressing isn't a bottleneck either; i.e., we can't do any better by
++ * incrementing the pointers as we go along, even with more unrolling.
++ */
++
++static void xor_avx512_2(long bytes, u8 *p0, const u8 *p1)
++{
++	long i = -bytes;
++
++	asm volatile("1: vmovdqa64 (%0,%1), %%zmm0\n"
++		     "vmovdqa64 64(%0,%1), %%zmm1\n"
++		     "vpxorq (%0,%2), %%zmm0, %%zmm0\n"
++		     "vpxorq 64(%0,%2), %%zmm1, %%zmm1\n"
++		     "vmovdqa64 %%zmm0, (%0,%1)\n"
++		     "vmovdqa64 %%zmm1, 64(%0,%1)\n"
++		     "add $128, %0\n"
++		     "jnz 1b\n"
++		     : "+&r"(i)
++		     : "r"(p0 + bytes), "r"(p1 + bytes)
++		     : "memory", "cc");
++}
++
++static void xor_avx512_3(long bytes, u8 *p0, const u8 *p1, const u8 *p2)
++{
++	long i = -bytes;
++
++	asm volatile("1: vmovdqa64 (%0,%1), %%zmm0\n"
++		     "vmovdqa64 64(%0,%1), %%zmm1\n"
++		     "vmovdqa64 (%0,%2), %%zmm2\n"
++		     "vmovdqa64 64(%0,%2), %%zmm3\n"
++		     "vpternlogq $0x96, (%0,%3), %%zmm2, %%zmm0\n"
++		     "vpternlogq $0x96, 64(%0,%3), %%zmm3, %%zmm1\n"
++		     "vmovdqa64 %%zmm0, (%0,%1)\n"
++		     "vmovdqa64 %%zmm1, 64(%0,%1)\n"
++		     "add $128, %0\n"
++		     "jnz 1b\n"
++		     : "+&r"(i)
++		     : "r"(p0 + bytes), "r"(p1 + bytes), "r"(p2 + bytes)
++		     : "memory", "cc");
++}
++
++static void xor_avx512_4(long bytes, u8 *p0, const u8 *p1, const u8 *p2,
++			 const u8 *p3)
++{
++	long i = -bytes;
++
++	asm volatile("1: vmovdqa64 (%0,%1), %%zmm0\n"
++		     "vmovdqa64 (%0,%2), %%zmm1\n"
++		     "vpxorq (%0,%3), %%zmm0, %%zmm0\n"
++		     "vpternlogq $0x96, (%0,%4), %%zmm1, %%zmm0\n"
++		     "vmovdqa64 %%zmm0, (%0,%1)\n"
++		     "add $64, %0\n"
++		     "jnz 1b\n"
++		     : "+&r"(i)
++		     : "r"(p0 + bytes), "r"(p1 + bytes), "r"(p2 + bytes),
++		       "r"(p3 + bytes)
++		     : "memory", "cc");
++}
++
++static void xor_avx512_5(long bytes, u8 *p0, const u8 *p1, const u8 *p2,
++			 const u8 *p3, const u8 *p4)
++{
++	long i = -bytes;
++
++	asm volatile("1: vmovdqa64 (%0,%1), %%zmm0\n"
++		     "vmovdqa64 (%0,%2), %%zmm1\n"
++		     "vpternlogq $0x96, (%0,%3), %%zmm1, %%zmm0\n"
++		     "vmovdqa64 (%0,%4), %%zmm1\n"
++		     "vpternlogq $0x96, (%0,%5), %%zmm1, %%zmm0\n"
++		     "vmovdqa64 %%zmm0, (%0,%1)\n"
++		     "add $64, %0\n"
++		     "jnz 1b\n"
++		     : "+&r"(i)
++		     : "r"(p0 + bytes), "r"(p1 + bytes), "r"(p2 + bytes),
++		       "r"(p3 + bytes), "r"(p4 + bytes)
++		     : "memory", "cc");
++}
++
++DO_XOR_BLOCKS(avx512_inner, xor_avx512_2, xor_avx512_3, xor_avx512_4,
++	      xor_avx512_5);
++
++/*
++ * Preconditions: bytes is a nonzero multiple of 512, and all buffers are
++ * 64-byte aligned.
++ */
++static void xor_gen_avx512(void *dest, void **srcs, unsigned int src_cnt,
++			   unsigned int bytes)
++{
++	kernel_fpu_begin();
++	xor_gen_avx512_inner(dest, srcs, src_cnt, bytes);
++	kernel_fpu_end();
++}
++
++struct xor_block_template xor_block_avx512 = {
++	.name = "avx512",
++	.xor_gen = xor_gen_avx512,
++};
+diff --git a/lib/raid/xor/x86/xor_arch.h b/lib/raid/xor/x86/xor_arch.h
+index 99fe85a213c6..b5d49376fc97 100644
+--- a/lib/raid/xor/x86/xor_arch.h
++++ b/lib/raid/xor/x86/xor_arch.h
+@@ -4,26 +4,30 @@
+ extern struct xor_block_template xor_block_pII_mmx;
+ extern struct xor_block_template xor_block_p5_mmx;
+ extern struct xor_block_template xor_block_sse;
+ extern struct xor_block_template xor_block_sse_pf64;
+ extern struct xor_block_template xor_block_avx;
++extern struct xor_block_template xor_block_avx512;
+ 
+-/*
+- * When SSE is available, use it as it can write around L2.  We may also be able
+- * to load into the L1 only depending on how the cpu deals with a load to a line
+- * that is being prefetched.
+- *
+- * When AVX2 is available, force using it as it is better by all measures.
+- *
+- * 32-bit without MMX can fall back to the generic routines.
+- */
+ static __always_inline void __init arch_xor_init(void)
+ {
+-	if (boot_cpu_has(X86_FEATURE_AVX) &&
+-	    boot_cpu_has(X86_FEATURE_OSXSAVE)) {
++	if (IS_ENABLED(CONFIG_X86_64) && boot_cpu_has(X86_FEATURE_AVX512F) &&
++	    boot_cpu_has(X86_FEATURE_OSXSAVE) &&
++	    !boot_cpu_has(X86_FEATURE_PREFER_YMM)) {
++		/* AVX-512 will be the best; no need to try others. */
++		/* !PREFER_YMM excludes CPUs with overly-eager downclocking. */
++		xor_force(&xor_block_avx512);
++	} else if (boot_cpu_has(X86_FEATURE_AVX) &&
++		   boot_cpu_has(X86_FEATURE_OSXSAVE)) {
++		/* AVX will be the best; no need to try others. */
+ 		xor_force(&xor_block_avx);
+ 	} else if (IS_ENABLED(CONFIG_X86_64) || boot_cpu_has(X86_FEATURE_XMM)) {
++		/*
++		 * When SSE is available, use it as it can write around L2.  We
++		 * may also be able to load into the L1 only depending on how
++		 * the cpu deals with a load to a line that is being prefetched.
++		 */
+ 		xor_register(&xor_block_sse);
+ 		xor_register(&xor_block_sse_pf64);
+ 	} else if (boot_cpu_has(X86_FEATURE_MMX)) {
+ 		xor_register(&xor_block_pII_mmx);
+ 		xor_register(&xor_block_p5_mmx);
 
-Because nr_pending acts as an existence lock that prevents the device from
-being removed from the array configuration by raid1_remove_conf(),
-incrementing it after the is_badblock() and test_bit(WriteErrorSeen, ...)
-checks means md_check_recovery() could evaluate rdev_removeable() while
-nr_pending is 0 and call hot_remove_disk().
+base-commit: 2b07ea76fd28989bde5993532d7a943a6f90e246
+-- 
+2.54.0
 
-If raid1_remove_conf() unlinks the device by setting
-conf->mirrors[i].rdev =3D NULL, when this thread resumes and the I/O
-eventually fails, would the error handling path (handle_write_finished()
-calling narrow_write_error()) read conf->mirrors[i].rdev and dereference a
-NULL pointer?
-
-Additionally, in clustered configurations, if the unlinked rdev is
-immediately freed by md_kick_rdev_from_array(), could this lead to a
-use-after-free directly in raid1_write_request() when evaluating
-test_bit(WriteErrorSeen, &rdev->flags) or is_badblock()?
-
->  		r1_bio->bios[i] =3D bio;
->  	}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260613182810.1317=
-258-1-abd.masalkhi@gmail.com?part=3D4
