@@ -1,148 +1,135 @@
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 219E93BB116
-	for <linux-raid@vger.kernel.org>; Mon, 15 Jun 2026 22:57:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFFA336AB77;
+	Mon, 15 Jun 2026 23:53:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781564263; cv=none; b=qa1Xosf2bjcHkWzSP9IZwrHOjSafGeRj6Yf6QY3RAstMiVhrOz/2RKdRfBjAR0ZWkW+57VVFAgUocI2MPmHAU14sKMd5kffs1S6YLtHhdzCofDnGPk+1r6sBAZOOrDqdwQVVRRiPK53DN6s3wHNC0cP/6Bv0mq5W96g/u6zt9+0=
+	t=1781567627; cv=none; b=TkMrOIOt2FEnr4iB5edlK3xtyDQrlhFZ8ynWQEA1s+JepNQ/LYa3SxntmQ6oDUCtSQ0ZgNzgNnSEyonBm/gqb98ZLiH+41td+/ZTD88EMD8GK+fCDphXJ5RZWOUhQk2e5MUJmv44rOAhizjSqqzU/qxrtm4xOVYLXvqgThwpQ6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781564263; c=relaxed/simple;
-	bh=xlDI29oAJ/RkZP2O27U2v7nIGJegpCQFhPSOGe1YZRo=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dxNC5H1dAT43wcz6ncpFLnVLbVHwAdkGoCqBy2Qj5dH/RWcQD3qu+7ktmCnP0WAwQ101LpNMqYr4uWebhCs9APH32H9140397N61/pXYFs0ZaDCp2fm8EURYI1XkEmfCgDYzYsgTVMQbRlk7Lxar4B3uRjmC4LCNYEIPqFx6Qkk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z/ZqeNlp; arc=none smtp.client-ip=209.85.221.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1781567627; c=relaxed/simple;
+	bh=1Gd1E2gPrjOnwLuGZcpzYjFgFcJ5vek864QssXvdmqw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZUPq0Nupvv6rOgIKHCXF6tnCWMmfXH0M5txDedTrXCUWjp/mEn+RWr9wM5+debIFt/IOUuCuf/sezWg8fdVzUWFzX+YHiT+JcxfqfAhSZU1tcvzbMwV6Pyp1R2YkWu9vnMjL/qsRTxVP9GoveeWLMboRmw9WmnRYhAe47QgXrRo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=cIj93yTW; arc=none smtp.client-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z/ZqeNlp"
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-46019edc13dso1811069f8f.1
-        for <linux-raid@vger.kernel.org>; Mon, 15 Jun 2026 15:57:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781564260; x=1782169060; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=nvgJd06ouiRA1Bt6a4YifRiNbd6eY+jmmfs208b9fGI=;
-        b=Z/ZqeNlpdgF3Cx08OWWCbBfyTn2r/l04h8344mIIqTlvx7mK1woE0Vq3tomZPyDW5Z
-         YUUxfx0jhso0H+Bc+p2OBiYhWlMOwYKWAWXNKqsqywwDrQNQw0btowaP7br39ncgTmmy
-         QgP3A6Ki98/dqGoAeGMB4wtwcrz1xPs5+FDDnZ013KQn/vWOCvHIeuiXRGEOCXZQ2qUp
-         77mheMc2lLukVK95yPu0FcF2qpZNBT79sl2DMr1K6L7Ge4xSppBvyVmuWs9kHuJ8DLNv
-         JQAcBAkHij+5/LIjYWUpkHkmIFG1CZunT/LHqYbfQBHuSWhAJ53fD+03lA+BjPQ4F9v6
-         R1OA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781564260; x=1782169060;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=nvgJd06ouiRA1Bt6a4YifRiNbd6eY+jmmfs208b9fGI=;
-        b=ihQshLTDBEAvW5K97DDfdUIPIE0iU98h7XYW6L7OWSbT443nySR3gkgtj8Xe7PKb/2
-         /YcAIQmPkadOG5ji0U5kNf1Udw7jburq9C+YXIkb9hWivf/2DIx8RDiGOGnN4nuVSfVB
-         ZZA+aFwJbkRAsei5ySIx2pdfQ85b9HcXoqXTyyIQl9EXOG8fXt//KbWlatiICSedEgYb
-         8gEHw/PP6ikHutnGD2Fv/+gKJKULnFKAJZGZGLpGJY93wEMAfdMk4pXOxpjVsvAj8Oyh
-         GBbzyraLzoK3pnZR21B3Nu1rolOGYoqAhoN1mQHHVpHOZ/RCF8V7loZOv0fYwJk4UHBt
-         3Oiw==
-X-Forwarded-Encrypted: i=1; AFNElJ8ML5/VXGY1dEcXUN2plGPN56pqxMyj/N8Qxnxg2Bt1hv/V+bO7j3ouHGi4gqoSSkXayAXdaCP2f7EF@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzt3jXmB0V/um9+5Rp4lXBBIeqPZCEWoc4D4a5mjU7xxheylGdd
-	gpX06d085na4Pb7ibHAb91jK3jZ8X0OpzLtqXLDw9xjBymsnuEk7v2wB
-X-Gm-Gg: Acq92OENA8P8Nbe5rAMyu8tdBA3J4qU6RYGS1ykYOZir5xvykzSuAIF+KlgOlyhl2Sv
-	SkU107aGqjCfNIi8Y/cdEXpfSPhlX03g2NdTYmiTYc/bx9iy4lp71i0+JmNorr+JdIciRjLrN16
-	T+zQ90f8FiJuLxGcCpQVYUsN+HEk2X2rhjwnCePVK+qlXFCi3Wx1nvVAm88Oehwnam8yghHMUsl
-	UJIb1cD9rgSP+w0ot5LLVSnLYCXAPR+ErU4AOehGD2zhNo9DmLTU5qRCtyNle04nwoejnxOxmQR
-	CV/Nl/FQjIR2dj93GZsob86n91ALSXrewg/5uoq4aBCpiKx0KYkkn0p/H19DPdwJ8RCaXoMGSs7
-	gH9flsSP2KVMbebltTrk/+6X/YGHsKyoqGelK323ARdIQcs1KkaQdmk6bWDnCUIcHblQKrYFuWT
-	msDrA1AbluVXbkp6Zia7bWK8hcUUh/bBlG+1E61vdOldNF2USP9vOhev0kqr19
-X-Received: by 2002:a05:6000:25f1:b0:43f:ea25:20ff with SMTP id ffacd0b85a97d-4606dbefc51mr24706743f8f.29.1781564260379;
-        Mon, 15 Jun 2026 15:57:40 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4606f2b0d70sm38633487f8f.19.2026.06.15.15.57.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Jun 2026 15:57:40 -0700 (PDT)
-Date: Mon, 15 Jun 2026 23:57:38 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org,
- Christoph Hellwig <hch@lst.de>, linux-crypto@vger.kernel.org,
- x86@kernel.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH v2] lib/raid/xor: x86: Add AVX-512 optimized xor_gen()
-Message-ID: <20260615235738.48a04644@pumpkin>
-In-Reply-To: <20260615184435.GA17731@quark>
-References: <20260614010357.69416-1-ebiggers@kernel.org>
-	<20260614111628.00af46b9@pumpkin>
-	<20260615184435.GA17731@quark>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="cIj93yTW"
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id A1C2A40E01CE;
+	Mon, 15 Jun 2026 23:53:42 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id 2Q7h6KcO9Y6T; Mon, 15 Jun 2026 23:53:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1781567612; bh=w1+VZxJhd9auI1O1Pph/8OjTinmdD4Jdgbh6toXfWag=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=cIj93yTWCM9xvi+L0if5BU9IMKyb2zDaEukgg61A33Wzaf3PfOXb9KE9S8rXAeBC8
+	 3iLDtaiWe5A6N0VleIUKi8WmHUEjv5ua0Pb8lrR1G7wB7kVHWniiiuTWt2KNl4aFvl
+	 q58y2ihqQcGAufG0LVn2/UrY77Ga0CMTVsoxJFnKgkSAZc2lnCGSRe7iiTonrTgBjx
+	 f6qUyip+KqtPB7I7BZLM2jMlVm9pPuYUP5CdJbetYwAzHD3d7LlkbhRosCXyUg/NAg
+	 HgyYYnTQDZAW+k4+kpZpNBxuUlI4aokKwM87KLd+ZQ/xYMcy3VjcgpmTIN+bQ7snpo
+	 1d2Uu23jWr1XyRvjjnIykfYzQ6QTkNWGi1sjcwkybzWtw40ttdOLoGkRk/UFbidFpC
+	 pAa6FGOeRZuzI1nZ/fC6tQr5MtTByevsF7XAFzG0WEqYZpES0hX3kWweU3lulOYila
+	 LVLg1lh1vHJp1ZUPhyMuL3F1wwud/I/8CCFht0UwiA1Zg4xz9hTthfdjVP/ZQ1SkYJ
+	 UWVgD0OW8Hd4ZR1MIGbAOLN4f0e+cu/xQuaz6h059dMCuRZYX1vALCTPs5BKQMhv33
+	 y3IMxXbykTz89TrxJNLqz4f1bysk6kzai5JOpOlXM1DoC4qKqvwbDbIRA9qVa62aB1
+	 hbH4tVwKfd2rBib9Zy+0s+6s=
+Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::48])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 192B540E01B4;
+	Mon, 15 Jun 2026 23:53:21 +0000 (UTC)
+Date: Mon, 15 Jun 2026 16:53:18 -0700
+From: Borislav Petkov <bp@alien8.de>
+To: Eric Biggers <ebiggers@kernel.org>, Richard Weinberger <richard@nod.at>
+Cc: x86@kernel.org, Christoph Hellwig <hch@lst.de>,
+	linux-crypto@vger.kernel.org,
+	David Laight <david.laight.linux@gmail.com>,
+	linux-raid@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-um@lists.infradead.org
+Subject: Re: [PATCH v3] lib/raid/xor: x86: Add AVX-512 optimized xor_gen()
+Message-ID: <20260615235318.GBajCQbuy9dBgKH8L_@fat_crate.local>
+References: <20260615190338.26581-1-ebiggers@kernel.org>
+ <20260615201050.GB1764@quark>
+ <255CAE3E-7FD3-4DC2-B3DE-46BE67EF22A8@alien8.de>
+ <20260615212922.GA28589@quark>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260615212922.GA28589@quark>
 
-On Mon, 15 Jun 2026 11:44:35 -0700
-Eric Biggers <ebiggers@kernel.org> wrote:
-
-> On Sun, Jun 14, 2026 at 11:16:28AM +0100, David Laight wrote:
-> > On Sat, 13 Jun 2026 18:03:57 -0700
-> > Eric Biggers <ebiggers@kernel.org> wrote:
-...
-> > Some 'not very important' comments:
+On Mon, Jun 15, 2026 at 02:29:22PM -0700, Eric Biggers wrote:
+> On Mon, Jun 15, 2026 at 09:16:55PM +0000, Borislav Petkov wrote:
+> > On June 15, 2026 8:10:50 PM UTC, Eric Biggers <ebiggers@kernel.org> wrote:
+> > >
+> > >But I wanted to ask: do we really care about the case where features are
+> > >"supported" but their XCR0 bits aren't set?  Perhaps the kernel just
+> > >doesn't/shouldn't support weird cases like "-cpu max,xsave=off"?
+> > >
 > > 
-> > I did wonder whether moving the loop into the asm() would help.
-> > gcc has a nasty habit of pessimising loops when you try to be clever.
-> > It is certainly safer for tight loops like these.  
+> > Yes, our aim is to support only configurations which are actually
+> > present in real hardware and not a "oh, it would be good if it did
+> > that, just because..."
 > 
-> I originally tried leaving the loops to the compiler, but gcc unrolled
-> the 1x ones by 2x, despite it having no visibility into the asm block.
-> That broke the intent with the indexed addressing, since to achieve the
-> unrolling it generated code that incremented the pointers.
+> Seems reasonable to me.  Would the same apply to UML here?
 
-I did suspect that might happen.
+Good question.
 
-> So I just ended up moving the loop to the asm, which reliably gives us
-> the code we want.
+Richi?
 
-Yep...
-
-...
-> > The code should be limited by the memory reads, so the 3-argument xor and
-> > the interleave of the unroll may make no difference.  
+> > >If this case indeed needs to be handled, could we make things easier for
+> > >the kernel's AVX and AVX-512 optimized code?  Currently AVX-512 needs:
+> > >
+> > >        if (boot_cpu_has(X86_FEATURE_AVX512F) &&
+> > >            cpu_has_xfeatures(XFEATURE_MASK_FP | XFEATURE_MASK_SSE |
+> > >                              XFEATURE_MASK_YMM | XFEATURE_MASK_AVX512, NULL))
+> > >
+> > >How about we make X86_FEATURE_AVX512F depend on XCR0=111xx111, and
+> > >X86_FEATURE_AVX depend on XCR0=xxxxx111?  Then the cpu_has_xfeatures()
+> > >check wouldn't be needed.  Is there any reason not to do that?
+> > 
+> >  How do you want to accomplish that? Very early during boot on the BSP
+> >  you sanity-check XCR0 and clear feature flags if components are not
+> >  set? 
 > 
-> The unroll by 2x in the 2 and 3-buffer cases helped a little bit on
-> Sapphire Rapids.  I don't know exactly why, but it makes sense that
-> those cases are where the loop overhead is most likely to matter.
+> That would be the idea.  Something similar to what
+> arch/x86/kernel/cpu/cpuid-deps.c does. 
 
-Each iteration does 2 (or 3) reads and a write.
-The cpu can do two reads and a write every clock.
-However Intel cpu can only execute a branch every other clock,
-so the shortest loop is two clocks.
-That means you need need to unroll once to keep the memory logic busy.
+Yap.
 
-The zen5 seems to be able to execute 1-clock loops, so wouldn't need
-the unroll.
+> Except that seems to only enforce the dependencies when the kernel itself is
+> disabling things; if the hypervisor is broken then it just warns.
 
-> > Some cpu do have constraints on the cache alignment in order to do two
-> > reads per clock, but I've forgotten them and they got better before AVX-512.
-> > If that were affecting this code (on the tested cpu) then I'd expect the
-> > interleaved unroll would improve the _4 and -5 functions.
-> > So it probably doesn't affect this code.  
+Not the kernel's problem. We deliberately don't want to maintain a zoo of
+options which are not present in real hw. If HV is doing funny things, oh
+well...
+
+
+> In any case, I'd like these to go away:
 > 
-> The buffers are always 64-byte aligned here, as documented.
+>     $ git grep cpu_has_xfeatures | wc -l
+>     31
 
-It is all more complex that that.
-Whether you can do two reads/clock depends on whether the reads manage to
-avoid needing the same buffers (etc) in the cache logic.
-For instance it might not work if the addresses differ by the size of the
-cache (one of Agner's books might have the answer).
-(It was pretty hard to get two reads/clock on Sandy Bridge.)
+Yeah, all in crypto. I can certainly see why.
 
-Then there are some really strange effects.
-On zen5 (at least on the one I've got) 'rep movsb' is very slow (setup and copy)
-if (IIRC) (%di - %si) mod 4k is between 1 and 127.
-The only other alignment that makes much difference is 64byte aligning %di (which
-doubles throughput).
+@dhansen, any other thoughts?
 
--- David
+Thx.
 
+-- 
+Regards/Gruss,
+    Boris.
 
+https://people.kernel.org/tglx/notes-about-netiquette
