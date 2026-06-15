@@ -1,156 +1,370 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from lf-2-44.ptr.blmpb.com (lf-2-44.ptr.blmpb.com [101.36.218.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B5B9212F89
-	for <linux-raid@vger.kernel.org>; Mon, 15 Jun 2026 11:49:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49F073F99F2
+	for <linux-raid@vger.kernel.org>; Mon, 15 Jun 2026 16:20:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.36.218.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781524171; cv=none; b=SJoFL4tFX7CmInEzO2jLyhZBwiOx3OgNgQq8PWNY/RA8dpX1HSq9GYz/Yg4c9WqRPw399qzYkF/q+MGyTF20oXrX45BYAK62oKBpIMFlOvWpezBWF4pPYLsz18tuF/2+ko+sejHpnkwUBvdAPpTv+P9rhnMAsOJAiXH71id9LPI=
+	t=1781540421; cv=none; b=Bm0+b0gETSdmjIPmDHj9IjfQSgdQUanmGWnLCWjeT0szXCzs1MMumS0G9KiiAqAPxAuBiWBz8Z+QLzinXrT2G8zq4TYMfej/QAIeN26k1PCNDQYhioYZTe0uFsWTkXlnmoBsC4pnHfNyaO/2zDq6IeVP85DC0EK57vfBuqMcTAk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781524171; c=relaxed/simple;
-	bh=jmCd37Ep9pEPoYQUFZ6Z7xLrdla+iID5Bkf9Sz8aOu0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=p+obxdHAh/Khk4fPhU+NZUNtwYHWWkeB2EhemDy4EQuP5g1TvdPNDjoagYNUFAkMkKP/6Ij0dhZeZbF+f69QBpyDi23GMz0SM/uLQJWhCAgoCBoZsYXvUyFy9j0xJDUBDrGz3FDZDd03EzB0YcX3h0WXRQGJcxRqqTCzQ/XIGTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KhiRtlxN; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781540421; c=relaxed/simple;
+	bh=SnwT/mCvv2Z+8opY/A/sGRiDMDXWiEn6n1J977hmmFw=;
+	h=References:From:Subject:Date:In-Reply-To:To:Message-Id:
+	 Mime-Version:Content-Type:Cc; b=hrSryajVg/LTf5uJYwFP6qfUhoeQozach+QcG9OWkg0WJdgpbqaLzlIqmqDusUWeb2p7EecrfVj4fQG9m2u/tTtWVOC+qQERV64JNEu/EnDamQQHOclIb55vwGGxVf3c6cF7ZEm/+lYZKcTTCfd2GuydYfWD0X4+LdYgIsCgJK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=Jh0YMauy; arc=none smtp.client-ip=101.36.218.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KhiRtlxN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5BAD1F00A3A;
-	Mon, 15 Jun 2026 11:49:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781524170;
-	bh=AjVa0NdicXhWaZkq5S66XQqZMLtRqqiVUO0pt9qh6sw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KhiRtlxN7f3BapOx+F86cDCOZ+Mfr6c6/ocG0BVOr0j3F5DK6elKiWMdyZWrD7vxy
-	 xv4KE0gdA2p5WCPcZipmbxEHuibl7h/eqnxIZ6SfXtFdgitH3h+faMgON7KQABSKgs
-	 3PnRabg6rtnfsPpZYFb7fPdm7N96C8+eDDA2HpTQTbG1jFHPXxLamB0PG1bDSH5Yz3
-	 8jVAoESc7VFoVyq7L46+u2WA5woG0k70f7wcLTetwdXFpWOiCFZKF4qY7Rbg3ImDkK
-	 CGsbg9Bxc6gBRFL615318oarf8yQlLAtZWcYPOQ1iUn7yOGZiDg0qQa0LPYooNJxU9
-	 ppCH2Y70xTRcw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] md/raid5: fix reshape deadlock while failed devices
- more than max degraded
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chen Cheng" <chencheng@fnnas.com>
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260615113450.2088877-1-chencheng@fnnas.com>
-References: <20260615113450.2088877-1-chencheng@fnnas.com>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="Jh0YMauy"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1781540370;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=SnwT/mCvv2Z+8opY/A/sGRiDMDXWiEn6n1J977hmmFw=;
+ b=Jh0YMauyY79gxlv+QqnqGimqZj1033qWQs9YCJZspwED5KfL29vrXM0bhbPNj4gdNPW9vU
+ DgpfBOqnBeRiYUVrUYJEZnqbbDNbtfaxDnBfkTJ2V76p6YYoRuFdKpM78+9S0p9aKsOjK6
+ zH5u9xBrs4qVi42Le9Iv8qp0ktM+tPcAgUfEQlm3tcNcsnaUUQ0VqS6KKK20RStVRwidhv
+ u1Iz+GGJsoyQkFkvrnlLtVSpmMU2Nc07huemQqdjNBPc/Yxv0+/Mc5Gesognw9qLtZI6OD
+ jHXC15okbA2tNmMg7uSqUORI6N2mUkQPLnt4lssDmEt95aNnJCHtbiajrLD9QA==
+References: <20260605091527.2463539-1-yukuai@kernel.org> <20260605091527.2463539-7-yukuai@kernel.org> <8q8gawaz.fsf@damenly.org>
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 15 Jun 2026 11:49:29 +0000
-Message-Id: <20260615114929.E5BAD1F00A3A@smtp.kernel.org>
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH] md/md-llbitmap: grow the page cache in place for reshape
+Date: Tue, 16 Jun 2026 00:19:25 +0800
+In-Reply-To: <8q8gawaz.fsf@damenly.org>
+To: "Su Yue" <l@damenly.org>, "Yu Kuai" <yukuai@kernel.org>
+Message-Id: <d8d9c6a8-a333-424e-98e4-22140735d885@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+User-Agent: Mozilla Thunderbird
+X-Lms-Return-Path: <lba+26a302611+c97b11+vger.kernel.org+yukuai@fygo.io>
+X-Original-From: yu kuai <yukuai@fygo.io>
+Content-Type: text/plain; charset=UTF-8
+Reply-To: yukuai@fygo.io
+Cc: "Song Liu" <song@kernel.org>, "Li Nan" <magiclinan@didiglobal.com>, 
+	"Xiao Ni" <xiao@kernel.org>, <linux-raid@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, <yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.180]) by smtp.larksuite.com with ESMTPS; Mon, 15 Jun 2026 16:19:29 +0000
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Critical] Clearing STRIPE_EXPANDING prematurely in handle_failed_reshape=
-() allows a destination stripe to be freed and reused while asynchronous DM=
-A is still writing to its pages, leading to DMA-after-free memory corruptio=
-n.
---
+Hi,
 
-commit ec55b78c975b4f9f35e287b83bee72d76b92b33a
-Author: Chen Cheng <chencheng@fnnas.com>
+=E5=9C=A8 2026/6/15 19:16, Su Yue =E5=86=99=E9=81=93:
+> On Fri 05 Jun 2026 at 17:15, Yu Kuai <yukuai@kernel.org> wrote:
+>
+>> From: Yu Kuai <yukuai@fygo.io>
+>>
+>> Use the page-control helpers to grow llbitmap's cached pages in place
+>> for resize and later reshape preparation, instead of rebuilding the
+>> whole cache.
+>>
+>> Signed-off-by: Yu Kuai <yukuai@fygo.io>
+>> ---
+>> =C2=A0drivers/md/md-llbitmap.c | 139 =C2=A0+++++++++++++++++++++++++++++=
+++++++----
+>> =C2=A01 file changed, 127 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
+>> index 2f2896fe4d6f..91d3dec43d48 100644
+>> --- a/drivers/md/md-llbitmap.c
+>> +++ b/drivers/md/md-llbitmap.c
+>> @@ -414,10 +414,23 @@ static char=20
+>> state_machine[BitStateCount][BitmapActionCount] =3D {
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 [BitmapActionClearUnwri=
+tten]=C2=A0=C2=A0=C2=A0 =3D BitUnwritten,
+>> =C2=A0=C2=A0=C2=A0=C2=A0 },
+>> =C2=A0};
+>>
+>> =C2=A0static void __llbitmap_flush(struct mddev *mddev);
+>> +static void llbitmap_flush(struct mddev *mddev);
+>> +static void llbitmap_update_sb(void *data);
+>> +
+>> +static void llbitmap_resize_chunks(struct mddev *mddev, sector_t=20
+>> blocks,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned long *chunksize,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned long *chunks)
+>>
+> NIT: I would like call it llbitmap_calculate_chunks.
 
-md/raid5: fix reshape deadlock while failed devices more than max degraded
-   =20
-This patch fixes a deadlock in raid5 reshape by cleaning up stripe states=20
-(including destination and source stripes) when failed devices exceed the=20
-max degraded count.
+Agreed this is better, will change it.
 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index d0d7f96fd7cd9..2f4d82bd7c2e6 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -3730,6 +3730,78 @@ handle_failed_sync(struct r5conf *conf, struct str=
-ipe_head *sh,
->  		md_sync_error(conf->mddev);
->  }
-> =20
-> +/*
-> + * handle_failed_reshape - handl failed stripes when reshape failed and
-> + *			   degraded devices >=3D max_degraded
+>
+>> +{
+>> +=C2=A0=C2=A0=C2=A0 *chunks =3D DIV_ROUND_UP_SECTOR_T(blocks, *chunksize=
+);
+>> +=C2=A0=C2=A0=C2=A0 while (*chunks > mddev->bitmap_info.space << SECTOR_=
+SHIFT) {
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 *chunksize =3D *chunksize <<=
+ 1;
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 *chunks =3D DIV_ROUND_UP_SEC=
+TOR_T(blocks, *chunksize);
+>> +=C2=A0=C2=A0=C2=A0 }
+>> +}
+>>
+>> =C2=A0static enum llbitmap_state llbitmap_read(struct llbitmap =C2=A0*ll=
+bitmap,=20
+>> loff_t pos)
+>> =C2=A0{
+>> =C2=A0=C2=A0=C2=A0=C2=A0 unsigned int idx;
+>> =C2=A0=C2=A0=C2=A0=C2=A0 unsigned int offset;
+>> @@ -653,10 +666,52 @@ static unsigned int=20
+>> llbitmap_reserved_pages(struct llbitmap *llbitmap)
+>> =C2=A0{
+>> =C2=A0=C2=A0=C2=A0=C2=A0 return DIV_ROUND_UP(llbitmap->mddev->bitmap_inf=
+o.space <<=20
+>> =C2=A0SECTOR_SHIFT,
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0 PAGE_SIZE);
+>> =C2=A0}
+>>
+>> +static int llbitmap_expand_pages(struct llbitmap *llbitmap,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned long chunks)
+>> +{
+>> +=C2=A0=C2=A0=C2=A0 struct llbitmap_page_ctl **pctl;
+>> +=C2=A0=C2=A0=C2=A0 unsigned int old_nr_pages =3D llbitmap->nr_pages;
+>> +=C2=A0=C2=A0=C2=A0 unsigned int nr_pages =3D llbitmap_used_pages(llbitm=
+ap, chunks);
+>> +=C2=A0=C2=A0=C2=A0 int i;
+>> +=C2=A0=C2=A0=C2=A0 int ret;
+>> +
+>> +=C2=A0=C2=A0=C2=A0 if (nr_pages <=3D old_nr_pages)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>> +
+>> +=C2=A0=C2=A0=C2=A0 pctl =3D kcalloc(nr_pages, sizeof(*pctl), GFP_KERNEL=
+);
+>> +=C2=A0=C2=A0=C2=A0 if (!pctl)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -ENOMEM;
+>> +
+>> +=C2=A0=C2=A0=C2=A0 if (llbitmap->pctl)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 memcpy(pctl, llbitmap->pctl,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 array_size(old_nr_pages, sizeof(*pctl)));
+>> +
+>> +=C2=A0=C2=A0=C2=A0 for (i =3D old_nr_pages; i < nr_pages; i++) {
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pctl[i] =3D llbitmap_alloc_p=
+age_ctl(llbitmap, i);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (IS_ERR(pctl[i]))
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 goto=
+ err_alloc_ptr;
+>> +=C2=A0=C2=A0=C2=A0 }
+>> +
+>> +=C2=A0=C2=A0=C2=A0 kfree(llbitmap->pctl);
+>> +=C2=A0=C2=A0=C2=A0 llbitmap->pctl =3D pctl;
+>> +=C2=A0=C2=A0=C2=A0 llbitmap->nr_pages =3D nr_pages;
+>> +=C2=A0=C2=A0=C2=A0 return 0;
+>> +
+>> +err_alloc_ptr:
+>> +=C2=A0=C2=A0=C2=A0 ret =3D PTR_ERR(pctl[i]);
+>> +=C2=A0=C2=A0=C2=A0 for (i--; i >=3D (int)old_nr_pages; i--) {
+>>
+> Confused about why not just declare i as an unsigned int?
+>
+Yes, this looks better as well.
 
-[ ... ]
-
-> +static void handle_failed_reshape(struct r5conf *conf, struct stripe_hea=
-d *sh,
-> +				  struct stripe_head_state *s)
-> +{
-> +	int i;
-
-[ ... ]
-
-> +	/* release the destination stripes that are waiting to be filled */
-> +	if (test_and_clear_bit(STRIPE_EXPAND_SOURCE, &sh->state)) {
-> +		for (i =3D 0; i < sh->disks; i++) {
-> +			int dd_idx;
-> +			struct stripe_head *sh2;
-> +			sector_t bn, sec;
-> +
-> +			if (i =3D=3D sh->pd_idx)
-> +				continue;
-> +			if (conf->level =3D=3D 6 && i =3D=3D sh->qd_idx)
-> +				continue;
-> +
-> +			bn =3D raid5_compute_blocknr(sh, i, 1);
-> +			sec =3D raid5_compute_sector(conf, bn, 0, &dd_idx, NULL);
-> +			sh2 =3D raid5_get_active_stripe(conf, NULL, sec,
-> +					R5_GAS_NOBLOCK | R5_GAS_NOQUIESCE);
-> +			if (!sh2)
-> +				continue;
-> +
-> +			if (test_and_clear_bit(STRIPE_EXPANDING, &sh2->state)) {
-
-[Severity: Critical]
-Could clearing STRIPE_EXPANDING prematurely here lead to a DMA-after-free?
-
-During a reshape, a destination stripe (sh2) might require data from multip=
-le
-source stripes. STRIPE_EXPANDING normally prevents the destination stripe f=
-rom
-being returned to the free list before all data is copied.
-
-If Worker 1 is handling a source stripe via handle_stripe_expansion(), it
-submits an asynchronous DMA copy to sh2's pages and then calls
-raid5_release_stripe(sh2) to drop its reference BEFORE waiting for the DMA =
-to
-complete:
-
-drivers/md/raid5.c:handle_stripe_expansion() {
-    ...
-            raid5_release_stripe(sh2);
-        }
-    /* done submitting copies, wait for them to complete */
-    async_tx_quiesce(&tx);
-    ...
-}
-
-If the array concurrently fails, Worker 2 could enter handle_failed_reshape=
-()
-for a different source stripe, look up sh2, clear its STRIPE_EXPANDING bit,
-and release it.=20
-
-If sh2's refcount drops to 0 without STRIPE_EXPANDING set, could it be
-added to the inactive_list and reallocated (or have its pages freed) while
-the DMA from Worker 1 is still actively writing to it?
-
-> +				atomic_dec(&conf->reshape_stripes);
-> +				wake_up(&conf->wait_for_reshape);
-> +				md_done_sync(conf->mddev,
-> +					     RAID5_STRIPE_SECTORS(conf));
-> +			}
-> +
-> +			clear_bit(STRIPE_EXPAND_READY, &sh2->state);
-> +
-> +			raid5_release_stripe(sh2);
-> +		}
-> +	}
-> +}
+>
+> --=20
+> Su
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 __free_page(pctl[i]->page);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 percpu_ref_exit(&pctl[i]->ac=
+tive);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 kfree(pctl[i]);
+>> +=C2=A0=C2=A0=C2=A0 }
+>> +=C2=A0=C2=A0=C2=A0 kfree(pctl);
+>> +=C2=A0=C2=A0=C2=A0 return ret;
+>> +}
+>> +
+>> =C2=A0static int llbitmap_alloc_pages(struct llbitmap *llbitmap)
+>> =C2=A0{
+>> =C2=A0=C2=A0=C2=A0=C2=A0 unsigned int used_pages =3D llbitmap_used_pages=
+(llbitmap,=20
+>> =C2=A0llbitmap->chunks);
+>> =C2=A0=C2=A0=C2=A0=C2=A0 unsigned int nr_pages =3D max(used_pages,=20
+>> =C2=A0llbitmap_reserved_pages(llbitmap));
+>> =C2=A0=C2=A0=C2=A0=C2=A0 int i;
+>> @@ -728,10 +783,38 @@ static bool llbitmap_zero_all_disks(struct=20
+>> llbitmap *llbitmap)
+>> =C2=A0=C2=A0=C2=A0=C2=A0 }
+>>
+>> =C2=A0=C2=A0=C2=A0=C2=A0 return true;
+>> =C2=A0}
+>>
+>> +static void llbitmap_mark_range(struct llbitmap *llbitmap,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0 unsigned long start,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0 unsigned long end,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0 enum llbitmap_state state)
+>> +{
+>> +=C2=A0=C2=A0=C2=A0 while (start <=3D end) {
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 llbitmap_write(llbitmap, sta=
+te, start);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 start++;
+>> +=C2=A0=C2=A0=C2=A0 }
+>> +}
+>> +
+>> +static int llbitmap_prepare_resize(struct llbitmap *llbitmap,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned long old_chunks,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned long new_chunks,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned long cache_chunks)
+>> +{
+>> +=C2=A0=C2=A0=C2=A0 int ret;
+>> +
+>> +=C2=A0=C2=A0=C2=A0 llbitmap_flush(llbitmap->mddev);
+>> +=C2=A0=C2=A0=C2=A0 ret =3D llbitmap_expand_pages(llbitmap, cache_chunks=
+);
+>> +=C2=A0=C2=A0=C2=A0 if (ret)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return ret;
+>> +=C2=A0=C2=A0=C2=A0 if (new_chunks > old_chunks)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 llbitmap_mark_range(llbitmap=
+, old_chunks, new_chunks - 1,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 BitUnwritten);
+>> +=C2=A0=C2=A0=C2=A0 return 0;
+>> +}
+>> +
+>> =C2=A0static void llbitmap_init_state(struct llbitmap *llbitmap)
+>> =C2=A0{
+>> =C2=A0=C2=A0=C2=A0=C2=A0 struct mddev *mddev =3D llbitmap->mddev;
+>> =C2=A0=C2=A0=C2=A0=C2=A0 enum llbitmap_state state =3D BitUnwritten;
+>> =C2=A0=C2=A0=C2=A0=C2=A0 unsigned long i;
+>> @@ -1024,14 +1107,14 @@ static int llbitmap_read_sb(struct llbitmap=20
+>> *llbitmap)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pr_err("md/llbitmap: %s=
+: chunksize not a power of 2",
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 mdname(mddev));
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 goto out_put_page;
+>> =C2=A0=C2=A0=C2=A0=C2=A0 }
+>>
+>> -=C2=A0=C2=A0=C2=A0 if (chunksize < DIV_ROUND_UP_SECTOR_T(mddev->resync_=
+max_sectors,
+>> +=C2=A0=C2=A0=C2=A0 if (chunksize < DIV_ROUND_UP_SECTOR_T(sync_size,
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0 mddev->bitmap_info.space << =C2=A0SECTOR_SHIFT)) {
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pr_err("md/llbitmap: %s=
+: chunksize too small %lu < %llu /=20
+>> =C2=A0%lu",
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 mdname(mddev), chunksize, mddev->resync_max_sectors,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 mdname(mddev), chunksize, sync_size,
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 mddev->bitmap_info.space);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 goto out_put_page;
+>> =C2=A0=C2=A0=C2=A0=C2=A0 }
+>>
+>> =C2=A0=C2=A0=C2=A0=C2=A0 daemon_sleep =3D le32_to_cpu(sb->daemon_sleep);
+>> @@ -1169,28 +1252,60 @@ static int llbitmap_create(struct mddev *mddev)
+>> =C2=A0}
+>>
+>> =C2=A0static int llbitmap_resize(struct mddev *mddev, sector_t =C2=A0blo=
+cks,=20
+>> int chunksize)
+>> =C2=A0{
+>> =C2=A0=C2=A0=C2=A0=C2=A0 struct llbitmap *llbitmap =3D mddev->bitmap;
+>> +=C2=A0=C2=A0=C2=A0 sector_t old_blocks =3D llbitmap->sync_size;
+>> +=C2=A0=C2=A0=C2=A0 unsigned long old_chunks =3D llbitmap->chunks;
+>> =C2=A0=C2=A0=C2=A0=C2=A0 unsigned long chunks;
+>> +=C2=A0=C2=A0=C2=A0 unsigned long cache_chunks;
+>> +=C2=A0=C2=A0=C2=A0 int ret =3D 0;
+>> +=C2=A0=C2=A0=C2=A0 unsigned long bitmap_chunksize;
+>> +=C2=A0=C2=A0=C2=A0 bool reshape;
+>>
+>> =C2=A0=C2=A0=C2=A0=C2=A0 if (chunksize =3D=3D 0)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 chunksize =3D llbitmap-=
+>chunksize;
+>>
+>> -=C2=A0=C2=A0=C2=A0 /* If there is enough space, leave the chunksize unc=
+hanged. */
+>> -=C2=A0=C2=A0=C2=A0 chunks =3D DIV_ROUND_UP_SECTOR_T(blocks, chunksize);
+>> -=C2=A0=C2=A0=C2=A0 while (chunks > mddev->bitmap_info.space << SECTOR_S=
+HIFT) {
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 chunksize =3D chunksize << 1=
+;
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 chunks =3D DIV_ROUND_UP_SECT=
+OR_T(blocks, chunksize);
+>> -=C2=A0=C2=A0=C2=A0 }
+>> +=C2=A0=C2=A0=C2=A0 bitmap_chunksize =3D chunksize;
+>> +=C2=A0=C2=A0=C2=A0 llbitmap_resize_chunks(mddev, blocks, &bitmap_chunks=
+ize, &chunks);
+>>
+>> -=C2=A0=C2=A0=C2=A0 llbitmap->chunkshift =3D ffz(~chunksize);
+>> -=C2=A0=C2=A0=C2=A0 llbitmap->chunksize =3D chunksize;
+>> -=C2=A0=C2=A0=C2=A0 llbitmap->chunks =3D chunks;
+>> -=C2=A0=C2=A0=C2=A0 llbitmap->sync_size =3D blocks;
+>> +=C2=A0=C2=A0=C2=A0 reshape =3D mddev->delta_disks || mddev->new_level !=
+=3D mddev->level ||
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 mddev->new_layout !=3D mddev=
+->layout ||
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 mddev->new_chunk_sectors !=
+=3D mddev->chunk_sectors;
+>> +=C2=A0=C2=A0=C2=A0 if (!reshape && bitmap_chunksize !=3D llbitmap->chun=
+ksize)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EOPNOTSUPP;
+>> +=C2=A0=C2=A0=C2=A0 if (blocks =3D=3D old_blocks && chunks =3D=3D llbitm=
+ap->chunks)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>> +
+>> +=C2=A0=C2=A0=C2=A0 mutex_lock(&mddev->bitmap_info.mutex);
+>>
+>> +=C2=A0=C2=A0=C2=A0 cache_chunks =3D reshape ? max(old_chunks, chunks) :=
+ chunks;
+>> +=C2=A0=C2=A0=C2=A0 ret =3D llbitmap_prepare_resize(llbitmap, old_chunks=
+, chunks,=20
+>> cache_chunks);
+>> +=C2=A0=C2=A0=C2=A0 if (ret)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 goto out;
+>> +
+>> +=C2=A0=C2=A0=C2=A0 if (reshape) {
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 llbitmap->reshape_sync_size =
+=3D blocks;
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 llbitmap->reshape_chunksize =
+=3D bitmap_chunksize;
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 llbitmap->reshape_chunks =3D=
+ chunks;
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 llbitmap->chunks =3D max(old=
+_chunks, chunks);
+>> +=C2=A0=C2=A0=C2=A0 } else {
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (blocks < old_blocks && c=
+hunks < old_chunks)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 llbi=
+tmap_mark_range(llbitmap, chunks, old_chunks - 1,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 BitUn=
+written);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 mddev->bitmap_info.chunksize=
+ =3D bitmap_chunksize;
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 llbitmap->chunks =3D chunks;
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 llbitmap->sync_size =3D bloc=
+ks;
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 llbitmap_update_sb(llbitmap)=
+;
+>> +=C2=A0=C2=A0=C2=A0 }
+>> +=C2=A0=C2=A0=C2=A0 __llbitmap_flush(mddev);
+>> +=C2=A0=C2=A0=C2=A0 mutex_unlock(&mddev->bitmap_info.mutex);
+>> =C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>> +
+>> +out:
+>> +=C2=A0=C2=A0=C2=A0 mutex_unlock(&mddev->bitmap_info.mutex);
+>> +=C2=A0=C2=A0=C2=A0 return ret;
+>> =C2=A0}
+>>
+>> =C2=A0static int llbitmap_load(struct mddev *mddev)
+>> =C2=A0{
+>> =C2=A0=C2=A0=C2=A0=C2=A0 enum llbitmap_action action =3D BitmapActionRel=
+oad;
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260615113450.2088=
-877-1-chencheng@fnnas.com?part=3D1
+Thanks,
+Kuai
