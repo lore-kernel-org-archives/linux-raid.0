@@ -1,53 +1,53 @@
-Received: from mail-108-mta213.mxroute.com (mail-108-mta213.mxroute.com [136.175.108.213])
+Received: from mail-108-mta96.mxroute.com (mail-108-mta96.mxroute.com [136.175.108.96])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA33236D4F1
-	for <linux-raid@vger.kernel.org>; Mon, 15 Jun 2026 10:53:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.175.108.213
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EFFB3E3C48
+	for <linux-raid@vger.kernel.org>; Mon, 15 Jun 2026 11:11:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.175.108.96
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781520831; cv=none; b=MPLE+EiIl3mufGcn8RrnrCe8fEjQCIjG2qeV1pBbvy1BCfW3vm9te3tXawy3JNejJS9ydhA0+d4hGrs9i4WL7zkVOu3ltVGdaTNCKYhwyCnDpNiSuuDi/7kAsYWuEkrMwwPQd13wrtIGNPFMhdC11vM8gpKXDk6aWXDG3ZFncQ0=
+	t=1781521907; cv=none; b=qJ4ywDCZjfWPN3vMy9czZuKK/jtuSsd0D5vViVVSkQswtvYrC11j4nWNCGglXG77Q8upq746DcwKzD3NXHyIcbMXIGrDY8nrrWmpQcqJVS0iWN4J1xLp9XxGbDErEzyv+p0R/hNluMZ/q780KN8igsadGEHnzNFJAcr1s2eb4Vc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781520831; c=relaxed/simple;
-	bh=K/0muZ1d849+ln4djHkHDXhWA79egeDs7Bm1rvHQR08=;
+	s=arc-20240116; t=1781521907; c=relaxed/simple;
+	bh=Fx4jtCVJwUBAQKObV+eiIzAWUdKlzPqpjFGtTp2I1X8=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=Bh+pp8Ijyvu/LUPzWNJai+lzAvFDkAB8JTeh1wIqbLgi/P0/1eXaAaSd1DXe90ciY5if9yfQ0YsJMFXe5Q1xs29QhGda9KdZsm7fnHD4towdeUUDgWMKFXZVt5yZe0IFQz2dWp0sy4pog2gRqM345Hoo62ji+wRdS2J7TURLDZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=damenly.org; spf=pass smtp.mailfrom=damenly.org; dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b=b/FuDnKE; arc=none smtp.client-ip=136.175.108.213
+	 MIME-Version:Content-Type; b=uf7zh+RQ/SUNtXpbsQwkHDD+iGwtztJ2FKbkvqaHBkNbZX8a2M7j9baodH28hMBfX54Gd0IXzDbZM/vHUoAvy6jjMLtzZkefY83SDNVImMNbiOp1BSRKX1F56oTKD8KqeV3RUw5J5sLgMFaDkCkpD4ZxefmlTSaj5GgkHeUenPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=damenly.org; spf=pass smtp.mailfrom=damenly.org; dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b=JAdZSRP6; arc=none smtp.client-ip=136.175.108.96
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=damenly.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=damenly.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b="b/FuDnKE"
+	dkim=pass (2048-bit key) header.d=damenly.org header.i=@damenly.org header.b="JAdZSRP6"
 Received: from filter006.mxroute.com ([136.175.111.3] filter006.mxroute.com)
  (Authenticated sender: mN4UYu2MZsgR)
- by mail-108-mta213.mxroute.com (ZoneMTA) with ESMTPSA id 19ecae5bffe00067f7.007
+ by mail-108-mta96.mxroute.com (ZoneMTA) with ESMTPSA id 19ecaf62d0600067f7.007
  for <linux-raid@vger.kernel.org>
  (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
- Mon, 15 Jun 2026 10:48:35 +0000
-X-Zone-Loop: e3c61b5dc2281362cfdc605d9e1a495ac7de573594f8
+ Mon, 15 Jun 2026 11:06:31 +0000
+X-Zone-Loop: 8594eaa46d3f8f3a502322b7040cd2a67d1a7471e1b6
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=damenly.org
 	; s=x; h=Content-Type:MIME-Version:Message-ID:Date:References:In-Reply-To:
 	Subject:Cc:To:From:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=2WqbZsPZb8CmALgcOOV3PxpQvbiGInyNdWXHjKo3Alw=; b=b/FuDnKE3rC2Ry3xjSrkwHhtib
-	DmXCQItThmdMvk+2lthAl/aHqqZv99mZeM+63zlGlQ6q9LC4svBb4PQcIZe9tq+L0omDZhelWILE3
-	yujzRVaIGWIXyFrAUc8nWSuczBy0NAoGE7MG7W8Lb5vbkPZGLS3Hsag/c9+wL/soCYjXmGNpzNwOw
-	HcGoPV64gzIDMfFVxK5S9y9Y/S4Pu8vWVuuR7OB59BL1Xg/EZ+WsBCVNTZcu0nVRS4xpAJwXhoFYz
-	YdOvdPXp7I5/9zYBmGO6DmGH5h12e1aBL3brQkEVLsPwEQxF8ZB7w/bQ4JhBh+KL67ozsfDpzmZsA
-	YyLauhrw==;
+	bh=xhN9+Ovm0IRX7RjfmlOK2I6GMgea8nh9m7Evv4gWBMU=; b=JAdZSRP6l+72HWOl/faa+xcV8V
+	FAFJFb8ALac3zfsYwHkXYzjTjsgJZJfnqjt4ryXncVLoxdNiAmuhnuCMPT36rs+ASFmsQxg8FW8hk
+	D0miHOrNAeXH5NgSuD7T9n1Jrs8Xi94xN8eIUD+h4GA5P3u+41e+TTVAgy652LfqpDpevJ7yDXwUX
+	Qb/BD7m7M6nG5hUvM5v0H/JSG3DBW58lOyFhHRxelDqJBNon1aWICabN/3vEX/EUJbjQ6wBzzG4LR
+	Ctf567zZvfA98b0f+i9pNhws8X62rYK2Ojv7KF7jJ/jNOOcqlVBpRan8SvC8aQnmSkMYaDwvIotaB
+	BYgBBsBw==;
 From: Su Yue <l@damenly.org>
 To: Yu Kuai <yukuai@kernel.org>
 Cc: Song Liu <song@kernel.org>,  Yu Kuai <yukuai@fygo.io>,  Li Nan
  <magiclinan@didiglobal.com>,  Xiao Ni <xiao@kernel.org>,
   linux-raid@vger.kernel.org,  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] md/md-llbitmap: track bitmap sync_size explicitly
-In-Reply-To: <20260605091527.2463539-5-yukuai@kernel.org> (Yu Kuai's message
-	of "Fri, 5 Jun 2026 17:15:11 +0800")
+Subject: Re: [PATCH] md/md-llbitmap: allocate page controls independently
+In-Reply-To: <20260605091527.2463539-6-yukuai@kernel.org> (Yu Kuai's message
+	of "Fri, 5 Jun 2026 17:15:12 +0800")
 References: <20260605091527.2463539-1-yukuai@kernel.org>
-	<20260605091527.2463539-5-yukuai@kernel.org>
+	<20260605091527.2463539-6-yukuai@kernel.org>
 User-Agent: mu4e 1.12.7; emacs 30.2
-Date: Mon, 15 Jun 2026 18:48:25 +0800
-Message-ID: <pl1saxl2.fsf@damenly.org>
+Date: Mon, 15 Jun 2026 19:06:23 +0800
+Message-ID: <h5n4awr4.fsf@damenly.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -61,135 +61,224 @@ On Fri 05 Jun 2026 at 17:15, Yu Kuai <yukuai@kernel.org> wrote:
 
 > From: Yu Kuai <yukuai@fygo.io>
 >
-> Track llbitmap's own sync_size instead of always using
-> mddev->resync_max_sectors directly.
+> Allocate one llbitmap page-control object at a time and free 
+> each
+> object through the same model.
 >
-> This is the minimal bookkeeping needed before llbitmap can track 
-> old
-> and new reshape geometry independently.
+> Let llbitmap_read_page() return a zeroed page without reading 
+> disk when
+> the page index is beyond the current bitmap size, so 
+> page-control
+> allocation no longer needs a separate read_existing flag.
+>
+> This keeps the llbitmap page-control lifetime self-consistent 
+> and
+> prepares the page-cache code for later in-place growth.
 >
 > Signed-off-by: Yu Kuai <yukuai@fygo.io>
 >
+
+Straight enough.
+
 Reviewed-by: Su Yue <glass.su@suse.com>
+
 > ---
->  drivers/md/md-llbitmap.c | 14 ++++++++++++--
->  1 file changed, 12 insertions(+), 2 deletions(-)
+>  drivers/md/md-llbitmap.c | 99 
+>  +++++++++++++++++++++++++---------------
+>  1 file changed, 62 insertions(+), 37 deletions(-)
 >
 > diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index bcf34f0c9af6..ecf3ed712315 100644
+> index ecf3ed712315..2f2896fe4d6f 100644
 > --- a/drivers/md/md-llbitmap.c
 > +++ b/drivers/md/md-llbitmap.c
-> @@ -285,10 +285,12 @@ struct llbitmap {
->  	unsigned long chunkshift;
->  	/* size of one chunk in sector */
->  	unsigned long chunksize;
->  	/* total number of chunks */
->  	unsigned long chunks;
-> +	/* total number of sectors tracked by current bitmap geometry 
-> */
-> +	sector_t sync_size;
->  	unsigned long last_end_sync;
->  	/*
->  	 * time in seconds that dirty bits will be cleared if the page 
->  is not
->  	 * accessed.
->  	 */
-> @@ -916,10 +918,11 @@ static int llbitmap_init(struct llbitmap 
-> *llbitmap)
+> @@ -510,24 +510,32 @@ static void llbitmap_write(struct llbitmap 
+> *llbitmap, enum llbitmap_state state,
+>  		llbitmap_set_page_dirty(llbitmap, idx, bit, true);
+>  	else if (state == BitNeedSyncUnwritten)
+>  		llbitmap_set_page_dirty(llbitmap, idx, bit, false);
+>  }
 >
->  	llbitmap->barrier_idle = DEFAULT_BARRIER_IDLE;
->  	llbitmap->chunkshift = ffz(~chunksize);
->  	llbitmap->chunksize = chunksize;
->  	llbitmap->chunks = chunks;
-> +	llbitmap->sync_size = blocks;
->  	mddev->bitmap_info.daemon_sleep = DEFAULT_DAEMON_SLEEP;
->
->  	ret = llbitmap_cache_pages(llbitmap);
->  	if (ret)
->  		return ret;
-> @@ -936,10 +939,11 @@ static int llbitmap_read_sb(struct 
-> llbitmap *llbitmap)
+> +static unsigned int llbitmap_used_pages(struct llbitmap 
+> *llbitmap,
+> +					unsigned long chunks)
+> +{
+> +	return DIV_ROUND_UP(chunks + BITMAP_DATA_OFFSET, PAGE_SIZE);
+> +}
+> +
+>  static struct page *llbitmap_read_page(struct llbitmap 
+>  *llbitmap, int idx)
 >  {
 >  	struct mddev *mddev = llbitmap->mddev;
->  	unsigned long daemon_sleep;
->  	unsigned long chunksize;
->  	unsigned long events;
-> +	sector_t sync_size;
->  	struct page *sb_page;
->  	bitmap_super_t *sb;
->  	int ret = -EINVAL;
+>  	struct page *page = NULL;
+>  	struct md_rdev *rdev;
 >
->  	if (!mddev->bitmap_info.offset) {
-> @@ -985,10 +989,13 @@ static int llbitmap_read_sb(struct 
+> -	if (llbitmap->pctl && llbitmap->pctl[idx])
+> +	if (llbitmap->pctl && idx < llbitmap->nr_pages && 
+> llbitmap->pctl[idx])
+>  		page = llbitmap->pctl[idx]->page;
+>  	if (page)
+>  		return page;
+>
+>  	page = alloc_page(GFP_KERNEL | __GFP_ZERO);
+>  	if (!page)
+>  		return ERR_PTR(-ENOMEM);
+> +	if (idx >= llbitmap_used_pages(llbitmap, llbitmap->chunks))
+> +		return page;
+>
+>  	rdev_for_each(rdev, mddev) {
+>  		sector_t sector;
+>
+>  		if (rdev->raid_disk < 0 || test_bit(Faulty, &rdev->flags) 
+>  ||
+> @@ -594,65 +602,82 @@ static void llbitmap_free_pages(struct 
 > llbitmap *llbitmap)
->  	if (test_and_clear_bit(BITMAP_FIRST_USE, &llbitmap->flags)) {
->  		ret = llbitmap_init(llbitmap);
->  		goto out_put_page;
+>  		return;
+>
+>  	for (i = 0; i < llbitmap->nr_pages; i++) {
+>  		struct llbitmap_page_ctl *pctl = llbitmap->pctl[i];
+>
+> -		if (!pctl || !pctl->page)
+> -			break;
+> -
+> -		__free_page(pctl->page);
+> +		if (!pctl)
+> +			continue;
+> +		if (pctl->page)
+> +			__free_page(pctl->page);
+>  		percpu_ref_exit(&pctl->active);
+> +		kfree(pctl);
 >  	}
 >
-> +	sync_size = le64_to_cpu(sb->sync_size);
-> +	if (!sync_size)
-> +		sync_size = mddev->resync_max_sectors;
->  	chunksize = le32_to_cpu(sb->chunksize);
->  	if (!is_power_of_2(chunksize)) {
->  		pr_err("md/llbitmap: %s: chunksize not a power of 2",
->  		       mdname(mddev));
->  		goto out_put_page;
-> @@ -1020,12 +1027,13 @@ static int llbitmap_read_sb(struct 
-> llbitmap *llbitmap)
->  	mddev->bitmap_info.chunksize = chunksize;
->  	mddev->bitmap_info.daemon_sleep = daemon_sleep;
+> -	kfree(llbitmap->pctl[0]);
+>  	kfree(llbitmap->pctl);
+>  	llbitmap->pctl = NULL;
+>  }
 >
->  	llbitmap->barrier_idle = DEFAULT_BARRIER_IDLE;
->  	llbitmap->chunksize = chunksize;
-> -	llbitmap->chunks = 
-> DIV_ROUND_UP_SECTOR_T(mddev->resync_max_sectors, chunksize);
-> +	llbitmap->chunks = DIV_ROUND_UP_SECTOR_T(sync_size, 
-> chunksize);
->  	llbitmap->chunkshift = ffz(~chunksize);
-> +	llbitmap->sync_size = sync_size;
->  	ret = llbitmap_cache_pages(llbitmap);
+> -static int llbitmap_cache_pages(struct llbitmap *llbitmap)
+> +static struct llbitmap_page_ctl *
+> +llbitmap_alloc_page_ctl(struct llbitmap *llbitmap, int idx)
+>  {
+>  	struct llbitmap_page_ctl *pctl;
+> -	unsigned int nr_pages = DIV_ROUND_UP(llbitmap->chunks +
+> -					     BITMAP_DATA_OFFSET, PAGE_SIZE);
+> +	struct page *page;
+>  	unsigned int size = struct_size(pctl, dirty, BITS_TO_LONGS(
+>  						llbitmap->blocks_per_page));
+> -	int i;
+> -
+> -	llbitmap->pctl = kmalloc_array(nr_pages, sizeof(void *),
+> -				       GFP_KERNEL | __GFP_ZERO);
+> -	if (!llbitmap->pctl)
+> -		return -ENOMEM;
 >
->  out_put_page:
->  	__free_page(sb_page);
->  	kunmap_local(sb);
-> @@ -1151,10 +1159,11 @@ static int llbitmap_resize(struct mddev 
-> *mddev, sector_t blocks, int chunksize)
+>  	size = round_up(size, cache_line_size());
+> -	pctl = kmalloc_array(nr_pages, size, GFP_KERNEL | __GFP_ZERO);
+> -	if (!pctl) {
+> -		kfree(llbitmap->pctl);
+> -		return -ENOMEM;
+> +	pctl = kzalloc(size, GFP_KERNEL);
+> +	if (!pctl)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	page = llbitmap_read_page(llbitmap, idx);
+> +
+> +	if (IS_ERR(page)) {
+> +		kfree(pctl);
+> +		return ERR_CAST(page);
 >  	}
 >
->  	llbitmap->chunkshift = ffz(~chunksize);
->  	llbitmap->chunksize = chunksize;
->  	llbitmap->chunks = chunks;
-> +	llbitmap->sync_size = blocks;
+> -	llbitmap->nr_pages = nr_pages;
+> +	if (percpu_ref_init(&pctl->active, active_release,
+> +			    PERCPU_REF_ALLOW_REINIT, GFP_KERNEL)) {
+> +		__free_page(page);
+> +		kfree(pctl);
+> +		return ERR_PTR(-ENOMEM);
+> +	}
+>
+> -	for (i = 0; i < nr_pages; i++, pctl = (void *)pctl + size) {
+> -		struct page *page = llbitmap_read_page(llbitmap, i);
+> +	pctl->page = page;
+> +	pctl->state = page_address(page);
+> +	init_waitqueue_head(&pctl->wait);
+> +	return pctl;
+> +}
+>
+> -		llbitmap->pctl[i] = pctl;
+> +static unsigned int llbitmap_reserved_pages(struct llbitmap 
+> *llbitmap)
+> +{
+> +	return DIV_ROUND_UP(llbitmap->mddev->bitmap_info.space << 
+> SECTOR_SHIFT,
+> +			    PAGE_SIZE);
+> +}
+>
+> -		if (IS_ERR(page)) {
+> -			llbitmap_free_pages(llbitmap);
+> -			return PTR_ERR(page);
+> -		}
+> +static int llbitmap_alloc_pages(struct llbitmap *llbitmap)
+> +{
+> +	unsigned int used_pages = llbitmap_used_pages(llbitmap, 
+> llbitmap->chunks);
+> +	unsigned int nr_pages = max(used_pages, 
+> llbitmap_reserved_pages(llbitmap));
+> +	int i;
+> +
+> +	llbitmap->pctl = kcalloc(nr_pages, sizeof(*llbitmap->pctl), 
+> GFP_KERNEL);
+> +	if (!llbitmap->pctl)
+> +		return -ENOMEM;
+>
+> -		if (percpu_ref_init(&pctl->active, active_release,
+> -				    PERCPU_REF_ALLOW_REINIT, GFP_KERNEL)) {
+> -			__free_page(page);
+> +	llbitmap->nr_pages = nr_pages;
+> +
+> +	for (i = 0; i < nr_pages; i++) {
+> +		llbitmap->pctl[i] = llbitmap_alloc_page_ctl(llbitmap, i);
+> +		if (IS_ERR(llbitmap->pctl[i])) {
+> +			int ret = PTR_ERR(llbitmap->pctl[i]);
+> +
+> +			llbitmap->pctl[i] = NULL;
+>  			llbitmap_free_pages(llbitmap);
+> -			return -ENOMEM;
+> +			return ret;
+>  		}
+> -
+> -		pctl->page = page;
+> -		pctl->state = page_address(page);
+> -		init_waitqueue_head(&pctl->wait);
+>  	}
 >
 >  	return 0;
 >  }
 >
->  static int llbitmap_load(struct mddev *mddev)
-> @@ -1524,11 +1533,11 @@ static void llbitmap_update_sb(void 
-> *data)
+> @@ -921,11 +946,11 @@ static int llbitmap_init(struct llbitmap 
+> *llbitmap)
+>  	llbitmap->chunksize = chunksize;
+>  	llbitmap->chunks = chunks;
+>  	llbitmap->sync_size = blocks;
+>  	mddev->bitmap_info.daemon_sleep = DEFAULT_DAEMON_SLEEP;
 >
->  	sb = kmap_local_page(sb_page);
->  	sb->events = cpu_to_le64(mddev->events);
->  	sb->state = cpu_to_le32(llbitmap->flags);
->  	sb->chunksize = cpu_to_le32(llbitmap->chunksize);
-> -	sb->sync_size = cpu_to_le64(mddev->resync_max_sectors);
-> +	sb->sync_size = cpu_to_le64(llbitmap->sync_size);
->  	sb->events_cleared = cpu_to_le64(llbitmap->events_cleared);
->  	sb->sectors_reserved = cpu_to_le32(mddev->bitmap_info.space);
->  	sb->daemon_sleep = 
->  cpu_to_le32(mddev->bitmap_info.daemon_sleep);
+> -	ret = llbitmap_cache_pages(llbitmap);
+> +	ret = llbitmap_alloc_pages(llbitmap);
+>  	if (ret)
+>  		return ret;
 >
+>  	llbitmap_state_machine(llbitmap, 0, llbitmap->chunks - 1,
+>  			       BitmapActionInit);
+> @@ -1030,11 +1055,11 @@ static int llbitmap_read_sb(struct 
+> llbitmap *llbitmap)
+>  	llbitmap->barrier_idle = DEFAULT_BARRIER_IDLE;
+>  	llbitmap->chunksize = chunksize;
+>  	llbitmap->chunks = DIV_ROUND_UP_SECTOR_T(sync_size, 
+>  chunksize);
+>  	llbitmap->chunkshift = ffz(~chunksize);
+>  	llbitmap->sync_size = sync_size;
+> -	ret = llbitmap_cache_pages(llbitmap);
+> +	ret = llbitmap_alloc_pages(llbitmap);
+>
+>  out_put_page:
+>  	__free_page(sb_page);
 >  	kunmap_local(sb);
-> @@ -1542,10 +1551,11 @@ static int llbitmap_get_stats(void 
-> *data, struct md_bitmap_stats *stats)
->  	memset(stats, 0, sizeof(*stats));
->
->  	stats->missing_pages = 0;
->  	stats->pages = llbitmap->nr_pages;
->  	stats->file_pages = llbitmap->nr_pages;
-> +	stats->sync_size = llbitmap->sync_size;
->
->  	stats->behind_writes = atomic_read(&llbitmap->behind_writes);
->  	stats->behind_wait = wq_has_sleeper(&llbitmap->behind_wait);
->  	stats->events_cleared = llbitmap->events_cleared;
+>  	return ret;
