@@ -1,121 +1,96 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A96E38BF61
-	for <linux-raid@vger.kernel.org>; Mon, 15 Jun 2026 19:25:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFF9E3B2FCE;
+	Mon, 15 Jun 2026 20:10:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781551540; cv=none; b=U/7JIAKEPyqjaLrUF4AEQOzXW3DwnTbS0geeLGVhGUUEDYLF2K2Pzi/FPum/FBchXmnZzrDJCt4/dIThPkEN6S4oFx0FgC848eQfWNkYCz3ce3mQcYmbA9v0VzsViAL2b/D0aRiRdZs+KUttAICOx+GNzxLiWjpjgAjqFvfJhgo=
+	t=1781554252; cv=none; b=rRc5lN06BvYfjtdtt7NkUo+zO5XcFQut4LkPDMd1KO5mMazWi8UmwpkfCB+C/ukuNyfabPK4OZaWw+r+qN0E9ZnlesUG63toJq7RpmlPWkyZAhUOsbAjSZwCCxozkgP49D/d6Ml9ppgWg/VSdNDtpWCilJRwnIAIvvNcl2Mn8C4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781551540; c=relaxed/simple;
-	bh=j0li/glgwRQ7WN5LcXKjiGDormUOurAJPEA03/45jJI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=AsTCT1awrhxKArHYkum4ILkZOz6dbPkn0lTo9RKbyJMjy36K8Xatmoi4E6iDCP3XKy4k0HRgsbXrlcoHQi9FxAo17nPoDf/VsYXRXXwCs0pquOry8b3gpmIs7pYb1lY3IT5GWCH2mIfmThTeN8E8Hy40D0RDYRP3hoH5UC/E17k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XwmkyrTw; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781554252; c=relaxed/simple;
+	bh=aoGF+UAgCACv4wkcUSvfAbWl6T+6AFnDpi2Ez7n/Wus=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rDI8jzrSVjtAcQpOdf5IlxG/l4cYW+jqi86Nyvgx6M07TsSrb4Y2djz0xWiInaftEgDukDrJ3Nju+MI219GKjbWZr7NtL/PZ+sWz+n2Qs2bT3AJegrz2BQb8sMlpHHu7IKmIJ9KCT+MNxZt8CBynrX3r1xZOaFSRtM5Z272MyVQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NtW5sn2/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XwmkyrTw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE0C31F000E9;
-	Mon, 15 Jun 2026 19:25:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NtW5sn2/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 536EA1F000E9;
+	Mon, 15 Jun 2026 20:10:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781551539;
-	bh=7wu1e1OwfM3bsuq7VMzcg4jKRv3bj6gxV3dzh4pH+/I=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XwmkyrTwoZRgycW04seOOvdAVAjuampfOx4YzaT7M2clgr5VlOL9qphnVagWpqKye
-	 Rwn/6LmB1Ph+iHuRpihdLlx8jCr362Q8jtjGxLJrzxbyLyk6eqLYFYAvR8Ly6ZO/v+
-	 vMeYRoRfBzJraMbVQK4+myunnmpGOOtZOL4eeeExa1L89FQpuPXOZPt9igV92Ttd6H
-	 SfM5CPYREuwOFR9IpiTo70M6eKhiDvgx5NWJj4x0Lc6TPRh/Yh+imdOGHPGFKfB6vD
-	 wY34o6K28Vyllm1af7tM2ev6Ro6Yupr1WjbntDuZvsWHdTE7NMoPA9BfhT29nYenkz
-	 OjajluIRXnprQ==
-From: sashiko-bot@kernel.org
+	s=k20260515; t=1781554251;
+	bh=T38ht8LUdfYFZ9jgYuBsYJO5B1Yg5v/mWG6HajglajA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=NtW5sn2/eTi/e42oElqvFFDC7sdgHCYXv8JE8Xfb/y0b7ytWqCYjIMWR3kdsFj9te
+	 lO5+3bjpLEpr+n7jUcHGVwIGe06a6Fk68qC9BmIOu7J4Sw/Oh1JftyVIHSwqXiXGEP
+	 vPliBFmFvKmWHQRbpCmMGWsyu84+WJubkH1UD5eZ2FyPUWMwvtpiVt7E0NcbRPJgyZ
+	 roPGcY9t8rFQQxTgRX51p/K0ehbcS8QMLXqkw7IQdIIqjUFRJ6UAtJSRCnFQvu9nPD
+	 KlwcXODwd9kg7Hnsy5U/GyxiIGEsh3yW1tEgjZNsZoo5J1990h5MFctBrZrqIICG7+
+	 L41dgHE594qlA==
+Date: Mon, 15 Jun 2026 13:10:50 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: x86@kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, linux-crypto@vger.kernel.org,
+	David Laight <david.laight.linux@gmail.com>,
+	linux-raid@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org
 Subject: Re: [PATCH v3] lib/raid/xor: x86: Add AVX-512 optimized xor_gen()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Eric Biggers" <ebiggers@kernel.org>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260615190338.26581-1-ebiggers@kernel.org>
+Message-ID: <20260615201050.GB1764@quark>
 References: <20260615190338.26581-1-ebiggers@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 15 Jun 2026 19:25:38 +0000
-Message-Id: <20260615192538.EE0C31F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260615190338.26581-1-ebiggers@kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] The AVX-512 XOR implementation is forced based solely on `boot_cpu=
-_has(X86_FEATURE_AVX512F)` without checking if the OS actually manages ZMM =
-registers via `cpu_has_xfeatures()`. This introduces an Undefined Opcode (#=
-UD) kernel panic vulnerability on systems where AVX-512 is supported by the=
- CPU but restricted in XCR0.
---
-
-commit b63aaca8e8b386ef1820d1caac3bce2cb328e8c3
-Author: Eric Biggers <ebiggers@kernel.org>
-
-lib/raid/xor: x86: Add AVX-512 optimized xor_gen()
-
-This commit adds an AVX-512 implementation of xor_gen() using 512-bit ZMM
-registers and the vpternlogq instruction. It enables this implementation on
-x86_64 CPUs that support AVX512F but do not prefer YMM registers, avoiding
-known downclocking issues on older architectures. The implementation
-explicitly omits the cpu_has_xfeatures() check.
-
+On Mon, Jun 15, 2026 at 12:03:38PM -0700, Eric Biggers wrote:
 > Note: for now I omitted the cpu_has_xfeatures() check that the AVX-512
 > optimized crypto and CRC code does, since it's not implemented on
 > User-Mode Linux and it's never been present in the RAID6 code either.
 
-[Severity: High]
-Does omitting the cpu_has_xfeatures() check introduce a potential Invalid
-Opcode exception in virtualized environments?
+By the way, Sashiko keeps complaining about this decision.
 
-If a hypervisor advertises AVX512F in CPUID but omits the AVX-512 FPU
-extended state from XSTATE, boot_cpu_has(X86_FEATURE_AVX512F) will evaluate
-to true, but the OS will not enable AVX-512 in XCR0. Executing 512-bit
-EVEX instructions without XCR0[7:5] enabled causes an Invalid Opcode
-exception and kernel panic.
+Maybe the x86 maintainers have some advice here?
 
-Would it be safer to preserve this check, perhaps providing a stub or
-using ifdef for User-Mode Linux compatibility instead?
+For context: on x86 processors, executing AVX or AVX512 instructions
+requires not just that the CPU supports the feature, but also that the
+operating system has set certain bits in XCR0.  For example all EVEX
+coded instructions (i.e. AVX-512) require XCR0=111xx111b.  (See Intel
+manual "2.6.11.1 State Dependent #UD".)
 
-> diff --git a/lib/raid/xor/x86/xor_arch.h b/lib/raid/xor/x86/xor_arch.h
-> index 99fe85a213c66..b5d49376fc974 100644
-> --- a/lib/raid/xor/x86/xor_arch.h
-> +++ b/lib/raid/xor/x86/xor_arch.h
-[ ... ]
-> @@ -6,22 +6,26 @@ extern struct xor_block_template xor_block_p5_mmx;
->  extern struct xor_block_template xor_block_sse;
->  extern struct xor_block_template xor_block_sse_pf64;
->  extern struct xor_block_template xor_block_avx;
-> +extern struct xor_block_template xor_block_avx512;
-> =20
->  static __always_inline void __init arch_xor_init(void)
->  {
-> -	if (boot_cpu_has(X86_FEATURE_AVX) &&
-> -	    boot_cpu_has(X86_FEATURE_OSXSAVE)) {
-> +	if (IS_ENABLED(CONFIG_X86_64) && boot_cpu_has(X86_FEATURE_AVX512F) &&
-> +	    boot_cpu_has(X86_FEATURE_OSXSAVE) &&
-> +	    !boot_cpu_has(X86_FEATURE_PREFER_YMM)) {
-> +		/* AVX-512 will be the best; no need to try others. */
-> +		/* !PREFER_YMM excludes CPUs with overly-eager downclocking. */
-> +		xor_force(&xor_block_avx512);
+Therefore most of the kernel's AVX and AVX512 optimized code checks not
+just X86_FEATURE_AVX* but also calls cpu_has_xfeatures() to check XCR0.
 
-[Severity: High]
-Can this force the AVX-512 implementation on systems that do not actually
-support ZMM registers in the OS?
+But "most" isn't all.  The RAID6 code for example doesn't check
+cpu_has_xfeatures().  So if you e.g. boot a kernel in QEMU using
+"-cpu max,xsave=off", it already crashes when the RAID6 code does its
+boot-time benchmark.
 
-During boot, fpu__init_system_xstate() limits fpu_kernel_cfg.max_features
-based on the XSTATE leaf, but does not clear X86_FEATURE_AVX512F from
-boot_cpu_data.x86_capability. As a result, this check passes and forces
-xor_block_avx512, which then attempts to execute AVX-512 instructions on
-an unsupported FPU context.
+Part of the reason for that omission probably is that UML doesn't
+provide an implementation of cpu_has_xfeatures().  And the x86 RAID (XOR
+and RAID6) code is enabled on UML.
 
-Is it necessary to include cpu_has_xfeatures(XFEATURE_MASK_AVX512, NULL)
-here to verify the FPU context supports these instructions before forcing
-the block?
+It could be implemented for UML by using the xgetbv instruction, like
+what userspace programs do.  (We'd also need to copy the XFEATURE_MASK_*
+constants, as UML can't include arch/x86/include/asm/fpu/types.h)
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260615190338.2658=
-1-1-ebiggers@kernel.org?part=3D1
+But I wanted to ask: do we really care about the case where features are
+"supported" but their XCR0 bits aren't set?  Perhaps the kernel just
+doesn't/shouldn't support weird cases like "-cpu max,xsave=off"?
+
+If this case indeed needs to be handled, could we make things easier for
+the kernel's AVX and AVX-512 optimized code?  Currently AVX-512 needs:
+
+        if (boot_cpu_has(X86_FEATURE_AVX512F) &&
+            cpu_has_xfeatures(XFEATURE_MASK_FP | XFEATURE_MASK_SSE |
+                              XFEATURE_MASK_YMM | XFEATURE_MASK_AVX512, NULL))
+
+How about we make X86_FEATURE_AVX512F depend on XCR0=111xx111, and
+X86_FEATURE_AVX depend on XCR0=xxxxx111?  Then the cpu_has_xfeatures()
+check wouldn't be needed.  Is there any reason not to do that?
+
+- Eric
