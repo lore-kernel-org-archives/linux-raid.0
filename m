@@ -1,150 +1,147 @@
-Received: from va-2-35.ptr.blmpb.com (va-2-35.ptr.blmpb.com [209.127.231.35])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 537DC36D4E4
-	for <linux-raid@vger.kernel.org>; Tue, 16 Jun 2026 13:13:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94834299A87
+	for <linux-raid@vger.kernel.org>; Tue, 16 Jun 2026 13:30:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781615618; cv=none; b=tfd2hFh2sId7dPNvZNFsFQf9zGxQWIRbexMRdw3clIPYOGb333HcZzylyvB0PBx+KOISjjzKImuVGTt6FNIkkf829YItucfGQOvJYLx8NI4xnW+Zn0UNa2cd62w4UbesSAcN9fEvDIN2lv70BzzVYbTpBamwccWPCsfh4j5OyEc=
+	t=1781616635; cv=none; b=MZ6fYTofGMbwxGQBqqE3sbTqgtV3wRJ4WoQH/JewV2QGz3lTu7yZrAtG53VVpGoR4/sDCT85J8EbejglyqKYDfdJ13fVAX1D7/VI1p5s59n/FEjSPCb4Ih/+KuTIfbO7xQG0nkhCpCkiocgNSnQsPjQH8OQ0DzYURLniE1hn4N0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781615618; c=relaxed/simple;
-	bh=Jkm6X4qXZsK2bQdvZGeWUWQo/QTKe/G4bFBs5DrlrVE=;
-	h=Content-Type:To:Cc:Subject:Mime-Version:Date:Message-Id:From; b=fV2w33BSSFQjf4/vuT2/n3SUnQ1h5o6hcz2m55dx9XA0kAnCcMNJyI7zHgBfnRtSvzX6baLlt9eph+sHTRsxeK85anR/2DxHVaa+szW9a0IeQzcFgfJUnvWi6FYFNQr4nBR+yK0FQ8+JC9gMMlhsMz1Ci3/CrIqBOk6ucrmlblo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=Z3isqUAi; arc=none smtp.client-ip=209.127.231.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1781616635; c=relaxed/simple;
+	bh=WHAa8sT/GWZibGrGlQRIO3gGSfC4lVSBaiJ80q0iKi0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=hTNG9vHyfKmBmh9uV6uMUUu2G1IFD5pbk0ArOF/aIrM1nTgZ9lXfngfFmJVjGEN/67iU/2dc22volrjDSOG4YG3NAI3hM95TWlegI1EoQCIACAhGYBrFze7qKYNhqyERMJezIfwe7h49ng1Is7r/OCWamiKgTlWR8NC1x3Ppg3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KnDihOxg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="Z3isqUAi"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1781615604;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=OuP1GXhMV1TD9B/cVZF+4n6ekwipHeQdYBo8RabLLMM=;
- b=Z3isqUAidEaqEUhmkeGN0/VqaZM+X25OO28D28546Oc4nqKxnkxjPzF1FQ12KNE5dFkE1a
- Ii8FqBm1j0iQkYUVFR3XBNIdV8KkOxGZgcKOHyyv+LZ0vBVYt3fEMrSkyf7j2rhKytKjCV
- 7JpSBPbbQuz0TgxgcWOtmNqFTHitAvcvqQCUWMpCJPow5HQ5+sOStrE2K9e9B4elRWdXS+
- d3Qp1CUjs5bitAilfWQHODuj6+LcH11pJ6+eopa0015OvxyS/wIxbji8HkaSdWbvjJvs5H
- WWk0k3zc8aA1AbIzxsxVdGnWen8jBgpNtV+L5rTuKraFeN0d4XC3mquaxCjSMg==
-Content-Type: text/plain; charset=UTF-8
-To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <yukuai@fnnas.com>
-Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH] md/raid5: protect bitmap batch counters aka seq_flush/seq_write
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KnDihOxg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 015501F000E9;
+	Tue, 16 Jun 2026 13:30:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781616634;
+	bh=rJ2JI8hJpl+aJIQ23RyE0ZzK9u/FmXENktH9GCVC9Ko=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=KnDihOxgsmn928DbZsOzsh7jBdQq2d+KDEhXDruYgOySKl8Nzxk5iQUFHBQretcvc
+	 RNBN4vBWIt26wqlgrPv6nlzUyTO7YdJSVghC4AHXr9MXFXsGCML0eCJabOFD9mW/le
+	 nrTMJpt6ALFZSUUwaRQi6OujDZIozZDS2arNpH2++oSSWdVGOTjth43PbJQL8pBvw6
+	 ldFzfEcrwD2kwiIZpHvRXXYgUIBEgDO3vXy1CoGaQNoXQqS+H5frji/+9+JbOavNxB
+	 s2W3z+gLSr4RJDLwRu131WcEn+TRH9B1/jeX7I9i3IP3+BZwuX4kJoJERlrNp9iYoo
+	 ioSIq/z1jWqJw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] md/raid5: protect bitmap batch counters aka
+ seq_flush/seq_write
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chen Cheng" <chencheng@fnnas.com>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260616131310.3790554-1-chencheng@fnnas.com>
+References: <20260616131310.3790554-1-chencheng@fnnas.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 16 Jun 2026 13:30:33 +0000
+Message-Id: <20260616133034.015501F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Date: Tue, 16 Jun 2026 21:13:10 +0800
-X-Original-From: chencheng@fnnas.com
-Content-Transfer-Encoding: 7bit
-Received: from localhost.localdomain ([183.34.162.81]) by smtp.feishu.cn with ESMTPS; Tue, 16 Jun 2026 21:13:21 +0800
-Message-Id: <20260616131310.3790554-1-chencheng@fnnas.com>
-X-Mailer: git-send-email 2.54.0
-From: "Chen Cheng" <chencheng@fnnas.com>
-X-Lms-Return-Path: <lba+26a314bf2+920384+vger.kernel.org+chencheng@fnnas.com>
 
-From: Chen Cheng <chencheng@fnnas.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-kcsan detect race :
-- raid5d() closes the current bitmap batch by updating
-	conf->seq_flush under conf->device_lock.
-- __add_stripe_bio() read conf->seq_flush without that
-	lock when assigning sh->bm_seq.
+Pre-existing issues:
+- [Critical] Missing full memory barriers between the bitmap update/scan an=
+d `seq_flush` access allows torn writes.
+--
 
-so, protect seq_flush/seq_write by READ_ONCE()/WRITE_ONCE().
+commit 45ef15a300eccd14518bc90e254146a73a49bf51
+Author: Chen Cheng <chencheng@fnnas.com>
 
-re-explain the stripe batch sequence number update flow:
-1. sh->bm_seq declare which batch number the stripe belongs to
-   when perform bitmap-related write.
-	==> bm_seq = seq_flush+1
+md/raid5: protect bitmap batch counters aka seq_flush/seq_write
 
-2. stripe be handled,
-	* if sh->bm_seq - conf->seq_write > 0, means the
-	  batch stripes **newer than** the last written
-	  batch, it cannot proceed yet, queued on bitmap_list.
-	* otherwise , has already proceed.
+This commit attempts to fix a KCSAN data-race report on conf->seq_flush
+in the raid5 code by introducing READ_ONCE() and WRITE_ONCE().
 
-3. raid5d() `++seq_flush` to closes the current batch, means
-	* no more stripes join that old batch
-	* just-closed batch ready to write-out to disk
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index d0d7f96fd7cd9..ffc89ebbc4857 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -3538,7 +3538,7 @@ static void __add_stripe_bio(struct stripe_head *sh=
+, struct bio *bi,
+>  		 sh->dev[dd_idx].sector);
+> =20
+>  	if (conf->mddev->bitmap && firstwrite && !sh->batch_head) {
+> -		sh->bm_seq =3D conf->seq_flush+1;
+> +		sh->bm_seq =3D READ_ONCE(conf->seq_flush) + 1;
 
-4. raid5d() calls bitmap hooks unplug() or writeout, then,
-   `++seq_write` to the same as bm_seq.
+[Severity: Critical]
+This is a pre-existing issue, but does this lockless synchronization require
+a full memory barrier (smp_mb()) before reading seq_flush?
 
-- seq_flush - for producer, to close batches.
-- seq_write - for consumer, the checkpoint number.
+The producer sequence updates the in-memory bitmap (which drops a lock,
+providing only a Store-Release barrier) and then reads seq_flush. Because
+there is no full memory barrier between the store to the bitmap and the load
+of seq_flush, weakly-ordered CPUs (and even x86, which allows Store-Load
+reordering) can reorder the read of seq_flush before the store to the
+bitmap becomes globally visible.
 
-the report:
-====================================
-BUG: KCSAN: data-race in __add_stripe_bio / raid5d
+Could this lead to silent data corruption on a crash if the consumer sees
+the old bitmap state but the producer assigns the stripe to the current
+batch?
 
-write to 0xffff88ba5625d470 of 4 bytes by task 82401 on cpu 0:
- raid5d+0x1d9/0xba0
- [.....]
+>  		set_bit(STRIPE_BIT_DELAY, &sh->state);
+>  	}
+>  }
 
-read to 0xffff88ba5625d470 of 4 bytes by task 82421 on cpu 8:
- __add_stripe_bio+0x332/0x400
- raid5_make_request+0x6ac/0x2930
- md_handle_request+0x4a2/0xa40
- md_submit_bio+0x109/0x1a0
- __submit_bio+0x2ec/0x390
- [.....]
+[ ... ]
 
-Signed-off-by: Chen Cheng <chencheng@fnnas.com>
----
- drivers/md/raid5.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+> @@ -5755,7 +5755,7 @@ static void make_discard_request(struct mddev *mdde=
+v, struct bio *bi)
+>  		}
+>  		spin_unlock_irq(&sh->stripe_lock);
+>  		if (conf->mddev->bitmap) {
+> -			sh->bm_seq =3D conf->seq_flush + 1;
+> +			sh->bm_seq =3D READ_ONCE(conf->seq_flush) + 1;
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index a320b71d7117..f3c2959b5606 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3536,11 +3536,11 @@ static void __add_stripe_bio(struct stripe_head *sh, struct bio *bi,
- 	pr_debug("added bi b#%llu to stripe s#%llu, disk %d, logical %llu\n",
- 		 (*bip)->bi_iter.bi_sector, sh->sector, dd_idx,
- 		 sh->dev[dd_idx].sector);
- 
- 	if (conf->mddev->bitmap && firstwrite && !sh->batch_head) {
--		sh->bm_seq = conf->seq_flush+1;
-+		sh->bm_seq = READ_ONCE(conf->seq_flush) + 1;
- 		set_bit(STRIPE_BIT_DELAY, &sh->state);
- 	}
- }
- 
- /*
-@@ -5827,11 +5827,11 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
- 			md_write_inc(mddev, bi);
- 			sh->overwrite_disks++;
- 		}
- 		spin_unlock_irq(&sh->stripe_lock);
- 		if (conf->mddev->bitmap) {
--			sh->bm_seq = conf->seq_flush + 1;
-+			sh->bm_seq = READ_ONCE(conf->seq_flush) + 1;
- 			set_bit(STRIPE_BIT_DELAY, &sh->state);
- 		}
- 
- 		set_bit(STRIPE_HANDLE, &sh->state);
- 		clear_bit(STRIPE_DELAYED, &sh->state);
-@@ -6877,16 +6877,17 @@ static void raid5d(struct md_thread *thread)
- 			clear_bit(R5_DID_ALLOC, &conf->cache_state);
- 
- 		if (
- 		    !list_empty(&conf->bitmap_list)) {
- 			/* Now is a good time to flush some bitmap updates */
--			conf->seq_flush++;
-+			int seq = READ_ONCE(conf->seq_flush) + 1;
-+			WRITE_ONCE(conf->seq_flush, seq);
- 			spin_unlock_irq(&conf->device_lock);
- 			if (md_bitmap_enabled(mddev, true))
- 				mddev->bitmap_ops->unplug(mddev, true);
- 			spin_lock_irq(&conf->device_lock);
--			conf->seq_write = conf->seq_flush;
-+			WRITE_ONCE(conf->seq_write, seq);
- 			activate_bit_delay(conf, conf->temp_inactive_list);
- 		}
- 		raid5_activate_delayed(conf);
- 
- 		while ((bio = remove_bio_from_retry(conf, &offset))) {
--- 
-2.54.0
+[Severity: Critical]
+This is a pre-existing issue, but the same missing full memory barrier
+pattern appears here in the discard path as well.
+
+>  			set_bit(STRIPE_BIT_DELAY, &sh->state);
+>  		}
+> =20
+
+[ ... ]
+
+> @@ -6805,12 +6805,13 @@ static void raid5d(struct md_thread *thread)
+>  		if (
+>  		    !list_empty(&conf->bitmap_list)) {
+>  			/* Now is a good time to flush some bitmap updates */
+> -			conf->seq_flush++;
+> +			int seq =3D READ_ONCE(conf->seq_flush) + 1;
+> +			WRITE_ONCE(conf->seq_flush, seq);
+
+[Severity: Critical]
+This isn't a bug introduced by this patch, but does the consumer side
+also rely dangerously on implicit barriers?
+
+The consumer (raid5d) writes seq_flush and relies on an implicit full
+barrier deep inside unplug() (via test_and_clear_bit) to order the
+subsequent bitmap scan.
+
+If the producer's missing barrier allows the read of seq_flush to be
+reordered, the consumer might flush the old batch and advance seq_write,
+unblocking the producer's stripe to be written to disk without its
+write-intent bitmap bit being flushed.
+
+>  			spin_unlock_irq(&conf->device_lock);
+>  			if (md_bitmap_enabled(mddev, true))
+>  				mddev->bitmap_ops->unplug(mddev, true);
+>  			spin_lock_irq(&conf->device_lock);
+> -			conf->seq_write =3D conf->seq_flush;
+> +			WRITE_ONCE(conf->seq_write, seq);
+>  			activate_bit_delay(conf, conf->temp_inactive_list);
+>  		}
+>  		raid5_activate_delayed(conf);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260616131310.3790=
+554-1-chencheng@fnnas.com?part=3D1
