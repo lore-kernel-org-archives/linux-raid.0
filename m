@@ -1,156 +1,150 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from va-2-35.ptr.blmpb.com (va-2-35.ptr.blmpb.com [209.127.231.35])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 635B7343D85
-	for <linux-raid@vger.kernel.org>; Tue, 16 Jun 2026 08:14:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 537DC36D4E4
+	for <linux-raid@vger.kernel.org>; Tue, 16 Jun 2026 13:13:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.35
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781597643; cv=none; b=bYGQpWX1Fh3wGR3POGDC+o6ZFPapbSleIfw38H4SA8K++sDSyPMWdiD5Ae1ch23dagKIQ8oxVmLfpn7n6ZdIIa1VUCN3r6z9Tk9yRhVD+L+tgjgvVsr6ce0oyi1NNcDQLJh4JsZzD9mqNaOrYa6xQXhJBQtcTevEe7NaWPK0m4Q=
+	t=1781615618; cv=none; b=tfd2hFh2sId7dPNvZNFsFQf9zGxQWIRbexMRdw3clIPYOGb333HcZzylyvB0PBx+KOISjjzKImuVGTt6FNIkkf829YItucfGQOvJYLx8NI4xnW+Zn0UNa2cd62w4UbesSAcN9fEvDIN2lv70BzzVYbTpBamwccWPCsfh4j5OyEc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781597643; c=relaxed/simple;
-	bh=GFVq4UQRxzODJ2V5pzchBL1UfarU6a7+leBY94Hd4V8=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OwoUDPJKCjFWGX6ctuTIzIUk4iufSzaAY5oNDS+bzmXu0znndjbTqOb5/scrWl5FCh8PTLsghyzQw9+ESIHL2xIhsMldCjWe0axiPyDFJ19YzVI2qLKeb7rcptgrD1T6kEQ4obc+CFIahVRmLQfHv7y63p+CzlJyg02LlymnVwg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hsu2kZud; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1781615618; c=relaxed/simple;
+	bh=Jkm6X4qXZsK2bQdvZGeWUWQo/QTKe/G4bFBs5DrlrVE=;
+	h=Content-Type:To:Cc:Subject:Mime-Version:Date:Message-Id:From; b=fV2w33BSSFQjf4/vuT2/n3SUnQ1h5o6hcz2m55dx9XA0kAnCcMNJyI7zHgBfnRtSvzX6baLlt9eph+sHTRsxeK85anR/2DxHVaa+szW9a0IeQzcFgfJUnvWi6FYFNQr4nBR+yK0FQ8+JC9gMMlhsMz1Ci3/CrIqBOk6ucrmlblo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=Z3isqUAi; arc=none smtp.client-ip=209.127.231.35
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hsu2kZud"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-490b613a17bso38737695e9.3
-        for <linux-raid@vger.kernel.org>; Tue, 16 Jun 2026 01:14:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781597641; x=1782202441; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TVXyFOU/nCSLvGY/1pF7V6nZATXSTaghxQ1IN52FbJs=;
-        b=hsu2kZudskft4p1f5ilvwaQLRcWUs2AaRbGEKHhrRVUSauIkuw9pbMTGRT7TZBYdJL
-         CAuk9g8UY7vpPhpMQuw1VMLkPC2PZdQBFtkhL9d1o684tgXiBdfrzXAmF7w2Dl9SlElU
-         0B5XF6FIcQFkI9Ew9lwPS9H7s7L9ycelYHtsagWfgcy9idtIEWyUKTD0PoyvNhAG0NQw
-         7qofxtlgZGHDjAHIQvLg8vYUlB+Jr+Nf4lltnU32ijwuEtkOYHjbue4bWardAGmKfe7e
-         ItpHmpsSzns7YbHVDkcHgVw/4Ky2R80ce5Ka/068Onw9AwliuODcHEB/xGs9rHKYP6j1
-         l9FQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781597641; x=1782202441;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=TVXyFOU/nCSLvGY/1pF7V6nZATXSTaghxQ1IN52FbJs=;
-        b=AgmKBFRZXQSVVSxd4kXDvOpJestfYK5CsyEcyX3iTRTFAlf/YuLoC54ptezAjaaLvm
-         iTJ0umX/MzM66ns8Tw42uqetY0AN5iorWVxm1UvoQ9vsqAnB8ZBSQTAazVDD/JjXOUAd
-         4R3boWxUX0U650vTWqGWBk7eU+vs8z4suR1UFXv0tO8YXYzk4cALr0nPtC4QmI8x6qDH
-         spfQLqveoez85Vd/gZms+W5L55+U1fBQUQBVcjQgJqA9zv/pQJHqC1I6GW1/8PiMVUnT
-         7NLD2aWK5ZAKMjc2sTfHxATuFI6bVQqn+ZZx6N6Na4JSr+XJ5sa8DblgoLojneVFFye3
-         yiPQ==
-X-Forwarded-Encrypted: i=1; AFNElJ/ogdmI7KSLQv/7rCRox+/017F2x9fFAa8kWpZkVK1siFnUTM/uZeEczj9ftDbo2VZDPj95YimGZgha@vger.kernel.org
-X-Gm-Message-State: AOJu0YyiBclS51V5+wjDlkhPCSzCpaCs6YqWN2gkRZ7bjfpclZ/GSbMn
-	Cc3srWifttBDtpnDX4vp7UMiTSuwJ79Tl7bQvC21JKuWmxwkJvr6qFyt
-X-Gm-Gg: Acq92OFG4HZW0r4nFKCwqugIbMtNVnSUlMKO1GTMAUZO5TzZ84Qh07xQL37H2E1MP+m
-	xMYHeU0V/FIho6/mWY6DjmqvusVMcEO9T7vS0jzuaCUQNWpIypWFU8M05nbVXMGkzmz7FUPfNYy
-	01VD87SqOzRyBGHiw3K2OBoMfRan+Xd2StzSWD73Hg9dP3xULdFmbohT029l/LCiLRW3sdsr2ke
-	4XE3KhHF13KiqXwufUMoo3qM2pPm3fYWxgcm2nnqvg6EERU/2Q6rr8c/L5st5d1K/Vhp2qPIkba
-	bdo2Ple2IK4x89dc+UclVpdZfFpJodqziDXz1ka2EnaNYw2WUfKk6Q6yxviHT2uLZA5LfZSmmOX
-	Mnih3F6RWvUnQldI6T1hhc2m/rAIof+O/cfI6RW1ay+KWmOW5v1jDfuyKfgyyRJ4g2XIK3JSJQ6
-	fJN9oreWuLDivQi2AYTmUkmWJg7X+x1lQid5IlORXv1JSSkWZmJDOUfP5v/22R
-X-Received: by 2002:a05:600c:3151:b0:490:d354:bd00 with SMTP id 5b1f17b1804b1-4922ffb823bmr37903905e9.25.1781597640400;
-        Tue, 16 Jun 2026 01:14:00 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4606f2c473bsm46295394f8f.28.2026.06.16.01.13.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Jun 2026 01:14:00 -0700 (PDT)
-Date: Tue, 16 Jun 2026 09:13:58 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: x86@kernel.org, Christoph Hellwig <hch@lst.de>,
- linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org, Andrew Morton
- <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] lib/raid/xor: x86: Add AVX-512 optimized xor_gen()
-Message-ID: <20260616091358.2ea11b9f@pumpkin>
-In-Reply-To: <20260615201050.GB1764@quark>
-References: <20260615190338.26581-1-ebiggers@kernel.org>
-	<20260615201050.GB1764@quark>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="Z3isqUAi"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1781615604;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=OuP1GXhMV1TD9B/cVZF+4n6ekwipHeQdYBo8RabLLMM=;
+ b=Z3isqUAidEaqEUhmkeGN0/VqaZM+X25OO28D28546Oc4nqKxnkxjPzF1FQ12KNE5dFkE1a
+ Ii8FqBm1j0iQkYUVFR3XBNIdV8KkOxGZgcKOHyyv+LZ0vBVYt3fEMrSkyf7j2rhKytKjCV
+ 7JpSBPbbQuz0TgxgcWOtmNqFTHitAvcvqQCUWMpCJPow5HQ5+sOStrE2K9e9B4elRWdXS+
+ d3Qp1CUjs5bitAilfWQHODuj6+LcH11pJ6+eopa0015OvxyS/wIxbji8HkaSdWbvjJvs5H
+ WWk0k3zc8aA1AbIzxsxVdGnWen8jBgpNtV+L5rTuKraFeN0d4XC3mquaxCjSMg==
+Content-Type: text/plain; charset=UTF-8
+To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <yukuai@fnnas.com>
+Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH] md/raid5: protect bitmap batch counters aka seq_flush/seq_write
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Mime-Version: 1.0
+Date: Tue, 16 Jun 2026 21:13:10 +0800
+X-Original-From: chencheng@fnnas.com
 Content-Transfer-Encoding: 7bit
+Received: from localhost.localdomain ([183.34.162.81]) by smtp.feishu.cn with ESMTPS; Tue, 16 Jun 2026 21:13:21 +0800
+Message-Id: <20260616131310.3790554-1-chencheng@fnnas.com>
+X-Mailer: git-send-email 2.54.0
+From: "Chen Cheng" <chencheng@fnnas.com>
+X-Lms-Return-Path: <lba+26a314bf2+920384+vger.kernel.org+chencheng@fnnas.com>
 
-On Mon, 15 Jun 2026 13:10:50 -0700
-Eric Biggers <ebiggers@kernel.org> wrote:
+From: Chen Cheng <chencheng@fnnas.com>
 
-> On Mon, Jun 15, 2026 at 12:03:38PM -0700, Eric Biggers wrote:
-> > Note: for now I omitted the cpu_has_xfeatures() check that the AVX-512
-> > optimized crypto and CRC code does, since it's not implemented on
-> > User-Mode Linux and it's never been present in the RAID6 code either.  
-> 
-> By the way, Sashiko keeps complaining about this decision.
-> 
-> Maybe the x86 maintainers have some advice here?
-> 
-> For context: on x86 processors, executing AVX or AVX512 instructions
-> requires not just that the CPU supports the feature, but also that the
-> operating system has set certain bits in XCR0.  For example all EVEX
-> coded instructions (i.e. AVX-512) require XCR0=111xx111b.  (See Intel
-> manual "2.6.11.1 State Dependent #UD".)
-> 
-> Therefore most of the kernel's AVX and AVX512 optimized code checks not
-> just X86_FEATURE_AVX* but also calls cpu_has_xfeatures() to check XCR0.
-> 
-> But "most" isn't all.  The RAID6 code for example doesn't check
-> cpu_has_xfeatures().  So if you e.g. boot a kernel in QEMU using
-> "-cpu max,xsave=off", it already crashes when the RAID6 code does its
-> boot-time benchmark.
-> 
-> Part of the reason for that omission probably is that UML doesn't
-> provide an implementation of cpu_has_xfeatures().  And the x86 RAID (XOR
-> and RAID6) code is enabled on UML.
-> 
-> It could be implemented for UML by using the xgetbv instruction, like
-> what userspace programs do.  (We'd also need to copy the XFEATURE_MASK_*
-> constants, as UML can't include arch/x86/include/asm/fpu/types.h)
-> 
-> But I wanted to ask: do we really care about the case where features are
-> "supported" but their XCR0 bits aren't set?  Perhaps the kernel just
-> doesn't/shouldn't support weird cases like "-cpu max,xsave=off"?
+kcsan detect race :
+- raid5d() closes the current bitmap batch by updating
+	conf->seq_flush under conf->device_lock.
+- __add_stripe_bio() read conf->seq_flush without that
+	lock when assigning sh->bm_seq.
 
-I think that case definitely matters for userspace.
-Isn't it what happens when you run an old OS on a new cpu?
-I remember cases where people were compiling programs that used AVX
-(possibly from gcc's cpu=native) but the os hadn't been updated to
-actually save the relevant registers.
-The programs 'sort of worked' until a process switch failed to preserve
-the registers.
+so, protect seq_flush/seq_write by READ_ONCE()/WRITE_ONCE().
 
-So the check you need to do is looking at XCR0 rather than anything else.
+re-explain the stripe batch sequence number update flow:
+1. sh->bm_seq declare which batch number the stripe belongs to
+   when perform bitmap-related write.
+	==> bm_seq = seq_flush+1
 
-> 
-> If this case indeed needs to be handled, could we make things easier for
-> the kernel's AVX and AVX-512 optimized code?  Currently AVX-512 needs:
-> 
->         if (boot_cpu_has(X86_FEATURE_AVX512F) &&
->             cpu_has_xfeatures(XFEATURE_MASK_FP | XFEATURE_MASK_SSE |
->                               XFEATURE_MASK_YMM | XFEATURE_MASK_AVX512, NULL))
-> 
-> How about we make X86_FEATURE_AVX512F depend on XCR0=111xx111, and
-> X86_FEATURE_AVX depend on XCR0=xxxxx111?  Then the cpu_has_xfeatures()
-> check wouldn't be needed.  Is there any reason not to do that?
+2. stripe be handled,
+	* if sh->bm_seq - conf->seq_write > 0, means the
+	  batch stripes **newer than** the last written
+	  batch, it cannot proceed yet, queued on bitmap_list.
+	* otherwise , has already proceed.
 
-If cpu_has_xfeatures() is checking (a copy of) XCR0 isn't it enough
-to just check that XFEATURE_MASK_AVX512 is set - it doesn't make any
-sense for the other bits to be clear at the same time.
-If the XCR0 copy is sane/sanitised you only need to check one bit.
-That would let you #define the constant to 0 if the kernel is built without
-the feature and the compiler will optimise the code away.
+3. raid5d() `++seq_flush` to closes the current batch, means
+	* no more stripes join that old batch
+	* just-closed batch ready to write-out to disk
 
-Then the test would just be:
-	if (can_use_xfeature(XFEATURE_AVX512))
+4. raid5d() calls bitmap hooks unplug() or writeout, then,
+   `++seq_write` to the same as bm_seq.
 
--- David
+- seq_flush - for producer, to close batches.
+- seq_write - for consumer, the checkpoint number.
 
-> 
-> - Eric
+the report:
+====================================
+BUG: KCSAN: data-race in __add_stripe_bio / raid5d
 
+write to 0xffff88ba5625d470 of 4 bytes by task 82401 on cpu 0:
+ raid5d+0x1d9/0xba0
+ [.....]
+
+read to 0xffff88ba5625d470 of 4 bytes by task 82421 on cpu 8:
+ __add_stripe_bio+0x332/0x400
+ raid5_make_request+0x6ac/0x2930
+ md_handle_request+0x4a2/0xa40
+ md_submit_bio+0x109/0x1a0
+ __submit_bio+0x2ec/0x390
+ [.....]
+
+Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+---
+ drivers/md/raid5.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index a320b71d7117..f3c2959b5606 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3536,11 +3536,11 @@ static void __add_stripe_bio(struct stripe_head *sh, struct bio *bi,
+ 	pr_debug("added bi b#%llu to stripe s#%llu, disk %d, logical %llu\n",
+ 		 (*bip)->bi_iter.bi_sector, sh->sector, dd_idx,
+ 		 sh->dev[dd_idx].sector);
+ 
+ 	if (conf->mddev->bitmap && firstwrite && !sh->batch_head) {
+-		sh->bm_seq = conf->seq_flush+1;
++		sh->bm_seq = READ_ONCE(conf->seq_flush) + 1;
+ 		set_bit(STRIPE_BIT_DELAY, &sh->state);
+ 	}
+ }
+ 
+ /*
+@@ -5827,11 +5827,11 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
+ 			md_write_inc(mddev, bi);
+ 			sh->overwrite_disks++;
+ 		}
+ 		spin_unlock_irq(&sh->stripe_lock);
+ 		if (conf->mddev->bitmap) {
+-			sh->bm_seq = conf->seq_flush + 1;
++			sh->bm_seq = READ_ONCE(conf->seq_flush) + 1;
+ 			set_bit(STRIPE_BIT_DELAY, &sh->state);
+ 		}
+ 
+ 		set_bit(STRIPE_HANDLE, &sh->state);
+ 		clear_bit(STRIPE_DELAYED, &sh->state);
+@@ -6877,16 +6877,17 @@ static void raid5d(struct md_thread *thread)
+ 			clear_bit(R5_DID_ALLOC, &conf->cache_state);
+ 
+ 		if (
+ 		    !list_empty(&conf->bitmap_list)) {
+ 			/* Now is a good time to flush some bitmap updates */
+-			conf->seq_flush++;
++			int seq = READ_ONCE(conf->seq_flush) + 1;
++			WRITE_ONCE(conf->seq_flush, seq);
+ 			spin_unlock_irq(&conf->device_lock);
+ 			if (md_bitmap_enabled(mddev, true))
+ 				mddev->bitmap_ops->unplug(mddev, true);
+ 			spin_lock_irq(&conf->device_lock);
+-			conf->seq_write = conf->seq_flush;
++			WRITE_ONCE(conf->seq_write, seq);
+ 			activate_bit_delay(conf, conf->temp_inactive_list);
+ 		}
+ 		raid5_activate_delayed(conf);
+ 
+ 		while ((bio = remove_bio_from_retry(conf, &offset))) {
+-- 
+2.54.0
