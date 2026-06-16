@@ -1,128 +1,170 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-3-29.ptr.tlmpb.com (sg-3-29.ptr.tlmpb.com [101.45.255.29])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5D71FE47B;
-	Tue, 16 Jun 2026 00:29:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19B7635A3A4
+	for <linux-raid@vger.kernel.org>; Tue, 16 Jun 2026 04:05:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.45.255.29
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781569798; cv=none; b=Tg+LhXiosgsvzRHR6phasjOffsAUv9BDG10c0xvnjV8HRMIEXXgquDzi/fyBpkdUaM5WnZLccJMJTfQlDDdVd0ew1N0H867+Zh4pPm6ZaGbM4xZikFYOmfb+WiFP2uwRvaOHxZ/HFcH9evHt8jP3VDLUd1NZijXKzark+pghIVw=
+	t=1781582720; cv=none; b=C9Lh26sEza1eTkE1eMLT10AOa0xp6gKWwBZ8vS1apjIovELPhu+9YGKBERgRLqMuFTbDEcAsXnbm8YBbahY79R/JR/+t2RcjcWfFdOEcCBGMhOg0kCYHnnrbbHCLXnxEz0q2uEAnuZVktRsXyTciG0ck81gNbM+X/2AVapWlFx4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781569798; c=relaxed/simple;
-	bh=nAcqhxqulZNHmEkkYFlFRN0k981XqrSoP83dI7MDHYE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GrcoSQ6HW4xPFUvwyJASzxjz692SLW1RoADbCCdxYIm+FON18bu6Aq97unzEs78tKRRBpPcc4MHuUWfK85PIaEselULbgqLZgIaokZ6bp3QUWG7nGsze5P/a9FmO07mego1hGGTLs3zv/uG8zYyVwc91JP8z/+hea+4S9bhOuLA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Kf1e2gRz; arc=none smtp.client-ip=192.198.163.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1781582720; c=relaxed/simple;
+	bh=q+yEAJ9zHc6IAufHG3LvWwwuJhw6lIAslZ0oMZGbX/M=;
+	h=References:To:Subject:Date:Message-Id:Content-Type:In-Reply-To:Cc:
+	 From:Mime-Version; b=BsCjY7nd0Q1TT1wNvsIXlFeZ7ToGUzEHcMo/3RjMrnoHuY/M+wFPtOtRxpTJPiddeQdx7PLKyPvMBgP5tXjoUMF3e3yi5xhLwgfZnipllTjzzORryYC/BeIrtb5/kj/988uOzeOG7KlgxOkKA6qoCWOXvlwKYa9PbMAw18XKOgI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=TILhfN6H; arc=none smtp.client-ip=101.45.255.29
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Kf1e2gRz"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1781569796; x=1813105796;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=nAcqhxqulZNHmEkkYFlFRN0k981XqrSoP83dI7MDHYE=;
-  b=Kf1e2gRz7+9cuZP/b/GRZXNJc8bdTwAdyfex/UGaXlAdNUuQtHDUU/jf
-   vLDyhNtNBe/RjurdPiaVQk57FHhAybImBTjlTTHKcYBO4Xny76hKGISIv
-   Nkl+dESnYFniZvMExfvbEzyAqjp0qgIMSplnWQyII4BHvQ4+98e5n+asi
-   5NlGrCQlW2HO8V2YoL0Y66YOuUduXk+X5HI4rNfU1LykYvLrMwGbg3Esw
-   pWhB23Zxsf1CM8oOzclIgYdY/D8B2P+47f4+oao1CbeP6i/EIbbLgzR8F
-   PpjslvvXyAVwntK25safU9yfjRLCH3p/D5RqkLapjDj57xz/Wtmn0sjsk
-   Q==;
-X-CSE-ConnectionGUID: dWrWvgMQTBCEjZmS/du35g==
-X-CSE-MsgGUID: MId2euYeTF2IYoJp7oD4sQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11818"; a="81335457"
-X-IronPort-AV: E=Sophos;i="6.24,207,1774335600"; 
-   d="scan'208";a="81335457"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jun 2026 17:29:55 -0700
-X-CSE-ConnectionGUID: 0+z8rS0yQOC7JRcAvaYDAg==
-X-CSE-MsgGUID: 7bwlbNNmQ+Kfq+YfA9Aw8Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,207,1774335600"; 
-   d="scan'208";a="246494161"
-Received: from bradocaj-mobl.ger.corp.intel.com (HELO [10.125.111.24]) ([10.125.111.24])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jun 2026 17:29:55 -0700
-Message-ID: <a832eee3-55ec-4cf4-907f-346ff98870ca@intel.com>
-Date: Mon, 15 Jun 2026 17:29:58 -0700
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="TILhfN6H"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1781582674;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=ESzF895AoHZXK4/g8cRewm9giil7RjP9kYNAm+NtV6A=;
+ b=TILhfN6HQqK5ls4h7OYz+R9K6SkcmW0z856bltncNYWlrZ2sdbZ9DPfHF4Ioz3HvB62CEe
+ pDSV7KeCcxlpeuzip7oxWZ3xApmvQbx2eXCXtwreSDP8CxSrGt1dQog0/nYIWGETlLaIfL
+ sz4MvMxpjP9Nem0rPzQtUMp/oRmIUj3AFE/cOhINL2iU1om25UXLOHlpWVHr9vOOLZaz1o
+ D7zAwKVaxK6OBKIf4JEiFNZWLlhFax6B+g7yuui4qUwGbxmN1gU11VD3m1yC8r4+ClINyZ
+ UwuN0neFcjuFLNSqo7741iMCBiVOyAzfFvnt8sL5ZrXbe8NSNcwNS9VgAbgrTg==
+References: <20260615113450.2088877-1-chencheng@fnnas.com> <20260615114929.E5BAD1F00A3A@smtp.kernel.org>
+Received: from [192.168.8.62] ([183.34.162.81]) by smtp.feishu.cn with ESMTPS; Tue, 16 Jun 2026 12:04:31 +0800
+To: <sashiko-reviews@lists.linux.dev>
+Subject: Re: [PATCH v2] md/raid5: fix reshape deadlock while failed devices more than max degraded
+User-Agent: Mozilla Thunderbird
+X-Lms-Return-Path: <lba+26a30cb50+30fc13+vger.kernel.org+chencheng@fnnas.com>
+Date: Tue, 16 Jun 2026 12:04:30 +0800
+Message-Id: <ddaaa79b-6171-40a5-a004-0178ecc0a44f@fnnas.com>
+Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20260615114929.E5BAD1F00A3A@smtp.kernel.org>
+X-Original-From: chencheng <chencheng@fnnas.com>
+Content-Transfer-Encoding: quoted-printable
+Cc: <yukuai@fygo.io>, <linux-raid@vger.kernel.org>
+From: "chencheng" <chencheng@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] lib/raid/xor: x86: Add AVX-512 optimized xor_gen()
-To: Borislav Petkov <bp@alien8.de>, Eric Biggers <ebiggers@kernel.org>,
- Richard Weinberger <richard@nod.at>
-Cc: x86@kernel.org, Christoph Hellwig <hch@lst.de>,
- linux-crypto@vger.kernel.org, David Laight <david.laight.linux@gmail.com>,
- linux-raid@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>,
- linux-kernel@vger.kernel.org, linux-um@lists.infradead.org
-References: <20260615190338.26581-1-ebiggers@kernel.org>
- <20260615201050.GB1764@quark>
- <255CAE3E-7FD3-4DC2-B3DE-46BE67EF22A8@alien8.de>
- <20260615212922.GA28589@quark>
- <20260615235318.GBajCQbuy9dBgKH8L_@fat_crate.local>
-From: Dave Hansen <dave.hansen@intel.com>
-Content-Language: en-US
-Autocrypt: addr=dave.hansen@intel.com; keydata=
- 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
-In-Reply-To: <20260615235318.GBajCQbuy9dBgKH8L_@fat_crate.local>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
 
-On 6/15/26 16:53, Borislav Petkov wrote:
-> 
->> In any case, I'd like these to go away:
->>
->>     $ git grep cpu_has_xfeatures | wc -l
->>     31
-> Yeah, all in crypto. I can certainly see why.
-> 
-> @dhansen, any other thoughts?
+=E5=9C=A8 2026/6/15 19:49, sashiko-bot@kernel.org =E5=86=99=E9=81=93:
+> Thank you for your contribution! Sashiko AI review found 1 potential issu=
+e(s) to consider:
+> - [Critical] Clearing STRIPE_EXPANDING prematurely in handle_failed_resha=
+pe() allows a destination stripe to be freed and reused while asynchronous =
+DMA is still writing to its pages, leading to DMA-after-free memory corrupt=
+ion.
+> --
+>
+> commit ec55b78c975b4f9f35e287b83bee72d76b92b33a
+> Author: Chen Cheng <chencheng@fnnas.com>
+>
+> md/raid5: fix reshape deadlock while failed devices more than max degrade=
+d
+>     =20
+> This patch fixes a deadlock in raid5 reshape by cleaning up stripe states
+> (including destination and source stripes) when failed devices exceed the
+> max degraded count.
+>
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index d0d7f96fd7cd9..2f4d82bd7c2e6 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -3730,6 +3730,78 @@ handle_failed_sync(struct r5conf *conf, struct st=
+ripe_head *sh,
+>>   		md_sync_error(conf->mddev);
+>>   }
+>>  =20
+>> +/*
+>> + * handle_failed_reshape - handl failed stripes when reshape failed and
+>> + *			   degraded devices >=3D max_degraded
+> [ ... ]
+>
+>> +static void handle_failed_reshape(struct r5conf *conf, struct stripe_he=
+ad *sh,
+>> +				  struct stripe_head_state *s)
+>> +{
+>> +	int i;
+> [ ... ]
+>
+>> +	/* release the destination stripes that are waiting to be filled */
+>> +	if (test_and_clear_bit(STRIPE_EXPAND_SOURCE, &sh->state)) {
+>> +		for (i =3D 0; i < sh->disks; i++) {
+>> +			int dd_idx;
+>> +			struct stripe_head *sh2;
+>> +			sector_t bn, sec;
+>> +
+>> +			if (i =3D=3D sh->pd_idx)
+>> +				continue;
+>> +			if (conf->level =3D=3D 6 && i =3D=3D sh->qd_idx)
+>> +				continue;
+>> +
+>> +			bn =3D raid5_compute_blocknr(sh, i, 1);
+>> +			sec =3D raid5_compute_sector(conf, bn, 0, &dd_idx, NULL);
+>> +			sh2 =3D raid5_get_active_stripe(conf, NULL, sec,
+>> +					R5_GAS_NOBLOCK | R5_GAS_NOQUIESCE);
+>> +			if (!sh2)
+>> +				continue;
+>> +
+>> +			if (test_and_clear_bit(STRIPE_EXPANDING, &sh2->state)) {
+> [Severity: Critical]
+> Could clearing STRIPE_EXPANDING prematurely here lead to a DMA-after-free=
+?
+>
+> During a reshape, a destination stripe (sh2) might require data from mult=
+iple
+> source stripes. STRIPE_EXPANDING normally prevents the destination stripe=
+ from
+> being returned to the free list before all data is copied.
+>
+> If Worker 1 is handling a source stripe via handle_stripe_expansion(), it
+> submits an asynchronous DMA copy to sh2's pages and then calls
+> raid5_release_stripe(sh2) to drop its reference BEFORE waiting for the DM=
+A to
+> complete:
+>
+> drivers/md/raid5.c:handle_stripe_expansion() {
+>      ...
+>              raid5_release_stripe(sh2);
+>          }
+>      /* done submitting copies, wait for them to complete */
+>      async_tx_quiesce(&tx);
+>      ...
+> }
+>
+> If the array concurrently fails, Worker 2 could enter handle_failed_resha=
+pe()
+> for a different source stripe, look up sh2, clear its STRIPE_EXPANDING bi=
+t,
+> and release it.
+>
+> If sh2's refcount drops to 0 without STRIPE_EXPANDING set, could it be
+> added to the inactive_list and reallocated (or have its pages freed) whil=
+e
+> the DMA from Worker 1 is still actively writing to it?
 
-If we can get rid of cpu_has_xfeatures(), I'm all for it. I'm not quite
-sure how the code would look so I'm reserving judgement until I see the
-patches. But it's worth a try.
+
+that make sense, however I can't find a card or processer to support offloa=
+d
+memcpy , neither emulate, so I can't re-produce this scenario.
+
+
+theoretically, the fix way I can think of is use refcnt to point-out the nu=
+mber
+of offloading memcpy tasks, after reach to zero, the destination stripe do
+cleanup, otherwise , delay source stripe handle.
+
+
+
+>> +				atomic_dec(&conf->reshape_stripes);
+>> +				wake_up(&conf->wait_for_reshape);
+>> +				md_done_sync(conf->mddev,
+>> +					     RAID5_STRIPE_SECTORS(conf));
+>> +			}
+>> +
+>> +			clear_bit(STRIPE_EXPAND_READY, &sh2->state);
+>> +
+>> +			raid5_release_stripe(sh2);
+>> +		}
+>> +	}
+>> +}
