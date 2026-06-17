@@ -1,156 +1,144 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 133AB31A807
-	for <linux-raid@vger.kernel.org>; Wed, 17 Jun 2026 06:00:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 927623B7760
+	for <linux-raid@vger.kernel.org>; Wed, 17 Jun 2026 06:59:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781676045; cv=none; b=W55cn8Y8FsaCymhNvL22l9+F2ENhNA1CZOJ43AP90hgKNmU452aXs/bYzlaLDUrqjtKTI+/jfdh0+IXOFD4I7wR0KXTajTTPLbnVHCA+uZ2pwuw235Kc5tk9Vc5Y9BHg1DXI73bSnV0G4c3hIKFMn9EIyKcGXYhZRo6IV4WNtNo=
+	t=1781679588; cv=none; b=eVvL9ph1sZZ8naRUgxSaQyHbbye/TwnGExG+wkMQbcYWMlvmH2kB148hbVNrnaXUSUJVuFTJ46BCQ40Pi0mimU5NE1Vdiaxbjdrqv0RRuvcLbDCxGsVR4OJSRMKzhke9D7fkydotuqKbA0NLN2vPmZv2IvHM8v+OERN+4arKYhI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781676045; c=relaxed/simple;
-	bh=13icpZYpkiFRVjnUX2LjTONYZCJD6zOKP0lrdq400fg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DTV4ZKyw4lNDdkYKSwr22v9IX1nyODAhNzp84UPPxZcev5bQIlhuVcFZcoUqPg9Ih/WW4z6WDyECW65bIhIrMQ2UMbZI6OmrE2lHldQueJsWyswad6vnkrxU0CGxI4oAEgKj3I+9aXMZxIfdV6TfWC1sX3L+CeA1uNusLHYM4ds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N67QnY+/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781679588; c=relaxed/simple;
+	bh=YzBiqBzb2nTJ2EBToPrJgox6Uy4MJa0HrtWAZQdC488=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=O96inxCqphIc4+FAe61RxyQ0Ld2DxpihYQ4F90vELEL+f+ZDcb6cEUHvCOYcpXKeIeuPkolKTkhw6b/rF8m6mXm9HaH641LTZ1QZ5j1LaIptU38hlydB8l6sYFChlTdk7rCWegxPBbBnnVLIDmGVs2+cNzyDo4uklx4jgHI963Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SO8BchZa; arc=none smtp.client-ip=209.85.160.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N67QnY+/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CED31F000E9;
-	Wed, 17 Jun 2026 06:00:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781676043;
-	bh=KTN72B5jtju3dtzhiIYzb86/w8+0t83DtaQkJJHWkdQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=N67QnY+/UBqYAyeBgWyL0Ocde9LNxZlbqYblGNgk5RbVBQCYr0aoyL8YV0U+SPqHB
-	 WLew7jqfrgoaCmAlOUusMUVIBg+YIGVgjYdiIrFP/Fppaj+aRMTZkdmCowD1WwRQED
-	 X6WFgjlTPTBsZTski+jK8gxFvXu96dgRjpuO0O/Fjqb7oyWs7PCRDrYlJMJ6KHh6QI
-	 Q5LHnNlEoV8paG9FtZ/JlemZabVTkONx0lCl2dITk5s+yjmtZwZUvJqisecq2QtNjc
-	 ZghAT21dYlaOWdHd/7sbph5vqU9yajNcTqbXO0ma9aPDadVtTZkTWZhpovRznGUEzQ
-	 Aulrvo6hQ8Ixw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/2] xor/kunit: add a benchmark
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Christoph Hellwig" <hch@lst.de>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260617054416.3841334-3-hch@lst.de>
-References: <20260617054416.3841334-1-hch@lst.de>
- <20260617054416.3841334-3-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 17 Jun 2026 06:00:43 +0000
-Message-Id: <20260617060043.7CED31F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SO8BchZa"
+Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-5176bbb9384so59644691cf.1
+        for <linux-raid@vger.kernel.org>; Tue, 16 Jun 2026 23:59:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1781679586; x=1782284386; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=0hidjbTjNNzvVMGh2B5LjYCPzQcAqorBBjg1StmO4hc=;
+        b=SO8BchZaOfK45Rs+W5pJ5k+1VgDjO5LIYZ2H9iBdGRYgJ0jf7Ke7o7h+AFjlWiv20Q
+         4xan03mQS4OFhnImxw6G5hrac3DkdPprlKoI/ZuMLNsPxhqQH5tSqbCj/j+ExblaOfOh
+         RYxudH7PrTnVKDk8TdzH/em/x7EHYLAEWhxF5J/6TAnJlQBCUS+RJ1S6NoA+hRu3b3F/
+         L/qkOASR6mwc+boiu4OyyWgGqgtZRoFKVQDooASiskKD3lLC/4i/yWnZ1DACZI3l/sph
+         WT0JR3Hx410X0Ecq6u6hj1YVM8UV7mvTURM0yL6n+JA9iZCKvnz09pXL4r8XaGqCS4JD
+         U4hA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781679586; x=1782284386;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=0hidjbTjNNzvVMGh2B5LjYCPzQcAqorBBjg1StmO4hc=;
+        b=QyYSa0U+AhTclq+t3lmr5V8nXXbv92MvopDJ3qAZFegf1naGWYXByRfH1O/lgOXLPS
+         Ikp+7/LkG5A0jAUzB2nXTRV3zEIxNUWt4OobDDT3LuXdShgcsScQJAOZsf602OR4nw37
+         HUdVilpwtp8lCfwF97U4liq6j7O93IRTQRQylTbWG7+2abpwBt+HvnMVNxsWdzTwMfau
+         FdhWaBBpgmgLvFQHRTAOgwqKFVpOyVbceYj6CwLUbRR4bjJ0fNINiRH/Vkh23I0XPTYq
+         Qic5jOG46gRUjsiYa96XRrgSvl8Aw+GI0XCSVNYdO/88F9KPwBLOi6M8SFIMUXo6Ju6i
+         UD3w==
+X-Gm-Message-State: AOJu0YwX8+wiq/1Pi5g2AvtDZmsBTbi+/moE3RT9vbrSBGJFaRPd3O6/
+	0MPttcNEuAXUgsGZB5tVoulFMVY+DoJV4F2PgvT8PRd0BPRdd+xFvGdD
+X-Gm-Gg: Acq92OE5mub+II+ageJZ/CDYWmyGp9D4TrR6YZnhoaBm546VLpARFjtBKp5sb0WAKFB
+	dY6kMChduX5TR7m6WCnclLdrgo0F0Y7uPetnJ1r7qQ3em8MztxaFcVbQm2H7hoVmuqq1Xo9Du8h
+	tBHgc3q618HJaxWLfUtNCDFcy3Meost/lwr07Fm6N9cThLmrEe3FKWrHYgtdmqewc/ragY2v8Dt
+	iBuJR6zWHbtbYkmCEQcIvvLHpG+/UBFs2rDrFDCl3z88Z3gzQB5yMR9vWGuh7LMZV0VpnVCEWFi
+	QMbfyrmSEnopeE/bk84UWLEKi5Cmp+OWSllPlLdIO3vP4IL6RBhAsy8NdBVszrP/ijL+4/91UEB
+	VAlbII/U05ECLc+6z7huwruejmAIA+dyHUgLmnyh4s+3/zwJZcJq86rj83A5vnbQqdToiRpkwSu
+	Qn70fzMw==
+X-Received: by 2002:a05:622a:450d:b0:517:577a:76f2 with SMTP id d75a77b69052e-519a902c90emr31933751cf.54.1781679586480;
+        Tue, 16 Jun 2026 23:59:46 -0700 (PDT)
+Received: from localhost ([43.225.189.75])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8d9f18f31d7sm57413796d6.12.2026.06.16.23.59.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 16 Jun 2026 23:59:45 -0700 (PDT)
+Date: Wed, 17 Jun 2026 09:59:39 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: linux-raid@vger.kernel.org
+Subject: [bug report] raid5-ppl: PPL support for disks with write-back cache
+ enabled
+Message-ID: <ajJF2wKYWRk4GGCK@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] The elapsed benchmark time `t` (a 64-bit nanosecond value) is pass=
-ed as a 32-bit divisor to `div_u64()`, leading to implicit truncation for r=
-uns over 4.29 seconds, resulting in totally incorrect throughput metrics or=
- a potential divide-by-zero kernel panic.
-- [Medium] Executing a massive 1,000-iteration XOR processing loop synchron=
-ously with preemption disabled can cause RCU CPU stall warnings and softloc=
-kups on slower test environments.
-- [Medium] The throughput computation calculates Gigabytes per second (GB/s=
-) using integer division, which unconditionally truncates any throughput sl=
-ower than 1 GB/s down to 0 GB/s.
---
+This code is nine years old, so what I like to do is add it to the KTODO
+in case anyone wants to fix it.
 
-commit facfbbbac101882a52a1c7a2e6d86cb1173448ed
-Author: Christoph Hellwig <hch@lst.de>
+KTODO: Fix use after free in ppl_do_flush()
 
-xor/kunit: add a benchmark
+Hello Tomasz Majchrzak,
 
-This commit adds a benchmark to test the XOR functions for more representat=
-ive
-block sizes and numbers of disks. It includes 4k and 16k sizes, as increasi=
-ng
-the test buffer size further would increase the functional kunit test runti=
-me
-too much.
+Commit 1532d9e87e8b ("raid5-ppl: PPL support for disks with
+write-back cache enabled") from Dec 27, 2017 (linux-next), leads to
+the following Smatch static checker warning:
 
-> diff --git a/lib/raid/xor/tests/xor_kunit.c b/lib/raid/xor/tests/xor_kuni=
-t.c
-> index 659ae3edbc25b..5939b78b39446 100644
-> --- a/lib/raid/xor/tests/xor_kunit.c
-> +++ b/lib/raid/xor/tests/xor_kunit.c
+	drivers/md/raid5-ppl.c:646 ppl_do_flush()
+	warn: 'io' was already freed. (line 647)
 
-[ ... ]
+drivers/md/raid5-ppl.c
+    608 static void ppl_do_flush(struct ppl_io_unit *io)
+    609 {
+    610         struct ppl_log *log = io->log;
+    611         struct ppl_conf *ppl_conf = log->ppl_conf;
+    612         struct r5conf *conf = ppl_conf->mddev->private;
+    613         int raid_disks = conf->raid_disks;
+    614         int flushed_disks = 0;
+    615         int i;
+    616 
+    617         atomic_set(&io->pending_flushes, raid_disks);
+    618 
+    619         for_each_set_bit(i, &log->disk_flush_bitmap, raid_disks) {
+    620                 struct md_rdev *rdev;
+    621                 struct block_device *bdev = NULL;
+    622 
+    623                 rdev = conf->disks[i].rdev;
+    624                 if (rdev && !test_bit(Faulty, &rdev->flags))
+    625                         bdev = rdev->bdev;
+    626 
+    627                 if (bdev) {
+    628                         struct bio *bio;
+    629 
+    630                         bio = bio_alloc_bioset(bdev, 0,
+    631                                                REQ_OP_WRITE | REQ_PREFLUSH,
+    632                                                GFP_NOIO, &ppl_conf->flush_bs);
+    633                         bio->bi_private = io;
+    634                         bio->bi_end_io = ppl_flush_endio;
+    635 
+    636                         pr_debug("%s: dev: %ps\n", __func__, bio->bi_bdev);
+    637 
+    638                         submit_bio(bio);
+    639                         flushed_disks++;
+    640                 }
+    641         }
+    642 
+    643         log->disk_flush_bitmap = 0;
+    644 
+    645         for (i = flushed_disks ; i < raid_disks; i++) {
+--> 646                 if (atomic_dec_and_test(&io->pending_flushes))
+    647                         ppl_io_unit_finished(io);
 
-> @@ -125,8 +125,71 @@ static void xor_test(struct kunit *test)
-> +		for (j =3D 0; j < ARRAY_SIZE(len_to_test); j++) {
-> +			unsigned int len =3D len_to_test[j];
-> +			const unsigned long num_iters =3D 1000;
-> +
-> +			KUNIT_ASSERT_GT(test, len, 0);
-> +			KUNIT_ASSERT_LE(test, len, XOR_KUNIT_MAX_BYTES);
-> +
-> +			preempt_disable();
-> +			t =3D ktime_get();
-> +			for (l =3D 0; l < num_iters; l++)
-> +				xor_gen(test_dest, test_buffers, nr, len);
-> +			t =3D ktime_get_ns() - t;
-> +			preempt_enable();
-
-[Severity: Medium]
-Will this massive 1,000-iteration XOR loop cause RCU CPU stall warnings or
-trigger the softlockup watchdog on slower environments?
-
-In the worst-case configuration, this processes 512MB of memory synchronous=
-ly
-with preemption completely disabled. On unaccelerated CI environments or
-low-power CPUs, processing this amount of data can take tens of seconds, wh=
-ich
-violates latency guarantees.
-
-Should preemption be enabled periodically, or the number of iterations scal=
-ed
-dynamically?
-
-> +
-> +			speed[j] =3D div_u64((u64)len * num_iters * nr, t);
-
-[Severity: High]
-Does this code silently truncate the 64-bit elapsed time t when dividing?
-
-div_u64() expects a 32-bit unsigned integer as its divisor. The elapsed time
-t is a 64-bit nanosecond value. If the execution takes longer than 4.29
-seconds (U32_MAX nanoseconds), the upper 32 bits of t will be implicitly
-truncated, corrupting the calculation.
-
-Worse, if the lower 32 bits happen to truncate to exactly 0, this will trig=
-ger
-a division by zero kernel panic.
-
-Should this use div64_u64() instead?
+The ppl_io_unit_finished() function frees "io" so probably there is
+supposed to be a statement after it.  The atomic_dec_and_test() will
+underflow on subsequent iterations through the loop which is normally
+harmless.  We may want to convert this to refcount_t so that any
+underflows cause a WARN().
 
 
-[Severity: Medium]
-Will this integer division unconditionally truncate any throughput slower t=
-han
-1 GB/s down to 0 GB/s?
+    648         }
+    649 }
 
-Mathematically, computing bytes per nanosecond is directly equivalent to
-computing GB/s. Because this uses integer division without scaling the
-numerator, any throughput below 1 GB/s will evaluate to exactly 0. On
-processors without SIMD acceleration or in VMs, this might falsely log 0 GB=
-/s.
+This email is a free service from the Smatch-CI project [smatch.sf.net].
 
-Could the numerator be multiplied by 1,000 to output MB/s and preserve usef=
-ul
-precision?
-
-> +		}
-> +
-> +		static_assert(ARRAY_SIZE(len_to_test) =3D=3D 2);
-> +		kunit_info(test, "%3u disks:\t%5llu  GB/s\t%5llu  GB/s\n",
-> +				nr, speed[0], speed[1]);
-> +	}
-> +}
-> +#endif /* CONFIG_XOR_BENCHMARK */
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260617054416.3841=
-334-1-hch@lst.de?part=3D2
+regards,
+dan carpenter
