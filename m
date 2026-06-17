@@ -1,142 +1,132 @@
-Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 595F83BB699
-	for <linux-raid@vger.kernel.org>; Wed, 17 Jun 2026 07:04:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 439923DB645
+	for <linux-raid@vger.kernel.org>; Wed, 17 Jun 2026 10:05:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781679898; cv=none; b=rzF+MrMT43rryT4jeCRUKxVl70G8r3Ye1EuOHrQXuXcaxRVNt2C2Jo8s7B860JMBp+nz6QJn8YLhOcKXbjJVmhiwzRm8AUSh4ApH9vg17fUvP6o6zhX+eQbG7261yF6vS/Lk5jrfz8Cgl8bxO2Asv9/js47dpHFbvoDQCaYDCMs=
+	t=1781690727; cv=none; b=WB0cyFbpZ9z/R7neDDWHjHyZ0YehCbveTAL2VjRAcdwOsGiJKFnP9QXt+e3JMZTrrysBzsC+I2aOoDbLWkYYbBBmZmblIaknA43zss4S+iT3SH8FesFKtfU0XGAPWzVAsoD9cn7ariyEhfRBdWxHZmG7BeFC7IsPX91KP70l+FI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781679898; c=relaxed/simple;
-	bh=JP9o71QIiNICYGRq2irZJnb7vrlBaRtPHkuBL7ueBBo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=I7VJrq33E3vCK6qyABoQXb0Uto4u/6c52/0jFtDulcxgN1OaY5WORJ1Pli2a5jjEeWxnoK8RhRBaccNuCzmVrDT+95gYIoNi5PRfuMfUdaZM3kLi+LsTTz9RShhu7p8Px+ePBZUjsFOBJ+T4Jfv32+d/8baoe3NlBejgpSEEC9Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gF/j91KS; arc=none smtp.client-ip=209.85.219.54
+	s=arc-20240116; t=1781690727; c=relaxed/simple;
+	bh=GRels6+00DOfhtua/SMwmdOjxdx+1fjruBc3u5+ohXk=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=KM384lRSgfXvCgnJoPr0sxssKiI7Co6k/z1oFv9W3PHMJDBGr95IMEiy5VogEZsHqf/+nYF4qfzt5rkrYZyb/joHtP+E0Kw7G5MkwuAoCuOTpHUCrAB2DZcTAaOE4p1qBVS3v7YgPbdUbecywnRBKfOzzinS7hbUGpcfnRBTP7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KHVdx7Fs; arc=none smtp.client-ip=209.85.221.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gF/j91KS"
-Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-8ccf18ef922so78636406d6.3
-        for <linux-raid@vger.kernel.org>; Wed, 17 Jun 2026 00:04:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KHVdx7Fs"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-4629324e170so514279f8f.0
+        for <linux-raid@vger.kernel.org>; Wed, 17 Jun 2026 03:05:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781679896; x=1782284696; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=H8c6uDZHqr7JkoiE7mt6TRUa/7S9xF1jPc0Ns3g13rE=;
-        b=gF/j91KSsipuenANEzm5HmRDuiHbvlugo14tNQn1Cn5eCqySybW+0KsKY4zPz4Mm6l
-         KvKWRfYEouPdVDN+BmNHyhCrlnc6t6YuiA67x6WJNi0+kT8aFptgl5byMcbvoHPiRFoL
-         s5NtRQPWIzWGSAMQwl7FQDzHQCtOxGcKshffF8GfCkAzroxLIihOQLr2H6FBT4oAGJa3
-         vSqAtYlE6/AhctCmfFbJo+qYKfk/fuPP5HGXOMYKkJuQEggTlSQLiiO6e3Sh/+mHThBY
-         7nXc7ko9LY0u1+p/Z7RP6EULzipGP0oEayB26lzFgw8St/WhOAaj+J/dnjkZWgC/TbEq
-         pDjg==
+        d=gmail.com; s=20251104; t=1781690720; x=1782295520; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=f2OPmLF096KqR20zLR2fjLEx0fdz7L4iVkInjy+NLrw=;
+        b=KHVdx7FsSUX70y3nKbzgeoG+EGfzuN1tVtPT9iW1MdcrPaD+DmOKUZZzWJ7/TKiUNw
+         LAIgDSl/dhkhFfZ8N8B0kFHVKw6XH4kD3FnQzzMxOXzCVtvjTGpRjYNq0ollIURBJgWH
+         c/blhzVx+wytjXV6FkmHdZ6X+6Kgyay6SRM8RNcfDnRkadFc18p8QEic7dBGKn4ssFRR
+         N2D4QhBJm9ZVz7Ww3B9g+fRM6nEZhI2k4e68uz7NXOYaM3MTZpgQ99W6Sog49cNuQDZt
+         c27kTW0qz6uz4tEckDe/lVI3UP99ejgTQtSNgxZVvmjEh5yTk5fqRmQ+jwh/42CWKn1Q
+         stiQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781679896; x=1782284696;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=H8c6uDZHqr7JkoiE7mt6TRUa/7S9xF1jPc0Ns3g13rE=;
-        b=aRojorR1v5Z+bPTtsVWNqt6R8PWkX2pU+ZhRJJjug/xY2Q/EXp6fHuCAdTR6K30Znw
-         pKKfQAB2my68Zw2iBLdYPLCDKyrS+s5u47wTS7pdVi64XkHYOEDSQLlgZYd8oIrn5XEa
-         fqhyzILIJCKNE74rSm/kJ8bqPzKrgNFjyjpWkjNREXnsxwGCz/pEgTQHLdD/TryVKQhR
-         hAn/LE2bWTMKfu2mI+Sb4QwVelyEQTFialAoptCvRDhr55YcFPLxERUvWvRYwAgdRXiy
-         mazoG4w73oa2n5L3VPMzsy/utpYUWhELcZdW+NufJ3JDlLIyquxStwZOK5U3on50aANL
-         xRfw==
-X-Gm-Message-State: AOJu0YzQNyr/ql+r1zzm80c51EqlESvpFCmF2oTr46Px1j1WV7PXUf53
-	1pv4AJK/1EgUDiEh3VgwRTUZ6ee670VonWKPP6PwhtbI8gXvRD08MkMk
-X-Gm-Gg: AfdE7ckiQqzXopvz/BSaD4VoWJJwJ8jHzUZImlN7irQbaQxhSl4impUuSHsaHbp+FVr
-	643BLVuLMMWECTeJWaM5ozOzQMl2PdH4+kMj5sYmTpAr1B9TlV4uvmwsfstn7chvXHcDHBS3E1j
-	7XyBxiUAm5tevg2QhV9Kk6ABv5NmucCSlXHZhDQrSCRgFpUBvEidv7twQ8U5bM8N/GSTeaSnJ26
-	SF/nnrEjcdMlJixNb4Y2sqXeu/cM42uWK3o9j0vikYPWkIxHbsvq9Kyh+Zf9roDD4eH0O76yLoC
-	TrZ8PTn2n6CRAmsd5K9yF+Y4ut+T3BB9X4DKkmVljffgMhgwQr2OyAJDhzdgZxfAp5h3hoqakVr
-	BC8g+MpnGXPx89kOwqjU8WVl5/onHSRxV6RZvPv2I0/VvTktYmY3hgBUddUattpNAZp8MLQJHat
-	7C0IScw8ahKoLnNrvT
-X-Received: by 2002:ad4:594b:0:b0:8ce:eaf7:dbd4 with SMTP id 6a1803df08f44-8db5b7ab7c2mr48763006d6.17.1781679895876;
-        Wed, 17 Jun 2026 00:04:55 -0700 (PDT)
-Received: from localhost ([43.225.189.75])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8d9f4557d43sm55343736d6.31.2026.06.17.00.04.54
+        d=1e100.net; s=20251104; t=1781690720; x=1782295520;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=f2OPmLF096KqR20zLR2fjLEx0fdz7L4iVkInjy+NLrw=;
+        b=JtRc+qF+fotkZ4BuGFiK5+5JK+pLALP2UeKTC5vmLGvIil/pHp51yjOxA/iVC+IpIb
+         zqjUEKqqNAbqS1v0jyeCq5csjNXG2sV6sE8MwNgC2P8b3C1UDJWKqchmT9thuNHC1soj
+         dC6um4GDOcUOw/IGaiBQ0q1FvbX9XwRoyAmWDocvzvI7HSnAP+3QraHHD49rglX68ToA
+         PYrSPFaQF32JneWjMywKK5PTsxuL9FfsN8PynCQocyLnzEvzCNwXLSEeQ0lmQWLhmoHr
+         nlKv6jSJkAEtIgwrLo2vUZbwq10srndHjOgypYpy/rhApJbxwvPEkEZlJGPDS/adlxWg
+         nIEA==
+X-Forwarded-Encrypted: i=1; AFNElJ85P+Pa8xMByxQtOahsd07w9xn+5MiSXBg/uXTelb8M1lLmQNFgnlCJDmW3O7JC/UtC/YuSVhTYYlez@vger.kernel.org
+X-Gm-Message-State: AOJu0YwKt+/dK9shI1xlomK6m3C1u2duyYFL5vudjBliq06DN5Du8fb+
+	kHQsy+ueT2XujvI0lAe+yeE+YlEAQusmTSpywXa3MNP68jbFaE/eTg1w
+X-Gm-Gg: AfdE7ckqniUvB1jSQ8lZhaMFYzu9iki23QcrxeIsWG5ualgcjw7/lC1oRuIqS5+zNcY
+	I9VcvyfF+GGyOoBfdmhZKXaPO1yF++txn1C+pNxyw7YtbuAJyROOLP4l4j0mc2nIq6iZcw6wOfr
+	OIZrnV9OEoQWjmU1Dx7qSgi6CrpkTRSzr+GGScrBS5iWEsLgltLyDqVAtWk7YudSAlCO4q0pNW4
+	Ikw/T2i87lD6S6kfBtgVE3CqE6Y/2mHZ0LuxrQBEOUHGbkNCG4wMH8FwYgoBjgJbgbO8k2rZOTI
+	iQ8QK5HXHjbHeK+r+WjrCDGvzpPuEjFlQaSjcMmx182yZ42yapImXG1dtjDfsXARyT2UaCgbutf
+	eTrydSnJjRhyzxY3U8E4FAXd5mQ/rwOjyWDDrHQi7Qvk2HfvoiQhHCkeHpkgXCU1Up/NiB55nz9
+	Mqd/oll2RFVW9odzQnWaPdxXLBNCF0FpNt97BOVIE9wqAdKDJZvg==
+X-Received: by 2002:a05:6000:461e:b0:45e:f2bd:2b17 with SMTP id ffacd0b85a97d-46238acb523mr5897596f8f.21.1781690720067;
+        Wed, 17 Jun 2026 03:05:20 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4606f2dbfb1sm55720157f8f.35.2026.06.17.03.05.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Jun 2026 00:04:55 -0700 (PDT)
-Date: Wed, 17 Jun 2026 10:04:48 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: [bug report] raid5-ppl: PPL support for disks with write-back
- cache enabled
-Message-ID: <ajJHEHtMns11Tax-@stanley.mountain>
-References: <ajJF2wKYWRk4GGCK@stanley.mountain>
+        Wed, 17 Jun 2026 03:05:19 -0700 (PDT)
+Date: Wed, 17 Jun 2026 11:05:16 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Eric Biggers <ebiggers@kernel.org>, Andrew Morton
+ <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org,
+ linux-crypto@vger.kernel.org, x86@kernel.org, linux-raid@vger.kernel.org
+Subject: Re: [PATCH v3] lib/raid/xor: x86: Add AVX-512 optimized xor_gen()
+Message-ID: <20260617110516.0a70950e@pumpkin>
+In-Reply-To: <20260617055653.GB19218@lst.de>
+References: <20260615190338.26581-1-ebiggers@kernel.org>
+	<20260617055653.GB19218@lst.de>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ajJF2wKYWRk4GGCK@stanley.mountain>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Wed, Jun 17, 2026 at 09:59:39AM +0300, Dan Carpenter wrote:
-> This code is nine years old, so what I like to do is add it to the KTODO
-> in case anyone wants to fix it.
-> 
-> KTODO: Fix use after free in ppl_do_flush()
-> 
-> Hello Tomasz Majchrzak,
-> 
-> Commit 1532d9e87e8b ("raid5-ppl: PPL support for disks with
-> write-back cache enabled") from Dec 27, 2017 (linux-next), leads to
-> the following Smatch static checker warning:
-> 
-> 	drivers/md/raid5-ppl.c:646 ppl_do_flush()
-> 	warn: 'io' was already freed. (line 647)
-> 
-> drivers/md/raid5-ppl.c
->     608 static void ppl_do_flush(struct ppl_io_unit *io)
->     609 {
->     610         struct ppl_log *log = io->log;
->     611         struct ppl_conf *ppl_conf = log->ppl_conf;
->     612         struct r5conf *conf = ppl_conf->mddev->private;
->     613         int raid_disks = conf->raid_disks;
->     614         int flushed_disks = 0;
->     615         int i;
->     616 
->     617         atomic_set(&io->pending_flushes, raid_disks);
->     618 
->     619         for_each_set_bit(i, &log->disk_flush_bitmap, raid_disks) {
->     620                 struct md_rdev *rdev;
->     621                 struct block_device *bdev = NULL;
->     622 
->     623                 rdev = conf->disks[i].rdev;
->     624                 if (rdev && !test_bit(Faulty, &rdev->flags))
->     625                         bdev = rdev->bdev;
->     626 
->     627                 if (bdev) {
->     628                         struct bio *bio;
->     629 
->     630                         bio = bio_alloc_bioset(bdev, 0,
->     631                                                REQ_OP_WRITE | REQ_PREFLUSH,
->     632                                                GFP_NOIO, &ppl_conf->flush_bs);
->     633                         bio->bi_private = io;
->     634                         bio->bi_end_io = ppl_flush_endio;
->     635 
->     636                         pr_debug("%s: dev: %ps\n", __func__, bio->bi_bdev);
->     637 
->     638                         submit_bio(bio);
->     639                         flushed_disks++;
->     640                 }
->     641         }
->     642 
->     643         log->disk_flush_bitmap = 0;
->     644 
->     645         for (i = flushed_disks ; i < raid_disks; i++) {
-> --> 646                 if (atomic_dec_and_test(&io->pending_flushes))
->     647                         ppl_io_unit_finished(io);
-> 
-> The ppl_io_unit_finished() function frees "io" so probably there is
-> supposed to be a statement after it.
+On Wed, 17 Jun 2026 07:56:53 +0200
+Christoph Hellwig <hch@lst.de> wrote:
 
-This sentence a word missing.  Probably there is supposed to be a *break*
-statement.
+> Can use the xor: prefix used for all other commits to lib/raid/xor?
+> 
+> > Benchmark on AMD Ryzen 9 9950X (Zen 5):
+> > 
+> >     src_cnt    avx          avx512       Improvement
+> >     =======    ==========   ==========   ===========
+> >     1          56353 MB/s   75388 MB/s   33%
+> >     2          54274 MB/s   68409 MB/s   26%
+> >     3          44649 MB/s   64042 MB/s   43%
+> >     4          41315 MB/s   55002 MB/s   33%  
+> 
+> On my Zen 5 mobile (AMD Ryzen AI 7 PRO 350) both the existing
+> AVX2 and this AVX512 code give numbers in the 200+ GB/s range.  Not
+> sure if is just the different benchmarking or something else going on.
 
-regards,
-dan carpenter
+I'd expect benchmarking of the xor loop to show that it is doing
+2 memory reads every clock.
+At 5GHz (I'm sure my zen5 will reach that single threaded) that
+is 320 GB/s for src_cnt == 1 and 160 GB/s for src_cnt == 3.
+
+200 GB/s with 32 byte cache reads would need a 200/32 = 6GHz cpu
+just for the reads.
+
+But I expect Eric is benchmarking more code and may be limited
+by data cache refills.
+
+> 
+> FYI, one or 2 sources are basically useless as they RAID5 configs
+> that have no benefits over simple mirroring and thus the numbers
+> aren't too interesting.
+
+With three disks you xor two buffers (src_count == 1) to get the parity
+to write to the third - so that is a valid RAID5 config.
+
+> 
+> > +DO_XOR_BLOCKS(avx512_inner, xor_avx512_2, xor_avx512_3, xor_avx512_4,
+> > +	      xor_avx512_5);  
+> 
+> Is there really much of a benefit of doing the historic DO_XOR_BLOCKS
+> vs doing the loop manually?  Especially as the common cases for a
+> modern RAID will usually loop over more disks than this was built
+> for.  I.e., in practice one or two source buffers only happen at the
+> end of a loop over more disks.
+
+I stopped looking at what was being tested at that point :-)
+
+	David
 
