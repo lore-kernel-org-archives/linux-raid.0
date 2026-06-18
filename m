@@ -1,118 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-37.ptr.blmpb.com (va-2-37.ptr.blmpb.com [209.127.231.37])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42834334C1C
-	for <linux-raid@vger.kernel.org>; Thu, 18 Jun 2026 03:12:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A32E1315D53
+	for <linux-raid@vger.kernel.org>; Thu, 18 Jun 2026 03:41:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.37
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781752354; cv=none; b=Ikh6BzuJsxynSHreYiH4b+Zd45hnSxK6smDI/hEXkOcg0eu4tmitK325kxRaITWHUm7zyZrFon3nXqaVo9vcat/2i7vEyNhGDEWqAaTahQGnNK/i5Mmoro1NuWLGh9zm+IwUVLi89ZeRiH+fkGbqFucBdwZzNFFUOLnrRiOfnz4=
+	t=1781754079; cv=none; b=h+T2Z4mSPFydWA0yAAuacJEeQprQDMFs1FjaApeNA1JqCJQenWDq2CikprXnKtbTgdGGwjXwfc7cn+uIJPDLDR/8N5CzXqu8JgaO3SlkqggMCBIW0+TXs8YmLpy+P8UQaZPb1NN+sll0mtxYf4N16WcHnE9jgycYUc5QwDrn9Lo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781752354; c=relaxed/simple;
-	bh=ZXA0Jbbyg/s37BtnwFEVnCRkF+AZrahFv6DvvmGtUVk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ME79rTFnnc1PobzfV34tHYnqR/SiSF4UvuUr5CDO5TTU2ywtGIfuXq7hL3z8bd6EBhxw3qn7HKMXE66gsFtNkRYNxCl5rEd+1+K77D0/PFAV/3hnStA91H75sx6ew6ySO6sK82VZLh4m8PFBkmE4/RRMYXynwuiYt5ioQRIn4Gk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TeMNxqx/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781754079; c=relaxed/simple;
+	bh=GB2CGxiVXiwwIBGUquuq0pcJk+W4fiCpQlrILlK3YF4=;
+	h=From:Subject:References:Message-Id:Mime-Version:Cc:In-Reply-To:To:
+	 Date:Content-Type; b=KXF+7Iw4T3N4kd2hd117OtKCk5XQ9gj2NunlHNn5KzV3fo+G3qcK+a4Ph3Iuk1HOVBRqiQmeDbiM4f9uv7eNyB6zVme0muItpeHaf7xFN07iW6DSlKfaVD2HtqKmBdrWySe5C/FyCFcN1vKV4wuQJwLJmunvQrdUNCbRTEh0ba4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=rXh+HWoO; arc=none smtp.client-ip=209.127.231.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TeMNxqx/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 831A41F000E9;
-	Thu, 18 Jun 2026 03:12:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781752352;
-	bh=Y0enYRdDXjVjB36YXXo7akL/9o9DpUCTU71wotCfLf4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TeMNxqx/7LvzoIrWnHOabeex65DTjqkDE8QjhEGV8hC2GrzcQfwtkabFK+pdNK4U+
-	 cZQ/pYMkoswNnpe/zSHnk02m/ehkTsIADvF1bhtSPiPhPgkp7NkFa1T7M5ez1SJmoO
-	 JueK6UeczeGQf2JMcEnexs7Zqk01rgkVULIQr2kA6Cdc5WkcSKooq19lF2YmsxGiJv
-	 Uz9496+NkftO529ajvSisu9C0wyxk7hZHgJtmX+JqC0FTi7XoTBdLj5KjtSRZ/VgZm
-	 18VrEKmKZSGA9Vt2qnOlDxIRnBZGtuKb1F2e8WyIQFJ2q+Axf1OP2J6aM28CRxiQ5+
-	 Ro+/svONKFtvw==
-From: sashiko-bot@kernel.org
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="rXh+HWoO"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1781754072;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=fJ8uBvKCl/b//LtCUtVSxBUtPP1ma0gdfVNEhV05WDA=;
+ b=rXh+HWoOEC6LIRk+JIqGfPUktxmUBEjirEU0+7fm/Cr4O4g2YSm3HpGoUAz5LFjo2BVTww
+ 5qFYlcFTTDg4AHC0ZbOzEjEHFr7ytDNfoU/+2oY3a/iqXlpQQ+/65yAw84jj/bS9eJBB98
+ 4FP5AKw7Pxtm01izXUIojjXbw7gsAF/dVGtyrciDAgc0b/Z49UNFkDejmQvt3QEzrcoz51
+ otFa2v3loMiAv6mHeyTbx+Iq5ooaxj5leLC5S8M07fg+W6ncU6pHmuUuXkDk6df2H8iFOK
+ 4zfQfIHkHQIv3TKKinCYotIxT+5nxF+HpXP2odmuiI9BNchanetBPdij4NvqKA==
+From: "Chen Cheng" <chencheng@fnnas.com>
 Subject: Re: [PATCH] md/raid5: let stripe batch bm_seq comparison wrap-safe
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chen Cheng" <chencheng@fnnas.com>
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260618025735.915113-1-chencheng@fnnas.com>
-References: <20260618025735.915113-1-chencheng@fnnas.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 18 Jun 2026 03:12:32 +0000
-Message-Id: <20260618031232.831A41F000E9@smtp.kernel.org>
+References: <20260618025735.915113-1-chencheng@fnnas.com> <20260618031232.831A41F000E9@smtp.kernel.org>
+User-Agent: Mozilla Thunderbird
+Message-Id: <8607405e-66cc-495a-9f67-1b68a4b56852@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Received: from [192.168.8.62] ([183.34.170.8]) by smtp.feishu.cn with ESMTPS; Thu, 18 Jun 2026 11:41:09 +0800
+Cc: <yukuai@fygo.io>, <linux-raid@vger.kernel.org>
+X-Original-From: Chen Cheng <chencheng@fnnas.com>
+X-Lms-Return-Path: <lba+26a3368d6+8b1f08+vger.kernel.org+chencheng@fnnas.com>
+In-Reply-To: <20260618031232.831A41F000E9@smtp.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+To: <sashiko-reviews@lists.linux.dev>
+Date: Thu, 18 Jun 2026 11:41:08 +0800
+Content-Type: text/plain; charset=UTF-8
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+=E5=9C=A8 2026/6/18 11:12, sashiko-bot@kernel.org =E5=86=99=E9=81=93:
+> Thank you for your contribution! Sashiko AI review found 2 potential issu=
+e(s) to consider:
+>=20
+> New issues:
+> - [Medium] Wrap-safe sequence comparison introduces signed integer overfl=
+ow, triggering UBSAN.
+>=20
+> Pre-existing issues:
+> - [High] Concurrent lockless read-modify-write of `batch_head->bm_seq` ca=
+n result in lost bitmap flush sequence updates.
+> --
+>=20
+> commit 38cbf25fbeef1204525d320e539132e2704c3653
+> Author: Chen Cheng <chencheng@fnnas.com>
+>=20
+> md/raid5: let stripe batch bm_seq comparison wrap-safe
+>=20
+> This commit alters the comparison of sequence numbers in the RAID5
+> stripe batching path to correctly handle wrap-around by using subtraction=
+.
+>=20
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index d0d7f96fd7cd9..5882670f7d0c9 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -996,7 +996,7 @@ static void stripe_add_to_batch_list(struct r5conf *=
+conf,
+>>   	if (test_and_clear_bit(STRIPE_BIT_DELAY, &sh->state)) {
+>>   		int seq =3D sh->bm_seq;
+>>   		if (test_bit(STRIPE_BIT_DELAY, &sh->batch_head->state) &&
+>=20
+> [Severity: High]
+> This isn't a bug introduced by this patch, but it appears that the shared
+> batch_head->bm_seq is being accessed and updated locklessly here. If mult=
+iple
+> threads concurrently append stripes to different parts of the batch list,
+> could Thread A and Thread B concurrently read batch_head->bm_seq, compare=
+ it,
+> and write it back, causing a race?
+>=20
+> An unguarded read-modify-write might allow a thread writing an older
+> sequence number to overwrite a newer one written by another thread. If bm=
+_seq
+> gets overwritten with an older value, could the batch start processing be=
+fore
+> the newer bitmap flush completes, potentially risking data corruption on =
+power
+> loss?
+>=20
+>> -		    sh->batch_head->bm_seq > seq)
+>> +		    sh->batch_head->bm_seq - seq > 0)
+>=20
 
-New issues:
-- [Medium] Wrap-safe sequence comparison introduces signed integer overflow=
-, triggering UBSAN.
+good catch..
 
-Pre-existing issues:
-- [High] Concurrent lockless read-modify-write of `batch_head->bm_seq` can =
-result in lost bitmap flush sequence updates.
---
+> [Severity: Medium]
+> Since both sh->batch_head->bm_seq and seq are signed ints, does this wrap=
+-safe
+> comparison introduce a signed integer overflow when the sequence wraps?
+>=20
+> While the kernel is compiled with -fno-strict-overflow so it functions as
+> intended, subtracting two signed integers whose difference exceeds the
+> representable range of a 32-bit signed integer can trigger Undefined Beha=
+vior
+> Sanitizer (UBSAN) splats.
+>=20
+> Could this be written by casting to unsigned before subtraction and back =
+to
+> signed, such as (s32)((u32)a - (u32)b) > 0, to avoid UBSAN warnings and
+> potential kernel panics on environments with panic_on_warn?
+>=20
+>>   			seq =3D sh->batch_head->bm_seq;
+>>   		set_bit(STRIPE_BIT_DELAY, &sh->batch_head->state);
+>>   		sh->batch_head->bm_seq =3D seq;
+>=20
 
-commit 38cbf25fbeef1204525d320e539132e2704c3653
-Author: Chen Cheng <chencheng@fnnas.com>
+I am fine with both way .. raid5 use the template "a - b > 0" directly=20
+for a long time
 
-md/raid5: let stripe batch bm_seq comparison wrap-safe
+     e.g. "sh->bm_seq - conf->seq_write > 0" in do_release_stripe()
 
-This commit alters the comparison of sequence numbers in the RAID5=20
-stripe batching path to correctly handle wrap-around by using subtraction.
-
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index d0d7f96fd7cd9..5882670f7d0c9 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -996,7 +996,7 @@ static void stripe_add_to_batch_list(struct r5conf *c=
-onf,
->  	if (test_and_clear_bit(STRIPE_BIT_DELAY, &sh->state)) {
->  		int seq =3D sh->bm_seq;
->  		if (test_bit(STRIPE_BIT_DELAY, &sh->batch_head->state) &&
-
-[Severity: High]
-This isn't a bug introduced by this patch, but it appears that the shared
-batch_head->bm_seq is being accessed and updated locklessly here. If multip=
-le
-threads concurrently append stripes to different parts of the batch list,
-could Thread A and Thread B concurrently read batch_head->bm_seq, compare i=
-t,
-and write it back, causing a race?
-
-An unguarded read-modify-write might allow a thread writing an older
-sequence number to overwrite a newer one written by another thread. If bm_s=
-eq
-gets overwritten with an older value, could the batch start processing befo=
-re
-the newer bitmap flush completes, potentially risking data corruption on po=
-wer
-loss?
-
-> -		    sh->batch_head->bm_seq > seq)
-> +		    sh->batch_head->bm_seq - seq > 0)
-
-[Severity: Medium]
-Since both sh->batch_head->bm_seq and seq are signed ints, does this wrap-s=
-afe
-comparison introduce a signed integer overflow when the sequence wraps?
-
-While the kernel is compiled with -fno-strict-overflow so it functions as
-intended, subtracting two signed integers whose difference exceeds the
-representable range of a 32-bit signed integer can trigger Undefined Behavi=
-or
-Sanitizer (UBSAN) splats.
-
-Could this be written by casting to unsigned before subtraction and back to
-signed, such as (s32)((u32)a - (u32)b) > 0, to avoid UBSAN warnings and
-potential kernel panics on environments with panic_on_warn?
-
->  			seq =3D sh->batch_head->bm_seq;
->  		set_bit(STRIPE_BIT_DELAY, &sh->batch_head->state);
->  		sh->batch_head->bm_seq =3D seq;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260618025735.9151=
-13-1-chencheng@fnnas.com?part=3D1
+(s32)((u32)a - (u32)b) > 0 is more rigorous, and "a - b > 0" much cleaner .
