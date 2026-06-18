@@ -1,95 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-37.ptr.blmpb.com (va-2-37.ptr.blmpb.com [209.127.231.37])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44BBD46AF1E;
-	Wed, 17 Jun 2026 17:14:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C25242D6E6C
+	for <linux-raid@vger.kernel.org>; Thu, 18 Jun 2026 02:52:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.37
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781716495; cv=none; b=WLDTPNVMQtP/Fb+kTJuBDJDSN3R4AZUjtxHhrcA1oR3wVm7r4GCXxyEbMalc6yEKfeAhCru279GzzTf0C1GXyiE0Ka7l08Waf1Chp2WJIe6LipQYkey34lc3yD/7cCwcv3rwNJwN461UT9DX4xB+VvgJBux4N3ps87/TQ1qF6JY=
+	t=1781751153; cv=none; b=mLqzriquQRqREcGTXamADJSBZjvzp9QZqiwkx4K9ZTHJLw2Bpc/nOhUNwHQZU2gy9YSJPVbJ+9mib60yaDuoh+OnaT+51JIhLWSSL8Bd6JsFTthXgHFq9oZQ4JjoetOagrSuAZWz51CtXLuS5FLjq+zXwU5VeBNAAG/g7+Vpv6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781716495; c=relaxed/simple;
-	bh=UduCEupVCfQTOm+j7oSSWsfp3Mgf+6WUsP3hpFwCwis=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qHNTerVQFc7L/bRZH1TzkhMxDicMe43xmJXwB1tDox7xXssZ42+J9NC9Xz565Itfehiz6fgsStTIJ75wYqwCF98GuRDxWySnRXcTa7XMsMm+TWFWBwjAvGjcTev3zDm0CvkRWFfvb8B2b5dWG1SzwzmnB/5wPnqFw/yZc+YVxA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WFGdGmT4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781751153; c=relaxed/simple;
+	bh=VHqvsp8G1nMcOMWTVIDi4lS3lA9NMyEa4HFN+AAPbwM=;
+	h=Mime-Version:Message-Id:Content-Type:To:From:Subject:Date:Cc; b=kjxQHm5Xb9lOEwT4SFtAGooi3dyaqEiQHf7JLUcgbhmajgxOFllG+iMD6/I99IZQl5r/opXz7ZpTFAa/wvL5L6fP0+KdVeo+SgZA4msmcy397jml9pnKetRfVvlCnQUzDkaBTIP5VsJaA7sdFJE9Djd1FD4vcyQUaELoK9Rg3ek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=mxFiP1qV; arc=none smtp.client-ip=209.127.231.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WFGdGmT4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40BBD1F000E9;
-	Wed, 17 Jun 2026 17:14:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781716490;
-	bh=+MnClB8EaK+TmELFjzZxKBmIbf+Vtv/J2Z6hYQ4VnZc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WFGdGmT4mD7rDcwQW9X2B5g5NFkEvbg5MEjb943bwTurphhAT6PzUek/6IbLIEEjb
-	 jf26LZqo9GckerOJ1iqvhMue4Ezgh+t7xa5TUDD7z+Eql5/vCKTI9SmMS/ZWpCP0fA
-	 QxIOFcx6X0m1rrEHM8NvoYGWn/XwnM2Zx6iSw/6U9q4rZzdaBQXAWY1gV+X0JLUEop
-	 /yphOacLtCcqdK70tXUiwATdOI5COZXWspu9I6XOXaeqxW3j4+mHeTO1Gj+Ao+zIef
-	 b6TZbAsKU701bF+3lA9GwQem++ag96jUsdv4nDcWUqvV1bjNnqcnKViBBvXvKWLNTG
-	 KiR9WcCCwveww==
-Date: Wed, 17 Jun 2026 17:14:48 +0000
-From: Eric Biggers <ebiggers@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org
-Subject: Re: [PATCH 2/2] xor/kunit: add a benchmark
-Message-ID: <20260617171448.GD785086@google.com>
-References: <20260617054416.3841334-1-hch@lst.de>
- <20260617054416.3841334-3-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="mxFiP1qV"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1781751140;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=JLZRupcfZdv/bCO5Hj3SXoglCL/TZUk1CK/JEE0Srfc=;
+ b=mxFiP1qV9lL+n/C9+XeD9dqYt1uFs+ImY0cnF6RJOPwIrBWweUTo73zfbnA+DHWNBpvYnY
+ B4wCxK6GqxiFv9Nu2x+hCGz40TPbTYPCJYSkD/SCOU1VtdqKwH85xmyST7iDYAyH8Q08wB
+ LEaJ6h9dpMBKYwYbKl3GSwWZ/6H4A7PeAVcG/fjbdGToxewtz3STZDDXhfaTJTKXP6kSc/
+ lbeeRfWi7RnwbFIKO+kkg5fRZ9pJNId5Qs789arkIwf8J4+TBzt8x6ld+aJruihQPNrWhi
+ 4T3cVNC7U5a/h3fVsI6T+Aw0rqtQTPfK8tb8OOHa8OK/GWJIbRlqcMNXr66YQg==
+X-Lms-Return-Path: <lba+26a335d62+95bfc5+vger.kernel.org+chencheng@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260617054416.3841334-3-hch@lst.de>
+Mime-Version: 1.0
+Message-Id: <20260618025206.906035-1-chencheng@fnnas.com>
+X-Original-From: chencheng@fnnas.com
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <yukuai@fnnas.com>
+From: "Chen Cheng" <chencheng@fnnas.com>
+Subject: [PATCH] md/raid10: protect head_position accesses consistency
+Date: Thu, 18 Jun 2026 10:52:06 +0800
+Received: from localhost.localdomain ([183.34.170.8]) by smtp.feishu.cn with ESMTPS; Thu, 18 Jun 2026 10:52:17 +0800
+Cc: <chencheng@fnnas.com>, <chenchneg33@gmail.com>, 
+	<linux-kernel@vger.kernel.org>
+X-Mailer: git-send-email 2.54.0
 
-On Wed, Jun 17, 2026 at 07:44:04AM +0200, Christoph Hellwig wrote:
-> diff --git a/lib/raid/xor/tests/xor_kunit.c b/lib/raid/xor/tests/xor_kunit.c
-> index 659ae3edbc25..5939b78b3944 100644
-> --- a/lib/raid/xor/tests/xor_kunit.c
-> +++ b/lib/raid/xor/tests/xor_kunit.c
-> @@ -125,8 +125,71 @@ static void xor_test(struct kunit *test)
->  	}
->  }
->  
-> +#ifdef CONFIG_XOR_BENCHMARK
-> +static void xor_benchmark(struct kunit *test)
+From: Chen Cheng <chencheng@fnnas.com>
 
-The #ifdef can be avoided using kunit_skip(), as the crypto and CRC
-tests do:
+the completion paths update conf->mirrors[x].head_position
+without a lock, while read_balance() reads the same field
+locklessly.
 
-    if (!IS_ENABLED(CONFIG_XOR_BENCHMARK))
-            kunit_skip(test, "not enabled");
+protect conf->mirror[x].head_position consistency for
+multi-CPUs by READ_ONCE()/WRITE_ONCE().
 
-> +		for (j = 0; j < ARRAY_SIZE(len_to_test); j++) {
-> +			unsigned int len = len_to_test[j];
-> +			const unsigned long num_iters = 1000;
-> +
-> +			KUNIT_ASSERT_GT(test, len, 0);
-> +			KUNIT_ASSERT_LE(test, len, XOR_KUNIT_MAX_BYTES);
-> +
-> +			preempt_disable();
-> +			t = ktime_get();
-> +			for (l = 0; l < num_iters; l++)
-> +				xor_gen(test_dest, test_buffers, nr, len);
-> +			t = ktime_get_ns() - t;
-> +			preempt_enable();
+the report #1:
+=====================
+ BUG: KCSAN: data-race in find_bio_disk.isra.0 / read_balance
 
-First one should be ktime_get_ns(), not ktime_get().
+ write to 0xffff8f0309679fd0 of 8 bytes by interrupt on cpu 9:
+  find_bio_disk.isra.0+0x108/0x180
+  raid10_end_write_request+0xd2/0x530
+  bio_endio+0x3c9/0x3e0
+ [...]
 
-> +
-> +			speed[j] = div_u64((u64)len * num_iters * nr, t);
-> +		}
-> +
-> +		static_assert(ARRAY_SIZE(len_to_test) == 2);
-> +		kunit_info(test, "%3u disks:\t%5llu  GB/s\t%5llu  GB/s\n",
-> +				nr, speed[0], speed[1]);
+ read to 0xffff8f0309679fd0 of 8 bytes by task 338766 on cpu 7:
+  read_balance+0x2ec/0x700
+  raid10_read_request+0x17b/0x550
+  raid10_make_request+0x27e/0x1080
+  md_handle_request+0x2c5/0x700
+  [...]
 
-As mentioned in the other thread, this measures the speed at which the
-source data is consumed, which differs from the code in
-lib/raid/xor/xor-core.c that measures the speed at which the destination
-data is produced.  Probably best to make them consistent.
+ value changed: 0x000000000032f440 -> 0x000000000014f8e0
 
-- Eric
+the report #2:
+=======================
+ BUG: KCSAN: data-race in raid10_end_read_request / read_balance
+
+ write to 0xffff8f03291091b0 of 8 bytes by interrupt on cpu 9:
+  raid10_end_read_request+0xf0/0x400
+  bio_endio+0x3c9/0x3e0
+  [...]
+
+ read to 0xffff8f03291091b0 of 8 bytes by task 336943 on cpu 8:
+  read_balance+0x2ec/0x700
+  raid10_read_request+0x17b/0x550
+  raid10_make_request+0x27e/0x1080
+  md_handle_request+0x2c5/0x700
+ [...]
+
+ value changed: 0x000000000041c188 -> 0x000000000041c1b8
+
+Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+---
+ drivers/md/raid10.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index caf1da15aa87..55aa052a957b 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -343,12 +343,12 @@ static void raid_end_bio_io(struct r10bio *r10_bio)
+  */
+ static inline void update_head_pos(int slot, struct r10bio *r10_bio)
+ {
+ 	struct r10conf *conf = r10_bio->mddev->private;
+ 
+-	conf->mirrors[r10_bio->devs[slot].devnum].head_position =
+-		r10_bio->devs[slot].addr + (r10_bio->sectors);
++	WRITE_ONCE(conf->mirrors[r10_bio->devs[slot].devnum].head_position,
++		   r10_bio->devs[slot].addr + (r10_bio->sectors));
+ }
+ 
+ /*
+  * Find the disk number which triggered given bio
+  */
+@@ -841,11 +841,11 @@ static struct md_rdev *read_balance(struct r10conf *conf,
+ 		/* for far > 1 always use the lowest address */
+ 		else if (geo->far_copies > 1)
+ 			new_distance = r10_bio->devs[slot].addr;
+ 		else
+ 			new_distance = abs(r10_bio->devs[slot].addr -
+-					   conf->mirrors[disk].head_position);
++					   READ_ONCE(conf->mirrors[disk].head_position));
+ 
+ 		if (new_distance < best_dist) {
+ 			best_dist = new_distance;
+ 			best_dist_slot = slot;
+ 			best_dist_rdev = rdev;
+-- 
+2.54.0
