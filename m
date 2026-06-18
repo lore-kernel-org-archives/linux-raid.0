@@ -1,184 +1,63 @@
-Received: from va-2-29.ptr.blmpb.com (va-2-29.ptr.blmpb.com [209.127.231.29])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 224C5280CFB
-	for <linux-raid@vger.kernel.org>; Thu, 18 Jun 2026 13:48:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 700E82F7EEE;
+	Thu, 18 Jun 2026 17:09:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781790491; cv=none; b=FQ5pIWnG6c2mxRgGnu1rUyEd7qI3TlODpYiLMvItp5krsRLVZD4Sy1tijsjlqjrIh5fZDWFO5SZF3KAxjIfkiyLAn+wHmUQlgidaduLrQBadAXWQajJrbB6pEa4zTs9eWX0bH7tasLXu1AF0QTwMsWqjDhiyuK2ObwhTIkMF124=
+	t=1781802554; cv=none; b=FqnOI7nNa7m7X8LbAay/vFcdR2elafiebgPbKkv6d29wuuRxpIfX43SZ2eq2iQHsF0I0i/UMt1Un7jXceql2TTX07mh3ihzt6RgXmdPHqjDHN7/XLQhh2ugLABW19rv6obAbSuyRsabk3EmVfiTiutAP2KxjAGNDgUGMMJwVxCg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781790491; c=relaxed/simple;
-	bh=LC2HlJXUPjtZiNjVzSMi95EcZub3bKtG+Eret7AqxwQ=;
-	h=From:Subject:Mime-Version:To:Date:Message-Id:Cc:Content-Type; b=rwMppYdm7bWbJWcws3tqJ7lsrMjm7qN/KGktPKPYtX5Nf1nATNS/zXkofq/qcp7g8+5N4tNOAZ5ZO24r0/7Dfl5VnmTsImlYE/FRleHRmBqdSnutK69pYpWILLhOcGCBkCo0/UQegF8kjTgfR+wIp7qwjLJTkH34kG3DIRsuhJE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=LPVUV5em; arc=none smtp.client-ip=209.127.231.29
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1781802554; c=relaxed/simple;
+	bh=cPnssL4QSkHLuwqjV9ESlU0V3IKz7HfozfI/AlRPbHw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cEvlsHYN5Cp9T26bXF9j16+8YLolxq5/xOWPhZ32XdnfUeLvyYE2ApO+YBQEnS+lZfhMQktgOb+P6Pr+p7InyptG07emdQfQIa1TD40oaKNOp7OH688JtkPDykOxmwuK9WVQ2T5opVqu8G7QrfICFjDP10vnqKTw2ilE/1kgMi0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cZX2lGVQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="LPVUV5em"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1781790483;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=rLfSpPNuEGSKw8Ptq4C/ZFhlN9JufsT1g6Ir66lmBU8=;
- b=LPVUV5emFYGukQuaEgED63QLTIdXeSSc32ztLOKJ1yXcnfT0i9IAPIctRdPRX1AaTPyaCy
- 2ui0OM/k8rieGIa6zDRP9fgeRZTFHnxoZkBIf6T9zqvhi36ttX1UBEwCwHKX8Iixyugwwz
- batHcs7cLre9o4XwtRMZuBo+1dncHx6tElg23VbcXZ5DZ7uCTNvm3ILWRmoRRWiGeUdN91
- hi0YmNeL9GERjC4xFqy7Bu4CZT9wzLihDKURHsGvE7T9yKqcfKbuRSswkVZ6hv+2CB4uf1
- fqZcKBLALwKamS8t1Q9X97B+SzbKCxyqSIT075mJQX8rUpcRKogd3IcY9JIcIQ==
-X-Original-From: chencheng@fnnas.com
-Received: from localhost.localdomain ([183.34.170.8]) by smtp.feishu.cn with ESMTPS; Thu, 18 Jun 2026 21:48:00 +0800
-From: "Chen Cheng" <chencheng@fnnas.com>
-Subject: [PATCH] md/raid5: use stripe state snapshot in break_stripe_batch_list()
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cZX2lGVQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3A5B1F000E9;
+	Thu, 18 Jun 2026 17:09:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781802553;
+	bh=rgLdSXU3Un570rqBdtfeqG0anO2liz6o80Mv+wxyFlc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=cZX2lGVQox6tLC0aU0s3gum4HD3fPnoythPORSE0TsnfFi5pWyY+ITplopf1USSv1
+	 zqa0e4gKO52v7zKcabiD1iZTvpce9e5i8mye5Uz3tz3EqpVTgKDko+PHnAGHQfLzMX
+	 ejNA+ezL4MDTfkvSklVS3mx0dey8JR5cPL6zIr9ES9vo+kTIUIz/Yvsy04vsTwdeTP
+	 pOIBDxfU1//qfPszs8zymHwnqwhHAEVmiPwGieLumdFl04iigoGQlFomS6JeQ1HSVL
+	 UmVf5gaG8RjrWvIS04chMPXCTTXPc1UBn3Kt+ELG2BIZCNu019X7ysWlIS0d5vsehZ
+	 tdugJYlFgATqA==
+Date: Thu, 18 Jun 2026 10:09:11 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org
+Subject: Re: [PATCH 2/2] xor/kunit: add a benchmark
+Message-ID: <20260618170911.GA1808@quark>
+References: <20260617054416.3841334-1-hch@lst.de>
+ <20260617054416.3841334-3-hch@lst.de>
+ <20260617171448.GD785086@google.com>
+ <20260618092224.GB17530@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <yukuai@fnnas.com>
-X-Lms-Return-Path: <lba+26a33f711+fca7a3+vger.kernel.org+chencheng@fnnas.com>
-X-Mailer: git-send-email 2.54.0
-Date: Thu, 18 Jun 2026 21:47:48 +0800
-Message-Id: <20260618134748.1168360-1-chencheng@fnnas.com>
-Content-Transfer-Encoding: 7bit
-Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260618092224.GB17530@lst.de>
 
-From: Chen Cheng <chencheng@fnnas.com>
+On Thu, Jun 18, 2026 at 11:22:24AM +0200, Christoph Hellwig wrote:
+> On Wed, Jun 17, 2026 at 05:14:48PM +0000, Eric Biggers wrote:
+> > The #ifdef can be avoided using kunit_skip(), as the crypto and CRC
+> > tests do:
+> > 
+> >     if (!IS_ENABLED(CONFIG_XOR_BENCHMARK))
+> >             kunit_skip(test, "not enabled");
+> 
+> I saw that, but what's the point or just not compiling it?
 
-The patch just suppress KCSAN noise. No functional change.
+Just the usual point of avoiding #ifdefs.  Developers won't have to
+build the file with two different kconfigs to ensure it builds.
 
-RAID-5 can group multi full-stripe-write aka stripe_head into a
-batch aka batch_list, with one head_sh leading them. Call
-break_stripe_batch_list() when the batch is finished, or,
-a stripe has to be dropped out of the batch.
-
-break_stripe_batch_list() reads stripe state several times while
-request paths can update thost state words concurrently with
-lockless bitops, which reported by KCSAN.
-
-Use a snapshot to guarantees that the value used for
-warning, copying, and handle checks is internally consistent
-at current read moment.
-
-KCSAN report:
-==============================================
-BUG: KCSAN: data-race in __add_stripe_bio / break_stripe_batch_list
-
-write (marked) to 0xffff8e89d4f0b988 of 8 bytes by task 4323 on cpu 3:
-  __add_stripe_bio+0x35e/0x400
-  raid5_make_request+0x6ac/0x2930
-  md_handle_request+0x4a2/0xa40
-  md_submit_bio+0x109/0x1a0
-  __submit_bio+0x2ec/0x390
-  submit_bio_noacct_nocheck+0x457/0x710
-  submit_bio_noacct+0x2a7/0xc20
-  submit_bio+0x56/0x250
-  blkdev_direct_IO+0x54c/0xda0
-  blkdev_write_iter+0x38f/0x570
-  aio_write+0x22b/0x490
-  io_submit_one+0xa51/0xf70
-
-read to 0xffff8e89d4f0b988 of 8 bytes by task 4290 on cpu 4:
-  break_stripe_batch_list+0x3ce/0x480
-  handle_stripe_clean_event+0x720/0x9b0
-  handle_stripe+0x32fb/0x4500
-  handle_active_stripes.isra.0+0x6e0/0xa50
-  raid5d+0x7e0/0xba0
-
-Signed-off-by: Chen Cheng <chencheng@fnnas.com>
----
- drivers/md/raid5.c | 45 ++++++++++++++++++++++++++-------------------
- 1 file changed, 26 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 26c24986e01c..a376560be92e 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4906,35 +4906,39 @@ static int clear_batch_ready(struct stripe_head *sh)
- static void break_stripe_batch_list(struct stripe_head *head_sh,
- 				    unsigned long handle_flags)
- {
- 	struct stripe_head *sh, *next;
- 	int i;
-+	unsigned long state;
- 
- 	list_for_each_entry_safe(sh, next, &head_sh->batch_list, batch_list) {
- 
- 		list_del_init(&sh->batch_list);
- 
--		WARN_ONCE(sh->state & ((1 << STRIPE_ACTIVE) |
--					  (1 << STRIPE_SYNCING) |
--					  (1 << STRIPE_REPLACED) |
--					  (1 << STRIPE_DELAYED) |
--					  (1 << STRIPE_BIT_DELAY) |
--					  (1 << STRIPE_FULL_WRITE) |
--					  (1 << STRIPE_BIOFILL_RUN) |
--					  (1 << STRIPE_COMPUTE_RUN)  |
--					  (1 << STRIPE_DISCARD) |
--					  (1 << STRIPE_BATCH_READY) |
--					  (1 << STRIPE_BATCH_ERR)),
--			"stripe state: %lx\n", sh->state);
--		WARN_ONCE(head_sh->state & ((1 << STRIPE_DISCARD) |
--					      (1 << STRIPE_REPLACED)),
--			"head stripe state: %lx\n", head_sh->state);
-+		state = READ_ONCE(sh->state);
-+		WARN_ONCE(state & ((1 << STRIPE_ACTIVE) |
-+				   (1 << STRIPE_SYNCING) |
-+				   (1 << STRIPE_REPLACED) |
-+				   (1 << STRIPE_DELAYED) |
-+				   (1 << STRIPE_BIT_DELAY) |
-+				   (1 << STRIPE_FULL_WRITE) |
-+				   (1 << STRIPE_BIOFILL_RUN) |
-+				   (1 << STRIPE_COMPUTE_RUN)  |
-+				   (1 << STRIPE_DISCARD) |
-+				   (1 << STRIPE_BATCH_READY) |
-+				   (1 << STRIPE_BATCH_ERR)),
-+			"stripe state: %lx\n", state);
-+
-+		state = READ_ONCE(head_sh->state);
-+		WARN_ONCE(state & ((1 << STRIPE_DISCARD) |
-+				   (1 << STRIPE_REPLACED)),
-+			"head stripe state: %lx\n", state);
- 
- 		set_mask_bits(&sh->state, ~(STRIPE_EXPAND_SYNC_FLAGS |
- 					    (1 << STRIPE_PREREAD_ACTIVE) |
- 					    (1 << STRIPE_ON_UNPLUG_LIST)),
--			      head_sh->state & (1 << STRIPE_INSYNC));
-+			      state & (1 << STRIPE_INSYNC));
- 
- 		sh->check_state = head_sh->check_state;
- 		sh->reconstruct_state = head_sh->reconstruct_state;
- 		spin_lock_irq(&sh->stripe_lock);
- 		sh->batch_head = NULL;
-@@ -4943,22 +4947,25 @@ static void break_stripe_batch_list(struct stripe_head *head_sh,
- 			if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
- 				wake_up_bit(&sh->dev[i].flags, R5_Overlap);
- 			sh->dev[i].flags = head_sh->dev[i].flags &
- 				(~((1 << R5_WriteError) | (1 << R5_Overlap)));
- 		}
--		if (handle_flags == 0 ||
--		    sh->state & handle_flags)
-+
-+		state = READ_ONCE(sh->state);
-+		if (handle_flags == 0 || (state & handle_flags))
- 			set_bit(STRIPE_HANDLE, &sh->state);
- 		raid5_release_stripe(sh);
- 	}
- 	spin_lock_irq(&head_sh->stripe_lock);
- 	head_sh->batch_head = NULL;
- 	spin_unlock_irq(&head_sh->stripe_lock);
- 	for (i = 0; i < head_sh->disks; i++)
- 		if (test_and_clear_bit(R5_Overlap, &head_sh->dev[i].flags))
- 			wake_up_bit(&head_sh->dev[i].flags, R5_Overlap);
--	if (head_sh->state & handle_flags)
-+
-+	state = READ_ONCE(head_sh->state);
-+	if (state & handle_flags)
- 		set_bit(STRIPE_HANDLE, &head_sh->state);
- }
- 
- /*
-  * handle_stripe - do things to a stripe.
--- 
-2.54.0
+- Eric
