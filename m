@@ -1,62 +1,84 @@
-Received: from va-2-27.ptr.blmpb.com (va-2-27.ptr.blmpb.com [209.127.231.27])
+Received: from va-2-29.ptr.blmpb.com (va-2-29.ptr.blmpb.com [209.127.231.29])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3330E8F49
-	for <linux-raid@vger.kernel.org>; Fri, 19 Jun 2026 06:56:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.27
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 198263546F9
+	for <linux-raid@vger.kernel.org>; Fri, 19 Jun 2026 08:11:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.29
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781852177; cv=none; b=sgEujhUwthxMS2sbeHbYwbvi9a8iZWD6Y2xN1m/PgODl7cNe2K+g78LDEuBZeecVBja+hetDaw9N1JiGtMVEfgNQDCtE+hRgtQDdWKi/IUPvisICqdP9BugHBJjQmzA3nX6mnQQcxynw1SPR/3afFHcT241NSvcnuuKf2ON0ULk=
+	t=1781856696; cv=none; b=ACRxE0vHrZZnaVYeLvwrxDbqRBdtNl81CpslzCULIO84hhL81fQduqtldD+rg4lELiDF5xM0tq8D0j4NG+WnPcTRx0KY4fYSC01BA542OGVq/rFKkaMVPqAM5+2AhfuedB3K8k5y3B0jCcY1sRVposicJVinAinhIYczAonPTdo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781852177; c=relaxed/simple;
-	bh=aeyEQFhTJX0Af8HLBqaVU59isbGRqMZyAOIk1MAhNC0=;
-	h=Subject:Content-Type:To:Message-Id:From:Mime-Version:Cc:Date; b=RIV/bULnaBJvQUsIvuOIASLogC/BDU9EkUDi7hF5sG0jvWNBCooZV+n3m7igflT0ekYAYVq/vaHsZfLcwIBgnc/WJSSW26WUWjSlY6ejBB8+h4/MnDiiUkwZxt8AJYJrMarODWWvJQdCL2BXEqTtlG8FZYMferdngQq8wTAxq3A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=wBpn9pDV; arc=none smtp.client-ip=209.127.231.27
+	s=arc-20240116; t=1781856696; c=relaxed/simple;
+	bh=BLvtpb1YTZMoA3xtjK/bwqQvNz8XUTTQKAMl9vVSei0=;
+	h=Date:To:Cc:Subject:Message-Id:Mime-Version:From:Content-Type; b=lIsvo1n02f+yAXQLx6EdouQlxhMYsn2Y9fh05MBJvMYY81oDpApXU2AgiSkH3TLMOuxK2pxvezTVWZH6+PNyUyaCIyJnfpYywT3s8pHrNdZE/MzOkvm8yONkIB67hmtFTQp0k45QxZQX7Be2HbCC9b8UjC1ru1hBOkhs3cU8RSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=Mm99XUHN; arc=none smtp.client-ip=209.127.231.29
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="wBpn9pDV"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="Mm99XUHN"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1781852166;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1781856683;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=WtqCo1xIxTblDVR/7DccpKvotTRDS8uX3Gl+/w20Z0o=;
- b=wBpn9pDVxsrpGDRoi6IE+tXUX7xj6cAS2Oru8rXypdofm++KR+fhMfvOaqV2ZaZxYS10Ue
- 1YgJzrV2TPOfpZZbLHxm3A5YWN0H3XQ7eqAQdT2u/zlRbsOjhfFQOKlr6DFsqf82aYnfYv
- WnFb90i4dyHeaTdGSkRyLPXvXJZJeEbAgyzgMqfvrlb/cg1L4526fvvRI5/y/bwC2sZoO6
- 6xD7c/tlq+dTRgsUz+s6p7dDixJ5wmwhlKyIrgYfeRs7M+oqqzFzVlwVvPqgsYJmbkS/WO
- TqD2LKsyKkwIs7uDjDTW5L9++QAtnbvHRtpS5W+NGdXXci3wzHCgpbAC8XMjOg==
-Subject: [PATCH] md/raid5: read batch_head under stripe_lock in make_stripe_request
-X-Lms-Return-Path: <lba+26a34e804+3d80ae+vger.kernel.org+chencheng@fnnas.com>
-Content-Transfer-Encoding: 7bit
+ bh=jd5eiwHth56Gz2G1AVOwqO5GyIs4kQktcD1yChHHYWI=;
+ b=Mm99XUHNaCRdMfgz4M81OIjrVt/R7VPmHTuxuSOPN/9gJdNuBs58LPR3ABUl+K/atsSG3E
+ m1Brw1pXbEaVS292OmbnVYa+rjRYuuLNAEgJAg9kQ5gYkVXiRVheuAfWdldfkO7ZTiTSBU
+ 1YNhfl7a5vNEPfCwf9725xvg63jKjzU2kcW150D560RBEzrUEIBk4VGpBnvzY1h41nqNC1
+ BiEFMgkyptEPsBrqALoTlcwEykkRYlPdnWF3TfX/IvjMKu0lRsqDTJLPNTv7+dOZiqwlY/
+ Y3Z3BLFS7NTn0acMfW78/YOeRmXE+Af87hwPYaf/sbTmJ1MOydy90VFp0HitpA==
+Date: Fri, 19 Jun 2026 16:11:09 +0800
 X-Original-From: chencheng@fnnas.com
-Content-Type: text/plain; charset=UTF-8
-To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <yukuai@fnnas.com>
-Message-Id: <20260619065551.1214690-1-chencheng@fnnas.com>
 X-Mailer: git-send-email 2.54.0
-From: "Chen Cheng" <chencheng@fnnas.com>
-Received: from localhost.localdomain ([183.34.170.142]) by smtp.feishu.cn with ESMTPS; Fri, 19 Jun 2026 14:56:03 +0800
+Content-Transfer-Encoding: 7bit
+To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <yukuai@fnnas.com>
+Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2] md/raid5: read batch_head under stripe_lock in make_stripe_request
+Message-Id: <20260619081109.1218112-1-chencheng@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
-Date: Fri, 19 Jun 2026 14:55:51 +0800
+Received: from localhost.localdomain ([183.34.170.142]) by smtp.feishu.cn with ESMTPS; Fri, 19 Jun 2026 16:11:20 +0800
+X-Lms-Return-Path: <lba+26a34f9a9+17f2eb+vger.kernel.org+chencheng@fnnas.com>
+From: "Chen Cheng" <chencheng@fnnas.com>
+Content-Type: text/plain; charset=UTF-8
 
 From: Chen Cheng <chencheng@fnnas.com>
 
 KCSAN reports race in raid5_make_request() vs. stripe_add_to_batch_list()
 
-write: sh->batch_head = head->batch_head / head
-       in stripe_add_to_batch_list() via make_stripe_request()
-read:  (!sh->batch_head || sh == sh->batch_head)
-       in make_stripe_request()
-variable: struct stripe_head::batch_head
+Writer flow (stripe_add_to_batch_list):
+1. grab `head` stripe;
+2. lock_two_stripes(head, sh);
+3. re-check stripe_can_batch() for both head and sh, which requires
+   STRIPE_BATCH_READY set on both;
+4. write head->batch_head = head and sh->batch_head = head;
+5. unlock_two_stripes.
 
-sh->batch_head is documented as protected by stripe_lock.
+STRIPE_BATCH_READY is cleared in two places:
+- clear_batch_ready(), at the entry of handle_stripe();
+- __add_stripe_bio(), for non-batchable bios.
+And, both need to acquire `stripe_lock`.
+
+Under stripe_lock, if STRIPE_BATCH_READY is clear, then:
+- New writers cannot install a batch_head;
+- Existing writers have already finished.
+So .. handle_stripe() readers can ready `batch_head` locklessly.
+
+Fix way:
+Writer side make_stripe_request() under STRIPE_BATCH_READY, so , need
+to be protected by stripe_lock when read something..
+
+v1 -> v2:
+- re-expalin how stripe_lock and batch_head work in commit message , and ,
+- modify comment in raid5.h.
+
+Fixs: f4aec6a097387
+
 
 KCSAN report:
+======================================
   BUG: KCSAN: data-race in raid5_make_request / raid5_make_request
 
   write to 0xffff8f03062432d8 of 8 bytes by task 210246 on cpu 6:
@@ -82,10 +104,12 @@ KCSAN report:
 
   value changed: 0x0000000000000000 -> 0xffff8f0307798728
 
+
 Signed-off-by: Chen Cheng <chencheng@fnnas.com>
 ---
  drivers/md/raid5.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/md/raid5.h | 8 +++++++-
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
 index 5521051a9425..efc63740f867 100644
@@ -108,5 +132,28 @@ index 5521051a9425..efc63740f867 100644
  	return STRIPE_SUCCESS;
  
  out_release:
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 1c7b710fc9c1..9ff825697ba3 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -221,11 +221,17 @@ struct stripe_head {
+ 	enum reconstruct_states reconstruct_state;
+ 	spinlock_t		stripe_lock;
+ 	int			cpu;
+ 	struct r5worker_group	*group;
+ 
+-	struct stripe_head	*batch_head; /* protected by stripe lock */
++	/*
++	 * Writer protected by stripe_lock.
++	 * Reader hold stripe_lock when STRIPE_BATCH_READY is set.
++	 * Without STRIPE_BATCH_READY means no concurrent write,
++	 * lockless read is ok.
++	 */
++	struct stripe_head	*batch_head;
+ 	spinlock_t		batch_lock; /* only header's lock is useful */
+ 	struct list_head	batch_list; /* protected by head's batch lock*/
+ 
+ 	union {
+ 		struct r5l_io_unit	*log_io;
 -- 
 2.54.0
