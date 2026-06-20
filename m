@@ -1,269 +1,234 @@
-Received: from va-2-52.ptr.blmpb.com (va-2-52.ptr.blmpb.com [209.127.231.52])
+Received: from va-2-36.ptr.blmpb.com (va-2-36.ptr.blmpb.com [209.127.231.36])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B60332F0C79
-	for <linux-raid@vger.kernel.org>; Sat, 20 Jun 2026 20:05:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36E4B1BBBFC
+	for <linux-raid@vger.kernel.org>; Sat, 20 Jun 2026 20:18:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.36
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781985940; cv=none; b=rfnow41ZXRxMzAhkMwjg/1txMrawZsk4nIiKEzK5V79eW4vIFbGTCxYDypEjjRnnbJAUkbafaxSKh3scwG7/wm0TENNoogTVaWX09HC6IV3omzUdHZRGdU1kJe35IyAOA/cM4f55/qM9ovlaZsHJEsCnzDbb3u4qn+BpJ/8MpeI=
+	t=1781986700; cv=none; b=YZl7Y+B36u+a7PPYitNWIwNURnlgC0MWTxxHAu/qeGN5QwXqJ2o2t2Rhhk8D8gDVzK/lGIzEDY1mbcxGkAp1KYOUcHZOV/zUZr4C10XQ9o4T+xvZElDwhOgAz65SaztY8hi7eBgry7Pfb6Vd7bnY2gpwjsoL4PjwQ8qXAEDNVt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781985940; c=relaxed/simple;
-	bh=8noKOa8pjMmGNZ7A7yDyVZOA7NDpmBYOfVHwubhMmsw=;
-	h=In-Reply-To:From:Date:To:Subject:References:Mime-Version:
-	 Content-Type:Cc:Message-Id; b=R4lAyV+XWEgl6EctYVmFeOThKtuwjXKZgNfvlk6Y3Twm8+rF1WTlDwoUXmaIFsQYwbKrbEHH8E6RmNX06G+Rfmb1dB+eEjbIlIGB0fax8Aj71jPF5ePo6ZtGudanBRmEZikMA2a7l6o/e/PC5UatlBFxLrNK0S+mZ58yR8p6xqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=pOCVOpVk; arc=none smtp.client-ip=209.127.231.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1781986700; c=relaxed/simple;
+	bh=UkUEyherRMok6tYJHGnQiYLG1OmpTghjF0bkLcSYY/4=;
+	h=Content-Type:To:Cc:Subject:Date:References:In-Reply-To:From:
+	 Message-Id:Mime-Version; b=YBl1sh7W19SiDUgWm/o5v7a5yDunpAxpKONDFFeO518rTyavuIYeqWidM2zUHnCwKqfiwnyx85leIjp8Z5FgibTalsLd8o52DNn1OL83yA0wkDqgzsF+zBka5gNrQdBQtu2RpVEFSH11pruRmV+26fBfK74y8EwOpW36lKyZavc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=lKXPS11r; arc=none smtp.client-ip=209.127.231.36
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="pOCVOpVk"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="lKXPS11r"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1781985933;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1781986686;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=AVHBlB12Pftv0MNTqw3iY6S8DNcnLnzpd2wwySEqinw=;
- b=pOCVOpVkP8VFELQShr2vsNeIfyNOCgnWdnpt60i8PBDnhsOoweM0WJes2AcuyToDTrlRYx
- QNQro0IpVoL58eu0UTKR+cN1h7QIyxFORR0S3E5d92zoBA2olAjNSJXg8VskxstbK6Rrnj
- TGA3o3Zg4+8yHiw8WTAoYnhmgujZuDsSuEN0lDOVpBxfzp0e2oM/MqHRND56r3u6I1EMcf
- QsFGBuuWdfd6jB5uD4giDFNXNXx6d92fjAIsfMYtmiBTKtjSyf1mo98dCI0wFBAdtpB3EL
- Otx2CWwGv/ZdIA9wgW/VBJhCuVwtmBQX20zophG3t5QnY6CYZdFr1mO2BDH1Ug==
-In-Reply-To: <20260603035925.217847-3-chencheng@fnnas.com>
-X-Lms-Return-Path: <lba+26a36f28c+787b15+vger.kernel.org+yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Date: Sun, 21 Jun 2026 04:05:28 +0800
-User-Agent: Mozilla Thunderbird
+ bh=9wMzmI+d1Zn+8RETLabqGNdT8egup+f4ZJfvTvQAl9w=;
+ b=lKXPS11rE/I55lnXMgSxpegmKBLN2QnVUB6NjHLo1nV7L7qhC3wnZUEB5gkj7usakzJSqI
+ nacIoMSLjOAu6XDrQfwSBL37Q/M+oHhmvxTiUG5N2FHoUY0XBFGhpcduNM7TeqGtJTlI6k
+ fRVU6LVL8A/UWfRl4wKQjA5MrKx0IEGjsErFsuAHkUWTNrLYEvOW+Oypr0MMuYz0JD0mpI
+ wpSRiERyeLeuPWohpy9D5woEFTX2lFy+YaFdfgoV9BOGoSA+dMLxhBtSdBL3LTceqpAwMV
+ Myr6p61f/9UrPplavqY6D9GDu7DL7/PzY9u1oW8D269D5d+YoKLCSpsYbzCEsw==
 Content-Transfer-Encoding: quoted-printable
-Received: from [192.168.1.104] ([39.182.0.148]) by smtp.larksuite.com with ESMTPS; Sat, 20 Jun 2026 20:05:31 +0000
-To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>
-Subject: Re: [PATCH v4 2/3] md/raid10: make r10bio_pool use fixed-size objects
-References: <20260603035925.217847-1-chencheng@fnnas.com> <20260603035925.217847-3-chencheng@fnnas.com>
+Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla Thunderbird
+Reply-To: yukuai@fygo.io
+To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, <song@kernel.org>, 
+	<yukuai@fygo.io>, <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
+	<vverma@digitalocean.com>, <axboe@kernel.dk>
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<yukuai@fygo.io>
+Subject: Re: [PATCH] md/raid1: honor REQ_NOWAIT when waiting for behind writes
+Date: Sun, 21 Jun 2026 04:18:01 +0800
+References: <20260611083514.754922-1-abd.masalkhi@gmail.com>
+X-Lms-Return-Path: <lba+26a36f57c+56ce88+vger.kernel.org+yukuai@fnnas.com>
+Received: from [192.168.1.104] ([39.182.0.148]) by smtp.feishu.cn with ESMTPS; Sun, 21 Jun 2026 04:18:03 +0800
+In-Reply-To: <20260611083514.754922-1-abd.masalkhi@gmail.com>
+From: "Yu Kuai" <yukuai@fnnas.com>
+Message-Id: <61361f20-f81c-46c3-bdd2-3de24e90a0aa@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Original-From: yu kuai <yukuai@fygo.io>
-Content-Type: text/plain; charset=UTF-8
-Reply-To: yukuai@fygo.io
-Cc: <linux-kernel@vger.kernel.org>, <yukuai@fygo.io>
-Message-Id: <01f109d9-dcb4-46e0-8348-c208d43778ca@fygo.io>
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
 
 Hi,
 
-=E5=9C=A8 2026/6/3 11:59, Chen Cheng =E5=86=99=E9=81=93:
-> From: Chen Cheng <chencheng@fnnas.com>
+=E5=9C=A8 2026/6/11 16:35, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
+> raid1 supports REQ_NOWAIT reads by avoiding waits in the barrier path
+> through wait_read_barrier(). However, a read can still block on a
+> WriteMostly device when the array uses a bitmap and there are
+> outstanding behind writes.
 >
-> raid10 currently sizes regular r10bio_pool objects from
-> conf->geo.raid_disks, which makes the mempool element width depend on
-> the current geometry.
+> In that case raid1 unconditionally calls wait_behind_writes(), which
+> may sleep until all behind writes complete. As a result, a REQ_NOWAIT
+> read can block despite the caller explicitly requesting non-blocking
+> behavior.
 >
-> That breaks across reshape. Regular r10bio objects are preallocated and
-> reused, so after a geometry change the pool may still contain objects
-> allocated for the old width. A later request under the new geometry can
-> then reuse an r10bio whose devs[] array is still sized for the previous
-> raid_disks value.
+> This ensures that raid1 consistently honors REQ_NOWAIT reads across all
+> paths that may otherwise wait for behind writes.
 >
-> Fix this by backing r10bio_pool with a fixed-size kmalloc mempool sized
-> for the maximum width needed across the current reshape transition.
-> Apply the same sizing rule to standalone r10bio objects allocated from
-> r10buf_pool_alloc().
->
-> This removes the geometry-dependent allocation width from regular
-> r10bio_pool objects and prevents reshape from reusing pool entries that
-> are too small for the new layout.
->
-> Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+> Fixes: 5aa705039c4f ("md: raid1 add nowait support")
+> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 > ---
->   drivers/md/raid10.c | 48 +++++++++++++++++++++++++++++++++------------
->   drivers/md/raid10.h |  2 +-
->   2 files changed, 36 insertions(+), 14 deletions(-)
+>   drivers/md/md-bitmap.c   |  9 +++++++--
+>   drivers/md/md-bitmap.h   |  2 +-
+>   drivers/md/md-llbitmap.c | 13 ++++++++-----
+>   drivers/md/md.c          |  2 +-
+>   drivers/md/raid1.c       | 10 +++++++---
+>   5 files changed, 24 insertions(+), 12 deletions(-)
+
+Applied to md-7.2.
+
+One note, remove nowait support is already in my to-do lists. There is a ca=
+se
+that can't be handled for now, for example:
+
+2 disk raid1, issue no wait write IO, rdev1 succeed while rdev2 failed. In =
+this
+case, we don't know if rdev2 failed issue because nowait or disk really hav=
+e
+badblocks. So we can't either record badblocks or issue again without nowai=
+t,
+for consequence, rdev1 and rdev2 will end up with different data.
+
+I think the best solution is to remove nowait support for mdraid. Feel free
+to cook a patch or if you have something else in mind.
+
 >
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index cee5a253a281..5eca34432e63 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -101,17 +101,32 @@ static void end_reshape(struct r10conf *conf);
->   static inline struct r10bio *get_resync_r10bio(struct bio *bio)
->   {
->   	return get_resync_pages(bio)->raid_bio;
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index 028b9ca8ce52..1206e31f323a 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -2063,18 +2063,23 @@ static void bitmap_end_behind_write(struct mddev =
+*mddev)
+>   		 bitmap->mddev->bitmap_info.max_write_behind);
 >   }
 >  =20
-> -static void * r10bio_pool_alloc(gfp_t gfp_flags, void *data)
-> +static inline unsigned int calc_r10bio_pool_disks(struct mddev *mddev)
+> -static void bitmap_wait_behind_writes(struct mddev *mddev)
+> +static bool bitmap_wait_behind_writes(struct mddev *mddev, bool nowait)
 >   {
-> -	struct r10conf *conf =3D data;
-> -	int size =3D offsetof(struct r10bio, devs[conf->geo.raid_disks]);
-> +	/* If delta_disks < 0, use bigger r10bio->devs[] is ok. */
-> +	return mddev->raid_disks + max(0, mddev->delta_disks);
-
-I don't understand this change first, I get what you want to do after takin=
-g
-a look at patch 3. However, I think geo.raid_disks is safe here. A r10_bio
-that is allocated from old pool should never be reused under new geometry.
-
-> +}
-> +
-> +static inline int calc_r10bio_size(struct mddev *mddev)
-> +{
-> +	return offsetof(struct r10bio, devs[calc_r10bio_pool_disks(mddev)]);
-> +}
-> +
-> +static mempool_t *create_r10bio_pool(struct mddev *mddev)
-> +{
-> +	int size =3D calc_r10bio_size(mddev);
-> +
-> +	return mempool_create_kmalloc_pool(NR_RAID_BIOS, size);
-> +}
-> +
-> +static struct r10bio *alloc_r10bio(struct mddev *mddev, gfp_t gfp_flags)
-> +{
-> +	int size =3D calc_r10bio_size(mddev);
+>   	struct bitmap *bitmap =3D mddev->bitmap;
 >  =20
-> -	/* allocate a r10bio with room for raid_disks entries in the
-> -	 * bios array */
->   	return kzalloc(size, gfp_flags);
+>   	/* wait for behind writes to complete */
+>   	if (bitmap && atomic_read(&bitmap->behind_writes) > 0) {
+> +		if (nowait)
+> +			return false;
+> +
+>   		pr_debug("md:%s: behind writes in progress - waiting to stop.\n",
+>   			 mdname(mddev));
+>   		/* need to kick something here to make sure I/O goes? */
+>   		wait_event(bitmap->behind_wait,
+>   			   atomic_read(&bitmap->behind_writes) =3D=3D 0);
+>   	}
+> +
+> +	return true;
 >   }
 >  =20
->   #define RESYNC_SECTORS (RESYNC_BLOCK_SIZE >> 9)
->   /* amount of memory to reserve for resync requests */
-> @@ -135,11 +150,11 @@ static void * r10buf_pool_alloc(gfp_t gfp_flags, vo=
-id *data)
->   	struct bio *bio;
->   	int j;
->   	int nalloc, nalloc_rp;
->   	struct resync_pages *rps;
->  =20
-> -	r10_bio =3D r10bio_pool_alloc(gfp_flags, conf);
-> +	r10_bio =3D alloc_r10bio(conf->mddev, gfp_flags);
->   	if (!r10_bio)
->   		return NULL;
->  =20
->   	if (test_bit(MD_RECOVERY_SYNC, &conf->mddev->recovery) ||
->   	    test_bit(MD_RECOVERY_RESHAPE, &conf->mddev->recovery))
-> @@ -275,11 +290,11 @@ static void put_all_bios(struct r10conf *conf, stru=
-ct r10bio *r10_bio)
->   static void free_r10bio(struct r10bio *r10_bio)
->   {
->   	struct r10conf *conf =3D r10_bio->mddev->private;
->  =20
->   	put_all_bios(conf, r10_bio);
-> -	mempool_free(r10_bio, &conf->r10bio_pool);
-> +	mempool_free(r10_bio, conf->r10bio_pool);
->   }
->  =20
->   static void put_buf(struct r10bio *r10_bio)
->   {
->   	struct r10conf *conf =3D r10_bio->mddev->private;
-> @@ -1537,11 +1552,11 @@ static void raid10_write_request(struct mddev *md=
-dev, struct bio *bio,
->   static void __make_request(struct mddev *mddev, struct bio *bio, int se=
-ctors)
->   {
->   	struct r10conf *conf =3D mddev->private;
->   	struct r10bio *r10_bio;
->  =20
-> -	r10_bio =3D mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
-> +	r10_bio =3D mempool_alloc(conf->r10bio_pool, GFP_NOIO);
->  =20
->   	r10_bio->master_bio =3D bio;
->   	r10_bio->sectors =3D sectors;
->  =20
->   	r10_bio->mddev =3D mddev;
-> @@ -1729,11 +1744,11 @@ static int raid10_handle_discard(struct mddev *md=
-dev, struct bio *bio)
->   		last_stripe_index *=3D geo->far_copies;
->   	end_disk_offset =3D (bio_end & geo->chunk_mask) +
->   				(last_stripe_index << geo->chunk_shift);
->  =20
->   retry_discard:
-> -	r10_bio =3D mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
-> +	r10_bio =3D mempool_alloc(conf->r10bio_pool, GFP_NOIO);
->   	r10_bio->mddev =3D mddev;
->   	r10_bio->state =3D 0;
->   	r10_bio->sectors =3D 0;
->   	r10_bio->read_slot =3D -1;
->   	memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) * geo->raid_disks);
-> @@ -3830,11 +3845,11 @@ static int setup_geo(struct geom *geo, struct mdd=
-ev *mddev, enum geo_type new)
->   static void raid10_free_conf(struct r10conf *conf)
->   {
->   	if (!conf)
+>   static void bitmap_destroy(struct mddev *mddev)
+> @@ -2084,7 +2089,7 @@ static void bitmap_destroy(struct mddev *mddev)
+>   	if (!bitmap) /* there was no bitmap */
 >   		return;
 >  =20
-> -	mempool_exit(&conf->r10bio_pool);
-> +	mempool_destroy(conf->r10bio_pool);
->   	kfree(conf->mirrors);
->   	kfree(conf->mirrors_old);
->   	kfree(conf->mirrors_new);
->   	safe_put_page(conf->tmppage);
->   	bioset_exit(&conf->bio_split);
-> @@ -3877,13 +3892,12 @@ static struct r10conf *setup_conf(struct mddev *m=
-ddev)
->   	if (!conf->tmppage)
->   		goto out;
+> -	bitmap_wait_behind_writes(mddev);
+> +	bitmap_wait_behind_writes(mddev, false);
+>   	if (!test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
+>   		mddev_destroy_serial_pool(mddev, NULL);
 >  =20
->   	conf->geo =3D geo;
->   	conf->copies =3D copies;
-> -	err =3D mempool_init(&conf->r10bio_pool, NR_RAID_BIOS, r10bio_pool_allo=
-c,
-> -			   rbio_pool_free, conf);
-> -	if (err)
-> +	conf->r10bio_pool =3D create_r10bio_pool(mddev);
-> +	if (!conf->r10bio_pool)
->   		goto out;
+> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+> index 214f623c7e79..f46674bdfeb9 100644
+> --- a/drivers/md/md-bitmap.h
+> +++ b/drivers/md/md-bitmap.h
+> @@ -98,7 +98,7 @@ struct bitmap_operations {
 >  =20
->   	err =3D bioset_init(&conf->bio_split, BIO_POOL_SIZE, 0, 0);
->   	if (err)
->   		goto out;
-> @@ -4373,10 +4387,11 @@ static int raid10_start_reshape(struct mddev *mdd=
-ev)
->   	struct geom new;
->   	struct r10conf *conf =3D mddev->private;
->   	struct md_rdev *rdev;
->   	int spares =3D 0;
->   	int ret;
-> +	mempool_t *new_pool;
+>   	void (*start_behind_write)(struct mddev *mddev);
+>   	void (*end_behind_write)(struct mddev *mddev);
+> -	void (*wait_behind_writes)(struct mddev *mddev);
+> +	bool (*wait_behind_writes)(struct mddev *mddev, bool nowait);
 >  =20
->   	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
->   		return -EBUSY;
+>   	md_bitmap_fn *start_write;
+>   	md_bitmap_fn *end_write;
+> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
+> index 1adc5b117821..5a4e2abaa757 100644
+> --- a/drivers/md/md-llbitmap.c
+> +++ b/drivers/md/md-llbitmap.c
+> @@ -1574,16 +1574,19 @@ static void llbitmap_end_behind_write(struct mdde=
+v *mddev)
+>   		wake_up(&llbitmap->behind_wait);
+>   }
 >  =20
->   	if (setup_geo(&new, mddev, geo_start) !=3D conf->copies)
-> @@ -4409,10 +4424,17 @@ static int raid10_start_reshape(struct mddev *mdd=
-ev)
+> -static void llbitmap_wait_behind_writes(struct mddev *mddev)
+> +static bool llbitmap_wait_behind_writes(struct mddev *mddev, bool nowait=
+)
+>   {
+>   	struct llbitmap *llbitmap =3D mddev->bitmap;
 >  =20
->   	if (spares < mddev->delta_disks)
->   		return -EINVAL;
+> -	if (!llbitmap)
+> -		return;
+> +	if (llbitmap && atomic_read(&llbitmap->behind_writes) > 0) {
+> +		if (nowait)
+> +			return false;
 >  =20
->   	conf->offset_diff =3D min_offset_diff;
-> +	if (mddev->delta_disks > 0) {
-> +		new_pool =3D create_r10bio_pool(mddev);
-> +		if (!new_pool)
-> +			return -ENOMEM;
-> +		mempool_destroy(conf->r10bio_pool);
-> +		conf->r10bio_pool =3D new_pool;
+> -	wait_event(llbitmap->behind_wait,
+> -		   atomic_read(&llbitmap->behind_writes) =3D=3D 0);
+> +		wait_event(llbitmap->behind_wait,
+> +			   atomic_read(&llbitmap->behind_writes) =3D=3D 0);
 > +	}
->   	spin_lock_irq(&conf->device_lock);
->   	if (conf->mirrors_new) {
->   		memcpy(conf->mirrors_new, conf->mirrors,
->   		       sizeof(struct raid10_info)*conf->prev.raid_disks);
->   		smp_mb();
-> diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-> index ec79d87fb92f..b711626a5db7 100644
-> --- a/drivers/md/raid10.h
-> +++ b/drivers/md/raid10.h
-> @@ -85,11 +85,11 @@ struct r10conf {
->   	int			have_replacement; /* There is at least one
->   						   * replacement device.
->   						   */
->   	wait_queue_head_t	wait_barrier;
 >  =20
-> -	mempool_t		r10bio_pool;
-> +	mempool_t		*r10bio_pool;
->   	mempool_t		r10buf_pool;
->   	struct page		*tmppage;
->   	struct bio_set		bio_split;
+> +	return true;
+>   }
 >  =20
->   	/* When taking over an array from a different personality, we store
+>   static ssize_t bits_show(struct mddev *mddev, char *page)
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 096bb64e87bd..d1465bcd86c8 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -7050,7 +7050,7 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
+>   static void mddev_detach(struct mddev *mddev)
+>   {
+>   	if (md_bitmap_enabled(mddev, false))
+> -		mddev->bitmap_ops->wait_behind_writes(mddev);
+> +		mddev->bitmap_ops->wait_behind_writes(mddev, false);
+>   	if (mddev->pers && mddev->pers->quiesce && !is_md_suspended(mddev)) {
+>   		mddev->pers->quiesce(mddev, 1);
+>   		mddev->pers->quiesce(mddev, 0);
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index b1ed4cc6ade4..b2d7c13b64bd 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1341,6 +1341,7 @@ static void raid1_read_request(struct mddev *mddev,=
+ struct bio *bio,
+>   	int max_sectors;
+>   	int rdisk;
+>   	bool r1bio_existed =3D !!r1_bio;
+> +	bool nowait =3D bio->bi_opf & REQ_NOWAIT;
+>  =20
+>   	/*
+>   	 * An md cloned bio indicates we are in the error path.
+> @@ -1360,8 +1361,7 @@ static void raid1_read_request(struct mddev *mddev,=
+ struct bio *bio,
+>   	 * Still need barrier for READ in case that whole
+>   	 * array is frozen.
+>   	 */
+> -	if (!wait_read_barrier(conf, bio->bi_iter.bi_sector,
+> -				bio->bi_opf & REQ_NOWAIT)) {
+> +	if (!wait_read_barrier(conf, bio->bi_iter.bi_sector, nowait)) {
+>   		bio_wouldblock_error(bio);
+>   		return;
+>   	}
+> @@ -1402,7 +1402,11 @@ static void raid1_read_request(struct mddev *mddev=
+, struct bio *bio,
+>   		 * over-take any writes that are 'behind'
+>   		 */
+>   		mddev_add_trace_msg(mddev, "raid1 wait behind writes");
+> -		mddev->bitmap_ops->wait_behind_writes(mddev);
+> +		if (!mddev->bitmap_ops->wait_behind_writes(mddev, nowait)) {
+> +			bio_wouldblock_error(bio);
+> +			set_bit(R1BIO_Returned, &r1_bio->state);
+> +			goto err_handle;
+> +		}
+>   	}
+>  =20
+>   	if (max_sectors < bio_sectors(bio)) {
 
 --=20
 Thanks,
