@@ -1,159 +1,129 @@
-Received: from va-2-29.ptr.blmpb.com (va-2-29.ptr.blmpb.com [209.127.231.29])
+Received: from va-2-55.ptr.blmpb.com (va-2-55.ptr.blmpb.com [209.127.231.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 198263546F9
-	for <linux-raid@vger.kernel.org>; Fri, 19 Jun 2026 08:11:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C7AD32FA14
+	for <linux-raid@vger.kernel.org>; Sat, 20 Jun 2026 18:25:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781856696; cv=none; b=ACRxE0vHrZZnaVYeLvwrxDbqRBdtNl81CpslzCULIO84hhL81fQduqtldD+rg4lELiDF5xM0tq8D0j4NG+WnPcTRx0KY4fYSC01BA542OGVq/rFKkaMVPqAM5+2AhfuedB3K8k5y3B0jCcY1sRVposicJVinAinhIYczAonPTdo=
+	t=1781979921; cv=none; b=KR9ewIX9LR6GrWALJKY3OUg6mbESdIW+RJYkzmqhJWcyGVRULsEvIPoLhliZSe1l5AjcGcyCLnRDUEwnZltODp6dYvPc5T7Md8j+C3/OK1WlEIRLOBML5LcyCSrHUlHt4eILU82MTjsLDqWtd3x7VjFv0UN5uv3q88Ebuve5nGY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781856696; c=relaxed/simple;
-	bh=BLvtpb1YTZMoA3xtjK/bwqQvNz8XUTTQKAMl9vVSei0=;
-	h=Date:To:Cc:Subject:Message-Id:Mime-Version:From:Content-Type; b=lIsvo1n02f+yAXQLx6EdouQlxhMYsn2Y9fh05MBJvMYY81oDpApXU2AgiSkH3TLMOuxK2pxvezTVWZH6+PNyUyaCIyJnfpYywT3s8pHrNdZE/MzOkvm8yONkIB67hmtFTQp0k45QxZQX7Be2HbCC9b8UjC1ru1hBOkhs3cU8RSM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=Mm99XUHN; arc=none smtp.client-ip=209.127.231.29
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1781979921; c=relaxed/simple;
+	bh=m4+vnQCzD4W1MtiBYdXcSLms4gBLg2bJhdg/2zEaZlA=;
+	h=Content-Type:To:References:Message-Id:From:Subject:Mime-Version:
+	 Cc:Date:In-Reply-To; b=WVfyglFtL8N1k+v21WxQiCyACcmft9BrrE+f+ywA9/hmMyrmFBvDuKi9T6I1+FUxlhXrt68MXplSt6fXeC6U+FsVPC0ZmF7x6VrBx6jO8e3nGBdxIUQRGphE+dvmqAydcQ0njx38aqizH5mNsoB7QgXisV3gMMsKkBgwQbzf15o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=mswArY0c; arc=none smtp.client-ip=209.127.231.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="Mm99XUHN"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="mswArY0c"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1781856683;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1781979905;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=jd5eiwHth56Gz2G1AVOwqO5GyIs4kQktcD1yChHHYWI=;
- b=Mm99XUHNaCRdMfgz4M81OIjrVt/R7VPmHTuxuSOPN/9gJdNuBs58LPR3ABUl+K/atsSG3E
- m1Brw1pXbEaVS292OmbnVYa+rjRYuuLNAEgJAg9kQ5gYkVXiRVheuAfWdldfkO7ZTiTSBU
- 1YNhfl7a5vNEPfCwf9725xvg63jKjzU2kcW150D560RBEzrUEIBk4VGpBnvzY1h41nqNC1
- BiEFMgkyptEPsBrqALoTlcwEykkRYlPdnWF3TfX/IvjMKu0lRsqDTJLPNTv7+dOZiqwlY/
- Y3Z3BLFS7NTn0acMfW78/YOeRmXE+Af87hwPYaf/sbTmJ1MOydy90VFp0HitpA==
-Date: Fri, 19 Jun 2026 16:11:09 +0800
-X-Original-From: chencheng@fnnas.com
-X-Mailer: git-send-email 2.54.0
-Content-Transfer-Encoding: 7bit
-To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <yukuai@fnnas.com>
-Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2] md/raid5: read batch_head under stripe_lock in make_stripe_request
-Message-Id: <20260619081109.1218112-1-chencheng@fnnas.com>
+ bh=ys4LFglm/KrCkt8cR7S2UM10kO0Eh2S6Upx2AWFDtAQ=;
+ b=mswArY0cb94tcnXk6C7PYQ9shZF0k+1JsxGfeCOAJkEOruozknp+LIqEa1fvdkbqJPJiRt
+ ldz9URzcj+vOHs0F7CA0mOgLIYN4SdNlSR4DfiZy3XW7+2veDjR8k4t6OEq/B1ZZMxP+jL
+ Gafaa+v9xC7WXUnAFsAmy78YlwVaIWSpYTwdH2IdEQBEM36GtNnx3pLlo1w3kL2bWj3Q0i
+ Ccj9sNAVPFA7TsrrJtnVzyPrvH92xCx9lI0e3E+SO/krhLGvTaMiWiA490tIli2VwC9v/t
+ ccvnTUHOhiAHG7lALXx8hg/F3qheHiXz5Rusx7nwzvbC9XUBz92vJRd1abcn5g==
+Content-Type: text/plain; charset=UTF-8
+Reply-To: yukuai@fygo.io
+To: <sashiko-reviews@lists.linux.dev>, 
+	"Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>
+Content-Transfer-Encoding: quoted-printable
+References: <20260613182810.1317258-3-abd.masalkhi@gmail.com> <20260613184042.BCEC01F000E9@smtp.kernel.org>
+Message-Id: <ecaef394-23a2-43ec-a85b-2e25786914aa@fygo.io>
+X-Lms-Return-Path: <lba+26a36db00+c0b92a+vger.kernel.org+yukuai@fygo.io>
+X-Original-From: yu kuai <yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.148]) by smtp.larksuite.com with ESMTPS; Sat, 20 Jun 2026 18:25:03 +0000
+User-Agent: Mozilla Thunderbird
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH v2 2/4] md/raid10: fix writes_pending leak on write request failures
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Received: from localhost.localdomain ([183.34.170.142]) by smtp.feishu.cn with ESMTPS; Fri, 19 Jun 2026 16:11:20 +0800
-X-Lms-Return-Path: <lba+26a34f9a9+17f2eb+vger.kernel.org+chencheng@fnnas.com>
-From: "Chen Cheng" <chencheng@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
+Cc: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>
+Date: Sun, 21 Jun 2026 02:25:00 +0800
+In-Reply-To: <20260613184042.BCEC01F000E9@smtp.kernel.org>
 
-From: Chen Cheng <chencheng@fnnas.com>
+Hi,
 
-KCSAN reports race in raid5_make_request() vs. stripe_add_to_batch_list()
+=E5=9C=A8 2026/6/14 2:40, sashiko-bot@kernel.org =E5=86=99=E9=81=93:
+> Thank you for your contribution! Sashiko AI review found 1 potential issu=
+e(s) to consider:
+>
+> Pre-existing issues:
+> - [High] The `r10_bio` structure allocated from the mempool is leaked whe=
+n `raid10_write_request()` bails out early due to `REQ_NOWAIT`.
+> --
+This looks like a real issue, do you plan to fix this as well?
+>
+> commit 3940ccdb4c7c7e19c20f9b5e2e1d12545c2558b5
+> Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+>
+> md/raid10: fix writes_pending leak on write request failures
+>
+> raid10_make_request() acquires a writes_pending reference with
+> md_write_start() before dispatching write requests. Several failure
+> paths in raid10_write_request() complete the bio and return without
+> reaching the normal write completion path, causing the corresponding
+> md_write_end() to be skipped.
+>
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index cee5a253a281d..c123a8c76ddcd 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+> [ ... ]
+>> @@ -1365,7 +1365,7 @@ static void raid10_write_request(struct mddev *mdd=
+ev, struct bio *bio,
+>>   		/* Bail out if REQ_NOWAIT is set for the bio */
+>>   		if (bio->bi_opf & REQ_NOWAIT) {
+>>   			bio_wouldblock_error(bio);
+>> -			return;
+>> +			return false;
+> [Severity: High]
+> This isn't a bug introduced by this patch, but does this early return lea=
+k
+> the r10_bio structure?
+>
+> __make_request() allocates r10_bio using:
+>      r10_bio =3D mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
+>
+> It then passes it to raid10_write_request(). When the bio has REQ_NOWAIT =
+set
+> during a clustered area resync, we complete the bio with an error and ret=
+urn
+> false without freeing the r10_bio. Could repeatedly triggering this exhau=
+st
+> the r10bio_pool, causing deadlocks on subsequent operations?
+>
+> Note that the regular_request_wait() error path right below correctly cal=
+ls
+> free_r10bio(r10_bio) before returning.
+>
+>>   		}
+>>   		for (;;) {
+> [ ... ]
+>> @@ -1398,7 +1398,7 @@ static void raid10_write_request(struct mddev *mdd=
+ev, struct bio *bio,
+>>   		if (bio->bi_opf & REQ_NOWAIT) {
+>>   			allow_barrier(conf);
+>>   			bio_wouldblock_error(bio);
+>> -			return;
+>> +			return false;
+> [Severity: High]
+> This is a pre-existing issue, but does this path also leak the r10_bio
+> mempool allocation when waiting for a reshape metadata update?
+>
+> Similar to the clustered area resync case above, the r10_bio allocated in
+> __make_request() does not appear to be freed before returning here.
+>
+>>   		}
+>>   		mddev_add_trace_msg(conf->mddev,
 
-Writer flow (stripe_add_to_batch_list):
-1. grab `head` stripe;
-2. lock_two_stripes(head, sh);
-3. re-check stripe_can_batch() for both head and sh, which requires
-   STRIPE_BATCH_READY set on both;
-4. write head->batch_head = head and sh->batch_head = head;
-5. unlock_two_stripes.
-
-STRIPE_BATCH_READY is cleared in two places:
-- clear_batch_ready(), at the entry of handle_stripe();
-- __add_stripe_bio(), for non-batchable bios.
-And, both need to acquire `stripe_lock`.
-
-Under stripe_lock, if STRIPE_BATCH_READY is clear, then:
-- New writers cannot install a batch_head;
-- Existing writers have already finished.
-So .. handle_stripe() readers can ready `batch_head` locklessly.
-
-Fix way:
-Writer side make_stripe_request() under STRIPE_BATCH_READY, so , need
-to be protected by stripe_lock when read something..
-
-v1 -> v2:
-- re-expalin how stripe_lock and batch_head work in commit message , and ,
-- modify comment in raid5.h.
-
-Fixs: f4aec6a097387
-
-
-KCSAN report:
-======================================
-  BUG: KCSAN: data-race in raid5_make_request / raid5_make_request
-
-  write to 0xffff8f03062432d8 of 8 bytes by task 210246 on cpu 6:
-    raid5_make_request+0x175e/0x2ab0
-    md_handle_request+0x2c5/0x700
-    md_submit_bio+0x126/0x320
-    [.........]
-    btrfs_sync_file+0x181/0x970
-    vfs_fsync_range+0x71/0x110
-    do_fsync+0x46/0xa0
-    __x64_sys_fsync+0x20/0x30
-
-  read to 0xffff8f03062432d8 of 8 bytes by task 210251 on cpu 0:
-    raid5_make_request+0x7c7/0x2ab0
-    md_handle_request+0x2c5/0x700
-    md_submit_bio+0x126/0x320
-    [.........]
-    btrfs_remap_file_range+0x266/0x980
-    vfs_clone_file_range+0x16d/0x610
-    ioctl_file_clone+0x64/0xd0
-    do_vfs_ioctl+0x87f/0xbc0
-    __x64_sys_ioctl+0xb8/0x130
-
-  value changed: 0x0000000000000000 -> 0xffff8f0307798728
-
-
-Signed-off-by: Chen Cheng <chencheng@fnnas.com>
----
- drivers/md/raid5.c | 2 ++
- drivers/md/raid5.h | 8 +++++++-
- 2 files changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 5521051a9425..efc63740f867 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6108,14 +6108,16 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
- 		ctx->do_flush = false;
- 	}
- 
- 	set_bit(STRIPE_HANDLE, &sh->state);
- 	clear_bit(STRIPE_DELAYED, &sh->state);
-+	spin_lock_irq(&sh->stripe_lock);
- 	if ((!sh->batch_head || sh == sh->batch_head) &&
- 	    (bi->bi_opf & REQ_SYNC) &&
- 	    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
- 		atomic_inc(&conf->preread_active_stripes);
-+	spin_unlock_irq(&sh->stripe_lock);
- 
- 	release_stripe_plug(mddev, sh);
- 	return STRIPE_SUCCESS;
- 
- out_release:
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 1c7b710fc9c1..9ff825697ba3 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -221,11 +221,17 @@ struct stripe_head {
- 	enum reconstruct_states reconstruct_state;
- 	spinlock_t		stripe_lock;
- 	int			cpu;
- 	struct r5worker_group	*group;
- 
--	struct stripe_head	*batch_head; /* protected by stripe lock */
-+	/*
-+	 * Writer protected by stripe_lock.
-+	 * Reader hold stripe_lock when STRIPE_BATCH_READY is set.
-+	 * Without STRIPE_BATCH_READY means no concurrent write,
-+	 * lockless read is ok.
-+	 */
-+	struct stripe_head	*batch_head;
- 	spinlock_t		batch_lock; /* only header's lock is useful */
- 	struct list_head	batch_list; /* protected by head's batch lock*/
- 
- 	union {
- 		struct r5l_io_unit	*log_io;
--- 
-2.54.0
+--=20
+Thanks,
+Kuai
