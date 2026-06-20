@@ -1,99 +1,148 @@
-Received: from lf-2-18.ptr.blmpb.com (lf-2-18.ptr.blmpb.com [101.36.218.18])
+Received: from va-2-47.ptr.blmpb.com (va-2-47.ptr.blmpb.com [209.127.231.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59E52368D7C
-	for <linux-raid@vger.kernel.org>; Sat, 20 Jun 2026 19:29:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.36.218.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C00664369A
+	for <linux-raid@vger.kernel.org>; Sat, 20 Jun 2026 19:44:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781983800; cv=none; b=j1QyXNID8/ipUbDhgFai2vQeSrGVjMP6Pe2zRC/+d6MpmF7m5Un9Xyzk6ms2WJ6VtKH6s3P5c8f12KJmmSgdmfIirCEfttdm8BzPgC3fTRP3+6R2cAO6YjJkchvT0SmGdHut0TuF70CIAHX4xdfbe+L7BOd+khfDRmyTamETCdw=
+	t=1781984647; cv=none; b=dmSv7PIVCst+ftY8jDc+ExPxMX07/DQ2rKzo39mdfN+jPIR4CUyhQ6Fph19mJAoe7KRojOCzF+DfI/kXUFlEwM2ldQ8Cl9rmGLEya7n/Ye8aiyRf/jfwEQTb7oM2hZ5bLm/mebviqjnxTmHQJ67Wan/wv/aK4ZN2lSF5yd7jh9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781983800; c=relaxed/simple;
-	bh=64lvEy0IgikpfF23MQjr9sNZPlqeSqooXxlnxAT+dyg=;
-	h=Content-Type:From:References:Message-Id:Mime-Version:Cc:Subject:
-	 In-Reply-To:To:Date; b=IKm7jFTvvupl5XnsvQrFy1tyX0VSrjJyeTtytkJGCFsEq+Es5rO1negSR+ZXa0fheodYeqe6pMVr9ESBthp9N7bl+TVccb6QvGQTsjYEMb9r6cErsv+xdahVzFiDUVNK3xFtflIrZZgCfwsiWESYwMsnjr2HwVbH1vgXO9LR6NQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=Si8QW0a5; arc=none smtp.client-ip=101.36.218.18
+	s=arc-20240116; t=1781984647; c=relaxed/simple;
+	bh=lRgJVCxY5tJruMD5EHGmasfgRnAshOV5FyHZPORa9eg=;
+	h=From:Date:Content-Type:Message-Id:Mime-Version:To:Cc:Subject:
+	 References:In-Reply-To; b=QWd0yzr8upVrUe0qZimOkrJbyWON+Gmt2AXFdcckXxKN6fVYF8KBhg4Da1EbUSGh993UmYBEy5YbMlFqGQkPRHmgTbBpuv6kOr5LejKQ7X7kwE8xn0yyzXS5BW7jbC6O/K3dlbIid+G7KtGgBXFRat3gko/HnWt/DaqCPJjIY1Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=BgVvstms; arc=none smtp.client-ip=209.127.231.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="Si8QW0a5"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="BgVvstms"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1781983749;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1781984632;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=lrnDzLjdmvtpFzTRloiZTx1I7ehFHfWIxg1adUIkyFY=;
- b=Si8QW0a5E4uvuD1kgkzvG7N0p4wWAjzCxVTdsoq1EXCvBQv11cQqCeyRvQvTFKZTZp+mAX
- dfI3DMGyQ2WPmSDn4KCYEsMg8/lLpxfbdiYbLBTFrl54JL+WYZ2TOtVYg+mjruGDptFCrA
- RGZw3fZjWrgnoB5L+gcz2M9VSopqYdutMKQv6Opzrvw1J4LwX2HVb50bdQ1zgZxHvghVy7
- /W80u1oDAJQFIoE5L5MXqQaS6OiBxAMuUA4pt973AevdfvQMlgRgqguWp0vRI7S1ilNX9E
- wMjm0wx8M39MJ0EgNouA8J2Txsi/u2SxRDh3V5EkYv9avWTOSfzoR8aAbkNAQQ==
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Reply-To: yukuai@fygo.io
+ bh=v43EFWR5Ac3eq80QQw1siF8EqSCh1z7zdg8b1hi1my8=;
+ b=BgVvstmsBdWAdHt8uWrp5t2omS1fKa495e5poQGVYkjn3nGC5I/WhPF0iDIJqK6AlCcR/G
+ z1QdzaNE2YoyEXBxL/+ooBF1CR1HovdeF2kS9rWK5DdDPKn/yTijtvh0FNEqUT3fYJWzNu
+ l4nA1IVFNP/OssvID2IEzD1J3iEWZMG1gd9/wBwpeGCIXz4MXKggt0CN8mGVaVtnr+gICl
+ 3suge8XoRipR4DhwEfwiO4/I66oN+ANCUfl0CPr1gATu4OUT+QYBQOHe0finV4iNEhtc0T
+ 1opyGqzTMHNrRuZA6z7EFeYlDJMlcM5nCA7JXMRycvgTh/YRRAxIcaSVBbL8BQ==
 From: "yu kuai" <yukuai@fygo.io>
-References: <20260611083510.476945-1-runyu.xiao@seu.edu.cn>
-User-Agent: Mozilla Thunderbird
-Message-Id: <5ccd58de-da8c-4a31-896d-24d86df4e177@fygo.io>
+Date: Sun, 21 Jun 2026 03:43:47 +0800
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Received: from [192.168.1.104] ([39.182.0.148]) by smtp.larksuite.com with ESMTPS; Sat, 20 Jun 2026 19:43:50 +0000
+Reply-To: yukuai@fygo.io
+Message-Id: <9919b1ec-66ca-4f91-af58-fdc34c0f8273@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Lms-Return-Path: <lba+26a36ea04+b3b1d8+vger.kernel.org+yukuai@fygo.io>
-Cc: <lilingfeng3@huawei.com>, <linux-kernel@vger.kernel.org>, 
-	<jianhao.xu@seu.edu.cn>
-Subject: Re: [PATCH] md: use READ_ONCE() for rdev_attr_show() mddev check
-Received: from [192.168.1.104] ([39.182.0.148]) by smtp.larksuite.com with ESMTPS; Sat, 20 Jun 2026 19:29:07 +0000
-In-Reply-To: <20260611083510.476945-1-runyu.xiao@seu.edu.cn>
+X-Lms-Return-Path: <lba+26a36ed77+830bd4+vger.kernel.org+yukuai@fygo.io>
 X-Original-From: yu kuai <yukuai@fygo.io>
-To: "Runyu Xiao" <runyu.xiao@seu.edu.cn>, <song@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <yukuai@fygo.io>
-Date: Sun, 21 Jun 2026 03:29:04 +0800
+To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>, 
+	<yukuai@fygo.io>
+Cc: <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 1/3] md: suspend array before raid10 reshape via sync_action
+References: <20260603035925.217847-1-chencheng@fnnas.com> <20260603035925.217847-2-chencheng@fnnas.com>
+User-Agent: Mozilla Thunderbird
+In-Reply-To: <20260603035925.217847-2-chencheng@fnnas.com>
 
 Hi,
 
-=E5=9C=A8 2026/6/11 16:35, Runyu Xiao =E5=86=99=E9=81=93:
-> md_kick_rdev_from_array() clears rdev->mddev with
-> WRITE_ONCE(rdev->mddev, NULL), and rdev_attr_store() already snapshots
-> that same shared pointer with READ_ONCE(rdev->mddev). rdev_attr_show()
-> still tests the pointer with a plain lockless `if (!rdev->mddev)` before
-> calling entry->show().
+=E5=9C=A8 2026/6/3 11:59, Chen Cheng =E5=86=99=E9=81=93:
+> From: Chen Cheng <chencheng@fnnas.com>
 >
-> A running system can reach this by reading rdev sysfs attributes while a
-> device removal path is tearing the same md_rdev down. In that window,
-> rdev_attr_show() can pass a stale plain guard while sibling
-> rdev_attr_store() already observes NULL and returns -ENODEV, leaving the
-> show path to operate after the shared mddev pointer has been revoked.
+> The sync_action=3Dreshape path currently enters mddev_start_reshape() wit=
+h
+> reconfig_mutex held but without suspending the array first. For raid10,
+> that means raid10_start_reshape() has to drop reconfig_mutex and reacquir=
+e
+> the array through mddev_suspend_and_lock_nointr() before it can safely
+> switch geometry-dependent state.
 >
-> Use READ_ONCE() in rdev_attr_show() so this sysfs read side matches the
-> existing visibility contract on rdev->mddev.
+> Use mddev_suspend_and_lock() for ACTION_RESHAPE in action_store(), so
+> the sysfs reshape path reaches mddev_start_reshape() with the array
+> already suspended and locked.
 >
-> Fixes: 9cfcf99e7ed6 ("md: get rdev->mddev with READ_ONCE()")
-> Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
+> Other sync_action operations keep using mddev_lock() unchanged.
+>
+> Signed-off-by: Chen Cheng <chencheng@fnnas.com>
 > ---
->   drivers/md/md.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+>   drivers/md/md.c | 22 +++++++++++++++++-----
+>   1 file changed, 17 insertions(+), 5 deletions(-)
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 92ec4be20db8..a021cf4a798d 100644
+> index 096bb64e87bd..5bc937e149ac 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -3704,7 +3704,7 @@ rdev_attr_show(struct kobject *kobj, struct attribu=
-te *attr, char *page)
+> @@ -5256,30 +5256,39 @@ static int mddev_start_reshape(struct mddev *mdde=
+v)
 >  =20
->   	if (!entry->show)
->   		return -EIO;
-> -	if (!rdev->mddev)
-> +	if (!READ_ONCE(rdev->mddev))
->   		return -ENODEV;
+>   static ssize_t
+>   action_store(struct mddev *mddev, const char *page, size_t len)
+>   {
+>   	int ret;
+> +	bool suspended =3D false;
+>   	enum sync_action action;
+>  =20
+>   	if (!mddev->pers || !mddev->pers->sync_request)
+>   		return -EINVAL;
+>  =20
+> +	action =3D md_sync_action_by_name(page);
+>   retry:
+>   	if (work_busy(&mddev->sync_work))
+>   		flush_work(&mddev->sync_work);
+>  =20
+> -	ret =3D mddev_lock(mddev);
+> +	if (action =3D=3D ACTION_RESHAPE) {
+> +		ret =3D mddev_suspend_and_lock(mddev);
 
-unlike rdev_attr_store(), kernel can panic if abnormal value is read. Howev=
-er, this is just a
-read and the value is not used at all, READ_ONCE() is not used here on purp=
-ose by 9cfcf99e7ed6.
+suspend during retry is too heavy. Please move suspend above retry.
 
->   	return entry->show(rdev, page);
+> +		suspended =3D true;
+> +	} else {
+> +		ret =3D mddev_lock(mddev);
+> +		suspended =3D false;
+> +	}
+>   	if (ret)
+>   		return ret;
+>  =20
+>   	if (work_busy(&mddev->sync_work)) {
+> -		mddev_unlock(mddev);
+> +		if (suspended)
+> +			mddev_unlock_and_resume(mddev);
+> +		else
+> +			mddev_unlock(mddev);
+>   		goto retry;
+>   	}
+>  =20
+> -	action =3D md_sync_action_by_name(page);
+> -
+>   	/* TODO: mdadm rely on "idle" to start sync_thread. */
+>   	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+>   		switch (action) {
+>   		case ACTION_FROZEN:
+>   			md_frozen_sync_thread(mddev);
+> @@ -5344,11 +5353,14 @@ action_store(struct mddev *mddev, const char *pag=
+e, size_t len)
+>   	md_wakeup_thread(mddev->thread);
+>   	sysfs_notify_dirent_safe(mddev->sysfs_action);
+>   	ret =3D len;
+>  =20
+>   out:
+> -	mddev_unlock(mddev);
+> +	if (suspended)
+> +		mddev_unlock_and_resume(mddev);
+> +	else
+> +		mddev_unlock(mddev);
+>   	return ret;
 >   }
+>  =20
+>   static struct md_sysfs_entry md_scan_mode =3D
+>   __ATTR_PREALLOC(sync_action, S_IRUGO|S_IWUSR, action_show, action_store=
+);
 
 --=20
 Thanks,
