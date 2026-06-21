@@ -1,73 +1,73 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78EA927A12F
-	for <linux-raid@vger.kernel.org>; Sun, 21 Jun 2026 11:05:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B871244665
+	for <linux-raid@vger.kernel.org>; Sun, 21 Jun 2026 18:09:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782039960; cv=none; b=hIHkOxGdZzM8JGjOSphjwp5Rk7xIAWtgSn4gG0zxNtdV8o/No/6iVPtpCa2VcAdvTJb40sibFnlqZMzQ6IpRgmscz/bLkxXX6KJwk9UbfsaHGsUuV8o/BpfmOmbYbjRLWmFpfdDwFWhnWsD5DPnrUuFXTU0hsNbtGd7oZqYswKQ=
+	t=1782065344; cv=none; b=dMY69hIYWBX4ew89WMD9eIvfEeZ3EfcBuOsebp20WB68aD9SZcWAJMP+Pls4cTGRMumSYKRuZKPpQL8j5T6NRkkAHlTVrt7WSJHrT62HysoiAB7fFGOT9zFFWXbo0dfCo2Q2srz+q8OoUABVAJcbLVcY4964x9+h6Qr0Ym2nyUs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782039960; c=relaxed/simple;
-	bh=S8g+Yb4LC3835NdJW21zFgho7+utbXRp9nSrlT2Nuro=;
+	s=arc-20240116; t=1782065344; c=relaxed/simple;
+	bh=fNbB198fflPdJnpxSSpG2Ox0FfkOAWfP5knojsgqn2M=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=JlyFCWZdXyddIJet8N8wvbIRa/HlPNOptSL8M0Ov8LTAXb8gw2Fq0JccvYMWphGEVgTVRsSr2E7pc1bA2aKcnPEwKGznyVA7GYH968y9Et0j26chZJD1qt6lYACWHt1qldExvZTDD2qP2FFiLzf/badjIPQYP4JCRhCb5vJ6YHs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J6mXhEwb; arc=none smtp.client-ip=209.85.128.52
+	 MIME-Version:Content-Type; b=OKzmjme5WvRKl6kP2Pyxsn90OOjdbg8TOw4/EyUp1WC/JKqyZpXCfguuleEVprcRhChvUkpMrQbqZr0+KabN8p0wFtfvt2sDnbelVb6d4oalV+ApsbGhBG2GQheMbd4K4HuzOLtpdeYSnX8KIg4zRdJ1ErkMivkrNtKx2gIwcX4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cZFrfuDm; arc=none smtp.client-ip=209.85.128.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J6mXhEwb"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4905529b933so33440875e9.0
-        for <linux-raid@vger.kernel.org>; Sun, 21 Jun 2026 04:05:58 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cZFrfuDm"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-490b7866869so35874335e9.2
+        for <linux-raid@vger.kernel.org>; Sun, 21 Jun 2026 11:09:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782039957; x=1782644757; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1782065341; x=1782670141; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:references
          :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=P6qCbctGU9YtgCNvyYnx6Q2LOX2NS4PdIhxDYYp5m4k=;
-        b=J6mXhEwbLMFoSV2U4fLU4cwxYt9a92rHIqQY+oHIuBwAaInsU2igvw7a2Z3xPEZIak
-         5OHvXO9fzV8lrDlSzn90idCetpfMxvKpWcp/3M52vbA4kKyd3xK0RdCeEWerTJ/E7eJo
-         WQUaemyiJzZd4CfWSftOSuUWRrG0460xJQRvoPVbx2o8AJ91/ku4Xw9FbTx5Jnynvxkr
-         ybWqG3eSb6hIrDr96kxR0dY28QusjMb5Hd4X/0RZBnrKrEQUlg4llcFTUKxacWutINuT
-         npBOx1JgQi2iYOwI8FEFBJ4wrPXcXkhmIA1e+1YeL3dOrg0EItrUJr97/X1gEtd4dfrm
-         SmOg==
+        bh=n2vX7UxoAyHR0nEsmAp/8SWI4koDkM6uFZgYkxJ5oXk=;
+        b=cZFrfuDmZ2BN0o/YXIErg6UEIeQ2gUv22WfDzdbI1zoda7TBNf5ASXbCUDTk2GoyrT
+         NXpJtJkJ2nFHziEpte4EK1OF8/RidGC3CED7Fy5bgd9CdYbjnv6TSunvGux7D7riI9eh
+         XAzRQZKhLS4VdHlIxeZKRJmYAmwG57Cwz0U5eN8Yy98PH6F0CoVzDGTZe+cqSG4FaPI5
+         3OeXQ/tjlDYF0frzAckMpiwYb0G1SipgZdzjjCULirBFhZcNSjv9Y0Ytn+0yhWmdJeQW
+         mmGFzvDUWZ+wsPp82h9WfbZWhR0A4I7wLbcNAxcUBu1vXBZNtZYXIHkyDxoQjDXyl1Ad
+         W06w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782039957; x=1782644757;
+        d=1e100.net; s=20251104; t=1782065341; x=1782670141;
         h=content-transfer-encoding:mime-version:message-id:date:references
          :in-reply-to:subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=P6qCbctGU9YtgCNvyYnx6Q2LOX2NS4PdIhxDYYp5m4k=;
-        b=quEJ/EDA307YZudGX+BKnP9nwLVuQaBjcd5lUbJImwap8COJUv3tXvy06yU99RIjDF
-         ufkBEqHZduNzOmCiySUVWIqFUyoMPgPlArzT0uF7WLpfQVVHRjwskp5xWw6LaKuUB0Ht
-         Dju24cFsxX2EEyT6+32C7yDQvMnPh5HLLa3xex1lX9s6WCamAN3qy9Mj+OdPqHqqBVaU
-         vu9THdBgGgb+LB07yKu3iOHDOYQbyYIO4YBv5UZNe2DRsjhlTrjT10csRU0CWzKd0tkm
-         x5hTu5cxMoB9h4unZ3Y24YwdfhWznOyamfthnSKlq1812omh1Ah3kWDg4NEf4zcyjaBA
-         6LKg==
-X-Gm-Message-State: AOJu0Yz3RbxgFylvtasL8MwQz8Vm2pQJxCy7DQJELHS/wTolIJi/OJWu
-	w9eu8g1N2m0mBMsJAKYlhQ6l2nD5DRrMxt4rkIufsEVBNmx6J9PbaMU6
-X-Gm-Gg: AfdE7clVPyakGdBzAaceVHpshKw7S9zMN9s9lDbVJAx2yd3oLgIDFGbFoRJoBeIc7tm
-	/1DhX1qh7qdKkGuFWSclj/PRE7gxE4BClrSYSoJsM/KKveXF0hganq5yLujZ+Ri+Q4czztdsTDW
-	1FPPCASDVStOdZLwRZfAk0YOA8CCGSPjv9BTOUAvuW7ZPnqFR1P0Sf4O496WC/7EG9xb6dBucgF
-	QzgHHo+W8WL8ecQNlGWy4DLWioJFg2todPfu2R/zsup0CQxpeOVsak9Y2xxehClqjTs000Il/hv
-	flMOzmlm+5G5kv2rx4QnMFfzlr3wyjs8t02l3Q+J1//dUHp4BmsXByPLXyggzy8Ru5FVo1zvRBr
-	hqYSkY3tXVp9565GLMC8PLN9VuiB/lpbQHS2qnHZl0a71mQRnYDb2Fzzy1QNZpXOczbP/dzLWUC
-	gktCKQ7T1A/qUp6B5uyOngZ2+FU99bfdyEaB/cUKGJlcksKeghKimkGic=
-X-Received: by 2002:a05:600c:3507:b0:492:433a:53af with SMTP id 5b1f17b1804b1-492433a552bmr156437115e9.16.1782039956683;
-        Sun, 21 Jun 2026 04:05:56 -0700 (PDT)
-Received: from Abds-MacBook-Air.local ([2a02:3037:615:2c89:25c9:4e1a:3e26:ebb0])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49240084928sm219169335e9.15.2026.06.21.04.05.55
+        bh=n2vX7UxoAyHR0nEsmAp/8SWI4koDkM6uFZgYkxJ5oXk=;
+        b=mkbgWeANFGfiBlMwpbA/1MSlMgdkgFwj4rGcRP5z9i01D3SMhk+F//9wX2X548Clg6
+         KHlhie5NBPKRu4Ls9slHkIEXi+uQbVDMy6KnlYpwrN21dPiCqVtvT6eTSUHPhAxL/Ui1
+         sqksE2Qd8FdOPxafFBw6zRHM9K1gRJtOJDObDPyJw4ACUeWmgBoSYxGfbAOw+mzKHWz7
+         DWkf6Ipf3C30XkqXzKeqno6v88sUBkH61HpnqapgFWRorMuamq0TxZiq9ecidf73eyJC
+         PvO5J0ZmXGBcGno3M2LdsC+fFvsK5yYST4nBHxuaPCb3mD06s0natjOeQHJyFCr5kgWz
+         f4Nw==
+X-Gm-Message-State: AOJu0YzrrwIpenocJHQWveUaxw4Kn0auVC81voVfYPfQqnZHyBk0qq7E
+	TbqURs93LMqwfBVf5END61zrs/pNsfyDPr9BnSA6KFboghSDywMM4QRN
+X-Gm-Gg: AfdE7ckdl7wH3rLolST/Gk+piDe/VwjPj25hpCVtv+BkTimC69vETECDMtU+f1hQ4c8
+	gUU/H1PSdGXXzSw9zBQvs1cosBRC5oiTboGie45IZ9fNduIt+T7sZZ2ax9uL0EBo0t8u+vTA+wC
+	P0KkMMxYNVLHQ7RAXgPfNkFgqx7FdJ4OkZe8EcKXtd0QbruQENXusdEauFhi4sZLvxuQAhqJbjQ
+	FHTSIiT+tjnsZ8I/WQrFnXMWF/d1/1flY0932LqmTHDa3aIuoeXWIsSQXPQvLXGnnO1oNjuL9mv
+	ynfvS6wHkom7/mTuHromdTvRFblMXKdz8TvcTG68W/iag6Ywx8f7GLHJ57f9khs2xUIUvu4cdq3
+	zXl3oFPp+WxmjFZtcR0RnIrp5U5DKoze0D1Vt3YncGAdvvg3XOOI+8GjUZTF1mnwUKlo+lz/Qcg
+	Zm/jTbdRQsyLpF+cKPpUJ1NEWygvxAGq1ccxUEZbe7CaWYcUu6NuMA
+X-Received: by 2002:a05:600c:4ec6:b0:490:b8c0:d470 with SMTP id 5b1f17b1804b1-492425706acmr173891275e9.19.1782065340512;
+        Sun, 21 Jun 2026 11:09:00 -0700 (PDT)
+Received: from Abds-MacBook-Air.local ([2a02:3037:615:2c89:4a:a3f7:13b1:5df6])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-46666c57a0esm17566975f8f.27.2026.06.21.11.08.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 21 Jun 2026 04:05:56 -0700 (PDT)
+        Sun, 21 Jun 2026 11:08:59 -0700 (PDT)
 From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: yu kuai <yukuai@fygo.io>, sashiko-reviews@lists.linux.dev
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-Subject: Re: [PATCH v2 2/4] md/raid10: fix writes_pending leak on write
- request failures
-In-Reply-To: <ecaef394-23a2-43ec-a85b-2e25786914aa@fygo.io>
-References: <20260613182810.1317258-3-abd.masalkhi@gmail.com>
- <20260613184042.BCEC01F000E9@smtp.kernel.org>
- <ecaef394-23a2-43ec-a85b-2e25786914aa@fygo.io>
-Date: Sun, 21 Jun 2026 13:05:46 +0200
-Message-ID: <m21pe02lx1.fsf@gmail.com>
+To: Yu Kuai <yukuai@fnnas.com>, song@kernel.org, yukuai@fygo.io,
+ magiclinan@didiglobal.com, xiao@kernel.org, vverma@digitalocean.com,
+ axboe@kernel.dk
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai@fygo.io
+Subject: Re: [PATCH] md/raid1: honor REQ_NOWAIT when waiting for behind writes
+In-Reply-To: <61361f20-f81c-46c3-bdd2-3de24e90a0aa@fnnas.com>
+References: <20260611083514.754922-1-abd.masalkhi@gmail.com>
+ <61361f20-f81c-46c3-bdd2-3de24e90a0aa@fnnas.com>
+Date: Sun, 21 Jun 2026 20:08:58 +0200
+Message-ID: <m2y0g722bp.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -78,87 +78,204 @@ Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
 
-Hi Kaui,
+Hi Kuai,
 
-On Sun, Jun 21, 2026 at 02:25 +0800, yu kuai wrote:
+On Sun, Jun 21, 2026 at 04:18 +0800, Yu Kuai wrote:
 > Hi,
 >
-> =E5=9C=A8 2026/6/14 2:40, sashiko-bot@kernel.org =E5=86=99=E9=81=93:
->> Thank you for your contribution! Sashiko AI review found 1 potential iss=
-ue(s) to consider:
+> =E5=9C=A8 2026/6/11 16:35, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
+>> raid1 supports REQ_NOWAIT reads by avoiding waits in the barrier path
+>> through wait_read_barrier(). However, a read can still block on a
+>> WriteMostly device when the array uses a bitmap and there are
+>> outstanding behind writes.
 >>
->> Pre-existing issues:
->> - [High] The `r10_bio` structure allocated from the mempool is leaked wh=
-en `raid10_write_request()` bails out early due to `REQ_NOWAIT`.
->> --
-> This looks like a real issue, do you plan to fix this as well?
+>> In that case raid1 unconditionally calls wait_behind_writes(), which
+>> may sleep until all behind writes complete. As a result, a REQ_NOWAIT
+>> read can block despite the caller explicitly requesting non-blocking
+>> behavior.
+>>
+>> This ensures that raid1 consistently honors REQ_NOWAIT reads across all
+>> paths that may otherwise wait for behind writes.
+>>
+>> Fixes: 5aa705039c4f ("md: raid1 add nowait support")
+>> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+>> ---
+>>   drivers/md/md-bitmap.c   |  9 +++++++--
+>>   drivers/md/md-bitmap.h   |  2 +-
+>>   drivers/md/md-llbitmap.c | 13 ++++++++-----
+>>   drivers/md/md.c          |  2 +-
+>>   drivers/md/raid1.c       | 10 +++++++---
+>>   5 files changed, 24 insertions(+), 12 deletions(-)
+>
+> Applied to md-7.2.
+>
+> One note, remove nowait support is already in my to-do lists. There is a =
+case
+> that can't be handled for now, for example:
+>
+> 2 disk raid1, issue no wait write IO, rdev1 succeed while rdev2 failed. I=
+n this
+> case, we don't know if rdev2 failed issue because nowait or disk really h=
+ave
+> badblocks. So we can't either record badblocks or issue again without now=
+ait,
+> for consequence, rdev1 and rdev2 will end up with different data.
+>
+> I think the best solution is to remove nowait support for mdraid. Feel fr=
+ee
+> to cook a patch or if you have something else in mind.
+>
 
-Yes, I plan to fix that issue as well. I'll include this fix along with
-the other patches.
+What if on a partial nowait failure we just end the master bio as
+success, but set NEEDED on that chunk's bitmap counter and start_sync()
+picks it up for resync? That way we don't have to decide why rdev2
+failed at all, resync just copies from rdev1 to rdev2 without nowait,
+so if it's a real bad block, end_sync_write() records it then.
+
+We kinda have the idea of ending the bio before the write lands on all
+mirrors in write-behind already, though it's not quite the same, there
+the deferred write still lands, here we ACK after it already failed and
+lean on resync to redo it.
+
+My worry is the loaded case: AGAIN under queue pressure isn't that rare,
+so we might end up triggering resync frequently. Do you think that's
+acceptable, or is dropping nowait better? Happy to prototype either way.
 
 >>
->> commit 3940ccdb4c7c7e19c20f9b5e2e1d12545c2558b5
->> Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
->>
->> md/raid10: fix writes_pending leak on write request failures
->>
->> raid10_make_request() acquires a writes_pending reference with
->> md_write_start() before dispatching write requests. Several failure
->> paths in raid10_write_request() complete the bio and return without
->> reaching the normal write completion path, causing the corresponding
->> md_write_end() to be skipped.
->>
->>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->>> index cee5a253a281d..c123a8c76ddcd 100644
->>> --- a/drivers/md/raid10.c
->>> +++ b/drivers/md/raid10.c
->> [ ... ]
->>> @@ -1365,7 +1365,7 @@ static void raid10_write_request(struct mddev *md=
-dev, struct bio *bio,
->>>   		/* Bail out if REQ_NOWAIT is set for the bio */
->>>   		if (bio->bi_opf & REQ_NOWAIT) {
->>>   			bio_wouldblock_error(bio);
->>> -			return;
->>> +			return false;
->> [Severity: High]
->> This isn't a bug introduced by this patch, but does this early return le=
-ak
->> the r10_bio structure?
->>
->> __make_request() allocates r10_bio using:
->>      r10_bio =3D mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
->>
->> It then passes it to raid10_write_request(). When the bio has REQ_NOWAIT=
- set
->> during a clustered area resync, we complete the bio with an error and re=
-turn
->> false without freeing the r10_bio. Could repeatedly triggering this exha=
-ust
->> the r10bio_pool, causing deadlocks on subsequent operations?
->>
->> Note that the regular_request_wait() error path right below correctly ca=
-lls
->> free_r10bio(r10_bio) before returning.
->>
->>>   		}
->>>   		for (;;) {
->> [ ... ]
->>> @@ -1398,7 +1398,7 @@ static void raid10_write_request(struct mddev *md=
-dev, struct bio *bio,
->>>   		if (bio->bi_opf & REQ_NOWAIT) {
->>>   			allow_barrier(conf);
->>>   			bio_wouldblock_error(bio);
->>> -			return;
->>> +			return false;
->> [Severity: High]
->> This is a pre-existing issue, but does this path also leak the r10_bio
->> mempool allocation when waiting for a reshape metadata update?
->>
->> Similar to the clustered area resync case above, the r10_bio allocated in
->> __make_request() does not appear to be freed before returning here.
->>
->>>   		}
->>>   		mddev_add_trace_msg(conf->mddev,
+>> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+>> index 028b9ca8ce52..1206e31f323a 100644
+>> --- a/drivers/md/md-bitmap.c
+>> +++ b/drivers/md/md-bitmap.c
+>> @@ -2063,18 +2063,23 @@ static void bitmap_end_behind_write(struct mddev=
+ *mddev)
+>>   		 bitmap->mddev->bitmap_info.max_write_behind);
+>>   }
+>>=20=20=20
+>> -static void bitmap_wait_behind_writes(struct mddev *mddev)
+>> +static bool bitmap_wait_behind_writes(struct mddev *mddev, bool nowait)
+>>   {
+>>   	struct bitmap *bitmap =3D mddev->bitmap;
+>>=20=20=20
+>>   	/* wait for behind writes to complete */
+>>   	if (bitmap && atomic_read(&bitmap->behind_writes) > 0) {
+>> +		if (nowait)
+>> +			return false;
+>> +
+>>   		pr_debug("md:%s: behind writes in progress - waiting to stop.\n",
+>>   			 mdname(mddev));
+>>   		/* need to kick something here to make sure I/O goes? */
+>>   		wait_event(bitmap->behind_wait,
+>>   			   atomic_read(&bitmap->behind_writes) =3D=3D 0);
+>>   	}
+>> +
+>> +	return true;
+>>   }
+>>=20=20=20
+>>   static void bitmap_destroy(struct mddev *mddev)
+>> @@ -2084,7 +2089,7 @@ static void bitmap_destroy(struct mddev *mddev)
+>>   	if (!bitmap) /* there was no bitmap */
+>>   		return;
+>>=20=20=20
+>> -	bitmap_wait_behind_writes(mddev);
+>> +	bitmap_wait_behind_writes(mddev, false);
+>>   	if (!test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
+>>   		mddev_destroy_serial_pool(mddev, NULL);
+>>=20=20=20
+>> diff --git a/drivers/md/md-bitmap.h b/drivers/md/md-bitmap.h
+>> index 214f623c7e79..f46674bdfeb9 100644
+>> --- a/drivers/md/md-bitmap.h
+>> +++ b/drivers/md/md-bitmap.h
+>> @@ -98,7 +98,7 @@ struct bitmap_operations {
+>>=20=20=20
+>>   	void (*start_behind_write)(struct mddev *mddev);
+>>   	void (*end_behind_write)(struct mddev *mddev);
+>> -	void (*wait_behind_writes)(struct mddev *mddev);
+>> +	bool (*wait_behind_writes)(struct mddev *mddev, bool nowait);
+>>=20=20=20
+>>   	md_bitmap_fn *start_write;
+>>   	md_bitmap_fn *end_write;
+>> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
+>> index 1adc5b117821..5a4e2abaa757 100644
+>> --- a/drivers/md/md-llbitmap.c
+>> +++ b/drivers/md/md-llbitmap.c
+>> @@ -1574,16 +1574,19 @@ static void llbitmap_end_behind_write(struct mdd=
+ev *mddev)
+>>   		wake_up(&llbitmap->behind_wait);
+>>   }
+>>=20=20=20
+>> -static void llbitmap_wait_behind_writes(struct mddev *mddev)
+>> +static bool llbitmap_wait_behind_writes(struct mddev *mddev, bool nowai=
+t)
+>>   {
+>>   	struct llbitmap *llbitmap =3D mddev->bitmap;
+>>=20=20=20
+>> -	if (!llbitmap)
+>> -		return;
+>> +	if (llbitmap && atomic_read(&llbitmap->behind_writes) > 0) {
+>> +		if (nowait)
+>> +			return false;
+>>=20=20=20
+>> -	wait_event(llbitmap->behind_wait,
+>> -		   atomic_read(&llbitmap->behind_writes) =3D=3D 0);
+>> +		wait_event(llbitmap->behind_wait,
+>> +			   atomic_read(&llbitmap->behind_writes) =3D=3D 0);
+>> +	}
+>>=20=20=20
+>> +	return true;
+>>   }
+>>=20=20=20
+>>   static ssize_t bits_show(struct mddev *mddev, char *page)
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 096bb64e87bd..d1465bcd86c8 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -7050,7 +7050,7 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
+>>   static void mddev_detach(struct mddev *mddev)
+>>   {
+>>   	if (md_bitmap_enabled(mddev, false))
+>> -		mddev->bitmap_ops->wait_behind_writes(mddev);
+>> +		mddev->bitmap_ops->wait_behind_writes(mddev, false);
+>>   	if (mddev->pers && mddev->pers->quiesce && !is_md_suspended(mddev)) {
+>>   		mddev->pers->quiesce(mddev, 1);
+>>   		mddev->pers->quiesce(mddev, 0);
+>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> index b1ed4cc6ade4..b2d7c13b64bd 100644
+>> --- a/drivers/md/raid1.c
+>> +++ b/drivers/md/raid1.c
+>> @@ -1341,6 +1341,7 @@ static void raid1_read_request(struct mddev *mddev=
+, struct bio *bio,
+>>   	int max_sectors;
+>>   	int rdisk;
+>>   	bool r1bio_existed =3D !!r1_bio;
+>> +	bool nowait =3D bio->bi_opf & REQ_NOWAIT;
+>>=20=20=20
+>>   	/*
+>>   	 * An md cloned bio indicates we are in the error path.
+>> @@ -1360,8 +1361,7 @@ static void raid1_read_request(struct mddev *mddev=
+, struct bio *bio,
+>>   	 * Still need barrier for READ in case that whole
+>>   	 * array is frozen.
+>>   	 */
+>> -	if (!wait_read_barrier(conf, bio->bi_iter.bi_sector,
+>> -				bio->bi_opf & REQ_NOWAIT)) {
+>> +	if (!wait_read_barrier(conf, bio->bi_iter.bi_sector, nowait)) {
+>>   		bio_wouldblock_error(bio);
+>>   		return;
+>>   	}
+>> @@ -1402,7 +1402,11 @@ static void raid1_read_request(struct mddev *mdde=
+v, struct bio *bio,
+>>   		 * over-take any writes that are 'behind'
+>>   		 */
+>>   		mddev_add_trace_msg(mddev, "raid1 wait behind writes");
+>> -		mddev->bitmap_ops->wait_behind_writes(mddev);
+>> +		if (!mddev->bitmap_ops->wait_behind_writes(mddev, nowait)) {
+>> +			bio_wouldblock_error(bio);
+>> +			set_bit(R1BIO_Returned, &r1_bio->state);
+>> +			goto err_handle;
+>> +		}
+>>   	}
+>>=20=20=20
+>>   	if (max_sectors < bio_sectors(bio)) {
 >
 > --=20
 > Thanks,
