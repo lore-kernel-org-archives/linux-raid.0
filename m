@@ -1,81 +1,101 @@
-Received: from imap5.colo.codethink.co.uk (imap5.colo.codethink.co.uk [78.40.148.171])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CE1A3B42E5;
-	Mon, 22 Jun 2026 13:55:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.40.148.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AEE53B2FC6
+	for <linux-raid@vger.kernel.org>; Mon, 22 Jun 2026 14:02:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782136550; cv=none; b=JPQqIDYGBqrMMD3o2BFiOASJdXBYVM9Aq+XR9Ya/VSvJh9fQuRFztp11utrfURXywOZ4YLij1Iv1wrfVANPL4mbEAzoNfujee1UCSM2jhcLjE5Fm/y1pYB2s/Pyf6ieSBEI8sNeUv9EhS3k3miVMYVcCW/PQD+NL6MFD6dG/m6o=
+	t=1782136979; cv=none; b=MUDmhJUDgrjUsxCKheFabos8gMSkhxqro/6ZVr5CCFxiahSpXP3LMKhg+MZq7zED6GZMrNqfLexVTA4bvne1QbSsd2dUYtnSyFG+Vln3QfpqXMOkBUlIowz5Q3Kx9QjSV1CCwrCB7NnbJYeS06JoqIq52Eam/Z7odeKaYLdyG0M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782136550; c=relaxed/simple;
-	bh=9BvRdIBACByVDe76RnoHiZf7cg+E5YVxC4MdC7cIOVI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=r5ai4BWV3zXyd58ohwFivpVK66MRr/LpIKtBzq59sqC8OmLPSm+gsCR4errGE2oW426KwPagwPMDmoHdpSgNsHP5VobSqtuzT5+GDZUY+PvXZmA8RcjsFaGd96ZFVheWbhdBdsQ755+SzMfm1xfaX7nsqYh8f6Go2AvaB11OZd4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=codethink.co.uk; spf=pass smtp.mailfrom=codethink.com; dkim=pass (2048-bit key) header.d=codethink.co.uk header.i=@codethink.co.uk header.b=X0tKilYS; arc=none smtp.client-ip=78.40.148.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=codethink.co.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=codethink.com
+	s=arc-20240116; t=1782136979; c=relaxed/simple;
+	bh=wwBxear/sfAe4FH9n66Y3I5iJZoW4KFOjHsNKnHI0go=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=NKf7an2z6VBhJyA4IcotLcRRA5BNprI4RO3LMR2C9uZaYiPShEXekcT1tVgBg4FPcjIMGlgmVJzzX7sw0bokN5OC1gKmPDlcq5knIhkHB8Ym9a+5d1Lpa7HLs3lKn4yE1v4bC84/ibNxA3lMJIm82G3Fmk7eh8iKJ7koCsmHCvc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g/FrPKhd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=codethink.co.uk header.i=@codethink.co.uk header.b="X0tKilYS"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=codethink.co.uk; s=imap5-20230908; h=Sender:Content-Transfer-Encoding:
-	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Reply-To:In-Reply-To:
-	References; bh=C39aNqUfckICrRYUCJ32OG2byxRISEpkNLemt876ss4=; b=X0tKilYS6zomJR
-	E3hkyJNf1I7llPV05Z9be2Ar/qM5UDYXqtGqrKVaCKuX26RUyFnAwf3pGaOxDr0NWy7JPUgY2kRwv
-	MlxpOg45gk/N0b421jCN9MBle5Mer68Yc3V441CHMRgGzgLpeZByzgoX2AMges3WUImm2HViocHh9
-	bKiBBgRuMTI8uDhb70sF3qYaNgcWeSy/p+vzOqL26NR3l4fFI2epCTzwxWkAXDTYoCho6sBJRkQzs
-	RC0AoGv6UghP5lxXDhZChU90yTC49XR2vOd9aRoA07YhKbo8ylSIM4u+lm3CgarkK/reFl4kt/PO2
-	ypGCu/GSLeekZ5sb7/Eg==;
-Received: from [167.98.27.226] (helo=rainbowdash)
-	by imap5.colo.codethink.co.uk with esmtpsa  (Exim 4.94.2 #2 (Debian))
-	id 1wbf7h-0053ms-Ak; Mon, 22 Jun 2026 14:55:37 +0100
-Received: from ben by rainbowdash with local (Exim 4.99.4)
-	(envelope-from <ben@rainbowdash>)
-	id 1wbf7g-000000021Gt-3fYo;
-	Mon, 22 Jun 2026 14:55:36 +0100
-From: Ben Dooks <ben.dooks@codethink.co.uk>
-To: linux-raid@vger.kernel.org,
-	Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>
-Cc: linux-riscv@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Paul Walmsley <pjw@kernel.org>,
-	Palmer Dabbelt <palmer@dabbelt.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>
-Subject: [PATCH] raid6: fix raid6_recov_rvv symbol undeclared warning
-Date: Mon, 22 Jun 2026 14:55:35 +0100
-Message-Id: <20260622135535.481534-1-ben.dooks@codethink.co.uk>
-X-Mailer: git-send-email 2.37.2.352.g3c44437643
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g/FrPKhd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF4781F000E9;
+	Mon, 22 Jun 2026 14:02:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782136978;
+	bh=8vkaGexevGE87CWT6cnb4GcDnw8NuhDUGWOo9HNe9aI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=g/FrPKhdGzQ2M8U6+kAOa+FBVOzVb6YQA3lnC/3rEcNo/2vCC4ww9jGPWIxaevqTm
+	 J0NjllPCteXRnrtdFzO2WmeYbrKtAc7YY+Zk7fMqJm260d4EFZ+ImgZyzpwJYrCScb
+	 PfQPMfIrieYGIxL7xKUI/t2G937z9sd4Fm47Lu0EP7wXMrkZqMSNZR6kHi7b3cfpuP
+	 8ZxYNLiA0GjB7p7m6h4wNWaTlNyhUL7QHecFkTB4xsrjWgWLcmnTH17pRs+bpFPdcX
+	 MIYwmdDaIPXUipnt+jHAEfUPPIbGaNOHsYfcqvnguOuFSOZK7ySMm3i3e1a9LrqlbL
+	 djIcbvqDU3uFA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] raid6: fix riscv symbol undeclared warnigns
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ben Dooks" <ben.dooks@codethink.co.uk>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260622135207.480540-1-ben.dooks@codethink.co.uk>
+References: <20260622135207.480540-1-ben.dooks@codethink.co.uk>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 22 Jun 2026 14:02:57 +0000
+Message-Id: <20260622140257.CF4781F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: srv_ts003@codethink.com
 
-The riscv recov_rvv.c should have included pq_arch.h for
-the definition of raid6_recov_rvv. Add the include to
-fix the following sparse warning:
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] Including `pq_arch.h` in `rvv.c` misuses an initialization fragment=
+ as a header, creating a brittle include dependency and violating architect=
+ural boundaries.
+--
 
-lib/raid/raid6/riscv/recov_rvv.c:218:32: warning: symbol 'raid6_recov_rvv' was not declared. Should it be static?
+commit 0d7480a95df3baf577ec13b2b5aec7d36d11ee3f
+Author: Ben Dooks <ben.dooks@codethink.co.uk>
 
-Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
----
- lib/raid/raid6/riscv/recov_rvv.c | 1 +
- 1 file changed, 1 insertion(+)
+raid6: fix riscv symbol undeclared warnigns
 
-diff --git a/lib/raid/raid6/riscv/recov_rvv.c b/lib/raid/raid6/riscv/recov_rvv.c
-index 2305940276dd..78e158a3e332 100644
---- a/lib/raid/raid6/riscv/recov_rvv.c
-+++ b/lib/raid/raid6/riscv/recov_rvv.c
-@@ -8,6 +8,7 @@
- #include <linux/raid/pq.h>
- #include "algos.h"
- #include "rvv.h"
-+#include "pq_arch.h"
- 
- static void __raid6_2data_recov_rvv(int bytes, u8 *p, u8 *q, u8 *dp,
- 				    u8 *dq, const u8 *pbmul,
--- 
-2.37.2.352.g3c44437643
+This commit attempts to resolve sparse warnings about undeclared raid6_rvvx
+symbols in the RISC-V RAID6 implementation by including pq_arch.h in rvv.c.
 
+> raid6: fix riscv symbol undeclared warnigns
+
+This isn't a bug, but there's a typo (warnigns) in the subject line.
+
+> diff --git a/lib/raid/raid6/riscv/rvv.c b/lib/raid/raid6/riscv/rvv.c
+> index 75c9dafedb284..4ac50606f3dc1 100644
+> --- a/lib/raid/raid6/riscv/rvv.c
+> +++ b/lib/raid/raid6/riscv/rvv.c
+> @@ -10,6 +10,7 @@
+>   */
+> =20
+>  #include "rvv.h"
+> +#include "pq_arch.h"
+
+[Severity: Low]
+Is it appropriate to include pq_arch.h here to fix the sparse warnings?
+
+The pq_arch.h file appears to be designed as an initialization fragment mea=
+nt
+to be conditionally included by the generic algos.c, since it contains the
+arch_raid6_init() static inline function. Including it here inappropriately
+injects unused initialization functions into the backend implementation.
+
+Does this also create a brittle include order dependency? The pq_arch.h file
+uses functions like raid6_algo_add_default and raid6_algo_add but does not
+include algos.h where they are declared. The build only succeeds because rv=
+v.c
+happens to include rvv.h (which includes algos.h) immediately before pq_arc=
+h.h.
+Any reordering of these includes could break the build.
+
+Would it be safer to place the extern declarations for these symbols in a
+shared internal header like rvv.h?
+
+> =20
+>  #ifdef __riscv_vector
+>  #error "This code must be built without compiler support for vector"
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260622135207.4805=
+40-1-ben.dooks@codethink.co.uk?part=3D1
