@@ -1,121 +1,116 @@
-Received: from va-2-37.ptr.blmpb.com (va-2-37.ptr.blmpb.com [209.127.231.37])
+Received: from va-2-26.ptr.blmpb.com (va-2-26.ptr.blmpb.com [209.127.231.26])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C43173D668C
-	for <linux-raid@vger.kernel.org>; Tue, 23 Jun 2026 12:39:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3403F222597
+	for <linux-raid@vger.kernel.org>; Tue, 23 Jun 2026 12:51:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.26
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782218347; cv=none; b=JE3VA7MSzfeAWpLf/fitGSjycS2dCGQ7ycMT1t3jkretDy3+X9BpX4NfShGBL+/cAIJiS3EfwdtiOifDleNR0Y2OjlweyBSBkhKp2oX2aAhqk4eFYZ4aAaxi1bAJXPPX1zniE3vtk3crYNmQDSbk0o8ebjPhCCmhMZPUxV4blHA=
+	t=1782219088; cv=none; b=kOuqtmsYHse3l9dRPcHJiXCD4Nglrm/o2emT8d3IDPxajNXDPnwhw+IWhc3H1zyk77dSvpFwqMd5T2rrtIkmLoCK5bFoerS91cNJWjYA3kK1mHY1EmLgT3kL4DLx6PVB+IqgysltsvlNWK3RmrEMMzRpG3XYtGr4VH4o3foVMsg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782218347; c=relaxed/simple;
-	bh=NFcWNilJux3CZ4hraUiBzKM/Ijmm8OFLt06ah89ybrs=;
-	h=Cc:Subject:Date:Mime-Version:References:To:From:Message-Id:
-	 In-Reply-To:Content-Type; b=OCkXGDeb20ca8B3iUPmLp1hcMc8W9OEr8Xgk4tQDEbmD6BkiYqGk4lMBS31escF1Njbhbhh5ahJ4G7W4aE7y6F8Xwo8EpqA2J4b78UfV5eCiRCuW8eRWzOy1ScM+7BIpc2gn0E0K+th/vFpqW2tJazHBac2F8AAchXJ9q8mFqCg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=oSR4EG0D; arc=none smtp.client-ip=209.127.231.37
+	s=arc-20240116; t=1782219088; c=relaxed/simple;
+	bh=3XtlspSA1T0EtcAqXSUE0FKXGL7Eiw5VaTIR30igwSM=;
+	h=Content-Type:To:Subject:References:Mime-Version:Cc:Date:
+	 Message-Id:From:In-Reply-To; b=Mp32v4PYFB7GOhXMj+BedAY138sC7UUxgTYctk9iAdO0Emuio2/2Pm/2cwKeN+Lr7GMNtlpsjogC8LZgUPOgUiEGwMYn8wdLUEZr1ESaADFMaUvBluLPXcY0Srg86nCP9pMYKTjW9UYLZds3DJymZnaGczm0GLn+1zfTskba93o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=0Zg+wi9u; arc=none smtp.client-ip=209.127.231.26
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="oSR4EG0D"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="0Zg+wi9u"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1782218335;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1782219076;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=Zgg/UU/IkdxPS7LkTIqjR4Xhj9+lxrycKcYNDAr53MY=;
- b=oSR4EG0D5BFvG9clLCilfZlBH6TuMSlPCQnGW5VXVL83LwhqI6HZMP5JIMcUqh1M/xD/z7
- rZnRIRJZtRLTUbQpuiWqwPdnwZ6nu/k2V2LU8n5TVceWFiRnCjc79XHoqsRYx7jIMggbPB
- a1ktPZ1U/n5eIogGsCAplbm4qLVxS4faJoLH78ufTCDncFGXkQSgKeH0Dm/wjsXfZacbeQ
- OfsrHr38sKV8LzS1p/xq8+z1XtfWXs98BgXojmp/99HucjB/s3/wmdCZKNHTiXB+08vUCF
- 9zW+yJ3xq+Wp1BPtG5WpIT8bM2qxEKxL3gOOTTpLC2vjpI7Z9w5HXFpzYunFXg==
-Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v6 1/3] md: suspend array when sync_action=reshape
-Date: Tue, 23 Jun 2026 20:38:38 +0800
+ bh=5397kGXq9BuZqiBMsUtgfQhHRZZtRApMK8NOvkq3vbA=;
+ b=0Zg+wi9ugDOmBqE2bGEf8m5y5mPlTRbaFUhsEdOdneAN+q5K2IOpfe6ODLASis2MO/gxhi
+ KXxQGIc+KoC+6x6eb8DH3m96mpDGsbFxO8ji+BpITmtk3enEEH3SiN8uKC4/a46cfDD0FI
+ 1nMjNMjbgGNsPY1+ZkicM7mn+41/a85E0XGNKjtJZxePiS197OCT37LpXm+R+i3P/SkcJe
+ tV9M9ZlMGqk+84H6IcTNnlNu0BgnrvIOIqYJdGNUoGCheI2rEEBRlVmEQUpGuezCaSxP9f
+ ORSVyI1tO4RxuvOLRpFQiLFnI8cLjgH1kBdc4NmHqCryP4LAIQ2rgb7uPcD8Kw==
+Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla Thunderbird
+X-Original-From: Chen Cheng <chencheng@fnnas.com>
+To: <sashiko-reviews@lists.linux.dev>
+Subject: Re: [PATCH v2] md: use READ_ONCE() for lockless reads of sb_flags
+References: <20260623111617.2500313-1-chencheng@fnnas.com> <20260623112532.4D4761F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Received: from localhost.localdomain ([183.34.169.141]) by smtp.feishu.cn with ESMTPS; Tue, 23 Jun 2026 20:38:52 +0800
-X-Mailer: git-send-email 2.54.0
-X-Lms-Return-Path: <lba+26a3a7e5d+82d381+vger.kernel.org+chencheng@fnnas.com>
-Content-Transfer-Encoding: 7bit
-References: <20260623123840.2521340-1-chencheng@fnnas.com>
-X-Original-From: chencheng@fnnas.com
-To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <yukuai@fnnas.com>
+Received: from [192.168.8.62] ([183.34.169.141]) by smtp.feishu.cn with ESMTPS; Tue, 23 Jun 2026 20:51:13 +0800
+Cc: <yukuai@fygo.io>, <linux-raid@vger.kernel.org>, 
+	"Chen Cheng" <chencheng@fnnas.com>, <chenchneg33@gmail.com>
+Date: Tue, 23 Jun 2026 20:51:12 +0800
+Message-Id: <085ee11a-d5f5-4d68-aa21-647543f9ab4a@fnnas.com>
+X-Lms-Return-Path: <lba+26a3a8142+a2dfd1+vger.kernel.org+chencheng@fnnas.com>
 From: "Chen Cheng" <chencheng@fnnas.com>
-Message-Id: <20260623123840.2521340-2-chencheng@fnnas.com>
-In-Reply-To: <20260623123840.2521340-1-chencheng@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20260623112532.4D4761F000E9@smtp.kernel.org>
 
-From: Chen Cheng <chencheng@fnnas.com>
+=E5=9C=A8 2026/6/23 19:25, sashiko-bot@kernel.org =E5=86=99=E9=81=93:
+> Thank you for your contribution! Sashiko AI review found 1 potential issu=
+e(s) to consider:
+>=20
+> Pre-existing issues:
+> - [Low] Lockless plain reads of `mddev->recovery` will cause KCSAN data r=
+ace warnings, similar to the ones fixed for `sb_flags`.
+> --
+>=20
+> commit f286787fa23a14cb6ec022eb99574f7a85f9957d
+> Author: Chen Cheng <chencheng@fnnas.com>
+>=20
+> md: use READ_ONCE() for lockless reads of sb_flags
+>=20
+> This patch adds READ_ONCE() annotations to lockless reads of mddev->sb_fl=
+ags
+> across md, raid1, raid5, and raid10. It aims to fix KCSAN data race warni=
+ngs
+> caused by concurrent set_bit() operations on sb_flags.
+>=20
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 096bb64e87bd5..c5c50640b6849 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -6832,7 +6832,7 @@ int md_run(struct mddev *mddev)
+>>   		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+>>   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>=20
+> [Severity: Low]
+> This is a pre-existing issue, but since this patch targets KCSAN warnings=
+ for
+> atomic bitmasks, could plain lockless reads of mddev->recovery trigger si=
+milar
+> data races?
+>=20
+> There are places where mddev->recovery is read without locks and without
+> READ_ONCE(), potentially causing KCSAN noise against set_bit() updates:
+>=20
+> drivers/md/md.c:md_sync_action() {
+>      ...
+>      unsigned long recovery =3D mddev->recovery;
+>      ...
+> }
+>=20
+> drivers/md/md.c:set_bitmap_file() {
+>      ...
+>      if (mddev->recovery || mddev->sync_thread)
+>      ...
+> }
+>=20
+> drivers/md/md.c:update_array_info() {
+>      ...
+>      if (mddev->recovery || mddev->sync_thread) {
+>      ...
+> }
+>=20
+> Should READ_ONCE() also be applied to these reads of mddev->recovery to
+> provide a more complete fix?
+>=20
+>> -	if (mddev->sb_flags)
+>> +	if (READ_ONCE(mddev->sb_flags))
+>>   		md_update_sb(mddev, 0);
+>=20
 
-raid10 needs to resize/swap r10bio_pool when reshape changes
-raid_disks, and, don't let new requests keep allocating r10bio
-objects from the old pool while that transition is in progress.
-
-suspend and lock array before mddev_start_reshape(), and resume
-it on exit.
-
-Other sync_action ops are unchanged.
-
-Signed-off-by: Chen Cheng <chencheng@fnnas.com>
----
- drivers/md/md.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 096bb64e87bd..1377c407614c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5261,25 +5261,29 @@ action_store(struct mddev *mddev, const char *page, size_t len)
- 	enum sync_action action;
- 
- 	if (!mddev->pers || !mddev->pers->sync_request)
- 		return -EINVAL;
- 
-+	action = md_sync_action_by_name(page);
- retry:
- 	if (work_busy(&mddev->sync_work))
- 		flush_work(&mddev->sync_work);
- 
--	ret = mddev_lock(mddev);
-+	ret = (action == ACTION_RESHAPE) ?
-+		mddev_suspend_and_lock(mddev) :
-+		mddev_lock(mddev);
- 	if (ret)
- 		return ret;
- 
- 	if (work_busy(&mddev->sync_work)) {
--		mddev_unlock(mddev);
-+		if (action == ACTION_RESHAPE)
-+			mddev_unlock_and_resume(mddev);
-+		else
-+			mddev_unlock(mddev);
- 		goto retry;
- 	}
- 
--	action = md_sync_action_by_name(page);
--
- 	/* TODO: mdadm rely on "idle" to start sync_thread. */
- 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
- 		switch (action) {
- 		case ACTION_FROZEN:
- 			md_frozen_sync_thread(mddev);
-@@ -5344,11 +5348,14 @@ action_store(struct mddev *mddev, const char *page, size_t len)
- 	md_wakeup_thread(mddev->thread);
- 	sysfs_notify_dirent_safe(mddev->sysfs_action);
- 	ret = len;
- 
- out:
--	mddev_unlock(mddev);
-+	if (action == ACTION_RESHAPE)
-+		mddev_unlock_and_resume(mddev);
-+	else
-+		mddev_unlock(mddev);
- 	return ret;
- }
- 
- static struct md_sysfs_entry md_scan_mode =
- __ATTR_PREALLOC(sync_action, S_IRUGO|S_IWUSR, action_show, action_store);
--- 
-2.54.0
+Only md_sync_action() do lockless u64 plain read, READ_ONCE could be=20
+safer in here ..
