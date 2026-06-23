@@ -1,147 +1,121 @@
-Received: from va-2-38.ptr.blmpb.com (va-2-38.ptr.blmpb.com [209.127.231.38])
+Received: from va-2-37.ptr.blmpb.com (va-2-37.ptr.blmpb.com [209.127.231.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBBF13D4117
-	for <linux-raid@vger.kernel.org>; Tue, 23 Jun 2026 12:39:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.38
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C43173D668C
+	for <linux-raid@vger.kernel.org>; Tue, 23 Jun 2026 12:39:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.37
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782218345; cv=none; b=ARcJD/wcu8ZLAzEZ5s4aOglWUkXVwETzRp2y9bK7NMkTEkzRuGRI6EfdbKoXEoWCxGI5VGJIbRClAip4XKBylwGyvod3FAO7LdYYUUZlIqB+qsBwODKgOwGy3KJH/uM3DRXfe2DjmGm1zUKetlsUZCjXrwAYEOBz3BkYihJu2iI=
+	t=1782218347; cv=none; b=JE3VA7MSzfeAWpLf/fitGSjycS2dCGQ7ycMT1t3jkretDy3+X9BpX4NfShGBL+/cAIJiS3EfwdtiOifDleNR0Y2OjlweyBSBkhKp2oX2aAhqk4eFYZ4aAaxi1bAJXPPX1zniE3vtk3crYNmQDSbk0o8ebjPhCCmhMZPUxV4blHA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782218345; c=relaxed/simple;
-	bh=18eTRgYoeHLppWrwYc6eF7a89RpQ353ju7R4vZITpDg=;
-	h=Date:Mime-Version:In-Reply-To:References:Cc:Subject:To:Message-Id:
-	 Content-Type:From; b=PSEQFwl/qmoxUewqdrujVRi2t0zrkKUAj7YoHvTwYBav5KtZunASTfkRNE1oChC+Y1nxkxWfECVMDBUzIWZIBQkOADuA4D5pIDUFrLQsPPWYWjNqjKXJQCrdbPKF6ViGS4zW+5lrAa4ZJARhnWMTmL09cSFaSIXbWw15s0YSoe4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=SLtTz0+0; arc=none smtp.client-ip=209.127.231.38
+	s=arc-20240116; t=1782218347; c=relaxed/simple;
+	bh=NFcWNilJux3CZ4hraUiBzKM/Ijmm8OFLt06ah89ybrs=;
+	h=Cc:Subject:Date:Mime-Version:References:To:From:Message-Id:
+	 In-Reply-To:Content-Type; b=OCkXGDeb20ca8B3iUPmLp1hcMc8W9OEr8Xgk4tQDEbmD6BkiYqGk4lMBS31escF1Njbhbhh5ahJ4G7W4aE7y6F8Xwo8EpqA2J4b78UfV5eCiRCuW8eRWzOy1ScM+7BIpc2gn0E0K+th/vFpqW2tJazHBac2F8AAchXJ9q8mFqCg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=oSR4EG0D; arc=none smtp.client-ip=209.127.231.37
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="SLtTz0+0"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="oSR4EG0D"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1782218339;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1782218335;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=tB1v22PxlpTCOlcV/3Md4yuBMVCnRPIXJoePQzKXC68=;
- b=SLtTz0+0VNUd0qfylZxI2AyyNVNdlB9YkkqP8d6VeV9k7pg+Ln/Y8mTVKTCqcymjNvs04v
- g8qUt482Ay07dIvWm7VMTC4zTsrYbohNBPD0V8JcUj8Z/ithlBZyo7CSFwL2REQNGfoIkm
- q0NCkCvSid7Mkfb33peU78WBS9cY7VaWQfY54aG7Vo4Q2jewlZ3wxhpM88OiAyDcQEqDBo
- FxXlKi7WRD3MDW7m+ZPIQGJCRnI36HlnFdqkG3y0AedapDSar7NK9aNs/ECWjuKPqCFsJ5
- PFOATmHXZzRrAsQpOsqzf9Cd2Dq5ZQ3ZB+Oh9yfTt0cOiD5vNX9ZMKaukvzcsQ==
-Date: Tue, 23 Jun 2026 20:38:40 +0800
+ bh=Zgg/UU/IkdxPS7LkTIqjR4Xhj9+lxrycKcYNDAr53MY=;
+ b=oSR4EG0D5BFvG9clLCilfZlBH6TuMSlPCQnGW5VXVL83LwhqI6HZMP5JIMcUqh1M/xD/z7
+ rZnRIRJZtRLTUbQpuiWqwPdnwZ6nu/k2V2LU8n5TVceWFiRnCjc79XHoqsRYx7jIMggbPB
+ a1ktPZ1U/n5eIogGsCAplbm4qLVxS4faJoLH78ufTCDncFGXkQSgKeH0Dm/wjsXfZacbeQ
+ OfsrHr38sKV8LzS1p/xq8+z1XtfWXs98BgXojmp/99HucjB/s3/wmdCZKNHTiXB+08vUCF
+ 9zW+yJ3xq+Wp1BPtG5WpIT8bM2qxEKxL3gOOTTpLC2vjpI7Z9w5HXFpzYunFXg==
+Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v6 1/3] md: suspend array when sync_action=reshape
+Date: Tue, 23 Jun 2026 20:38:38 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-In-Reply-To: <20260623123840.2521340-1-chencheng@fnnas.com>
-References: <20260623123840.2521340-1-chencheng@fnnas.com>
+Received: from localhost.localdomain ([183.34.169.141]) by smtp.feishu.cn with ESMTPS; Tue, 23 Jun 2026 20:38:52 +0800
 X-Mailer: git-send-email 2.54.0
-Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v6 3/3] md/raid10: free r10bio before ending master_bio in raid_end_bio_io() and raid_end_discard_bio()
-To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <yukuai@fnnas.com>
-Message-Id: <20260623123840.2521340-4-chencheng@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-From: "Chen Cheng" <chencheng@fnnas.com>
+X-Lms-Return-Path: <lba+26a3a7e5d+82d381+vger.kernel.org+chencheng@fnnas.com>
 Content-Transfer-Encoding: 7bit
-Received: from localhost.localdomain ([183.34.169.141]) by smtp.feishu.cn with ESMTPS; Tue, 23 Jun 2026 20:38:56 +0800
+References: <20260623123840.2521340-1-chencheng@fnnas.com>
 X-Original-From: chencheng@fnnas.com
-X-Lms-Return-Path: <lba+26a3a7e61+57b00d+vger.kernel.org+chencheng@fnnas.com>
+To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <yukuai@fnnas.com>
+From: "Chen Cheng" <chencheng@fnnas.com>
+Message-Id: <20260623123840.2521340-2-chencheng@fnnas.com>
+In-Reply-To: <20260623123840.2521340-1-chencheng@fnnas.com>
+Content-Type: text/plain; charset=UTF-8
 
 From: Chen Cheng <chencheng@fnnas.com>
 
-origin flow:
+raid10 needs to resize/swap r10bio_pool when reshape changes
+raid_disks, and, don't let new requests keep allocating r10bio
+objects from the old pool while that transition is in progress.
 
-      bio_endio(master_bio);   /* may drop active_io to zero */
-      allow_barrier(conf);
-      free_r10bio(r10_bio);    /* reads conf->geo, returns to pool */
+suspend and lock array before mddev_start_reshape(), and resume
+it on exit.
 
-one scenario is:
-
-  CPU A (softirq, raid_end_bio_io)         CPU B (action_store) --> reshape
-  ================================         ===============================
-  bio_endio(master_bio)
-    md_end_clone_io
-      percpu_ref_put -> 0
-                                           wait_event wakeup, and,
-                                           	mddev_suspend return
-                                           raid10_start_reshape:
-                                             setup_geo(&conf->geo, new)
-                                             ...
-                                             mempool_destroy(old_pool)
-                                             conf->r10bio_pool = new_pool
-  allow_barrier(conf)
-  free_r10bio(r10_bio)
-    put_all_bios:
-      for (i=0; i<conf->geo.raid_disks; i++)
-          ==> old obj, new geo, OOB
-    mempool_free(r10_bio, conf->r10bio_pool)
-          ==> old-geometry obj freed into new pool
-
-so .. fix by reorder the flow:
-
-	free_r10bio(r10_bio)
-	allow_barrier(conf)
-	bio_endio(master_io)
-
-raid_end_discard_bio() is exactly the same.
+Other sync_action ops are unchanged.
 
 Signed-off-by: Chen Cheng <chencheng@fnnas.com>
 ---
- drivers/md/raid10.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
+ drivers/md/md.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index d740744a9746..e44a9b6e95c7 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -330,24 +330,25 @@ static void reschedule_retry(struct r10bio *r10_bio)
-  */
- static void raid_end_bio_io(struct r10bio *r10_bio)
- {
- 	struct bio *bio = r10_bio->master_bio;
- 	struct r10conf *conf = r10_bio->mddev->private;
-+	unsigned long state = r10_bio->state;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 096bb64e87bd..1377c407614c 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5261,25 +5261,29 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+ 	enum sync_action action;
  
--	if (!test_and_set_bit(R10BIO_Returned, &r10_bio->state)) {
--		if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
--			bio->bi_status = BLK_STS_IOERR;
--		bio_endio(bio);
--	}
-+	free_r10bio(r10_bio);
+ 	if (!mddev->pers || !mddev->pers->sync_request)
+ 		return -EINVAL;
  
- 	/*
- 	 * Wake up any possible resync thread that waits for the device
- 	 * to go idle.
- 	 */
- 	allow_barrier(conf);
++	action = md_sync_action_by_name(page);
+ retry:
+ 	if (work_busy(&mddev->sync_work))
+ 		flush_work(&mddev->sync_work);
  
--	free_r10bio(r10_bio);
-+	if (!test_and_set_bit(R10BIO_Returned, &state)) {
-+		if (!test_bit(R10BIO_Uptodate, &state))
-+			bio->bi_status = BLK_STS_IOERR;
-+		bio_endio(bio);
-+	}
- }
+-	ret = mddev_lock(mddev);
++	ret = (action == ACTION_RESHAPE) ?
++		mddev_suspend_and_lock(mddev) :
++		mddev_lock(mddev);
+ 	if (ret)
+ 		return ret;
  
- /*
-  * Update disk head position estimator based on IRQ completion info.
-  */
-@@ -1580,13 +1581,15 @@ static void raid_end_discard_bio(struct r10bio *r10bio)
- 		if (!test_bit(R10BIO_Discard, &r10bio->state)) {
- 			first_r10bio = (struct r10bio *)r10bio->master_bio;
- 			free_r10bio(r10bio);
- 			r10bio = first_r10bio;
- 		} else {
-+			struct bio *master_bio = r10bio->master_bio;
-+
- 			md_write_end(r10bio->mddev);
--			bio_endio(r10bio->master_bio);
- 			free_r10bio(r10bio);
-+			bio_endio(master_bio);
- 			break;
- 		}
+ 	if (work_busy(&mddev->sync_work)) {
+-		mddev_unlock(mddev);
++		if (action == ACTION_RESHAPE)
++			mddev_unlock_and_resume(mddev);
++		else
++			mddev_unlock(mddev);
+ 		goto retry;
  	}
+ 
+-	action = md_sync_action_by_name(page);
+-
+ 	/* TODO: mdadm rely on "idle" to start sync_thread. */
+ 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+ 		switch (action) {
+ 		case ACTION_FROZEN:
+ 			md_frozen_sync_thread(mddev);
+@@ -5344,11 +5348,14 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+ 	md_wakeup_thread(mddev->thread);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+ 	ret = len;
+ 
+ out:
+-	mddev_unlock(mddev);
++	if (action == ACTION_RESHAPE)
++		mddev_unlock_and_resume(mddev);
++	else
++		mddev_unlock(mddev);
+ 	return ret;
  }
  
+ static struct md_sysfs_entry md_scan_mode =
+ __ATTR_PREALLOC(sync_action, S_IRUGO|S_IWUSR, action_show, action_store);
 -- 
 2.54.0
