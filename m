@@ -1,175 +1,110 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B280B2264C0
-	for <linux-raid@vger.kernel.org>; Tue, 23 Jun 2026 12:55:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6A04288C96
+	for <linux-raid@vger.kernel.org>; Tue, 23 Jun 2026 13:01:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782219322; cv=none; b=HRf+KSwRp292SwSGad9RafhM6nzrNtGsPtNd9UozkIX8qM6Y6Dry9SeSC21Ib2iSoeR+0U+O2D2m8+lPyGboKtmuzI4T29TfsWyzuTvXeRpXFBXIaYye2xqgk0mEMqQAX4yX+yM+Wux7DWc5tjDTpUd/V9Z2d4L7TpqhDmrthXc=
+	t=1782219661; cv=none; b=B7dxoUeXhd/XY4gr3ig1qnFaEqgGmV8tft1d95w54jtPT2PkxrMw4UiEAustdtGZoMq+0SdaLmu43yc4j0evIcPcz73fNws9iyxAu/34HeLVek6OhcJJVLwcPyQ3JFBIBg/jlLvdNUTZCH3m3M9wE4WPF+mets+DTV+nqR7u9do=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782219322; c=relaxed/simple;
-	bh=+ZRz0YyBFvNdz1CdUxF5ie/awgsJjyh2Oi9WnRSKZOM=;
+	s=arc-20240116; t=1782219661; c=relaxed/simple;
+	bh=5dPde9k8GA+tNpefUBX2isM9j1Rc9AxCGQzltVlfoiA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CzWb5e1jnD0SeiYDZeR6wh939uWUGWr5klYb5vVyt0GaO2Dt+0q9vSSX/HIm0aZEpC9NuYgIt90FqBzXP5bttHYBCeDWxedNxM3BtcQBwKUcGC+hLrXzW81EJ6SaW4fWFjlEGfXtVBU0pqwp1Yebyej5iE1bci1KNwysR2HJ6uA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cirs8oIH; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=C3J6qlns3LPdTm4jW0rVACJyApDa02tauNRq+/6u6OgeZItqcOH2BiCbUs2e0VIiqFDzW8xDDKlbOqidePZYogo9kaVs6snPO0AVVwB1xMBArjy7mU+stcd66z0VV8CbdqPJJPqjKMR07RIAU1dFmAJiWGbxoiWmcBznDm3nekQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M73J5QJR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cirs8oIH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FA391F000E9;
-	Tue, 23 Jun 2026 12:55:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M73J5QJR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 477FE1F000E9;
+	Tue, 23 Jun 2026 13:01:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782219321;
-	bh=Iixuugu2ao3uYq2S6/fhba73qvoZ/ge6yMGj0TbEjdM=;
+	s=k20260515; t=1782219660;
+	bh=KxHLSzdwGIkwXORO4PADhla1HUa2NmdGrbZR4MENncs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cirs8oIHCR7mMTWpdOJk58oBvngQ8CG1Nceiv56mbT078S598wCy4oPHUA74WdaEG
-	 SiMTGjszMvYfWQRWzhYYT2GmNbZthtfQxgEDcQ4fgdnsyF9ITjj+aaCG/sqXyJhd2F
-	 5t+m6C2VsyjV2hm5l15gh5tODFFsH6Y0wqeC26H+J4vMMBTnJLEfRX88APKWfeGsBX
-	 WzFzrhx/ajLJBpedL8TwfrwFSAoI36aosttdNhknOZ50oRaEIDu7ZIxNe0i4AyVGGg
-	 dbK6YyysDSD9t9Jaypc9RnxL6rQaeuk8izLkb3X53wttvTtSb77CbkN7kxHSoKGBdB
-	 oF9tQNK2VzEYQ==
+	b=M73J5QJRMYZFuquOrrZK0CArrbw/l5mAAElqWCTojkVb2ZJIH+Swu4t6D59mQJ0h3
+	 Qf2lbwoLgnj8RXeDfvEa4u+6o2sHZOu8PnFSH5h4Bwj/Ryc61+72d78KGykUXhgIOc
+	 ig23gbRlwLRb74Tnmrely3iJekOFhFac1EVLsWHJsahzuPqC7VUjaGaDe2M67m425F
+	 2MT+bijs1uRBLLZSjAfDH8uVDOAIgHA4Su2aIHzWkcQXic/4LDQsN2H0rWEv0MSq8D
+	 kl9pHol5kljdbubiMZiFDNMqmksy1QzDv35vMMxAXwQTtU0wwBB3q+pwuj9f2X+DyS
+	 3dep2SJaAxhpw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 1/3] md: suspend array when sync_action=reshape
+Subject: Re: [PATCH v6 2/3] md/raid10: resize r10bio_pool for reshape
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Chen Cheng" <chencheng@fnnas.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260623123840.2521340-2-chencheng@fnnas.com>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260623123840.2521340-3-chencheng@fnnas.com>
 References: <20260623123840.2521340-1-chencheng@fnnas.com>
- <20260623123840.2521340-2-chencheng@fnnas.com>
+ <20260623123840.2521340-3-chencheng@fnnas.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 12:55:20 +0000
-Message-Id: <20260623125521.1FA391F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 13:00:59 +0000
+Message-Id: <20260623130100.477FE1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [Critical] Concurrent calls to mddev_suspend() corrupt current->flags due=
- to a shared mddev->noio_flag.
-- [High] TOCTOU race on mddev->pers in action_store leading to NULL pointer=
- dereference.
-- [High] Unprotected access to mddev->pers inside mddev_suspend leading to =
-TOCTOU and potential Use-After-Free.
+- [Medium] The newly allocated `new_pool` is leaked on the `reshape_backwar=
+ds` error path.
 --
 
-commit 480ff61edd64974d75f3192274f5151dada9f98c
+commit 2142096170ffdd8a1caabfde6f2461f6e7d64f61
 Author: Chen Cheng <chencheng@fnnas.com>
 
-md: suspend array when sync_action=3Dreshape
+md/raid10: resize r10bio_pool for reshape
+   =20
+When reshape grows raid_disks, the pool must also switch to new geometry
+object size, and allocate a new geometry size pool and replace the old.
 
-This patch modifies action_store() to suspend and lock the array
-before starting a reshape operation, and resume it upon exit. This
-prevents new requests from allocating objects from an old pool while
-the array is being reconfigured.
+But not for shrinking reshape, because regular I/O can still use the
+prev geo for sectors that have not crossed reshape_progress yet.
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 096bb64e87bd5..1377c407614c6 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5263,21 +5263,25 @@ action_store(struct mddev *mddev, const char *pag=
-e, size_t len)
->  	if (!mddev->pers || !mddev->pers->sync_request)
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index cee5a253a281d..d740744a97461 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+[ ... ]
+> @@ -4411,6 +4422,11 @@ static int raid10_start_reshape(struct mddev *mdde=
+v)
 >  		return -EINVAL;
-
-[Severity: High]
-This is a pre-existing issue, but does checking mddev->pers locklessly
-here risk a NULL pointer dereference later in the function?
-
-A process writing "reshape" to sync_action locklessly verifies
-mddev->pers !=3D NULL here. If it is preempted or blocks in flush_work(),
-a concurrent write to array_state could stop the array, taking
-reconfig_mutex and calling do_md_stop(), which sets mddev->pers =3D NULL.
-
-When the first process resumes, it acquires reconfig_mutex via
-mddev_lock() and calls mddev_start_reshape() without re-verifying
-mddev->pers:
-
-mddev_start_reshape() {
-    if (mddev->pers->start_reshape =3D=3D NULL)
-    ...
-}
-
-Could this cause a kernel panic if do_md_stop() has cleared mddev->pers
-concurrently?
-
 > =20
-> +	action =3D md_sync_action_by_name(page);
->  retry:
->  	if (work_busy(&mddev->sync_work))
->  		flush_work(&mddev->sync_work);
-> =20
-> -	ret =3D mddev_lock(mddev);
-> +	ret =3D (action =3D=3D ACTION_RESHAPE) ?
-> +		mddev_suspend_and_lock(mddev) :
-> +		mddev_lock(mddev);
+>  	conf->offset_diff =3D min_offset_diff;
+> +	if (mddev->delta_disks > 0) {
+> +		new_pool =3D create_r10bio_pool(new.raid_disks);
+> +		if (!new_pool)
+> +			return -ENOMEM;
+> +	}
+>  	spin_lock_irq(&conf->device_lock);
+>  	if (conf->mirrors_new) {
+>  		memcpy(conf->mirrors_new, conf->mirrors,
 
-[Severity: Critical]
-This isn't a bug introduced by this patch, but does exposing
-mddev_suspend_and_lock() to concurrent sysfs writes via ACTION_RESHAPE
-risk corrupting current->flags?
+[Severity: Medium]
+Will this newly allocated new_pool be leaked if the reshape_backwards
+error path is triggered?
 
-If two processes concurrently write "reshape" to the sync_action sysfs
-file, they both execute mddev_suspend_and_lock() -> mddev_suspend()
-concurrently without external serialization.
+If an array is configured for a reshape that expands the number of disks
+(delta_disks > 0), the new_pool is allocated here. However, if the
+component device sizes are also reduced such that the array is set to
+reshape backwards, it can hit a pre-existing error check a few lines
+down:
 
-The first process increments mddev->suspended from 0 to 1 and saves
-its task-local NOIO state into the shared mddev->noio_flag:
+	if (mddev->reshape_backwards) {
+		sector_t size =3D raid10_size(mddev, 0, 0);
+		if (size < mddev->array_sectors) {
+			spin_unlock_irq(&conf->device_lock);
+			pr_warn("md/raid10:%s: array size must be reduce before number of disks\=
+n",
+				mdname(mddev));
+			return -EINVAL;
+		}
 
-mddev_suspend() {
-    ...
-    if (!mddev->suspended++) {
-        ...
-        mddev->noio_flag =3D memalloc_noio_save();
-    ...
-}
-
-The second process increments it from 1 to 2 and skips saving its state.
-
-Upon completion, the first process calls mddev_resume(), decrements the
-count to 1, and returns without restoring its state. The second process
-calls mddev_resume(), decrements the count to 0, and restores the first
-process's state onto itself:
-
-__mddev_resume() {
-    ...
-    if (--mddev->suspended)
-        return;
-    ...
-    memalloc_noio_restore(mddev->noio_flag);
-}
-
-Can this cause a permanent leak of the PF_MEMALLOC_NOIO flag for the
-first thread and incorrectly apply it to the last thread?
-
-[Severity: High]
-This is also a pre-existing issue in mddev_suspend(), but does calling it
-here before acquiring reconfig_mutex allow an unprotected access to
-mddev->pers?
-
-If a process writes "reshape", it invokes mddev_suspend() which evaluates
-mddev->pers without holding reconfig_mutex or mddev->lock:
-
-mddev_suspend() {
-    ...
-    if (mddev->pers && mddev->pers->prepare_suspend &&
-        reshape_interrupted(mddev))
-        mddev->pers->prepare_suspend(mddev);
-    ...
-}
-
-Concurrently, another process calling do_md_stop() could set
-mddev->pers =3D NULL and drop the personality module reference. If
-mddev_suspend() checks mddev->pers, but the module is unloaded before
-calling mddev->pers->prepare_suspend(), could this result in a NULL
-pointer dereference or execution of unmapped memory?
-
->  	if (ret)
->  		return ret;
+This direct return skips the standard cleanup path at the abort label,
+causing the mempool_t structure and its preallocated elements to leak.
+Should we add a mempool_destroy(new_pool) here, or change the return to
+a goto abort?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623123840.2521=
-340-1-chencheng@fnnas.com?part=3D1
+340-1-chencheng@fnnas.com?part=3D2
