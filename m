@@ -1,148 +1,224 @@
-Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
+Received: from va-2-29.ptr.blmpb.com (va-2-29.ptr.blmpb.com [209.127.231.29])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2B6F369D6E
-	for <linux-raid@vger.kernel.org>; Tue, 23 Jun 2026 10:06:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB7B93769FE
+	for <linux-raid@vger.kernel.org>; Tue, 23 Jun 2026 10:20:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.29
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782209174; cv=none; b=EexR2fBYALACJguQGn/AbAaiqzGdr8WbYZBA04+kQGfuMr+cfxRqAKN1tIZnDwJqTzoeVbMxHCSpZXT7KBeyVCncENETa/f0QjzhaCH1dv0v9Z3Ju0Zg7YCGy5Qmcbg343xYTUwhUamH4K97tIch1dmwK1eD6y09Zyhlw2XXQW0=
+	t=1782210048; cv=none; b=sRVAXyXTrGVMbEpcl2pnwXwhNc6pTxpejSIapCm042NyaxPAa6Q/5Qe5UUIVq+k7DcLR2X7+DjLrwo28D4yTK32OW5zJRHWrk7cYM6lCy3U1a+xSb72b5PPkN7CuoYEqmoZainP9UgEO325L/a/EHNspahygv0+hzC3r4d9/dC4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782209174; c=relaxed/simple;
-	bh=IeCcvLfEXXfbac5s+Vn9SHrII3bh9+V9Maa+KrWFHm8=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=u25HMMVJOY9BARuwUOB/q/WWGwI6oB8n6mmGWdbwZHePCFtnuCTEmySgoarGN4YNcalxi2lyz8a5PaqsrlkVBPrYYjNJeuN+8ziwRs2q7nl52IgqvlhKMya97St/zpr4+mxyvHE6YXgAfwBGA3nwHE7VmX+8MTCNZG4Yia7qrE4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rm7d5FoA; arc=none smtp.client-ip=209.85.221.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1782210048; c=relaxed/simple;
+	bh=KB5kq+Lb+SJzdN6PKOyVW8lcgKFRGKEOYzXcXIgoc5c=;
+	h=Cc:References:Message-Id:From:Content-Type:In-Reply-To:To:Subject:
+	 Date:Mime-Version; b=ixsw1Z2Zsld4gBFjHwLbZtK4SIcMQ7s9n6yDrpEJNcq5xbKCQoBt7XulURtrrCJWORHxh9chr9/Ssuk1+AGB7k2TVlzM+c4DuhzfK+lk+vVy+6oAZdKnZYTq5fqK0HD0y0W3rirqlTi9S0618IZrnqjehsmlp2pNlpiCpdxNOv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=RSvbm7mu; arc=none smtp.client-ip=209.127.231.29
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rm7d5FoA"
-Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-4629051c946so579468f8f.1
-        for <linux-raid@vger.kernel.org>; Tue, 23 Jun 2026 03:06:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782209171; x=1782813971; darn=vger.kernel.org;
-        h=mime-version:message-id:date:references:in-reply-to:subject:cc:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=8BFdELiiAWXtyV9jq5igUjkjNq2N/STvSc6HvxYwA4E=;
-        b=rm7d5FoA9C3R1RWeMMzypWWZNkakjyo0VgyWu5NLWQaKXOTT41yJ4AfrLRZzjNXS2F
-         y66wkI5P2j8w/ejBHZNhOu6xwz+j5t8eLpczoh/sGVH8c9IPVedfMvDQkr1g8ZfpZ5tP
-         cXu92hAA/NNSAGxERaVGPQfyPuvNjyRObYwlsMEeOBM/RqaD/J+XRFKHnO7pc4MaILRF
-         jZEkBpYlGnZYHH6tW4Rym4K+ciRH9DbI+iznFq82jSuldnSmoFQcUC9Y5wmGHXQtx29R
-         Zs41yKW8HuwRF0gDu7muUb/r9Dmtv3HjUdefkfKxjQUzWvXYNhn85x7a7caTOgIWiATP
-         d2NQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782209171; x=1782813971;
-        h=mime-version:message-id:date:references:in-reply-to:subject:cc:to
-         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=8BFdELiiAWXtyV9jq5igUjkjNq2N/STvSc6HvxYwA4E=;
-        b=goj72YN7wA+Q/fccPNMJwTWDCNESvH547zmHOCBvqsvYeADyk5Wm0gMLSspQZzo3nW
-         DyiacHt0ZETLgluWgUzOqtDbA7wBK8giuSyq63JksGnu+p03hJj/fRiZGS4p3lRdNcOw
-         AofgTK+dqjMAmRY0VGTVT3WEYcuyH/xpeREyOOn9RbJzy3in1SYfOnJireDl6fbK572F
-         lAYvU6KyntrEJ4X1YfBs4Ha2zin85j9fy8upJUhaKRFUR2R2ZsB1z0XamSjvkj5iJcEu
-         ILcvi+DlPfrGWpAHZi21AzGg18gScP7Z1QWoDKvyQ4DUhIOQrVpx6Vzq2N9s92/11Zxo
-         5Mgw==
-X-Gm-Message-State: AOJu0YyvFwr2jbksJd6Qo/dl8qMjgsO0bmnTZhWKteHDNS1LNKJ7/Hve
-	Ed0N+k9GjJ+LSZnxJzYTdFFX7hSNdWONpPxL7LlF/6PdrsAIfp5zxXQw
-X-Gm-Gg: AfdE7cn9DF6ZcRJkhUNWlCZboJqx3eCTfXMKQLiXUnbMqZZDxum1SbusjfL3AxWdb46
-	CQ6Q5hA1iWHCwOiODmiiEJIc1EQ/D0RInBN0M/8PSIk0Yj4u5tQhxTH30w5v92fZTtQQ1N525ob
-	ElKy/ihpcJHTUKvseO91zN0MNMhtu5iuOEggCIfuFaUTTVlaG+jnOOFEwTdaB3t2fA+0mzG9qaj
-	ahLmpTHoHw366r9euY81h21fBrKFGheamru2Sm1Ni8PpYWLz3O7lHeeESX6nybJbWF/5Hb8FTO1
-	QLAb6yPm1aJHc7NaAADGyLHyRLGw5aR2WXGNxdzd28RLpsklb250k7F67O1eW3qZnnVJ2UiXK0a
-	zGbQfX8dr8qQ3aWYjMTpysPo9UO+P2sTlgXrsclwETwroHa5jjfw2rSUMSybIH6QDm/iBG2vFTO
-	M6AlVCSpLfGD2UpPMdYb8/Fq/537NgspkcNVdkTpY8j1A4hXXdvthJrdBX
-X-Received: by 2002:a05:6000:250a:b0:463:3184:6310 with SMTP id ffacd0b85a97d-46a80f5c67amr4920142f8f.28.1782209171167;
-        Tue, 23 Jun 2026 03:06:11 -0700 (PDT)
-Received: from Abds-MacBook-Air.local ([141.2.113.173])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-46666788226sm33996976f8f.23.2026.06.23.03.06.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Jun 2026 03:06:10 -0700 (PDT)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: John Garry <john.g.garry@oracle.com>, song@kernel.org, yukuai@fygo.io,
- magiclinan@didiglobal.com, xiao@kernel.org, axboe@kernel.dk,
- martin.petersen@oracle.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/7] md/raid1: handle atomic writes that require splitting
-In-Reply-To: <6130d0cb-4cf8-4042-843e-98a9d8aa00c5@oracle.com>
-References: <20260623072456.333437-1-abd.masalkhi@gmail.com>
- <20260623072456.333437-3-abd.masalkhi@gmail.com>
- <ba67f3ef-45cb-41c0-b4ea-fa0a22508cdc@oracle.com>
- <m2se6d1vls.fsf@gmail.com>
- <6130d0cb-4cf8-4042-843e-98a9d8aa00c5@oracle.com>
-Date: Tue, 23 Jun 2026 12:06:09 +0200
-Message-ID: <m2mrwl1sha.fsf@gmail.com>
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="RSvbm7mu"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1782210039;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=5YdYUXPymFMjuROW4lLeX68ou59KMxvnjfqYggwilv0=;
+ b=RSvbm7muGr+YllMyIVeRS7ysQUnjmgoYJ9wFvPmpOw/N1FIIyW4w/MwTcOLQa8uw3jHr79
+ N44BDl5WLOFNsBGJSh/Li+IxxrLyOpqh6bvrIvsX4m2SWujLz2DxgKy31WFjcJ+z6r37ht
+ jrTO23q2E30m5BvQYy0SQ8WTZ/idCP0XVk7+NIzyqJcczeJ5AkSf52rK5T+Wu26oLD1xqV
+ AjAWsHtVXPQNjC2LAiZuPrTnqOvdCAxRQqNWSVyZIN6znD0JtdGQlidNNpQNOKCBxEYV9h
+ MuUJoAqfZxBE9u3O6FCo1RnBoOAIbEJD4BmaCtdFnctmeNJtXtcdYgH0MNDZog==
+Received: from [192.168.8.62] ([183.34.169.141]) by smtp.feishu.cn with ESMTPS; Tue, 23 Jun 2026 18:20:35 +0800
+Cc: <yukuai@fygo.io>, <linux-raid@vger.kernel.org>
+User-Agent: Mozilla Thunderbird
+References: <20260622121312.1775322-1-chencheng@fnnas.com> <20260622121312.1775322-2-chencheng@fnnas.com> <20260622122554.E43991F000E9@smtp.kernel.org>
+X-Original-From: Chen Cheng <chencheng@fnnas.com>
+X-Lms-Return-Path: <lba+26a3a5df5+ca6c4e+vger.kernel.org+chencheng@fnnas.com>
+Message-Id: <44048e05-f7fa-499e-8bb4-bef56da87e86@fnnas.com>
+From: "Chen Cheng" <chencheng@fnnas.com>
+Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20260622122554.E43991F000E9@smtp.kernel.org>
+To: <sashiko-reviews@lists.linux.dev>
+Subject: Re: [PATCH v5 1/3] md: suspend array when sync_action=reshape
+Date: Tue, 23 Jun 2026 18:20:34 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jun 23, 2026 at 10:20 +0100, John Garry wrote:
-> On 23/06/2026 09:58, Abd-Alrhman Masalkhi wrote:
->> On Tue, Jun 23, 2026 at 09:11 +0100, John Garry wrote:
->>> On 23/06/2026 08:24, Abd-Alrhman Masalkhi wrote:
->>>> If a request already requires splitting when entering
->>>> raid1_write_request(), the current code allows it to proceed until it
->>>> eventually reaches the split path.
->>>
->>> The block layer should catch invalid atomic writes in
->>> submit_bio_noacct() -> blk_validate_atomic_write_op_size() before we
->>> even get as far as the md atomic write handling. Having the check in
->>> bio_submit_split_bioset() is really just a fail-safe for the block layer
->>> not catching invalid atomic writes or the atomic writes queue limits not
->>> being properly calculated.
->> The request size itself satisfies the currently advertised atomic write
->> limits, so blk_validate_atomic_write_op_size() allows it. The problem
->> is that RAID1 may further restrict atomic writes to a single barrier
->> unit via align_to_barrier_unit_end(). Therefore a request that crosses
->> a barrier-unit boundary can still reach raid1_write_request() with
->> max_sectors < bio_sectors(bio).
->> 
->> If the barrier-unit restriction should instead be advertised through the
->> atomic write queue limits, 
+=E5=9C=A8 2026/6/22 20:25, sashiko-bot@kernel.org =E5=86=99=E9=81=93:
+> Thank you for your contribution! Sashiko AI review found 4 potential issu=
+e(s) to consider:
+>=20
+> New issues:
+> - [High] Unmatched mddev_resume() on mddev_lock() failure causes mddev->s=
+uspended underflow.
+> - [High] The retry loop bypasses array re-suspension but leaves the suspe=
+nded flag set, causing unprotected reshape and double-resume.
+> - [High] Suspending the array before calling flush_work() creates a circu=
+lar memory reclaim deadlock.
+>=20
+> Pre-existing issues:
+> - [High] Cross-task corruption of PF_MEMALLOC_NOIO flags when mddev_suspe=
+nd() and mddev_resume() are interleaved.
+> --
+>=20
+> commit ec573079e939aa92bfb3fd89247846ae57883ef2
+> Author: Chen Cheng <chencheng@fnnas.com>
+>=20
+> md: suspend array when sync_action=3Dreshape
+>=20
+> This patch suspends the md array before starting a reshape operation to
+> prevent new requests from allocating objects from the old pool during
+> the transition. The array is then resumed on exit.
+>=20
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 096bb64e87bd5..e139f36e30b92 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -5258,26 +5258,37 @@ static ssize_t
+>>   action_store(struct mddev *mddev, const char *page, size_t len)
+>>   {
+>>   	int ret;
+>> +	bool suspended =3D false;
+>>   	enum sync_action action;
+>>  =20
+>>   	if (!mddev->pers || !mddev->pers->sync_request)
+>>   		return -EINVAL;
+>>  =20
+>> +	action =3D md_sync_action_by_name(page);
+>> +	if (action =3D=3D ACTION_RESHAPE) {
+>> +		ret =3D mddev_suspend(mddev, true);
+>=20
+> [Severity: High]
+> This is a pre-existing issue, but does calling mddev_suspend() and
+> mddev_resume() from concurrent contexts risk corrupting the PF_MEMALLOC_N=
+OIO
+> task flags?
+>=20
+> When mddev_suspend() is called, it stores the task-specific NOIO flag int=
+o
+> the global mddev structure:
+>=20
+> drivers/md/md.c:mddev_suspend() {
+>      ...
+>      mddev->noio_flag =3D memalloc_noio_save();
+>      ...
+> }
+>=20
+> If two tasks concurrently enter mddev_suspend(), the second task incremen=
+ts
+> the suspend counter without overwriting mddev->noio_flag. If the first ta=
+sk
+> then resumes (e.g., on a lock failure) it decrements the counter but retu=
+rns
+> early because the array is still suspended:
+>=20
+> drivers/md/md.c:__mddev_resume() {
+>      if (mddev->suspended) {
+>          mutex_unlock(&mddev->suspend_mutex);
+>          return;
+>      }
+>      ...
+>      memalloc_noio_restore(mddev->noio_flag);
+> }
+>=20
+> This prevents the first task from restoring its NOIO flag. When the secon=
+d
+> task later resumes and drops the counter to 0, it incorrectly restores th=
+e
+> first task's flags onto its own context. Could this leave the first task
+> stuck in NOIO mode indefinitely?
+>=20
+>> +		if (ret)
+>> +			return ret;
+>> +		suspended =3D true;
+>> +	}
+>>   retry:
+>>   	if (work_busy(&mddev->sync_work))
+>>   		flush_work(&mddev->sync_work);
+>=20
+
+Looks like a independent problem, I need to sort out the flow.
+
+> [Severity: High]
+> Can holding the array suspended while synchronously waiting for the worke=
+r
+> thread expose the worker's memory allocations to a circular deadlock?
+>=20
+> If md_start_sync() allocates memory with GFP_KERNEL in the kworker thread
+> (for example, when calling md_register_thread()), it can trigger direct
+> memory reclaim. Because the worker thread did not transition the array to
+> suspended itself, it does not inherit the PF_MEMALLOC_NOIO flag.
+>=20
+> Consequently, memory reclaim can issue I/O to the md device. Since the ar=
+ray
+> is now suspended, md_handle_request() will block this I/O indefinitely. T=
+he
+> worker thread hangs waiting for I/O, and action_store() hangs here in
+> flush_work() waiting for the worker thread, permanently deadlocking the
+> array. Is it safe to suspend the array before flushing the work?
+>=20
+>>  =20
+>>   	ret =3D mddev_lock(mddev);
+>> -	if (ret)
+>> +	if (ret) {
+>> +		mddev_resume(mddev);
+>>   		return ret;
+>> +	}
+>=20
+
+Seems suspend_and_lock() after flush_work() more reasonable.
+
+> [Severity: High]
+> Does this unconditional mddev_resume() risk underflowing the mddev->suspe=
+nded
+> counter if the array was not actually suspended?
+>=20
+> If action_store() is called with an action other than ACTION_RESHAPE, the
+> array is not suspended. If the subsequent mddev_lock() fails (e.g., if it=
+ is
+> interrupted by a signal), the error path unconditionally calls mddev_resu=
+me().
+>=20
+> Since the array was not suspended, __mddev_resume() decrements
+> mddev->suspended from 0 to -1. Because mddev->suspended is a signed integ=
+er
+> and -1 evaluates to true, subsequent calls to mddev_suspend() will see
+> mddev->suspended !=3D 0, increment it back to 0, and return immediately w=
+ithout
+> actually pausing I/O. Could this permanently break the suspension mechani=
+sm
+> for the array?
+>=20
+>>  =20
+>>   	if (work_busy(&mddev->sync_work)) {
+>> -		mddev_unlock(mddev);
+>> +		if (suspended)
+>> +			mddev_unlock_and_resume(mddev);
+>> +		else
+>> +			mddev_unlock(mddev);
+>>   		goto retry;
+>>   	}
+>=20
+
+sure, my mistake.
+
+> [Severity: High]
+> Will the retry loop bypass array re-suspension while leaving the local
+> suspended flag set to true?
+>=20
+> If work_busy(&mddev->sync_work) is true, the code unlocks and resumes the
+> array, then jumps back to the retry label. However, the retry label is pl=
+aced
+> after the mddev_suspend() block.
+>=20
+> The code will not re-suspend the array, but the local 'suspended' boolean
+> remains true. As a result, the reshape operation proceeds on an active,
+> unsuspended array. Furthermore, when the function exits, it will call
+> mddev_unlock_and_resume() again because 'suspended' is true, leading to a
+> double-resume and another mddev->suspended underflow.
+>=20
+> [ ... ]
 >
-> It should. Any restrictions should be advertised up front. For the user 
-> to issue an atomic write which is valid according to limits, then it 
-> should succeed.
->
-
-I'll take a look at how best to expose that through the queue limits and
-rework this part accordingly. If there is already an existing mechanism 
-you had in mind, I'd appreciate any pointers.
-
->> then I agree the block layer could reject
->> such requests earlier and the RAID1 entry check would become
->> unnecessary.
->> 
->> However, there are also cases where max_sectors is reduced later within
->> raid1_write_request(), for example when bad blocks are present on some
->> mirrors (or due to other RAID1-specific constraints such as write-behind
->> limits). Those reductions depend on RAID1 runtime state and mirror
->> health, so they are not readily visible to the block layer during atomic
->> write validation. In those cases RAID1 still needs to detect that the
->> atomic write can no longer be serviced as requested and fail it
->> appropriately.
->
-> Sure, and we do this. As I remember, we should return -EIO in this case.
->
-
-Right, and that's the main motivation for this patch. The original
-atomic write support already returned -EIO for one bad-block path, but
-there are other cases where max_sectors can be reduced (e.g. the
-first_bad <= sector path and write-behind limits)
-
-After a4c55c902670, those cases can end up completing with EINVAL or
-NOTSUPP instead. This patch is intended to restore consistent -EIO.
-
->> 
->>>
->>>> Along the way, the bio may instead
->>>> fail due to other conditions and return a different status, even though
->>>> the request was invalid as an atomic write from the beginning.
->>>>
->
-
--- 
-Best Regards,
-Abd-Alrhman
