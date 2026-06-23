@@ -1,224 +1,280 @@
-Received: from va-2-29.ptr.blmpb.com (va-2-29.ptr.blmpb.com [209.127.231.29])
+Received: from va-2-40.ptr.blmpb.com (va-2-40.ptr.blmpb.com [209.127.231.40])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB7B93769FE
-	for <linux-raid@vger.kernel.org>; Tue, 23 Jun 2026 10:20:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 788D137BE83
+	for <linux-raid@vger.kernel.org>; Tue, 23 Jun 2026 11:16:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.40
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782210048; cv=none; b=sRVAXyXTrGVMbEpcl2pnwXwhNc6pTxpejSIapCm042NyaxPAa6Q/5Qe5UUIVq+k7DcLR2X7+DjLrwo28D4yTK32OW5zJRHWrk7cYM6lCy3U1a+xSb72b5PPkN7CuoYEqmoZainP9UgEO325L/a/EHNspahygv0+hzC3r4d9/dC4=
+	t=1782213399; cv=none; b=jPejByb9Z1y2axITjoIEJoIR/Lu3aGJTwQX2DCDdo+NmJJ00PXWiKBRk8JJi5dlQmOzjMr2Lo5LEy+tGDuUMcdZ/GkYduQreF3PDqUi2kCe8lvnfJHAu25fa3ErDHu4hDeEih2O7aQq1K/q7ksh+76iGKokRHEAldD/UvixGY6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782210048; c=relaxed/simple;
-	bh=KB5kq+Lb+SJzdN6PKOyVW8lcgKFRGKEOYzXcXIgoc5c=;
-	h=Cc:References:Message-Id:From:Content-Type:In-Reply-To:To:Subject:
-	 Date:Mime-Version; b=ixsw1Z2Zsld4gBFjHwLbZtK4SIcMQ7s9n6yDrpEJNcq5xbKCQoBt7XulURtrrCJWORHxh9chr9/Ssuk1+AGB7k2TVlzM+c4DuhzfK+lk+vVy+6oAZdKnZYTq5fqK0HD0y0W3rirqlTi9S0618IZrnqjehsmlp2pNlpiCpdxNOv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=RSvbm7mu; arc=none smtp.client-ip=209.127.231.29
+	s=arc-20240116; t=1782213399; c=relaxed/simple;
+	bh=+VPd0K2CSn/sORDjMQ1zrY0DAKPQVgHWoYfiys0pttM=;
+	h=To:Subject:Cc:From:Message-Id:Date:Mime-Version:Content-Type; b=lYuoR88Jhh4dlFKyHEaq5gAYXEQmTbBUPH/PnsQBpqbD26nl+eH6yFQLVKU178Q3h/svzkXX1zOR7Qqu6Od9RLunsZHcgHOfvOiJPE5nOfDs/6CEJepe56wCYAPJ0cAdzp/eSxDvfsNkPT0fj8xIohh6nl3WPq+qPjsBsJ1jX+s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=rnVfhsfM; arc=none smtp.client-ip=209.127.231.40
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="RSvbm7mu"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="rnVfhsfM"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1782210039;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1782213391;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=5YdYUXPymFMjuROW4lLeX68ou59KMxvnjfqYggwilv0=;
- b=RSvbm7muGr+YllMyIVeRS7ysQUnjmgoYJ9wFvPmpOw/N1FIIyW4w/MwTcOLQa8uw3jHr79
- N44BDl5WLOFNsBGJSh/Li+IxxrLyOpqh6bvrIvsX4m2SWujLz2DxgKy31WFjcJ+z6r37ht
- jrTO23q2E30m5BvQYy0SQ8WTZ/idCP0XVk7+NIzyqJcczeJ5AkSf52rK5T+Wu26oLD1xqV
- AjAWsHtVXPQNjC2LAiZuPrTnqOvdCAxRQqNWSVyZIN6znD0JtdGQlidNNpQNOKCBxEYV9h
- MuUJoAqfZxBE9u3O6FCo1RnBoOAIbEJD4BmaCtdFnctmeNJtXtcdYgH0MNDZog==
-Received: from [192.168.8.62] ([183.34.169.141]) by smtp.feishu.cn with ESMTPS; Tue, 23 Jun 2026 18:20:35 +0800
-Cc: <yukuai@fygo.io>, <linux-raid@vger.kernel.org>
-User-Agent: Mozilla Thunderbird
-References: <20260622121312.1775322-1-chencheng@fnnas.com> <20260622121312.1775322-2-chencheng@fnnas.com> <20260622122554.E43991F000E9@smtp.kernel.org>
-X-Original-From: Chen Cheng <chencheng@fnnas.com>
-X-Lms-Return-Path: <lba+26a3a5df5+ca6c4e+vger.kernel.org+chencheng@fnnas.com>
-Message-Id: <44048e05-f7fa-499e-8bb4-bef56da87e86@fnnas.com>
+ bh=dv7C9+8x8Uhg3rvEkEKsgSoIjr9CG3R+eVtC0POJY7Y=;
+ b=rnVfhsfM5VqFFr9zTq30CPMl3MYZFlG/n0ovJ4yPPjB6TIKip4CgrVljNpAgMYKPostGvR
+ SVFxQlm2xS6m0gHbaSW0fnF2FYA7YZWxJuFImwGzjQNHycstnGQ9kC/pi/bMTgi/T45heg
+ eZHPs22XO5MNoz8hTgutJ/hUD7oOgEc0Iy2C7M869C/nM5r1Ca6dfqXe0U7KmBai4sP3O4
+ v2tQcdyKIfWw3xAOUdXNMoSxumU9EGN0grbxL5Xrrog8TeOtMBVdwMQ30s0xPbD2O7rIok
+ G/fh0FZqQo7Cxycf1ITbFPth6s30kq/KKFGCe/UUEqNQyoGedE5s2nz3SNCBZQ==
+To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <yukuai@fnnas.com>
+Subject: [PATCH v2] md: use READ_ONCE() for lockless reads of sb_flags
+X-Mailer: git-send-email 2.54.0
+Content-Transfer-Encoding: 7bit
+Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
 From: "Chen Cheng" <chencheng@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-In-Reply-To: <20260622122554.E43991F000E9@smtp.kernel.org>
-To: <sashiko-reviews@lists.linux.dev>
-Subject: Re: [PATCH v5 1/3] md: suspend array when sync_action=reshape
-Date: Tue, 23 Jun 2026 18:20:34 +0800
+Message-Id: <20260623111617.2500313-1-chencheng@fnnas.com>
+X-Original-From: chencheng@fnnas.com
+Date: Tue, 23 Jun 2026 19:16:17 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Received: from localhost.localdomain ([183.34.169.141]) by smtp.feishu.cn with ESMTPS; Tue, 23 Jun 2026 19:16:28 +0800
+Content-Type: text/plain; charset=UTF-8
+X-Lms-Return-Path: <lba+26a3a6b0d+ab61f6+vger.kernel.org+chencheng@fnnas.com>
 
-=E5=9C=A8 2026/6/22 20:25, sashiko-bot@kernel.org =E5=86=99=E9=81=93:
-> Thank you for your contribution! Sashiko AI review found 4 potential issu=
-e(s) to consider:
->=20
-> New issues:
-> - [High] Unmatched mddev_resume() on mddev_lock() failure causes mddev->s=
-uspended underflow.
-> - [High] The retry loop bypasses array re-suspension but leaves the suspe=
-nded flag set, causing unprotected reshape and double-resume.
-> - [High] Suspending the array before calling flush_work() creates a circu=
-lar memory reclaim deadlock.
->=20
-> Pre-existing issues:
-> - [High] Cross-task corruption of PF_MEMALLOC_NOIO flags when mddev_suspe=
-nd() and mddev_resume() are interleaved.
-> --
->=20
-> commit ec573079e939aa92bfb3fd89247846ae57883ef2
-> Author: Chen Cheng <chencheng@fnnas.com>
->=20
-> md: suspend array when sync_action=3Dreshape
->=20
-> This patch suspends the md array before starting a reshape operation to
-> prevent new requests from allocating objects from the old pool during
-> the transition. The array is then resumed on exit.
->=20
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 096bb64e87bd5..e139f36e30b92 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -5258,26 +5258,37 @@ static ssize_t
->>   action_store(struct mddev *mddev, const char *page, size_t len)
->>   {
->>   	int ret;
->> +	bool suspended =3D false;
->>   	enum sync_action action;
->>  =20
->>   	if (!mddev->pers || !mddev->pers->sync_request)
->>   		return -EINVAL;
->>  =20
->> +	action =3D md_sync_action_by_name(page);
->> +	if (action =3D=3D ACTION_RESHAPE) {
->> +		ret =3D mddev_suspend(mddev, true);
->=20
-> [Severity: High]
-> This is a pre-existing issue, but does calling mddev_suspend() and
-> mddev_resume() from concurrent contexts risk corrupting the PF_MEMALLOC_N=
-OIO
-> task flags?
->=20
-> When mddev_suspend() is called, it stores the task-specific NOIO flag int=
-o
-> the global mddev structure:
->=20
-> drivers/md/md.c:mddev_suspend() {
->      ...
->      mddev->noio_flag =3D memalloc_noio_save();
->      ...
-> }
->=20
-> If two tasks concurrently enter mddev_suspend(), the second task incremen=
-ts
-> the suspend counter without overwriting mddev->noio_flag. If the first ta=
-sk
-> then resumes (e.g., on a lock failure) it decrements the counter but retu=
-rns
-> early because the array is still suspended:
->=20
-> drivers/md/md.c:__mddev_resume() {
->      if (mddev->suspended) {
->          mutex_unlock(&mddev->suspend_mutex);
->          return;
->      }
->      ...
->      memalloc_noio_restore(mddev->noio_flag);
-> }
->=20
-> This prevents the first task from restoring its NOIO flag. When the secon=
-d
-> task later resumes and drops the counter to 0, it incorrectly restores th=
-e
-> first task's flags onto its own context. Could this leave the first task
-> stuck in NOIO mode indefinitely?
->=20
->> +		if (ret)
->> +			return ret;
->> +		suspended =3D true;
->> +	}
->>   retry:
->>   	if (work_busy(&mddev->sync_work))
->>   		flush_work(&mddev->sync_work);
->=20
+From: Chen Cheng <chencheng@fnnas.com>
 
-Looks like a independent problem, I need to sort out the flow.
+sb_flags is checked without a lock in md, raid1, raid5, and raid10.
+KCSAN reports these reads as data races.
 
-> [Severity: High]
-> Can holding the array suspended while synchronously waiting for the worke=
-r
-> thread expose the worker's memory allocations to a circular deadlock?
->=20
-> If md_start_sync() allocates memory with GFP_KERNEL in the kworker thread
-> (for example, when calling md_register_thread()), it can trigger direct
-> memory reclaim. Because the worker thread did not transition the array to
-> suspended itself, it does not inherit the PF_MEMALLOC_NOIO flag.
->=20
-> Consequently, memory reclaim can issue I/O to the md device. Since the ar=
-ray
-> is now suspended, md_handle_request() will block this I/O indefinitely. T=
-he
-> worker thread hangs waiting for I/O, and action_store() hangs here in
-> flush_work() waiting for the worker thread, permanently deadlocking the
-> array. Is it safe to suspend the array before flushing the work?
->=20
->>  =20
->>   	ret =3D mddev_lock(mddev);
->> -	if (ret)
->> +	if (ret) {
->> +		mddev_resume(mddev);
->>   		return ret;
->> +	}
->=20
+The write side uses atomic bit ops.
+The read side still has plain loads in a few places.
 
-Seems suspend_and_lock() after flush_work() more reasonable.
+Use READ_ONCE() for the lockless reads of sb_flags.
 
-> [Severity: High]
-> Does this unconditional mddev_resume() risk underflowing the mddev->suspe=
-nded
-> counter if the array was not actually suspended?
->=20
-> If action_store() is called with an action other than ACTION_RESHAPE, the
-> array is not suspended. If the subsequent mddev_lock() fails (e.g., if it=
- is
-> interrupted by a signal), the error path unconditionally calls mddev_resu=
-me().
->=20
-> Since the array was not suspended, __mddev_resume() decrements
-> mddev->suspended from 0 to -1. Because mddev->suspended is a signed integ=
-er
-> and -1 evaluates to true, subsequent calls to mddev_suspend() will see
-> mddev->suspended !=3D 0, increment it back to 0, and return immediately w=
-ithout
-> actually pausing I/O. Could this permanently break the suspension mechani=
-sm
-> for the array?
->=20
->>  =20
->>   	if (work_busy(&mddev->sync_work)) {
->> -		mddev_unlock(mddev);
->> +		if (suspended)
->> +			mddev_unlock_and_resume(mddev);
->> +		else
->> +			mddev_unlock(mddev);
->>   		goto retry;
->>   	}
->=20
 
-sure, my mistake.
+v1 -> v2:
+        - Add lock-free read paths for other array levels.
 
-> [Severity: High]
-> Will the retry loop bypass array re-suspension while leaving the local
-> suspended flag set to true?
->=20
-> If work_busy(&mddev->sync_work) is true, the code unlocks and resumes the
-> array, then jumps back to the retry label. However, the retry label is pl=
-aced
-> after the mddev_suspend() block.
->=20
-> The code will not re-suspend the array, but the local 'suspended' boolean
-> remains true. As a result, the reshape operation proceeds on an active,
-> unsuspended array. Furthermore, when the function exits, it will call
-> mddev_unlock_and_resume() again because 'suspended' is true, leading to a
-> double-resume and another mddev->suspended underflow.
->=20
-> [ ... ]
->
+KCSAN reports #1:
+======================================
+
+BUG: KCSAN: data-race in md_check_recovery / md_write_start
+
+write (marked) to 0xffff8e39f897f030 of 8 bytes by task 248146 on cpu 8:
+  md_write_start+0x5dd/0x910
+  raid10_make_request+0x9b/0x1080
+  md_handle_request+0x4a2/0xa40
+  [........]
+
+read to 0xffff8e39f897f030 of 8 bytes by task 250445 on cpu 11:
+  md_check_recovery+0x574/0x900
+  raid10d+0xb7/0x2950
+  [........]
+
+KCSAN reports #2:
+======================================
+BUG: KCSAN: data-race in md_check_recovery / md_write_start
+
+write (marked) to 0xffff8e39e953f030 of 8 bytes by task 540091 on cpu 11:
+  md_write_start+0x5dd/0x910
+  raid1_make_request+0x141/0x1990
+  [........]
+
+read to 0xffff8e39e953f030 of 8 bytes by task 580822 on cpu 0:
+  md_check_recovery+0x574/0x900
+  raid1d+0xcc/0x3840
+  [........]
+
+value changed: 0x0000000000000002 -> 0x0000000000000006
+
+KCSAN reports #3:
+======================================
+BUG: KCSAN: data-race in md_check_recovery / md_do_sync.cold
+
+write (marked) to 0xffff8e39e9404030 of 8 bytes by task 492473 on cpu 6:
+  md_do_sync.cold+0x3f6/0x1686
+  [........]
+
+read to 0xffff8e39e9404030 of 8 bytes by task 492402 on cpu 3:
+  md_check_recovery+0x16d/0x900
+  raid1d+0xcc/0x3840
+  [........]
+
+value changed: 0x0000000000000000 -> 0x0000000000000002
+
+KCSAN reports #4:
+======================================
+BUG: KCSAN: data-race in md_do_sync.cold / raid5d
+
+write (marked) to 0xffff8e39c35cb030 of 8 bytes by task 192196 on cpu 10:
+  md_do_sync.cold+0x3f6/0x1686
+  md_thread+0x15a/0x2d0
+  [........]
+
+read to 0xffff8e39c35cb030 of 8 bytes by task 190759 on cpu 5:
+  raid5d+0x7f9/0xba0
+  md_thread+0x15a/0x2d0
+  [........]
+
+value changed: 0x0000000000000000 -> 0x0000000000000002
+
+Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+---
+ drivers/md/md.c     | 8 ++++----
+ drivers/md/raid1.c  | 2 +-
+ drivers/md/raid10.c | 4 ++--
+ drivers/md/raid5.c  | 7 ++++---
+ 4 files changed, 11 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 096bb64e87bd..c5c50640b684 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6830,11 +6830,11 @@ int md_run(struct mddev *mddev)
+ 		 * via sysfs - until a lack of spares is confirmed.
+ 		 */
+ 		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 
+-	if (mddev->sb_flags)
++	if (READ_ONCE(mddev->sb_flags))
+ 		md_update_sb(mddev, 0);
+ 
+ 	if (IS_ENABLED(CONFIG_MD_BITMAP) && !mddev->bitmap_info.file &&
+ 	    !mddev->bitmap_info.offset)
+ 		md_bitmap_set_none(mddev);
+@@ -7024,11 +7024,11 @@ static void __md_stop_writes(struct mddev *mddev)
+ 			mddev->bitmap_ops->flush(mddev);
+ 	}
+ 
+ 	if (md_is_rdwr(mddev) &&
+ 	    ((!mddev->in_sync && !mddev_is_clustered(mddev)) ||
+-	     mddev->sb_flags)) {
++	     READ_ONCE(mddev->sb_flags))) {
+ 		/* mark array as shutdown cleanly */
+ 		if (!mddev_is_clustered(mddev))
+ 			mddev->in_sync = 1;
+ 		md_update_sb(mddev, 1);
+ 	}
+@@ -10294,11 +10294,11 @@ static bool md_should_do_recovery(struct mddev *mddev)
+ 	/*
+ 	 * MD_SB_CHANGE_PENDING indicates that the array is switching from clean to
+ 	 * active, and no action is needed for now.
+ 	 * All other MD_SB_* flags require to update the superblock.
+ 	 */
+-	if (mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING))
++	if (READ_ONCE(mddev->sb_flags) & ~ (1<<MD_SB_CHANGE_PENDING))
+ 		return true;
+ 
+ 	/*
+ 	 * If the array is not using external metadata and there has been no data
+ 	 * written for some time, then the array's status needs to be set to
+@@ -10423,11 +10423,11 @@ void md_check_recovery(struct mddev *mddev)
+ 			spin_lock(&mddev->lock);
+ 			set_in_sync(mddev);
+ 			spin_unlock(&mddev->lock);
+ 		}
+ 
+-		if (mddev->sb_flags)
++		if (READ_ONCE(mddev->sb_flags))
+ 			md_update_sb(mddev, 0);
+ 
+ 		/*
+ 		 * Never start a new sync thread if MD_RECOVERY_RUNNING is
+ 		 * still set.
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 29b58583e381..bd6808656edb 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2738,11 +2738,11 @@ static void raid1d(struct md_thread *thread)
+ 			handle_read_error(conf, r1_bio);
+ 		else
+ 			WARN_ON_ONCE(1);
+ 
+ 		cond_resched();
+-		if (mddev->sb_flags & ~(1<<MD_SB_CHANGE_PENDING))
++		if (READ_ONCE(mddev->sb_flags) & ~(1 << MD_SB_CHANGE_PENDING))
+ 			md_check_recovery(mddev);
+ 	}
+ 	blk_finish_plug(&plug);
+ }
+ 
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index adaf9e432e25..3ffa5a19964d 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3030,11 +3030,11 @@ static void raid10d(struct md_thread *thread)
+ 			handle_read_error(mddev, r10_bio);
+ 		else
+ 			WARN_ON_ONCE(1);
+ 
+ 		cond_resched();
+-		if (mddev->sb_flags & ~(1<<MD_SB_CHANGE_PENDING))
++		if (READ_ONCE(mddev->sb_flags) & ~(1 << MD_SB_CHANGE_PENDING))
+ 			md_check_recovery(mddev);
+ 	}
+ 	blk_finish_plug(&plug);
+ }
+ 
+@@ -4698,11 +4698,11 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr,
+ 		else
+ 			mddev->curr_resync_completed = conf->reshape_progress;
+ 		conf->reshape_checkpoint = jiffies;
+ 		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+ 		md_wakeup_thread(mddev->thread);
+-		wait_event(mddev->sb_wait, mddev->sb_flags == 0 ||
++		wait_event(mddev->sb_wait, READ_ONCE(mddev->sb_flags) == 0 ||
+ 			   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
+ 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+ 			allow_barrier(conf);
+ 			return sectors_done;
+ 		}
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index ded6a69f7795..cb58b4353995 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1219,11 +1219,11 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 				break;
+ 
+ 			if (bad < 0) {
+ 				set_bit(BlockedBadBlocks, &rdev->flags);
+ 				if (!conf->mddev->external &&
+-				    conf->mddev->sb_flags) {
++				    READ_ONCE(conf->mddev->sb_flags)) {
+ 					/* It is very unlikely, but we might
+ 					 * still need to write out the
+ 					 * bad block log - better give it
+ 					 * a chance*/
+ 					md_check_recovery(conf->mddev);
+@@ -6469,11 +6469,11 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
+ 					rdev->recovery_offset = sector_nr;
+ 
+ 		conf->reshape_checkpoint = jiffies;
+ 		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+ 		md_wakeup_thread(mddev->thread);
+-		wait_event(mddev->sb_wait, mddev->sb_flags == 0 ||
++		wait_event(mddev->sb_wait, READ_ONCE(mddev->sb_flags) == 0 ||
+ 			   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
+ 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+ 			return 0;
+ 		spin_lock_irq(&conf->device_lock);
+ 		conf->reshape_safe = mddev->reshape_position;
+@@ -6913,11 +6913,12 @@ static void raid5d(struct md_thread *thread)
+ 						   conf->temp_inactive_list);
+ 		if (!batch_size && !released)
+ 			break;
+ 		handled += batch_size;
+ 
+-		if (mddev->sb_flags & ~(1 << MD_SB_CHANGE_PENDING)) {
++		if (READ_ONCE(mddev->sb_flags) &
++		    ~(1 << MD_SB_CHANGE_PENDING)) {
+ 			spin_unlock_irq(&conf->device_lock);
+ 			md_check_recovery(mddev);
+ 			spin_lock_irq(&conf->device_lock);
+ 		}
+ 	}
+-- 
+2.54.0
