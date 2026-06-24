@@ -1,82 +1,140 @@
-Received: from va-2-43.ptr.blmpb.com (va-2-43.ptr.blmpb.com [209.127.231.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 656CF388893
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 06:39:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88E8A2609EE;
+	Wed, 24 Jun 2026 06:42:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782283186; cv=none; b=C95xlC4WXFppvjI7AA3yaPIsu0Q7SxWUXonFduaNY8UcLLrtQdzhXmbCZ7xHM04h1ThHdXoNbQJTAvuKy9w891Ku5iQqKmp1Jnu02jR6Wf6dbOyAkVK/p4iuVhUD8zSpDTffSIXQCu2ErvfxslLFLkohOfg6nwbAyE22Z6WNvyU=
+	t=1782283344; cv=none; b=m2oyUgdN3mE+r7NmksSajOKolrvgIsmYW603TD11IA0QQeZYfxb7ZFBDIPkAtEEQtkydF180xTWU7uAgrRNvx8KrkRQGHFw7O45pv19t7mxh+6R/T6jIy+qb4nbtz1pNpd7HbmvwwZhBZ8S0jqjQU2OTo2WTPhoXEBM2fwM/fZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782283186; c=relaxed/simple;
-	bh=+mP5zBreyzsqpu3ao60hjePsqBg5/yjpI+4ZLMxkvYQ=;
-	h=To:From:Message-Id:Content-Type:Subject:In-Reply-To:Date:
-	 Mime-Version:References:Cc; b=tHlUWPfffVIk3fpd4mdv6aRN5qmvMSwU8AVDycWS77GQdXGbo6KROq34KwYCL5/ICqK1EVCvN5tVLPo4vuqZjwC3olwClrv1mO324R9FBaza2GV5p9b0t6s1xA7THrQs0WLIKhevvV/772UGZv2DT6jxWM0EQC4LwQba2LE31+c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=fTC23qX/; arc=none smtp.client-ip=209.127.231.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1782283344; c=relaxed/simple;
+	bh=PWTLzAcj34dXuiMcl3AUrEn4Tei1VLDvGg1ssu5R+Qg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=dbyHHOeXaPBZkQNJg9rZT5z2aBnKYZZVp1O6xNvCcOtxr5EfOnhazfmKNAoWC7pc2ev3R/F4pBQeXSCyZf/Z1C2V4H4cOPWXzwcusdx+/s1Qowd7x7T/lATHzz+7RDNQK5o/hPhq5CvY0o5k37cbj0+nD+2FWHugaB7NQt2EhqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HSdH1mHs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="fTC23qX/"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1782283174;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=+mP5zBreyzsqpu3ao60hjePsqBg5/yjpI+4ZLMxkvYQ=;
- b=fTC23qX/DfyTfUpv1Ex8rJ8PNyVXh55R+FY9zrF5FtMtRsZFUM7DCq0yChsyMM10t9Mw+Z
- wTwi7ZSPhQTY2MNNZlA51DGOFnDx5+CCntxu9S+AfX9vC63mUbOnY/OnHZTAOML4oe6Zeb
- 7Yu1QAtKpewQO9Phm3D9k8LyMdnZOhUlaFdTWRjBnEN7Yy6ovnbVD4Ngjd9Vic7hH1Ghes
- DEzSnl2puN/9zA/ES3rJyWzG7QPYMZurDIyXuOyPfHlWU8N6sH3A51jUDdsT+9gJSKWBdL
- Y0KsvwM8uLg55FFab45/Y7eIQIO+sa4Or7nXuay7fe/queXh776PiQlmsH75ZA==
-X-Lms-Return-Path: <lba+26a3b7ba6+9c3bc7+vger.kernel.org+yukuai@fygo.io>
-To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, <song@kernel.org>, 
-	<magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<vverma@digitalocean.com>, <axboe@kernel.dk>
-From: "yu kuai" <yukuai@fygo.io>
-Message-Id: <868207d0-d20f-42e8-8257-f57816987bf5@fygo.io>
-Content-Type: text/plain; charset=UTF-8
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md/raid1: honor REQ_NOWAIT when waiting for behind writes
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <m2y0g722bp.fsf@gmail.com>
-Date: Wed, 24 Jun 2026 14:39:29 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HSdH1mHs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5309C1F000E9;
+	Wed, 24 Jun 2026 06:42:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782283343;
+	bh=uJBYcadendJz9KXTZcVxbu9g1/HwAB+oqCOZ0IxxxtE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=HSdH1mHsZV6meT9V5aKmZfhRiH5eJtvtpCVEG4pDpSDyUInJzFa83quZVizMgyoIL
+	 uZms+Jn+UCOuiO2Iis9Qgy4FzZH26tRRCDRq+D5qYvDFT9zpunroTkyrEd4RDdLOP0
+	 njSuax02SyOn4DsQtwyEY0W3y10zPCbTns10vgwOss1ZHHvvj/vgvIBOWBNZ6HG6hO
+	 8CalLaT9k+MfRoluE5Qar6TYFzsMOKCeDxfjvVw9+KQrVqrxAY9bdTg8MmKEkblYv1
+	 kV3RsOaquZJmL3o4K1g7XPRzjp407F+J9denh9X610l8y1hHGCHwD/KseFakAay/P/
+	 LW+WMwgSgZpEA==
+From: Yu Kuai <yukuai@kernel.org>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	Su Yue <glass.su@suse.com>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 00/20] md/md-llbitmap: support reshape for RAID10 and RAID5
+Date: Wed, 24 Jun 2026 14:41:57 +0800
+Message-ID: <cover.1782282042.git.yukuai@kernel.org>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260605091527.2463539-1-yukuai@kernel.org>
+References: <20260605091527.2463539-1-yukuai@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260611083514.754922-1-abd.masalkhi@gmail.com> <61361f20-f81c-46c3-bdd2-3de24e90a0aa@fnnas.com> <m2y0g722bp.fsf@gmail.com>
-Reply-To: yukuai@fygo.io
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<yukuai@fygo.io>
-X-Original-From: yu kuai <yukuai@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.148]) by smtp.larksuite.com with ESMTPS; Wed, 24 Jun 2026 06:39:33 +0000
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
 Hi,
 
-=E5=9C=A8 2026/6/22 2:08, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
-> What if on a partial nowait failure we just end the master bio as
-> success, but set NEEDED on that chunk's bitmap counter and start_sync()
-> picks it up for resync? That way we don't have to decide why rdev2
-> failed at all, resync just copies from rdev1 to rdev2 without nowait,
-> so if it's a real bad block, end_sync_write() records it then.
->
-> We kinda have the idea of ending the bio before the write lands on all
-> mirrors in write-behind already, though it's not quite the same, there
-> the deferred write still lands, here we ACK after it already failed and
-> lean on resync to redo it.
->
-> My worry is the loaded case: AGAIN under queue pressure isn't that rare,
-> so we might end up triggering resync frequently. Do you think that's
-> acceptable, or is dropping nowait better? Happy to prototype either way.
+This series adds llbitmap support for online reshape in RAID10 and RAID5.
 
-Yes, AGAIN under queue pressure isn't rare, and I don't think trigger resyn=
-c
-for a nowait IO failure is acceptable. This can cause lots of offline IO
-pressure which will affect disk service life. Meanwhile, resync will cause
-performance degradation for user.
+llbitmap has a different set of constraints from the existing bitmap code:
+there is one live bitmap instance, each bit state has richer semantics, and
+reshape can change the mapping from logical array ranges to bitmap ranges.
+The series therefore adds exact bitmap range mapping hooks, tracks old and
+new llbitmap geometry during reshape, remaps checkpointed bits as reshape
+progresses, and wires the reshape lifecycle into RAID10 and RAID5.
 
-I still feel dropping nowait is better.
+The main rules are:
 
---=20
-Thanks,
-Kuai
+1. split bios at the reshape position before bitmap accounting, so one bio
+   is never accounted with mixed old/new geometry;
+2. do not skip reshape ranges from stale llbitmap state, because reshape
+   progress is checkpointed by array metadata;
+3. remap llbitmap bits when reshape progress is checkpointed;
+4. reject llbitmap reshape if mddev->chunk_sectors shrinks, because the
+   effective data range represented by existing bitmap bits can shrink.
+
+The first group of patches prepares generic bitmap and llbitmap
+infrastructure. The second group wires RAID10. The last group wires RAID5,
+including exact old/new stripe mapping.
+
+Changes since v1:
+- Add Reviewed-by tags from Su Yue.
+- Rename llbitmap_resize_chunks() to llbitmap_calculate_chunks().
+- Use an unsigned index in llbitmap_expand_pages() error cleanup.
+- Rebase on mdraid/md-7.2, including the mddev_bio_split_at_reshape_offset()
+  declaration needed by the RAID5 build reported by kernel test robot.
+
+Validation:
+* RAID5 llbitmap test:
+  - created 3-disk RAID5 with --bitmap=lockless
+  - wrote 96 MiB of random data
+  - reshaped to 4 disks
+  - llbitmap bits changed from clean=1024 dirty=1024 to
+    unwritten=448 clean=1600 dirty=0
+  - all sync-related llbitmap counters were zero after reshape
+  - data hash was unchanged after reshape
+  - replaced one disk, waited for recovery, hash was unchanged
+  - failed another old disk and verified degraded reads still matched
+* RAID10 llbitmap test:
+  - created 4-disk RAID10 n2 with --bitmap=lockless
+  - wrote 128 MiB of random data
+  - reshaped to 6 disks
+  - llbitmap bits changed from clean=2048 dirty=2048 to
+    unwritten=2048 clean=4096 dirty=0
+  - all sync-related llbitmap counters were zero after reshape
+  - data hash was unchanged after reshape
+  - replaced one disk, waited for recovery, hash was unchanged
+  - failed the rebuilt disk's mirror mate and verified degraded reads still
+    matched
+
+Yu Kuai (20):
+  md: add exact bitmap mapping and reshape hooks
+  md: skip bitmap accounting for empty write ranges
+  md: add helper to split bios at reshape offset
+  md/md-llbitmap: track bitmap sync_size explicitly
+  md/md-llbitmap: allocate page controls independently
+  md/md-llbitmap: grow the page cache in place for reshape
+  md/md-llbitmap: track target reshape geometry fields
+  md/md-llbitmap: finish reshape geometry
+  md/md-llbitmap: refuse reshape while llbitmap still needs sync
+  md/md-llbitmap: add reshape range mapping helpers
+  md/md-llbitmap: don't skip reshape ranges from bitmap state
+  md/md-llbitmap: remap checkpointed bits as reshape progresses
+  md/md-llbitmap: clamp state-machine walks to tracked bits
+  md/raid10: reject llbitmap reshape when md chunk shrinks
+  md/raid10: wire llbitmap reshape lifecycle
+  md/raid10: split reshape bios before bitmap accounting
+  md/raid5: add exact old and new llbitmap mapping helpers
+  md/raid5: reject llbitmap reshape when md chunk shrinks
+  md/raid5: wire llbitmap reshape lifecycle
+  md/raid5: split reshape bios before bitmap accounting
+
+ drivers/md/md-bitmap.c   |   8 +
+ drivers/md/md-bitmap.h   |   8 +
+ drivers/md/md-llbitmap.c | 619 +++++++++++++++++++++++++++++++++++----
+ drivers/md/md.c          |  60 +++-
+ drivers/md/md.h          |   8 +
+ drivers/md/raid10.c      |  49 ++++
+ drivers/md/raid5.c       | 118 ++++++--
+ 7 files changed, 795 insertions(+), 75 deletions(-)
+
+
+base-commit: 55b77337bdd088c77461588e5ec094421b89911b
+-- 
+2.51.0
