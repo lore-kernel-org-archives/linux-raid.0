@@ -1,81 +1,80 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB6C01E1A17
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 16:48:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D449B33C50D
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 16:51:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.215.171
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782319733; cv=pass; b=VEPSFdDqoM8aBqbG6i9QHSWoJBzEGakylz1EsUCXi2YsKSOKVad/enZCvv10SJEiQg7dx/UfAoLioVf18p6FaYhSpBReNCeTx2JUctfR1fzxULsw2tkyDyt64ZgBYpbAXsyEXlAqmUn9hSTSHNewBpsHpt3Il8jPoFIjtwDSsRk=
+	t=1782319870; cv=pass; b=JAK+fmef1S4IVjY0xF5kxoNiWHuc/iSxFzRMzb4zw9xsr7miOgM+qEqgJqZ6D8sRxpeHC6IGIwyCjf3Bn/1LiUo3AwMjAAj6HmoYXkj6ogl6qkIqj5F6BW+ddGVKrQ70hkjfMdOvSlGswaaVQgWgXSpWw0oDkVQVo5eEzCZLuEE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782319733; c=relaxed/simple;
-	bh=tUd9MSOf6Gpfnj/DjRgEetNk24cj0Ww3vsmnBOJTSdU=;
+	s=arc-20240116; t=1782319870; c=relaxed/simple;
+	bh=cjvPvtEsTHCAOU+IjGR4oOnSd0wTDR9pc2SGE/nQchk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=G1W8gGA5DoDeXQDIHVHGqGxuFq9asCGfUv2aIdYAgS/PgDfnT9szQLOAvsaAaZhjwMjFMH0Rb9ekBreFD4bWkLDAgNGmIRftsnbg2C8Z6WwJvD74Mkj1oDBmtB6Xd31siVX92YmklRHDiaAzk0PViY99i0v8ZelF48Sb5+cBr1k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qRTh3Q01; arc=pass smtp.client-ip=209.85.214.172
+	 To:Cc:Content-Type; b=MRu3etd/5m0L/u0EPBHNzIqMDs39ksKJIKKk3R9E49HTSacjpE7sqNzBeU+/4qgZvaSuF630ucygVfgfTNZWMc6vCBKXk7y2N3vTePQd9u1AhCLGURPQrXYm1TdhExu3lyIE9pYUEgh53ev9hhQX1Agad+BNG20ulpuXSJktros=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CBC1dK6R; arc=pass smtp.client-ip=209.85.215.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qRTh3Q01"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2c7cfa17fedso10235165ad.3
-        for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 09:48:52 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1782319732; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CBC1dK6R"
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-c858961a8efso513770a12.2
+        for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 09:51:08 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1782319868; cv=none;
         d=google.com; s=arc-20240605;
-        b=Pva6PYb6TNPMokvP48kn1ugvGi6G//llY1j65jmZxi2R73C0aQY3VuAtOtis1kGVYc
-         mMmoyrOw2SW/FkO4LGNezKWW5AiV0bQql1qL3iXw+mklvX0LcsX4c1NJiYgBzV5+2YsB
-         0dLsHGF5XaH6pSinwN7kPHqmHJNRKzIQ8mvK7KDmPwt+WmwZhMj1jaKfdG+4Rofg4gNL
-         H76gJHhUqAshPluTiQ4NnYfLKCJvKH3V5xpNCWICJ/n1bgq9IghBBR9L0MQVjtb1xrnU
-         MwMt+B9Ry5ZtsJljjNXrbhNNtzD5VL0rACDTUfL59tJ3eyxtR2WaawOJ7wbNiNg1e2zd
-         1eqg==
+        b=IhNYCGN0Gcqp2B6VW7/iaeLbfFzXAmyF1Ff0UDnFkaHMOsyj8hHAYigcRwHz8EniWP
+         cANXExgnyZ4qkWZV4D/u/0mmtaHiG5R54N2xUZH+9O+T7s/9Y+LwZuWLMnXUKFO2yvSw
+         l1bTLEPxg+CjrfVG9x0dSsafTiWCgoUmQwW7msN0Nz0xupch3QMqZaze5iJ7Tq4rjAUe
+         9tOevhPD9dZXVshZE3mQGLuo4gUo7WFSSmOlQLRlCUpvA1e3nqocM2wAgkepTQm6+IFB
+         3UElbJ+H3yBF0JeCvjJNg4GqprlHWs6+rz93ikXhJoF1qAVyhCQCqtPcqfPciA5apBxW
+         NsAw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=Eqa0a7zsYCqL0jsMUMAnI+leBn+5NE0HEyi9TIA0TpY=;
-        fh=s3zDK4oIW35lnMNj6ctNoLUCgCMK6Fehs3aY4gQYlrc=;
-        b=XXXNcUSSMcqxDzD+Nj4t4BBAJFA/roxoaL5aYV8WkV95FdMP0CE1kOdK7J7F0sxhYg
-         E4DUGuTQ7J0kZWhyGPOC0yOnJB3xpcj8KuOvI1DEFSIvrbkWWCn/L42k+T5p0j9SjExl
-         h9JsKaV/gEZgK5kFntMvMbclpQMHs+GLai5RBeML2l/yyrYOxt6ZnG3Dg90CD5lvGWDr
-         qwokjS20mgt7fH4VjdEmqRCnELHO3XWkX4HOymZygKnOOduLQPZpsPiIUCmdjYhlqsEP
-         wayBlKwu6TzCff++1uuMxBPm/dnsR0REMpff2z83yNAcCI5W93bi6ZqncA9oqocb5JlQ
-         Cn4w==;
+        bh=CkhSwh0tn/SPxaM6seg68NrgymEV8OV7TF7kZYQtoSw=;
+        fh=mTP6TkWV1IhQRgyhsEpYqIpiXvhDlZKdHAfNRdOTDjk=;
+        b=TjPgl7COjY9dBoEuXZXkaFkaJ5hhRD4TOvEtYv33oT5s+J9d8JCyxVlj+9BMrM5Xzy
+         eXwpfLCyyTS9LOmK8Ttpa5thluS986P1RP+7BrY+AX4Z7zXQmpqX69Ck/wvfn4QJfv8/
+         fjN/ZOyS6OFjS2K6DfOeFgMfGUIBuUYtSiL/F5pm96tLsQthCCh10909kW+F3fF8ciDA
+         dKeuQX4t5sDjA+hWtMG/JgzPSjJzf7vjY2OugI1TRpmhwNPRJVEYND43LJEr2Ewrp/Pt
+         +tvf/2GeKU7x1EtEG6855/+yER7GzLCE7hQZM0m3eNlaNR4UyOmfpKchn2t8uY6FYBFi
+         uNFQ==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782319732; x=1782924532; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1782319868; x=1782924668; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Eqa0a7zsYCqL0jsMUMAnI+leBn+5NE0HEyi9TIA0TpY=;
-        b=qRTh3Q01H2krDwUIya6NmDrNcq2WTKHraOvAO7//F+LHVRNBYfq2VrhOQUfrknRMw8
-         Id2b1zEHPatOallLPU6r2CtvmZiEug8trh45EuF2ox39v9c+xIdT4PrV+1ntLMWR7liE
-         qyD5FXSlivwj26RQ4q1Mkv+sf6jgwCGyYa3jg616HC4Jd47XW/1+ISy2Q1Fe3JismCGd
-         3fTfsJHUzJg+MV71414EHPyzJ19ailKdPIu2czomEf+SYPp8rVXTvQakf1KJ8RXgRQ4S
-         K7cVLEdkTxYmUHmqmeIA5UgJIURFSHOtTeyJEb79VqzVM6cAGz9YbVCru79bDk+ejdgE
-         dB3g==
+        bh=CkhSwh0tn/SPxaM6seg68NrgymEV8OV7TF7kZYQtoSw=;
+        b=CBC1dK6RalpAyA805GdKxPeeh0DIQpZ/PFyrZ2ZPqjYui8gw6ENApiQ2BkSaU79Gvf
+         2uzBYY6KfUAPWLFk806lGSjJiQeZEV+VH3m4p1CaqT/ywFCxMK/EJmOQc45nOxrIiBmp
+         MqArOJ/NIqAGNgeH+a9C/93N4k6+7IF87sDrmiZ3lVJ7ddBlJ0Ltu93A4LAXjCdMeLUg
+         FpEr/nB8ghz8F3tEvcRpH1I/6txnJuF9cqpJibQ11PcfeXNbu+GYfooFr1WXpR/HYTAx
+         kzAQ1Mm0BFYBhyDAvEbWZyoAPLrj+9KeP8EpZXh2oGhECzwTXevR3R6y2AB9IBKf6RJ4
+         4DvA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782319732; x=1782924532;
+        d=1e100.net; s=20251104; t=1782319868; x=1782924668;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=Eqa0a7zsYCqL0jsMUMAnI+leBn+5NE0HEyi9TIA0TpY=;
-        b=rlbC2+G4yOf+puxENbATldm+YF7xd/zDxX1vSD9nwZADkF01mGnbwUmwLSIi2owl1g
-         yNpogkIb/jCX89FTmlAIA641A0SHQHM5BVvawUYyb+Q4z/nL/f0Rt98njAH5vDPIVpfA
-         AbdlZtmwEsgBtVn51sHevsfC3ktR3UoaQd2ihuQ1RbsJwyYEpWRTYp7oGMWCiWGs0Yj4
-         5uuj/+iKXgoWEyhhOL3iKeZk1DFsfFJlzzCWF+wkzDwsCRCP/Nasbj3opSMbWnUzp0j8
-         /EwmHEV6SASVywvtJ1hx9Ngq8c7yRTzu1/XqMohyBGJmmT8z3BDV/6aYiw/pT3VcTw3J
-         fRcw==
-X-Forwarded-Encrypted: i=1; AHgh+Rr308552Dcu6mXvxB5+gBMOVfyY7PIkUg+oqyUe1qIJ2HgkzyS8DCQ7QXHqw/x7n+Yn+5F9+XsLKGv7@vger.kernel.org
-X-Gm-Message-State: AOJu0YwfHjvWgs9Pmzvrwmsr4gfxZmxH7Dpd0b/Y72zsAdZDAO7TQPh1
-	KLSKAEXaHi9in5vlrzX4UJtnlyAU/kQ9Y6WgPby/XFZxP7tB808JGERPnRXwL8l8Ib0Mn6baHXk
-	mRSVrH4niVHGN6zSCWtqznd5tF+Z1e+iaI5QW/1DIew==
-X-Gm-Gg: AfdE7cl5wrKXdc8/cEkp2RBmlWb3arpOKEo1oCR7RGAGQo58i8iWHA2VFDSVY7QWQGr
-	gc/SNpSmP1brYa0GGy0pRyfz7wwqCrEBxdDK3aZJ9HX3/qU8Vt4L3wjyUk0GhImxHMX1WwuUUvR
-	hNdK0xhUISipxdeY6KTQWzuazZiNdt6qQZokWH7Dg5uQDhTTSGGyf4MWuYxHV+fd01sA/eJCnrS
-	g8ze+JXU7WdJ7+RA/+06qrfNNDcj+ZjDfUaiUiU4HL9fO2CSZGTlv3FFE+EoWwuohuZ8YMdVzI2
-	zNLcDcIi/jwCWlxEP1HM9t1/6cAAXuxgLwASxxzdpx03lmICZrTiuyRNmcDh0WR/HvwXQLxWfJ9
-	mdR0v+RF8BXlP
-X-Received: by 2002:a17:903:1aad:b0:2c1:ef9:4516 with SMTP id
- d9443c01a7336-2c7e15c5297mr43674665ad.35.1782319732029; Wed, 24 Jun 2026
- 09:48:52 -0700 (PDT)
+        bh=CkhSwh0tn/SPxaM6seg68NrgymEV8OV7TF7kZYQtoSw=;
+        b=M6TyBKemMo0YY1ZvpwiDibT1mhDAnxqarZrX/B79NovWrsDVJD6SmwfyHdG5tiOZlX
+         PJwsVq6WdTrFcZecEfrrqt/4rNVdOpZO0MR+1AF84pftuPMHgnsZtRNbD40rP/GNkoeh
+         CcNz23vetc8zViIMwEsQUR4caEMV1dXYHyXQYuoMR7dxTToXYHkWH2uUqAcRj4RGH94+
+         aqSpvNE03RzFPDjMlyeBzco1lNVbsQKQn6lyU0JcxnV73vbTUvn0g4X4GpAzW3DJ837h
+         2gkUm+BXtTbs3sYIBM7aL7oJpPSCIIKVzvj8cG8CrSrOiFnNMhl3vwqgOINXYSBgZaaL
+         virA==
+X-Gm-Message-State: AOJu0Yy5SFt3tttxLY/qoGB2oFPSoH5oHG8U2N3wjPtQdq6zgqk8aDBq
+	f1PLojtHhNvj17F81cv6NKPnQ1EfWKs/Qjd9/MGvs0LiVblc+9tL/QsZcaQYF14dklr8Vh61t0l
+	ZjoemQy/Wsl5ub8ObRcZ7uHvyR8zoo9woDyjDXG8YCQ==
+X-Gm-Gg: AfdE7ckk9a8Wmkoc/QgpDzzeN+e6keOejl1AhDluqxyhoPvW3dd9vz9qQWvs52+8OdI
+	6vI5MDWw1Q6QN3aDjVDmNbWDaDQyvYZyANrLXw2GXMpQrAJuiTsBcuazD4JQlkz7Xlsq7XWJZZP
+	oUkdNvP/Ij99eYMxCb/mk0ssVUE4kRRcYNZkDz6IGPLmUsR6pa6HgSZWulqx5BEDHwfRJdqAkKC
+	RviWCRQDKnebJzLs28uI2TDaSMySkZwxKjW9L7gXZBBigcGlM3K6v8jxf5GyE1v2nSPKzdzFEJ3
+	GaCi9X72snSYzXv3Hl0YGpupk+qyb/TVhGsDGcVyVTy5uW2x++0c4PWFdIwouj413iNuJ8IGtv0
+	jJZ+HrdGXqu09
+X-Received: by 2002:a17:903:240b:b0:2b0:608d:d8a8 with SMTP id
+ d9443c01a7336-2c7e13bad7amr45153165ad.1.1782319868022; Wed, 24 Jun 2026
+ 09:51:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -83,82 +82,109 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260624155421.211626-1-nishidafmly@gmail.com>
- <20260624155421.211626-5-nishidafmly@gmail.com> <20260624160331.9C5F51F000E9@smtp.kernel.org>
-In-Reply-To: <20260624160331.9C5F51F000E9@smtp.kernel.org>
+ <20260624155421.211626-6-nishidafmly@gmail.com> <20260624155828.3C6F91F000E9@smtp.kernel.org>
+In-Reply-To: <20260624155828.3C6F91F000E9@smtp.kernel.org>
 From: Hiroshi Nishida <nishidafmly@gmail.com>
-Date: Wed, 24 Jun 2026 09:48:41 -0700
-X-Gm-Features: AVVi8Cc7jSMc1yHpFFYbnDbaOM6sh9UWwBeIwtrsGUnSAeV1VUeKclqRIYl7iAU
-Message-ID: <CAE1ksKRGv8SVTuSh80L5VLs_O-+jhnSvnLi7fkLRT1g-HW3sZg@mail.gmail.com>
-Subject: Re: [PATCH 4/5] md: use sector_t for recovery_active in status_resync()
+Date: Wed, 24 Jun 2026 09:50:56 -0700
+X-Gm-Features: AVVi8CdhXqTw5nypB8-AWepGa7-ArMWEpSofzhJN9Dg4XePtsj-rfRWJ7mxBlhc
+Message-ID: <CAE1ksKTSn6dSApiYdNve8WZuDC7P=6KnDPODsvrWw=FJ-7W=gQ@mail.gmail.com>
+Subject: Re: [PATCH 5/5] md: clarify the resync ETA comment in status_resync()
 To: sashiko-reviews@lists.linux.dev
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-> [Medium] mddev->recovery_active is a standard atomic_t, not "sector-typed=
-";
-> changing the local to sector_t doesn't prevent narrowing.
+> The comment states that the divisor db is scaled up by 32, but the code
+> rt =3D div64_u64(rt, db/32+1); divides db by 32 -- scaling it down.
 
-You're right -- mddev->recovery_active is an atomic_t and
-atomic_read() returns int, so there's nothing wider to narrow; the
-int->sector_t conversion just moves to the assignment.
-The change is only a type-consistency tidy (the local is used solely
-with the sector_t curr_mark_cnt/resync_mark_cnt), not a narrowing fix.
-I'll reword the commit message in v2 accordingly and drop the
-"sector-typed atomic"/"narrows" wording.
+You're right -- the code divides by db/32, which scales the divisor
+*down* by 32 (so the intermediate quotient is 32x larger and keeps
+low-order bits a plain divide by db would lose), and rt is then
+rescaled by the >> 5.
+My rewritten comment had the direction backwards.  I'll fix it in v2:
 
+      rt is, in exact arithmetic, (remaining sectors) * dt / db.  To keep
+      precision near the end of resync, when the remaining count is close t=
+o db,
+      the dividend is divided by db/32 rather than db -- i.e. the divisor i=
+s
+      scaled down by 32, so the intermediate quotient is 32x larger -- and =
+rt is
+      scaled back down by 32 (>> 5) afterwards.
 
-2026=E5=B9=B46=E6=9C=8824=E6=97=A5(=E6=B0=B4) 9:03 <sashiko-bot@kernel.org>=
+  Thanks,
+
+2026=E5=B9=B46=E6=9C=8824=E6=97=A5(=E6=B0=B4) 8:58 <sashiko-bot@kernel.org>=
 :
 >
 > Thank you for your contribution! Sashiko AI review found 1 potential issu=
 e(s) to consider:
-> - [Medium] The commit message falsely claims `mddev->recovery_active` is =
-a 'sector-typed atomic' and that declaring a local variable as `int` 'needl=
-essly narrows it', but the structure field remains a standard 32-bit `atomi=
-c_t`.
+> - [Low] The newly added comment incorrectly states that the divisor `db` =
+is scaled up by 32, when the code actually scales it down.
 > --
 >
-> commit 7ec77a6b233ce4d151f7fc723e5f312b20b4ac92
+> commit 21672ecf7d2b823245c32b9d2699f7cf1a5c2e7c
 > Author: Hiroshi Nishida <nishidafmly@gmail.com>
 >
-> md: use sector_t for recovery_active in status_resync()
+> md: clarify the resync ETA comment in status_resync()
 >
-> This commit changes the local variable recovery_active in status_resync()
-> from int to sector_t. The commit message states this is to match the type
-> of mddev->recovery_active and avoid needlessly narrowing the value.
+> This commit updates the block comment above the remaining-time computatio=
+n
+> in status_resync() to clarify the calculation logic. It is a comment-only
+> change.
 >
-> > recovery_active holds a sector count read from the sector-typed atomic
-> > mddev->recovery_active and is then combined with the sector_t values
-> > curr_mark_cnt and resync_mark_cnt. Declaring it as a plain int needless=
-ly
-> > narrows it and mixes signedness into sector_t arithmetic; declare it
-> > sector_t to match.
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index 0cd85cc92ed31..a5c0da0d11334 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -8916,17 +8916,11 @@ static int status_resync(struct seq_file *seq, =
+struct mddev *mddev)
+> >        * db: blocks written from mark until now
+> >        * rt: remaining time
+> >        *
+> > -      * rt is a sector_t, which is always 64bit now. We are keeping
+> > -      * the original algorithm, but it is not really necessary.
+> > -      *
+> > -      * Original algorithm:
+> > -      *   So we divide before multiply in case it is 32bit and close
+> > -      *   to the limit.
+> > -      *   We scale the divisor (db) by 32 to avoid losing precision
+> > -      *   near the end of resync when the number of remaining sectors
+> > -      *   is close to 'db'.
+> > -      *   We then divide rt by 32 after multiplying by db to compensat=
+e.
+> > -      *   The '+1' avoids division by zero if db is very small.
+> > +      * rt is computed as (remaining sectors) * dt / db.  To keep prec=
+ision
+> > +      * near the end of resync, when the remaining count is close to d=
+b, the
+> > +      * divisor db is scaled up by 32 before the divide and rt is scal=
+ed back
 >
-> [Severity: Medium]
-> Is this description accurate? Looking at struct mddev in drivers/md/md.h,
-> recovery_active is defined as a standard atomic_t:
+> [Severity: Low]
+> Is this new comment accurate regarding the math applied to db?
 >
-> drivers/md/md.h:struct mddev {
->     ...
->     atomic_t recovery_active;
->     ...
-> }
+> The comment states that the divisor db is scaled up by 32, but looking at
+> the actual code:
 >
-> Since atomic_t is a 32-bit signed integer, and atomic_read() returns an i=
-nt,
-> does changing this local variable to sector_t actually prevent narrowing?=
- The
-> implicit cast from int to sector_t will now simply happen at assignment
-> rather than during the arithmetic operations.
+>     rt =3D max_sectors - resync;
+>     rt =3D div64_u64(rt, db/32+1);
 >
-> Could the commit message be updated to reflect that mddev->recovery_activ=
-e
-> is a standard atomic_t, rather than a "sector-typed atomic"?
+> This divides db by 32, effectively scaling it down rather than up (which =
+in
+> turn scales the resulting quotient up). Does this comment need to be
+> adjusted to reflect the db/32 downscaling?
+>
+> > +      * down by 32 afterwards.  The '+1' avoids division by zero when =
+db is
+> > +      * very small.
+> >        */
+> >       dt =3D ((jiffies - mddev->resync_mark) / HZ);
+> >       if (!dt) dt++;
 >
 > --
 > Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260624155421.21=
-1626-1-nishidafmly@gmail.com?part=3D4
+1626-1-nishidafmly@gmail.com?part=3D5
 
 
 
