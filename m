@@ -1,222 +1,145 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17B683905E7
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 07:16:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB28E396B7F
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 07:20:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782285389; cv=none; b=cC3UG5u4Zp38NnVq+foqyTRlWYu3J+jbID628t72bhhLuwFGV+jrYW+LT1STVBrEMIVxIalhgOToZivVQI+khq71wy60CwQUr+v81xXuxAzty7+GRWEddBHmy70RP9LvyslKdJXMwhJiqKEIrsLrHIHANeiRRXfZvYH6BMmkg3I=
+	t=1782285632; cv=none; b=sDZLRy+8XYCZaEhqRQzrohytdKGD5UQGs+AuUYjtvmwPHfZ8Qv7CNFLogvwgNiDduRxLTkNO7LOzs/DILPPxz/xARBvQ/Mm2xB6qryTgA6R4EXbK/XDnJp55MyetiC2RkaC3+0tAe5ktqeXP3HxQw61h+MW8SvE9u2O2DSSspTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782285389; c=relaxed/simple;
-	bh=PcylBQQHxj6JglNFV4Ad77Al9bsZeBa9khlXpwWuZOs=;
+	s=arc-20240116; t=1782285632; c=relaxed/simple;
+	bh=V9DE7GxCzREGy7k1fSmxSH0giibUxy6s9Qk+VOHxq8w=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hSCuHDlTTObJcke1K0yS0PpxxYWyvn3dzTXEYABREOoKi44m0WFImnep9ECJfANRvHjjScWUXYSH5zedZd9YrMr0HldoSgVmqKEvtOH5V2365P7p1aV3UXsWK3/Bz8vCGVqTA/Kw3lwgX1bUDkDeGPzOHrSaBZwtMpMawgWwLNg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bkdA0ijj; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=oR3SE0FR7UaT7AYt4tWT96CmZNuqgiQGm54mEsfmdExbqlsozgpTUXjDLs1wy9DY54np5ckUDUbxn7OmQ20bxJEHYuFMeNRCgWy6s0rUGmYnQ7186ZCf4117r3Tt0Mc7t0dhBY9P0YJL+I7C85hRsVRSAPVE4ULx9UrUSxVju/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tq/7/ewl; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bkdA0ijj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF1F01F00A3A;
-	Wed, 24 Jun 2026 07:16:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tq/7/ewl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52B5F1F000E9;
+	Wed, 24 Jun 2026 07:20:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782285387;
-	bh=gRUavpIBmeBcKPhEDROiX0UR6LfFSrBORfi1W0eHnEk=;
+	s=k20260515; t=1782285627;
+	bh=b/qiHK9rWrYbce6L9wI3iKtK2/MeIThidkqzyyj+XTE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bkdA0ijj9+muQg6xe4FlBBWY84kzrX2UBRH/ppEajQ2SKLzF/rh2vFLKzMShaPDnc
-	 9j/dHKQ4tcDNppm5Ksev6abJBrkdtv+zmvenuEg+i0cp303wmXP0c0ul5FmhQLdhgr
-	 e+UHbvPBv+VkJN6Wj1Qlt8o1EAg2O88w9+9KT3k2xs8dg9/GvTO2S15UfoQJeDa214
-	 7e8O8QlCzL3C/FBnXNrR/jBm5qF8w+ZhM2NYVCLloOhkK36UV2bUNk31AmH31cFWSr
-	 Tuurwt51YV3YETNBxqmdMmGJsenDeJRvZOi5XfSXIf0eCyvfmbMMN8qJe5UiFm5Xu6
-	 DN+Oh4jvOyFkA==
+	b=Tq/7/ewldYeqvvW/TYuPK4Vr8mfQ0/S+5YsdsFLEvicgvhGyXgh4+gcus5RtRia4H
+	 hw2e3MwkqMflQY3FYBJKr5Bo6TEni46fwwgoYojZfZH8zyv6DEbElrZUtDdZKP6GnB
+	 vNkaiJ36cO7VlUQYjDPX86eig6cEvmykXbsGsi5v7zSE1oyBb8tkFv6lKdlUdB/b4w
+	 +lnKTAViBq9KlI4EIto29Qr/1ObMEmjo+cQnhuO3mlh+paZoF0O8y1Zz0oZL08k0Lc
+	 6Hb6qKzZuuMs9oGDa564h7U1jb1Wi9fq0GAKUMhZb5GB5wxC4HYNF5I/M6F93jhfkh
+	 p0Abbt9ZlgpmQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 17/20] md/raid5: add exact old and new llbitmap
- mapping helpers
+Subject: Re: [PATCH v2 19/20] md/raid5: wire llbitmap reshape lifecycle
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <7f4f61a0c06d01b38b0a175ce5df9afe6450d09e.1782282042.git.yukuai@kernel.org>
+In-Reply-To: <55686793056df8053d1797d22c18fce8df7eebe8.1782282042.git.yukuai@kernel.org>
 References: <20260605091527.2463539-1-yukuai@kernel.org>
  <cover.1782282042.git.yukuai@kernel.org>
- <7f4f61a0c06d01b38b0a175ce5df9afe6450d09e.1782282042.git.yukuai@kernel.org>
+ <55686793056df8053d1797d22c18fce8df7eebe8.1782282042.git.yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 24 Jun 2026 07:16:27 +0000
-Message-Id: <20260624071627.BF1F01F00A3A@smtp.kernel.org>
+Date: Wed, 24 Jun 2026 07:20:25 +0000
+Message-Id: <20260624072026.52B5F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-New issues:
-- [High] raid5_bitmap_array_sectors() incorrectly returns the new, smaller =
-array size for the previous layout during a shrink reshape, leading to trun=
-cated bitmap tracking.
-
-Pre-existing issues:
-- [High] Invalid use of round_down() and round_up() with a non-power-of-2 s=
-ectors_per_chunk multiplier, causing corrupt bitmap mappings.
-- [High] Bounding box calculation for mapping ranges between old and new la=
-youts can overflow `unsigned long` on 32-bit systems, truncating dirty regi=
-ons.
-- [High] raid5_bitmap_sector_map() accesses reshape geometry parameters wit=
-hout holding the required sequence lock.
+- [Critical] Checkpointing the translated llbitmap to disk before the MD su=
+perblock is updated creates a crash window that leads to silent data corrup=
+tion on restart.
+- [Critical] The llbitmap page control array (`llbitmap->pctl`) can be acce=
+ssed after being freed during RAID5 reshape initialization because the bitm=
+ap resize happens before the array is quiesced.
 --
 
-commit 7f0559d3994c9371245bbc6a23cf3ce1e8d48872
+commit 18675e43f792016c6cde2f177af7a007c667120d
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/raid5: add exact old and new llbitmap mapping helpers
+md/raid5: wire llbitmap reshape lifecycle
 
-Teach RAID5 to export exact old and new llbitmap mappings and the
-corresponding sync and array sizes for reshape-aware bitmap users.
+Prepare llbitmap before RAID5 reshape starts, checkpoint the bitmap
+before advancing reshape_position, and finish the llbitmap geometry
+update when reshape completes.
 
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 0c5c9fb0606ee..1613a42cc25dc 100644
+> index 9de648f75dd04..ac7ea483502fd 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
+
 [ ... ]
-> @@ -5942,25 +5942,43 @@ static enum reshape_loc get_reshape_loc(struct md=
-dev *mddev,
+
+> @@ -6430,6 +6430,13 @@ static sector_t reshape_request(struct mddev *mdde=
+v, sector_t sector_nr, int *sk
+>  			   || test_bit(MD_RECOVERY_INTR, &mddev->recovery));
+>  		if (atomic_read(&conf->reshape_stripes) !=3D 0)
+>  			return 0;
+> +		if (md_bitmap_enabled(mddev, false) &&
+> +		    mddev->bitmap_ops->reshape_mark &&
+> +		    conf->reshape_safe !=3D conf->reshape_progress) {
+> +			mddev->bitmap_ops->reshape_mark(mddev, conf->reshape_safe,
+> +						       conf->reshape_progress);
+> +			mddev->bitmap_ops->unplug(mddev, true);
+> +		}
+
+[Severity: Critical]
+Does checkpointing the translated llbitmap to disk before the MD superblock
+is updated create a crash window that leads to silent data corruption on
+restart?
+
+During RAID5 reshape, the code translates the bitmap to the new layout via
+reshape_mark() and flushes it to disk before asynchronously waking the MD
+thread to update the superblock.
+
+If the system crashes after the bitmap flush but before the superblock write
+completes, the on-disk metadata will still point to the old reshape position
+(reshape_safe), while the on-disk bitmap for the region=20
+[reshape_safe, reshape_progress] will be stored in the new layout.
+
+On reboot, the array will resume the reshape from reshape_safe and
+misinterpret the newly mapped bitmap bits as if they were in the old layout.
+If the array is degraded during this restart, it might incorrectly assume t=
+he
+parity for these sectors is in-sync and reconstruct missing data using
+corrupted parity.
+
+>  		mddev->reshape_position =3D conf->reshape_progress;
+>  		mddev->curr_resync_completed =3D sector_nr;
+>  		if (!mddev->reshape_backwards)
+
 [ ... ]
-> -static void raid5_bitmap_sector(struct mddev *mddev, sector_t *offset,
-> -				unsigned long *sectors)
-> +static void raid5_bitmap_sector_map(struct mddev *mddev, sector_t *offse=
-t,
-> +				    unsigned long *sectors,
-> +				    bool previous)
->  {
->  	struct r5conf *conf =3D mddev->private;
->  	sector_t start =3D *offset;
->  	sector_t end =3D start + *sectors;
-> -	sector_t prev_start =3D start;
-> -	sector_t prev_end =3D end;
->  	int sectors_per_chunk;
-> -	enum reshape_loc loc;
->  	int dd_idx;
+
+> @@ -8571,6 +8585,12 @@ static int raid5_start_reshape(struct mddev *mddev)
+>  			mdname(mddev));
+>  		return -EINVAL;
+>  	}
+> +	if (md_bitmap_enabled(mddev, false) &&
+> +	    mddev->bitmap_id =3D=3D ID_LLBITMAP) {
+> +		i =3D mddev->bitmap_ops->resize(mddev, mddev->dev_sectors, 0);
+> +		if (i)
+> +			return i;
+> +	}
+
+[Severity: Critical]
+Can this resize operation trigger a use-after-free regression since it
+occurs before raid5_quiesce() stops concurrent I/O?
+
+In raid5_start_reshape(), mddev->bitmap_ops->resize() is called to prepare
+the bitmap for the new geometry before raid5_quiesce() is invoked. This mea=
+ns
+the array is not suspended, and concurrent I/O is actively being handled.
+
+If the resize operation calls llbitmap_expand_pages() and frees the old
+pctl array via kfree() without RCU synchronization, concurrent fast-path I/O
+threads executing llbitmap_start_write() could locklessly dereference the
+freed pointer array in llbitmap_raise_barrier().
+
 > =20
-> -	sectors_per_chunk =3D conf->chunk_sectors *
-> -		(conf->raid_disks - conf->max_degraded);
-> +	if (previous)
-> +		sectors_per_chunk =3D conf->prev_chunk_sectors *
-> +			(conf->previous_raid_disks - conf->max_degraded);
-> +	else
-> +		sectors_per_chunk =3D conf->chunk_sectors *
-> +			(conf->raid_disks - conf->max_degraded);
-
-[Severity: High]
-This is a pre-existing issue, but does raid5_bitmap_sector_map() access
-these reshape geometry parameters safely?
-
-During a concurrent reshape operation (e.g., raid5_start_reshape()), these
-configuration fields can be updated in-place. Without being protected by
-read_seqcount_begin(&conf->gen_lock), could a concurrent I/O observe torn
-state or a mismatch between chunk size and raid disks, leading to an
-incorrect bitmap mapping?
-
->  	start =3D round_down(start, sectors_per_chunk);
->  	end =3D round_up(end, sectors_per_chunk);
-
-[Severity: High]
-This is a pre-existing issue, but do round_down() and round_up() work corre=
-ctly
-here when sectors_per_chunk is not a power of 2?
-
-The round_down() and round_up() macros perform a bitwise masking operation
-which strictly requires the multiplier to be a power of 2. Because the
-number of data disks (raid_disks - max_degraded) is often not a power of 2
-(for example, 3 data disks in a 4-disk RAID5), sectors_per_chunk is frequen=
-tly
-not a power of 2.
-
-Will this bitwise mask silently corrupt the logical offsets instead of roun=
-ding
-to stripe boundaries, leading to incorrect physical regions being tracked in
-the bitmap?
-
-> -	start =3D raid5_compute_sector(conf, start, 0, &dd_idx, NULL);
-> -	end =3D raid5_compute_sector(conf, end, 0, &dd_idx, NULL);
-> +	start =3D raid5_compute_sector(conf, start, previous, &dd_idx, NULL);
-> +	end =3D raid5_compute_sector(conf, end, previous, &dd_idx, NULL);
-> +	*offset =3D start;
-> +	*sectors =3D end - start;
-> +}
-> +
-> +static void raid5_bitmap_sector(struct mddev *mddev, sector_t *offset,
-> +				unsigned long *sectors)
-> +{
-> +	struct r5conf *conf =3D mddev->private;
-> +	sector_t start =3D *offset;
-> +	sector_t end =3D start + *sectors;
-> +	sector_t prev_start =3D start;
-> +	unsigned long prev_sectors =3D end - start;
-> +	enum reshape_loc loc;
-> +
-> +	raid5_bitmap_sector_map(mddev, &start, sectors, false);
-> +	end =3D start + *sectors;
-[ ... ]
-> @@ -5987,7 +5998,7 @@ static void raid5_bitmap_sector(struct mddev *mddev=
-, sector_t *offset,
->  	 * we set bits for both.
->  	 */
->  	*offset =3D min(start, prev_start);
-> -	*sectors =3D max(end, prev_end) - *offset;
-> +	*sectors =3D max(end, prev_start + prev_sectors) - *offset;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but can this bounding box
-calculation overflow on 32-bit systems?
-
-When calculating the bounding box spanning the old and new physical layout
-mappings for an I/O ahead of a reshape, the physical sector offsets diverge
-linearly due to differing data disk counts.
-
-For large arrays (e.g., >40TB), the gap between the mapped sectors can
-exceed 2TB (4,294,967,295 sectors). Because *sectors is a pointer to
-unsigned long (which is 32-bit on 32-bit architectures), could this
-subtraction silently overflow, truncating the dirty region and potentially
-missing necessary bits?
-
->  }
-> =20
->  static enum stripe_result make_stripe_request(struct mddev *mddev,
-[ ... ]
-> @@ -9049,6 +9060,20 @@ static void raid5_prepare_suspend(struct mddev *md=
-dev)
->  	wake_up(&conf->wait_for_reshape);
->  }
-> =20
-> +static sector_t raid5_bitmap_sync_size(struct mddev *mddev, bool previou=
-s)
-> +{
-> +	return mddev->dev_sectors;
-> +}
-> +
-> +static sector_t raid5_bitmap_array_sectors(struct mddev *mddev, bool pre=
-vious)
-> +{
-> +	struct r5conf *conf =3D mddev->private;
-> +
-> +	if (previous)
-> +		return raid5_size(mddev, 0, 0);
-
-[Severity: High]
-Does passing 0 for raid_disks in raid5_size() incorrectly truncate the array
-size for the previous layout?
-
-During an array shrink reshape (e.g., from 5 disks to 4), passing 0 forces
-raid5_size() to use the minimum disk count between the old and new layouts.
-This would return the new, smaller array size instead of the exact previous
-layout's size.
-
-Since reshape-aware bitmap users rely on this limit to clip logical I/O
-offsets, could I/Os mapping to the old unreshaped region beyond the new
-limit be erroneously discarded, leading to dropped dirty bits?
-
-> +	return raid5_size(mddev, mddev->dev_sectors, conf->raid_disks);
-> +}
+>  	atomic_set(&conf->reshape_stripes, 0);
+>  	spin_lock_irq(&conf->device_lock);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1782282042.gi=
-t.yukuai@kernel.org?part=3D17
+t.yukuai@kernel.org?part=3D19
