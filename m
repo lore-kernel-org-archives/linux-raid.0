@@ -1,140 +1,137 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BF0C374E7F
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 07:01:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE40030674B
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 07:02:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782284518; cv=none; b=nyDpwTP/jTMp1SIHavGYDET9HLgd8BzI8v4Wws33CxVbi00N1sVPhrS9Zc8XeNJp9H8sui3Y3pGjmWCud/94SEE4U6gVTsHJRWj/xzjPe7r6yAPhCtxrawrBwyTDPNTXjJzYU9zyHsTFe7XhkE7fP6m8Cv9EVccc65wO1/Wl/OY=
+	t=1782284523; cv=none; b=XQZg8/OCwiErFtHpJnm06YIuwZCDszWb9nOw1lJh+RLJYEtfhfN96IhMmL3jfh0Juvp5gyEUfSSTiRwuNFnWq9TGhZPv9scVphktiyipierXHlEsvigThL7hW2Wbu4yyMpfRSfQ0CwO9qarEPGt84GtwMvvixxwNXm7E7p1fkjY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782284518; c=relaxed/simple;
-	bh=aFmS/Y6dywtqaqvMLlAqgFfxmMdF/YRXjB9QzT5e0Uc=;
+	s=arc-20240116; t=1782284523; c=relaxed/simple;
+	bh=YKIYcsRe+/5Tx4iePTRThaMkZXyvZa+R3N28kUMOMGU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ec/BIPoI5A7OQ9eN/32AdacKX09nOT44z9FP1PuLqE50idXgZCTf4X8iv6KN72MWWGSnlo0mvSfTfFOM3YE+H3lQt7y9q6J1F24HXCGCYa+MNqBL9nQac0e0R9WdHVg1a/6in+XxxBER1UTsV4M8+nu1uTxitCqloAQfXra/8mE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W1mllKTb; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=iE/VcQ7QFjcJE+AsfgNJWml4S2TuERBvsEf/h+Yo6biOatZvJvID8M4liAn1cwEgEJxb7BJ+0Zj8Ptvlb+IKTLVvKvLg0F32WhbtjKlY+Ci/WojLyC+K4C3BMQUwBAk2MlreZoHQbeIhrWhXi2EMhB9fRP6dJizAVnYKByUxMmU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R/+EDPrn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W1mllKTb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9013D1F000E9;
-	Wed, 24 Jun 2026 07:01:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R/+EDPrn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 524001F000E9;
+	Wed, 24 Jun 2026 07:02:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782284516;
-	bh=relsRed38+U1EKK34lCBmRxx7O8lgBiwlUAd7JyUChI=;
+	s=k20260515; t=1782284522;
+	bh=Vyla9jI8vThhmPDGKB6N45IhtYLUqzLBJ6JkrZQd9Os=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=W1mllKTbCkINaAR+FiT2dKuSXR03aK6a+7toTwNO7DIStN5NgKjVIOfCAmFClgjc0
-	 gBga7x3CcKyEKIBycI3sUqa1gBEh4vOZ3j/gl3bjqmIPyrnQdLnCr+KyZe3YXMzCKD
-	 uuMrYfhSRxUXlCColTAjWUte2nlpWfWxuDTQmHTaHzLpMpRJDTN04U7VQUEEkeAoPT
-	 C7vHC2soev7KNFVLAKRs5LCVLg6QWiD+Ni2i8iunrlUaxBqlwEUFtrltFuEoCKHQCq
-	 SvLRNWavaBL9CXJOjz4LMjZFUqF+CBEpPoJ5hm6KWXI3ag6ye6mCEuXtBV3PS8iX6s
-	 eVGYE6iVeQMYg==
+	b=R/+EDPrnWwvRal2caiEjZ8chGWz6Iw78i5c9DPWyMxyC3a4baEGLhzEAcuEmgNuTm
+	 INuoUUhXXU7AGMw9hn61M3s58UC82LDt3SR21A9Mi1i0NdSmRuHzZHiLmXEg1hlUbo
+	 G1ZZBrRIuQ+0oU+nSVj/gqxW5bpkXCNtioTxmupdhDRjvgSXPS6h/Jqsl8AmuHs6xZ
+	 5FywQC4+19ymbnAERUtY6za2eMOusSey+lfVswNFBXWo7oBEzrOzR+F9P+aAfyssxe
+	 576aHiI9iNbkcS+0JzPguM+JV/FfyLNabiD4HNsBjJi42206HWaMeX6agx0wTqTBf5
+	 bBunwMI9yvwfg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 03/20] md: add helper to split bios at reshape offset
+Subject: Re: [PATCH v2 05/20] md/md-llbitmap: allocate page controls
+ independently
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20e701b8355e1efd0d7cff3265189abf2424400b.1782282042.git.yukuai@kernel.org>
+In-Reply-To: <6e1ca7ea2cb90ae58c47230a90f3f08d51658829.1782282042.git.yukuai@kernel.org>
 References: <20260605091527.2463539-1-yukuai@kernel.org>
  <cover.1782282042.git.yukuai@kernel.org>
- <20e701b8355e1efd0d7cff3265189abf2424400b.1782282042.git.yukuai@kernel.org>
+ <6e1ca7ea2cb90ae58c47230a90f3f08d51658829.1782282042.git.yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 24 Jun 2026 07:01:56 +0000
-Message-Id: <20260624070156.9013D1F000E9@smtp.kernel.org>
+Date: Wed, 24 Jun 2026 07:02:01 +0000
+Message-Id: <20260624070202.524001F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Critical] Lockless read of 64-bit `mddev->reshape_position` risks torn r=
-eads on 32-bit architectures and TOCTOU races between bio splitting and bit=
-map accounting, leading to silent data corruption.
+
+New issues:
+- [High] Eager allocation of physical memory and disk I/O for the entire un=
+used reserved bitmap space causes severe memory consumption and I/O stall r=
+egressions.
+
+Pre-existing issues:
+- [Critical] The bitmap space validation omits BITMAP_DATA_OFFSET, potentia=
+lly allowing the bitmap to overflow its physical bounds and corrupt user da=
+ta.
 --
 
-commit 4912480eb23a69a6634d083e53f12568752eafb0
+commit 880054f58bccd2442566ac1e584d6d9c8fc01e7e
 Author: Yu Kuai <yukuai@fygo.io>
 
-md: add helper to split bios at reshape offset
+md/md-llbitmap: allocate page controls independently
 
-This commit adds the mddev_bio_split_at_reshape_offset() helper function.
-It allows MD personalities to share the reshape-offset bio splitting logic
-instead of open-coding it in multiple places.
+Allocate one llbitmap page-control object at a time and free each
+object through the same model.
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 0b59c676f7c03..c18a7f3c27e65 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
+> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
+> index e3500a1a52c07..4c3fc4b35aff0 100644
+> --- a/drivers/md/md-llbitmap.c
+> +++ b/drivers/md/md-llbitmap.c
+
 [ ... ]
-> @@ -9361,6 +9361,45 @@ void md_submit_discard_bio(struct mddev *mddev, st=
-ruct md_rdev *rdev,
->  }
->  EXPORT_SYMBOL_GPL(md_submit_discard_bio);
-> =20
-> +struct bio *mddev_bio_split_at_reshape_offset(struct mddev *mddev,
-> +					      struct bio *bio,
-> +					      unsigned int *max_sectors,
-> +					      struct bio_set *bs)
+
+> +static int llbitmap_alloc_pages(struct llbitmap *llbitmap)
 > +{
-> +	sector_t boundary;
-> +	sector_t start;
-> +	sector_t end;
-> +	unsigned int split_sectors;
+> +	unsigned int used_pages =3D llbitmap_used_pages(llbitmap, llbitmap->chu=
+nks);
+> +	unsigned int nr_pages =3D max(used_pages, llbitmap_reserved_pages(llbit=
+map));
+> +	int i;
+
+[Severity: High]
+Does this unconditionally eager-allocate memory and write out the entire=20
+reserved space?
+
+By setting nr_pages to the maximum reserved space:
+nr_pages =3D max(used_pages, llbitmap_reserved_pages(llbitmap));
+
+and unconditionally allocating a physical 4KB page for every index up to=20
+this limit in llbitmap_read_page(), this seems to allocate RAM for all=20
+reserved, unused pages.
+
+Furthermore, will functions like __llbitmap_flush() now iterate over all=20
+these allocated nr_pages, marking them dirty and synchronously writing them=
+=20
+to disk, potentially causing severe I/O stalls for arrays with large=20
+reserved bitmap spaces?
+
 > +
-> +	split_sectors =3D bio_sectors(bio);
-> +	if (max_sectors && *max_sectors && *max_sectors < split_sectors)
-> +		split_sectors =3D *max_sectors;
-> +
-> +	if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
-> +		goto split;
-> +
-> +	boundary =3D mddev->reshape_position;
+> +	llbitmap->pctl =3D kcalloc(nr_pages, sizeof(*llbitmap->pctl), GFP_KERNE=
+L);
+> +	if (!llbitmap->pctl)
+> +		return -ENOMEM;
+
+[ ... ]
+
+> @@ -923,7 +948,7 @@ static int llbitmap_init(struct llbitmap *llbitmap)
+>  	llbitmap->sync_size =3D blocks;
+>  	mddev->bitmap_info.daemon_sleep =3D DEFAULT_DAEMON_SLEEP;
+> =20
+> -	ret =3D llbitmap_cache_pages(llbitmap);
+> +	ret =3D llbitmap_alloc_pages(llbitmap);
 
 [Severity: Critical]
-Can this lockless read of mddev->reshape_position cause a torn read on
-32-bit architectures since it is a 64-bit value?
+This is a pre-existing issue, but does the bitmap space validation here
+omit BITMAP_DATA_OFFSET?
 
-Additionally, does reading this without locking introduce a time-of-check to
-time-of-use race with bitmap accounting? If mddev->reshape_position
-is updated by the reshape thread after this split check, but before bitmap
-accounting in llbitmap_map_previous(), an unsplit bio could end up crossing
-the new boundary.
+In llbitmap_init() and llbitmap_read_sb(), the validation checks ensure
+the total bitmap size (chunks) doesn't exceed the reserved byte length
+(space). However, they don't seem to account for the 1024-byte
+BITMAP_DATA_OFFSET that is prepended to the bitmap data on disk.
 
-This could trigger the WARN_ON_ONCE in llbitmap_map_previous():
+If chunks is close to or exactly equal to space, the total byte size
+required (chunks + BITMAP_DATA_OFFSET) could exceed the physical bounds
+of the reserved space. During flushes, could llbitmap_write_page() write
+across the reserved bitmap boundary and overwrite adjacent user data?
 
-    sector_t boundary =3D mddev->reshape_position;
-
-    if (!llbitmap_reshaping(llbitmap))
-        return false;
-
-    WARN_ON_ONCE(sectors && offset < boundary && offset + sectors > boundar=
-y);
-
-Could this race result in a bio being mis-accounted to the wrong array
-geometry, potentially causing data corruption if a crash occurs during a
-reshape?
-
-> +	start =3D bio->bi_iter.bi_sector;
-> +	end =3D bio_end_sector(bio);
-> +	if (start >=3D boundary || end <=3D boundary)
-> +		goto split;
-> +
-> +	if (boundary - start < split_sectors)
-> +		split_sectors =3D boundary - start;
-> +
-> +split:
-> +	if (max_sectors)
-> +		*max_sectors =3D split_sectors;
-> +	if (split_sectors < bio_sectors(bio)) {
-> +		bio =3D bio_submit_split_bioset(bio, split_sectors, bs);
-> +		if (bio)
-> +			bio->bi_opf |=3D REQ_NOMERGE;
-> +	}
-> +
-> +	return bio;
-> +}
-> +EXPORT_SYMBOL_GPL(mddev_bio_split_at_reshape_offset);
+>  	if (ret)
+>  		return ret;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1782282042.gi=
-t.yukuai@kernel.org?part=3D3
+t.yukuai@kernel.org?part=3D5
