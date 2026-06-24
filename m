@@ -1,142 +1,191 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56BBB2F8E9C
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 07:04:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AB792F8E9C
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 07:04:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782284686; cv=none; b=eVyPH9dqQGKFBrFRcFRaW8O1uSfPL3QHWAnEJx+owsc2Tkw05H08lLzQuwetcl3/R0fgakx9yythhQQhISIa9hfwuaJSKPvNLfjZtpZgaLQs1RmD0I/1eZuQO7QlsDFeYYcX3/e5B2CY4Jdk0PZOSBBLHdkxmKQSsnhzPH4k/GI=
+	t=1782284697; cv=none; b=eCjxEDH/zBQ64JaRNr4fTBqpQo9XU81C7tLhR+V9UNWN4JF6j+9cSoE8KDNBwJl5lKk1kyjiDT+4yfJGgvkzhn7ubJyoCD/VSrVGzAlLkEErsRoQGmGxnz41X+t39CwcvfvxKug13f4/KEXTrGxEJUN3hiD5fbQ0NzFn6RSKOww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782284686; c=relaxed/simple;
-	bh=l1J1lnC1sDkwiSGbIsbJe+p0USQaLZte+/ruxEOyNqw=;
+	s=arc-20240116; t=1782284697; c=relaxed/simple;
+	bh=lC7lc0An0jRQwuOdju+YjKoUz+dc1qDIC8fP5QixAno=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=m6+r/hV+c3bonBDlC1rP8uADYVVEbTKaFNM64JyKOD/fR1eBy6sfGWajyVhCrU5GJjRYEzup8E6EMTBe+bM9n7j3dP3dXdar1VB48DtpHX7sFDcZZm/jgfzeRJzxLIm0t6smmNL1lBNOAj9ynKNdhVwXxa2J5NSG10DjxbulaQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aq0jlcr1; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=MybzPdlFqaSyPLCiWfSpn0pKMapisvDx9+QFTf2ViQzTxpM8QqNNLM8SkCVGqREtjq1HkvKq0fv/194qA+ExB2zJ+Uqc+T/Fk5JKUc36hYPucSJNVc+XGuO8z9VCgaY3NIHWESnPp0tEZHvFc8jTTx6eqJaSrJeS8b5ze24xxsc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Azuj4UYJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aq0jlcr1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D34711F000E9;
-	Wed, 24 Jun 2026 07:04:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Azuj4UYJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39A771F000E9;
+	Wed, 24 Jun 2026 07:04:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782284685;
-	bh=LGPpD2onetZt8heOyfutHM9g3aZNcr0zNKN/XxeczmM=;
+	s=k20260515; t=1782284696;
+	bh=KYyVDqqR1k5GoTMxP9/6NvhsunnhuBIfHQtu3CYSDSY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=aq0jlcr1NTo1C0BkDbR+gkn4y9hzPs5r3Ai7eqM2BCVq4Y8VFvtO3ix7SJxSBrhiV
-	 ugaihtCy4u6/9Kqf9f3ZaBVamPAeeEqzSg5jRSwFonFIf/V38FSMEHuZnM7lb9Ua2z
-	 F1WUfsMMRhTxlO0J3h+jQ8X3REVdk2IIPG+qqwzXqsBLqzwJH5ZHpc65kSS4yIsg0j
-	 PtvGxjJyey7VigIYtzzkkw3v/4tjEgehIR9fDVtwwNmVyx8N0bDUJ2VHr/eMgvCWOe
-	 C+oBG2uQYcHgjJ4xIxFzor/JRtNZssIxfqZV3NjV6UZOzG2VIiBv1McJ/MYvZcMGu3
-	 V182lEk/07Y5g==
+	b=Azuj4UYJrnnwTco9ZN7xH4ZrduhBHE5FHf8KCADsxICK7ZWyXlDi1YEA/hyJcuGnW
+	 zFfxwK/gl/Tp0EDiGpyGFnPgkSlFUwJyghsxDgmMsQnyoTti5qFwu3FgH9a7y1FzIr
+	 QIb4UhOuEpYdcvcCFpMeC5YI6tyTLXg1Yv8sk0SJlylm/heFF5HSg5y4Mh7BS0Tglm
+	 R0PuxUyQrw5ICwym069ymFm/vCG4SlRy2bC2W0yzeE9qCJv4OPyPf01FCeUjEkif+c
+	 H70uQ78qD/6XnjxUMy21yY1cGnmr9s7Pi6DfyK98PXt2+48S0l8ZQ7SK4FYve5zUUy
+	 qv4mlSgRoRy3A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 09/20] md/md-llbitmap: refuse reshape while llbitmap
- still needs sync
+Subject: Re: [PATCH v2 12/20] md/md-llbitmap: remap checkpointed bits as
+ reshape progresses
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <fde37bced9be5e6b4d0f71cdd7d33d9387c022f6.1782282042.git.yukuai@kernel.org>
+In-Reply-To: <8700112d660a7f9fa48d174ee9b395fbe309e7c9.1782282042.git.yukuai@kernel.org>
 References: <20260605091527.2463539-1-yukuai@kernel.org>
  <cover.1782282042.git.yukuai@kernel.org>
- <fde37bced9be5e6b4d0f71cdd7d33d9387c022f6.1782282042.git.yukuai@kernel.org>
+ <8700112d660a7f9fa48d174ee9b395fbe309e7c9.1782282042.git.yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 24 Jun 2026 07:04:44 +0000
-Message-Id: <20260624070444.D34711F000E9@smtp.kernel.org>
+Date: Wed, 24 Jun 2026 07:04:55 +0000
+Message-Id: <20260624070456.39A771F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-- [High] llbitmap_reshape_can_start() fails to reject reshape when chunks a=
-re in BitNeedSyncUnwritten or BitSyncingUnwritten states.
-- [High] The newly introduced reshape_can_start callback is never invoked b=
-y the RAID5 subsystem, rendering the reshape refusal logic non-functional f=
-or RAID5/6.
+- [Critical] In-place array modification during reshape overwrites un-resha=
+ped source data before it can be read.
+- [High] Non-atomic read-modify-write cycle in `llbitmap_reshape_merge` rac=
+es with concurrent normal I/O, dropping `BitDirty` flags.
+- [High] Missing handling for `BitNeedSyncUnwritten` and `BitCleanUnwritten=
+` in `llbitmap_rmerge_state` silently demotes them.
+- [High] The `level_456` condition in `llbitmap_rmerge_state` is completely=
+ ineffective and subsumed by the subsequent fallback.
 --
 
-commit fc17ecb84d03fe66b3e1048dc17b6b8022da7f9b
+commit a1307817c41ef916bb59f41a3af5b2d7a709caa2
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/md-llbitmap: refuse reshape while llbitmap still needs sync
+md/md-llbitmap: remap checkpointed bits as reshape progresses
 
-Reject reshape when llbitmap still contains NeedSync or Syncing bits.
-
-This keeps reshape from starting until the current llbitmap state has
-been reconciled.
+Merge checkpointed old llbitmap state forward as reshape_position
+advances and record the checkpoint remap through reshape_mark().
 
 > diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index ae2e87fd58874..11fede1fc79fd 100644
+> index c62397743d9a0..00b77ecd600be 100644
 > --- a/drivers/md/md-llbitmap.c
 > +++ b/drivers/md/md-llbitmap.c
-> @@ -1680,6 +1680,29 @@ static void llbitmap_dirty_bits(struct mddev *mdde=
-v, unsigned long s,
->  	llbitmap_state_machine(mddev->bitmap, s, e, BitmapActionStartwrite);
->  }
-> =20
-> +static int llbitmap_reshape_can_start(struct mddev *mddev)
-> +{
-> +	struct llbitmap *llbitmap =3D mddev->bitmap;
-> +	unsigned long chunk;
-> +	int ret =3D 0;
-> +
-> +	if (!llbitmap)
-> +		return 0;
-> +
-> +	mutex_lock(&mddev->bitmap_info.mutex);
-> +	for (chunk =3D 0; chunk < llbitmap->chunks; chunk++) {
-> +		enum llbitmap_state state =3D llbitmap_read(llbitmap, chunk);
-> +
-> +		if (state =3D=3D BitNeedSync || state =3D=3D BitSyncing) {
-
-[Severity: High]
-Should this check also include BitNeedSyncUnwritten and BitSyncingUnwritten
-states?
-
-Reshaping an array while it has regions pending or undergoing proactive par=
-ity
-synchronization could change the array layout while the background sync pro=
-cess
-is running, potentially leading to corrupt parity.
-
-> +			ret =3D -EBUSY;
-> +			break;
-> +		}
-> +	}
-> +	mutex_unlock(&mddev->bitmap_info.mutex);
-> +
-> +	return ret;
-> +}
-> +
 
 [ ... ]
 
-> @@ -2002,6 +2025,7 @@ static struct bitmap_operations llbitmap_ops =3D {
->  	.dirty_bits		=3D llbitmap_dirty_bits,
->  	.prepare_range		=3D llbitmap_prepare_range,
->  	.reshape_finish		=3D llbitmap_reshape_finish,
-> +	.reshape_can_start	=3D llbitmap_reshape_can_start,
+> @@ -906,6 +914,33 @@ static int llbitmap_prepare_resize(struct llbitmap *=
+llbitmap,
+>  	return 0;
+>  }
+> =20
+> +static enum llbitmap_state
+> +llbitmap_rmerge_state(struct llbitmap *llbitmap,
+> +		      enum llbitmap_state dst,
+> +		      enum llbitmap_state src)
+> +{
+> +	bool level_456 =3D raid_is_456(llbitmap->mddev);
+> +
+> +	if (dst =3D=3D BitNeedSync || dst =3D=3D BitSyncing ||
+> +	    src =3D=3D BitNeedSync || src =3D=3D BitSyncing)
+> +		return BitNeedSync;
 
 [Severity: High]
-Is the reshape_can_start callback invoked by the RAID5 subsystem when start=
-ing
-a reshape?
+Are BitNeedSyncUnwritten and BitCleanUnwritten states meant to be handled
+here?
 
-Looking at raid5_start_reshape() in drivers/md/raid5.c:
+Because they do not match BitNeedSync, BitSyncing, BitDirty, or BitClean,
+they fall through these conditions. If paired with BitClean, they
+incorrectly evaluate to BitClean; otherwise, they fall through to
+BitUnwritten. Both outcomes silently drop the sync requirement.
 
-    if (md_bitmap_enabled(mddev, false) &&
-        mddev->bitmap_id =3D=3D ID_LLBITMAP) {
-        i =3D mddev->bitmap_ops->resize(mddev, mddev->dev_sectors, 0);
+> +
+> +	if (dst =3D=3D BitDirty || src =3D=3D BitDirty)
+> +		return BitDirty;
+> +
+> +	/*
+> +	 * Reshape generates valid target parity/data for both already-written
+> +	 * and not-yet-written regions in the checkpointed range, so a mix of
+> +	 * clean and unwritten still results in a clean destination bit.
+> +	 */
+> +	if (level_456 && ((dst =3D=3D BitClean && src =3D=3D BitUnwritten) ||
+> +			  (src =3D=3D BitClean && dst =3D=3D BitUnwritten)))
+> +		return BitClean;
+> +	if (dst =3D=3D BitClean || src =3D=3D BitClean)
+> +		return BitClean;
 
-It doesn't appear to call mddev->bitmap_ops->reshape_can_start. This could
-allow RAID5/6 arrays to start a reshape while the bitmap still contains
-pending sync bits, causing the array layout to change before parity is
-reconciled.
+[Severity: High]
+Does the fallback condition "dst =3D=3D BitClean || src =3D=3D BitClean" re=
+nder the
+preceding level_456 check dead code?
 
->  	.write_all		=3D llbitmap_write_all,
-> =20
->  	.groups			=3D md_llbitmap_groups,
+The fallback unconditionally forces any BitClean mix to BitClean, which
+entirely overrides the level_456 restriction. Could this lead to RAID10
+incorrectly resolving mixed BitClean and BitUnwritten states to BitClean,
+causing skipped resync operations?
+
+> +	return BitUnwritten;
+> +}
+
+[ ... ]
+
+> +static void llbitmap_reshape_merge(struct llbitmap *llbitmap,
+> +				   const struct llbitmap_reshape_range *old,
+> +				   const struct llbitmap_reshape_range *new)
+> +{
+> +	unsigned long dst_start;
+> +	unsigned long dst_end;
+> +	unsigned long dst;
+> +
+> +	if (!new->sectors)
+> +		return;
+> +
+> +	dst_start =3D div64_u64(new->offset, llbitmap->reshape_chunksize);
+> +	dst_end =3D div64_u64(new->end - 1, llbitmap->reshape_chunksize);
+> +
+> +	for (dst =3D dst_start; dst <=3D dst_end; dst++) {
+> +		struct llbitmap_reshape_range dst_range;
+> +		struct llbitmap_reshape_range src;
+> +		enum llbitmap_state state;
+> +
+> +		llbitmap_reshape_dst_range(llbitmap, dst, new, &dst_range);
+> +		state =3D llbitmap_reshape_init_dst(llbitmap, dst, new);
+
+[Severity: High]
+Does this non-atomic read-modify-write cycle race with concurrent normal I/=
+O?
+
+llbitmap_reshape_init_dst() reads the chunk state, computes the merged state
+through llbitmap_rmerge_src(), and writes it back via llbitmap_write() below
+without being protected by locks.
+
+Concurrent normal I/O operating on stripes outside the reshape window but
+within the same bitmap chunk can set BitDirty. The llbitmap_reshape_merge()
+thread will blindly overwrite this BitDirty flag with its locally computed
+state, potentially causing silent data corruption due to lost BitDirty
+flags.
+
+> +		if (llbitmap_reshape_src_range(old, new, &dst_range, &src))
+> +			state =3D llbitmap_rmerge_src(llbitmap, state, &src);
+> +		else
+> +			state =3D llbitmap_rmerge_state(llbitmap, state, BitUnwritten);
+> +		llbitmap_write(llbitmap, state, dst);
+
+[Severity: Critical]
+Does writing directly to the shared pctl array overwrite un-reshaped source
+data before it can be read?
+
+When adding disks to a RAID5 array, new->sectors > old->sectors. This causes
+the forward iteration of dst to outpace bit in llbitmap_rmerge_src()
+(e.g., dst =3D 10, bit =3D 5).
+
+Because llbitmap_write() updates the array in place, the state at index 5
+is overwritten before it is read for dst =3D 10, destroying the original ch=
+unk
+state.
+
+> +	}
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1782282042.gi=
-t.yukuai@kernel.org?part=3D9
+t.yukuai@kernel.org?part=3D12
