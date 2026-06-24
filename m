@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2D4F38A726;
-	Wed, 24 Jun 2026 06:42:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DBE5388378;
+	Wed, 24 Jun 2026 06:42:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782283360; cv=none; b=MUhgJkwzF902EvR1LNDfgUj3OzNfsDDe9qjV9bK8CD+m7MJhToXDkOXpqKzLQgvFVwm3mlmWaNLT82FwZ3CRowKCPIQiQ6AO4pbPodhYa1KLoY1m9Oq9j/IDTxW+lfbNCnMsLOcjIpLPGHPbhkbsvUq3FE8q1rEjNFI8W5m7nrY=
+	t=1782283362; cv=none; b=V+IAmsgUduW9pPXmbhRXkJzlvnN/qaenn5Kxtqw5Xi6oa94eaaGntRYhxLhXei+8Rvlo2WJBb4SXH7S/C7cOD99bU0C2g1qS6w2FfHzBZ6Wn14cTtz1dbI6BNmmz7HGUARZk1az2Xfbl3uFNG5w9c5dZRZMvZRSlC9ZWun+WNKY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782283360; c=relaxed/simple;
-	bh=b/9bp4eC93a8eYE5hrj5ryqGax4CNGI+abTs4NciwaU=;
+	s=arc-20240116; t=1782283362; c=relaxed/simple;
+	bh=dn+4drJvKh7XR2tkAXyUC8o3310f9qkZ1gVdebwhTsM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tBMS3iMtuVbCkwSVJFua5r427TwJ9mNdkJxBN98XBAiH60ZVdjo2Gcbm2nBSsIUAjQlqB0VRfqwrOcXtNBmFn2j44sx6+0DBjl9VvkwVAZ4/f6TLhGw37C4q3NtpbF/iH9d0GuIPAhRfPXdyzXRGUEzHQbxNaGKwUXdnvbYnt3Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NgbClnBO; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=HIv0edT+MTtm4/Kd/wmYOPpG6QuYhjPli6GTDYAHIm/YNPHbutHjyR0SvHBHd3JdOxjEFZUCi768SnIfX4MMZiZzjE4PQYP/3YSkRt0/HssVnCWRqQ4tpSvuYdm2vEo4JLpSZMAc4UwNEtIuJdzlTcoqVzamwoCslbI7bg15cSw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L/UkeX5r; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NgbClnBO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D28671F00A3D;
-	Wed, 24 Jun 2026 06:42:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L/UkeX5r"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B0AD1F000E9;
+	Wed, 24 Jun 2026 06:42:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782283358;
-	bh=Y+znrA4nzLYFIakzMQU9Qx3hk6C3nMkfboM++Ktz+Xk=;
+	s=k20260515; t=1782283361;
+	bh=8gKrtMiV8BM2LBqO9lS12wIt4TXRcA7sxkYpDsLJbuE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=NgbClnBOAZhTbboSBV8/tq6kLxkBaQN6DVhYaA5+XlokCEKJz5gOu/SEpr9DmWGkB
-	 q0L+HUdZA2Cw9FH1VVngSR0M5PDrY4RbXijYtCMuUYpARCZUxl1eUenj7qG3wHj3Ox
-	 gcdEwWhjacnnap0Q4yFNOHvbFbMbB84/og8oquIiZIkFPV3e7S58wGxGf+YYDORUE7
-	 UXjgUbN5GK3ENiXMX52JZ0eiObVmIjyKVO2vv+DnXnsFv5xasqjg5KbEYd85tWd6Bb
-	 GfPW3pVaZUP/iqpH7yGVz03CJy+fw5ZwlZVgMwBzEHUSnNLjoAcNi7SLfGgaWpyWIz
-	 4KFAFxsjcZJAg==
+	b=L/UkeX5rTsH1+OLnTMe6Bwq1sFkL17dKRI71s4NjjFBt0vncyF6O5p4RywrQ9Eszh
+	 CSI+P1P+SlQ9CVruWb6yymLKWmMNpttA08O5cQKxu4L0KzDaV5Y0tfHzCBsZjwa3Qa
+	 Be+C4vhdUgx8aRfB9TDhF8B/fJGFS+BnHoQVg+wyhgkvxt9mi6mCHaNVPwhOTs63mS
+	 rw0XBDWO4UFyvGXd9JtDSLlnCfCPojBvNv//U3cCNJggqaPMbCkTGpYRLL5zJBJRgt
+	 ZizhX+1Lo1gdIzAPxcmkz6zN/glx2oH5Gq402AU0NGuhv4KVBl8z789U5dpUql6kf0
+	 Wm8Z4ml0/V3TA==
 From: Yu Kuai <yukuai@kernel.org>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fygo.io>
@@ -34,9 +34,9 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	Su Yue <glass.su@suse.com>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 06/20] md/md-llbitmap: grow the page cache in place for reshape
-Date: Wed, 24 Jun 2026 14:42:03 +0800
-Message-ID: <27639f9aceb3cb6d6d021df79f9f6839d916bb58.1782282042.git.yukuai@kernel.org>
+Subject: [PATCH v2 07/20] md/md-llbitmap: track target reshape geometry fields
+Date: Wed, 24 Jun 2026 14:42:04 +0800
+Message-ID: <5440f676d6637f4c0262862252191c2244363087.1782282042.git.yukuai@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <cover.1782282042.git.yukuai@kernel.org>
 References: <20260605091527.2463539-1-yukuai@kernel.org> <cover.1782282042.git.yukuai@kernel.org>
@@ -50,203 +50,95 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai@fygo.io>
 
-Use the page-control helpers to grow llbitmap's cached pages in place
-for resize and later reshape preparation, instead of rebuilding the
-whole cache.
+Track llbitmap bookkeeping for the target reshape geometry while keeping
+a single live bitmap instance.
+
+Add the reshape geometry fields, refresh helper, and update the load and
+resize paths to keep the target geometry in sync.
 
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 ---
- drivers/md/md-llbitmap.c | 139 +++++++++++++++++++++++++++++++++++----
- 1 file changed, 127 insertions(+), 12 deletions(-)
+ drivers/md/md-llbitmap.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
 diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-index 4c3fc4b35aff..98e7824c7362 100644
+index 98e7824c7362..cdced2126e97 100644
 --- a/drivers/md/md-llbitmap.c
 +++ b/drivers/md/md-llbitmap.c
-@@ -416,6 +416,19 @@ static char state_machine[BitStateCount][BitmapActionCount] = {
- };
+@@ -289,6 +289,9 @@ struct llbitmap {
+ 	unsigned long chunks;
+ 	/* total number of sectors tracked by current bitmap geometry */
+ 	sector_t sync_size;
++	unsigned long reshape_chunksize;
++	unsigned long reshape_chunks;
++	sector_t reshape_sync_size;
+ 	unsigned long last_end_sync;
+ 	/*
+ 	 * time in seconds that dirty bits will be cleared if the page is not
+@@ -430,6 +433,39 @@ static void llbitmap_calculate_chunks(struct mddev *mddev, sector_t blocks,
+ 	}
+ }
  
- static void __llbitmap_flush(struct mddev *mddev);
-+static void llbitmap_flush(struct mddev *mddev);
-+static void llbitmap_update_sb(void *data);
-+
-+static void llbitmap_calculate_chunks(struct mddev *mddev, sector_t blocks,
-+				      unsigned long *chunksize,
-+				      unsigned long *chunks)
++static bool llbitmap_reshaping(struct llbitmap *llbitmap)
 +{
-+	*chunks = DIV_ROUND_UP_SECTOR_T(blocks, *chunksize);
-+	while (*chunks > mddev->bitmap_info.space << SECTOR_SHIFT) {
-+		*chunksize = *chunksize << 1;
-+		*chunks = DIV_ROUND_UP_SECTOR_T(blocks, *chunksize);
-+	}
++	return llbitmap->mddev->reshape_position != MaxSector;
 +}
- 
++
++static sector_t llbitmap_personality_sync_size(struct llbitmap *llbitmap,
++					       bool previous)
++{
++	struct mddev *mddev = llbitmap->mddev;
++
++	if (!llbitmap_reshaping(llbitmap) || !mddev->private || !mddev->pers ||
++	    !mddev->pers->bitmap_sync_size)
++		return llbitmap->sync_size;
++	return mddev->pers->bitmap_sync_size(mddev, previous);
++}
++
++static void llbitmap_refresh_reshape(struct llbitmap *llbitmap)
++{
++	unsigned long old_chunks = DIV_ROUND_UP_SECTOR_T(llbitmap->sync_size,
++						 llbitmap->chunksize);
++	sector_t blocks = llbitmap_personality_sync_size(llbitmap, false);
++	unsigned long chunksize = llbitmap->chunksize;
++	unsigned long chunks = DIV_ROUND_UP_SECTOR_T(blocks, chunksize);
++
++	llbitmap->reshape_sync_size = blocks;
++	llbitmap->reshape_chunksize = chunksize;
++	llbitmap->reshape_chunks = chunks;
++	llbitmap_calculate_chunks(llbitmap->mddev, blocks,
++				  &llbitmap->reshape_chunksize,
++				  &llbitmap->reshape_chunks);
++	llbitmap->chunks = max(old_chunks, llbitmap->reshape_chunks);
++}
++
  static enum llbitmap_state llbitmap_read(struct llbitmap *llbitmap, loff_t pos)
  {
-@@ -655,6 +668,48 @@ static unsigned int llbitmap_reserved_pages(struct llbitmap *llbitmap)
- 			    PAGE_SIZE);
- }
+ 	unsigned int idx;
+@@ -1029,6 +1065,7 @@ static int llbitmap_init(struct llbitmap *llbitmap)
+ 	llbitmap->chunksize = chunksize;
+ 	llbitmap->chunks = chunks;
+ 	llbitmap->sync_size = blocks;
++	llbitmap_refresh_reshape(llbitmap);
+ 	mddev->bitmap_info.daemon_sleep = DEFAULT_DAEMON_SLEEP;
  
-+static int llbitmap_expand_pages(struct llbitmap *llbitmap,
-+				 unsigned long chunks)
-+{
-+	struct llbitmap_page_ctl **pctl;
-+	unsigned int old_nr_pages = llbitmap->nr_pages;
-+	unsigned int nr_pages = llbitmap_used_pages(llbitmap, chunks);
-+	unsigned int i;
-+	int ret;
-+
-+	if (nr_pages <= old_nr_pages)
-+		return 0;
-+
-+	pctl = kcalloc(nr_pages, sizeof(*pctl), GFP_KERNEL);
-+	if (!pctl)
-+		return -ENOMEM;
-+
-+	if (llbitmap->pctl)
-+		memcpy(pctl, llbitmap->pctl,
-+		       array_size(old_nr_pages, sizeof(*pctl)));
-+
-+	for (i = old_nr_pages; i < nr_pages; i++) {
-+		pctl[i] = llbitmap_alloc_page_ctl(llbitmap, i);
-+		if (IS_ERR(pctl[i]))
-+			goto err_alloc_ptr;
-+	}
-+
-+	kfree(llbitmap->pctl);
-+	llbitmap->pctl = pctl;
-+	llbitmap->nr_pages = nr_pages;
-+	return 0;
-+
-+err_alloc_ptr:
-+	ret = PTR_ERR(pctl[i]);
-+	while (i-- > old_nr_pages) {
-+		__free_page(pctl[i]->page);
-+		percpu_ref_exit(&pctl[i]->active);
-+		kfree(pctl[i]);
-+	}
-+	kfree(pctl);
-+	return ret;
-+}
-+
- static int llbitmap_alloc_pages(struct llbitmap *llbitmap)
- {
- 	unsigned int used_pages = llbitmap_used_pages(llbitmap, llbitmap->chunks);
-@@ -730,6 +785,34 @@ static bool llbitmap_zero_all_disks(struct llbitmap *llbitmap)
- 	return true;
- }
+ 	ret = llbitmap_alloc_pages(llbitmap);
+@@ -1140,6 +1177,7 @@ static int llbitmap_read_sb(struct llbitmap *llbitmap)
+ 	llbitmap->chunks = DIV_ROUND_UP_SECTOR_T(sync_size, chunksize);
+ 	llbitmap->chunkshift = ffz(~chunksize);
+ 	llbitmap->sync_size = sync_size;
++	llbitmap_refresh_reshape(llbitmap);
+ 	ret = llbitmap_alloc_pages(llbitmap);
  
-+static void llbitmap_mark_range(struct llbitmap *llbitmap,
-+				unsigned long start,
-+				unsigned long end,
-+				enum llbitmap_state state)
-+{
-+	while (start <= end) {
-+		llbitmap_write(llbitmap, state, start);
-+		start++;
-+	}
-+}
-+
-+static int llbitmap_prepare_resize(struct llbitmap *llbitmap,
-+				   unsigned long old_chunks,
-+				   unsigned long new_chunks,
-+				   unsigned long cache_chunks)
-+{
-+	int ret;
-+
-+	llbitmap_flush(llbitmap->mddev);
-+	ret = llbitmap_expand_pages(llbitmap, cache_chunks);
-+	if (ret)
-+		return ret;
-+	if (new_chunks > old_chunks)
-+		llbitmap_mark_range(llbitmap, old_chunks, new_chunks - 1,
-+				    BitUnwritten);
-+	return 0;
-+}
-+
- static void llbitmap_init_state(struct llbitmap *llbitmap)
- {
- 	struct mddev *mddev = llbitmap->mddev;
-@@ -1026,10 +1109,10 @@ static int llbitmap_read_sb(struct llbitmap *llbitmap)
- 		goto out_put_page;
+ out_put_page:
+@@ -1295,6 +1333,7 @@ static int llbitmap_resize(struct mddev *mddev, sector_t blocks, int chunksize)
+ 		mddev->bitmap_info.chunksize = bitmap_chunksize;
+ 		llbitmap->chunks = chunks;
+ 		llbitmap->sync_size = blocks;
++		llbitmap_refresh_reshape(llbitmap);
+ 		llbitmap_update_sb(llbitmap);
  	}
- 
--	if (chunksize < DIV_ROUND_UP_SECTOR_T(mddev->resync_max_sectors,
-+	if (chunksize < DIV_ROUND_UP_SECTOR_T(sync_size,
- 					      mddev->bitmap_info.space << SECTOR_SHIFT)) {
- 		pr_err("md/llbitmap: %s: chunksize too small %lu < %llu / %lu",
--		       mdname(mddev), chunksize, mddev->resync_max_sectors,
-+		       mdname(mddev), chunksize, sync_size,
- 		       mddev->bitmap_info.space);
- 		goto out_put_page;
- 	}
-@@ -1171,24 +1254,56 @@ static int llbitmap_create(struct mddev *mddev)
- static int llbitmap_resize(struct mddev *mddev, sector_t blocks, int chunksize)
- {
- 	struct llbitmap *llbitmap = mddev->bitmap;
-+	sector_t old_blocks = llbitmap->sync_size;
-+	unsigned long old_chunks = llbitmap->chunks;
- 	unsigned long chunks;
-+	unsigned long cache_chunks;
-+	int ret = 0;
-+	unsigned long bitmap_chunksize;
-+	bool reshape;
- 
- 	if (chunksize == 0)
- 		chunksize = llbitmap->chunksize;
- 
--	/* If there is enough space, leave the chunksize unchanged. */
--	chunks = DIV_ROUND_UP_SECTOR_T(blocks, chunksize);
--	while (chunks > mddev->bitmap_info.space << SECTOR_SHIFT) {
--		chunksize = chunksize << 1;
--		chunks = DIV_ROUND_UP_SECTOR_T(blocks, chunksize);
--	}
-+	bitmap_chunksize = chunksize;
-+	llbitmap_calculate_chunks(mddev, blocks, &bitmap_chunksize, &chunks);
- 
--	llbitmap->chunkshift = ffz(~chunksize);
--	llbitmap->chunksize = chunksize;
--	llbitmap->chunks = chunks;
--	llbitmap->sync_size = blocks;
-+	reshape = mddev->delta_disks || mddev->new_level != mddev->level ||
-+		mddev->new_layout != mddev->layout ||
-+		mddev->new_chunk_sectors != mddev->chunk_sectors;
-+	if (!reshape && bitmap_chunksize != llbitmap->chunksize)
-+		return -EOPNOTSUPP;
-+	if (blocks == old_blocks && chunks == llbitmap->chunks)
-+		return 0;
-+
-+	mutex_lock(&mddev->bitmap_info.mutex);
- 
-+	cache_chunks = reshape ? max(old_chunks, chunks) : chunks;
-+	ret = llbitmap_prepare_resize(llbitmap, old_chunks, chunks, cache_chunks);
-+	if (ret)
-+		goto out;
-+
-+	if (reshape) {
-+		llbitmap->reshape_sync_size = blocks;
-+		llbitmap->reshape_chunksize = bitmap_chunksize;
-+		llbitmap->reshape_chunks = chunks;
-+		llbitmap->chunks = max(old_chunks, chunks);
-+	} else {
-+		if (blocks < old_blocks && chunks < old_chunks)
-+			llbitmap_mark_range(llbitmap, chunks, old_chunks - 1,
-+					    BitUnwritten);
-+		mddev->bitmap_info.chunksize = bitmap_chunksize;
-+		llbitmap->chunks = chunks;
-+		llbitmap->sync_size = blocks;
-+		llbitmap_update_sb(llbitmap);
-+	}
-+	__llbitmap_flush(mddev);
-+	mutex_unlock(&mddev->bitmap_info.mutex);
- 	return 0;
-+
-+out:
-+	mutex_unlock(&mddev->bitmap_info.mutex);
-+	return ret;
- }
- 
- static int llbitmap_load(struct mddev *mddev)
+ 	__llbitmap_flush(mddev);
 -- 
 2.51.0
 
