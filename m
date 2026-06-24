@@ -1,186 +1,167 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0E7878F3A
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 16:16:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782317786; cv=none; b=uLMlstB1qmURIqREJxDGPJihxgzv5qleva74knVUABLTdXsMMcSEDPVVmqnPL2niIFn3CXHe1N8qfRqUyae1oK8Lid57Oiw8QyHP9AnuZWigy9jlXvq2cXT6Gdpwv/DPvCNqksIswa0i81NpKRc3WVLj/8n+li141aZ0Kk8vbog=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782317786; c=relaxed/simple;
-	bh=WD6wnnYgqCae7WlU6xTM4gUWCCRAQsxGhm6BpN46kIw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=e18lkArM/ic8VX7mKW8j5in1P2ukT1zZKNyp9PIJe7P3Vj3QzAuEoWaioYF/jd8NrwWoX91nx1WJddSlqcZFGmSsrzeWtfBi5FsMVaUcaOxDwu+be8/UFWCmHnFfNa+Spi1EUuSLCuppNuSdBr2fwLY+prKu3NLUYvRd1P4NLx4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M2QojuzF; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB6C01E1A17
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 16:48:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.172
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782319733; cv=pass; b=VEPSFdDqoM8aBqbG6i9QHSWoJBzEGakylz1EsUCXi2YsKSOKVad/enZCvv10SJEiQg7dx/UfAoLioVf18p6FaYhSpBReNCeTx2JUctfR1fzxULsw2tkyDyt64ZgBYpbAXsyEXlAqmUn9hSTSHNewBpsHpt3Il8jPoFIjtwDSsRk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782319733; c=relaxed/simple;
+	bh=tUd9MSOf6Gpfnj/DjRgEetNk24cj0Ww3vsmnBOJTSdU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=G1W8gGA5DoDeXQDIHVHGqGxuFq9asCGfUv2aIdYAgS/PgDfnT9szQLOAvsaAaZhjwMjFMH0Rb9ekBreFD4bWkLDAgNGmIRftsnbg2C8Z6WwJvD74Mkj1oDBmtB6Xd31siVX92YmklRHDiaAzk0PViY99i0v8ZelF48Sb5+cBr1k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qRTh3Q01; arc=pass smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M2QojuzF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12CC81F000E9;
-	Wed, 24 Jun 2026 16:16:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782317784;
-	bh=jj2MxSe5ifs17h4FzH9Xt74Kdixw9J8MZL0WeMxCSXs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=M2QojuzFjYW+4x/RW0ozCfnD8ysWlyP2MtERPjvLJxer33bXOOS2bkZKw7mbNRiKH
-	 swuuPz9A7rMfHsszEp1NYo4MgBnjPaLfA4oYBeAB04so7oZV/d3gfDIhypc5B2dx+t
-	 EzSwwH0mAEuCvL+Fh4FD+lkzZmF3H997ySt44blgu1LAtl1HHZSGqa7P1ZfYtH8lwE
-	 yv/1oiBpmtU7MwnC0ygHWI3ukhE5DF0roOMTAW0pryHQKrTDeepF83mcGjBmhK8bvG
-	 FlZZv3jfMnzV9DF9OlEYoPBB+tvD6Gwt4cgLziQMvSmkMQvKztdWTSR4OWhm8HBok+
-	 ieQwlR9tUveeg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/8] md: change chunk_sectors and stripe cache counts to
- unsigned int
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Hiroshi Nishida" <nishidafmly@gmail.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260624155452.211646-2-nishidafmly@gmail.com>
-References: <20260624155452.211646-1-nishidafmly@gmail.com>
- <20260624155452.211646-2-nishidafmly@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 24 Jun 2026 16:16:23 +0000
-Message-Id: <20260624161624.12CC81F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qRTh3Q01"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2c7cfa17fedso10235165ad.3
+        for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 09:48:52 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1782319732; cv=none;
+        d=google.com; s=arc-20240605;
+        b=Pva6PYb6TNPMokvP48kn1ugvGi6G//llY1j65jmZxi2R73C0aQY3VuAtOtis1kGVYc
+         mMmoyrOw2SW/FkO4LGNezKWW5AiV0bQql1qL3iXw+mklvX0LcsX4c1NJiYgBzV5+2YsB
+         0dLsHGF5XaH6pSinwN7kPHqmHJNRKzIQ8mvK7KDmPwt+WmwZhMj1jaKfdG+4Rofg4gNL
+         H76gJHhUqAshPluTiQ4NnYfLKCJvKH3V5xpNCWICJ/n1bgq9IghBBR9L0MQVjtb1xrnU
+         MwMt+B9Ry5ZtsJljjNXrbhNNtzD5VL0rACDTUfL59tJ3eyxtR2WaawOJ7wbNiNg1e2zd
+         1eqg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=Eqa0a7zsYCqL0jsMUMAnI+leBn+5NE0HEyi9TIA0TpY=;
+        fh=s3zDK4oIW35lnMNj6ctNoLUCgCMK6Fehs3aY4gQYlrc=;
+        b=XXXNcUSSMcqxDzD+Nj4t4BBAJFA/roxoaL5aYV8WkV95FdMP0CE1kOdK7J7F0sxhYg
+         E4DUGuTQ7J0kZWhyGPOC0yOnJB3xpcj8KuOvI1DEFSIvrbkWWCn/L42k+T5p0j9SjExl
+         h9JsKaV/gEZgK5kFntMvMbclpQMHs+GLai5RBeML2l/yyrYOxt6ZnG3Dg90CD5lvGWDr
+         qwokjS20mgt7fH4VjdEmqRCnELHO3XWkX4HOymZygKnOOduLQPZpsPiIUCmdjYhlqsEP
+         wayBlKwu6TzCff++1uuMxBPm/dnsR0REMpff2z83yNAcCI5W93bi6ZqncA9oqocb5JlQ
+         Cn4w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782319732; x=1782924532; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Eqa0a7zsYCqL0jsMUMAnI+leBn+5NE0HEyi9TIA0TpY=;
+        b=qRTh3Q01H2krDwUIya6NmDrNcq2WTKHraOvAO7//F+LHVRNBYfq2VrhOQUfrknRMw8
+         Id2b1zEHPatOallLPU6r2CtvmZiEug8trh45EuF2ox39v9c+xIdT4PrV+1ntLMWR7liE
+         qyD5FXSlivwj26RQ4q1Mkv+sf6jgwCGyYa3jg616HC4Jd47XW/1+ISy2Q1Fe3JismCGd
+         3fTfsJHUzJg+MV71414EHPyzJ19ailKdPIu2czomEf+SYPp8rVXTvQakf1KJ8RXgRQ4S
+         K7cVLEdkTxYmUHmqmeIA5UgJIURFSHOtTeyJEb79VqzVM6cAGz9YbVCru79bDk+ejdgE
+         dB3g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782319732; x=1782924532;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=Eqa0a7zsYCqL0jsMUMAnI+leBn+5NE0HEyi9TIA0TpY=;
+        b=rlbC2+G4yOf+puxENbATldm+YF7xd/zDxX1vSD9nwZADkF01mGnbwUmwLSIi2owl1g
+         yNpogkIb/jCX89FTmlAIA641A0SHQHM5BVvawUYyb+Q4z/nL/f0Rt98njAH5vDPIVpfA
+         AbdlZtmwEsgBtVn51sHevsfC3ktR3UoaQd2ihuQ1RbsJwyYEpWRTYp7oGMWCiWGs0Yj4
+         5uuj/+iKXgoWEyhhOL3iKeZk1DFsfFJlzzCWF+wkzDwsCRCP/Nasbj3opSMbWnUzp0j8
+         /EwmHEV6SASVywvtJ1hx9Ngq8c7yRTzu1/XqMohyBGJmmT8z3BDV/6aYiw/pT3VcTw3J
+         fRcw==
+X-Forwarded-Encrypted: i=1; AHgh+Rr308552Dcu6mXvxB5+gBMOVfyY7PIkUg+oqyUe1qIJ2HgkzyS8DCQ7QXHqw/x7n+Yn+5F9+XsLKGv7@vger.kernel.org
+X-Gm-Message-State: AOJu0YwfHjvWgs9Pmzvrwmsr4gfxZmxH7Dpd0b/Y72zsAdZDAO7TQPh1
+	KLSKAEXaHi9in5vlrzX4UJtnlyAU/kQ9Y6WgPby/XFZxP7tB808JGERPnRXwL8l8Ib0Mn6baHXk
+	mRSVrH4niVHGN6zSCWtqznd5tF+Z1e+iaI5QW/1DIew==
+X-Gm-Gg: AfdE7cl5wrKXdc8/cEkp2RBmlWb3arpOKEo1oCR7RGAGQo58i8iWHA2VFDSVY7QWQGr
+	gc/SNpSmP1brYa0GGy0pRyfz7wwqCrEBxdDK3aZJ9HX3/qU8Vt4L3wjyUk0GhImxHMX1WwuUUvR
+	hNdK0xhUISipxdeY6KTQWzuazZiNdt6qQZokWH7Dg5uQDhTTSGGyf4MWuYxHV+fd01sA/eJCnrS
+	g8ze+JXU7WdJ7+RA/+06qrfNNDcj+ZjDfUaiUiU4HL9fO2CSZGTlv3FFE+EoWwuohuZ8YMdVzI2
+	zNLcDcIi/jwCWlxEP1HM9t1/6cAAXuxgLwASxxzdpx03lmICZrTiuyRNmcDh0WR/HvwXQLxWfJ9
+	mdR0v+RF8BXlP
+X-Received: by 2002:a17:903:1aad:b0:2c1:ef9:4516 with SMTP id
+ d9443c01a7336-2c7e15c5297mr43674665ad.35.1782319732029; Wed, 24 Jun 2026
+ 09:48:52 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260624155421.211626-1-nishidafmly@gmail.com>
+ <20260624155421.211626-5-nishidafmly@gmail.com> <20260624160331.9C5F51F000E9@smtp.kernel.org>
+In-Reply-To: <20260624160331.9C5F51F000E9@smtp.kernel.org>
+From: Hiroshi Nishida <nishidafmly@gmail.com>
+Date: Wed, 24 Jun 2026 09:48:41 -0700
+X-Gm-Features: AVVi8Cc7jSMc1yHpFFYbnDbaOM6sh9UWwBeIwtrsGUnSAeV1VUeKclqRIYl7iAU
+Message-ID: <CAE1ksKRGv8SVTuSh80L5VLs_O-+jhnSvnLi7fkLRT1g-HW3sZg@mail.gmail.com>
+Subject: Re: [PATCH 4/5] md: use sector_t for recovery_active in status_resync()
+To: sashiko-reviews@lists.linux.dev
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+> [Medium] mddev->recovery_active is a standard atomic_t, not "sector-typed=
+";
+> changing the local to sector_t doesn't prevent narrowing.
 
-New issues:
-- [Medium] The commit's core justification is false. Changing the types to =
-unsigned does not enable compiler right-shift optimizations for variable di=
-visions.
-- [Low] Unupdated printf-style format specifiers passing unsigned fields to=
- '%d' cause compiler warnings (-Wformat) and break builds configured with -=
-Werror.
+You're right -- mddev->recovery_active is an atomic_t and
+atomic_read() returns int, so there's nothing wider to narrow; the
+int->sector_t conversion just moves to the assignment.
+The change is only a type-consistency tidy (the local is used solely
+with the sector_t curr_mark_cnt/resync_mark_cnt), not a narrowing fix.
+I'll reword the commit message in v2 accordingly and drop the
+"sector-typed atomic"/"narrows" wording.
 
-Pre-existing issues:
-- [Critical] The macro `round_down` is incorrectly used with a non-power-of=
--two divisor, causing silent data corruption in bitmap sector calculations.
---
 
-commit 86528a8b22367a5ee16a7cb19a1d56bf58f6aa67
-Author: Hiroshi Nishida <nishidafmly@gmail.com>
-
-md: change chunk_sectors and stripe cache counts to unsigned int
-
-This commit changes several structural fields and local variables like
-chunk_sectors and max_nr_stripes from signed to unsigned int. The stated
-rationale is to prevent negative values and enable right-shift compiler
-optimizations for power-of-two division in the hot I/O path.
-
->     chunk_sectors, new_chunk_sectors, prev_chunk_sectors, max_nr_stripes,
->     and min_nr_stripes are never negative. Using signed int is semantical=
+2026=E5=B9=B46=E6=9C=8824=E6=97=A5(=E6=B0=B4) 9:03 <sashiko-bot@kernel.org>=
+:
+>
+> Thank you for your contribution! Sashiko AI review found 1 potential issu=
+e(s) to consider:
+> - [Medium] The commit message falsely claims `mddev->recovery_active` is =
+a 'sector-typed atomic' and that declaring a local variable as `int` 'needl=
+essly narrows it', but the structure field remains a standard 32-bit `atomi=
+c_t`.
+> --
+>
+> commit 7ec77a6b233ce4d151f7fc723e5f312b20b4ac92
+> Author: Hiroshi Nishida <nishidafmly@gmail.com>
+>
+> md: use sector_t for recovery_active in status_resync()
+>
+> This commit changes the local variable recovery_active in status_resync()
+> from int to sector_t. The commit message states this is to match the type
+> of mddev->recovery_active and avoid needlessly narrowing the value.
+>
+> > recovery_active holds a sector count read from the sector-typed atomic
+> > mddev->recovery_active and is then combined with the sector_t values
+> > curr_mark_cnt and resync_mark_cnt. Declaring it as a plain int needless=
 ly
->     wrong and prevents the compiler from optimizing division/modulo by
->     power-of-two chunk sizes to right shifts in the hot I/O path.
+> > narrows it and mixes signedness into sector_t arithmetic; declare it
+> > sector_t to match.
+>
+> [Severity: Medium]
+> Is this description accurate? Looking at struct mddev in drivers/md/md.h,
+> recovery_active is defined as a standard atomic_t:
+>
+> drivers/md/md.h:struct mddev {
+>     ...
+>     atomic_t recovery_active;
+>     ...
+> }
+>
+> Since atomic_t is a 32-bit signed integer, and atomic_read() returns an i=
+nt,
+> does changing this local variable to sector_t actually prevent narrowing?=
+ The
+> implicit cast from int to sector_t will now simply happen at assignment
+> rather than during the arithmetic operations.
+>
+> Could the commit message be updated to reflect that mddev->recovery_activ=
+e
+> is a standard atomic_t, rather than a "sector-typed atomic"?
+>
+> --
+> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260624155421.21=
+1626-1-nishidafmly@gmail.com?part=3D4
 
-[Severity: Medium]
-Is this optimization rationale accurate? The hot I/O path uses sector_div(),
-which expands to do_div(). The do_div() macro explicitly casts the divisor
-to a 32-bit unsigned integer, so the division was already operating on an
-unsigned value.
 
-Additionally, because sectors_per_chunk is a runtime variable rather than a
-compile-time constant, would the compiler be able to optimize it into a
-right shift without a conditional branch?
-
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index d8daf0f75cbbe..b9ad26844799d 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-[ ... ]
-> @@ -437,7 +437,7 @@ struct mddev {
->  	int				external;	/* metadata is
->  							 * managed externally */
->  	char				metadata_type[17]; /* externally set*/
-> -	int				chunk_sectors;
-> +	unsigned int			chunk_sectors;
-
-[Severity: Low]
-Does changing this field to unsigned int cause compiler warnings with
-existing format strings?
-
-For example, chunk_size_show() in drivers/md/md.c appears to use %d to
-format mddev->chunk_sectors:
-
-chunk_size_show() {
-    ...
-    return sprintf(page, "%d (%d)\n",
-                   mddev->new_chunk_sectors << 9,
-                   mddev->chunk_sectors << 9);
-}
-
-Will this break builds configured with -Werror?
-
-> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> index cb5feae04db27..5cd9d0f36b6e0 100644
-> --- a/drivers/md/raid5.h
-> +++ b/drivers/md/raid5.h
-[ ... ]
-> @@ -572,12 +572,12 @@ struct r5conf {
->  	/* only protect corresponding hash list and inactive_list */
->  	spinlock_t		hash_locks[NR_STRIPE_HASH_LOCKS];
->  	struct mddev		*mddev;
-> -	int			chunk_sectors;
-> +	unsigned int		chunk_sectors;
->  	int			level, algorithm, rmw_level;
->  	int			max_degraded;
->  	int			raid_disks;
-> -	int			max_nr_stripes;
-> -	int			min_nr_stripes;
-> +	unsigned int		max_nr_stripes;
-> +	unsigned int		min_nr_stripes;
-
-[Severity: Low]
-Will the changes to min_nr_stripes and max_nr_stripes also trigger format
-warnings?
-
-Places like raid5_end_read_request() and raid5_set_cache_size() still use
-%d to print these fields. For instance, in raid5_set_cache_size():
-
-pr_err("md/raid:%s: Cannot increase cache size, ret=3D%d, new_size=3D%d, mi=
-n_nr_stripes=3D%d, max_nr_stripes=3D%d\n",
-       ...
-       conf->min_nr_stripes,
-       conf->max_nr_stripes);
-
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 0c5c9fb0606ee..28828e083c2b3 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-[ ... ]
-> @@ -2970,7 +2970,7 @@ sector_t raid5_compute_sector(struct r5conf *conf, =
-sector_t r_sector,
->  	sector_t new_sector;
->  	int algorithm =3D previous ? conf->prev_algo
->  				 : conf->algorithm;
-> -	int sectors_per_chunk =3D previous ? conf->prev_chunk_sectors
-> +	unsigned int sectors_per_chunk =3D previous ? conf->prev_chunk_sectors
->  					 : conf->chunk_sectors;
-
-[Severity: Critical]
-This is a pre-existing issue, but could the use of sectors_per_chunk
-cause problems when passed to rounding macros?
-
-Looking at raid5_bitmap_sector():
-
-raid5_bitmap_sector() {
-    ...
-    sectors_per_chunk =3D conf->chunk_sectors *
-        (conf->raid_disks - conf->max_degraded);
-    start =3D round_down(start, sectors_per_chunk);
-    end =3D round_up(end, sectors_per_chunk);
-    ...
-}
-
-The round_down() and round_up() macros are designed specifically for
-power-of-two divisors. If the number of data disks is not a power of two,
-sectors_per_chunk will not be a power of two, which would yield incorrect
-sector boundaries.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260624155452.2116=
-46-1-nishidafmly@gmail.com?part=3D1
+Hiroshi Nishida
+nishidafmly@gmail.com
