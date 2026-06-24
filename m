@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F3ED388E72;
-	Wed, 24 Jun 2026 06:42:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7831F388893;
+	Wed, 24 Jun 2026 06:42:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782283350; cv=none; b=tXWMmzyOIFKjFOUT+pfigY1d2SEvyHKaH3G8QwDAanPkZtsv9gjsMp5NAecyKZCBCAbsP6lUhWgLxVLxVMQFkaXT1zcNRSSmVVVjQXsvbTQvzp5vir8FZ1Ks+47eutvp8bQXKCSAa/coNiLEdUluzEoO3Eb1N9nNvX3w/NvVgWw=
+	t=1782283352; cv=none; b=KBtSLSLzJMshrcfkKWZiqiU8G2vvsG/KIanmY8x+3vO8owlM/nUshRuccqdcfeVKOWp7cuGY7I4TB/E39vJoB6J/T2OcH/Qy9wCN3eshmmflTKp004DNacN+poEkTFum/Xw0jHRxSmdLuo+7WBg380bxwGqOdQZxoMI80aEYxok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782283350; c=relaxed/simple;
-	bh=zE6V0rS1CYRh8HHF4UU9C4G8OkNMOGRNXdKiUikz4ss=;
+	s=arc-20240116; t=1782283352; c=relaxed/simple;
+	bh=duBhFsYzXeSG9/zoc9k9CpZaCQZLZU3Cc7uUPpEqc7c=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BaCikh+dA33b2QfWsD8nUD0xrGDUSJ4MSAlnXYP4/6BFTKUuiUp7K2W5vgVOn4A8u1FRrQbZJQ0aDY4vtk9jeZg75WDfgel95NfhJI8TARRdRylZ8LmqhHyIlbcyZ1mRFQVNa8I/X61D68a8vrJPa1AF8H4IxeZ8kSec3wMIZLI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DG9hjT/Y; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=gcLvgL4qaea5gIw7MH0h3krxK8hT50V5DXfXjroAc/qV9XbEBYVAn0aF6mbZKhJ7QtwdXOmWS3qrSBEfOvw5j00WvITa1/TbAITzgp41ivAzeAH4aGbjLsYh+tzHgG5/IJjaMW8P5g1/sJzn75p3DTlMnbfZouOAkut1zC4QL8A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ljVjBma6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DG9hjT/Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CA621F000E9;
-	Wed, 24 Jun 2026 06:42:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ljVjBma6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 495C31F00A3A;
+	Wed, 24 Jun 2026 06:42:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782283348;
-	bh=ExNpf8G5K91gwe32QvrS/B9q/xSMdoQA1ID+InSEdgQ=;
+	s=k20260515; t=1782283351;
+	bh=GK7Ky+/FO+gaUoFDpRMV2NIlz8ZZP3rIDk7tW8Fqhek=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=DG9hjT/YgAojVpyuzExDghjp7OjbNeiNJPXqHKh4Y7UhqZP8C2WbQwXYelub4WuPm
-	 0jwNf5aCcnCDgQEKJYHF92+pp5bpqXvLxscu7RAIE0ynCc7nGm8j4Ma2x/Ge2mQwh2
-	 sA113fAllns+Bt468WCzLcegRcVigHMJzW2Kv7Jf3qwv4y4CaXoIkqHRrAPAr+bfZt
-	 g/a+rc4VuMG5pb1/CoQeMcBw2IsQD8BwDcuaXyg692gd8UkFnwhECeV4p0y8aPTlXa
-	 2DmBjH1ofMSLKuFsisxEwNsCLx8Hb/0hootIMnDGn3RlqmZuVtmbh1sA/7UYcm+nY4
-	 bm6JJoNzliwrg==
+	b=ljVjBma6PYIS6Nm95487jXU9olJ0w77Dq6ApfTAgsLDxo1SZifnadANARcc8UV6DY
+	 qf5iA8LP9KExGOaIY7FcI/VrQcJkPza2bnmz9wURImWBljcCCgapMQdpChT00PTPiK
+	 vS5O0afpnXHIOc0irU1DBhMtvMgyColgBeuYekLx4g0dQA4tUFvoQdcsRX9YuBxJKu
+	 JsBxTeeBeqDCwREucqCXITY9z4Sc7sCmx7ek6QC7hPqYiyZLiVZ3OcgYL5hKXomRlI
+	 AQu5I0EB2jbJFwwfRGQeoWUMMkx0Wj95DfhnXYd0/UT1NNyNCC4H/Ra2R0/R4ol7pf
+	 FzSkmnWTRpq7Q==
 From: Yu Kuai <yukuai@kernel.org>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fygo.io>
@@ -34,9 +34,9 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	Su Yue <glass.su@suse.com>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 02/20] md: skip bitmap accounting for empty write ranges
-Date: Wed, 24 Jun 2026 14:41:59 +0800
-Message-ID: <d978c0c72c874d7033b0806a2dba255d6ff9e359.1782282042.git.yukuai@kernel.org>
+Subject: [PATCH v2 03/20] md: add helper to split bios at reshape offset
+Date: Wed, 24 Jun 2026 14:42:00 +0800
+Message-ID: <20e701b8355e1efd0d7cff3265189abf2424400b.1782282042.git.yukuai@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <cover.1782282042.git.yukuai@kernel.org>
 References: <20260605091527.2463539-1-yukuai@kernel.org> <cover.1782282042.git.yukuai@kernel.org>
@@ -50,61 +50,81 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai@fygo.io>
 
-mkfs.ext4 can submit zero-sector flush/FUA bios. These bios are WRITE
-bios for md_write_start() purposes, but they do not cover any data sector
-and must not dirty bitmap bits.
-
-md bitmap accounting currently passes such bios to bitmap start_write().
-For llbitmap this reaches llbitmap_start_write() with sectors == 0,
-which underflows the end chunk calculation.
-
-The new bitmap prepare_range() hook can also turn a non-empty bio into an
-empty bitmap range when the requested sectors are outside the active
-bitmap geometry. Treat both cases as not started, so the completion path
-will not call end_write() for an empty range.
+Add mddev_bio_split_at_reshape_offset() so personalities can share
+reshape-offset bio splitting instead of open-coding the same helper in
+multiple places.
 
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 ---
- drivers/md/md.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/md/md.c | 39 +++++++++++++++++++++++++++++++++++++++
+ drivers/md/md.h |  4 ++++
+ 2 files changed, 43 insertions(+)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 3b20a57b8c7e..0b59c676f7c0 100644
+index 0b59c676f7c0..c18a7f3c27e6 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -9376,6 +9376,8 @@ static void md_bitmap_start(struct mddev *mddev,
- 
- 	md_bitmap_prepare_range(mddev, &md_io_clone->offset,
- 				&md_io_clone->sectors);
-+	if (!md_io_clone->sectors)
-+		return;
- 	fn(mddev, md_io_clone->offset, md_io_clone->sectors);
+@@ -9361,6 +9361,45 @@ void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
  }
+ EXPORT_SYMBOL_GPL(md_submit_discard_bio);
  
-@@ -9396,7 +9398,8 @@ static void md_end_clone_io(struct bio *bio)
- 	struct mddev *mddev = md_io_clone->mddev;
- 	struct completion *reshape_completion = bio->bi_private;
++struct bio *mddev_bio_split_at_reshape_offset(struct mddev *mddev,
++					      struct bio *bio,
++					      unsigned int *max_sectors,
++					      struct bio_set *bs)
++{
++	sector_t boundary;
++	sector_t start;
++	sector_t end;
++	unsigned int split_sectors;
++
++	split_sectors = bio_sectors(bio);
++	if (max_sectors && *max_sectors && *max_sectors < split_sectors)
++		split_sectors = *max_sectors;
++
++	if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
++		goto split;
++
++	boundary = mddev->reshape_position;
++	start = bio->bi_iter.bi_sector;
++	end = bio_end_sector(bio);
++	if (start >= boundary || end <= boundary)
++		goto split;
++
++	if (boundary - start < split_sectors)
++		split_sectors = boundary - start;
++
++split:
++	if (max_sectors)
++		*max_sectors = split_sectors;
++	if (split_sectors < bio_sectors(bio)) {
++		bio = bio_submit_split_bioset(bio, split_sectors, bs);
++		if (bio)
++			bio->bi_opf |= REQ_NOMERGE;
++	}
++
++	return bio;
++}
++EXPORT_SYMBOL_GPL(mddev_bio_split_at_reshape_offset);
++
+ static void md_bitmap_prepare_range(struct mddev *mddev, sector_t *offset,
+ 				    unsigned long *sectors)
+ {
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 110cf0f8b107..ebfc6da83161 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -925,6 +925,10 @@ extern void md_error(struct mddev *mddev, struct md_rdev *rdev);
+ extern void md_finish_reshape(struct mddev *mddev);
+ void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
+ 			struct bio *bio, sector_t start, sector_t size);
++struct bio *mddev_bio_split_at_reshape_offset(struct mddev *mddev,
++					      struct bio *bio,
++					      unsigned int *max_sectors,
++					      struct bio_set *bs);
+ void md_account_bio(struct mddev *mddev, struct bio **bio);
  
--	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev, false))
-+	if (bio_data_dir(orig_bio) == WRITE && md_io_clone->sectors &&
-+	    md_bitmap_enabled(mddev, false))
- 		md_bitmap_end(mddev, md_io_clone);
- 
- 	if (bio->bi_status && !orig_bio->bi_status)
-@@ -9423,10 +9426,12 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
- 	md_io_clone = container_of(clone, struct md_io_clone, bio_clone);
- 	md_io_clone->orig_bio = *bio;
- 	md_io_clone->mddev = mddev;
-+	md_io_clone->sectors = 0;
- 	if (blk_queue_io_stat(bdev->bd_disk->queue))
- 		md_io_clone->start_time = bio_start_io_acct(*bio);
- 
--	if (bio_data_dir(*bio) == WRITE && md_bitmap_enabled(mddev, false)) {
-+	if (bio_data_dir(*bio) == WRITE && bio_sectors(*bio) &&
-+	    md_bitmap_enabled(mddev, false)) {
- 		md_io_clone->offset = (*bio)->bi_iter.bi_sector;
- 		md_io_clone->sectors = bio_sectors(*bio);
- 		md_io_clone->rw = op_stat_group(bio_op(*bio));
+ extern bool __must_check md_flush_request(struct mddev *mddev, struct bio *bio);
 -- 
 2.51.0
 
