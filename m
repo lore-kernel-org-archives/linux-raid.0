@@ -1,191 +1,113 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AB792F8E9C
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 07:04:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73F4038A711
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 07:06:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782284697; cv=none; b=eCjxEDH/zBQ64JaRNr4fTBqpQo9XU81C7tLhR+V9UNWN4JF6j+9cSoE8KDNBwJl5lKk1kyjiDT+4yfJGgvkzhn7ubJyoCD/VSrVGzAlLkEErsRoQGmGxnz41X+t39CwcvfvxKug13f4/KEXTrGxEJUN3hiD5fbQ0NzFn6RSKOww=
+	t=1782284809; cv=none; b=HF6HX6asXL843LDJnhRqfv2AhD3vyn+/dwh9bO/iTlurVYIGYKBUDcaUAlTs13G91/XiiVZVILe1J/vEW0S1bu4OZ0S1pTyUrGKeHxipfXkgt4LbPMfrLYPMDkty/FM/LWJIB1JyDRDWcARvGt89XRkqkWydjWEu9O7mF39fuH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782284697; c=relaxed/simple;
-	bh=lC7lc0An0jRQwuOdju+YjKoUz+dc1qDIC8fP5QixAno=;
+	s=arc-20240116; t=1782284809; c=relaxed/simple;
+	bh=oKqYhMM8jZKf0ig38D3e4pEV+DXSB2FvT8kNkjoVhFo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MybzPdlFqaSyPLCiWfSpn0pKMapisvDx9+QFTf2ViQzTxpM8QqNNLM8SkCVGqREtjq1HkvKq0fv/194qA+ExB2zJ+Uqc+T/Fk5JKUc36hYPucSJNVc+XGuO8z9VCgaY3NIHWESnPp0tEZHvFc8jTTx6eqJaSrJeS8b5ze24xxsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Azuj4UYJ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=MZG4CNjYm7MSwuCPYn1uA1iJvrqRF4r1LoeIdyQyAYZ8me/R3Rzyr0Qmz9cZjnQ/nzEGh0cpUVa3ZEQ06RZRPuKjGOSsmUg4dCeMjJgimLR2fGjAXC6w3vlhlnvASYeBQCFHkXVWMJXFmSnnx4BF4xlgunHzYFNmCZdXkCZplRU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=APo9azhv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Azuj4UYJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39A771F000E9;
-	Wed, 24 Jun 2026 07:04:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="APo9azhv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D7301F00A3A;
+	Wed, 24 Jun 2026 07:06:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782284696;
-	bh=KYyVDqqR1k5GoTMxP9/6NvhsunnhuBIfHQtu3CYSDSY=;
+	s=k20260515; t=1782284808;
+	bh=6AyEuzfxQD8cIUgFRnQ4aQbzprIDqHG+OYlDUzGErC0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Azuj4UYJrnnwTco9ZN7xH4ZrduhBHE5FHf8KCADsxICK7ZWyXlDi1YEA/hyJcuGnW
-	 zFfxwK/gl/Tp0EDiGpyGFnPgkSlFUwJyghsxDgmMsQnyoTti5qFwu3FgH9a7y1FzIr
-	 QIb4UhOuEpYdcvcCFpMeC5YI6tyTLXg1Yv8sk0SJlylm/heFF5HSg5y4Mh7BS0Tglm
-	 R0PuxUyQrw5ICwym069ymFm/vCG4SlRy2bC2W0yzeE9qCJv4OPyPf01FCeUjEkif+c
-	 H70uQ78qD/6XnjxUMy21yY1cGnmr9s7Pi6DfyK98PXt2+48S0l8ZQ7SK4FYve5zUUy
-	 qv4mlSgRoRy3A==
+	b=APo9azhvs5LAfveuwrtp4NTUO2+YvPOteJaakf6AFDaUv+CAa2bXJCkyGpBvyBi2L
+	 ZULP2Paps/vVrHLVHvQhO/q4BnokdDdDrlMPwazQLS2VWKsPmYyvh0OcKS15IvDjBA
+	 eYYsMjT6ADomLRm8SdttY5p4kC7So7ndzBMAYQzquRscKhkfOpQw5vb9Z2tqguXuv8
+	 aUNmG5FQw//JbXhZqAHd7zEdwiywDi5MZTfAQquKE1v6ej4pteBBbjJYYS0xEFUlKd
+	 KUT15lZMrmMjXcuyvEn51zix/D3GX5G4uBfxKAkclheT7g8KlcUeqqs/bDqmkHCJ5/
+	 Sn+gh8/X5Q/OA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 12/20] md/md-llbitmap: remap checkpointed bits as
- reshape progresses
+Subject: Re: [PATCH v2 13/20] md/md-llbitmap: clamp state-machine walks to
+ tracked bits
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <8700112d660a7f9fa48d174ee9b395fbe309e7c9.1782282042.git.yukuai@kernel.org>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <2f58279987b8b8b3f5b2ed8e563512524c530297.1782282042.git.yukuai@kernel.org>
 References: <20260605091527.2463539-1-yukuai@kernel.org>
  <cover.1782282042.git.yukuai@kernel.org>
- <8700112d660a7f9fa48d174ee9b395fbe309e7c9.1782282042.git.yukuai@kernel.org>
+ <2f58279987b8b8b3f5b2ed8e563512524c530297.1782282042.git.yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 24 Jun 2026 07:04:55 +0000
-Message-Id: <20260624070456.39A771F000E9@smtp.kernel.org>
+Date: Wed, 24 Jun 2026 07:06:47 +0000
+Message-Id: <20260624070648.2D7301F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Critical] In-place array modification during reshape overwrites un-resha=
-ped source data before it can be read.
-- [High] Non-atomic read-modify-write cycle in `llbitmap_reshape_merge` rac=
-es with concurrent normal I/O, dropping `BitDirty` flags.
-- [High] Missing handling for `BitNeedSyncUnwritten` and `BitCleanUnwritten=
-` in `llbitmap_rmerge_state` silently demotes them.
-- [High] The `level_456` condition in `llbitmap_rmerge_state` is completely=
- ineffective and subsumed by the subsequent fallback.
+
+Pre-existing issues:
+- [Critical] llbitmap_cond_end_sync prematurely marks partially synced chun=
+ks as completed, risking data corruption and skipped resyncs.
 --
 
-commit a1307817c41ef916bb59f41a3af5b2d7a709caa2
+commit e55ca490604a05215923d84a1b1272a73343ea48
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/md-llbitmap: remap checkpointed bits as reshape progresses
+md/md-llbitmap: clamp state-machine walks to tracked bits
 
-Merge checkpointed old llbitmap state forward as reshape_position
-advances and record the checkpoint remap through reshape_mark().
+This commit adds bounds checking to llbitmap_state_machine() to prevent
+walking past the tracked bitmap chunks. It ensures the state machine range
+is clamped when the requested end bit exceeds the tracked boundary.
 
 > diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index c62397743d9a0..00b77ecd600be 100644
+> index 00b77ecd600be..581ee9e4a3467 100644
 > --- a/drivers/md/md-llbitmap.c
 > +++ b/drivers/md/md-llbitmap.c
-
-[ ... ]
-
-> @@ -906,6 +914,33 @@ static int llbitmap_prepare_resize(struct llbitmap *=
-llbitmap,
->  	return 0;
->  }
-> =20
-> +static enum llbitmap_state
-> +llbitmap_rmerge_state(struct llbitmap *llbitmap,
-> +		      enum llbitmap_state dst,
-> +		      enum llbitmap_state src)
-> +{
-> +	bool level_456 =3D raid_is_456(llbitmap->mddev);
-> +
-> +	if (dst =3D=3D BitNeedSync || dst =3D=3D BitSyncing ||
-> +	    src =3D=3D BitNeedSync || src =3D=3D BitSyncing)
-> +		return BitNeedSync;
-
-[Severity: High]
-Are BitNeedSyncUnwritten and BitCleanUnwritten states meant to be handled
-here?
-
-Because they do not match BitNeedSync, BitSyncing, BitDirty, or BitClean,
-they fall through these conditions. If paired with BitClean, they
-incorrectly evaluate to BitClean; otherwise, they fall through to
-BitUnwritten. Both outcomes silently drop the sync requirement.
-
-> +
-> +	if (dst =3D=3D BitDirty || src =3D=3D BitDirty)
-> +		return BitDirty;
-> +
-> +	/*
-> +	 * Reshape generates valid target parity/data for both already-written
-> +	 * and not-yet-written regions in the checkpointed range, so a mix of
-> +	 * clean and unwritten still results in a clean destination bit.
-> +	 */
-> +	if (level_456 && ((dst =3D=3D BitClean && src =3D=3D BitUnwritten) ||
-> +			  (src =3D=3D BitClean && dst =3D=3D BitUnwritten)))
-> +		return BitClean;
-> +	if (dst =3D=3D BitClean || src =3D=3D BitClean)
-> +		return BitClean;
-
-[Severity: High]
-Does the fallback condition "dst =3D=3D BitClean || src =3D=3D BitClean" re=
-nder the
-preceding level_456 check dead code?
-
-The fallback unconditionally forces any BitClean mix to BitClean, which
-entirely overrides the level_456 restriction. Could this lead to RAID10
-incorrectly resolving mixed BitClean and BitUnwritten states to BitClean,
-causing skipped resync operations?
-
-> +	return BitUnwritten;
-> +}
-
-[ ... ]
-
-> +static void llbitmap_reshape_merge(struct llbitmap *llbitmap,
-> +				   const struct llbitmap_reshape_range *old,
-> +				   const struct llbitmap_reshape_range *new)
-> +{
-> +	unsigned long dst_start;
-> +	unsigned long dst_end;
-> +	unsigned long dst;
-> +
-> +	if (!new->sectors)
-> +		return;
-> +
-> +	dst_start =3D div64_u64(new->offset, llbitmap->reshape_chunksize);
-> +	dst_end =3D div64_u64(new->end - 1, llbitmap->reshape_chunksize);
-> +
-> +	for (dst =3D dst_start; dst <=3D dst_end; dst++) {
-> +		struct llbitmap_reshape_range dst_range;
-> +		struct llbitmap_reshape_range src;
-> +		enum llbitmap_state state;
-> +
-> +		llbitmap_reshape_dst_range(llbitmap, dst, new, &dst_range);
-> +		state =3D llbitmap_reshape_init_dst(llbitmap, dst, new);
-
-[Severity: High]
-Does this non-atomic read-modify-write cycle race with concurrent normal I/=
-O?
-
-llbitmap_reshape_init_dst() reads the chunk state, computes the merged state
-through llbitmap_rmerge_src(), and writes it back via llbitmap_write() below
-without being protected by locks.
-
-Concurrent normal I/O operating on stripes outside the reshape window but
-within the same bitmap chunk can set BitDirty. The llbitmap_reshape_merge()
-thread will blindly overwrite this BitDirty flag with its locally computed
-state, potentially causing silent data corruption due to lost BitDirty
-flags.
-
-> +		if (llbitmap_reshape_src_range(old, new, &dst_range, &src))
-> +			state =3D llbitmap_rmerge_src(llbitmap, state, &src);
-> +		else
-> +			state =3D llbitmap_rmerge_state(llbitmap, state, BitUnwritten);
-> +		llbitmap_write(llbitmap, state, dst);
+> @@ -983,7 +983,10 @@ static enum llbitmap_state llbitmap_state_machine(st=
+ruct llbitmap *llbitmap,
+>  		llbitmap_init_state(llbitmap);
+>  		return BitNone;
+>  	}
+> -
+> +	if (start >=3D llbitmap->chunks)
+> +		return BitNone;
+> +	if (end >=3D llbitmap->chunks)
+> +		end =3D llbitmap->chunks - 1;
+>  	while (start <=3D end) {
 
 [Severity: Critical]
-Does writing directly to the shared pctl array overwrite un-reshaped source
-data before it can be read?
+This is a pre-existing issue, but does the inclusive bound here cause
+prematurely completed resyncs?
 
-When adding disks to a RAID5 array, new->sectors > old->sectors. This causes
-the forward iteration of dst to outpace bit in llbitmap_rmerge_src()
-(e.g., dst =3D 10, bit =3D 5).
+Looking at llbitmap_cond_end_sync(), it passes the current sector's chunk
+index as the end bit:
 
-Because llbitmap_write() updates the array in place, the state at index 5
-is overwritten before it is read for dst =3D 10, destroying the original ch=
-unk
-state.
+drivers/md/md-llbitmap.c:llbitmap_cond_end_sync() {
+    ...
+    llbitmap_state_machine(llbitmap, 0, sector >> llbitmap->chunkshift,
+                           BitmapActionEndsync);
+    ...
+}
 
-> +	}
-> +}
+Because the while loop condition is start <=3D end, the chunk currently
+undergoing resync will be included in BitmapActionEndsync and transition to
+BitDirty prematurely.
+
+If start_sync() is subsequently called for the remainder of this chunk,
+won't it see BitDirty and return false? This would cause the resync loop
+to interpret it as no resync needed, skipping the rest of the chunk's
+sectors and leaving them out of sync.
+
+Should the end parameter be treated as exclusive instead, or does
+llbitmap_cond_end_sync() need to subtract one from the end chunk when
+sector is not aligned to the chunk size?
+
+>  		enum llbitmap_state c =3D llbitmap_read(llbitmap, start);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1782282042.gi=
-t.yukuai@kernel.org?part=3D12
+t.yukuai@kernel.org?part=3D13
