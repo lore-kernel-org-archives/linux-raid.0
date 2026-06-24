@@ -1,92 +1,128 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2490033F582
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 16:03:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B957C2EC09F
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 16:07:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782317013; cv=none; b=DCZpDkWRUuC+ce3jcdQqODGaL5XN1ouxFCgzqa4IgjZvg6uGAMu+yUmA5faZFwuHdXCYz3HVmEf6PBCs5Poac/IdTST46VVlU2cZMq7u3SMZC34Vw9eryE4I/qZQZL21ozxuwN1xHaUPPnCK23+H+7OkDtYkW16vK8tIxHRTx0Y=
+	t=1782317247; cv=none; b=Madxk21kGlO7Y8uC7jlzHvrcR+9CvAPurnRQ8bqSkDLxRtb5rnp2I1+Wet337mGlB+TxHGAVqfHyIm6x4l8gwoRMDQJsHgYwrGjSHAK/fE1VSHQo23iMxOO3UGoUhlx3UgBPOWg32IEEKGZojXnvQ1drHnek/vp7stbZqL+BRPU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782317013; c=relaxed/simple;
-	bh=0VjNLQdtbZP9OdwVJ/H7EMMkMv3SkMHrHEEFq2lcYCM=;
+	s=arc-20240116; t=1782317247; c=relaxed/simple;
+	bh=OE0MIoWrVr0JdYtG6wEir+EGBdtdY5RHOLW92Q3rfP4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Q/6cR6YAoDpXk+HQlHFCQlibqzH5QynuCAheENZEcj86muPwjERxPY/zguOA4WcD4TAMG1DmBDoG8/RoTlLrH6NIzskjdLKsL3xva1gVT0EnbGCRBGVkb7UYE17Mzx+HPsCt70e6yYreEjwxjbWwFPRH7B6sH1ZlFqAJZSqm/gE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FApj8uF1; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=qGq1Ez6nRwQedZCm9YAg8SFZLXWwNYDjcl8mRoR2L1lVc/UCFXOrUe27c/i0VSuZTz6vytQmJdxxJHd0N4eF3uSV/QN0aQXjj6bGUxeeF4XLRv3UqWrqT5C8QhVFNjDiM7CSk9hyebFp6Gg/1JitSCsIh5i4PTerP57C4P3Xx0Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AN7q0lFB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FApj8uF1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C5F51F000E9;
-	Wed, 24 Jun 2026 16:03:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AN7q0lFB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B9161F000E9;
+	Wed, 24 Jun 2026 16:07:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782317011;
-	bh=CW7fpDYwBj8TqHkvodvEf2FifZUltkMHYTKR8wBSs5M=;
+	s=k20260515; t=1782317246;
+	bh=C3sAnjxahMmGZT7C3AeGk0+gZWqrU8x2rnClDd0wVUY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=FApj8uF1eBIm3DhnFwpCN4XRGfooGl4XmScTsS8IDwXN8jQY40zhglcEbuBXzwZxL
-	 oS32nWAD2vg83ErFXXGwX48TLukfIRtXyfWY5p7bBIPyCxvhjT1kv7rXDPKy6Fwdsg
-	 DUohXarcbbHiiAGfIHTb8p5ETiqVyCuXzVFkj9JbFZcy0J63M1Odx0hVrheubWDH30
-	 +wklDpmUCVit92QClHFEz+wTMoiklXyA7wPXV1qCnWp1CDmv4YCewOaRTkT0hsjhSJ
-	 Re3/cXeIwxXvQ2Bun0OG3qcXbtv0pXmNZu4tSay8KvcGb8SlNxOvwTrESgMNB6lSQ7
-	 uL87I4Rbe5DjA==
+	b=AN7q0lFBN3yexDqLT6iIQiN+F6J+g3LixGE7f+TKhrXkipwZTW+eksEpT4Ooam5dp
+	 v/7nQlI82XbECN9NnQvQqLd9Acz8nSPUyjLOW8uCuGc954f1y0IpsutiizlvKdkfam
+	 kmjDViiG2+Lgt8oB6N+ENaZHORf4e/TCtL7o7xYSum7KrVfaTopzgLgqC0mGDislNW
+	 FMElPMmfomZ+XYM8smaGChixCVEsqXpx8PxHLpWSot0OdSVPEda8eZpMc5VOlCW69Z
+	 Ko0elsmx+zF9NVXp5+eF7XySbSOrEagerny7LYYvr9KnriBOzA2tZBBloOzVzAgcxc
+	 Y7odPi0BahJ1A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 4/5] md: use sector_t for recovery_active in
- status_resync()
+Subject: Re: [PATCH 6/8] md/raid5: allocate worker groups per NUMA node
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hiroshi Nishida" <nishidafmly@gmail.com>
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260624155421.211626-5-nishidafmly@gmail.com>
-References: <20260624155421.211626-1-nishidafmly@gmail.com>
- <20260624155421.211626-5-nishidafmly@gmail.com>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20260624155452.211646-7-nishidafmly@gmail.com>
+References: <20260624155452.211646-1-nishidafmly@gmail.com>
+ <20260624155452.211646-7-nishidafmly@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 24 Jun 2026 16:03:31 +0000
-Message-Id: <20260624160331.9C5F51F000E9@smtp.kernel.org>
+Date: Wed, 24 Jun 2026 16:07:25 +0000
+Message-Id: <20260624160726.2B9161F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Medium] The commit message falsely claims `mddev->recovery_active` is a =
-'sector-typed atomic' and that declaring a local variable as `int` 'needles=
-sly narrows it', but the structure field remains a standard 32-bit `atomic_=
-t`.
+
+New issues:
+- [High] The patch incorrectly uses a sequential loop index `i` as the NUMA=
+ node ID parameter to `kzalloc_node()`.
+
+Pre-existing issues:
+- [High] The `worker_groups` array is sized using `num_possible_nodes()` bu=
+t is indexed by the raw NUMA node ID, leading to out-of-bounds accesses on =
+systems with sparse NUMA node IDs.
 --
 
-commit 7ec77a6b233ce4d151f7fc723e5f312b20b4ac92
+commit bce08bf6ce446b00da625ff4028f5782b756e17c
 Author: Hiroshi Nishida <nishidafmly@gmail.com>
 
-md: use sector_t for recovery_active in status_resync()
+md/raid5: allocate worker groups per NUMA node
 
-This commit changes the local variable recovery_active in status_resync()
-from int to sector_t. The commit message states this is to match the type
-of mddev->recovery_active and avoid needlessly narrowing the value.
+alloc_thread_groups() previously allocated all r5worker arrays in a
+single kcalloc() block, assigning workers for NUMA node N from node 0
+memory.  On multi-socket systems this causes remote memory traffic on
+every worker->work and worker->temp_inactive_list access.
 
-> recovery_active holds a sector count read from the sector-typed atomic
-> mddev->recovery_active and is then combined with the sector_t values
-> curr_mark_cnt and resync_mark_cnt. Declaring it as a plain int needlessly
-> narrows it and mixes signedness into sector_t arithmetic; declare it
-> sector_t to match.
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 8e9edaaca667b..c8787ab7b309c 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+[ ... ]
+> @@ -7336,7 +7340,6 @@ static int alloc_thread_groups(struct r5conf *conf,=
+ int cnt, int *group_cnt,
+[ ... ]
+>  	*group_cnt =3D num_possible_nodes();
+> -	size =3D sizeof(struct r5worker) * cnt;
+> -	workers =3D kcalloc(size, *group_cnt, GFP_NOIO);
+>  	*worker_groups =3D kzalloc_objs(struct r5worker_group, *group_cnt,
+>  				      GFP_NOIO);
 
-[Severity: Medium]
-Is this description accurate? Looking at struct mddev in drivers/md/md.h,
-recovery_active is defined as a standard atomic_t:
+[Severity: High]
+This isn't a bug introduced by this patch, but could this array sizing cause
+an out-of-bounds access on systems with sparse NUMA nodes?
 
-drivers/md/md.h:struct mddev {
-    ...
-    atomic_t recovery_active;
-    ...
-}
+We size the worker_groups array using num_possible_nodes(), which is a coun=
+t.
+On systems with sparse NUMA node IDs (for example, nodes 0 and 8), the array
+would only have 2 elements. Later, in raid5_wakeup_stripe_thread(), we index
+into this array using cpu_to_group(cpu) which expands to cpu_to_node(cpu).
+If a CPU belongs to node 8, we would access conf->worker_groups[8], exceedi=
+ng
+the allocated size and corrupting memory.
 
-Since atomic_t is a 32-bit signed integer, and atomic_read() returns an int,
-does changing this local variable to sector_t actually prevent narrowing? T=
-he
-implicit cast from int to sector_t will now simply happen at assignment
-rather than during the arithmetic operations.
+> -	if (!*worker_groups || !workers) {
+> -		kfree(workers);
+> -		kfree(*worker_groups);
+> +	if (!*worker_groups)
+>  		return -ENOMEM;
+> -	}
+> =20
+> +	size =3D sizeof(struct r5worker) * cnt;
+>  	for (i =3D 0; i < *group_cnt; i++) {
+> -		struct r5worker_group *group;
+> +		struct r5worker_group *group =3D &(*worker_groups)[i];
+> +		struct r5worker *workers;
+> +
+> +		workers =3D kzalloc_node(size, GFP_NOIO, i);
 
-Could the commit message be updated to reflect that mddev->recovery_active
-is a standard atomic_t, rather than a "sector-typed atomic"?
+[Severity: High]
+Could passing the sequential loop index i directly to kzalloc_node cause a
+NULL pointer dereference on systems with sparse NUMA nodes?
+
+Since num_possible_nodes returns a count rather than an upper bound on IDs,
+on a system with nodes 0 and 8, i would be evaluated as 1. Passing an
+unpopulated node ID to kzalloc_node without validation can lead to a crash
+when accessing NODE_DATA(nid). Should this loop use
+for_each_node_state(nid, N_MEMORY) or similar to get the actual node ID
+instead of using the loop counter?
+
+> +		if (!workers)
+> +			goto out_free;
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260624155421.2116=
-26-1-nishidafmly@gmail.com?part=3D4
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260624155452.2116=
+46-1-nishidafmly@gmail.com?part=3D6
