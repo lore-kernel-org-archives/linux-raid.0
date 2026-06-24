@@ -1,106 +1,186 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7763322B8C
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 16:12:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0E7878F3A
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 16:16:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782317566; cv=none; b=HoO0VWZsje08B6Lnts8DwGqHo2+ZyqwGCAC500zAVTYxuYmpKG9RIBmJ2ze2qh5GCZXmXYwv4OHF2I9WuLg+0hWqHYkE1ICUqVy/oFmlVHc3Lg+p/wKscBmxXduIhIRhivKPo7nVza3TsellLQcBppeAT3W8bTSkc1w9Y6oeTg0=
+	t=1782317786; cv=none; b=uLMlstB1qmURIqREJxDGPJihxgzv5qleva74knVUABLTdXsMMcSEDPVVmqnPL2niIFn3CXHe1N8qfRqUyae1oK8Lid57Oiw8QyHP9AnuZWigy9jlXvq2cXT6Gdpwv/DPvCNqksIswa0i81NpKRc3WVLj/8n+li141aZ0Kk8vbog=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782317566; c=relaxed/simple;
-	bh=cViPEk60zKnYOAjtnSuqh2oU11gPWJwAigdYJzKZ09g=;
+	s=arc-20240116; t=1782317786; c=relaxed/simple;
+	bh=WD6wnnYgqCae7WlU6xTM4gUWCCRAQsxGhm6BpN46kIw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=H2/pvPEeySRVOPhBaH+TnA8XsQszWhfduLOooLU7R6ADWlkv3Q3HBTD0/sbyht5vDsZQZh8b14QoR09VBVUrUhP5NGHLX697I0T7Tz9ZCnTccoixGYlwQ0Y1OVDA0FjcPgQkLGD1JY7/KZxjJuc44lCYw89LeGLkWAYexcM0XoE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UWOCF55k; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=e18lkArM/ic8VX7mKW8j5in1P2ukT1zZKNyp9PIJe7P3Vj3QzAuEoWaioYF/jd8NrwWoX91nx1WJddSlqcZFGmSsrzeWtfBi5FsMVaUcaOxDwu+be8/UFWCmHnFfNa+Spi1EUuSLCuppNuSdBr2fwLY+prKu3NLUYvRd1P4NLx4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M2QojuzF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UWOCF55k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 292821F000E9;
-	Wed, 24 Jun 2026 16:12:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M2QojuzF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12CC81F000E9;
+	Wed, 24 Jun 2026 16:16:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782317565;
-	bh=O61ywiLgoXfd5x23ypgR4Tyag27laJpr/jtYx5uZ8Aw=;
+	s=k20260515; t=1782317784;
+	bh=jj2MxSe5ifs17h4FzH9Xt74Kdixw9J8MZL0WeMxCSXs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UWOCF55kOLhaz3rnmQdJ1SW3wuN/dofZHlvmkse7FF2q1R1P1tvRYi06Wiu3G9B7d
-	 5z5NChzNGli/5jv2O45P7Ch9hBelNMqd+YhXUKwswYqlSGEr7Tsri9qupzqfXCTnIU
-	 Lu22MsD0vMBN1p4VId2l+muQaG7+IdL1mH2Ma6aUvNQXPIg7tuPLx7RkHogmczboPY
-	 8hb8Yi3ONvTMSha0svSoScXRY6yf2knBMQ8/II4nuO9rJSbUSoHgs/OSM15ny3/03o
-	 XSR3YlHLAf2wNRzfvyXoASLydRgnQwlVk7qug4mblI/oCaUjUtBU+5HQQveMesBiAH
-	 lbUVQC/5WFH/w==
+	b=M2QojuzFjYW+4x/RW0ozCfnD8ysWlyP2MtERPjvLJxer33bXOOS2bkZKw7mbNRiKH
+	 swuuPz9A7rMfHsszEp1NYo4MgBnjPaLfA4oYBeAB04so7oZV/d3gfDIhypc5B2dx+t
+	 EzSwwH0mAEuCvL+Fh4FD+lkzZmF3H997ySt44blgu1LAtl1HHZSGqa7P1ZfYtH8lwE
+	 yv/1oiBpmtU7MwnC0ygHWI3ukhE5DF0roOMTAW0pryHQKrTDeepF83mcGjBmhK8bvG
+	 FlZZv3jfMnzV9DF9OlEYoPBB+tvD6Gwt4cgLziQMvSmkMQvKztdWTSR4OWhm8HBok+
+	 ieQwlR9tUveeg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 8/8] md/raid5: reserve stripe cache for user I/O during
- rebuild
+Subject: Re: [PATCH 1/8] md: change chunk_sectors and stripe cache counts to
+ unsigned int
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hiroshi Nishida" <nishidafmly@gmail.com>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260624155452.211646-9-nishidafmly@gmail.com>
+In-Reply-To: <20260624155452.211646-2-nishidafmly@gmail.com>
 References: <20260624155452.211646-1-nishidafmly@gmail.com>
- <20260624155452.211646-9-nishidafmly@gmail.com>
+ <20260624155452.211646-2-nishidafmly@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 24 Jun 2026 16:12:44 +0000
-Message-Id: <20260624161245.292821F000E9@smtp.kernel.org>
+Date: Wed, 24 Jun 2026 16:16:23 +0000
+Message-Id: <20260624161624.12CC81F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] The patch fails to bound the rebuild's share of the stripe cache t=
-o 50%. Breaking the read-ahead batch loop just causes the outer md_do_sync(=
-) loop to allocate stripes one-by-one, relentlessly filling the cache to 10=
-0% anyway.
+
+New issues:
+- [Medium] The commit's core justification is false. Changing the types to =
+unsigned does not enable compiler right-shift optimizations for variable di=
+visions.
+- [Low] Unupdated printf-style format specifiers passing unsigned fields to=
+ '%d' cause compiler warnings (-Wformat) and break builds configured with -=
+Werror.
+
+Pre-existing issues:
+- [Critical] The macro `round_down` is incorrectly used with a non-power-of=
+-two divisor, causing silent data corruption in bitmap sector calculations.
 --
 
-commit 29ed9bbd7953c5d6ceeb0158cc53c81fd4d3aaf9
+commit 86528a8b22367a5ee16a7cb19a1d56bf58f6aa67
 Author: Hiroshi Nishida <nishidafmly@gmail.com>
 
-md/raid5: reserve stripe cache for user I/O during rebuild
+md: change chunk_sectors and stripe cache counts to unsigned int
 
-This commit attempts to prevent rebuild operations from monopolizing the
-stripe cache and starving concurrent user I/O. It adds yield points in the
-resync read-ahead loop to stop submitting stripes if there are active
-waiters or if the cache is more than half full.
+This commit changes several structural fields and local variables like
+chunk_sectors and max_nr_stripes from signed to unsigned int. The stated
+rationale is to prevent negative values and enable right-shift compiler
+optimizations for power-of-two division in the hot I/O path.
+
+>     chunk_sectors, new_chunk_sectors, prev_chunk_sectors, max_nr_stripes,
+>     and min_nr_stripes are never negative. Using signed int is semantical=
+ly
+>     wrong and prevents the compiler from optimizing division/modulo by
+>     power-of-two chunk sizes to right shifts in the hot I/O path.
+
+[Severity: Medium]
+Is this optimization rationale accurate? The hot I/O path uses sector_div(),
+which expands to do_div(). The do_div() macro explicitly casts the divisor
+to a 32-bit unsigned integer, so the division was already operating on an
+unsigned value.
+
+Additionally, because sectors_per_chunk is a runtime variable rather than a
+compile-time constant, would the compiler be able to optimize it into a
+right shift without a conditional branch?
+
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index d8daf0f75cbbe..b9ad26844799d 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+[ ... ]
+> @@ -437,7 +437,7 @@ struct mddev {
+>  	int				external;	/* metadata is
+>  							 * managed externally */
+>  	char				metadata_type[17]; /* externally set*/
+> -	int				chunk_sectors;
+> +	unsigned int			chunk_sectors;
+
+[Severity: Low]
+Does changing this field to unsigned int cause compiler warnings with
+existing format strings?
+
+For example, chunk_size_show() in drivers/md/md.c appears to use %d to
+format mddev->chunk_sectors:
+
+chunk_size_show() {
+    ...
+    return sprintf(page, "%d (%d)\n",
+                   mddev->new_chunk_sectors << 9,
+                   mddev->chunk_sectors << 9);
+}
+
+Will this break builds configured with -Werror?
+
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index cb5feae04db27..5cd9d0f36b6e0 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+[ ... ]
+> @@ -572,12 +572,12 @@ struct r5conf {
+>  	/* only protect corresponding hash list and inactive_list */
+>  	spinlock_t		hash_locks[NR_STRIPE_HASH_LOCKS];
+>  	struct mddev		*mddev;
+> -	int			chunk_sectors;
+> +	unsigned int		chunk_sectors;
+>  	int			level, algorithm, rmw_level;
+>  	int			max_degraded;
+>  	int			raid_disks;
+> -	int			max_nr_stripes;
+> -	int			min_nr_stripes;
+> +	unsigned int		max_nr_stripes;
+> +	unsigned int		min_nr_stripes;
+
+[Severity: Low]
+Will the changes to min_nr_stripes and max_nr_stripes also trigger format
+warnings?
+
+Places like raid5_end_read_request() and raid5_set_cache_size() still use
+%d to print these fields. For instance, in raid5_set_cache_size():
+
+pr_err("md/raid:%s: Cannot increase cache size, ret=3D%d, new_size=3D%d, mi=
+n_nr_stripes=3D%d, max_nr_stripes=3D%d\n",
+       ...
+       conf->min_nr_stripes,
+       conf->max_nr_stripes);
 
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 0c5c9fb0606ee..28828e083c2b3 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
-> @@ -6656,6 +6656,27 @@ static inline sector_t raid5_sync_request(struct m=
-ddev *mddev, sector_t sector_n
->  	     submitted < RAID5_SYNC_WINDOW && win_sector < max_sector &&
->  	     win_sector < mddev->resync_max;
->  	     submitted++, win_sector +=3D RAID5_STRIPE_SECTORS(conf)) {
-
 [ ... ]
+> @@ -2970,7 +2970,7 @@ sector_t raid5_compute_sector(struct r5conf *conf, =
+sector_t r_sector,
+>  	sector_t new_sector;
+>  	int algorithm =3D previous ? conf->prev_algo
+>  				 : conf->algorithm;
+> -	int sectors_per_chunk =3D previous ? conf->prev_chunk_sectors
+> +	unsigned int sectors_per_chunk =3D previous ? conf->prev_chunk_sectors
+>  					 : conf->chunk_sectors;
 
-> +		/*
-> +		 * Reserve cache for user I/O only when it is actually competing.
-> +		 * preread_active_stripes counts stripes queued for write I/O
-> +		 * (including the read phase of RMW); sync stripes never set
-> +		 * STRIPE_PREREAD_ACTIVE, so during a pure rebuild it stays zero
-> +		 * and the window fills freely.  Competing user reads do not bump
-> +		 * the counter but are caught by the waitqueue_active() check
-> +		 * above.
-> +		 */
-> +		if (atomic_read(&conf->preread_active_stripes) > 0 &&
-> +		    atomic_read(&conf->active_stripes) >=3D
-> +		    conf->max_nr_stripes / RAID5_SYNC_HWMARK)
-> +			break;
+[Severity: Critical]
+This is a pre-existing issue, but could the use of sectors_per_chunk
+cause problems when passed to rounding macros?
 
-[Severity: High]
-Does breaking out of the read-ahead loop here actually limit the cache
-usage to 50%?
+Looking at raid5_bitmap_sector():
 
-When this breaks, raid5_sync_request() returns control to md_do_sync(),
-which operates in a loop and will immediately call raid5_sync_request()=20
-again for the next sector.
+raid5_bitmap_sector() {
+    ...
+    sectors_per_chunk =3D conf->chunk_sectors *
+        (conf->raid_disks - conf->max_degraded);
+    start =3D round_down(start, sectors_per_chunk);
+    end =3D round_up(end, sectors_per_chunk);
+    ...
+}
 
-Because raid5_sync_request() unconditionally allocates its first stripe
-earlier in the function before entering this batch loop, won't the outer
-loop just continue allocating stripes one-by-one until the cache reaches
-100% capacity and triggers the fallback blocking path anyway?
+The round_down() and round_up() macros are designed specifically for
+power-of-two divisors. If the number of data disks is not a power of two,
+sectors_per_chunk will not be a power of two, which would yield incorrect
+sector boundaries.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260624155452.2116=
-46-1-nishidafmly@gmail.com?part=3D8
+46-1-nishidafmly@gmail.com?part=3D1
