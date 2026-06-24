@@ -1,117 +1,111 @@
-Received: from mail-oo1-f48.google.com (mail-oo1-f48.google.com [209.85.161.48])
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 545FD224234
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 12:33:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 121133A963C
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 15:54:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782304426; cv=none; b=N0QxEtaH7j51GfAjhfO2JxnmQeCii8mjrCLnhri343oTgToXmc2U7/xs/p60lyT8omFSUzo1Hn0+i4RjdY4KxJPuvXrSlrvNhoYUSeXkkfcK5dECnA9qLlSRqPlME2K8F0W9+vCDljaPO/A4HGXY9n/aJ4JFeFd/Y3RGde/YhF8=
+	t=1782316471; cv=none; b=fVL0GzOJjRSqpBS4ZL/VqX/B0QVKYR835DDs9u3I+ReUHqsPW3IGilsGZvfRFwVWkx1+4NMvHOBznymDe5EWJZpAvvH4RNl8dFNgBAJQLfXDQ7ct7LWSlNvLuMOvzyEDb2484MllzrM/jaQKsK6P9I7ncFE4+i35u4wUL7CDxmI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782304426; c=relaxed/simple;
-	bh=sLtMKNNBxNPRoTT7i52CS+cA3UpL8EVU7zz6HmezOgM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cQvh0ijpPM0B+0OZLm4FeZAYJ7qehmbkdLlCotVlR+osSzR4702GUvgfHyXT3xEztBHDHmKovYl2ANCVfeTYILX8a4/AfV3Bg/3v7QERnDsDkPmHk3mLa9Jel7MkS/Z3/X3Rc+nATu3DdJM/83DUcEesop5fWNo4ZdrzzBdJrB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=vCTIeBQ8; arc=none smtp.client-ip=209.85.161.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1782316471; c=relaxed/simple;
+	bh=5oslTZgyVVbc/FeAxMn7kdZ4BfUgM2DZuzcfIckqHUw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=B1gmDy9NwOzVyS0bGB1SxS++tHeug0Yx3irIzcLH23IO3j+xZ2AZDK95Y+/0I/CXu4BT4GUoUHT87ZzIGw7nHD4baSeSJdfc/vFsZn7pnnbHLiKyrFqUMu9NRg0FqJ+G1QqwdAr4Pn++5oIiJiHPJKUGKFb22qJJZlrTapPzGM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=USNFyBV6; arc=none smtp.client-ip=209.85.216.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="vCTIeBQ8"
-Received: by mail-oo1-f48.google.com with SMTP id 006d021491bc7-6a0a38a013eso810352eaf.0
-        for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 05:33:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="USNFyBV6"
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-37d55e8d3e3so10073a91.0
+        for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 08:54:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1782304423; x=1782909223; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=rgCaZQUlPbeknSjtTTO3LBzo17VyVdrEEzXLcaDWWkM=;
-        b=vCTIeBQ8VMHyy4Qr7rcvl+Y50X9SjiMg9riC03uhQfjsrmznHRFssgTDo5LOVHP5eG
-         h65OlqG3++iGyJ7CWHM1qYcO/HXXDQmLUI8XXsH9XqPnvHtAFYbyscL76aRow1rvB0Qd
-         ogQEKLUwsYOoahGZi6PYz09j5E3ZqeVmeASmzp9Nu0FmxETz+TZ3ZoLGLTVtr+LRr4l4
-         0XERG2mx5q2TKIIOFWhxer7vtnutdyzgYCTBHn1EYEHaNxtjZwdiE5qpbyTKr+MYpAeE
-         nomlmKMFHhCf44J9DSsI/8bKQyce/l4O+AImsfxTfBU4NjHLD0dk1QXoNEe5ab67Tumv
-         45Wg==
+        d=gmail.com; s=20251104; t=1782316469; x=1782921269; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=118MZcwCl0K0Xriee8aQ19Cp+uefrlM2nkM0sdxLZSw=;
+        b=USNFyBV6+fWE1wo9dQ6Fd/fj8ON9JKrRgbPa/2rowcuVHEc/pQYBKMBT7sbvW97wdf
+         3PHjZCaU1ktco5Xe5F+/ns8ZHSkMi934On6FyCPWXvyTkp4Xoej9K8OG62HUx2kGLhZ2
+         Lq8rYfi8MvTD/SPzlutmWYbonkP9sgy6u6t9yxpsLniWca2VjFqdSTqFR+j4Ab4qf6kn
+         A1Ag4RAVzC7dzj6pgpNKnPSppNF7NYCdhW73Vl+KSd1owgGeTBILA5qTwaE/w4v6gQwS
+         95+wK5RjR627/vGQH8VYGwwfEnHKmMTFk7yFC/NQK8Tc1Jp6+7+S8zazR8A+ipV6qguk
+         HXKw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782304423; x=1782909223;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=rgCaZQUlPbeknSjtTTO3LBzo17VyVdrEEzXLcaDWWkM=;
-        b=hX7X8O039U6ur/vHYo2Mt5IKlRL8oiaszt3AnZaVeAXEyEWj5DpU88KDZ808kTD/iM
-         KaQ/2IDT1c88Zs1ijt5+86HU/7zWRw24AJcm6nX/UYMCMgYk4O/qW78xIYI3LstvImwH
-         gqbgQNYoyCokvCA/5f39Mn7BNnKAjYEJEgtvgqYIsmes71m/Z2r87TN5uOpYmmIgKjYV
-         iTgOSzOD1Si1OYsWcXj6kBE5n+QYeeP9v6+NFpyQ41ZLQzPYLhkSGDS02h+1m4wPltKv
-         o3qyOYlhC3f6Ktm0VAC4an5ibjVZ9t0CSATPpNVeJkHlBDATyC3vUxG9F3eXBDAo/gec
-         VUpw==
-X-Gm-Message-State: AOJu0YzmAokQY4lzwnUAkifEJrF1E1AjZoVLdC/Z+/zN4JHR5dL5PNoz
-	a0vjFjqclFtqNvyqEmway5OMGcIhJUbF+MT/Pb/JyDbaVmhZgJlUV3Z9vqyrkhIvsFo=
-X-Gm-Gg: AfdE7cnsoLYgw5Tu/X0IOjKB0bumNhNBqfI9dg8bITLASa7aLEuwFnVr5qaUotoaP55
-	2tP+/0XswqvLIQepg6uDC3n+HpcgLDvmwYPtaDcI5kpz4cTnxrN/CUkBH1D0uN2qMF1LBzkcHo+
-	5pS6NVugEk0Pdf06aRkzds/D570qSqNqsKt2a1PfXGzc4Ebn4aOtDvbPNwX7JluQ68RYrNLC3G2
-	Gksxb9tnd2KP5iYNguauMxsy4ZoS0CLLjoVStEvjQEJ2bU0NjGnCIqfwHqIEOb9HsmrptejH1bV
-	NussXXVNtEmkjHTJ8u7ZpJBAP+x3l+6pz4nfYLxg9iHwQAWXcxdkY7w5D1oeYOfXPa27FLVMB+0
-	98PT10jZEIfpm2+gMr1qVnFoD4AUYxZsVKp+PVhUFrKpSkauGyoZFPNZIx7POMq0+kEfAH96J8m
-	oRUz0AK3rXd4mz0ppH8pZmmk24yfYSTMX+p1kn5HQdEoAcgx1sKgk8in3iUZn4t2l/PSqyQak=
-X-Received: by 2002:a05:6820:1c94:b0:69d:ecb9:4a2 with SMTP id 006d021491bc7-6a12d788b4dmr115278eaf.4.1782304423346;
-        Wed, 24 Jun 2026 05:33:43 -0700 (PDT)
-Received: from [192.168.1.150] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id 006d021491bc7-6a0e9f698ccsm8680170eaf.4.2026.06.24.05.33.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 24 Jun 2026 05:33:42 -0700 (PDT)
-Message-ID: <354f8038-e402-42d3-a706-6c1fac284e0d@kernel.dk>
-Date: Wed, 24 Jun 2026 06:33:41 -0600
+        d=1e100.net; s=20251104; t=1782316469; x=1782921269;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=118MZcwCl0K0Xriee8aQ19Cp+uefrlM2nkM0sdxLZSw=;
+        b=ZyNGqXGNAuf6Nn2KuHA4/9zDT7bU2/wGd8CSGlWO5QKkG3k6KmrCQjLl3PdFEpoSEb
+         9ns+d5i2gpVz8CIBOHW79YL8UykMuCOKdUnyywt9w8vcSkKOOrnWgP1975ZxaSVnNKRu
+         BuR2oFphY87XceZ/CjYZ/pexluhqmv9ormq7SVjGdnZCvkTZSmMT8hib1dfWT8KKj01D
+         R0F/tYUoE8BPJG7bYlqqELtSj3nIEgtu+E6k6Kqc3fuX5Jwm3TM/FPaJxu3MMAK1QZlR
+         ncO2E5an/mgu6YGdniA0oLdflolxITb+68zeAXNpnLCvuKrwBUwp6WtKYiwiWSiZZFFf
+         WjEA==
+X-Forwarded-Encrypted: i=1; AHgh+RoZoHLgMg0fJXRosV0MjsdS4AVGl89koikFk7DeYGwrouAoBQr09ypJaqW/RRiIPZMX9DuSAZMiKfg4@vger.kernel.org
+X-Gm-Message-State: AOJu0YzA/zFpFMZfrF8RYzT7jp4HbBRKOwnAgiUAees6fPKLEx78RyFn
+	ipsUZy5ZX7o/tsTnBg5tPcBYFX5GWu6tmkDNp9DYzoqgTJ9Ypq0cX6Xs
+X-Gm-Gg: AfdE7cnZDyP/UAb9HfldO7GJ7tGIDVeSTWgvIgohXsdlzbFc/lCrtu74m2bvoyA0Oh1
+	U6WLOOzMuxUjJZgwQjW/Zk4M17SBxKBD1m2Bw2YS9/KDywjPVp+bcqFyfRjk1fEjGGKA5wZ+a5L
+	AIa96/psoueFC/+pDvM0RAY/5oQUQkFil2j/VgERZ8YOoPxJJPyviBXd3lRDYXeYRBhTi5N7GKX
+	bdprP24HB/dR8LFxBn07fuAh5/PBWfdcUH/jaFgdPmuaNLTBEkKFJQfFZGhEYB3MdivkWP+SOmB
+	FcU9aNwGHvUUIlbXTRvPGp5R3Pj/v7/vvlYX7Zsm5OYYVpfEYsAyIg7spIUfEpMuojkWQ8lCFcR
+	Mmzj2z9zUmsdcCi5iq0B+FmxhZS19Udw+IBzZYMLvOZ10KmuEuDSjiVr5y4/b7SXZlQCc6R0sW0
+	laR6r1/91cO2kioea5jvKdcUE1jYko+eIGfHi5DqDOzvImnkMU2Dr0VGmbR7NVNB+Wu7jqcEmfL
+	kpsepw=
+X-Received: by 2002:a17:90b:3f4f:b0:369:1dbb:4732 with SMTP id 98e67ed59e1d1-37defc79762mr805079a91.0.1782316469301;
+        Wed, 24 Jun 2026 08:54:29 -0700 (PDT)
+Received: from research02.. ([2601:1c1:8700:f5b:fe34:97ff:fea3:c147])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-37df3af8563sm54939a91.5.2026.06.24.08.54.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 24 Jun 2026 08:54:29 -0700 (PDT)
+From: Hiroshi Nishida <nishidafmly@gmail.com>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hiroshi Nishida <nishidafmly@gmail.com>
+Subject: [PATCH 0/5] md: minor cleanups in md core and raid5/raid1/raid10
+Date: Wed, 24 Jun 2026 08:54:16 -0700
+Message-ID: <20260624155421.211626-1-nishidafmly@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [GIT PULL] md-7.2-20260623
-To: Yu Kuai <yukuai@kernel.org>
-Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
- Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>,
- Chen Cheng <chencheng@fnnas.com>
-References: <20260623090327.1097428-1-yukuai@kernel.org>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20260623090327.1097428-1-yukuai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 6/23/26 3:03 AM, Yu Kuai wrote:
-> Hi Jens,
-> 
-> Please consider pulling the following changes into your block-7.2
-> branch.
-> 
-> This pull request contains:
-> 
-> Bug Fixes:
-> - Fix raid1 writes_pending and barrier reference leaks on write failures.
->   (Abd-Alrhman Masalkhi)
-> - Fix raid10 writes_pending leak on write request failures.
->   (Abd-Alrhman Masalkhi)
-> - Fix raid10 writes_pending and barrier reference leaks on discard failures.
->   (Abd-Alrhman Masalkhi)
-> - Fix raid1 REQ_NOWAIT handling while waiting for behind writes.
->   (Abd-Alrhman Masalkhi)
-> - Fix raid1 r1_bio leak when a REQ_NOWAIT retry would block.
->   (Abd-Alrhman Masalkhi)
-> - Fix raid1 read-balance head_position data race. (Chen Cheng)
-> - Fix raid5 stripe batch bm_seq wraparound comparison. (Chen Cheng)
-> - Fix raid5 stripe batch state snapshot KCSAN noise. (Chen Cheng)
-> - Fix raid5 R5_Overlap races while breaking stripe batches. (Chen Cheng)
-> 
-> Improvements:
-> - Add raid5 discard IO accounting. (Yu Kuai)
-> - Always convert raid5 llbitmap bits for discard. (Yu Kuai)
-> 
-> Cleanups:
-> - Simplify raid1_write_request() error handling. (Abd-Alrhman Masalkhi)
+A handful of small, no-functional-change cleanups noticed while reading
+the md code:
 
-Pulled, thanks.
+ - drop an unused parameter from check_decay_read_errors();
+ - use max() in raid5_calc_degraded();
+ - make is_mddev_idle() take a bool init flag, matching the helper it
+   forwards to;
+ - declare a sector count as sector_t rather than int in status_resync();
+ - rewrite a self-contradictory comment above the resync ETA math.
+
+No behavioral change in any patch.  Built and functionally sanity-tested
+(RAID5/RAID6 create, rebuild, scrub) on x86_64, including a run with KASAN
+and lockdep enabled -- with concurrent /proc/mdstat polling to exercise
+status_resync() -- and no reports.
+
+Hiroshi Nishida (5):
+  md/raid1,raid10: drop unused mddev arg from check_decay_read_errors()
+  md/raid5: use max() in raid5_calc_degraded()
+  md: make is_mddev_idle() take a bool init flag
+  md: use sector_t for recovery_active in status_resync()
+  md: clarify the resync ETA comment in status_resync()
+
+ drivers/md/md.c       | 26 ++++++++++----------------
+ drivers/md/raid1-10.c |  4 ++--
+ drivers/md/raid5.c    |  4 +---
+ 3 files changed, 13 insertions(+), 21 deletions(-)
+
+base-commit: 55b77337bdd088c77461588e5ec094421b89911b
 
 -- 
-Jens Axboe
+2.43.0
 
