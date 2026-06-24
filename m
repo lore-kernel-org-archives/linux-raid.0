@@ -1,80 +1,80 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBAD7351C34
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 17:25:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 812CD3DCD9B
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 17:25:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.180
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782321943; cv=pass; b=NKph0Dx9agErAYmcn7MSh3aM3K89HnlquPKTpMYAJ7GP0J8/p975LFrRfIOyZqeMEb7szFSiYavnfAZAgFUcRpxnS7f8RowrdEvaMlisc75QKG8dg1H9r7CMZTdFf4UXdPx87XL7q4p3jCEPNFCYVTYnHWd2jy0TRNdaQeLwhwY=
+	t=1782321949; cv=pass; b=b6+v1UrLqYtZfD7eme61WV8usQYB0K/RyQvronYx66N48WuyP5X0k+UXfwdZKC4Mmqwme+3Abf123zDs+ywb66MxgH6lznazhhkM5PJUgkdtUX3Zciyoc5rw6z/yU2Xl4h77aS/3N14RBKGYTOJG9vKGzIXb+OVrXRcBif4uXb0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782321943; c=relaxed/simple;
-	bh=FDHI7VnrkkCOG8jvaI6SfzXOA+cSFumE07u+TGQZETg=;
+	s=arc-20240116; t=1782321949; c=relaxed/simple;
+	bh=2ulYMFA2kFw/iz4ZhIGgEMFkfQEvvSC3Q2LgFZA+dH8=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Fbd9Va4UpCobVqDaxovBBrxU2aYv6Ql4Tz9AxpiIbKKqiSj07h1RBTgqjIWufnVmRRznkXOnvQKNwaWEo9Y1shBir2yPOo/WgsuoOvAu8py+ExBCNKuDgfTHsOqET9XDne1k7kI5sQK57jvaLGkKE7O/gkt5x/JHXrlZpQu9B0Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EXtAyqq3; arc=pass smtp.client-ip=209.85.214.179
+	 To:Cc:Content-Type; b=Eb/9bpEkG3l+jwxtTOyg4bLhw9AlqsmZpX4jFGGgexXeCBK+RwCWJK+/ocs4H7YR420O+9bsF+E6mcs/+laJxK3Dwqh+PrtNNejEeLuugqbQC2+BTVhAsFgpfosplZWsrm24hT8X19WnsVidSS6UtN9nELB16/K47BjSxGxQoCA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZuajVOHR; arc=pass smtp.client-ip=209.85.214.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EXtAyqq3"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2c7f11646c3so4389425ad.3
-        for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 10:25:41 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1782321941; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZuajVOHR"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2c74383c93cso10504955ad.1
+        for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 10:25:48 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1782321948; cv=none;
         d=google.com; s=arc-20240605;
-        b=hoLW7rik9O+QjfE5l6bf/OkuqCJZN9it8Tqfwj7EtzFa3IDOWhlF2mTVwlD3v8HKNB
-         nPqaPYnus7ihOARl3IJP7D3inkYiaDCKIOIqfW1pTRoKx3xwZslkXUM7Kkw0VLonyr0b
-         v3C+Z5BUtBWnvRgUcAgyYu2ioVlduMEhWHVaf/ZDClAasV5c6rMEx1357mineTc62AuY
-         3s6HKt30tESq8wHV4Qd2Uh3djNBBB9QBhxhYukNRwzgkOsq1yCMaz5P/PZRMvui/85dB
-         knpRvHQVCc+x/zVZkCWvkSqaBUoRpyyla4FxYrDXzVIHcfztgNBhWlMsGJuYaQWPidSn
-         X2ow==
+        b=j83ziEzLVV7rcnu7d5BpLxo0BXq1PshSwtzOSRgEtUhc26DtoX8Sicf5obNo0I5cO+
+         jSbWUDWDhRCSn3fbFlnuICQnQltTjrW/bAPuInjH41RxwUGAAcRiudilCi3zf6YYJI1B
+         t/qai3gVIEFk755QJdLywHJa9hOXvPJVIzpwYLnJN/oWJwfWp8qWy4tAZuWQVzkWig1M
+         nDw7K431NzQbAYaG+4Nz/ad6K5Jfa+sNcOPwgCskkTPkaYp97Nfx+IlkmAFd4q47xdlB
+         CYzgAW8o9zr8aPRIg2OJGBLUP8T2kZpV1DUDJ5vLuCxkIkh+9F6F/hOUZNVG/syh6HJu
+         T3Ug==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=Ylil1kH8ULfeMONK9EVQ0jpuT/tHZ2Z7F3bsoKK5hxY=;
+        bh=h54lF4cp4pKVbkWYZ0Pc8whGOHAxadfn5MZ75TgQZE8=;
         fh=mTP6TkWV1IhQRgyhsEpYqIpiXvhDlZKdHAfNRdOTDjk=;
-        b=jeKPV9BZ45PDUbsFY4thd0UUGV8tc9mYR2mUHke+fENcvOshLP6ITJUiq+OrXQgApt
-         Jp9VaHTGZdSVJ4ZqOlzcpz+wnn9o8v3/ScEug/xc5H8W+NdsK8PIrWEVNunEcUAI+oiv
-         CmMAFzYQi/SRLVRFG64R8GlaeCjPf8YnqKWM+7USSzJIpREaz7cFowUJl9+xdff/mZbq
-         wg1re9h2Px17PtQ85ApKseb+iJaxsr3UHXuoxAzW8TIwNu5RcGoNCpThxf7o70gibzpM
-         4a1IvBj35kRdFBSh0+J/ikHJbddxXEmVrBix5QVs5HSP5PKXfnEZI5GDiy2qhOZJAUdb
-         yS3w==;
+        b=DzlYK+rLk5fSCWOiBVwzAh9bBh+vHOqUQPUOEI4n0Q6+L/1soweNBzSlZOS28s3/ta
+         MHm9rW9yeypkJIKwBLpsCog4QDZDLplw7XsmLbLNdj+kLMf17wYnFA43R/EkaNYYcmiA
+         OAz1AVW0tFEjULe3OpKgiAePrtOHloQU8S6DZEeF4EOZobpUykNEWir9HHXXzwWfjkYK
+         Mr/Yw5J9mYXS7qZBkQEol4MewPZGA89QtxMGBtTD3B/9WwsKWwvalKUic+EeKAIYbJZr
+         ovY0Mn2LdxfJBRGCd+l3+Jtu2ezTIBbE3QojfrBrbYmhM7onZaYV6TT8qdGju9olNpP1
+         +MPw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782321941; x=1782926741; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1782321948; x=1782926748; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Ylil1kH8ULfeMONK9EVQ0jpuT/tHZ2Z7F3bsoKK5hxY=;
-        b=EXtAyqq3Uo2Z54FWnPuXYVOJe7csEcRUAZhiuMhy5FLdUiM/jW0Al3layJlRcJrCLr
-         0kDToWxgwHS1yiBwx1LmfAom0pWcbgCGXFRjapODeLwgdssSl59pVAlBOrmXVA7ySx5O
-         o2G5fjVcCCugdQC7othMOYszwuePi+ALD5yiRvLvvhInSiy+c7mGh08xDDEnn7gDNFf0
-         qGxpBEGqT2CofKn21j8mKgNssSUVg34xoUKtUpEPGug+v+Fau/p7LN3j0barXrCLbqVM
-         B5g1MeZdufvImUEyqvjJjdBRM2SZw/uKxZThM9FPZgoy5EasMkCHlHkC6P9nOa7naBhl
-         KTyg==
+        bh=h54lF4cp4pKVbkWYZ0Pc8whGOHAxadfn5MZ75TgQZE8=;
+        b=ZuajVOHRzYMwsesqnQ7vZN+kyxzANDwvojiklgv26ZKTglzSETUXrhRo9jzD9sN7A7
+         mU0wr2pk/7lArfYAteoftKCzZT4iwCQoer1su6mXCi7akHsic+2J61A+eQar1aHxqlmw
+         3I65D9gf/C/6+biFAPY2PukZgZNxUGBe+RUA04/WXzobDNmcF7eIJVoWGv1lWtqtstxw
+         oYiZCLRgGOaUEXYBX6LDfjHfhoEebG0kMIiM3g4pvTC6huVhds2TDfp9OANXEBC9Xrcm
+         UoVtrkvFjwoBQS8tFFayl+cif8TrmQtqI8tupmASnSArNseMCVFf0bCQpNUcZw7fwSCw
+         MFmw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782321941; x=1782926741;
+        d=1e100.net; s=20251104; t=1782321948; x=1782926748;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=Ylil1kH8ULfeMONK9EVQ0jpuT/tHZ2Z7F3bsoKK5hxY=;
-        b=aNDa8Sj4t6hlWQSG6CUwKbkjKfWxx+j5KKxu3fBKSpUnfEOALOEcBtV/bvK7j/pQ86
-         tBLpVgEya2kBA3IUW7CdaKONUfPo9rZfStd2LhvY/vVRdAVZ4InxB+7+5XpxD99pwKcH
-         YyuUhpwr6E4IE+MurXqMiLxEabLLzFV0NqOxHr1tQW52ASKxvcTUfTBi8Ek38CpiRJUr
-         KJlkG4p3F38IHkoaWWFt0Rs4r8b8eL8mUP4EHSCYZc7hwi1w0mGte0s+L13BBl6fmlpG
-         rnpxIpGeqcV/a78fyWd4PffdiYvQats+eHW4ERNB69LT17OFogpuoAHAouPOrADuo47g
-         0rFw==
-X-Gm-Message-State: AOJu0YymIJto/8kdJPCMGV9RAVFV3up6AiVL6bHLUAeMD1ru1v4fCWUu
-	fucmn1IadS2yAdb0DHEhr71z2hTTNik4n8z5bZ0u0JC6jx1KJBnbS0k1/RWQl9qgJg5Y+3P8WXt
-	ZZB044D3twPod67TAF+oVuZ7c4KBfcPoQ9V+uRiS46Q==
-X-Gm-Gg: AfdE7ck/w6XD76pbdhUm+0u7l4OciA8zGS1sh+f+/nb+LCy0ktYB8PZsdMNnLASpcim
-	t+/GMQdk496EPIG6CYFk6KVKzGswCPyJCDu776+8RMaNrxaMjDdyBzvj2U0/SU9P5yvNxOtVBDr
-	qPxqCh2TXL13PvJ2Y7ZAV6Gm1Mh231P0pJyfNP9rXY6oTC1GbiCcDUXs+HQ/QyqCsnIiyZlEhAv
-	F9ck0OP3zIQD6L2sbuLkzoNWavdK+stv4xfhlp6u4DBf3e0RB3AjC+/ZXGtz14bIZY+RlTZ8JL8
-	8TfMVSoralrUpapHIoPRMTNaFaniXAkeF7psjX2rHaWYT46JNEWC7JwO1ouNYzAgmoswlEF8wSA
-	0V7VllJx3+5SH
-X-Received: by 2002:a17:902:ec88:b0:2b7:aa20:3c61 with SMTP id
- d9443c01a7336-2c7c7724fedmr90657185ad.33.1782321941003; Wed, 24 Jun 2026
- 10:25:41 -0700 (PDT)
+        bh=h54lF4cp4pKVbkWYZ0Pc8whGOHAxadfn5MZ75TgQZE8=;
+        b=RXXBd6C16hE30Q0SwKBWqh2EWMRTLZ2CGtEPehq9xlnwLWHv2HjXYSHSRDGQ2vgEMg
+         ki/uGuKS5s63k03VrmcM+njQ95WWNjiC0Heu+BWzEpR0hURz4Xje68F/1iWW+ajc2MJb
+         kk8erXAbP8jUvaQT/+CnjUkUxAXMkG8XegdNlCmVPHg/mjrxvZosW2onRUjUqVWzptOr
+         4+EJlDvvcCkmhU1e3JKlLEA+2uGsnIFMlQP+ulT7OZ0rluIYVBDqHVHAhsCtLaDufhr+
+         gwAtNgee7yEvjcPw+DVr8c1aBH0i90dugoKDZTXeMXZKM0whc3oPy9mwiK+ut40C/tPQ
+         xjow==
+X-Gm-Message-State: AOJu0Yy9YUGbB2jLDdl1vr9secrOH3muJa06Jw8HRud5c1nTtBM7ksfy
+	3EVpR4lowOoTwvme1sy05A1DDbmlGCpSdtRcsMFPSfzSxVMJwa+PkQT5ToWSaBhTfmyhFvnb2iN
+	H6SYM/31FA9qyp14wBwYjsAnjk46kljI=
+X-Gm-Gg: AfdE7cnOJlT3zud9cqhO3x/CWyChjNTNHDFNqPa+p3OQhPIYIAdWFSUzXxIUDJftrVg
+	WMgRlz3cN/ecTl+DEzQUpqSKQ3WvRm14aZlJIwTjWto5A3H8sEVjWy06s1EMVbv3H80k6/w0AmK
+	v/fOwjZCxtusiXOxr6j91MBymc5x87Ee5OPbkO32mBW8P/+BRDuDJLJNe3wCQQ4xNFQpOJzK9A3
+	rUjJwIZqhI9GH0HnH+doZnLbMLh03O7g9RS3SPJJfJHwGgfROeSyGdNmz+M+yTaIU5NhLXNj/+9
+	Y3Jy0Qa2lAzdfsqglGpYjyOHpk6FayaXqKxgomWz9iX1t3udOeCpePQY1p9N/sAz3Sim71m4/ZU
+	8r6nJ+ZDOfYNx
+X-Received: by 2002:a17:902:e790:b0:2c1:f262:4962 with SMTP id
+ d9443c01a7336-2c7e155dd89mr45922735ad.20.1782321947598; Wed, 24 Jun 2026
+ 10:25:47 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -82,199 +82,117 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260624155452.211646-1-nishidafmly@gmail.com>
- <20260624155452.211646-2-nishidafmly@gmail.com> <20260624161624.12CC81F000E9@smtp.kernel.org>
-In-Reply-To: <20260624161624.12CC81F000E9@smtp.kernel.org>
+ <20260624155452.211646-9-nishidafmly@gmail.com> <20260624161245.292821F000E9@smtp.kernel.org>
+In-Reply-To: <20260624161245.292821F000E9@smtp.kernel.org>
 From: Hiroshi Nishida <nishidafmly@gmail.com>
-Date: Wed, 24 Jun 2026 10:25:29 -0700
-X-Gm-Features: AVVi8CdRZclWHH6Q8FyuThmyI_0HKCh5bG2NnxDlL83UnzvO6xAEuuog11b_vKY
-Message-ID: <CAE1ksKSByKNH=F7BY+VWtycoRgchwCK-wiCoSb0ANaOMKw-kAA@mail.gmail.com>
-Subject: Re: [PATCH 1/8] md: change chunk_sectors and stripe cache counts to
- unsigned int
+Date: Wed, 24 Jun 2026 10:25:36 -0700
+X-Gm-Features: AVVi8CfykguIgR_hnOKDWjOkdsb_WTfQQoNRVrBjvv9IkmE75YRljQjjyjs-x-c
+Message-ID: <CAE1ksKSaLykqdP90aueX-kn0ydjd6bQ7FjuAxnVaFGCvAsi8zQ@mail.gmail.com>
+Subject: Re: [PATCH 8/8] md/raid5: reserve stripe cache for user I/O during rebuild
 To: sashiko-reviews@lists.linux.dev
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-> [Medium] unsigned types don't enable right-shift optimization for variabl=
-e divisions.
+> [High] Breaking the read-ahead loop doesn't bound the rebuild to 50% -- t=
+he
+> outer md_do_sync() loop just calls raid5_sync_request() again and the
+> unconditional first-stripe allocation keeps filling the cache to 100%.
 
-You're right -- the hot-path divisions go through
-sector_div()/do_div() (already u32),
-and sectors_per_chunk is a runtime value, so signedness changes no codegen.
-The rationale is wrong and the change has no perf benefit, so I'll
-drop this patch
-from v2 rather than reword a claim that doesn't hold.
+You're right, and it defeats the patch's purpose.
+The 50% check only gates the window batch; the first stripe of each
+raid5_sync_request() call is allocated
+unconditionally before the loop, so md_do_sync() keeps driving one
+stripe per call past 50%
+until the cache is full and the existing blocking get throttles at ~100% an=
+yway.
+The "reserve half the cache for user I/O" claim doesn't hold.
 
-> [Low] unupdated %d specifiers for the now-unsigned fields.
-Another reason to drop it -- avoids the %d/%u churn. (They don't warn
-in a default
-build, only under -Wformat-signedness, but they are inconsistent.)
-
- > [Critical, pre-existing] round_down/round_up with a non-power-of-two div=
-isor.
-Good catch, and independent of this series.
-sectors_per_chunk =3D chunk_sectors * (raid_disks - max_degraded)
-isn't a power of two whenever the data-disk count isn't (raid5 4-disk
--> 3 data),
-and round_down/round_up are mask-based.
-I'll send a separate fix switching to rounddown()/roundup() with a Fixes: t=
-ag.
+Making it actually bound the rebuild would mean gating the
+first-stripe allocation and
+having raid5_sync_request() yield without making progress --
+effectively reworking the sync throttle, which is more than this
+change should take on,
+and the user-latency benefit was never something I could measure
+cleanly.
+So I'll drop this patch from v2.  (It's coupled to the read-ahead
+window patch, which I'll keep and fix per the other thread.)
 
 Thanks,
 
-2026=E5=B9=B46=E6=9C=8824=E6=97=A5(=E6=B0=B4) 9:16 <sashiko-bot@kernel.org>=
+2026=E5=B9=B46=E6=9C=8824=E6=97=A5(=E6=B0=B4) 9:12 <sashiko-bot@kernel.org>=
 :
+
 >
-> Thank you for your contribution! Sashiko AI review found 3 potential issu=
+> Thank you for your contribution! Sashiko AI review found 1 potential issu=
 e(s) to consider:
->
-> New issues:
-> - [Medium] The commit's core justification is false. Changing the types t=
-o unsigned does not enable compiler right-shift optimizations for variable =
-divisions.
-> - [Low] Unupdated printf-style format specifiers passing unsigned fields =
-to '%d' cause compiler warnings (-Wformat) and break builds configured with=
- -Werror.
->
-> Pre-existing issues:
-> - [Critical] The macro `round_down` is incorrectly used with a non-power-=
-of-two divisor, causing silent data corruption in bitmap sector calculation=
-s.
+> - [High] The patch fails to bound the rebuild's share of the stripe cache=
+ to 50%. Breaking the read-ahead batch loop just causes the outer md_do_syn=
+c() loop to allocate stripes one-by-one, relentlessly filling the cache to =
+100% anyway.
 > --
 >
-> commit 86528a8b22367a5ee16a7cb19a1d56bf58f6aa67
+> commit 29ed9bbd7953c5d6ceeb0158cc53c81fd4d3aaf9
 > Author: Hiroshi Nishida <nishidafmly@gmail.com>
 >
-> md: change chunk_sectors and stripe cache counts to unsigned int
+> md/raid5: reserve stripe cache for user I/O during rebuild
 >
-> This commit changes several structural fields and local variables like
-> chunk_sectors and max_nr_stripes from signed to unsigned int. The stated
-> rationale is to prevent negative values and enable right-shift compiler
-> optimizations for power-of-two division in the hot I/O path.
->
-> >     chunk_sectors, new_chunk_sectors, prev_chunk_sectors, max_nr_stripe=
-s,
-> >     and min_nr_stripes are never negative. Using signed int is semantic=
-ally
-> >     wrong and prevents the compiler from optimizing division/modulo by
-> >     power-of-two chunk sizes to right shifts in the hot I/O path.
->
-> [Severity: Medium]
-> Is this optimization rationale accurate? The hot I/O path uses sector_div=
-(),
-> which expands to do_div(). The do_div() macro explicitly casts the diviso=
-r
-> to a 32-bit unsigned integer, so the division was already operating on an
-> unsigned value.
->
-> Additionally, because sectors_per_chunk is a runtime variable rather than=
- a
-> compile-time constant, would the compiler be able to optimize it into a
-> right shift without a conditional branch?
->
-> > diff --git a/drivers/md/md.h b/drivers/md/md.h
-> > index d8daf0f75cbbe..b9ad26844799d 100644
-> > --- a/drivers/md/md.h
-> > +++ b/drivers/md/md.h
-> [ ... ]
-> > @@ -437,7 +437,7 @@ struct mddev {
-> >       int                             external;       /* metadata is
-> >                                                        * managed extern=
-ally */
-> >       char                            metadata_type[17]; /* externally =
-set*/
-> > -     int                             chunk_sectors;
-> > +     unsigned int                    chunk_sectors;
->
-> [Severity: Low]
-> Does changing this field to unsigned int cause compiler warnings with
-> existing format strings?
->
-> For example, chunk_size_show() in drivers/md/md.c appears to use %d to
-> format mddev->chunk_sectors:
->
-> chunk_size_show() {
->     ...
->     return sprintf(page, "%d (%d)\n",
->                    mddev->new_chunk_sectors << 9,
->                    mddev->chunk_sectors << 9);
-> }
->
-> Will this break builds configured with -Werror?
->
-> > diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> > index cb5feae04db27..5cd9d0f36b6e0 100644
-> > --- a/drivers/md/raid5.h
-> > +++ b/drivers/md/raid5.h
-> [ ... ]
-> > @@ -572,12 +572,12 @@ struct r5conf {
-> >       /* only protect corresponding hash list and inactive_list */
-> >       spinlock_t              hash_locks[NR_STRIPE_HASH_LOCKS];
-> >       struct mddev            *mddev;
-> > -     int                     chunk_sectors;
-> > +     unsigned int            chunk_sectors;
-> >       int                     level, algorithm, rmw_level;
-> >       int                     max_degraded;
-> >       int                     raid_disks;
-> > -     int                     max_nr_stripes;
-> > -     int                     min_nr_stripes;
-> > +     unsigned int            max_nr_stripes;
-> > +     unsigned int            min_nr_stripes;
->
-> [Severity: Low]
-> Will the changes to min_nr_stripes and max_nr_stripes also trigger format
-> warnings?
->
-> Places like raid5_end_read_request() and raid5_set_cache_size() still use
-> %d to print these fields. For instance, in raid5_set_cache_size():
->
-> pr_err("md/raid:%s: Cannot increase cache size, ret=3D%d, new_size=3D%d, =
-min_nr_stripes=3D%d, max_nr_stripes=3D%d\n",
->        ...
->        conf->min_nr_stripes,
->        conf->max_nr_stripes);
+> This commit attempts to prevent rebuild operations from monopolizing the
+> stripe cache and starving concurrent user I/O. It adds yield points in th=
+e
+> resync read-ahead loop to stop submitting stripes if there are active
+> waiters or if the cache is more than half full.
 >
 > > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index 0c5c9fb0606ee..28828e083c2b3 100644
 > > --- a/drivers/md/raid5.c
 > > +++ b/drivers/md/raid5.c
+> > @@ -6656,6 +6656,27 @@ static inline sector_t raid5_sync_request(struct=
+ mddev *mddev, sector_t sector_n
+> >            submitted < RAID5_SYNC_WINDOW && win_sector < max_sector &&
+> >            win_sector < mddev->resync_max;
+> >            submitted++, win_sector +=3D RAID5_STRIPE_SECTORS(conf)) {
+>
 > [ ... ]
-> > @@ -2970,7 +2970,7 @@ sector_t raid5_compute_sector(struct r5conf *conf=
-, sector_t r_sector,
-> >       sector_t new_sector;
-> >       int algorithm =3D previous ? conf->prev_algo
-> >                                : conf->algorithm;
-> > -     int sectors_per_chunk =3D previous ? conf->prev_chunk_sectors
-> > +     unsigned int sectors_per_chunk =3D previous ? conf->prev_chunk_se=
-ctors
-> >                                        : conf->chunk_sectors;
 >
-> [Severity: Critical]
-> This is a pre-existing issue, but could the use of sectors_per_chunk
-> cause problems when passed to rounding macros?
+> > +             /*
+> > +              * Reserve cache for user I/O only when it is actually co=
+mpeting.
+> > +              * preread_active_stripes counts stripes queued for write=
+ I/O
+> > +              * (including the read phase of RMW); sync stripes never =
+set
+> > +              * STRIPE_PREREAD_ACTIVE, so during a pure rebuild it sta=
+ys zero
+> > +              * and the window fills freely.  Competing user reads do =
+not bump
+> > +              * the counter but are caught by the waitqueue_active() c=
+heck
+> > +              * above.
+> > +              */
+> > +             if (atomic_read(&conf->preread_active_stripes) > 0 &&
+> > +                 atomic_read(&conf->active_stripes) >=3D
+> > +                 conf->max_nr_stripes / RAID5_SYNC_HWMARK)
+> > +                     break;
 >
-> Looking at raid5_bitmap_sector():
+> [Severity: High]
+> Does breaking out of the read-ahead loop here actually limit the cache
+> usage to 50%?
 >
-> raid5_bitmap_sector() {
->     ...
->     sectors_per_chunk =3D conf->chunk_sectors *
->         (conf->raid_disks - conf->max_degraded);
->     start =3D round_down(start, sectors_per_chunk);
->     end =3D round_up(end, sectors_per_chunk);
->     ...
-> }
+> When this breaks, raid5_sync_request() returns control to md_do_sync(),
+> which operates in a loop and will immediately call raid5_sync_request()
+> again for the next sector.
 >
-> The round_down() and round_up() macros are designed specifically for
-> power-of-two divisors. If the number of data disks is not a power of two,
-> sectors_per_chunk will not be a power of two, which would yield incorrect
-> sector boundaries.
+> Because raid5_sync_request() unconditionally allocates its first stripe
+> earlier in the function before entering this batch loop, won't the outer
+> loop just continue allocating stripes one-by-one until the cache reaches
+> 100% capacity and triggers the fallback blocking path anyway?
 >
 > --
 > Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260624155452.21=
-1646-1-nishidafmly@gmail.com?part=3D1
+1646-1-nishidafmly@gmail.com?part=3D8
 
 
 
---=20
+--
 Hiroshi Nishida
 nishidafmly@gmail.com
