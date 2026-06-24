@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 262593DB30A
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 15:58:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2490033F582
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 16:03:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782316710; cv=none; b=dWWR9KH/ZQ5GJ1cz9Rb4YvWBHoSL1bPv2iTXs4DFqFQoDHun8HaDAkMO384Gd6AlnND2sXMg3+H/quoJQPD3M/K2by2u3ypLsQtPT4ujJZAtkze+Y1/RkjsTZmyNg5LRWuIVRQqPTHJ8n/k6S+kP64AxDhnQPKPm6JC8FFCGmLg=
+	t=1782317013; cv=none; b=DCZpDkWRUuC+ce3jcdQqODGaL5XN1ouxFCgzqa4IgjZvg6uGAMu+yUmA5faZFwuHdXCYz3HVmEf6PBCs5Poac/IdTST46VVlU2cZMq7u3SMZC34Vw9eryE4I/qZQZL21ozxuwN1xHaUPPnCK23+H+7OkDtYkW16vK8tIxHRTx0Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782316710; c=relaxed/simple;
-	bh=YxUU7iG++tqiD3Uge65gw4RBSIX109jBxuC0OKOQTrM=;
+	s=arc-20240116; t=1782317013; c=relaxed/simple;
+	bh=0VjNLQdtbZP9OdwVJ/H7EMMkMv3SkMHrHEEFq2lcYCM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=f3KS5G5Xd/3BGefbyOqbNqF0eMSuIN53pZdVQIuqivnpM3nHUToGHwMY6xWVqfPzBK5+srLB4tgQQMIs3CE/hcakwnowMqjQXkIlSUl7iwX6URpQC2bsBWXzLOC/LCMoB3meriV6raa+1vwI4bygaB0dVvHKMymA7xWZQ5jGl2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CYdevoHy; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Q/6cR6YAoDpXk+HQlHFCQlibqzH5QynuCAheENZEcj86muPwjERxPY/zguOA4WcD4TAMG1DmBDoG8/RoTlLrH6NIzskjdLKsL3xva1gVT0EnbGCRBGVkb7UYE17Mzx+HPsCt70e6yYreEjwxjbWwFPRH7B6sH1ZlFqAJZSqm/gE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FApj8uF1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CYdevoHy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C6F91F000E9;
-	Wed, 24 Jun 2026 15:58:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FApj8uF1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C5F51F000E9;
+	Wed, 24 Jun 2026 16:03:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782316708;
-	bh=3pdI7pt4w8nzNNsGCna84YxOBf4XFFGIfSPAnSic9KI=;
+	s=k20260515; t=1782317011;
+	bh=CW7fpDYwBj8TqHkvodvEf2FifZUltkMHYTKR8wBSs5M=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=CYdevoHyCw/8vEYippgDEmFNTFCHsvyz5lEgddzI/eyyj/Z/i9j1cL2jI7lhC6Tvu
-	 +9CSdJD0Q1fAwtnq6MOtCue3QSW5EK+0eAe7On7HnYhBg6FA3YO/rM9S/cjohLfIqD
-	 CVGxV44tEct7GRIQaiRdx4sdBnk4jtFvk5q5r0N4G6YA8JW0hbGWdA9v7+StGc710J
-	 eaCMsW/nEYldRt5AWy7pKuocOZ/+JHGTBw8KlJ6ztyi16EoIxH/bjqTQ2Zibp1fV2J
-	 wdyXjEbv/0+lUT9ZqWeUmIWR4+5oDjlHqQHxQuJu239tFD4o/XcqsthmPGjX7iTBFN
-	 j/nYw6s7oEwcA==
+	b=FApj8uF1eBIm3DhnFwpCN4XRGfooGl4XmScTsS8IDwXN8jQY40zhglcEbuBXzwZxL
+	 oS32nWAD2vg83ErFXXGwX48TLukfIRtXyfWY5p7bBIPyCxvhjT1kv7rXDPKy6Fwdsg
+	 DUohXarcbbHiiAGfIHTb8p5ETiqVyCuXzVFkj9JbFZcy0J63M1Odx0hVrheubWDH30
+	 +wklDpmUCVit92QClHFEz+wTMoiklXyA7wPXV1qCnWp1CDmv4YCewOaRTkT0hsjhSJ
+	 Re3/cXeIwxXvQ2Bun0OG3qcXbtv0pXmNZu4tSay8KvcGb8SlNxOvwTrESgMNB6lSQ7
+	 uL87I4Rbe5DjA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 5/5] md: clarify the resync ETA comment in
+Subject: Re: [PATCH 4/5] md: use sector_t for recovery_active in
  status_resync()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hiroshi Nishida" <nishidafmly@gmail.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260624155421.211626-6-nishidafmly@gmail.com>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260624155421.211626-5-nishidafmly@gmail.com>
 References: <20260624155421.211626-1-nishidafmly@gmail.com>
- <20260624155421.211626-6-nishidafmly@gmail.com>
+ <20260624155421.211626-5-nishidafmly@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 24 Jun 2026 15:58:27 +0000
-Message-Id: <20260624155828.3C6F91F000E9@smtp.kernel.org>
+Date: Wed, 24 Jun 2026 16:03:31 +0000
+Message-Id: <20260624160331.9C5F51F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -47,62 +47,46 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] The newly added comment incorrectly states that the divisor `db` is=
- scaled up by 32, when the code actually scales it down.
+- [Medium] The commit message falsely claims `mddev->recovery_active` is a =
+'sector-typed atomic' and that declaring a local variable as `int` 'needles=
+sly narrows it', but the structure field remains a standard 32-bit `atomic_=
+t`.
 --
 
-commit 21672ecf7d2b823245c32b9d2699f7cf1a5c2e7c
+commit 7ec77a6b233ce4d151f7fc723e5f312b20b4ac92
 Author: Hiroshi Nishida <nishidafmly@gmail.com>
 
-md: clarify the resync ETA comment in status_resync()
+md: use sector_t for recovery_active in status_resync()
 
-This commit updates the block comment above the remaining-time computation
-in status_resync() to clarify the calculation logic. It is a comment-only
-change.
+This commit changes the local variable recovery_active in status_resync()
+from int to sector_t. The commit message states this is to match the type
+of mddev->recovery_active and avoid needlessly narrowing the value.
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 0cd85cc92ed31..a5c0da0d11334 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8916,17 +8916,11 @@ static int status_resync(struct seq_file *seq, st=
-ruct mddev *mddev)
->  	 * db: blocks written from mark until now
->  	 * rt: remaining time
->  	 *
-> -	 * rt is a sector_t, which is always 64bit now. We are keeping
-> -	 * the original algorithm, but it is not really necessary.
-> -	 *
-> -	 * Original algorithm:
-> -	 *   So we divide before multiply in case it is 32bit and close
-> -	 *   to the limit.
-> -	 *   We scale the divisor (db) by 32 to avoid losing precision
-> -	 *   near the end of resync when the number of remaining sectors
-> -	 *   is close to 'db'.
-> -	 *   We then divide rt by 32 after multiplying by db to compensate.
-> -	 *   The '+1' avoids division by zero if db is very small.
-> +	 * rt is computed as (remaining sectors) * dt / db.  To keep precision
-> +	 * near the end of resync, when the remaining count is close to db, the
-> +	 * divisor db is scaled up by 32 before the divide and rt is scaled back
+> recovery_active holds a sector count read from the sector-typed atomic
+> mddev->recovery_active and is then combined with the sector_t values
+> curr_mark_cnt and resync_mark_cnt. Declaring it as a plain int needlessly
+> narrows it and mixes signedness into sector_t arithmetic; declare it
+> sector_t to match.
 
-[Severity: Low]
-Is this new comment accurate regarding the math applied to db?
+[Severity: Medium]
+Is this description accurate? Looking at struct mddev in drivers/md/md.h,
+recovery_active is defined as a standard atomic_t:
 
-The comment states that the divisor db is scaled up by 32, but looking at
-the actual code:
+drivers/md/md.h:struct mddev {
+    ...
+    atomic_t recovery_active;
+    ...
+}
 
-    rt =3D max_sectors - resync;
-    rt =3D div64_u64(rt, db/32+1);
+Since atomic_t is a 32-bit signed integer, and atomic_read() returns an int,
+does changing this local variable to sector_t actually prevent narrowing? T=
+he
+implicit cast from int to sector_t will now simply happen at assignment
+rather than during the arithmetic operations.
 
-This divides db by 32, effectively scaling it down rather than up (which in
-turn scales the resulting quotient up). Does this comment need to be
-adjusted to reflect the db/32 downscaling?
-
-> +	 * down by 32 afterwards.  The '+1' avoids division by zero when db is
-> +	 * very small.
->  	 */
->  	dt =3D ((jiffies - mddev->resync_mark) / HZ);
->  	if (!dt) dt++;
+Could the commit message be updated to reflect that mddev->recovery_active
+is a standard atomic_t, rather than a "sector-typed atomic"?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260624155421.2116=
-26-1-nishidafmly@gmail.com?part=3D5
+26-1-nishidafmly@gmail.com?part=3D4
