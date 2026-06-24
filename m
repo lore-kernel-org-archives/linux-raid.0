@@ -1,147 +1,106 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4631306775
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 16:12:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7763322B8C
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 16:12:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782317559; cv=none; b=PAFj6/u8vvUbDeaFs8VRQ8hy5L7rMTCCOM/SRFvpIRWdSkH+YbiBkzBhAjgOUgpO3dnu/hmS+d7mVpJBoxw1EULaF3+lrNrWyiGfWsF/3w4Nm6Az/J3M2rr3pITIJeNdCc4oUvoyTsounqn5lqDTaCGXg/8SvTvROSN3DYkoJHs=
+	t=1782317566; cv=none; b=HoO0VWZsje08B6Lnts8DwGqHo2+ZyqwGCAC500zAVTYxuYmpKG9RIBmJ2ze2qh5GCZXmXYwv4OHF2I9WuLg+0hWqHYkE1ICUqVy/oFmlVHc3Lg+p/wKscBmxXduIhIRhivKPo7nVza3TsellLQcBppeAT3W8bTSkc1w9Y6oeTg0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782317559; c=relaxed/simple;
-	bh=p0HTkEi4ohWfNOXLACz5HqqgKMvrmT9Nt7MgUMRRzAY=;
+	s=arc-20240116; t=1782317566; c=relaxed/simple;
+	bh=cViPEk60zKnYOAjtnSuqh2oU11gPWJwAigdYJzKZ09g=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tZbhAJwd++66o/+FReGFAswLfNd6i7so7hsmy5TziGm4h2kSKLivmGXcxeFCDbeOSMdTBYkZGizm75+X6SZAKMkbk7GS9JQx87MndgdCZ1+lHAz+eclTOH7im60IUuIqseya1+gi1gSS42r9YzcZyHEEbLOhgy6/yYIjImhSjhE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BLEm4Oo2; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=H2/pvPEeySRVOPhBaH+TnA8XsQszWhfduLOooLU7R6ADWlkv3Q3HBTD0/sbyht5vDsZQZh8b14QoR09VBVUrUhP5NGHLX697I0T7Tz9ZCnTccoixGYlwQ0Y1OVDA0FjcPgQkLGD1JY7/KZxjJuc44lCYw89LeGLkWAYexcM0XoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UWOCF55k; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BLEm4Oo2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6813B1F000E9;
-	Wed, 24 Jun 2026 16:12:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UWOCF55k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 292821F000E9;
+	Wed, 24 Jun 2026 16:12:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782317558;
-	bh=jew1YLSshQ4GTdn45OxAcFA4NmCIv9q1TSQtlLSTSCQ=;
+	s=k20260515; t=1782317565;
+	bh=O61ywiLgoXfd5x23ypgR4Tyag27laJpr/jtYx5uZ8Aw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BLEm4Oo2zVQvudc16GvELvCTncPLe8hrQ+kvACKRbUFs+6uYfan8ls674PnkQnklS
-	 9cWaE2QEwHNkw+ij6L7xsXNi3hiw1NQeq1WTiFCTRNSNVCrCNzEXUfvaO959N6BRO1
-	 VTUskrWoiqE4XjdLNXU2RrpgpVvJj3Rv8Wy00TnsSHm5RnhCkTrjmZCPtcJwXxlIhy
-	 CeWUatjeA3z6PdGGHrKRJF65tCuCLrGR6jAXKiq6ePigrpPMEVFP5x3EPvJ1k/LbG5
-	 qcFCwMa+bynvZO24ZHp4u0RUU8EYlGi+fqoZlRQTdgI5wynXHu3O1sJe9qWRSHIwYi
-	 dQScxDqBTB3Og==
+	b=UWOCF55kOLhaz3rnmQdJ1SW3wuN/dofZHlvmkse7FF2q1R1P1tvRYi06Wiu3G9B7d
+	 5z5NChzNGli/5jv2O45P7Ch9hBelNMqd+YhXUKwswYqlSGEr7Tsri9qupzqfXCTnIU
+	 Lu22MsD0vMBN1p4VId2l+muQaG7+IdL1mH2Ma6aUvNQXPIg7tuPLx7RkHogmczboPY
+	 8hb8Yi3ONvTMSha0svSoScXRY6yf2knBMQ8/II4nuO9rJSbUSoHgs/OSM15ny3/03o
+	 XSR3YlHLAf2wNRzfvyXoASLydRgnQwlVk7qug4mblI/oCaUjUtBU+5HQQveMesBiAH
+	 lbUVQC/5WFH/w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 5/8] md/raid5: submit a window of stripes during
- resync/recovery
+Subject: Re: [PATCH 8/8] md/raid5: reserve stripe cache for user I/O during
+ rebuild
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hiroshi Nishida" <nishidafmly@gmail.com>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260624155452.211646-6-nishidafmly@gmail.com>
+In-Reply-To: <20260624155452.211646-9-nishidafmly@gmail.com>
 References: <20260624155452.211646-1-nishidafmly@gmail.com>
- <20260624155452.211646-6-nishidafmly@gmail.com>
+ <20260624155452.211646-9-nishidafmly@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 24 Jun 2026 16:12:37 +0000
-Message-Id: <20260624161238.6813B1F000E9@smtp.kernel.org>
+Date: Wed, 24 Jun 2026 16:12:44 +0000
+Message-Id: <20260624161245.292821F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The batch loop ignores the return value of md_bitmap_start_sync(),=
- forcing clean stripes to be unnecessarily synchronized.
-- [High] Time-of-check to time-of-use race on the array's degraded state, l=
-eading to silent data corruption via incorrect bitmap updates.
+- [High] The patch fails to bound the rebuild's share of the stripe cache t=
+o 50%. Breaking the read-ahead batch loop just causes the outer md_do_sync(=
+) loop to allocate stripes one-by-one, relentlessly filling the cache to 10=
+0% anyway.
 --
 
-commit 01d1e80ee6aa253c48c233e7fc218fbdac9522fa
+commit 29ed9bbd7953c5d6ceeb0158cc53c81fd4d3aaf9
 Author: Hiroshi Nishida <nishidafmly@gmail.com>
 
-md/raid5: submit a window of stripes during resync/recovery
+md/raid5: reserve stripe cache for user I/O during rebuild
 
-This commit alters raid5_sync_request() to dispatch up to 32 stripes per
-call instead of one. It attempts to submit the remaining stripes in the
-window with a non-blocking flag to avoid the per-stripe throttle sleep.
+This commit attempts to prevent rebuild operations from monopolizing the
+stripe cache and starving concurrent user I/O. It adds yield points in the
+resync read-ahead loop to stop submitting stripes if there are active
+waiters or if the cache is more than half full.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 9cb4ed3bd85c5..8e9edaaca667b 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6620,16 +6621,7 @@ static inline sector_t raid5_sync_request(...)
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -6656,6 +6656,27 @@ static inline sector_t raid5_sync_request(struct m=
+ddev *mddev, sector_t sector_n
+>  	     submitted < RAID5_SYNC_WINDOW && win_sector < max_sector &&
+>  	     win_sector < mddev->resync_max;
+>  	     submitted++, win_sector +=3D RAID5_STRIPE_SECTORS(conf)) {
+
 [ ... ]
-> -	sh =3D raid5_get_active_stripe(conf, NULL, sector_nr,
-> -				     R5_GAS_NOBLOCK);
-> -	if (sh =3D=3D NULL) {
-> -		sh =3D raid5_get_active_stripe(conf, NULL, sector_nr, 0);
-> -		/* make sure we don't swamp the stripe cache if someone else
-> -		 * is trying to get access
-> -		 */
-> -		schedule_timeout_uninterruptible(1);
-> -	}
-> -	/* Need to check if array will still be degraded after recovery/resync
-> +	/* Check once whether array will still be degraded after recovery/resyn=
-c.
->  	 * Note in case of > 1 drive failures it's possible we're rebuilding
->  	 * one drive while leaving another faulty drive in array.
->  	 */
-> @@ -6640,13 +6632,42 @@ static inline sector_t raid5_sync_request(...)
->  			still_degraded =3D true;
->  	}
-> =20
-> +	/* First stripe: block if stripe cache is full, then throttle. */
-> +	sh =3D raid5_get_active_stripe(conf, NULL, sector_nr, R5_GAS_NOBLOCK);
-> +	if (sh =3D=3D NULL) {
-> +		sh =3D raid5_get_active_stripe(conf, NULL, sector_nr, 0);
-> +		/* make sure we don't swamp the stripe cache if someone else
-> +		 * is trying to get access
+
+> +		/*
+> +		 * Reserve cache for user I/O only when it is actually competing.
+> +		 * preread_active_stripes counts stripes queued for write I/O
+> +		 * (including the read phase of RMW); sync stripes never set
+> +		 * STRIPE_PREREAD_ACTIVE, so during a pure rebuild it stays zero
+> +		 * and the window fills freely.  Competing user reads do not bump
+> +		 * the counter but are caught by the waitqueue_active() check
+> +		 * above.
 > +		 */
-> +		schedule_timeout_uninterruptible(1);
-> +	}
-
-[Severity: High]
-Does moving the degraded check before the stripe allocation introduce a
-time-of-check to time-of-use race?
-
-If a drive fails during the potential sleep in raid5_get_active_stripe() or
-schedule_timeout_uninterruptible(), the stale still_degraded value is used
-below to update the bitmap. This could incorrectly clear the NEEDED bit,
-potentially leaving parity inconsistent if the system crashes before the sy=
-nc
-completes.
-
->  	md_bitmap_start_sync(mddev, sector_nr, &sync_blocks, still_degraded);
->  	set_bit(STRIPE_SYNC_REQUESTED, &sh->state);
->  	set_bit(STRIPE_HANDLE, &sh->state);
-
-[ ... ]
-
-> +	win_sector =3D sector_nr + RAID5_STRIPE_SECTORS(conf);
-> +	for (submitted =3D 1;
-> +	     submitted < RAID5_SYNC_WINDOW && win_sector < max_sector &&
-> +	     win_sector < mddev->resync_max;
-> +	     submitted++, win_sector +=3D RAID5_STRIPE_SECTORS(conf)) {
-> +		sh =3D raid5_get_active_stripe(conf, NULL, win_sector,
-> +					     R5_GAS_NOBLOCK);
-> +		if (!sh)
+> +		if (atomic_read(&conf->preread_active_stripes) > 0 &&
+> +		    atomic_read(&conf->active_stripes) >=3D
+> +		    conf->max_nr_stripes / RAID5_SYNC_HWMARK)
 > +			break;
-> +		md_bitmap_start_sync(mddev, win_sector, &sync_blocks,
-> +				     still_degraded);
-> +		set_bit(STRIPE_SYNC_REQUESTED, &sh->state);
-> +		set_bit(STRIPE_HANDLE, &sh->state);
 
 [Severity: High]
-Does this batch loop unnecessarily synchronize clean stripes?
+Does breaking out of the read-ahead loop here actually limit the cache
+usage to 50%?
 
-The boolean return value of md_bitmap_start_sync() is ignored here. If the
-first stripe needs sync but subsequent stripes in the window are clean, this
-loop unconditionally queues every stripe for synchronization regardless of
-its clean/dirty state, forcing read-rebuild-write cycles on clean stripes.
+When this breaks, raid5_sync_request() returns control to md_do_sync(),
+which operates in a loop and will immediately call raid5_sync_request()=20
+again for the next sector.
 
-> +		raid5_release_stripe(sh);
-> +	}
-> +
-> +	return submitted * RAID5_STRIPE_SECTORS(conf);
->  }
+Because raid5_sync_request() unconditionally allocates its first stripe
+earlier in the function before entering this batch loop, won't the outer
+loop just continue allocating stripes one-by-one until the cache reaches
+100% capacity and triggers the fallback blocking path anyway?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260624155452.2116=
-46-1-nishidafmly@gmail.com?part=3D5
+46-1-nishidafmly@gmail.com?part=3D8
