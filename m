@@ -1,113 +1,153 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73F4038A711
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 07:06:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6849E38AC90
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 07:07:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782284809; cv=none; b=HF6HX6asXL843LDJnhRqfv2AhD3vyn+/dwh9bO/iTlurVYIGYKBUDcaUAlTs13G91/XiiVZVILe1J/vEW0S1bu4OZ0S1pTyUrGKeHxipfXkgt4LbPMfrLYPMDkty/FM/LWJIB1JyDRDWcARvGt89XRkqkWydjWEu9O7mF39fuH0=
+	t=1782284841; cv=none; b=DTPPdgttGrBm0++OutIaXhqkf/s/ejzbUweHk8kt+UCvKgYGD9a/KiDd17Fm9IvgMZa3ei1uPlb18iEg7L0iRR4ObDMHUJHlCptnAN3j86xp1MFiGVyP43RWilCAJwfl0JVJFfyq7yIDbG6f1fsCffPKd2aI+sWEaqMyw5nFDzE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782284809; c=relaxed/simple;
-	bh=oKqYhMM8jZKf0ig38D3e4pEV+DXSB2FvT8kNkjoVhFo=;
+	s=arc-20240116; t=1782284841; c=relaxed/simple;
+	bh=RpcXHeejJP5VLG52h9meRUiotcxNZPdhb0mKUG/2WFE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MZG4CNjYm7MSwuCPYn1uA1iJvrqRF4r1LoeIdyQyAYZ8me/R3Rzyr0Qmz9cZjnQ/nzEGh0cpUVa3ZEQ06RZRPuKjGOSsmUg4dCeMjJgimLR2fGjAXC6w3vlhlnvASYeBQCFHkXVWMJXFmSnnx4BF4xlgunHzYFNmCZdXkCZplRU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=APo9azhv; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=fyJTIay/uhT+LcO8vNXs7ksbJWB7/XIvclhZ3mzpqgAmgW4BVSj0ct/eyIwBd2VdVlODDbsx6EHSE/RkYJzGws1JaUj2gzLaSAFTEuBNnNz8T2ReKUYSmpQ9uCFZNWyE9aZAsVVa7SXgVOWMSWz5eUJMdCayUAsZfIBl/Nsc8wo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JXm/KD+/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="APo9azhv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D7301F00A3A;
-	Wed, 24 Jun 2026 07:06:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JXm/KD+/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 457371F000E9;
+	Wed, 24 Jun 2026 07:07:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782284808;
-	bh=6AyEuzfxQD8cIUgFRnQ4aQbzprIDqHG+OYlDUzGErC0=;
+	s=k20260515; t=1782284839;
+	bh=nH0p2VVfkeFV1s9RMg4MCpEc6GP0SshmwI/TzWhcGfs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=APo9azhvs5LAfveuwrtp4NTUO2+YvPOteJaakf6AFDaUv+CAa2bXJCkyGpBvyBi2L
-	 ZULP2Paps/vVrHLVHvQhO/q4BnokdDdDrlMPwazQLS2VWKsPmYyvh0OcKS15IvDjBA
-	 eYYsMjT6ADomLRm8SdttY5p4kC7So7ndzBMAYQzquRscKhkfOpQw5vb9Z2tqguXuv8
-	 aUNmG5FQw//JbXhZqAHd7zEdwiywDi5MZTfAQquKE1v6ej4pteBBbjJYYS0xEFUlKd
-	 KUT15lZMrmMjXcuyvEn51zix/D3GX5G4uBfxKAkclheT7g8KlcUeqqs/bDqmkHCJ5/
-	 Sn+gh8/X5Q/OA==
+	b=JXm/KD+/L82Dm1ikYugTiAyNiYzY+o+98KfbH4x2Fs5/dIBIzfvEtfM7gp87bRrgO
+	 fNC3riSyoUUGnawjSeRPTET3fLEwAAbysjTR22rCkI3ctXfiGr14PqDXUijqmVtHK/
+	 LT+rbSfTa0e9rq5i6L1TKm+k/scRY7t8r3B3xsIcxPM7XgWwbkzC3akQFTE/8SnQ7w
+	 44W5rYNnyPOgMwLLIKnTrv7+X/o2JrlCtPFd651tLqtMvyRwEigBBWfdZBNZ+PymON
+	 3j4JVJFsSl2ASJf6TigZuhyONDrcaTLyGB3QUxyuZHfEbthFkegXqxSb2ybXC96uKr
+	 Wie/RUM12XZKw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 13/20] md/md-llbitmap: clamp state-machine walks to
- tracked bits
+Subject: Re: [PATCH v2 07/20] md/md-llbitmap: track target reshape geometry
+ fields
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
 Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <2f58279987b8b8b3f5b2ed8e563512524c530297.1782282042.git.yukuai@kernel.org>
+In-Reply-To: <5440f676d6637f4c0262862252191c2244363087.1782282042.git.yukuai@kernel.org>
 References: <20260605091527.2463539-1-yukuai@kernel.org>
  <cover.1782282042.git.yukuai@kernel.org>
- <2f58279987b8b8b3f5b2ed8e563512524c530297.1782282042.git.yukuai@kernel.org>
+ <5440f676d6637f4c0262862252191c2244363087.1782282042.git.yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 24 Jun 2026 07:06:47 +0000
-Message-Id: <20260624070648.2D7301F00A3A@smtp.kernel.org>
+Date: Wed, 24 Jun 2026 07:07:18 +0000
+Message-Id: <20260624070719.457371F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] llbitmap_cond_end_sync prematurely marks partially synced chun=
-ks as completed, risking data corruption and skipped resyncs.
+- [High] Incomplete teardown of the `pending_timer` and `daemon_work` cycle=
+ in `llbitmap_destroy` leads to a Use-After-Free.
+- [High] Concurrent array resize causes Use-After-Free on the `llbitmap->pc=
+tl` array due to lack of I/O suspension.
 --
 
-commit e55ca490604a05215923d84a1b1272a73343ea48
+commit 2a89e33f120722b7687d6b24f4bf95273fa7a498
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/md-llbitmap: clamp state-machine walks to tracked bits
+md/md-llbitmap: track target reshape geometry fields
 
-This commit adds bounds checking to llbitmap_state_machine() to prevent
-walking past the tracked bitmap chunks. It ensures the state machine range
-is clamped when the requested end bit exceeds the tracked boundary.
+Track llbitmap bookkeeping for the target reshape geometry while keeping
+a single live bitmap instance.
+
+Add the reshape geometry fields, refresh helper, and update the load and
+resize paths to keep the target geometry in sync.
 
 > diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index 00b77ecd600be..581ee9e4a3467 100644
+> index 98e7824c7362e..cdced2126e975 100644
 > --- a/drivers/md/md-llbitmap.c
 > +++ b/drivers/md/md-llbitmap.c
-> @@ -983,7 +983,10 @@ static enum llbitmap_state llbitmap_state_machine(st=
-ruct llbitmap *llbitmap,
->  		llbitmap_init_state(llbitmap);
->  		return BitNone;
->  	}
-> -
-> +	if (start >=3D llbitmap->chunks)
-> +		return BitNone;
-> +	if (end >=3D llbitmap->chunks)
-> +		end =3D llbitmap->chunks - 1;
->  	while (start <=3D end) {
+> @@ -289,6 +289,9 @@ struct llbitmap {
+>  	unsigned long chunks;
+>  	/* total number of sectors tracked by current bitmap geometry */
+>  	sector_t sync_size;
+> +	unsigned long reshape_chunksize;
+> +	unsigned long reshape_chunks;
+> +	sector_t reshape_sync_size;
+>  	unsigned long last_end_sync;
+>  	/*
+>  	 * time in seconds that dirty bits will be cleared if the page is not
 
-[Severity: Critical]
-This is a pre-existing issue, but does the inclusive bound here cause
-prematurely completed resyncs?
+[Severity: High]
+This isn't a bug introduced by this patch, but is there a use-after-free ri=
+sk
+during llbitmap teardown?
 
-Looking at llbitmap_cond_end_sync(), it passes the current sector's chunk
-index as the end bit:
+If a user removes the bitmap via the location sysfs node,
+llbitmap_destroy() deletes the pending_timer and flushes the I/O workqueue:
 
-drivers/md/md-llbitmap.c:llbitmap_cond_end_sync() {
+drivers/md/md-llbitmap.c:llbitmap_destroy() {
     ...
-    llbitmap_state_machine(llbitmap, 0, sector >> llbitmap->chunkshift,
-                           BitmapActionEndsync);
+    timer_delete_sync(&llbitmap->pending_timer);
+    flush_workqueue(md_llbitmap_io_wq);
     ...
 }
 
-Because the while loop condition is start <=3D end, the chunk currently
-undergoing resync will be included in BitmapActionEndsync and transition to
-BitDirty prematurely.
+However, it doesn't seem to set a shutdown flag to prevent re-arming.
+If the daemon work is executing and finds unexpired dirty pages, it will set
+restart =3D true and unconditionally re-arm the timer:
 
-If start_sync() is subsequently called for the remainder of this chunk,
-won't it see BitDirty and return false? This would cause the resync loop
-to interpret it as no resync needed, skipping the rest of the chunk's
-sectors and leaving them out of sync.
+drivers/md/md-llbitmap.c:md_llbitmap_daemon_fn() {
+    ...
+    if (restart)
+        mod_timer(&llbitmap->pending_timer,
+                  jiffies + llbitmap->mddev->bitmap_info.daemon_sleep * HZ);
+}
 
-Should the end parameter be treated as exclusive instead, or does
-llbitmap_cond_end_sync() need to subtract one from the end chunk when
-sector is not aligned to the chunk size?
+Once the work finishes, the flush_workqueue() call in llbitmap_destroy()
+returns and the llbitmap structure is freed. Can the re-armed timer then
+fire on the freed llbitmap structure?
 
->  		enum llbitmap_state c =3D llbitmap_read(llbitmap, start);
+[Severity: High]
+This is a pre-existing issue, but can concurrent array resizing cause a
+use-after-free on the llbitmap->pctl array?
+
+When expanding the array size via sysfs, update_size() invokes the
+personality resize hook without suspending the array:
+
+drivers/md/md.c:update_size() {
+    ...
+    rv =3D mddev->pers->resize(mddev, num_sectors);
+    ...
+}
+
+This eventually calls llbitmap_expand_pages(), which allocates a new
+pointer array and immediately frees the old one:
+
+drivers/md/md-llbitmap.c:llbitmap_expand_pages() {
+    ...
+    kfree(llbitmap->pctl);
+    llbitmap->pctl =3D pctl;
+    ...
+}
+
+Since update_size() only holds the mddev_lock and does not drain in-flight
+I/O, new I/O can still be issued.
+
+Could a concurrent I/O path calling llbitmap_raise_barrier() fetch the old
+llbitmap->pctl array pointer just before it is freed:
+
+drivers/md/md-llbitmap.c:llbitmap_raise_barrier() {
+    struct llbitmap_page_ctl *pctl =3D llbitmap->pctl[page_idx];
+    ...
+}
+
+and then dereference it, accessing freed memory?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1782282042.gi=
-t.yukuai@kernel.org?part=3D13
+t.yukuai@kernel.org?part=3D7
