@@ -1,45 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6849E38AC90
-	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 07:07:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE81438AC90
+	for <linux-raid@vger.kernel.org>; Wed, 24 Jun 2026 07:08:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782284841; cv=none; b=DTPPdgttGrBm0++OutIaXhqkf/s/ejzbUweHk8kt+UCvKgYGD9a/KiDd17Fm9IvgMZa3ei1uPlb18iEg7L0iRR4ObDMHUJHlCptnAN3j86xp1MFiGVyP43RWilCAJwfl0JVJFfyq7yIDbG6f1fsCffPKd2aI+sWEaqMyw5nFDzE=
+	t=1782284933; cv=none; b=Q/fD3MWWkXcu0R5DUiMkBFU3yvAOWQVL6disa+1Vaaubv22x+wD1A+nemr6uMmHJM/uYSKDd+PHYiCovQyaJMG5uiBnOIDIREbYtAomE5c4uvd5/rkSz16GjG54wal0UFHT9UTCMiMD4mmaYjMkOIfVwHcwYctmtV+xjf9WOqL4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782284841; c=relaxed/simple;
-	bh=RpcXHeejJP5VLG52h9meRUiotcxNZPdhb0mKUG/2WFE=;
+	s=arc-20240116; t=1782284933; c=relaxed/simple;
+	bh=gCTRkuSmcBQArAQF1dP7JNM5JrSNaEQyCpKIieRIZrI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=fyJTIay/uhT+LcO8vNXs7ksbJWB7/XIvclhZ3mzpqgAmgW4BVSj0ct/eyIwBd2VdVlODDbsx6EHSE/RkYJzGws1JaUj2gzLaSAFTEuBNnNz8T2ReKUYSmpQ9uCFZNWyE9aZAsVVa7SXgVOWMSWz5eUJMdCayUAsZfIBl/Nsc8wo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JXm/KD+/; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=LZq2luqIh/ItcP3p+qWzgJYoqsY2RWuYHeDxgMBXLhsyqIa0UqqRilPENB83qZQ2HRAUloBtcKtbI5E+YvDb31k7aktx8irKkxsMP6qBP8Ye1m5DdrSM9J6xS4VzqsIQ+hDkGzyNvbojR5Bwx6CKS+4k5vCsKNty317VHN9WlQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qub56dtF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JXm/KD+/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 457371F000E9;
-	Wed, 24 Jun 2026 07:07:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qub56dtF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27D8E1F000E9;
+	Wed, 24 Jun 2026 07:08:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782284839;
-	bh=nH0p2VVfkeFV1s9RMg4MCpEc6GP0SshmwI/TzWhcGfs=;
+	s=k20260515; t=1782284932;
+	bh=/NJatGW4TOec4xJMTsnID/PoPOKHyB7PQFqRKLKTN2A=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JXm/KD+/L82Dm1ikYugTiAyNiYzY+o+98KfbH4x2Fs5/dIBIzfvEtfM7gp87bRrgO
-	 fNC3riSyoUUGnawjSeRPTET3fLEwAAbysjTR22rCkI3ctXfiGr14PqDXUijqmVtHK/
-	 LT+rbSfTa0e9rq5i6L1TKm+k/scRY7t8r3B3xsIcxPM7XgWwbkzC3akQFTE/8SnQ7w
-	 44W5rYNnyPOgMwLLIKnTrv7+X/o2JrlCtPFd651tLqtMvyRwEigBBWfdZBNZ+PymON
-	 3j4JVJFsSl2ASJf6TigZuhyONDrcaTLyGB3QUxyuZHfEbthFkegXqxSb2ybXC96uKr
-	 Wie/RUM12XZKw==
+	b=Qub56dtFKZ26rhjaF7kuebXpTRdfQ7Lug3j5LxV/YVyHoqYa2uQkuhdOPFo1GNU/a
+	 LuUGhb2u82t3IpC0N8L2Stpu8i/lDUq98/m4MLF3MHFosO6y5EJVh+F/UN/wfmPSEg
+	 cFrO6dexGo8pJDOMQycvYh+FX0ZXE9SZ71g9KV/I2LaBF/jX9yWcc5uC42IPsqtAq0
+	 U3JsSldbrNXT4YHepx8H+29frlYLChoo7VvGdCOzlSqqzH/yi1G2Ntiorxj1goDnkC
+	 CM9t7cfnaS/Tz72F24OlIhjUCm+yBeJZdEog1SIDIiHm/lnGj+HQj+XfnXVjKZ8Brt
+	 lAVO+8eBQHQiA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 07/20] md/md-llbitmap: track target reshape geometry
- fields
+Subject: Re: [PATCH v2 10/20] md/md-llbitmap: add reshape range mapping
+ helpers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <5440f676d6637f4c0262862252191c2244363087.1782282042.git.yukuai@kernel.org>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <8a47becf3100a3998e003afcdabce6c17c149194.1782282042.git.yukuai@kernel.org>
 References: <20260605091527.2463539-1-yukuai@kernel.org>
  <cover.1782282042.git.yukuai@kernel.org>
- <5440f676d6637f4c0262862252191c2244363087.1782282042.git.yukuai@kernel.org>
+ <8a47becf3100a3998e003afcdabce6c17c149194.1782282042.git.yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 24 Jun 2026 07:07:18 +0000
-Message-Id: <20260624070719.457371F000E9@smtp.kernel.org>
+Date: Wed, 24 Jun 2026 07:08:51 +0000
+Message-Id: <20260624070852.27D8E1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -48,106 +48,102 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Incomplete teardown of the `pending_timer` and `daemon_work` cycle=
- in `llbitmap_destroy` leads to a Use-After-Free.
-- [High] Concurrent array resize causes Use-After-Free on the `llbitmap->pc=
-tl` array due to lack of I/O suspension.
+- [High] TOCTOU race on mddev->reshape_position causes bios to be mapped to=
+ the wrong geometry.
+- [High] The resync threads use raw array sectors and blindly compute the b=
+itmap bit index using the old geometry's chunkshift, completely ignoring re=
+shape_chunksize for sectors residing in the new geometry.
 --
 
-commit 2a89e33f120722b7687d6b24f4bf95273fa7a498
+commit a481d24ff8d12695efeabb7f320e930174126333
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/md-llbitmap: track target reshape geometry fields
+md/md-llbitmap: add reshape range mapping helpers
+   =20
+Teach llbitmap to choose old versus new geometry during reshape and to
+encode exact bitmap ranges for the active geometry.
 
-Track llbitmap bookkeeping for the target reshape geometry while keeping
-a single live bitmap instance.
-
-Add the reshape geometry fields, refresh helper, and update the load and
-resize paths to keep the target geometry in sync.
+This is the mapping groundwork for checkpoint remapping.
 
 > diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index 98e7824c7362e..cdced2126e975 100644
+> index 11fede1fc79fd..d27993cfb13da 100644
 > --- a/drivers/md/md-llbitmap.c
 > +++ b/drivers/md/md-llbitmap.c
-> @@ -289,6 +289,9 @@ struct llbitmap {
->  	unsigned long chunks;
->  	/* total number of sectors tracked by current bitmap geometry */
->  	sector_t sync_size;
-> +	unsigned long reshape_chunksize;
-> +	unsigned long reshape_chunks;
-> +	sector_t reshape_sync_size;
->  	unsigned long last_end_sync;
->  	/*
->  	 * time in seconds that dirty bits will be cleared if the page is not
+
+[ ... ]
+
+> @@ -1376,11 +1433,32 @@ static void llbitmap_destroy(struct mddev *mddev)
+>  	mutex_unlock(&mddev->bitmap_info.mutex);
+>  }
+> =20
+> +static bool llbitmap_map_previous(struct llbitmap *llbitmap, sector_t of=
+fset,
+> +				  unsigned long sectors)
+> +{
+> +	struct mddev *mddev =3D llbitmap->mddev;
+> +	sector_t boundary =3D mddev->reshape_position;
+> +
+> +	if (!llbitmap_reshaping(llbitmap))
+> +		return false;
 
 [Severity: High]
-This isn't a bug introduced by this patch, but is there a use-after-free ri=
-sk
-during llbitmap teardown?
+Can a concurrent reshape thread update mddev->reshape_position from MaxSect=
+or to
+0 between reading it into boundary and the call to llbitmap_reshaping()?
 
-If a user removes the bitmap via the location sysfs node,
-llbitmap_destroy() deletes the pending_timer and flushes the I/O workqueue:
+If that happens, boundary holds MaxSector but llbitmap_reshaping() evaluate=
+s to
+true. This would cause offset < MaxSector to evaluate to true, mapping the =
+IO
+to the new geometry before the array has actually reshaped the sector. Could
+this race lead to data corruption?
 
-drivers/md/md-llbitmap.c:llbitmap_destroy() {
-    ...
-    timer_delete_sync(&llbitmap->pending_timer);
-    flush_workqueue(md_llbitmap_io_wq);
-    ...
-}
+> +
+> +	WARN_ON_ONCE(sectors && offset < boundary && offset + sectors > boundar=
+y);
+> +
+> +	return mddev->reshape_backwards ? offset < boundary : offset >=3D bound=
+ary;
+> +}
 
-However, it doesn't seem to set a shutdown flag to prevent re-arming.
-If the daemon work is executing and finds unexpired dirty pages, it will set
-restart =3D true and unconditionally re-arm the timer:
+[ ... ]
 
-drivers/md/md-llbitmap.c:md_llbitmap_daemon_fn() {
-    ...
-    if (restart)
-        mod_timer(&llbitmap->pending_timer,
-                  jiffies + llbitmap->mddev->bitmap_info.daemon_sleep * HZ);
-}
-
-Once the work finishes, the flush_workqueue() call in llbitmap_destroy()
-returns and the llbitmap structure is freed. Can the re-armed timer then
-fire on the freed llbitmap structure?
+> @@ -1549,7 +1627,11 @@ static bool llbitmap_blocks_synced(struct mddev *m=
+ddev, sector_t offset)
+>  {
+>  	struct llbitmap *llbitmap =3D mddev->bitmap;
+>  	unsigned long p =3D offset >> llbitmap->chunkshift;
 
 [Severity: High]
-This is a pre-existing issue, but can concurrent array resizing cause a
-use-after-free on the llbitmap->pctl array?
+Does this unconditionally use the old chunkshift to compute the bit index f=
+rom
+the raw sync offset?
 
-When expanding the array size via sysfs, update_size() invokes the
-personality resize hook without suspending the array:
+During an interrupted reshape recovery, active IO computes the correct bit =
+index
+using llbitmap_encode_range() for the new geometry. However, functions like
+llbitmap_blocks_synced(), llbitmap_skip_sync_blocks(), and llbitmap_start_s=
+ync()
+receive raw physical sectors from md_do_sync() and completely bypass
+llbitmap_prepare_range().
 
-drivers/md/md.c:update_size() {
-    ...
-    rv =3D mddev->pers->resize(mddev, num_sectors);
-    ...
-}
+If reshape_chunksize differs from chunksize, will the sync thread calculate=
+ the
+wrong bit index, read a clean bit instead of the dirty bit marked by active=
+ IO,
+and silently skip synchronizing the dirty sectors?
 
-This eventually calls llbitmap_expand_pages(), which allocates a new
-pointer array and immediately frees the old one:
-
-drivers/md/md-llbitmap.c:llbitmap_expand_pages() {
-    ...
-    kfree(llbitmap->pctl);
-    llbitmap->pctl =3D pctl;
-    ...
-}
-
-Since update_size() only holds the mddev_lock and does not drain in-flight
-I/O, new I/O can still be issued.
-
-Could a concurrent I/O path calling llbitmap_raise_barrier() fetch the old
-llbitmap->pctl array pointer just before it is freed:
-
-drivers/md/md-llbitmap.c:llbitmap_raise_barrier() {
-    struct llbitmap_page_ctl *pctl =3D llbitmap->pctl[page_idx];
-    ...
-}
-
-and then dereference it, accessing freed memory?
+> -	enum llbitmap_state c =3D llbitmap_read(llbitmap, p);
+> +	enum llbitmap_state c;
+> +
+> +	if (p >=3D llbitmap->chunks)
+> +		return false;
+> +	c =3D llbitmap_read(llbitmap, p);
+> =20
+>  	return c =3D=3D BitClean || c =3D=3D BitDirty || c =3D=3D BitCleanUnwri=
+tten;
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1782282042.gi=
-t.yukuai@kernel.org?part=3D7
+t.yukuai@kernel.org?part=3D10
