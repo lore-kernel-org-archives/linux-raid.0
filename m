@@ -1,170 +1,135 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38F5E2D7393
-	for <linux-raid@vger.kernel.org>; Fri, 26 Jun 2026 09:36:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E77E3E5589
+	for <linux-raid@vger.kernel.org>; Fri, 26 Jun 2026 10:50:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782466564; cv=none; b=vGmKfuIEbP6KgRencFuk+y4ZjvZ3z39YCscv0cb1ZrKoahW6mJsGvLebG0tIKw8Ubv2ymOC+Zq2NtVXFFzndkB+Ro+MkrSk6hEzfZzMWR49uDg8jk6AsGk3m7SqhYwUcfQtcVsdTtAaDGYMClFC5ZH+RlUrPHs8BQPjKX20W7wE=
+	t=1782471002; cv=none; b=b3eswA4T1sCbi9i90+MoNhW9XGmArWrNQs/tleDZd/8ZHTm87wNK+DHkfprAMXo5yAegOPWBPRNnBfGh8bclJSNi1AzrKTUEvYKJBKNh5ns+sRnLJ76XzCuWL6Wd/XiWBrwWFEdVrW9sZ9R175KIVj/I+iWnoF+DK9JFGueVEMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782466564; c=relaxed/simple;
-	bh=BrMd2r1//CdBzorRKMZmhZod4lpS+Btb21odTuXfvt0=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=pCG9LpXnp+vNGT+FpbpzgRKRn0igtaOLfU0nsAf5fw/asTGBQhg55hkZTS5DJexNVxxEFh0KqxME8CqEVa09tsC74dy6yg0+IsOU+Y7sZcDWdjD7wyc6rR4V6AbFzxWPmiuK3zVBRx3U7U5E53DSgF3Fn4D4a3jeHj0d+dr+3nE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Cs5DbtYA; arc=none smtp.client-ip=209.85.128.52
+	s=arc-20240116; t=1782471002; c=relaxed/simple;
+	bh=203pWt4Jm7PC4KEO3FHeYQ3VSYID6CvF/RFcjlJ3oGU=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Pu9OwJqL+WDXAyaqkTXHxNZtG7I5pXzK96AUytMWhaLN3briJlw8WVTmmYdVmWlGCpNWQ0XPJrerSdm7kcDakJdnz7mvplRc3I8o5QwQBuqY6tYURHGRAPPqNr02FKefHqtgrMGccba7HgNvUXWoJW80u6eC4DKkhaB3BJu3P5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k1ckVfS5; arc=none smtp.client-ip=209.85.128.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Cs5DbtYA"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4926d6b177eso1514285e9.1
-        for <linux-raid@vger.kernel.org>; Fri, 26 Jun 2026 02:36:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k1ckVfS5"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-490cf322ed0so5729685e9.1
+        for <linux-raid@vger.kernel.org>; Fri, 26 Jun 2026 03:50:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782466562; x=1783071362; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:references
-         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=2QrRtslok8RyYJ6MbOn3soQpg68BNlnF1V0N+/oIKVs=;
-        b=Cs5DbtYAs4e+aDQMazdnQfpES/lCu1WLCW5wfcUTHG50Ift75LFSodKJvKJdifRT6Y
-         8b1wpMu0eJ3H+VXmy+bHZlzYBGYrLqxqrYpkRpjCCDqawnOqql0x2E2i6T+Tye3ucjAz
-         jpktHnj3OSOapwDfcllLUdMoxEEVV6QWO3tjzsf6ktKnZzYxvCPk4u0oZ31quW14RURT
-         5D0YutlUJ39ZZT8mUV9J7QjLr4pLqZ1hZkdkqvhCLOiW7GjsvuSFJA0yZXAQf0ShsJU0
-         tjGdI4BIx/i7SoyyBIMVplJq6+ddd6qc/+9osyMtn6V6BoDhcPCV+ZUs4J1IHSVB+NN5
-         Ww6g==
+        d=gmail.com; s=20251104; t=1782471000; x=1783075800; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=cT0BDtDugceKAggCQsSGYTrTPkbadSs08NjvUXAN76c=;
+        b=k1ckVfS5NPKveV0plkyfHtxOVv+O/OK7HuboKDAW3hYpEQqHKFt21rt3aVRtI2SUmJ
+         mVGNL4sF0zCAp93SOInaY05qV0YtE1tzQM2qtc/Ho5Hmvu+DRIXctgXpba5pgbCtkOXD
+         JSVWUWuYeOvZv8QreZtn4R1GEU24S2UIFEA9sx2AcZSvLUVg95kf/+6Z0KD4g+Hq/5nB
+         u61thapNx0qD/nW2OGUtYP6clsJzBBmFU9S+kpshx3Ev9pBmo7wenRfDEs9VubIA6sxZ
+         SoBPG181asyK56eogAXErzP0GcB/RB8XEsnedCBxGOs0q96CTdq/Jtaw264KW3EV9ie0
+         VdtQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782466562; x=1783071362;
-        h=content-transfer-encoding:mime-version:message-id:date:references
-         :in-reply-to:subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=2QrRtslok8RyYJ6MbOn3soQpg68BNlnF1V0N+/oIKVs=;
-        b=EOGNmtysFlBPF5fQplSJvaxfnIv1g5TmKeZ7FF6OeN81otY1yTkjtSQUfGIWUCsnhW
-         vW3XUU4QQMNV6gFb6FySOySFW9yCdzgRfeHCSjWSWI10/UtfsJhPRsBB+S4EZ+hRpf5a
-         PYwQfNUC4HFjRFnbmr0ak34hrEiKFJlMWWizTmKmV0KXBhenvPautQHDH5BJyTfDDEjm
-         E+D3gHt/mX14FKgUr76VHO4zciUHNXgnxoX4kD7YB6L6gizPRtC0SVzU5SfEhGvh69F9
-         RpdQD3ykMFlWsUdgD4+oZeWTR/8gCewRYwhQ/NDcNLbePH2whJskNeCWH2VwyVUr/3G/
-         bfhg==
-X-Gm-Message-State: AOJu0YxjBeLVkN6hvapf0MG8VexzAW27vQZ7JM4Vo8zIcdM9F777VPZ7
-	xw9matmuRUUl6AA78WJtFrAIh2IAO9dxDqJh3awaPrUpYp3QDd7txNEq
-X-Gm-Gg: AfdE7clQFZEs0esInDnot99uY6FtyGis+f/Jn8LNSUH10t1Of8fEu//7fe7fjfh3J3v
-	LiD7Au0QNBOJsKzdsa8oaTBdfCoWI2aOF11D+KnAkeXj0gNZ5lsfQDYQP+l+DfA+olzhjpg8wdz
-	85a/PYchnJRgklM4H7yy4pFb0MjaMhr3ToGX6lluoY7/v+FFbK12szQpA3FoFUrXJLPDWBj79dl
-	MlJlknLZXCQ3xyJvW0MlgeHfxd/Y9CSG6Abf9cFPHNuCmt/Wl+sro/tDV4lDLWKhx1E/l0w/+r+
-	vtGWPeJDAjEZfIfVLsjZKx2sp9XSg+KFdtty9W4LIoa0BKooygXXboYXTta+5BstjUjxPZCdBud
-	GUlBtS3rKDZWrTYHuAkgxNOtrIQOYUMjWF1B4kpwwhXvna2HiTGA42bQwCEwdMrme1BK7v+659j
-	Lbc82bzZ1sF9NfXDfXIWYih73St55YXJCzHBTtyiElmRfXIA==
-X-Received: by 2002:a05:600c:8716:b0:490:bc46:1a58 with SMTP id 5b1f17b1804b1-49266880f2cmr88340965e9.18.1782466561400;
-        Fri, 26 Jun 2026 02:36:01 -0700 (PDT)
-Received: from Abds-MacBook-Air.local ([141.2.113.190])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49269002511sm64340415e9.8.2026.06.26.02.35.59
+        d=1e100.net; s=20251104; t=1782471000; x=1783075800;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=cT0BDtDugceKAggCQsSGYTrTPkbadSs08NjvUXAN76c=;
+        b=YiBEAAjSSZw0BN5hb7GRGrqwBcFAjluBhSytvkIrEzwxoUSYCRbCOUoG56Nh30++mK
+         Pai2VccsepNuJt0WCQuVwVi66OGhc3XjSbhCyVDhkK6aVuitVA5MYb3w375pADCigg9n
+         oCONSqzI7Dq1soJ/5KyMgz8StLdcM1BEwaQ/RmimVBxz8QDnwxa0p/SFX7IlQSCz4V8h
+         taaryl2N8smLFd7lCG6vQthmm14CGWOmyejSiKwOeyHT2a/HwwhtrVtGyXlt56VcDii5
+         NsBcjQG12YK8p2Ut8ZXtrvCFodEF9MyUoPmw/JhyFFeuM9VJ7Kbirgt0Ug1XOwcW4VZs
+         zGEA==
+X-Forwarded-Encrypted: i=1; AFNElJ/QKOTBaFvL+kT16Ntq0aneXEFxTLCeuM6WpYf/v+RQWmRNkgipvnrLf2qLtQYHDF4wqB0NYpDdyZIb@vger.kernel.org
+X-Gm-Message-State: AOJu0YycjVbnxcjr3n/iXjVJk+UY9UU109JlOZbV7FHH8eHTUTXS7z8P
+	M4beHQvTxPvA4GPQgrROPZj4PnZBG758V93IEY2oCIxuBFfTZ0rdgupg
+X-Gm-Gg: AfdE7clCw4VA+7oHl8FAZV62iuLOqsgO7mitGxK3PgOO/u/GVXUm2qCvKwvjAj+It9L
+	9WxuT/1GY4OQMCJmKJTElDbDlyaGqgVNd2/cnS0BR8fEhCX32nks6P4UmKrPf5uK8WF3nl0A+r5
+	VdpHOrNAUtgw2FEukPMGHRPBw80Q3E0+5vnDQZim5bMDM9P1+ChtpEYX1kpp0mXFFKUCzk6bDA7
+	AXB0AmjaDNhxhCEU12HR92kHQs5MvmKg11XeXf2W2i7mjGR8t16TKN1HyM2Gq+kcBS4Ag6MM1T+
+	uJeAbhz5AJ9BkoEC3YcxUZ5QNOhirXlm2IQ7uJOC5Rrky3y6vFM2cTFVDCVJfF/4J7E6aCvShOZ
+	/HPY8KLOtVR9wLeU7OuiatxCMk/9yHJquv4SNJDR8UvcLaGInECrApcD1rzDnhp2TowNRXiIqw3
+	fbQJFtSP55JtelAqvlPhcNjKfsAyhVRcbaNtPjP+RRG6U9po4kWw==
+X-Received: by 2002:a05:600d:8494:20b0:490:5cb3:e94a with SMTP id 5b1f17b1804b1-4926684a83fmr72058605e9.2.1782470999554;
+        Fri, 26 Jun 2026 03:49:59 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-46c221d9371sm25352587f8f.21.2026.06.26.03.49.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Jun 2026 02:36:00 -0700 (PDT)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: yu kuai <yukuai@fygo.io>, song@kernel.org, magiclinan@didiglobal.com,
- xiao@kernel.org, axboe@kernel.dk, john.g.garry@oracle.com,
- martin.petersen@oracle.com, yukuai@fygo.io
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/7] md/raid10: raid10_write_request() drops the barrier
- before calling
-In-Reply-To: <draft-m2h5ms1i5p.fsf@gmail.com>
-References: <20260623072456.333437-1-abd.masalkhi@gmail.com>
- <20260623072456.333437-5-abd.masalkhi@gmail.com>
- <7239c50c-b257-4179-827a-9facd48e75e1@fygo.io>
- <draft-m2h5ms1i5p.fsf@gmail.com>
-Date: Fri, 26 Jun 2026 11:35:58 +0200
-Message-ID: <m28q811w5d.fsf@gmail.com>
+        Fri, 26 Jun 2026 03:49:59 -0700 (PDT)
+Date: Fri, 26 Jun 2026 11:49:57 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Anton Ivanov <anton.ivanov@cambridgegreys.com>
+Cc: Eric Biggers <ebiggers@kernel.org>, x86@kernel.org,
+ linux-um@lists.infradead.org, linux-raid@vger.kernel.org,
+ linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph
+ Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 2/8] um: Check for missing AVX and AVX-512 xstate bits
+Message-ID: <20260626114957.1a2b7e5b@pumpkin>
+In-Reply-To: <6a20b442-b97f-4cae-9168-30201d5ef82c@cambridgegreys.com>
+References: <20260626043731.319287-1-ebiggers@kernel.org>
+	<20260626043731.319287-3-ebiggers@kernel.org>
+	<20260626084113.42eae31c@pumpkin>
+	<6a20b442-b97f-4cae-9168-30201d5ef82c@cambridgegreys.com>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
+On Fri, 26 Jun 2026 09:21:49 +0100
+Anton Ivanov <anton.ivanov@cambridgegreys.com> wrote:
 
-Hi Kuai,
+> On 26/06/2026 08:41, David Laight wrote:
+> > On Thu, 25 Jun 2026 21:37:25 -0700
+> > Eric Biggers <ebiggers@kernel.org> wrote:
+> >   
+> >> If the CPU declares AVX or AVX-512 support, verify that all the
+> >> corresponding xstate bits are also set.  If any are missing, warn and
+> >> don't set the corresponding X86_FEATURE_* flags.
+> >>
+> >> This eliminates the perceived need for UML-supporting AVX and AVX-512
+> >> optimized code in the kernel (that is, lib/raid/ currently) to start
+> >> checking the xstate bits in addition to X86_FEATURE_AVX*.
+> >>  
+> > ...  
+> >>   static void __init parse_host_cpu_flags(char *line)
+> >>   {
+> >> +	u64 xcr0 = read_xcr0();
+> >>   	int i;
+> >> +
+> >>   	for (i = 0; i < 32*NCAPINTS; i++) {
+> >>   		if ((x86_cap_flags[i] != NULL) && strstr(line, x86_cap_flags[i]))  
+> > 
+> > 'line' comes from /proc/cpuinfo
+> > Surely something would be terribly wrong if that included something the kernel
+> > had disabled (or didn't support).
+> > 
+> > 	David
+> > 
+> >   
+> >> -			set_cpu_cap(&boot_cpu_data, i);
+> >> +			validate_and_set_cpu_cap(i, xcr0);
+> >>   	}
+> >>   }
+> >>   
+> >>   static void __init parse_cache_line(char *line)
+> >>   {  
+> > 
+> > 
+> > 
+>  >  
+> Lots of other stuff will go wrong before that. Glibc, things compiled with LLVM, python, perl, etc.
+> 
+> Half of the userland will go belly up, because AVX is used in string operations and hashing if it is available.
 
-On Wed, Jun 24, 2026 at 10:01 +0200, Abd-Alrhman Masalkhi wrote:
-> On Wed, Jun 24, 2026 at 15:23 +0800, yu kuai wrote:
->> Hi,
->>
->> =E5=9C=A8 2026/6/23 15:24, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
->>> bio_submit_split_bioset() and reacquires it afterwards. This is
->>> unnecessary because bio_submit_split_bioset() does not require
->>> releasing the barrier protection.
->>
->> Why is this safe?
->>
->> It's possible plug is not enabled in this context, and the allocated new
->> aplit bio will be submitted and enter wait_barrier() again. wait_barrier=
-()
->> is not supposed to be called recursively. Otherwise deadlock can happend:
->>
->> t1: sync_thread grab barrier and waiting for nr_pending to be 0 from rai=
-se_barrier()
->> t2: wait_barrier() first inc nr_pending, then recursive wait_barrier() w=
-aiting
->> for barrier to be released.
->>
->
-> raid10_write_request() is only called from the bio submission path and
-> not from raid10d thread, so we do not re-enter it while already holding
-> barrier. Therefore, the split bio submitted by bio_submit_split_bioset()
-> cannot recurse back into wait_barrier() from the same execution path.
+And glibc will check xcr0.
 
-I looked at commit e820d55cb99d. At the time, it addressed this issue
-because submit_flushes() called md_handle_request() directly. Since
-v5.2, submit_flushes() has gone through submit_bio() instead before
-submit_flushes() was eventually removed.
+> 
+> UML is just another userland application from this perspective, so there is no reason for it to behave any different from the rest of the userland.
 
-Today, md_handle_request() is called from md_submit_bio() and dm-raid.
-I don't have much experience with dm, but at first glance it seems safe
-to remove these calls. However, if md_handle_request() were ever invoked
-from a worker thread or kthread, we could run into the same kind of
-issues, not only for RAID10, but also for RAID1.
-
-What do you think? Should I drop this patch and guard RAID1 as well, or
-is it safe to assume that dm-raid cannot hit this path from a kthread
-or a workqueue worker?
-
->
-> The situation is different for reads, where raid10_read_request() will
-> be called both from the submission path and from raid10d. There,
-> dropping and reacquiring the barrier protection remains necessary.
->
->>>
->>> Remove the redundant allow_barrier()/wait_barrier() pair around
->>> bio_submit_split_bioset().
->>>
->>> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
->>> ---
->>>   drivers/md/raid10.c | 2 --
->>>   1 file changed, 2 deletions(-)
->>>
->>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->>> index 840f0446c231..4bc1d5553ec7 100644
->>> --- a/drivers/md/raid10.c
->>> +++ b/drivers/md/raid10.c
->>> @@ -1493,10 +1493,8 @@ static bool raid10_write_request(struct mddev *m=
-ddev, struct bio *bio,
->>>   		if (atomic)
->>>   			goto err_handle;
->>>=20=20=20
->>> -		allow_barrier(conf);
->>>   		bio =3D bio_submit_split_bioset(bio, r10_bio->sectors,
->>>   					      &conf->bio_split);
->>> -		wait_barrier(conf, false);
->>>   		if (!bio) {
->>>   			set_bit(R10BIO_Returned, &r10_bio->state);
->>>   			goto err_handle;
->>
->> --=20
->> Thanks,
->> Kuai
->
-> --=20
-> Best Regards,
-> Abd-Alrhman
-
---=20
-Best Regards,
-Abd-Alrhman
