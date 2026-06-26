@@ -1,157 +1,52 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A2342BEFEF
-	for <linux-raid@vger.kernel.org>; Fri, 26 Jun 2026 05:00:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B72AD3C555B;
+	Fri, 26 Jun 2026 05:39:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782450039; cv=none; b=pFt5rAYPaeVcNJBJ6j1xbCbEqiPM8+NYCiFnc/ZJdVO6rzKyc+fFWmQSRSw/lGDX9XhBYqVxXhIbqN+LclZpj7uSZpdaZf4J/G06xsU5gkVVzrz65kkqBD4q9YV3m0ZJ6E+WAl4heVulkB9OpY5O3Xi1Th5noHDY3LncFDASGKs=
+	t=1782452398; cv=none; b=UZI35z5adcgVU7dEhtSpR2VwB443coPtSRaD0YUwe6fLXg2c8pxjQQPI0kw3ztHbLqNNbMyk+1+lQ2cUdezhJB0EEjLdMMTX9P4Tn829Yk91CeY3G2X1bdd0aKMh1Nm4JSMm95ipgqp1Va80IaCmB/D9CR+xJt9+x8Sqm2amrmw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782450039; c=relaxed/simple;
-	bh=Mk6zwM+9bdj+iINoUihDFCk4JI8t5RvPLP9qMYR7yE0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=SjGiaeOgDKcnFuqj3HJ7pnmuBuzvTjmBV2rvXMabOx1oyiSCOy9iswGHa1WQ5UBTDUMDmn0enuNCODVmOd3SWL0TNSFomxXjltxv7aWbLGNGwnD01nzNCPGahJPkND3VTL7kOyi5MGgbFRUbTV14a4xUw1NjiiU5isG8/3o+pVw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TWtizlQJ; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TWtizlQJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AD661F000E9;
-	Fri, 26 Jun 2026 05:00:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782450038;
-	bh=MLcUrY342tfSLteUWN70pi9iu5jwV5R0VlQpGYWCHd0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TWtizlQJqPGjetv0c9FKsRB9GMgPdPfudUgcV5XoYuj95k4MKSJA9AWclGElDek9a
-	 1XUDkrgqxs1GR1P9taQFkJV23MbDOyiivXW7NyZYLS4VeMthOWcnpFHydbewlnkfKo
-	 8smyXbiVNrvW4MD7UAVmdjUPRSmH8eAr6YXmuqNFnlSdMeXRPMZYC5fgnaE8eWl8Qf
-	 IW3G273oCtFAlTjLCuLD88wezc9wMEzEQSJv+lIs8xU7JIIdxltRikNwTW017m/JWe
-	 lnqTe2r98mwfTZyla5jh2blkj9v0Y88Y7dGYGLm754YS6+2OjUbnHxofHvtyRLGHdV
-	 URldoqZfSywBQ==
-From: sashiko-bot@kernel.org
+	s=arc-20240116; t=1782452398; c=relaxed/simple;
+	bh=TQSzTw9EAFYugue+JZNGZyvxo8PM1nt9mOtOsEaMWQo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SoKKTQkqovneFes02pXIWOKe0t28dTYi0CuayQ6zf1uoVWnv5xpuaGgAG8sSHzTiSMiVoAdPXcjHLYL4pE47Ohzgc1nrjfe99Ip7iH/+Hu8ELNHAM7h/aCqkWC1AXskthdFIuunUC6nz3q/zmR2oS2/zUW88K30CX/J8+XCU1DA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 53D4268B05; Fri, 26 Jun 2026 07:39:55 +0200 (CEST)
+Date: Fri, 26 Jun 2026 07:39:55 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: x86@kernel.org, linux-um@lists.infradead.org,
+	linux-raid@vger.kernel.org, linux-crypto@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+	Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: [PATCH 1/8] x86/fpu: Check for missing AVX and AVX-512 xstate
  bits
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Eric Biggers" <ebiggers@kernel.org>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260626043731.319287-2-ebiggers@kernel.org>
-References: <20260626043731.319287-1-ebiggers@kernel.org>
- <20260626043731.319287-2-ebiggers@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 26 Jun 2026 05:00:37 +0000
-Message-Id: <20260626050038.2AD661F000E9@smtp.kernel.org>
+Message-ID: <20260626053955.GA9629@lst.de>
+References: <20260626043731.319287-1-ebiggers@kernel.org> <20260626043731.319287-2-ebiggers@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260626043731.319287-2-ebiggers@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Thu, Jun 25, 2026 at 09:37:24PM -0700, Eric Biggers wrote:
+> If the CPU declares AVX or AVX-512 support, verify that the
+> corresponding xstate bits are also set.  If not, warn and clear them.
+> 
+> This eliminates the perceived need for AVX and AVX-512 optimized code in
+> the kernel to call cpu_has_xfeatures().  That has never been universally
+> done, which strongly suggests that it has never really been needed in
+> practice, but this should remove any remaining doubt.
 
-New issues:
-- [High] The patch fails to clear AVX and AVX-512 CPU capabilities when the=
- CPU natively enumerates AVX but omits XSAVE or FPU support, bypassing the =
-new sanitization logic and leading to #UD panics.
+I'll leave it to the x86-experts if the low-level details are right,
+but the model behind this makes life so much easier, thanks a lot!
 
-Pre-existing issues:
-- [Critical] Memory Protection Keys (PKU) isolation can be bypassed because=
- the kernel enables X86_FEATURE_PKU without verifying the presence of XFEAT=
-URE_PKRU in xstate.
---
-
-commit 0cd2494a6ed30cd9eb21bc480a6d7d789ab47e00
-Author: Eric Biggers <ebiggers@kernel.org>
-
-x86/fpu: Check for missing AVX and AVX-512 xstate bits
-
-If the CPU declares AVX or AVX-512 support, verify that the
-corresponding xstate bits are also set.  If not, warn and clear them.
-This eliminates the perceived need for AVX and AVX-512 optimized code in
-the kernel to call cpu_has_xfeatures().
-
-> diff --git a/arch/x86/kernel/fpu/xstate.c b/arch/x86/kernel/fpu/xstate.c
-> index a7b6524a9dea2..7f7e62e4ebc5b 100644
-> --- a/arch/x86/kernel/fpu/xstate.c
-> +++ b/arch/x86/kernel/fpu/xstate.c
-> @@ -799,6 +799,23 @@ static u64 __init guest_default_mask(void)
->  	return ~(u64)XFEATURE_MASK_USER_DYNAMIC;
->  }
-> =20
-> +/* Clear any X86_FEATURE_* used by the kernel whose xfeatures are missin=
-g. */
-> +static void __init clear_cpu_caps_with_missing_xfeatures(u64 xfeatures)
-> +{
-> +	u64 mask;
-> +
-> +	mask =3D XFEATURE_MASK_FPSSE | XFEATURE_MASK_YMM;
-> +	if (boot_cpu_has(X86_FEATURE_AVX) && (xfeatures & mask) !=3D mask) {
-> +		pr_err("x86/fpu: Disabling AVX support due to missing xstate features\=
-n");
-> +		setup_clear_cpu_cap(X86_FEATURE_AVX);
-> +	}
-> +	mask =3D XFEATURE_MASK_FPSSE | XFEATURE_MASK_YMM | XFEATURE_MASK_AVX512;
-> +	if (boot_cpu_has(X86_FEATURE_AVX512F) && (xfeatures & mask) !=3D mask) {
-> +		pr_err("x86/fpu: Disabling AVX-512 support due to missing xstate featu=
-res\n");
-> +		setup_clear_cpu_cap(X86_FEATURE_AVX512F);
-> +	}
-> +}
-> +
-
-[Severity: Critical]
-This is a pre-existing issue, but Memory Protection Keys (PKU) isolation
-can be bypassed because we don't verify X86_FEATURE_PKU against the
-presence of XFEATURE_PKRU in xstate here.
-
-If a hypervisor reports X86_FEATURE_PKU in CPUID but masks out the
-XFEATURE_PKRU xstate component, the kernel's setup_pku() enables CR4.PKE
-and forces X86_FEATURE_OSPKE.  Because X86_FEATURE_OSPKE is artificially
-forced, the feature is not cleared.
-
-CR4.PKE=3D1 permits userspace to use WRPKRU, but because XCR0.PKRU=3D0,
-xsaves/xrstors silently ignore the PKRU register during task context
-switches, leading to state leakage across tasks.
-
-Should we also validate PKU against missing xstate components in this
-function to prevent isolation bypass?
-
->  /*
->   * Enable and initialize the xsave feature.
->   * Called once per system bootup.
-
-[ ... ]
-
-> @@ -855,6 +872,8 @@ void __init fpu__init_system_xstate(unsigned int lega=
-cy_size)
->  		goto out_disable;
->  	}
-> =20
-> +	clear_cpu_caps_with_missing_xfeatures(fpu_kernel_cfg.max_features);
-> +
-
-[Severity: High]
-Does this logic get bypassed if XSAVE or FPU support is missing?
-
-Earlier in fpu__init_system_xstate(), there are early returns if
-X86_FEATURE_FPU or X86_FEATURE_XSAVE are missing:
-
-	if (!boot_cpu_has(X86_FEATURE_XSAVE)) {
-		pr_info("x86/fpu: x87 FPU will use %s\n",
-			boot_cpu_has(X86_FEATURE_FXSR) ? "FXSAVE" : "FSAVE");
-		return;
-	}
-
-If a hypervisor natively enumerates AVX=3D1 but XSAVE=3D0 (such as QEMU
-with -cpu host,-xsave), check_cpufeature_deps() only warns about unmet
-dependencies without clearing them.  The lack of X86_FEATURE_XSAVE triggers
-the early return, completely bypassing this new capability cleanup logic.
-
-Since the kernel will then attempt to execute VEX-encoded AVX instructions
-while CR4.OSXSAVE=3D0, will this result in an invalid opcode (#UD) panic?
-
->  	fpu_kernel_cfg.independent_features =3D fpu_kernel_cfg.max_features &
->  					      XFEATURE_MASK_INDEPENDENT;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260626043731.3192=
-87-1-ebiggers@kernel.org?part=3D1
