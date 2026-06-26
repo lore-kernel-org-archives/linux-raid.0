@@ -1,88 +1,104 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from www.kot-begemot.co.uk (ns1.kot-begemot.co.uk [217.160.28.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBE003E3DBE
-	for <linux-raid@vger.kernel.org>; Fri, 26 Jun 2026 08:51:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C4273E866C;
+	Fri, 26 Jun 2026 09:01:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.160.28.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782463902; cv=none; b=mTIreNCTIOkl3w7YosUeM5hl04CQn9E7RTOdAqO1L/E9d1YO8PFllZaM5PtR+bSpuQ7yQuiN+bU9FCsQZ+RnQxAmXUYRWGmFU4DTIFgGIISHhd6GJh1BnEn8SlFh24joerWN2TECUGfSGWjeGLqdXGNSjN67b/78Sx4W8hsPva0=
+	t=1782464514; cv=none; b=A/yJV0o+0aYSuDiF+YUyqtH6I+b8yfGZCPtcLaADgxK6/NWru44EPebsGJA9SB7oX3Y+PyCg2hGWtTBg8EBBENPz1Ae3zvlcB37wvDfw2vbkXjI32R8u3SfmvWp4lh+wqDFhDG+OqC6j7qLYCpxgGznXinRDKLdv5Wn7osmoE0k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782463902; c=relaxed/simple;
-	bh=CwJSSElVRZ5HGw7cvVaod5HcF7qaRh+6WmXylBpN6xc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VQHo93obVL21PLZeHt1T+TMyMmX8ItEG/JEOEkTrewZ4jmAp9cXd5JF7Dzc5WsaZRrQ2U8um1RMhreaxTmpkD0ItNPRVr/TtTybMPWLlFqub+QUU+2cAkebacqCL17oasEZz4mo6I8Y5N5kTjk34RpFa04qE/RgyFx31h6FwR/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hgoh8mLn; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hgoh8mLn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AEBC1F000E9;
-	Fri, 26 Jun 2026 08:51:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782463901;
-	bh=DBa3gmPHrcaiMYgXHhufSQu49YRMpZvFd/q32hUmDL8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Hgoh8mLnbuAAFkbA6xEcMya/nw9W17SpFxfKmGivx5x3+m33szc7mBgei/kneeOFS
-	 JE/6WTFO83mIB092lO8TwJ7G7wLojOm2RAIcnavfm1FwKgw3jMmOtnEPwzjNwwnQu8
-	 z1GdENu3gzUJQ+A2dI1M053nT/jB1f7EEFrM03/ymLO1t5mmIcdpzt59ZMlPqMQ3wE
-	 DXzLv+cFFD4qHssSJx9ER6F9OBPKnYPXWdrPYSqP442PcKzA8BbZfZ3Saor10S9Zcd
-	 mZ/dZgC8jV/gL9K12HBlV1uVhk0garkghxPTgsh1SzSfL/YMnKVSz9pfBV3P+jWL7k
-	 bAE+UL8NNmVqA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 next] drivers/md/md: Use bounded strings ops when
- setting disk->disk_name
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "David Laight" <david.laight.linux@gmail.com>
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260626084334.3012-1-david.laight.linux@gmail.com>
-References: <20260626084334.3012-1-david.laight.linux@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 26 Jun 2026 08:51:40 +0000
-Message-Id: <20260626085141.3AEBC1F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1782464514; c=relaxed/simple;
+	bh=sEWrR8kYZ2BiJFak+x25+Vh8Z+DSlNqSjgiodK9Lmmo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=dVkZYCnC7UVMJRzKpxfm1HtPfemBqrGIjoEgLadoUP5iPZ2JqiUuGJG5HXY3wm5Mj7tMXDXyxosKCNdyu6i2x/t62KXRHj2hFYSOim83ZaGPujW2puEayW1LqSFk5N65q0rMXM2+endOjJlSgYEjWd6r4h2BkV7+Gha+mQRk1iY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cambridgegreys.com; spf=pass smtp.mailfrom=cambridgegreys.com; arc=none smtp.client-ip=217.160.28.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cambridgegreys.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cambridgegreys.com
+Received: from [192.168.17.6] (helo=jain.kot-begemot.co.uk)
+	by www.kot-begemot.co.uk with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.94.2)
+	(envelope-from <anton.ivanov@cambridgegreys.com>)
+	id 1wd1ot-001u1R-T0; Fri, 26 Jun 2026 08:21:51 +0000
+Received: from [192.168.21.56]
+	by jain.kot-begemot.co.uk with esmtp (Exim 4.98.2)
+	(envelope-from <anton.ivanov@cambridgegreys.com>)
+	id 1wd1kq-0000000BoSt-0qIQ;
+	Fri, 26 Jun 2026 09:21:50 +0100
+Message-ID: <6a20b442-b97f-4cae-9168-30201d5ef82c@cambridgegreys.com>
+Date: Fri, 26 Jun 2026 09:21:49 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/8] um: Check for missing AVX and AVX-512 xstate bits
+To: David Laight <david.laight.linux@gmail.com>,
+ Eric Biggers <ebiggers@kernel.org>
+Cc: x86@kernel.org, linux-um@lists.infradead.org, linux-raid@vger.kernel.org,
+ linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>
+References: <20260626043731.319287-1-ebiggers@kernel.org>
+ <20260626043731.319287-3-ebiggers@kernel.org>
+ <20260626084113.42eae31c@pumpkin>
+Content-Language: en-US
+From: Anton Ivanov <anton.ivanov@cambridgegreys.com>
+In-Reply-To: <20260626084113.42eae31c@pumpkin>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Spam-Score: -1.0
+X-Spam-Score: -1.0
+X-Clacks-Overhead: GNU Terry Pratchett
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] Inconsistent coding style for the sizeof operator in newly added co=
-de.
---
 
-commit 663613700e83a5bb9c1749d80b4fae68752645fb
-Author: David Laight <david.laight.linux@gmail.com>
 
-drivers/md/md: Use bounded strings ops when setting disk->disk_name
+On 26/06/2026 08:41, David Laight wrote:
+> On Thu, 25 Jun 2026 21:37:25 -0700
+> Eric Biggers <ebiggers@kernel.org> wrote:
+> 
+>> If the CPU declares AVX or AVX-512 support, verify that all the
+>> corresponding xstate bits are also set.  If any are missing, warn and
+>> don't set the corresponding X86_FEATURE_* flags.
+>>
+>> This eliminates the perceived need for UML-supporting AVX and AVX-512
+>> optimized code in the kernel (that is, lib/raid/ currently) to start
+>> checking the xstate bits in addition to X86_FEATURE_AVX*.
+>>
+> ...
+>>   static void __init parse_host_cpu_flags(char *line)
+>>   {
+>> +	u64 xcr0 = read_xcr0();
+>>   	int i;
+>> +
+>>   	for (i = 0; i < 32*NCAPINTS; i++) {
+>>   		if ((x86_cap_flags[i] != NULL) && strstr(line, x86_cap_flags[i]))
+> 
+> 'line' comes from /proc/cpuinfo
+> Surely something would be terribly wrong if that included something the kernel
+> had disabled (or didn't support).
+> 
+> 	David
+> 
+> 
+>> -			set_cpu_cap(&boot_cpu_data, i);
+>> +			validate_and_set_cpu_cap(i, xcr0);
+>>   	}
+>>   }
+>>   
+>>   static void __init parse_cache_line(char *line)
+>>   {
+> 
+> 
+> 
+ >
+Lots of other stuff will go wrong before that. Glibc, things compiled with LLVM, python, perl, etc.
 
-This commit replaces unbounded strcpy() and sprintf() with bounded strscpy()
-and snprintf() operations when setting the disk_name in md_alloc() to impro=
-ve
-safety.
+Half of the userland will go belly up, because AVX is used in string operations and hashing if it is available.
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index d1465bcd86c81..afbdc52a11270 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6354,11 +6354,11 @@ struct mddev *md_alloc(dev_t dev, char *name)
-[ ... ]
->  	if (name)
-> -		strcpy(disk->disk_name, name);
-> +		strscpy(disk->disk_name, name);
->  	else if (partitioned)
-> -		sprintf(disk->disk_name, "md_d%d", unit);
-> +		snprintf(disk->disk_name, sizeof(disk->disk_name), "md_d%d", unit);
->  	else
-> -		sprintf(disk->disk_name, "md%d", unit);
-> +		snprintf(disk->disk_name, sizeof (disk->disk_name), "md%d", unit);
+UML is just another userland application from this perspective, so there is no reason for it to behave any different from the rest of the userland.
+-- 
+Anton R. Ivanov
+Cambridgegreys Limited. Registered in England. Company Number 10273661
 
-[Severity: Low]
-This isn't a bug, but there is an inconsistent coding style for the sizeof
-operator here in md_alloc(). The adjacent branch uses sizeof(disk->disk_nam=
-e)
-without a space, while this newly added branch includes a space. The kernel
-coding style prefers no space after sizeof.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260626084334.3012=
--1-david.laight.linux@gmail.com?part=3D1
