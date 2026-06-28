@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 463EA3AC0C2
-	for <linux-raid@vger.kernel.org>; Sun, 28 Jun 2026 14:36:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C70323AE197
+	for <linux-raid@vger.kernel.org>; Sun, 28 Jun 2026 14:38:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782657383; cv=none; b=XyChbRvSVJofdyzEraxhHqjjvVYJHkKdB3SlbPTCf2kW0vDCP3u1yaDUsQZdv4ohDpEx6cH7++uTsYJQSGS8CySKesSH3+tWt5aPvvJOhAUWg+QMGlgDhVfe1WkLbhNFaz8+4cnXIbB5l4+KjNgltCKqoCIE/gzoL0hLv4iFoEs=
+	t=1782657494; cv=none; b=DQTFv+strh/BHUVSywLgixGspAt/GAsJzmxiQwXqnpmbM02WzFC84tkLv7f5cp3bDrydf2TaTxFMp70zLV071DhOZ+XZ6hqcpf/ifif05TlGR/q6AyfiELaw+fwIRp0KlrVsGz575P22HUBYZ1XMYkz1lKT9HmoKaovKKIt/mmY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782657383; c=relaxed/simple;
-	bh=wYkuZYf9XFKY7oyR8K9tJZoWW3mDqVdNxM4z5zWlMHk=;
+	s=arc-20240116; t=1782657494; c=relaxed/simple;
+	bh=3LLGDjI04mFGxcOZtdJ506EnlmigdYtin2A5c8NrH6g=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=fokjJKLzHNjrY5M9SYwvv6dj11hpYtqE4+4ZypsNiEVhK4H+wf0IpQmUxMlAYGWduX+rhHat/WqxLEvxRVYyQDB/997bRnLctdUc+5DKTKxbAH++vSRedBy47zk25Sh5byQa6zbpNRG+ksjqEkkcM7YmCuJjp7NlH1HwK5Rxwog=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ErAswZJJ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=fdZBy61r/Lg6rLKYEKoB3QKlnTG996fEkyVOBaEnhjzGE6LHdejdrDxy4CK0Os0HmeKqPBpA49ABbbJDcybVuDhzjgMdnYo1/9dQMbkygqZA6F4QxL3tt/sbN/1XaoVprsIrdyWo35/RTiR5Qqkshc/PizK7ZrgRAM1KXrPuPSY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fEAJ7ESg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ErAswZJJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64A6C1F000E9;
-	Sun, 28 Jun 2026 14:36:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fEAJ7ESg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30C801F00A3D;
+	Sun, 28 Jun 2026 14:38:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782657380;
-	bh=9YuMh3Q7IjGFeNOKihOZ9PtidEs3HDqgAgUIqBaWLeA=;
+	s=k20260515; t=1782657492;
+	bh=0byPDz6+dVwX8sB6g3ZqvtzNIYVukyBsIyRSA+F3R8E=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ErAswZJJs81ehaaID4vr73ewzYLMDkruXzpZ2kH6PjQsQ2yZ24QEofcvRQKrKPw4j
-	 pw3a9KLwcNU7ongA7gCdEyLZle0atM6p2u25WHb/ySsg8f7nGOjcNMyIKx/tWCc2Pc
-	 NRAe5V9qnGvTfi3oQm4TcR5dMY1jCaOh1K5OPVlvCg/B8aRanzo4NCyLPnEWhQSRja
-	 ZAY7+1didFvQ+1tTCub0SCy9nKVvPKmSTDFikIqJmJUtpZwLNIe2EALJVGMxpQCY2O
-	 clI7q/WGnCaRlXe86zzvZA4A7dae1dmHjzHqTBIWVnvQcSecwKOuWGvmoT6Z5qsvjr
-	 XlLanzB3y0QkQ==
+	b=fEAJ7ESg+fEr6BX8XRLOk/inN+y4IAlTzyg5mZF+oT5We0yFVqHcL7zAx4WWQz+R/
+	 j49XXAhCzYsj/4fIeS902CgYoQYN1UXvcg0UdB8RdM98Q7llQsHvOS/y4AsubF0Nuh
+	 npM8/U3rKoIcT81N3rP3P69hpDVwC6LRI32ZxFIJbOQ8bZ7g6MfpgmYu73gmmh9aAS
+	 3bnLynIfztGzcjioLy/OfzhL9DoFiA8Ur0YKPQZ8cE6CMLoqXFnDdWOqp3LPQv4qxG
+	 FxQVbIaE76/BCmtyIEn9wtVdsB3QzlWsJE2Xg/OifVlDAnQz2Znc8Lt86so5GfGToy
+	 sBzjOuG+abs3Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 3/7] md/raid10: consistently fail atomic writes that
- require splitting
+Subject: Re: [PATCH v2 2/7] md/raid1: advertise atomic write limits and
+ handle runtime constraints
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260628142420.1051027-4-abd.masalkhi@gmail.com>
+In-Reply-To: <20260628142420.1051027-3-abd.masalkhi@gmail.com>
 References: <20260628142420.1051027-1-abd.masalkhi@gmail.com>
- <20260628142420.1051027-4-abd.masalkhi@gmail.com>
+ <20260628142420.1051027-3-abd.masalkhi@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 28 Jun 2026 14:36:19 +0000
-Message-Id: <20260628143620.64A6C1F000E9@smtp.kernel.org>
+Date: Sun, 28 Jun 2026 14:38:11 +0000
+Message-Id: <20260628143812.30C801F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -47,79 +47,81 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] The `err_dec_pending` (formerly `err_handle`) cleanup path in `rai=
-d10_write_request` can trigger a NULL pointer dereference when a replacemen=
-t device is promoted concurrently.
+- [High] Atomic write limits are improperly configured and completely overw=
+ritten during limit stacking.
 --
 
-commit bc9d81fdb2c33f8c55baad27ab1eedf427ae25ed
+commit c2837eff05b0ac2b80653d924f40f1bef7bad6d3
 Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 
-md/raid10: consistently fail atomic writes that require splitting
+md/raid1: advertise atomic write limits and handle runtime constraints
 
-RAID10 handles one badblock path explicitly by failing atomic writes with
-EIO, but another path can also reduce the writable range and force the bio
-through bio_submit_split_bioset(), completing it with EINVAL. This commit
-centralizes the check to fail all atomic writes requiring splitting with
-EIO.
+Atomic writes in RAID1 must fit within a single barrier unit. Advertise
+this restriction through the queue limits by setting
+atomic_write_hw_unit_max to BARRIER_UNIT_SECTOR_SIZE so that bios which
+would cross a barrier-unit boundary are rejected by the block layer
+before reaching MD.
 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index bd322eccdc3ff..3480fc7907f01 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
+A bio that passes block-layer validation may still become unserviceable
+within RAID1 due to bad blocks or write-behind constraints. In the former
+case, complete the bio with EIO. In the latter case, disable
+write-behind rather than failing the bio with EIO.
+
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1633,10 +1620,24 @@ static bool raid1_write_request(struct mddev *mdd=
+ev, struct bio *bio,
 [ ... ]
-> @@ -1493,6 +1484,9 @@ static bool raid10_write_request(struct mddev *mdde=
-v, struct bio *bio,
->  		r10_bio->sectors =3D max_sectors;
-> =20
->  	if (r10_bio->sectors < bio_sectors(bio)) {
-> +		if (atomic)
-> +			goto err_handle;
+>  	if (max_sectors < bio_sectors(bio)) {
+> +		if (atomic) {
+> +			bio_io_error(bio);
+> +			goto err_dec_pending;
+> +		}
 > +
 
 [Severity: High]
-This is a pre-existing issue, but can this jump to the error handler cause a
-null pointer dereference if a replacement device is concurrently promoted?
+Will this result in atomic writes dynamically failing with unexpected I/O
+errors instead of being properly rejected early by the block layer?
 
-In the error handler path, the code fetches the replacement device without
-checking for null or falling back to the primary slot:
+Because the limits configured in raid1_set_limits() appear to get overwritt=
+en
+during stacking, boundary-crossing bios will bypass block layer validation =
+and
+trigger an error dynamically here.
 
-err_handle:
-	for (k =3D 0;  k < i; k++) {
-		int d =3D r10_bio->devs[k].devnum;
-		struct md_rdev *rrdev =3D conf->mirrors[d].replacement;
-		...
-		if (r10_bio->devs[k].repl_bio) {
-			rdev_dec_pending(rrdev, mddev);
-			r10_bio->devs[k].repl_bio =3D NULL;
-		}
-	}
-
-If raid10_remove_disk() runs concurrently, it can promote the replacement to
-the primary slot and clear conf->mirrors[d].replacement:
-
-raid10_remove_disk() {
-	...
-	WRITE_ONCE(*rdevp, NULL);
-	if (p->replacement) {
-		WRITE_ONCE(p->rdev, p->replacement);
-		clear_bit(Replacement, &p->replacement->flags);
-		WRITE_ONCE(p->replacement, NULL);
-	}
-	...
-}
-
-If this concurrent promotion happens, will rrdev be null here? It looks like
-other paths such as raid10_end_write_request() safely handle this exact
-race by falling back to rdev when replacement is null, but this cleanup
-path does not.
-
->  		allow_barrier(conf);
->  		bio =3D bio_submit_split_bioset(bio, r10_bio->sectors,
+>  		bio =3D bio_submit_split_bioset(bio, max_sectors,
 >  					      &conf->bio_split);
+[ ... ]
+> @@ -3229,6 +3230,7 @@ static int raid1_set_limits(struct mddev *mddev)
+>  	lim.max_write_zeroes_sectors =3D 0;
+>  	lim.max_hw_wzeroes_unmap_sectors =3D 0;
+>  	lim.logical_block_size =3D mddev->logical_block_size;
+> +	lim.atomic_write_hw_unit_max =3D BARRIER_UNIT_SECTOR_SIZE;
+> +	lim.features |=3D BLK_FEAT_ATOMIC_WRITES;
+> +	lim.features |=3D BLK_FEAT_PCI_P2PDMA;
+>  	err =3D mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
+
+[Severity: High]
+Is BARRIER_UNIT_SECTOR_SIZE being assigned in sectors while the
+atomic_write_hw_unit_max limit expects bytes? If so, this might artificially
+cap atomic writes to mismatched units.
+
+Additionally, will these custom RAID1 atomic limits be completely overwritt=
+en
+when stacking?
+
+Because atomic_write_hw_max is left unmodified from its default of UINT_MAX,
+when mddev_stack_rdev_limits() is called:
+
+mddev_stack_rdev_limits() ->
+   queue_limits_stack_bdev() ->
+      blk_stack_atomic_writes_limits() ->
+         blk_stack_atomic_writes_head()
+
+The stacking code will see UINT_MAX and unconditionally overwrite the newly
+configured RAID1 limit with the first underlying device's limits.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260628142420.1051=
-027-1-abd.masalkhi@gmail.com?part=3D3
+027-1-abd.masalkhi@gmail.com?part=3D2
