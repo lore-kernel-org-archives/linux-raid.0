@@ -1,61 +1,63 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C30073AC0EF
-	for <linux-raid@vger.kernel.org>; Sun, 28 Jun 2026 14:24:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B3B83AD516
+	for <linux-raid@vger.kernel.org>; Sun, 28 Jun 2026 14:24:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782656670; cv=none; b=fYzxe8lw2LnOojY9dc9AKC5u5OrnkzSgYZNr7LFegCo8641hvfU58QECExbqeSFl/E2izAU8TVv4Vj3hSym+ZkMG9RcJ4l+e0iF+BhCwpxQ/ZzpK1nKpdnFMzT2Nd+AumHtrZdJcaWb5RundZHstQqVb7QwXadTLDLuxS3OoY9k=
+	t=1782656673; cv=none; b=jfz69vnoHCWzlEcZYiZDcdoZD/gKe6Xx9SeO5gzzt+MoyuYUhVrCfc4y5W2o/Rxn5OZLC2PWhIVE4wZUj71sV80COt6aZRfEm57aMrnB0QmwU5SGaZiXkF5cNRV0Pf8RMbmOMEMXR9ZMHCpX/qltCiiahZ+RgRn/z+oUj7OQImg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782656670; c=relaxed/simple;
-	bh=zUz43ZH7VKchUSdgQ50Q0qRIyRBfS4U8Ixx9tFPlIpw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ioHkBqDCxJXReMsCck3UpMAhqfZK/yamSKr2JoCe+8TMOvzxW7YaSVHQn7zY1szCbdBmooM9GzaoiBT6yKcce1CM3BuXCbx1FMn3i6YbGOapKAzTMsLLmlHVoKLuDQRVFtqqZ3T6bnMtaQLzVPeHaSSQIGuP5eNmsNLGQnOb7Zc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bwM4Kt+J; arc=none smtp.client-ip=209.85.128.49
+	s=arc-20240116; t=1782656673; c=relaxed/simple;
+	bh=1R/KuzTRQ4OYBfyE1PjecBDfm9bxCJCt3XJtXKafr8k=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=nxRXpcQ7UuaCjUQ2xPczhtBP8pKllnlnih599eVbxkkbP4g/9IS3gVJTU6EUSpz89RQLUmiS/UnhfyQQz9Mm3DH3H3MV+PNbGdqMf1iO53S2EL4gGrB7VkYF+YBF6O6XkT6k/vdZ5BTf/DnGFoMyOmtBk15DHb8Z00+ZBzoxfF8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DT8SN+0Q; arc=none smtp.client-ip=209.85.128.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bwM4Kt+J"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4936e85e0deso5712495e9.2
-        for <linux-raid@vger.kernel.org>; Sun, 28 Jun 2026 07:24:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DT8SN+0Q"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-493ad116e05so963735e9.3
+        for <linux-raid@vger.kernel.org>; Sun, 28 Jun 2026 07:24:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782656666; x=1783261466; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=4YcpIATYRtraK9yBXIVvQeJwZDE3/yv25GmcunhXyJQ=;
-        b=bwM4Kt+JbPnhy79jbc4V//TYJ2klb8QlesBRKRmhGTVsMmU0uqIeoQMjyEWk5Au5ri
-         HJTAu5e7pd2Qr3UcRvMZnsMVVCTJwa8hZhfuefmzOb1Nj0Iq/7SJ3gYrrdCz7ZHQFtwB
-         fO5jPjwOb3UrhuOs7Brgq87MRiRJ2/2G9rWqI4qcReMr8IDM+OIBHUwdeqf1Ga5KwWHm
-         ZG0etnygjmKHftF/T9fr9AEYuELHhhg00jhKp7eGG7So8fOu3o2UJJO1vqCI3fgrB/U+
-         cbh1m1R4PQo/qufBy9l8rhx/yrGI1aFnQzKXLH74RxEux1I57GX+RwuqoMAOtGJ5SqW/
-         A1WQ==
+        d=gmail.com; s=20251104; t=1782656669; x=1783261469; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xivX3NJ6EZtkbKkLAqCvtj9AF5zdWu3UP6KMCJ/Ac0o=;
+        b=DT8SN+0Q/ZYqmILtFybfk2Rz5mkocm7Q9zcDKZQ57W987DX4qtDq8SgRHGh6VXCzrD
+         xP1bA8MaJKqDResDZleqUbF4dOUNv5K8/fyUjGd0heGm4peBh7R3UgpM+UMnvwWM1DJB
+         8nF+W1Mu4DuBk+rr+WPsWarw/BznR/4nu0Tiq/2AsjCFgjaLCwBUY6y45CBqBuwVZ+NJ
+         Er22HwWISHe9byBHLXyUhgsjroZWbUZWmzdEWYyTO/U4fWw7KECD3if4r3hh5CRxzEj4
+         ZSqxlaFwXd1KyZv/vYgl5fey/vNUEcQkaNmcr7jhXBByxk+Cpe6zicFno8gQ/iyrszs+
+         8v9w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782656666; x=1783261466;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=4YcpIATYRtraK9yBXIVvQeJwZDE3/yv25GmcunhXyJQ=;
-        b=RHDf6fwnIBOIAvFPjHZmpej1EZ0Gt9uLiczz593Urf3pSz8pwkULxldlU4JRGhdT91
-         6NzM0N5hGOt4gGd3dFmPt8DrjXaj/jCoivau3KBEh5ShmqGaf7aydJKuXt8CQo6MYMpd
-         kOmZrP7LaTWxFr+H2JJmWC5dj7i29cKIenQ/E3tMGHs9ukkqdbzpjz7xPvToKTtPgsjX
-         0SD9XqB70civOq/r7NLV0NCkVXv2zhWtNhpIMFOcVIS/K4M1kKuAeg3EantkVDNjltm4
-         daQ2Z081HC36W3ickiQuUC4V6leD+GMaCMuZMID8A8ECOkQ/cBwWgVJ2Ox1IbPwzwfOU
-         Jhtw==
-X-Gm-Message-State: AOJu0YzE1yc1PdNYXH8OlDAVSxVuHL75h3Cfr2pFi2oJSzAC5T4bUr3O
-	ElwONbNVJZgjybOQDSQha+upCS9YdowsOeJzl1iCMutGNbl7Cap3ZUct
-X-Gm-Gg: AfdE7cmp/0WmiCF1K2r7BC8y7x5L8Om5URQe/Y+3nVZ7a8/Gt8PyAB12HxVcST/wpNq
-	bFLDuTnlgF5Gfu83lvrke3Lmc38btcymnjgw7j/TNhWK490lYJHTBH2hZAg8rMXhubRNFED0aDV
-	9GP4E/EbBxqm7y17Muz5U8xWw85WFf/fl9ubhP6Cb7/xrMAhbyUGAAaK1EpirA5gwfUr/rZ0ITS
-	azb0sUR6A9kyf2f9CtL7FzwYe/E4IgTfuU7eEKau/mgZmSSXBvzTPndwUBQpOUZMRrdipYYf1XR
-	KnIjtiFdaXtHp7ScnKhY5BMgXXP1VXmTOdTg+SxBflK3lv6pxOwPz5mgVWIOwp+hebJ7WhEYRu8
-	I7UPzRtoC7wVu+cIf+GBz/0zLYOFftCrVS/mFDAT+VKNa5o+LWpQVY0BZ6oYnScjyO77AOJgIXD
-	hnG7mKi5SYfNZbj/3xvySXBMyrnTfHXA4KQGFCNWhEbkqrwbfKYtk6t0oc5viZWgrsRCl2ptSnn
-	UtqQuA=
-X-Received: by 2002:a05:600c:1d0e:b0:492:2f59:4969 with SMTP id 5b1f17b1804b1-49266899d40mr209889975e9.22.1782656665773;
-        Sun, 28 Jun 2026 07:24:25 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1782656669; x=1783261469;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=xivX3NJ6EZtkbKkLAqCvtj9AF5zdWu3UP6KMCJ/Ac0o=;
+        b=OKkFkinJVKE37EDpF20sg4hI43rL4uEhwH6rCv/sWKWbxCguuWOSE92+BRi/Nij2aR
+         L0rbm34xqLEARlzn7ZmOucZCIVy9mKhXjI/OrWaJM5myTVnYsl/Mg60VBFEJ3DGC19t3
+         +RGdAOtcNsdQI3WgMmTz+2yFymY+Jbu+DeJa91O0/UlJpqfmwKtxLYZFVksp+ohA0+bo
+         se1Eq5oO5CJSXny/M8nkrCswtpQEHq7t87kXatXhN238MOnEPa6qNB/wDOsSGgmSu4k/
+         Cn5knQPQ10/SgBfhPzxRcTUvMe/A5IyMsL/+SggO9Nk8x3MT0L5h44hy1Ja0kGRUhAFQ
+         oYVw==
+X-Gm-Message-State: AOJu0Yxq7nwGxshKqnpjyPeiQmy0lPZ80tqHmhiu2l1x2vMMLZsw9/G1
+	2wvlGzNWdb11aCIgdpCb2gVb9SK5sgcGs+Ovdvz2ZYI3G66Jgq8MnP4ElaD7CA==
+X-Gm-Gg: AfdE7cnQul0NnnXlB/GiE1YubHQqt7Li7Sbd5itFrwXaoZUzjoFMXCoOeOumHNq8QV/
+	eDiZMR8K7L3E0AVeyB8QJjw22Ggmwe3NVKAEwnGuWMCZiz20lOgf2T9+AU3vFRGYh/iCRcM7dtl
+	jqUxqDiECzedv6Bsgfu6DN0MPfnJ7JdFjAmAhcNnBheGLVnbbIm7ZXrofOAwdajLvSKv5pH9GLB
+	9ckOy/Y5yQcq23cTAojZIBshZeyAGo6e9jELoeiDkOV/l/R8cb32HGexPjit09KghHBUz5ZBNx+
+	Tnm/86y4fYqaO8UOHXz0PRzwF2o3tHPFeCuMCpbjUKyUIXVSKfis/Xr6km9S53LDP9xGNth1O4A
+	M7bDJzy4YFuAppRs7k5KrrS+PYAYu/Zx1UsfN2BmjtZ+sFl8kX/lFQJX7URG9vr2QH95IYFzYgA
+	Onf15tUNI49csq2lvx4d9f3cawUE6wqVrN4e8PI1y3OZFCsdJJtB4E1UqK8iaIxZNrpL9G1k7qQ
+	M3QUtc=
+X-Received: by 2002:a05:600c:c118:b0:492:6881:1114 with SMTP id 5b1f17b1804b1-49268811131mr154530535e9.0.1782656669173;
+        Sun, 28 Jun 2026 07:24:29 -0700 (PDT)
 Received: from yocto.rz.uni-frankfurt.de (cb-8021x-nat-134-108.net.uni-frankfurt.de. [141.2.134.108])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4728072189asm7819927f8f.30.2026.06.28.07.24.23
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4728072189asm7819927f8f.30.2026.06.28.07.24.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 28 Jun 2026 07:24:24 -0700 (PDT)
+        Sun, 28 Jun 2026 07:24:27 -0700 (PDT)
 From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 To: song@kernel.org,
 	yukuai@fygo.io,
@@ -67,11 +69,14 @@ To: song@kernel.org,
 	martin.petersen@oracle.com,
 	abd.masalkhi@gmail.com,
 	linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
-Subject: [PATCH v2 0/7] md/raid10: fixes, atomic write handling, and error-path cleanup
-Date: Sun, 28 Jun 2026 14:24:13 +0000
-Message-ID: <20260628142420.1051027-1-abd.masalkhi@gmail.com>
+Cc: linux-raid@vger.kernel.org,
+	sashiko-bot <sashiko-bot@kernel.org>
+Subject: [PATCH v2 1/7] md/raid10: fix r10bio leak in raid10_write_request() error paths
+Date: Sun, 28 Jun 2026 14:24:14 +0000
+Message-ID: <20260628142420.1051027-2-abd.masalkhi@gmail.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260628142420.1051027-1-abd.masalkhi@gmail.com>
+References: <20260628142420.1051027-1-abd.masalkhi@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -80,39 +85,42 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi,
+When raid10_write_request() fails because REQ_NOWAIT is set, the
+allocated r10_bio is not freed before returning, resulting in a memory
+leak. Free r10_bio before returning from the REQ_NOWAIT error paths.
 
-This v2 of series contains a mix of bug fixes and cleanups for RAID10,
-along with a related atomic write fix for RAID1.
-
+Fixes: c9aa889b035f ("md: raid10 add nowait support")
+Reported-by: sashiko-bot <sashiko-bot@kernel.org>
+Closes: https://lore.kernel.org/linux-raid/20260613184042.BCEC01F000E9@smtp.kernel.org/
+Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+---
 Changes in v2:
- - Expand the commit message to explain why the
-   allow_barrier()/wait_barrier() pair is no longer needed.
- - Drop the early atomic write split check from raid1_write_request().
- - Advertise the atomic write size limit via queue limits.
- - Disable write-behind instead of failing atomic writes when the
-   BIO_MAX_VECS limit is encountered.
- - Drop the early atomic write split check from raid10_write_request()
-   and rely on queue limits instead.
- - Fix a compilation error (bi -> bio).
- - Link to v1: https://lore.kernel.org/linux-raid/20260623072456.333437-1-abd.masalkhi@gmail.com/
+ - No changes.
+ - Link to v1: https://lore.kernel.org/linux-raid/20260623072456.333437-2-abd.masalkhi@gmail.com/
+---
+ drivers/md/raid10.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks,
-Abd-alrhman,
-
-Abd-Alrhman Masalkhi (7):
-  md/raid10: fix r10bio leak in raid10_write_request() error paths
-  md/raid1: advertise atomic write limits and handle runtime constraints
-  md/raid10: consistently fail atomic writes that require splitting
-  md/raid10: remove unnecessary barrier around bio_submit_split_bioset()
-  md/raid10: replace wait loop with wait_event_idle()
-  md/raid10: simplify write request error handling
-  md/raid10: simplify read request error handling
-
- drivers/md/raid1.c  |  36 +++++++-------
- drivers/md/raid10.c | 118 +++++++++++++++++++++-----------------------
- 2 files changed, 74 insertions(+), 80 deletions(-)
-
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 0a3cfdd3f5df..bd322eccdc3f 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1365,6 +1365,7 @@ static bool raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 		/* Bail out if REQ_NOWAIT is set for the bio */
+ 		if (bio->bi_opf & REQ_NOWAIT) {
+ 			bio_wouldblock_error(bio);
++			free_r10bio(r10_bio);
+ 			return false;
+ 		}
+ 		for (;;) {
+@@ -1398,6 +1399,7 @@ static bool raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 		if (bio->bi_opf & REQ_NOWAIT) {
+ 			allow_barrier(conf);
+ 			bio_wouldblock_error(bio);
++			free_r10bio(r10_bio);
+ 			return false;
+ 		}
+ 		mddev_add_trace_msg(conf->mddev,
 -- 
 2.43.0
 
