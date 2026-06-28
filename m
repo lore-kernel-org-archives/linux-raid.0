@@ -1,135 +1,118 @@
-Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A6202C21F0
-	for <linux-raid@vger.kernel.org>; Sat, 27 Jun 2026 11:25:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C30073AC0EF
+	for <linux-raid@vger.kernel.org>; Sun, 28 Jun 2026 14:24:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782559549; cv=none; b=qKPMxmgjCFo7PNA7361oICrqJw8fkdDSfYnest77wWe10fEqGliyKbjReb2Zkda0FfYHpwso8SPrDxCaP1k/BesradTCo8OlXTELaRmanXYSykQSOHhE4Z7ATlXoxhyY7NfJ9MmU43ZZOMiKjxLuKRXagRSuutEcve2OULHmQdw=
+	t=1782656670; cv=none; b=fYzxe8lw2LnOojY9dc9AKC5u5OrnkzSgYZNr7LFegCo8641hvfU58QECExbqeSFl/E2izAU8TVv4Vj3hSym+ZkMG9RcJ4l+e0iF+BhCwpxQ/ZzpK1nKpdnFMzT2Nd+AumHtrZdJcaWb5RundZHstQqVb7QwXadTLDLuxS3OoY9k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782559549; c=relaxed/simple;
-	bh=yV0SvxMkq8w1vh3jiv7FYnXkHG1zYg1t4ueqkd4ijnc=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=Yb7esMbrUslfjOT/cR1lTBBp1TejQfT/7+ikkK3Q4xsDUPYUuOMugH6p2y7oVnKEkZ9Lxs048h1a55TrQEnzrzeKv9cJueWN56y181G0QBpe4uM8bBVAy8y5yKKJQbmNtLRB6aveJJuZuIhtB/TsgLxkKA6UdtH1ZsWNUzKsdzw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SD7f7nD+; arc=none smtp.client-ip=209.85.128.45
+	s=arc-20240116; t=1782656670; c=relaxed/simple;
+	bh=zUz43ZH7VKchUSdgQ50Q0qRIyRBfS4U8Ixx9tFPlIpw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ioHkBqDCxJXReMsCck3UpMAhqfZK/yamSKr2JoCe+8TMOvzxW7YaSVHQn7zY1szCbdBmooM9GzaoiBT6yKcce1CM3BuXCbx1FMn3i6YbGOapKAzTMsLLmlHVoKLuDQRVFtqqZ3T6bnMtaQLzVPeHaSSQIGuP5eNmsNLGQnOb7Zc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bwM4Kt+J; arc=none smtp.client-ip=209.85.128.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SD7f7nD+"
-Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-493a287b8c1so831935e9.0
-        for <linux-raid@vger.kernel.org>; Sat, 27 Jun 2026 04:25:46 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bwM4Kt+J"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4936e85e0deso5712495e9.2
+        for <linux-raid@vger.kernel.org>; Sun, 28 Jun 2026 07:24:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782559545; x=1783164345; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:references
-         :in-reply-to:subject:cc:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=yiEQJgz37IF5ItliBSbJ+D+0d4CD8jTL0FdscRFycZ4=;
-        b=SD7f7nD+wQOsUAQmeDgp8EX4IKMAb5zzxylhuKoqFcWw0GBYampKQldqn7beji/1If
-         qlm+vj239NH03keUtU5NZoBz1TXARkVmQLO8tih68E2zr1z0pOUXnPfmhbvb7ihTSO8F
-         sQUgpt4sWf9Z0yYMOknNY3kGVfi6yEX415MjFeyhp15t3SPZmKhLZxuBqaiuln8tOAB2
-         1GDF8PuF+ibO+Fg2mZKAgRGOw3HCKGvEuNUjWzEus1HM0IEjT22Wx0YGhIg0YpxMSo77
-         +pglX6fvUtGqF/urfYV9F1hVxxTAF3j+r41D4Kvz08luYQVQpFtLdNvKc/e5QYOsd5Zs
-         zjyQ==
+        d=gmail.com; s=20251104; t=1782656666; x=1783261466; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=4YcpIATYRtraK9yBXIVvQeJwZDE3/yv25GmcunhXyJQ=;
+        b=bwM4Kt+JbPnhy79jbc4V//TYJ2klb8QlesBRKRmhGTVsMmU0uqIeoQMjyEWk5Au5ri
+         HJTAu5e7pd2Qr3UcRvMZnsMVVCTJwa8hZhfuefmzOb1Nj0Iq/7SJ3gYrrdCz7ZHQFtwB
+         fO5jPjwOb3UrhuOs7Brgq87MRiRJ2/2G9rWqI4qcReMr8IDM+OIBHUwdeqf1Ga5KwWHm
+         ZG0etnygjmKHftF/T9fr9AEYuELHhhg00jhKp7eGG7So8fOu3o2UJJO1vqCI3fgrB/U+
+         cbh1m1R4PQo/qufBy9l8rhx/yrGI1aFnQzKXLH74RxEux1I57GX+RwuqoMAOtGJ5SqW/
+         A1WQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782559545; x=1783164345;
-        h=content-transfer-encoding:mime-version:message-id:date:references
-         :in-reply-to:subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=yiEQJgz37IF5ItliBSbJ+D+0d4CD8jTL0FdscRFycZ4=;
-        b=EJlNxdsj78hjG52dScGyh54HssZeQW1Erji13iDKtrh8TeC7adtAggVmgVbs/ekmbE
-         VJ0su/QjiCDIG+Z0RmjQ7boRB1XvZE/X/3awLCc4upaKXL4e/rJp30j8IqopbQ/pE304
-         Afuj2PjCsc4o40LrBslLVolopUhgfyt+4kzvTYg/Stq/KmMLL4FaEmnYDBbvcA7Qgc9Z
-         P5qZkPYpJu1PpmmKjXRvwsQLFUzbPch/vIESIvegMcBnfsYFVb3OtKT3dhblZYxPYrjZ
-         XZtL8WjfyKDQUigqG97kiQbn/FstCqfIP3b48J1vCnTNnYMBfcCOLNJ577WnrpG7JF2x
-         CGKg==
-X-Forwarded-Encrypted: i=1; AFNElJ/Ym9+TrdCrnw6wbgD6HtFJkKWLXKOoD8ayr4Rs/xM8vrW7i8qyuf03MsXmWgfuHwHwFbUrRXDqFy5R@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy74AIdkBG2uGujDX45GRnCb2wB6T0t33IkEOO3kjRMLAeKzD/x
-	P37/j0c/QcS/vFpxT6IHrzUysGGMFgVXywYQtYrtaXIli8cODjr662hC
-X-Gm-Gg: AfdE7cmt7WxYYDGO3JIAP7GOcLoqevsK0JuMzUGtKkNzdbHnFH7e8I0iU2975pAq5I2
-	cI6EQBnyStTCuSlYSEEiZ3ldhSUwOwXEC0MCAB0Je3xW3Q6mBjlhmA6zncSxxpZEqzTq5ol9THw
-	vkT0EF4btImXpin/wiXl0+XHQIxGaA2XDvyqvoStJ98+KZSwKb1T25xxJy0ZUCQUFqhlK/uPFvb
-	1+I5DEimjlqvz2/Z0Gy9LJpecOgNWY7UE5L/K8qaXMpcfARnhxWy8sZcm06uYpg3/z+N7LSGWnQ
-	GmeRcB2erMalFpgRUM33zKWC6hru3LZ2P9mldoPZOOhoDmALr6oMzwfVoDJpM6sQ4gsKaDDnun9
-	8xYTsiyIEKtT0Hn9/C70RLDmzZbs4pbD/kyezj1XOUSmk2VwjtVT0IB0DmYTS9Ut8A/MZW2cDX7
-	g5vXm3d4gpphRpDrDX8v5ztRzb5iEMm8IpFJDdMy56/9IyxcxVZzX8JGDo
-X-Received: by 2002:a05:600c:3552:b0:492:700b:deea with SMTP id 5b1f17b1804b1-492700bdef5mr68021295e9.13.1782559544578;
-        Sat, 27 Jun 2026 04:25:44 -0700 (PDT)
-Received: from Abds-MacBook-Air.local ([141.2.113.129])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49269071c9esm150040755e9.9.2026.06.27.04.25.42
+        d=1e100.net; s=20251104; t=1782656666; x=1783261466;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=4YcpIATYRtraK9yBXIVvQeJwZDE3/yv25GmcunhXyJQ=;
+        b=RHDf6fwnIBOIAvFPjHZmpej1EZ0Gt9uLiczz593Urf3pSz8pwkULxldlU4JRGhdT91
+         6NzM0N5hGOt4gGd3dFmPt8DrjXaj/jCoivau3KBEh5ShmqGaf7aydJKuXt8CQo6MYMpd
+         kOmZrP7LaTWxFr+H2JJmWC5dj7i29cKIenQ/E3tMGHs9ukkqdbzpjz7xPvToKTtPgsjX
+         0SD9XqB70civOq/r7NLV0NCkVXv2zhWtNhpIMFOcVIS/K4M1kKuAeg3EantkVDNjltm4
+         daQ2Z081HC36W3ickiQuUC4V6leD+GMaCMuZMID8A8ECOkQ/cBwWgVJ2Ox1IbPwzwfOU
+         Jhtw==
+X-Gm-Message-State: AOJu0YzE1yc1PdNYXH8OlDAVSxVuHL75h3Cfr2pFi2oJSzAC5T4bUr3O
+	ElwONbNVJZgjybOQDSQha+upCS9YdowsOeJzl1iCMutGNbl7Cap3ZUct
+X-Gm-Gg: AfdE7cmp/0WmiCF1K2r7BC8y7x5L8Om5URQe/Y+3nVZ7a8/Gt8PyAB12HxVcST/wpNq
+	bFLDuTnlgF5Gfu83lvrke3Lmc38btcymnjgw7j/TNhWK490lYJHTBH2hZAg8rMXhubRNFED0aDV
+	9GP4E/EbBxqm7y17Muz5U8xWw85WFf/fl9ubhP6Cb7/xrMAhbyUGAAaK1EpirA5gwfUr/rZ0ITS
+	azb0sUR6A9kyf2f9CtL7FzwYe/E4IgTfuU7eEKau/mgZmSSXBvzTPndwUBQpOUZMRrdipYYf1XR
+	KnIjtiFdaXtHp7ScnKhY5BMgXXP1VXmTOdTg+SxBflK3lv6pxOwPz5mgVWIOwp+hebJ7WhEYRu8
+	I7UPzRtoC7wVu+cIf+GBz/0zLYOFftCrVS/mFDAT+VKNa5o+LWpQVY0BZ6oYnScjyO77AOJgIXD
+	hnG7mKi5SYfNZbj/3xvySXBMyrnTfHXA4KQGFCNWhEbkqrwbfKYtk6t0oc5viZWgrsRCl2ptSnn
+	UtqQuA=
+X-Received: by 2002:a05:600c:1d0e:b0:492:2f59:4969 with SMTP id 5b1f17b1804b1-49266899d40mr209889975e9.22.1782656665773;
+        Sun, 28 Jun 2026 07:24:25 -0700 (PDT)
+Received: from yocto.rz.uni-frankfurt.de (cb-8021x-nat-134-108.net.uni-frankfurt.de. [141.2.134.108])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4728072189asm7819927f8f.30.2026.06.28.07.24.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 27 Jun 2026 04:25:43 -0700 (PDT)
+        Sun, 28 Jun 2026 07:24:24 -0700 (PDT)
 From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: Chen Cheng <chenchneg33@gmail.com>, Chen Cheng <chencheng@fnnas.com>,
- linux-raid@vger.kernel.org, yukuai@fygo.io
-Cc: linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] md: protect read mddev->recovery in md_sync_action()
-In-Reply-To: <da95c106-6416-4abd-8fef-3b71986c17f8@gmail.com>
-References: <20260627102909.141036-1-chencheng@fnnas.com>
- <m25x341cro.fsf@gmail.com>
- <da95c106-6416-4abd-8fef-3b71986c17f8@gmail.com>
-Date: Sat, 27 Jun 2026 13:25:42 +0200
-Message-ID: <m2y0g0z0ll.fsf@gmail.com>
+To: song@kernel.org,
+	yukuai@fygo.io,
+	magiclinan@didiglobal.com,
+	xiao@kernel.org,
+	axboe@kernel.dk,
+	vverma@digitalocean.com,
+	john.g.garry@oracle.com,
+	martin.petersen@oracle.com,
+	abd.masalkhi@gmail.com,
+	linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
+Subject: [PATCH v2 0/7] md/raid10: fixes, atomic write handling, and error-path cleanup
+Date: Sun, 28 Jun 2026 14:24:13 +0000
+Message-ID: <20260628142420.1051027-1-abd.masalkhi@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
+Hi,
 
-Hi Chen,
+This v2 of series contains a mix of bug fixes and cleanups for RAID10,
+along with a related atomic write fix for RAID1.
 
-On Sat, Jun 27, 2026 at 18:52 +0800, Chen Cheng wrote:
-> =E5=9C=A8 2026/6/27 18:46, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
->> On Sat, Jun 27, 2026 at 18:29 +0800, Chen Cheng wrote:
->>> From: Chen Cheng <chencheng@fnnas.com>
->>>
->>> md_sync_action() read mddev->recovery in lockless path, use READ_ONCE()
->>> instead of u64 plain read.
->>>
->> unisgned long is not always u64...
->> I can not see what it fixes, is this just to silence KCSAN? If so,
->> please say so in the commit message.
->
-> I need to find KCSAN report , I lost this one, but I think it's easy to=20
-> find locklessly path to call md_sync_action(), so. READ_ONCE is need.
->
-Thanks. Adding the KCSAN report would be helpful.
+Changes in v2:
+ - Expand the commit message to explain why the
+   allow_barrier()/wait_barrier() pair is no longer needed.
+ - Drop the early atomic write split check from raid1_write_request().
+ - Advertise the atomic write size limit via queue limits.
+ - Disable write-behind instead of failing atomic writes when the
+   BIO_MAX_VECS limit is encountered.
+ - Drop the early atomic write split check from raid10_write_request()
+   and rely on queue limits instead.
+ - Fix a compilation error (bi -> bio).
+ - Link to v1: https://lore.kernel.org/linux-raid/20260623072456.333437-1-abd.masalkhi@gmail.com/
 
->>=20
->>> Fixes: e792a4c2156a3 ("md: add new helpers for sync_action")
->>>
->>> Signed-off-by: Chen Cheng <chencheng@fnnas.com>
->>> ---
->>>   drivers/md/md.c | 2 +-
->>>   1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/md/md.c b/drivers/md/md.c
->>> index c5c50640b684..f4415c1a79d9 100644
->>> --- a/drivers/md/md.c
->>> +++ b/drivers/md/md.c
->>> @@ -5074,11 +5074,11 @@ static enum sync_action md_get_active_sync_acti=
-on(struct mddev *mddev)
->>>   	return is_recover ? ACTION_RECOVER : ACTION_IDLE;
->>>   }
->>>=20=20=20
->>>   enum sync_action md_sync_action(struct mddev *mddev)
->>>   {
->>> -	unsigned long recovery =3D mddev->recovery;
->>> +	unsigned long recovery =3D READ_ONCE(mddev->recovery);
->>>   	enum sync_action active_action;
->>>=20=20=20
->>>   	/*
->>>   	 * frozen has the highest priority, means running sync_thread will be
->>>   	 * stopped immediately, and no new sync_thread can start.
->>> --=20
->>> 2.54.0
->>>
->>=20
->
+Thanks,
+Abd-alrhman,
 
---=20
-Best Regards,
-Abd-Alrhman
+Abd-Alrhman Masalkhi (7):
+  md/raid10: fix r10bio leak in raid10_write_request() error paths
+  md/raid1: advertise atomic write limits and handle runtime constraints
+  md/raid10: consistently fail atomic writes that require splitting
+  md/raid10: remove unnecessary barrier around bio_submit_split_bioset()
+  md/raid10: replace wait loop with wait_event_idle()
+  md/raid10: simplify write request error handling
+  md/raid10: simplify read request error handling
+
+ drivers/md/raid1.c  |  36 +++++++-------
+ drivers/md/raid10.c | 118 +++++++++++++++++++++-----------------------
+ 2 files changed, 74 insertions(+), 80 deletions(-)
+
+-- 
+2.43.0
+
