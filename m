@@ -1,158 +1,111 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F92D3E9C06
-	for <linux-raid@vger.kernel.org>; Tue, 30 Jun 2026 10:18:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F85C126C03;
+	Wed,  1 Jul 2026 00:49:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782814709; cv=none; b=TN3MipC4Nfo07lN/sPGwAeus89sM2Ui0FCOT94h8ImqbB5BN0NCDiMDCIFOVnESn69K/9tr6J5z7wD7IN2RgXrWDAvHdgsZQdYDOaRub/n2QytPnLjyKwgMsJudd7MUMuBE424A5bewNgBVrb8R2xGzwL/ubTn1lbyS3u8Xmlqc=
+	t=1782866966; cv=none; b=Tk+nKMWccqaz4AEgoNrnajEjEUl+Qw1bm+c556MQIgikNNreFi24X8Km3iT/Ad3kgu+/59Oz1fTl14YmINpeojrKz6CvET+z1FrwKICUpA/v8J8d4nIIPVyZOqg83+zENb9T7wfIGwV//TJ6bmnCFb/YkIHO5Y5MH0eXAyzR7I0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782814709; c=relaxed/simple;
-	bh=onsgDQRCkIiz0hqAyXj0YjqySbdLU6As4GcAmSWoYs8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=PchmT1jhL4ygOl81tGZL9ipSWR3klieb6ZXiygL8wu/CrnbJNNRAfaY9lqlOy4pmJyYKZNK+MNmL0xflVjhgKt6TAZnJfdyhdexnVZ5olwsdOXqqqlrDyAtzU0oOijn4dt1Kt+3BDzdQ2tm2kN2lyP2/lagxYfKEdtEn4UQhuZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZtQKFXvH; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782866966; c=relaxed/simple;
+	bh=lWVZ7Tul/itbRkqJV4EpvVyTf8+7BsWi8hDgaNWdOyU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qffCy7UK1ZGNLsFjKCzig5ASKNZ36aG9gHpaYsSkITE6EdZVdjEQ3KyY8dTm4eskQ8B6URPR5y1e4eu2LzBscLxisHgILhFv3Xd4cmY+P2APDPgy2SBK87Dt8zDyYox+o5bCx61OhbAQ2OWqIQVMCJO94OXUCPEOfbwiS536a9c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=DA9tEczx; arc=none smtp.client-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZtQKFXvH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67B191F000E9;
-	Tue, 30 Jun 2026 10:18:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782814701;
-	bh=uZKwclh9eGIRwu4ZAzlvr9DyOAdYMjGqgom1HCSH9Os=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZtQKFXvHXRPZ6/m3nF9oa1W262H4HXYtGhZEfthaMIhdk/wa/+euTpAr6oTPAKtoV
-	 6Di6ElxCTiwnvKPv4qlRMdHKGgO/g30ggXjdoWQ3g1zFhzyqQPIJxz68Y1gOS5Vtjn
-	 i4ietl1NW6CKan7M78t5pgYQ9j4TpIcv4qfuMNOx9W12RC/8paOtQkeBgX3Hojj9Vf
-	 cLfDOTcULXT0Dn6CMvYTkiGZOC+pagiAlIq5ZEUw+ael98QC5UGHrSaOhPvJRhkjoE
-	 HwhUvJX0zOD94OPYFKppijOA9a8cpSE1qv3b/ljtXxlPAvvEodjVBBCBseQ8Bm5O1I
-	 3qtvQYPiy2bSw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] md: avoid modifying spares while the array is not
- suspended
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260630075640.1081634-1-abd.masalkhi@gmail.com>
-References: <20260630075640.1081634-1-abd.masalkhi@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 30 Jun 2026 10:18:20 +0000
-Message-Id: <20260630101821.67B191F000E9@smtp.kernel.org>
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="DA9tEczx"
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 5EC4640E0140;
+	Wed,  1 Jul 2026 00:49:23 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id y6TGv14w66I5; Wed,  1 Jul 2026 00:49:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1782866953; bh=SyThy7tS7xMbhdArT/LoJGc0WPj3c7HgQ0ERzvqr1u0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=DA9tEczx//ACvseSssAsLo5xdkpuCVtE+oVqM8E5otyjluxK65w8X1aJ+4BpGPAfo
+	 aKWTEPuB0/zgADeXo/t6nDXNAuBxBq4zXb2VDl0BJoqHKZzIhk26g4Ssf6/9XHJ2DG
+	 eYLVQBP6iSHqzc+8uSdgoOmhQ7/yhcN3D2GX4MRZWdIcl29hVwwoVkYP86e8weHU6P
+	 YA1FptQ+z2XSAu9vdO4X4wr1U0nRg0kBKsVv078+BxpWWzxLUvXDZIe0Rpr+oFjtkp
+	 xVuZ64ugLMq140NjqwL3hcdLa+5pJSoW72m4DZBa+yhP+lK/0bzggYRcGLFNo6mKua
+	 ifeA1TP6bVtqiHbEuaF+PpTnRw9RQRGoDMBy822AStoGYsFvmcf0kDYofhMNYdle9r
+	 BOaG/TM/Se288sTJh7k3PrxKOJNR8DWyS9590vsG6VHULiqSCSggmHUoMPmaXUqvTO
+	 d4BgmNYXt5ioZPCnFdg7RmrdbLNeEPiWKqsoCZyRk2C3oM/7mJfr4yEgI11sRvcyag
+	 Yh3S1vO23oGvGTQpm0tTjCvK0uxXBeKjaZzsWbuZ6pavT6RqIgsRH7EbrDPUOBQXyC
+	 VJg6wkTKwV+0BOZpGV5T7g5YIQ1s5ctzyr996308SF0U1m/Mf7/cJhgytsg9xuN4Cn
+	 kTA3eG5QYmMUPej/kKc/i7jc=
+Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::1a])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id CA69E40E00BA;
+	Wed,  1 Jul 2026 00:49:07 +0000 (UTC)
+Date: Tue, 30 Jun 2026 17:49:04 -0700
+From: Borislav Petkov <bp@alien8.de>
+To: sashiko-reviews@lists.linux.dev
+Cc: Eric Biggers <ebiggers@kernel.org>, linux-raid@vger.kernel.org,
+	yukuai@fygo.io, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/8] x86/fpu: Check for missing AVX and AVX-512 xstate
+ bits
+Message-ID: <20260701004904.GBakRkAEzs5lGvERSZ@fat_crate.local>
+References: <20260626043731.319287-1-ebiggers@kernel.org>
+ <20260626043731.319287-2-ebiggers@kernel.org>
+ <20260626050038.2AD661F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260626050038.2AD661F000E9@smtp.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Fri, Jun 26, 2026 at 05:00:37AM +0000, sashiko-bot@kernel.org wrote:
+> [Severity: Critical]
+> This is a pre-existing issue, but Memory Protection Keys (PKU) isolation
+> can be bypassed because we don't verify X86_FEATURE_PKU against the
+> presence of XFEATURE_PKRU in xstate here.
+> 
+> If a hypervisor reports X86_FEATURE_PKU in CPUID but masks out the
+> XFEATURE_PKRU xstate component, the kernel's setup_pku() enables CR4.PKE
+> and forces X86_FEATURE_OSPKE.  Because X86_FEATURE_OSPKE is artificially
+> forced, the feature is not cleared.
+> 
+> CR4.PKE=1 permits userspace to use WRPKRU, but because XCR0.PKRU=0,
+> xsaves/xrstors silently ignore the PKRU register during task context
+> switches, leading to state leakage across tasks.
+> 
+> Should we also validate PKU against missing xstate components in this
+> function to prevent isolation bypass?
 
-New issues:
-- [High] The patch prevents the recovery thread from starting or resuming f=
-or existing rebuilding spares, silently abandoning recovery and leaving the=
- array permanently degraded.
+I *think* Sashiko means here our preexisting fpu__init_system_xstate() here
+but I'm not sure...
 
-Pre-existing issues:
-- [High] The patch addresses a TOCTOU race for `state_store` but misses oth=
-er vulnerable paths like `slot_store` and cluster updates, which still call=
- `remove_and_add_spares()` without array suspension.
---
+> [Severity: High]
+> Does this logic get bypassed if XSAVE or FPU support is missing?
+> 
+> Earlier in fpu__init_system_xstate(), there are early returns if
+> X86_FEATURE_FPU or X86_FEATURE_XSAVE are missing:
+> 
+> 	if (!boot_cpu_has(X86_FEATURE_XSAVE)) {
+> 		pr_info("x86/fpu: x87 FPU will use %s\n",
+> 			boot_cpu_has(X86_FEATURE_FXSR) ? "FXSAVE" : "FSAVE");
+> 		return;
+> 	}
+> 
+> If a hypervisor natively enumerates AVX=1 but XSAVE=0 (such as QEMU
+> with -cpu host,-xsave), check_cpufeature_deps() only warns about unmet
 
-commit 16cf64f20d25bc671dc52422ec0a44672674e524
-Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+Yah, we don't care. We won't support non-sensical guest configs.
 
-md: avoid modifying spares while the array is not suspended
+-- 
+Regards/Gruss,
+    Boris.
 
-This commit ensures that remove_spares() and remove_and_add_spares() are
-only called after the array has been suspended. This prevents a race
-condition where normal I/O could trigger a NULL pointer dereference when
-rdevs are removed or replaced concurrently.
-
-Closes: https://sashiko.dev/#/patchset/20260628142420.1051027-1-abd.masalkh=
-i@gmail.com?part=3D3
-
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index d1465bcd86c81..f555eb5aca5d8 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -10151,7 +10154,11 @@ static bool md_choose_sync_action(struct mddev *=
-mddev, int *spares)
->  	 * also removed and re-added, to allow the personality to fail the
->  	 * re-add.
->  	 */
-> -	*spares =3D remove_and_add_spares(mddev, NULL);
-> +	if (array_suspended)
-> +		*spares =3D remove_and_add_spares(mddev, NULL);
-> +	else
-> +		*spares =3D 0;
-> +
-
-[Severity: High]
-Does this else branch prevent the recovery thread from starting or resuming
-for existing rebuilding spares?
-
-In md_start_sync(), suspend is determined by checking
-md_spares_need_change(mddev). For an existing recovering spare receiving
-normal I/O (where nr_pending > 0), both rdev_removeable() and
-rdev_addable() can evaluate to false. This causes md_spares_need_change()
-to return false, leaving suspend as false.
-
-When md_choose_sync_action() is called with array_suspended =3D=3D false, t=
-his
-new else branch forces *spares =3D 0. By completely bypassing the counting =
-of
-existing recovering spares, md_choose_sync_action() will return false and
-skip starting the sync thread.
-
-Since nr_pending dropping to zero on a non-faulty spare doesn't trigger a
-new MD_RECOVERY_NEEDED event, could this silently abandon recovery and
-leave the array permanently degraded?
-
-[Severity: High]
-This is a pre-existing issue, but does restricting remove_and_add_spares()
-calls to suspended arrays in md_choose_sync_action() leave other
-vulnerable paths exposed?
-
-The commit addresses a TOCTOU race by ensuring remove_and_add_spares() is
-only called when the array is suspended, preventing concurrent I/O from
-encountering a cleared replacement pointer.
-
-However, slot_store() can still call remove_and_add_spares() without an
-array suspension when a user writes "none" (slot =3D=3D -1):
-
-drivers/md/md.c:slot_store() {
-    ...
-    clear_bit(Blocked, &rdev->flags);
-    remove_and_add_spares(rdev->mddev, rdev);
-    if (rdev->raid_disk >=3D 0)
-        return -EBUSY;
-    ...
-}
-
-Similarly, the MD cluster component updates the array configuration in
-check_sb_changes() by calling remove_and_add_spares() while the array is
-not suspended.
-
-Could normal I/O still increment nr_pending on a replacement drive just
-before remove_spares() removes the faulty drive and clears the replacement
-pointer in these paths, reproducing the exact TOCTOU crash this patch
-aims to fix?
-
-> @@ -10196,11 +10203,12 @@ static void md_start_sync(struct work_struct *w=
-s)
->  		 * As we only add devices that are already in-sync, we can
->  		 * activate the spares immediately.
->  		 */
-> -		remove_and_add_spares(mddev, NULL);
-> +		if (suspend)
-> +			remove_and_add_spares(mddev, NULL);
->  		goto not_running;
->  	}
-> =20
-> -	if (!md_choose_sync_action(mddev, &spares))
-> +	if (!md_choose_sync_action(mddev, &spares, suspend))
->  		goto not_running;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260630075640.1081=
-634-1-abd.masalkhi@gmail.com?part=3D1
+https://people.kernel.org/tglx/notes-about-netiquette
