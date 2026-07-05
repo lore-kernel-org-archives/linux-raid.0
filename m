@@ -1,134 +1,162 @@
-Received: from va-2-45.ptr.blmpb.com (va-2-45.ptr.blmpb.com [209.127.231.45])
+Received: from va-2-19.ptr.blmpb.com (va-2-19.ptr.blmpb.com [209.127.231.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A0FF3EA66
-	for <linux-raid@vger.kernel.org>; Sun,  5 Jul 2026 07:43:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 145F525B085
+	for <linux-raid@vger.kernel.org>; Sun,  5 Jul 2026 07:50:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783237439; cv=none; b=I569TpBWjR/axZjvWk8FXVH8AehedVFBNZOcfyyFLOi8yM8Ab26H6/XtdxEaEf/mLFR0aR6E0eFIuwMq8zkarBmAxDAUix8LB8gh6rI2CqUJvyzmRBIxAzAqK3w4RDPlEj7OVF+BKDAFdBJb4bMKM7aMuGVexMbCmBS9W1U9+M0=
+	t=1783237851; cv=none; b=rb6sOowrvn+XcO/XFR4xO01mDBE5Afufr8oaShLj0AvZOnuQIlhXH9ce502h29mTiSDz2jTbJKegU92y1ERMedlzhctHvyLxZsDt1IeVupvQGmvUXbqEIFF5N2g0G6oVJwfdWnA8tqfAf9h7f0Ko2Hybt0cEriV8MrrohhV5WQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783237439; c=relaxed/simple;
-	bh=rN3dPMR1JOuGrDzajdXQW25mKTmrGL7wUlUXLWNhazY=;
-	h=From:Date:Content-Type:To:Subject:Message-Id:Mime-Version:Cc:
-	 In-Reply-To:References; b=D83t8Sae+6F6SD3dtIh6mLskKChnhQNUKj59qXPrViXjeO9iawznXErwatO09mWWFLsWQQgWIxTpwJ8SJGQ8lyMLyM4z8yfeFPQX74rqSxOLLzEnhJJAkAXtgIZRk/DqUf7JRA32RY4tilZ9DBPXIle17cCgxKpoye3N7hP4aeg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=PcidMJlj; arc=none smtp.client-ip=209.127.231.45
+	s=arc-20240116; t=1783237851; c=relaxed/simple;
+	bh=MS/9QAPsxjBt53EYN8SHvaiV4+JNabOmtvjpeFWf9to=;
+	h=Date:From:Subject:Message-Id:In-Reply-To:To:Cc:Mime-Version:
+	 Content-Type:References; b=Ktgd6n2D5xswQj6j2D/2p6lOW6QPP7G2BpBgWa9vr2uUqLYfbV9UfJrB6nhfLSiiGM51WqIEMEu+cIV5tyl945CFRd+nHkQzS69ZZW1ZP/Seka6JdUq92U/7aZMgtZV+OzxSjH3mqEKGeliKVO6PbNP6tp1gs4tTCFAA0FEx3cU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=NP9BxlJL; arc=none smtp.client-ip=209.127.231.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="PcidMJlj"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="NP9BxlJL"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1783237424;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1783237731;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=ByyTgFPvFnt0YRsAseTZxMUjofdmbcKTLGTH5726mDg=;
- b=PcidMJlj/UAddQYv+4w0PaM+Q10WflrwVlR8rnowapDGtSMv8IQP3q0soREurXtpWHhnkc
- wMLOiaPKBUHyYcr6bxQfULu3qkuySKZPLyMIV6NgQUFFd121FvJY+fWam0t53SS8nl/LNu
- n9HMRA1DyjxOi93QLJxYWmfq+9gaK3b931HlAqLz9k5dQspQMJrkOTVrgf0lsgKIxKPXTh
- xixefblyeAeMMnMg17m1qbMdw8Xf/XxWDqv078E8uwUo8TMjYwZ72ZlU93rsVysSo6A+WT
- 6ncrC0HE+tT0GAhMxN3rd3mAGi2znqtNEbVhhb9Zu1pD5Tx7n+K54HDpbuXAaA==
-From: "yu kuai" <yukuai@fygo.io>
-Date: Sun, 5 Jul 2026 15:43:38 +0800
-Content-Type: text/plain; charset=UTF-8
-X-Lms-Return-Path: <lba+26a4a0b2f+6b009c+vger.kernel.org+yukuai@fygo.io>
+ bh=1m5Ij7cUm3aNg4SiY7SOw7EkjbLYYJT81g6Re6w0q/A=;
+ b=NP9BxlJLUL/Y5LJymCESEsKknC7cEldNpDHw8JK+kczm/TM9AzuwzvQVbJEu4sJsmDuPwm
+ fQHd7SAX86szIcWAeXMp3Cb7cb6LP+UUQjQMWxizlXuCF7f2ChD0mESfVLqyvhiVy8Tzp7
+ szBahwZejsnOQJ51SD7dWmro31UBzT/k5n/3GOLPlj8j9E3aWFvD5UPhgSUNnECfWzS9v9
+ uboDCBvvctv7t10seX/D++x+/kkMZJu3fDQ6QBZwe7KN/+L/O4+Y/fSO+9tfv4KGUOsbkv
+ jdkJEfYkEr05zfD9aE8IVOJvlRFQflfDGB52VX1/cQXDN7wE9hJaCvVLb3M9PQ==
 Reply-To: yukuai@fygo.io
+Date: Sun, 5 Jul 2026 15:48:46 +0800
+Received: from [192.168.1.104] ([39.182.0.144]) by smtp.larksuite.com with ESMTPS; Sun, 05 Jul 2026 07:48:50 +0000
+User-Agent: Mozilla Thunderbird
+X-Original-From: yu kuai <yukuai@fygo.io>
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH v6 3/3] md/raid10: free r10bio before ending master_bio in raid_end_bio_io() and raid_end_discard_bio()
+Message-Id: <fb8b048b-3912-44e8-9f56-a25989cd80ee@fygo.io>
+In-Reply-To: <20260623123840.2521340-4-chencheng@fnnas.com>
 To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>, 
 	<yukuai@fygo.io>
-Subject: Re: [PATCH v6 1/3] md: suspend array when sync_action=reshape
-Message-Id: <9fbba621-964d-4166-93f8-9fc01d56d698@fygo.io>
-User-Agent: Mozilla Thunderbird
+Cc: <linux-kernel@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Received: from [192.168.1.104] ([39.182.0.144]) by smtp.larksuite.com with ESMTPS; Sun, 05 Jul 2026 07:43:42 +0000
-Cc: <linux-kernel@vger.kernel.org>
-X-Original-From: yu kuai <yukuai@fygo.io>
-In-Reply-To: <20260623123840.2521340-2-chencheng@fnnas.com>
-References: <20260623123840.2521340-1-chencheng@fnnas.com> <20260623123840.2521340-2-chencheng@fnnas.com>
-Content-Transfer-Encoding: quoted-printable
+X-Lms-Return-Path: <lba+26a4a0c63+5ce2ad+vger.kernel.org+yukuai@fygo.io>
+Content-Type: text/plain; charset=UTF-8
+References: <20260623123840.2521340-1-chencheng@fnnas.com> <20260623123840.2521340-4-chencheng@fnnas.com>
 
-Hi=EF=BC=8C
+Hi,
 
 =E5=9C=A8 2026/6/23 20:38, Chen Cheng =E5=86=99=E9=81=93:
 > From: Chen Cheng <chencheng@fnnas.com>
 >
-> raid10 needs to resize/swap r10bio_pool when reshape changes
-> raid_disks, and, don't let new requests keep allocating r10bio
-> objects from the old pool while that transition is in progress.
+> origin flow:
 >
-> suspend and lock array before mddev_start_reshape(), and resume
-> it on exit.
+>        bio_endio(master_bio);   /* may drop active_io to zero */
+>        allow_barrier(conf);
+>        free_r10bio(r10_bio);    /* reads conf->geo, returns to pool */
 >
-> Other sync_action ops are unchanged.
+> one scenario is:
+>
+>    CPU A (softirq, raid_end_bio_io)         CPU B (action_store) --> resh=
+ape
+>    =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D         =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>    bio_endio(master_bio)
+>      md_end_clone_io
+>        percpu_ref_put -> 0
+>                                             wait_event wakeup, and,
+>                                             	mddev_suspend return
+>                                             raid10_start_reshape:
+>                                               setup_geo(&conf->geo, new)
+>                                               ...
+>                                               mempool_destroy(old_pool)
+>                                               conf->r10bio_pool =3D new_p=
+ool
+>    allow_barrier(conf)
+>    free_r10bio(r10_bio)
+>      put_all_bios:
+>        for (i=3D0; i<conf->geo.raid_disks; i++)
+>            =3D=3D> old obj, new geo, OOB
+>      mempool_free(r10_bio, conf->r10bio_pool)
+>            =3D=3D> old-geometry obj freed into new pool
+>
+> so .. fix by reorder the flow:
+>
+> 	free_r10bio(r10_bio)
+> 	allow_barrier(conf)
+> 	bio_endio(master_io)
+>
+> raid_end_discard_bio() is exactly the same.
 >
 > Signed-off-by: Chen Cheng <chencheng@fnnas.com>
 > ---
->   drivers/md/md.c | 17 ++++++++++++-----
->   1 file changed, 12 insertions(+), 5 deletions(-)
+>   drivers/md/raid10.c | 17 ++++++++++-------
+>   1 file changed, 10 insertions(+), 7 deletions(-)
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 096bb64e87bd..1377c407614c 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5261,25 +5261,29 @@ action_store(struct mddev *mddev, const char *pag=
-e, size_t len)
->   	enum sync_action action;
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index d740744a9746..e44a9b6e95c7 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -330,24 +330,25 @@ static void reschedule_retry(struct r10bio *r10_bio=
+)
+>    */
+>   static void raid_end_bio_io(struct r10bio *r10_bio)
+>   {
+>   	struct bio *bio =3D r10_bio->master_bio;
+>   	struct r10conf *conf =3D r10_bio->mddev->private;
+> +	unsigned long state =3D r10_bio->state;
 >  =20
->   	if (!mddev->pers || !mddev->pers->sync_request)
->   		return -EINVAL;
+> -	if (!test_and_set_bit(R10BIO_Returned, &r10_bio->state)) {
+> -		if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
+> -			bio->bi_status =3D BLK_STS_IOERR;
+> -		bio_endio(bio);
+> -	}
+> +	free_r10bio(r10_bio);
 >  =20
-> +	action =3D md_sync_action_by_name(page);
->   retry:
->   	if (work_busy(&mddev->sync_work))
->   		flush_work(&mddev->sync_work);
+>   	/*
+>   	 * Wake up any possible resync thread that waits for the device
+>   	 * to go idle.
+>   	 */
+>   	allow_barrier(conf);
 >  =20
-> -	ret =3D mddev_lock(mddev);
-> +	ret =3D (action =3D=3D ACTION_RESHAPE) ?
-> +		mddev_suspend_and_lock(mddev) :
-> +		mddev_lock(mddev);
+> -	free_r10bio(r10_bio);
+> +	if (!test_and_set_bit(R10BIO_Returned, &state)) {
+> +		if (!test_bit(R10BIO_Uptodate, &state))
+> +			bio->bi_status =3D BLK_STS_IOERR;
+> +		bio_endio(bio);
+> +	}
 
-I already suggestted in previous verions that suspend for retry is too
-heavy, please suspend before retry.
+Why is this moved to the end? I feel it's not necessary.
 
->   	if (ret)
->   		return ret;
->  =20
->   	if (work_busy(&mddev->sync_work)) {
-> -		mddev_unlock(mddev);
-> +		if (action =3D=3D ACTION_RESHAPE)
-> +			mddev_unlock_and_resume(mddev);
-> +		else
-> +			mddev_unlock(mddev);
->   		goto retry;
->   	}
->  =20
-> -	action =3D md_sync_action_by_name(page);
-> -
->   	/* TODO: mdadm rely on "idle" to start sync_thread. */
->   	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
->   		switch (action) {
->   		case ACTION_FROZEN:
->   			md_frozen_sync_thread(mddev);
-> @@ -5344,11 +5348,14 @@ action_store(struct mddev *mddev, const char *pag=
-e, size_t len)
->   	md_wakeup_thread(mddev->thread);
->   	sysfs_notify_dirent_safe(mddev->sysfs_action);
->   	ret =3D len;
->  =20
->   out:
-> -	mddev_unlock(mddev);
-> +	if (action =3D=3D ACTION_RESHAPE)
-> +		mddev_unlock_and_resume(mddev);
-> +	else
-> +		mddev_unlock(mddev);
->   	return ret;
 >   }
 >  =20
->   static struct md_sysfs_entry md_scan_mode =3D
->   __ATTR_PREALLOC(sync_action, S_IRUGO|S_IWUSR, action_show, action_store=
-);
+>   /*
+>    * Update disk head position estimator based on IRQ completion info.
+>    */
+> @@ -1580,13 +1581,15 @@ static void raid_end_discard_bio(struct r10bio *r=
+10bio)
+>   		if (!test_bit(R10BIO_Discard, &r10bio->state)) {
+>   			first_r10bio =3D (struct r10bio *)r10bio->master_bio;
+>   			free_r10bio(r10bio);
+>   			r10bio =3D first_r10bio;
+>   		} else {
+> +			struct bio *master_bio =3D r10bio->master_bio;
+> +
+>   			md_write_end(r10bio->mddev);
+> -			bio_endio(r10bio->master_bio);
+>   			free_r10bio(r10bio);
+> +			bio_endio(master_bio);
+>   			break;
+>   		}
+>   	}
+>   }
+>  =20
 
 --=20
 Thanks,
