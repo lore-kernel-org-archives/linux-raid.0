@@ -1,162 +1,115 @@
-Received: from va-2-19.ptr.blmpb.com (va-2-19.ptr.blmpb.com [209.127.231.19])
+Received: from va-2-48.ptr.blmpb.com (va-2-48.ptr.blmpb.com [209.127.231.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 145F525B085
-	for <linux-raid@vger.kernel.org>; Sun,  5 Jul 2026 07:50:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B40E7372EEA
+	for <linux-raid@vger.kernel.org>; Sun,  5 Jul 2026 08:50:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783237851; cv=none; b=rb6sOowrvn+XcO/XFR4xO01mDBE5Afufr8oaShLj0AvZOnuQIlhXH9ce502h29mTiSDz2jTbJKegU92y1ERMedlzhctHvyLxZsDt1IeVupvQGmvUXbqEIFF5N2g0G6oVJwfdWnA8tqfAf9h7f0Ko2Hybt0cEriV8MrrohhV5WQs=
+	t=1783241443; cv=none; b=Ap/jMP21G8FF4uwDMHw07qni8OMdjmgsWfAVISOAFHc8kZtcMke2yNUTHM4pYsQc8w+yvo/1XBdnAbF4T1g68412CAFhLGfsliOrUDR/mhy39rWuJ/JQ6IgiQCaXSc9h66/+WJ1itohmE0xdsiLM/mWvrxsWRSOw8IhwzOfi8IA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783237851; c=relaxed/simple;
-	bh=MS/9QAPsxjBt53EYN8SHvaiV4+JNabOmtvjpeFWf9to=;
-	h=Date:From:Subject:Message-Id:In-Reply-To:To:Cc:Mime-Version:
-	 Content-Type:References; b=Ktgd6n2D5xswQj6j2D/2p6lOW6QPP7G2BpBgWa9vr2uUqLYfbV9UfJrB6nhfLSiiGM51WqIEMEu+cIV5tyl945CFRd+nHkQzS69ZZW1ZP/Seka6JdUq92U/7aZMgtZV+OzxSjH3mqEKGeliKVO6PbNP6tp1gs4tTCFAA0FEx3cU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=NP9BxlJL; arc=none smtp.client-ip=209.127.231.19
+	s=arc-20240116; t=1783241443; c=relaxed/simple;
+	bh=WlEMdGtzcKNnwpn8PU29AUDF5RIqrSCV102VCqlrTk8=;
+	h=To:From:Message-Id:Mime-Version:Content-Type:Subject:Date:
+	 References:In-Reply-To:Cc; b=V3u0/P0Gyak3OzNQQXNjua/IWdIy15B2EH9dNFrfGDnC6JIrzHFfWDPaDzOjznbATW40H0eR+cYoNa1f1Y4bFOBYvvFRZlRVyJy0fRmF/dqBEvNarYe1Ux6lnIVw7JHQVEjz/e4qpplBTtqZ+MHO4PesFA34pwPWHC4YSnu0h38=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=l+vdLFmh; arc=none smtp.client-ip=209.127.231.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="NP9BxlJL"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="l+vdLFmh"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1783237731;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1783241433;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=1m5Ij7cUm3aNg4SiY7SOw7EkjbLYYJT81g6Re6w0q/A=;
- b=NP9BxlJLUL/Y5LJymCESEsKknC7cEldNpDHw8JK+kczm/TM9AzuwzvQVbJEu4sJsmDuPwm
- fQHd7SAX86szIcWAeXMp3Cb7cb6LP+UUQjQMWxizlXuCF7f2ChD0mESfVLqyvhiVy8Tzp7
- szBahwZejsnOQJ51SD7dWmro31UBzT/k5n/3GOLPlj8j9E3aWFvD5UPhgSUNnECfWzS9v9
- uboDCBvvctv7t10seX/D++x+/kkMZJu3fDQ6QBZwe7KN/+L/O4+Y/fSO+9tfv4KGUOsbkv
- jdkJEfYkEr05zfD9aE8IVOJvlRFQflfDGB52VX1/cQXDN7wE9hJaCvVLb3M9PQ==
-Reply-To: yukuai@fygo.io
-Date: Sun, 5 Jul 2026 15:48:46 +0800
-Received: from [192.168.1.104] ([39.182.0.144]) by smtp.larksuite.com with ESMTPS; Sun, 05 Jul 2026 07:48:50 +0000
-User-Agent: Mozilla Thunderbird
-X-Original-From: yu kuai <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH v6 3/3] md/raid10: free r10bio before ending master_bio in raid_end_bio_io() and raid_end_discard_bio()
-Message-Id: <fb8b048b-3912-44e8-9f56-a25989cd80ee@fygo.io>
-In-Reply-To: <20260623123840.2521340-4-chencheng@fnnas.com>
+ bh=xyqwMNPPLy0pTxzfWs6GBSLStx6XvtgEnVs9jNLizi4=;
+ b=l+vdLFmh0bB5O2uVfXx00ttEYd2N6rpjyX+NGnj4OJuu7ochCL+0NVAEDmgad51B2scbnJ
+ W8hHWalKdQByY79UfhNEaTDO82y7RmkMODF2AvEDJhdQ1HXuCGv1o52DrD8dG3fm5WwjeV
+ bjNMiKgp7c/4x0p+OcvAAdiOsSknKyBnvPX/qtW7b6VG297BFtNgVdnM0Rbuqw3ENmHZRg
+ uUd+uGkV/9CHV8QyvSRdq2HAvCXKpdm64hl7GrC9xIW1yZi1Xg6isMg+3vB+uQ8S04aGfu
+ j4qDZMbnAYP9IcCiLU4E19WpB77FU5lZgfI8G0+88wPtLg+E3VcQvrYDFbqZUw==
 To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>, 
 	<yukuai@fygo.io>
-Cc: <linux-kernel@vger.kernel.org>
-Content-Transfer-Encoding: quoted-printable
+From: "yu kuai" <yukuai@fygo.io>
+Message-Id: <6204807c-3da4-4eb6-96f0-066f66030d33@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Lms-Return-Path: <lba+26a4a0c63+5ce2ad+vger.kernel.org+yukuai@fygo.io>
 Content-Type: text/plain; charset=UTF-8
-References: <20260623123840.2521340-1-chencheng@fnnas.com> <20260623123840.2521340-4-chencheng@fnnas.com>
+User-Agent: Mozilla Thunderbird
+Reply-To: yukuai@fygo.io
+Subject: Re: [PATCH v2] md/raid5: protect bitmap batch counters aka seq_flush/seq_write consistency
+Date: Sun, 5 Jul 2026 16:50:28 +0800
+References: <20260617142839.882378-1-chencheng@fnnas.com>
+Received: from [192.168.1.104] ([39.182.0.144]) by smtp.larksuite.com with ESMTPS; Sun, 05 Jul 2026 08:50:32 +0000
+In-Reply-To: <20260617142839.882378-1-chencheng@fnnas.com>
+Content-Transfer-Encoding: quoted-printable
+Cc: <chenchneg33@gmail.com>, <linux-kernel@vger.kernel.org>
+X-Original-From: yu kuai <yukuai@fygo.io>
+X-Lms-Return-Path: <lba+26a4a1ad9+19915b+vger.kernel.org+yukuai@fygo.io>
 
-Hi,
+=E5=9C=A8 2026/6/17 22:28, Chen Cheng =E5=86=99=E9=81=93:
 
-=E5=9C=A8 2026/6/23 20:38, Chen Cheng =E5=86=99=E9=81=93:
-> From: Chen Cheng <chencheng@fnnas.com>
+> From: Chen Cheng<chencheng@fnnas.com>
 >
-> origin flow:
+> kcsan detect race :
+> - raid5d() closes the current bitmap batch by updating
+> 	conf->seq_flush under conf->device_lock.
+> - __add_stripe_bio() read conf->seq_flush without that
+> 	lock when assigning sh->bm_seq.
 >
->        bio_endio(master_bio);   /* may drop active_io to zero */
->        allow_barrier(conf);
->        free_r10bio(r10_bio);    /* reads conf->geo, returns to pool */
+> so, protect seq_flush/seq_write consistency for multiple CPUs by
+> READ_ONCE()/WRITE_ONCE() under the path without held device_lock.
 >
-> one scenario is:
+> re-explain the stripe batch sequence number update flow:
+> 1. sh->bm_seq declare which batch number the stripe belongs to
+>     when perform bitmap-related write.
+> 	=3D=3D> bm_seq =3D seq_flush+1
 >
->    CPU A (softirq, raid_end_bio_io)         CPU B (action_store) --> resh=
-ape
->    =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D         =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->    bio_endio(master_bio)
->      md_end_clone_io
->        percpu_ref_put -> 0
->                                             wait_event wakeup, and,
->                                             	mddev_suspend return
->                                             raid10_start_reshape:
->                                               setup_geo(&conf->geo, new)
->                                               ...
->                                               mempool_destroy(old_pool)
->                                               conf->r10bio_pool =3D new_p=
-ool
->    allow_barrier(conf)
->    free_r10bio(r10_bio)
->      put_all_bios:
->        for (i=3D0; i<conf->geo.raid_disks; i++)
->            =3D=3D> old obj, new geo, OOB
->      mempool_free(r10_bio, conf->r10bio_pool)
->            =3D=3D> old-geometry obj freed into new pool
+> 2. stripe be handled,
+> 	* if sh->bm_seq - conf->seq_write > 0, means the
+> 	  batch stripes **newer than** the last written
+> 	  batch, it cannot proceed yet, queued on bitmap_list.
+> 	* otherwise , has already proceed.
 >
-> so .. fix by reorder the flow:
+> 3. raid5d() `++seq_flush` to closes the current batch, means
+> 	* no more stripes join that old batch
+> 	* just-closed batch ready to write-out to disk
 >
-> 	free_r10bio(r10_bio)
-> 	allow_barrier(conf)
-> 	bio_endio(master_io)
+> 4. raid5d() calls bitmap hooks unplug() or writeout, then,
+>     `++seq_write` to the same as bm_seq.
 >
-> raid_end_discard_bio() is exactly the same.
+> - seq_flush - for producer, to close batches.
+> - seq_write - for consumer, the checkpoint number.
 >
-> Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+> the report:
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> BUG: KCSAN: data-race in __add_stripe_bio / raid5d
+>
+> write to 0xffff88ba5625d470 of 4 bytes by task 82401 on cpu 0:
+>   raid5d+0x1d9/0xba0
+>   [.....]
+>
+> read to 0xffff88ba5625d470 of 4 bytes by task 82421 on cpu 8:
+>   __add_stripe_bio+0x332/0x400
+>   raid5_make_request+0x6ac/0x2930
+>   md_handle_request+0x4a2/0xa40
+>   md_submit_bio+0x109/0x1a0
+>   __submit_bio+0x2ec/0x390
+>   [.....]
+>
+> v1 -> v2:
+> - remove WRITE_ONCE(conf->seq_write) in held device_lock path.
+> - remove READ_ONCE(conf->seq_flush) in held device_lock path.
+>
+> Signed-off-by: Chen Cheng<chencheng@fnnas.com>
 > ---
->   drivers/md/raid10.c | 17 ++++++++++-------
->   1 file changed, 10 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index d740744a9746..e44a9b6e95c7 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -330,24 +330,25 @@ static void reschedule_retry(struct r10bio *r10_bio=
-)
->    */
->   static void raid_end_bio_io(struct r10bio *r10_bio)
->   {
->   	struct bio *bio =3D r10_bio->master_bio;
->   	struct r10conf *conf =3D r10_bio->mddev->private;
-> +	unsigned long state =3D r10_bio->state;
->  =20
-> -	if (!test_and_set_bit(R10BIO_Returned, &r10_bio->state)) {
-> -		if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
-> -			bio->bi_status =3D BLK_STS_IOERR;
-> -		bio_endio(bio);
-> -	}
-> +	free_r10bio(r10_bio);
->  =20
->   	/*
->   	 * Wake up any possible resync thread that waits for the device
->   	 * to go idle.
->   	 */
->   	allow_barrier(conf);
->  =20
-> -	free_r10bio(r10_bio);
-> +	if (!test_and_set_bit(R10BIO_Returned, &state)) {
-> +		if (!test_bit(R10BIO_Uptodate, &state))
-> +			bio->bi_status =3D BLK_STS_IOERR;
-> +		bio_endio(bio);
-> +	}
+>   drivers/md/raid5.c | 9 +++++----
+>   1 file changed, 5 insertions(+), 4 deletions(-)
 
-Why is this moved to the end? I feel it's not necessary.
-
->   }
->  =20
->   /*
->    * Update disk head position estimator based on IRQ completion info.
->    */
-> @@ -1580,13 +1581,15 @@ static void raid_end_discard_bio(struct r10bio *r=
-10bio)
->   		if (!test_bit(R10BIO_Discard, &r10bio->state)) {
->   			first_r10bio =3D (struct r10bio *)r10bio->master_bio;
->   			free_r10bio(r10bio);
->   			r10bio =3D first_r10bio;
->   		} else {
-> +			struct bio *master_bio =3D r10bio->master_bio;
-> +
->   			md_write_end(r10bio->mddev);
-> -			bio_endio(r10bio->master_bio);
->   			free_r10bio(r10bio);
-> +			bio_endio(master_bio);
->   			break;
->   		}
->   	}
->   }
->  =20
+Reviewed-by: Yu Kuai <yukuai@fygo.io>
 
 --=20
 Thanks,
