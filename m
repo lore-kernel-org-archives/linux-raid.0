@@ -1,1188 +1,184 @@
-Received: from lf-2-44.ptr.blmpb.com (lf-2-44.ptr.blmpb.com [101.36.218.44])
+Received: from va-2-17.ptr.blmpb.com (va-2-17.ptr.blmpb.com [209.127.231.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2BCF377553
-	for <linux-raid@vger.kernel.org>; Sun,  5 Jul 2026 13:11:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.36.218.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25369171CD
+	for <linux-raid@vger.kernel.org>; Sun,  5 Jul 2026 16:16:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783257072; cv=none; b=jj/EoZGLlyvPmLOMXpUs27uyuULKhOIYu3Orr5leA/kcS8pD4Fue6JZwnkkWrimVLeiKg0SpsSnAs0eh4b5XTO0R/iMuI0Nmbd6mkZ82WuZAkvCFzxL33uqmKxFG/OZerUOBPgtguHfFHzMtiWL+Di9SDzSUQ2GA3KGz7VmxV+I=
+	t=1783268200; cv=none; b=FmWbJhIrHbv/cfdg/hByh4j9g/yGdZ/wlIkxzeqqGsqdLsFR65GnMiFE82cnUGRuIdAcOnk0hBboyEVogvbTCYTM0Fp+XJ4yBINHN/9/MhJ/Yg1NQgIoayAmqYeeck5M5cyRd33UrvIoSW+VCHSXUQ6w2vPIQ3uvR1xmn5Qdub8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783257072; c=relaxed/simple;
-	bh=L+8NL3/j7cGhRWtfJwOaqTS/oliV1Q3b0X0vcFt0bVE=;
-	h=Date:Content-Type:Cc:From:Message-Id:Mime-Version:In-Reply-To:To:
-	 Subject:References; b=NK8eSX4f30YhuGHT7v5dydp75Y/IV+Uyg7HFxMIFAm1SfO9pGA2CKeYSwc5wF94AEMTYAnkV+i59IIEX3jWw3Jrr01PXnh5n1zw+ni794Z6EjqcVQpLyCemUCAZimZW6+SGJnNmN687Ky/SzcvLhfT+ewbjMin0CKQ1h6sNCrKQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=fGa6da6R; arc=none smtp.client-ip=101.36.218.44
+	s=arc-20240116; t=1783268200; c=relaxed/simple;
+	bh=MxeCiJGguuKfSXWxTHmUYzDXBfnnqUDlHIzYxNiS9CA=;
+	h=Date:References:To:Message-Id:Mime-Version:In-Reply-To:From:
+	 Subject:Content-Type:Cc; b=AuvR+iBtWFzneE33AynOc3uksBb1jm9wksSGYlYbjEp8vSaSLBbQVFMAFatcb0O8PMhePHELTeQIaLZz1Gre6uBhdD/XJ68UglOrRyXEk4r99WvJVXpz5LB3tQJCOHd9O5XR2jkGCoPfty3shPPNCUrkVGeU/+giSKsQnLoXscY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=RB4d88R8; arc=none smtp.client-ip=209.127.231.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="fGa6da6R"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="RB4d88R8"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1783257020;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1783268190;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=6IBMO0jwXFmVGW0Mo72ES7VMGQLr7o1NNF3JM7GwbnI=;
- b=fGa6da6Rcw5LAHKxGJYc1BarLfgzaDAolt7s/yHkLfCzJlXjqOhhAj+jLdVohx6be6yxsP
- x54ghfrFlY9TkZ5Us1LzpyV+xQla9p2B7xN4p9G7mgLklbAaYesxqmSKNwl6I9+jRBdE77
- Nmo2aC6pFYs+j1Si0Jws/h1OnFA+969iHT1IXo+ZtfNsc7bjE8epOrmenso9qNKBqNu86t
- AM98WzAlkHPONlXQZnzQUnxtPe4+rY6o+WySExJVeLhiCJktygrU77XffG1IF5bwo2G6Yq
- lZoHzGGFqzFJj3g4LGqqrrIC955EfC+Wvu3JmSuEe4UsatXfCC2k5XhvV/zBpA==
-Reply-To: yukuai@fygo.io
-Date: Sun, 5 Jul 2026 21:10:15 +0800
+ bh=b6AtWDZjTTxX3OsXNXFJqOyicH//GW2+ir0w4NemRJI=;
+ b=RB4d88R8MQjhiq16IenPE1wweLEjpSfKXKJ7N5sGMdxA2ycGNd31c38CWrtW4yrnybXJbQ
+ 7i6cJTGgjlSfrca+ZqGSoTTWu0aUE/ADEgRYWG8MHFz9Xkzt5Ep7ufWI+b8zL3hZBKVwUm
+ UFxnML7FeU12BJnBoSM+6zsrKSDdonnNV7LjXmE8xGvIK3VTrDj3ix3tv/Wa1PBV0nu7Pv
+ ZL8xI9Vb6ucWl3ghSXsMEOI60zQF6dSnhIyd9iS1yWdnDrtxRqZD7qTbuJwtNawpkFlNkD
+ L+4vno/7xnBsCZUcXsqRWh1+/daQwY8wTxdFYXRyci/zjV7MVWeXLmLc/yHXHg==
+Date: Mon, 6 Jul 2026 00:16:24 +0800
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-User-Agent: Mozilla Thunderbird
-X-Lms-Return-Path: <lba+26a4a57bc+03fea9+vger.kernel.org+yukuai@fygo.io>
-Cc: <linux-kernel@vger.kernel.org>
-From: "yu kuai" <yukuai@fygo.io>
-Message-Id: <da94b991-fe62-4a8b-b448-c4ee226b6b4f@fygo.io>
+References: <20260630075640.1081634-1-abd.masalkhi@gmail.com>
+X-Original-From: yu kuai <yukuai@fygo.io>
+To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, <song@kernel.org>, 
+	<magiclinan@didiglobal.com>, <xiao@kernel.org>, <yukuai@fygo.io>
+Message-Id: <0a7dc7e2-30af-44de-8c29-b6e27a62fa55@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Original-From: yu kuai <yukuai@fygo.io>
-In-Reply-To: <20260624101353.2678126-1-chencheng@fnnas.com>
-To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>, 
-	<dm-devel@lists.linux.dev>, <yukuai@fygo.io>
-Subject: Re: [RFC PATCH] md,dm: caller-owned memalloc_noio token in mddev_suspend()/resume()
-References: <20260624101353.2678126-1-chencheng@fnnas.com>
-Received: from [192.168.1.104] ([39.182.0.144]) by smtp.larksuite.com with ESMTPS; Sun, 05 Jul 2026 13:10:19 +0000
+In-Reply-To: <20260630075640.1081634-1-abd.masalkhi@gmail.com>
+Received: from [192.168.1.104] ([39.182.0.144]) by smtp.larksuite.com with ESMTPS; Sun, 05 Jul 2026 16:16:28 +0000
+X-Lms-Return-Path: <lba+26a4a835d+46fd35+vger.kernel.org+yukuai@fygo.io>
+Reply-To: yukuai@fygo.io
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH] md: avoid modifying spares while the array is not suspended
+Content-Type: text/plain; charset=UTF-8
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	"sashiko-bot" <sashiko-bot@kernel.org>
+User-Agent: Mozilla Thunderbird
 
 Hi,
 
-=E5=9C=A8 2026/6/24 18:13, Chen Cheng =E5=86=99=E9=81=93:
-> From: Chen Cheng <chencheng@fnnas.com>
+=E5=9C=A8 2026/6/30 15:56, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
+> remove_spares() and remove_and_add_spares() modify the array's rdev
+> configuration. These operations are only safe after the array has been
+> suspended.
 >
-> Save token as mddev-scoped in mddev->noio_flags cause PF_MEMALLOC_NOIO
-> leak into task A, while task B restores a token that it never saved.
+> Today, md_start_sync() can call md_choose_sync_action() even when the
+> array has not been suspended. As a result, md_choose_sync_action() may
+> remove or replace rdevs while normal I/O is still accessing them.
 >
-> scenario:
+> The race can occur as follows:
 >
-> task A                          mddev                         task B
-> =3D=3D=3D=3D=3D=3D                          =3D=3D=3D=3D=3D=3D=3D        =
-               =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> write suspend_lo
-> mddev_suspend()
->                                  suspended =3D=3D 0
->                                  drain active_io
->                                  suspended =3D 1
-> A: noio_A =3D memalloc_noio_save()
-> A returns with PF_MEMALLOC_NOIO set
+> raid10d          Worker                      Normal IO
+> ____________     _______________________     ______________________
 >
->                                                                write susp=
-end_hi
->                                                                mddev_susp=
-end()
->                                  suspended =3D=3D 1
->                                  suspended =3D 2
->                                                                B returns
->                                                                (no save)
+>                                               raid10_write_request()
+>                                               wait_blocked_dev()
+> set Blocked
+> set Faulty
+>                                               Skip Faulty rdev
+>                                               rrdev->nr_pending++
+>                                               .repl_bio =3D bio
+>                   removeable_rdev =3D false     .
+>                   array not suspended         .
+> lock mddev                                   goto err_handle
+>                   lock mddev (wait)
+>                   .
+> update sb        .
+> clear Blocked    .
+>                   .
+> unlock mddev     .
+>                   lock mddev (acquires)
+>                   remove_spares()
+>                   removeable_rdev =3D true
 >
-> mddev_resume()
->                                  suspended =3D 1
->                                  not last resume
-> A returns
-> A still has PF_MEMALLOC_NOIO   <-- leaked
+>                   raid10_remove_disk()
+>                   rdev =3D replacement
+>                   replacement =3D NULL
+>                                               rdev_dec_pending(NULL)
+>                   unlock mddev                (NULL)->nr_pending--
 >
->                                                                mddev_resu=
-me()
->                                  suspended =3D 0
->                                                                memalloc_n=
-oio_restore(noio_A)
->                                                                (restores =
-A's token in B)
+> In this case, rdev_dec_pending() is called with a NULL pointer,
+> resulting in a NULL pointer dereference when attempting to decrement
+> nr_pending.
 >
-> Fixed by:
->    - return each caller's noio_flags from mddev_suspend()
->    - pass that token back into mddev_resume()
->    - update the suspend-and-lock helpers to carry the token
->    - store the token in struct raid_set for dm-raid paths where suspend
->      and resume are paired across callbacks
+> Fix this by ensuring that remove_spares() and remove_and_add_spares()
+> are only called after the array has been suspended, preventing
+> concurrent rdev configuration changes while normal I/O is in progress.
 >
-> Validation:
-> repeatedly updates the array's suspend_lo and suspend_hi sysfs from many
-> concurrent userspace workers. That makes multiple tasks to call
-> mddev_suspend()/mddev_resume() concurrently.
->
-> Each worker:
->    - reads its initial /proc/self/stat flags and verifies that PF_MEMALLO=
-C_NOIO is not already
->      set
->    - writes 0 to either suspend_lo or suspend_hi
->    - immediately reads its own task flags again
->    - reports success if flags & PF_MEMALLOC_NOIO is true after the write =
-returns
->
-> Link: https://github.com/chencheng-fnnas/reproducer/blob/main/repro-md-no=
-io-token-leak.sh
->
-> Fixes: 78f57ef9d50a ("md: use memalloc scope APIs in mddev_suspend()/mdde=
-v_resume()")
->
-> Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+> Fixes: bc08041b32ab ("md: suspend array in md_start_sync() if array need =
+reconfiguration")
+> Reported-by: sashiko-bot <sashiko-bot@kernel.org>
+> Closes: https://sashiko.dev/#/patchset/20260628142420.1051027-1-abd.masal=
+khi@gmail.com?part=3D3
+> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 > ---
->   drivers/md/dm-raid.c       |  7 ++--
->   drivers/md/md-autodetect.c |  5 ++-
->   drivers/md/md-bitmap.c     | 12 +++---
->   drivers/md/md.c            | 85 ++++++++++++++++++++++----------------
->   drivers/md/md.h            | 23 ++++++-----
->   drivers/md/raid5-cache.c   | 11 +++--
->   drivers/md/raid5.c         | 25 ++++++-----
->   7 files changed, 97 insertions(+), 71 deletions(-)
+>   drivers/md/md.c | 18 +++++++++++++-----
+>   1 file changed, 13 insertions(+), 5 deletions(-)
 >
-> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-> index 8f5a5e1342a9..d89207e3722a 100644
-> --- a/drivers/md/dm-raid.c
-> +++ b/drivers/md/dm-raid.c
-> @@ -239,10 +239,11 @@ struct raid_set {
->   	int raid_disks;
->   	int delta_disks;
->   	int data_offset;
->   	int raid10_copies;
->   	int requested_bitmap_chunk_sectors;
-> +	unsigned int suspend_noio_flags;
->  =20
->   	struct mddev md;
->   	struct raid_type *raid_type;
->  =20
->   	sector_t array_sectors;
-> @@ -3251,11 +3252,11 @@ static int raid_ctr(struct dm_target *ti, unsigne=
-d int argc, char **argv)
->   	/* Start raid set read-only and assumed clean to change in raid_resume=
-() */
->   	rs->md.ro =3D MD_RDONLY;
->   	rs->md.in_sync =3D 1;
->  =20
->   	/* Has to be held on running the array */
-> -	mddev_suspend_and_lock_nointr(&rs->md);
-> +	mddev_suspend_and_lock_nointr(&rs->md, &rs->suspend_noio_flags);
->  =20
->   	/* Keep array frozen until resume. */
->   	md_frozen_sync_thread(&rs->md);
->  =20
->   	r =3D md_run(&rs->md);
-> @@ -3863,11 +3864,11 @@ static void raid_postsuspend(struct dm_target *ti=
-)
->   		/*
->   		 * sync_thread must be stopped during suspend, and writes have
->   		 * to be stopped before suspending to avoid deadlocks.
->   		 */
->   		md_stop_writes(&rs->md);
-> -		mddev_suspend(&rs->md, false);
-> +		mddev_suspend(&rs->md, false, &rs->suspend_noio_flags);
->   		rs->md.ro =3D MD_RDONLY;
->   	}
->   	clear_bit(MD_DM_SUSPENDING, &mddev->flags);
->  =20
->   }
-> @@ -4141,11 +4142,11 @@ static void raid_resume(struct dm_target *ti)
->   						       lockdep_is_held(&mddev->reconfig_mutex)));
->   		clear_bit(RT_FLAG_RS_FROZEN, &rs->runtime_flags);
->   		mddev->ro =3D MD_RDWR;
->   		mddev->in_sync =3D 0;
->   		md_unfrozen_sync_thread(mddev);
-> -		mddev_unlock_and_resume(mddev);
-> +		mddev_unlock_and_resume(mddev, rs->suspend_noio_flags);
->   	}
->   }
-
-For mdraid, changes looks fine. However, for dm-raid, for example:
-
-dmsetup suspend ...
-
-In this case, array will be suspended while task returned to user. Take a l=
-ook at
-the commit to introduce memalloc_noio_save(), it's supposed to be called fo=
-r mdraid
-arrays to allocate memory while array is suspended, I don't see why dm-raid=
- need it.
-So I'll suggest just bypass the memalloc_noio_save() for dm-raid where mdde=
-v_suspend()
-is not paired with mddev_resume() in the same task context.
-
->  =20
->   static struct target_type raid_target =3D {
->   	.name =3D "raid",
-> diff --git a/drivers/md/md-autodetect.c b/drivers/md/md-autodetect.c
-> index 4b80165afd23..58e062cd0580 100644
-> --- a/drivers/md/md-autodetect.c
-> +++ b/drivers/md/md-autodetect.c
-> @@ -126,10 +126,11 @@ static void __init md_setup_drive(struct md_setup_a=
-rgs *args)
->   	dev_t devices[MD_SB_DISKS + 1], mdev;
->   	struct mdu_array_info_s ainfo =3D { };
->   	struct mddev *mddev;
->   	int err =3D 0, i;
->   	char name[16];
-> +	unsigned int noio_flags;
->  =20
->   	if (args->partitioned) {
->   		mdev =3D MKDEV(mdp_major, args->minor << MdpMinorShift);
->   		sprintf(name, "md_d%d", args->minor);
->   	} else {
-> @@ -173,11 +174,11 @@ static void __init md_setup_drive(struct md_setup_a=
-rgs *args)
->   	if (IS_ERR(mddev)) {
->   		pr_err("md: md_alloc failed - cannot start array %s\n", name);
->   		return;
->   	}
->  =20
-> -	err =3D mddev_suspend_and_lock(mddev);
-> +	err =3D mddev_suspend_and_lock(mddev, &noio_flags);
->   	if (err) {
->   		pr_err("md: failed to lock array %s\n", name);
->   		goto out_mddev_put;
->   	}
->  =20
-> @@ -219,11 +220,11 @@ static void __init md_setup_drive(struct md_setup_a=
-rgs *args)
->   	if (!err)
->   		err =3D do_md_run(mddev);
->   	if (err)
->   		pr_warn("md: starting %s failed\n", name);
->   out_unlock:
-> -	mddev_unlock_and_resume(mddev);
-> +	mddev_unlock_and_resume(mddev, noio_flags);
->   out_mddev_put:
->   	mddev_put(mddev);
->   }
->  =20
->   static int __init raid_setup(char *str)
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 028b9ca8ce52..74b7f569a3f4 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -2620,13 +2620,14 @@ location_show(struct mddev *mddev, char *page)
->   }
->  =20
->   static ssize_t
->   location_store(struct mddev *mddev, const char *buf, size_t len)
->   {
-> +	unsigned int noio_flags;
->   	int rv;
->  =20
-> -	rv =3D mddev_suspend_and_lock(mddev);
-> +	rv =3D mddev_suspend_and_lock(mddev, &noio_flags);
->   	if (rv)
->   		return rv;
->  =20
->   	if (mddev->pers) {
->   		if (mddev->recovery || mddev->sync_thread) {
-> @@ -2711,11 +2712,11 @@ location_store(struct mddev *mddev, const char *b=
-uf, size_t len)
->   		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->   		md_wakeup_thread(mddev->thread);
->   	}
->   	rv =3D 0;
->   out:
-> -	mddev_unlock_and_resume(mddev);
-> +	mddev_unlock_and_resume(mddev, noio_flags);
->   	if (rv)
->   		return rv;
->   	return len;
->  =20
->   merge_err:
-> @@ -2831,17 +2832,18 @@ backlog_store(struct mddev *mddev, const char *bu=
-f, size_t len)
->   {
->   	unsigned long backlog;
->   	unsigned long old_mwb =3D mddev->bitmap_info.max_write_behind;
->   	struct md_rdev *rdev;
->   	bool has_write_mostly =3D false;
-> +	unsigned int noio_flags;
->   	int rv =3D kstrtoul(buf, 10, &backlog);
->   	if (rv)
->   		return rv;
->   	if (backlog > COUNTER_MAX)
->   		return -EINVAL;
->  =20
-> -	rv =3D mddev_suspend_and_lock(mddev);
-> +	rv =3D mddev_suspend_and_lock(mddev, &noio_flags);
->   	if (rv)
->   		return rv;
->  =20
->   	/*
->   	 * Without write mostly device, it doesn't make sense to set
-> @@ -2854,11 +2856,11 @@ backlog_store(struct mddev *mddev, const char *bu=
-f, size_t len)
->   		}
->   	}
->   	if (!has_write_mostly) {
->   		pr_warn_ratelimited("%s: can't set backlog, no write mostly device av=
-ailable\n",
->   				    mdname(mddev));
-> -		mddev_unlock(mddev);
-> +		mddev_unlock_and_resume(mddev, noio_flags);
->   		return -EINVAL;
->   	}
->  =20
->   	mddev->bitmap_info.max_write_behind =3D backlog;
->   	if (!backlog && mddev->serial_info_pool) {
-> @@ -2871,11 +2873,11 @@ backlog_store(struct mddev *mddev, const char *bu=
-f, size_t len)
->   			mddev_create_serial_pool(mddev, rdev);
->   	}
->   	if (old_mwb !=3D backlog)
->   		bitmap_update_sb(mddev->bitmap);
->  =20
-> -	mddev_unlock_and_resume(mddev);
-> +	mddev_unlock_and_resume(mddev, noio_flags);
->   	return len;
->   }
->  =20
->   static struct md_sysfs_entry bitmap_backlog =3D
->   __ATTR(backlog, S_IRUGO|S_IWUSR, backlog_show, backlog_store);
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 1377c407614c..86d938dee50a 100644
+> index 66a41d482e59..c85ebb59535b 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -459,11 +459,12 @@ static void md_submit_bio(struct bio *bio)
->  =20
->   /*
->    * Make sure no new requests are submitted to the device, and any reque=
-sts that
->    * have been submitted are completely handled.
->    */
-> -int mddev_suspend(struct mddev *mddev, bool interruptible)
-> +int mddev_suspend(struct mddev *mddev, bool interruptible,
-> +		  unsigned int *noio_flags)
->   {
->   	int err =3D 0;
->  =20
->   	/*
->   	 * hold reconfig_mutex to wait for normal io will deadlock, because
-> @@ -478,10 +479,11 @@ int mddev_suspend(struct mddev *mddev, bool interru=
-ptible)
->   		mutex_lock(&mddev->suspend_mutex);
->   	if (err)
->   		return err;
->  =20
->   	if (mddev->suspended) {
-> +		*noio_flags =3D memalloc_noio_save();
->   		WRITE_ONCE(mddev->suspended, mddev->suspended + 1);
->   		mutex_unlock(&mddev->suspend_mutex);
->   		return 0;
->   	}
->  =20
-> @@ -515,31 +517,30 @@ int mddev_suspend(struct mddev *mddev, bool interru=
-ptible)
->   	 * prevent deadlock.
->   	 */
->   	WRITE_ONCE(mddev->suspended, mddev->suspended + 1);
->  =20
->   	/* restrict memory reclaim I/O during raid array is suspend */
-> -	mddev->noio_flag =3D memalloc_noio_save();
-> +	*noio_flags =3D memalloc_noio_save();
->  =20
->   	mutex_unlock(&mddev->suspend_mutex);
->   	return 0;
->   }
->   EXPORT_SYMBOL_GPL(mddev_suspend);
->  =20
-> -static void __mddev_resume(struct mddev *mddev, bool recovery_needed)
-> +static void __mddev_resume(struct mddev *mddev, bool recovery_needed,
-> +			   unsigned int noio_flags)
->   {
->   	lockdep_assert_not_held(&mddev->reconfig_mutex);
->  =20
->   	mutex_lock(&mddev->suspend_mutex);
-> +	memalloc_noio_restore(noio_flags);
->   	WRITE_ONCE(mddev->suspended, mddev->suspended - 1);
->   	if (mddev->suspended) {
->   		mutex_unlock(&mddev->suspend_mutex);
->   		return;
->   	}
->  =20
-> -	/* entred the memalloc scope from mddev_suspend() */
-> -	memalloc_noio_restore(mddev->noio_flag);
-> -
->   	percpu_ref_resurrect(&mddev->active_io);
->   	wake_up(&mddev->sb_wait);
->  =20
->   	if (recovery_needed)
->   		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> @@ -547,13 +548,13 @@ static void __mddev_resume(struct mddev *mddev, boo=
-l recovery_needed)
->   	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape *=
-/
->  =20
->   	mutex_unlock(&mddev->suspend_mutex);
+> @@ -10116,7 +10116,8 @@ static int remove_and_add_spares(struct mddev *md=
+dev,
+>   	return spares;
 >   }
 >  =20
-> -void mddev_resume(struct mddev *mddev)
-> +void mddev_resume(struct mddev *mddev, unsigned int noio_flags)
+> -static bool md_choose_sync_action(struct mddev *mddev, int *spares)
+> +static bool md_choose_sync_action(struct mddev *mddev, int *spares,
+> +				  bool array_suspended)
 >   {
-> -	return __mddev_resume(mddev, true);
-> +	return __mddev_resume(mddev, true, noio_flags);
->   }
->   EXPORT_SYMBOL_GPL(mddev_resume);
->  =20
->   /* sync bdev before setting device to readonly or stopping raid*/
->   static int mddev_set_closing_and_sync_blockdev(struct mddev *mddev, int=
- opener_num)
-> @@ -3737,10 +3738,11 @@ rdev_attr_store(struct kobject *kobj, struct attr=
-ibute *attr,
->   {
->   	struct rdev_sysfs_entry *entry =3D container_of(attr, struct rdev_sysf=
-s_entry, attr);
->   	struct md_rdev *rdev =3D container_of(kobj, struct md_rdev, kobj);
->   	struct kernfs_node *kn =3D NULL;
->   	bool suspend =3D false;
-> +	unsigned int noio_flags =3D 0;
->   	ssize_t rv;
->   	struct mddev *mddev =3D READ_ONCE(rdev->mddev);
->  =20
->   	if (!entry->store)
->   		return -EIO;
-> @@ -3756,17 +3758,17 @@ rdev_attr_store(struct kobject *kobj, struct attr=
-ibute *attr,
->   		    cmd_match(page, "writemostly") ||
->   		    cmd_match(page, "-writemostly"))
->   			suspend =3D true;
->   	}
->  =20
-> -	rv =3D suspend ? mddev_suspend_and_lock(mddev) : mddev_lock(mddev);
-> +	rv =3D suspend ? mddev_suspend_and_lock(mddev, &noio_flags) : mddev_loc=
-k(mddev);
->   	if (!rv) {
->   		if (rdev->mddev =3D=3D NULL)
->   			rv =3D -ENODEV;
->   		else
->   			rv =3D entry->store(rdev, page, length);
-> -		suspend ? mddev_unlock_and_resume(mddev) : mddev_unlock(mddev);
-> +		suspend ? mddev_unlock_and_resume(mddev, noio_flags) : mddev_unlock(md=
-dev);
->   	}
->  =20
->   	if (kn)
->   		sysfs_unbreak_active_protection(kn);
->  =20
-> @@ -4049,15 +4051,16 @@ level_store(struct mddev *mddev, const char *buf,=
- size_t len)
->   	size_t slen =3D len;
->   	struct md_personality *pers, *oldpers;
->   	long level;
->   	void *priv, *oldpriv;
->   	struct md_rdev *rdev;
-> +	unsigned int noio_flags;
->  =20
->   	if (slen =3D=3D 0 || slen >=3D sizeof(clevel))
->   		return -EINVAL;
->  =20
-> -	rv =3D mddev_suspend_and_lock(mddev);
-> +	rv =3D mddev_suspend_and_lock(mddev, &noio_flags);
->   	if (rv)
->   		return rv;
->  =20
->   	if (mddev->pers =3D=3D NULL) {
->   		memcpy(mddev->clevel, buf, slen);
-> @@ -4231,11 +4234,11 @@ level_store(struct mddev *mddev, const char *buf,=
- size_t len)
->   		md_update_sb(mddev, 1);
->   	sysfs_notify_dirent_safe(mddev->sysfs_level);
->   	md_new_event();
->   	rv =3D len;
->   out_unlock:
-> -	mddev_unlock_and_resume(mddev);
-> +	mddev_unlock_and_resume(mddev, noio_flags);
->   	return rv;
->   }
->  =20
->   static struct md_sysfs_entry md_level =3D
->   __ATTR(level, S_IRUGO|S_IWUSR, level_show, level_store);
-> @@ -4410,17 +4413,18 @@ static int update_raid_disks(struct mddev *mddev,=
- int raid_disks);
->  =20
->   static ssize_t
->   raid_disks_store(struct mddev *mddev, const char *buf, size_t len)
->   {
->   	unsigned int n;
-> +	unsigned int noio_flags;
->   	int err;
->  =20
->   	err =3D kstrtouint(buf, 10, &n);
->   	if (err < 0)
->   		return err;
->  =20
-> -	err =3D mddev_suspend_and_lock(mddev);
-> +	err =3D mddev_suspend_and_lock(mddev, &noio_flags);
->   	if (err)
->   		return err;
->   	if (mddev->pers) {
->   		if (n !=3D mddev->raid_disks)
->   			err =3D update_raid_disks(mddev, n);
-> @@ -4442,11 +4446,11 @@ raid_disks_store(struct mddev *mddev, const char =
-*buf, size_t len)
->   		mddev->raid_disks =3D n;
->   		mddev->reshape_backwards =3D (mddev->delta_disks < 0);
->   	} else
->   		mddev->raid_disks =3D n;
->   out_unlock:
-> -	mddev_unlock_and_resume(mddev);
-> +	mddev_unlock_and_resume(mddev, noio_flags);
->   	return err ? err : len;
->   }
->   static struct md_sysfs_entry md_raid_disks =3D
->   __ATTR(raid_disks, S_IRUGO|S_IWUSR, raid_disks_show, raid_disks_store);
->  =20
-> @@ -4822,10 +4826,11 @@ new_dev_store(struct mddev *mddev, const char *bu=
-f, size_t len)
->   	char *e;
->   	int major =3D simple_strtoul(buf, &e, 10);
->   	int minor;
->   	dev_t dev;
->   	struct md_rdev *rdev;
-> +	unsigned int noio_flags;
->   	int err;
->  =20
->   	if (!*buf || *e !=3D ':' || !e[1] || e[1] =3D=3D '\n')
->   		return -EINVAL;
->   	minor =3D simple_strtoul(e+1, &e, 10);
-> @@ -4834,11 +4839,11 @@ new_dev_store(struct mddev *mddev, const char *bu=
-f, size_t len)
->   	dev =3D MKDEV(major, minor);
->   	if (major !=3D MAJOR(dev) ||
->   	    minor !=3D MINOR(dev))
->   		return -EOVERFLOW;
->  =20
-> -	err =3D mddev_suspend_and_lock(mddev);
-> +	err =3D mddev_suspend_and_lock(mddev, &noio_flags);
->   	if (err)
->   		return err;
->   	if (mddev->persistent) {
->   		rdev =3D md_import_device(dev, mddev->major_version,
->   					mddev->minor_version);
-> @@ -4855,18 +4860,18 @@ new_dev_store(struct mddev *mddev, const char *bu=
-f, size_t len)
->   		rdev =3D md_import_device(dev, -2, -1);
->   	else
->   		rdev =3D md_import_device(dev, -1, -1);
->  =20
->   	if (IS_ERR(rdev)) {
-> -		mddev_unlock_and_resume(mddev);
-> +		mddev_unlock_and_resume(mddev, noio_flags);
->   		return PTR_ERR(rdev);
->   	}
->   	err =3D bind_rdev_to_array(rdev, mddev);
->    out:
->   	if (err)
->   		export_rdev(rdev);
-> -	mddev_unlock_and_resume(mddev);
-> +	mddev_unlock_and_resume(mddev, noio_flags);
->   	if (!err)
->   		md_new_event();
->   	return err ? err : len;
->   }
->  =20
-> @@ -5257,28 +5262,29 @@ static int mddev_start_reshape(struct mddev *mdde=
-v)
->   static ssize_t
->   action_store(struct mddev *mddev, const char *page, size_t len)
->   {
->   	int ret;
->   	enum sync_action action;
-> +	unsigned int noio_flags =3D 0;
->  =20
->   	if (!mddev->pers || !mddev->pers->sync_request)
->   		return -EINVAL;
->  =20
->   	action =3D md_sync_action_by_name(page);
->   retry:
->   	if (work_busy(&mddev->sync_work))
->   		flush_work(&mddev->sync_work);
->  =20
->   	ret =3D (action =3D=3D ACTION_RESHAPE) ?
-> -		mddev_suspend_and_lock(mddev) :
-> +		mddev_suspend_and_lock(mddev, &noio_flags) :
->   		mddev_lock(mddev);
->   	if (ret)
->   		return ret;
->  =20
->   	if (work_busy(&mddev->sync_work)) {
->   		if (action =3D=3D ACTION_RESHAPE)
-> -			mddev_unlock_and_resume(mddev);
-> +			mddev_unlock_and_resume(mddev, noio_flags);
->   		else
->   			mddev_unlock(mddev);
->   		goto retry;
->   	}
->  =20
-> @@ -5349,11 +5355,11 @@ action_store(struct mddev *mddev, const char *pag=
-e, size_t len)
->   	sysfs_notify_dirent_safe(mddev->sysfs_action);
->   	ret =3D len;
->  =20
->   out:
->   	if (action =3D=3D ACTION_RESHAPE)
-> -		mddev_unlock_and_resume(mddev);
-> +		mddev_unlock_and_resume(mddev, noio_flags);
->   	else
->   		mddev_unlock(mddev);
->   	return ret;
->   }
->  =20
-> @@ -5640,24 +5646,25 @@ suspend_lo_show(struct mddev *mddev, char *page)
->  =20
->   static ssize_t
->   suspend_lo_store(struct mddev *mddev, const char *buf, size_t len)
->   {
->   	unsigned long long new;
-> +	unsigned int noio_flags;
->   	int err;
->  =20
->   	err =3D kstrtoull(buf, 10, &new);
->   	if (err < 0)
->   		return err;
->   	if (new !=3D (sector_t)new)
->   		return -EINVAL;
->  =20
-> -	err =3D mddev_suspend(mddev, true);
-> +	err =3D mddev_suspend(mddev, true, &noio_flags);
->   	if (err)
->   		return err;
->  =20
->   	WRITE_ONCE(mddev->suspend_lo, new);
-> -	mddev_resume(mddev);
-> +	mddev_resume(mddev, noio_flags);
->  =20
->   	return len;
->   }
->   static struct md_sysfs_entry md_suspend_lo =3D
->   __ATTR(suspend_lo, S_IRUGO|S_IWUSR, suspend_lo_show, suspend_lo_store);
-> @@ -5671,24 +5678,25 @@ suspend_hi_show(struct mddev *mddev, char *page)
->  =20
->   static ssize_t
->   suspend_hi_store(struct mddev *mddev, const char *buf, size_t len)
->   {
->   	unsigned long long new;
-> +	unsigned int noio_flags;
->   	int err;
->  =20
->   	err =3D kstrtoull(buf, 10, &new);
->   	if (err < 0)
->   		return err;
->   	if (new !=3D (sector_t)new)
->   		return -EINVAL;
->  =20
-> -	err =3D mddev_suspend(mddev, true);
-> +	err =3D mddev_suspend(mddev, true, &noio_flags);
->   	if (err)
->   		return err;
->  =20
->   	WRITE_ONCE(mddev->suspend_hi, new);
-> -	mddev_resume(mddev);
-> +	mddev_resume(mddev, noio_flags);
->  =20
->   	return len;
->   }
->   static struct md_sysfs_entry md_suspend_hi =3D
->   __ATTR(suspend_hi, S_IRUGO|S_IWUSR, suspend_hi_show, suspend_hi_store);
-> @@ -5928,19 +5936,20 @@ static ssize_t serialize_policy_show(struct mddev=
- *mddev, char *page)
->   static ssize_t
->   serialize_policy_store(struct mddev *mddev, const char *buf, size_t len=
-)
->   {
->   	int err;
->   	bool value;
-> +	unsigned int noio_flags;
->  =20
->   	err =3D kstrtobool(buf, &value);
->   	if (err)
->   		return err;
->  =20
->   	if (value =3D=3D test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
->   		return len;
->  =20
-> -	err =3D mddev_suspend_and_lock(mddev);
-> +	err =3D mddev_suspend_and_lock(mddev, &noio_flags);
->   	if (err)
->   		return err;
->   	if (mddev->pers =3D=3D NULL || (mddev->pers->head.id !=3D ID_RAID1)) {
->   		pr_err("md: serialize_policy is only effective for raid1\n");
->   		err =3D -EINVAL;
-> @@ -5953,11 +5962,11 @@ serialize_policy_store(struct mddev *mddev, const=
- char *buf, size_t len)
->   	} else {
->   		mddev_destroy_serial_pool(mddev, NULL);
->   		clear_bit(MD_SERIALIZE_POLICY, &mddev->flags);
->   	}
->   unlock:
-> -	mddev_unlock_and_resume(mddev);
-> +	mddev_unlock_and_resume(mddev, noio_flags);
->   	return err ?: len;
->   }
->  =20
->   static struct md_sysfs_entry md_serialize_policy =3D
->   __ATTR(serialize_policy, S_IRUGO | S_IWUSR, serialize_policy_show,
-> @@ -6263,21 +6272,22 @@ EXPORT_SYMBOL_GPL(mddev_stack_new_rdev);
->  =20
->   /* update the optimal I/O size after a reshape */
->   void mddev_update_io_opt(struct mddev *mddev, unsigned int nr_stripes)
->   {
->   	struct queue_limits lim;
-> +	unsigned int noio_flags;
->  =20
->   	if (mddev_is_dm(mddev))
->   		return;
->  =20
->   	/* don't bother updating io_opt if we can't suspend the array */
-> -	if (mddev_suspend(mddev, false) < 0)
-> +	if (mddev_suspend(mddev, false, &noio_flags) < 0)
->   		return;
->   	lim =3D queue_limits_start_update(mddev->gendisk->queue);
->   	lim.io_opt =3D lim.io_min * nr_stripes;
->   	queue_limits_commit_update(mddev->gendisk->queue, &lim);
-> -	mddev_resume(mddev);
-> +	mddev_resume(mddev, noio_flags);
->   }
->   EXPORT_SYMBOL_GPL(mddev_update_io_opt);
->  =20
->   static void mddev_delayed_delete(struct work_struct *ws)
->   {
-> @@ -7255,10 +7265,11 @@ static void autorun_array(struct mddev *mddev)
->    */
->   static void autorun_devices(int part)
->   {
->   	struct md_rdev *rdev0, *rdev, *tmp;
->   	struct mddev *mddev;
-> +	unsigned int noio_flags;
->  =20
->   	pr_info("md: autorun ...\n");
->   	while (!list_empty(&pending_raid_disks)) {
->   		int unit;
->   		dev_t dev;
-> @@ -7295,27 +7306,27 @@ static void autorun_devices(int part)
->  =20
->   		mddev =3D md_alloc(dev, NULL);
->   		if (IS_ERR(mddev))
->   			break;
->  =20
-> -		if (mddev_suspend_and_lock(mddev))
-> +		if (mddev_suspend_and_lock(mddev, &noio_flags))
->   			pr_warn("md: %s locked, cannot run\n", mdname(mddev));
->   		else if (mddev->raid_disks || mddev->major_version
->   			 || !list_empty(&mddev->disks)) {
->   			pr_warn("md: %s already running, cannot run %pg\n",
->   				mdname(mddev), rdev0->bdev);
-> -			mddev_unlock_and_resume(mddev);
-> +			mddev_unlock_and_resume(mddev, noio_flags);
->   		} else {
->   			pr_debug("md: created %s\n", mdname(mddev));
->   			mddev->persistent =3D 1;
->   			rdev_for_each_list(rdev, tmp, &candidates) {
->   				list_del_init(&rdev->same_set);
->   				if (bind_rdev_to_array(rdev, mddev))
->   					export_rdev(rdev);
->   			}
->   			autorun_array(mddev);
-> -			mddev_unlock_and_resume(mddev);
-> +			mddev_unlock_and_resume(mddev, noio_flags);
->   		}
->   		/* on success, candidates will be empty, on error
->   		 * it won't...
->   		 */
->   		rdev_for_each_list(rdev, tmp, &candidates) {
-> @@ -8329,10 +8340,11 @@ static int __md_set_array_info(struct mddev *mdde=
-v, void __user *argp)
->  =20
->   static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
->   			unsigned int cmd, unsigned long arg)
->   {
->   	int err =3D 0;
-> +	unsigned int noio_flags =3D 0;
->   	void __user *argp =3D (void __user *)arg;
->   	struct mddev *mddev =3D NULL;
->  =20
->   	err =3D md_ioctl_valid(cmd);
->   	if (err)
-> @@ -8380,11 +8392,11 @@ static int md_ioctl(struct block_device *bdev, bl=
-k_mode_t mode,
->   	}
->  =20
->   	if (!md_is_rdwr(mddev))
->   		flush_work(&mddev->sync_work);
->  =20
-> -	err =3D md_ioctl_need_suspend(cmd) ? mddev_suspend_and_lock(mddev) :
-> +	err =3D md_ioctl_need_suspend(cmd) ? mddev_suspend_and_lock(mddev, &noi=
-o_flags) :
->   					   mddev_lock(mddev);
->   	if (err) {
->   		pr_debug("md: ioctl lock interrupted, reason %d, cmd %d\n",
->   			 err, cmd);
->   		goto out;
-> @@ -8511,11 +8523,11 @@ static int md_ioctl(struct block_device *bdev, bl=
-k_mode_t mode,
->   unlock:
->   	if (mddev->hold_active =3D=3D UNTIL_IOCTL &&
->   	    err !=3D -EINVAL)
->   		mddev->hold_active =3D 0;
->  =20
-> -	md_ioctl_need_suspend(cmd) ? mddev_unlock_and_resume(mddev) :
-> +	md_ioctl_need_suspend(cmd) ? mddev_unlock_and_resume(mddev, noio_flags)=
- :
->   				     mddev_unlock(mddev);
->  =20
->   out:
->   	if (cmd =3D=3D STOP_ARRAY_RO || (err && cmd =3D=3D STOP_ARRAY))
->   		clear_bit(MD_CLOSING, &mddev->flags);
-> @@ -10180,20 +10192,21 @@ static bool md_choose_sync_action(struct mddev =
-*mddev, int *spares)
->   static void md_start_sync(struct work_struct *ws)
->   {
->   	struct mddev *mddev =3D container_of(ws, struct mddev, sync_work);
->   	int spares =3D 0;
->   	bool suspend =3D false;
-> +	unsigned int noio_flags =3D 0;
->   	char *name;
->  =20
->   	/*
->   	 * If reshape is still in progress, spares won't be added or removed
->   	 * from conf until reshape is done.
->   	 */
->   	if (mddev->reshape_position =3D=3D MaxSector &&
->   	    md_spares_need_change(mddev)) {
->   		suspend =3D true;
-> -		mddev_suspend(mddev, false);
-> +		mddev_suspend(mddev, false, &noio_flags);
->   	}
->  =20
->   	mddev_lock_nointr(mddev);
->   	if (!md_is_rdwr(mddev)) {
->   		/*
-> @@ -10237,11 +10250,11 @@ static void md_start_sync(struct work_struct *w=
-s)
->   	 * not set it again. Otherwise, we may cause issue like this one:
->   	 *     https://bugzilla.kernel.org/show_bug.cgi?id=3D218200
->   	 * Therefore, use __mddev_resume(mddev, false).
->   	 */
->   	if (suspend)
-> -		__mddev_resume(mddev, false);
-> +		__mddev_resume(mddev, false, noio_flags);
->   	md_wakeup_thread(mddev->sync_thread);
->   	sysfs_notify_dirent_safe(mddev->sysfs_action);
->   	md_new_event();
->   	return;
->  =20
-> @@ -10257,11 +10270,11 @@ static void md_start_sync(struct work_struct *w=
-s)
->   	 * not set it again. Otherwise, we may cause issue like this one:
->   	 *     https://bugzilla.kernel.org/show_bug.cgi?id=3D218200
->   	 * Therefore, use __mddev_resume(mddev, false).
->   	 */
->   	if (suspend)
-> -		__mddev_resume(mddev, false);
-> +		__mddev_resume(mddev, false, noio_flags);
->  =20
->   	wake_up(&resync_wait);
->   	if (test_and_clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery) &&
->   	    mddev->sysfs_action)
->   		sysfs_notify_dirent_safe(mddev->sysfs_action);
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index d8daf0f75cbb..3337cd21eb30 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -619,11 +619,10 @@ struct mddev {
->   	mempool_t *serial_info_pool;
->   	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
->   	struct md_cluster_info		*cluster_info;
->   	struct md_cluster_operations *cluster_ops;
->   	unsigned int			good_device_nr;	/* good device num within cluster raid =
-*/
-> -	unsigned int			noio_flag; /* for memalloc scope API */
->  =20
->   	/*
->   	 * Temporarily store rdev that will be finally removed when
->   	 * reconfig_mutex is unlocked, protected by reconfig_mutex.
->   	 */
-> @@ -953,12 +952,13 @@ extern void md_stop(struct mddev *mddev);
->   extern void md_stop_writes(struct mddev *mddev);
->   extern int md_rdev_init(struct md_rdev *rdev);
->   extern void md_rdev_clear(struct md_rdev *rdev);
->  =20
->   extern bool md_handle_request(struct mddev *mddev, struct bio *bio);
-> -extern int mddev_suspend(struct mddev *mddev, bool interruptible);
-> -extern void mddev_resume(struct mddev *mddev);
-> +extern int mddev_suspend(struct mddev *mddev, bool interruptible,
-> +			 unsigned int *noio_flags);
-> +extern void mddev_resume(struct mddev *mddev, unsigned int noio_flags);
->   extern void md_idle_sync_thread(struct mddev *mddev);
->   extern void md_frozen_sync_thread(struct mddev *mddev);
->   extern void md_unfrozen_sync_thread(struct mddev *mddev);
->  =20
->   extern void md_update_sb(struct mddev *mddev, int force);
-> @@ -999,35 +999,38 @@ static inline void mddev_check_write_zeroes(struct =
-mddev *mddev, struct bio *bio
->   	if (bio_op(bio) =3D=3D REQ_OP_WRITE_ZEROES &&
->   	    !bio->bi_bdev->bd_disk->queue->limits.max_write_zeroes_sectors)
->   		mddev->gendisk->queue->limits.max_write_zeroes_sectors =3D 0;
->   }
->  =20
-> -static inline int mddev_suspend_and_lock(struct mddev *mddev)
-> +static inline int mddev_suspend_and_lock(struct mddev *mddev,
-> +					 unsigned int *noio_flags)
->   {
->   	int ret;
->  =20
-> -	ret =3D mddev_suspend(mddev, true);
-> +	ret =3D mddev_suspend(mddev, true, noio_flags);
->   	if (ret)
->   		return ret;
->  =20
->   	ret =3D mddev_lock(mddev);
->   	if (ret)
-> -		mddev_resume(mddev);
-> +		mddev_resume(mddev, *noio_flags);
->  =20
->   	return ret;
->   }
->  =20
-> -static inline void mddev_suspend_and_lock_nointr(struct mddev *mddev)
-> +static inline void mddev_suspend_and_lock_nointr(struct mddev *mddev,
-> +						 unsigned int *noio_flags)
->   {
-> -	mddev_suspend(mddev, false);
-> +	mddev_suspend(mddev, false, noio_flags);
->   	mddev_lock_nointr(mddev);
->   }
->  =20
-> -static inline void mddev_unlock_and_resume(struct mddev *mddev)
-> +static inline void mddev_unlock_and_resume(struct mddev *mddev,
-> +					   unsigned int noio_flags)
->   {
->   	mddev_unlock(mddev);
-> -	mddev_resume(mddev);
-> +	mddev_resume(mddev, noio_flags);
->   }
->  =20
->   struct mdu_array_info_s;
->   struct mdu_disk_info_s;
->  =20
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 7b7546bfa21f..6f8e3a624456 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -693,13 +693,15 @@ static void r5c_disable_writeback_async(struct work=
-_struct *work)
->   		   !READ_ONCE(conf->log) ||
->   		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
->  =20
->   	log =3D READ_ONCE(conf->log);
->   	if (log) {
-> -		mddev_suspend(mddev, false);
-> +		unsigned int noio_flags;
+>   	/* Check if reshape is in progress first. */
+>   	if (mddev->reshape_position !=3D MaxSector) {
+> @@ -10132,7 +10133,9 @@ static bool md_choose_sync_action(struct mddev *m=
+ddev, int *spares)
+>  =20
+>   	/* Check if resync is in progress. */
+>   	if (mddev->resync_offset < MaxSector) {
+> -		remove_spares(mddev, NULL);
+> +		if (array_suspended)
+> +			remove_spares(mddev, NULL);
+
+The problem looks real, however, I think this will cause a change that user=
+ will be awared,
+if there are really spares that can be removed from conf, but array is not =
+suspended here,
+user will still expect rdev will be removed from conf automatically.
+
+In md_start_sync, if suspend is false, can we check again after mddev_lock?=
+ If suspend is
+supposed to be true, we can release the lock and retry with suspend =3D tru=
+e.
+
 > +
-> +		mddev_suspend(mddev, false, &noio_flags);
->   		log->r5c_journal_mode =3D R5C_JOURNAL_MODE_WRITE_THROUGH;
-> -		mddev_resume(mddev);
-> +		mddev_resume(mddev, noio_flags);
->   	}
->   }
->  =20
->   static void r5l_submit_current_io(struct r5l_log *log)
->   {
-> @@ -2603,10 +2605,11 @@ EXPORT_SYMBOL(r5c_journal_mode_set);
->   static ssize_t r5c_journal_mode_store(struct mddev *mddev,
->   				      const char *page, size_t length)
->   {
->   	int mode =3D ARRAY_SIZE(r5c_journal_mode_str);
->   	size_t len =3D length;
-> +	unsigned int noio_flags;
->   	int ret;
->  =20
->   	if (len < 2)
->   		return -EINVAL;
->  =20
-> @@ -2615,15 +2618,15 @@ static ssize_t r5c_journal_mode_store(struct mdde=
-v *mddev,
->  =20
->   	while (mode--)
->   		if (strlen(r5c_journal_mode_str[mode]) =3D=3D len &&
->   		    !strncmp(page, r5c_journal_mode_str[mode], len))
->   			break;
-> -	ret =3D mddev_suspend_and_lock(mddev);
-> +	ret =3D mddev_suspend_and_lock(mddev, &noio_flags);
->   	if (ret)
->   		return ret;
->   	ret =3D r5c_journal_mode_set(mddev, mode);
-> -	mddev_unlock_and_resume(mddev);
-> +	mddev_unlock_and_resume(mddev, noio_flags);
->   	return ret ?: length;
->   }
->  =20
->   struct md_sysfs_entry
->   r5c_journal_mode =3D __ATTR(journal_mode, 0644,
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 65ae7d8930fc..6062c4b62cc8 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -6992,11 +6992,11 @@ raid5_show_stripe_size(struct mddev  *mddev, char=
- *page)
->   #if PAGE_SIZE !=3D DEFAULT_STRIPE_SIZE
->   static ssize_t
->   raid5_store_stripe_size(struct mddev  *mddev, const char *page, size_t =
-len)
->   {
->   	struct r5conf *conf;
-> -	unsigned long new;
-> +	unsigned long new, noio_flags;
->   	int err;
->   	int size;
->  =20
->   	if (len >=3D PAGE_SIZE)
->   		return -EINVAL;
-> @@ -7011,11 +7011,11 @@ raid5_store_stripe_size(struct mddev  *mddev, con=
-st char *page, size_t len)
->   	if (new % DEFAULT_STRIPE_SIZE !=3D 0 ||
->   			new > PAGE_SIZE || new =3D=3D 0 ||
->   			new !=3D roundup_pow_of_two(new))
->   		return -EINVAL;
->  =20
-> -	err =3D mddev_suspend_and_lock(mddev);
-> +	err =3D mddev_suspend_and_lock(mddev, &noio_flags);
->   	if (err)
->   		return err;
->  =20
->   	conf =3D mddev->private;
->   	if (!conf) {
-> @@ -7049,11 +7049,11 @@ raid5_store_stripe_size(struct mddev  *mddev, con=
-st char *page, size_t len)
->   		err =3D -ENOMEM;
->   	}
->   	mutex_unlock(&conf->cache_size_mutex);
->  =20
->   out_unlock:
-> -	mddev_unlock_and_resume(mddev);
-> +	mddev_unlock_and_resume(mddev, noio_flags);
->   	return err ?: len;
->   }
->  =20
->   static struct md_sysfs_entry
->   raid5_stripe_size =3D __ATTR(stripe_size, 0644,
-> @@ -7127,19 +7127,20 @@ raid5_show_skip_copy(struct mddev *mddev, char *p=
-age)
->   static ssize_t
->   raid5_store_skip_copy(struct mddev *mddev, const char *page, size_t len=
-)
->   {
->   	struct r5conf *conf;
->   	unsigned long new;
-> +	unsigned int noio_flags;
->   	int err;
->  =20
->   	if (len >=3D PAGE_SIZE)
->   		return -EINVAL;
->   	if (kstrtoul(page, 10, &new))
->   		return -EINVAL;
->   	new =3D !!new;
->  =20
-> -	err =3D mddev_suspend_and_lock(mddev);
-> +	err =3D mddev_suspend_and_lock(mddev, &noio_flags);
->   	if (err)
->   		return err;
->   	conf =3D mddev->private;
->   	if (!conf)
->   		err =3D -ENODEV;
-> @@ -7152,11 +7153,11 @@ raid5_store_skip_copy(struct mddev *mddev, const =
-char *page, size_t len)
->   			lim.features |=3D BLK_FEAT_STABLE_WRITES;
->   		else
->   			lim.features &=3D ~BLK_FEAT_STABLE_WRITES;
->   		err =3D queue_limits_commit_update(q, &lim);
->   	}
-> -	mddev_unlock_and_resume(mddev);
-> +	mddev_unlock_and_resume(mddev, noio_flags);
->   	return err ?: len;
->   }
->  =20
->   static struct md_sysfs_entry
->   raid5_skip_copy =3D __ATTR(skip_copy, S_IRUGO | S_IWUSR,
-> @@ -7195,10 +7196,11 @@ static int alloc_thread_groups(struct r5conf *con=
-f, int cnt,
->   static ssize_t
->   raid5_store_group_thread_cnt(struct mddev *mddev, const char *page, siz=
-e_t len)
->   {
->   	struct r5conf *conf;
->   	unsigned int new;
-> +	unsigned int noio_flags;
->   	int err;
->   	struct r5worker_group *new_groups, *old_groups;
->   	int group_cnt;
->  =20
->   	if (len >=3D PAGE_SIZE)
-> @@ -7207,16 +7209,16 @@ raid5_store_group_thread_cnt(struct mddev *mddev,=
- const char *page, size_t len)
->   		return -EINVAL;
->   	/* 8192 should be big enough */
->   	if (new > 8192)
->   		return -EINVAL;
->  =20
-> -	err =3D mddev_suspend_and_lock(mddev);
-> +	err =3D mddev_suspend_and_lock(mddev, &noio_flags);
->   	if (err)
->   		return err;
->   	conf =3D mddev->private;
->   	if (!conf) {
-> -		mddev_unlock_and_resume(mddev);
-> +		mddev_unlock_and_resume(mddev, noio_flags);
->   		return -ENODEV;
->   	}
->   	raid5_quiesce(mddev, true);
->  =20
->   	if (new !=3D conf->worker_cnt_per_group) {
-> @@ -7237,11 +7239,11 @@ raid5_store_group_thread_cnt(struct mddev *mddev,=
- const char *page, size_t len)
->   			kfree(old_groups);
->   		}
+>   		set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+>   		clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+>   		clear_bit(MD_RECOVERY_LAZY_RECOVER, &mddev->recovery);
+> @@ -10144,7 +10147,11 @@ static bool md_choose_sync_action(struct mddev *=
+mddev, int *spares)
+>   	 * also removed and re-added, to allow the personality to fail the
+>   	 * re-add.
+>   	 */
+> -	*spares =3D remove_and_add_spares(mddev, NULL);
+> +	if (array_suspended)
+> +		*spares =3D remove_and_add_spares(mddev, NULL);
+> +	else
+> +		*spares =3D 0;
+> +
+>   	if (*spares || test_bit(MD_RECOVERY_LAZY_RECOVER, &mddev->recovery)) {
+>   		clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+>   		clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+> @@ -10189,11 +10196,12 @@ static void md_start_sync(struct work_struct *w=
+s)
+>   		 * As we only add devices that are already in-sync, we can
+>   		 * activate the spares immediately.
+>   		 */
+> -		remove_and_add_spares(mddev, NULL);
+> +		if (suspend)
+> +			remove_and_add_spares(mddev, NULL);
+>   		goto not_running;
 >   	}
 >  =20
->   	raid5_quiesce(mddev, false);
-> -	mddev_unlock_and_resume(mddev);
-> +	mddev_unlock_and_resume(mddev, noio_flags);
+> -	if (!md_choose_sync_action(mddev, &spares))
+> +	if (!md_choose_sync_action(mddev, &spares, suspend))
+>   		goto not_running;
 >  =20
->   	return err ?: len;
->   }
->  =20
->   static struct md_sysfs_entry
-> @@ -8940,18 +8942,19 @@ static void *raid6_takeover(struct mddev *mddev)
->   }
->  =20
->   static int raid5_change_consistency_policy(struct mddev *mddev, const c=
-har *buf)
->   {
->   	struct r5conf *conf;
-> +	unsigned int noio_flags;
->   	int err;
->  =20
-> -	err =3D mddev_suspend_and_lock(mddev);
-> +	err =3D mddev_suspend_and_lock(mddev, &noio_flags);
->   	if (err)
->   		return err;
->   	conf =3D mddev->private;
->   	if (!conf) {
-> -		mddev_unlock_and_resume(mddev);
-> +		mddev_unlock_and_resume(mddev, noio_flags);
->   		return -ENODEV;
->   	}
->  =20
->   	if (strncmp(buf, "ppl", 3) =3D=3D 0) {
->   		/* ppl only works with RAID 5 */
-> @@ -8990,11 +8993,11 @@ static int raid5_change_consistency_policy(struct=
- mddev *mddev, const char *buf)
->   	}
->  =20
->   	if (!err)
->   		md_update_sb(mddev, 1);
->  =20
-> -	mddev_unlock_and_resume(mddev);
-> +	mddev_unlock_and_resume(mddev, noio_flags);
->  =20
->   	return err;
->   }
->  =20
->   static int raid5_start(struct mddev *mddev)
+>   	if (!mddev->pers->sync_request)
 
 --=20
 Thanks,
