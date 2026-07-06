@@ -1,167 +1,250 @@
-Received: from va-2-16.ptr.blmpb.com (va-2-16.ptr.blmpb.com [209.127.231.16])
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6383738642C
-	for <linux-raid@vger.kernel.org>; Mon,  6 Jul 2026 02:56:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A40E3F44E3
+	for <linux-raid@vger.kernel.org>; Mon,  6 Jul 2026 11:35:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783306602; cv=none; b=LR6U2Pg/UysEDvr/lywyXYSzW14QC32WVoZ8GRh+E8qJ78Bn/QnvwsHQYAiMRjNsAgZdKMqhOObRM38+x7HgeVXP10fauWyKW3mTZ1yIfGMDYwd+LWSqL+EHwgwLFsvg/NCeqnXXkiDYbbcSeYfVFQFYVWuKo1B2tFZoBLGhdFw=
+	t=1783337756; cv=none; b=CP08PnZiO+ByzJJJOZfCn1GOVHg6XXvqH5mySg9H6IkgYNp2vI9s5wa9Pjc1MAZLP2FSkQRCUvMy/F4l59ROlsKFgfuHg5MIFEHwRz3erVMCs4m+LWL3Q77VmPTMFbyz9isWDnibB8IYtmR0P7B+PJRmLdAYvHGFaqr0RyXzmxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783306602; c=relaxed/simple;
-	bh=rq4CADBSRTsjxP9KSd23WMxx0+sck8rdPgKORP+x1mY=;
-	h=In-Reply-To:Subject:Mime-Version:References:Message-Id:To:Cc:
-	 Content-Type:From:Date; b=HTivY24Rz6w7VXfXgFyLUTNhy3xyiYx5yQhXxNTrHwC0eHGw87LMgS1mTMGChFiShs5W/bCWnRY9X565lsKEQ7lh7MIyNB6iM0xLo4MJ3vSD/wmHzp6dHY77r7SVzLzJvj7MJ0PfWuwd/2tks/B536kNJdY/FEzf+1LTM6SyV/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=WFBBoy0p; arc=none smtp.client-ip=209.127.231.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1783337756; c=relaxed/simple;
+	bh=hCzKh7+OnS1XF53C7I8CTn81usasqlc3LwzJQgV0sVo=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=Ok88KWd9Blu7FXqjgKoZMjUlXYXm+JXYXHnGxXBtdrlzwIQHLcEMvYqXTgjjklzGk0popWcf+40P83c62aCG10Lt8AovqiXlEyJiugacQ/GX9QmIrNEi+sgyRb3+ga2GwJSObJkNcD0q3vt7fw48Wcg8FYQ6nGC/IUMB+FiXgOg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=F5UusZHG; arc=none smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="WFBBoy0p"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1783306594;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=YNTxii3C5bkFszHGLOtjd4EbPnNTulBVLmkXkt0ziJU=;
- b=WFBBoy0pb/wv2GEWpsVu/q+ZP2Kl8z0W4t4RRd1bhD9ORK8ZMnEHz3IZvD5p9xrwYJ/MP2
- Cp/EiU34i0OiYeHEEtMCRaQDx9RXRKNQUEkombCUfnzdD2AT1GIQ1vHz7pEwXv+/JcQ0u5
- JdRhcvdDquM5fTsy5U+E7x5I7krRdJmN8+fAdzuXPXx/ATrpq56ehTmC/dEPF4cR1SDzv+
- u1hGuIyod5bux2jjVpuJ+U+3uHeM/Ll3vAPhql4zM1lg+fiYRFgW5Gt+klylRVXGtiH6eO
- /rKBb8hOoDjXqbt0oPpy92Hc2WeZ6lJ/ajfTPHhgJthf6COKtbSEDWJIQd+YyA==
-In-Reply-To: <20260624155452.211646-1-nishidafmly@gmail.com>
-Received: from [192.168.1.104] ([39.182.0.144]) by smtp.larksuite.com with ESMTPS; Mon, 06 Jul 2026 02:56:33 +0000
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH 0/8] md/raid5: scalability and rebuild-path improvements
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F5UusZHG"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-493bb510ce4so22016245e9.1
+        for <linux-raid@vger.kernel.org>; Mon, 06 Jul 2026 04:35:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783337754; x=1783942554; darn=vger.kernel.org;
+        h=mime-version:message-id:date:references:in-reply-to:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZVnuaoQHXzg0auu5bmPMaWnWzbZUreNJrNRtm/ox0Aw=;
+        b=F5UusZHGDv/mU34TXG8qYIoZFa4tV4j9HR8kIUPJwjaeZ2AmsmpBoiXF1IFxcMjYGy
+         911BcXpJQuVJl/jOsE0bdWMwjH1yAUFGEAFj8h/IQRVau0j38aJbwgG8jkziHR0EraOP
+         Be57rtjP5lZI7B76rjmvcOVqcZOx7MEV8UEeDS2WcxkNTRH04vTME8fFZ/2Oo9yrtaXx
+         F2F0BfbEzOygV6aBISpA+vCb0atqLviXcTR3hpcjprWrkGt0WOelD7e6v8FerVNNWS65
+         2DUZlxHHrgaJ9qZId4LUw0hSIT/PYkzLea+CAVWMbRoIoemiyFzqc4B+zt/hf7xC1up5
+         Brug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783337754; x=1783942554;
+        h=mime-version:message-id:date:references:in-reply-to:subject:cc:to
+         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ZVnuaoQHXzg0auu5bmPMaWnWzbZUreNJrNRtm/ox0Aw=;
+        b=ccDKiOJvyrQnWVWtInroDA//rb4HLwCnC95YIFXlAAcsIrKsEDtqQynM8WyYfqRMEO
+         RIgfuxaYriIW7nhl6EKAzncR0sd1Ao8luELrbBlS7E5fE7expDbL5NsMaH8Ckn71yBRi
+         FuCWX/f9WaH3JYEivUTpDM3ME3P/3OmCIPJv0A3ZqorSqdyrfCeMaSl8fJo1AiO7kQ4K
+         85eke+zOamYnUbjlRebqT0Optx/p6nWLpBK3rXHlyWUgyM36CT22jxeUcLfErHAs5Tsi
+         UufwMRtn/bvv2NuvXqb8VxD5vIowNHJJdrvIdK6qfOfQUwHrT6of+HLaXmSg4OrFOIDT
+         DK7Q==
+X-Gm-Message-State: AOJu0YyT/SoW+B0CtoIXzauhnxIfV1Bf1WF5H87OfTRux59ABHMslavM
+	sxGLH7jozUHM1uLxfARGB9TTFE/+djcItsnC9F40+aUnhltLsE1zYw+r53dQTQ==
+X-Gm-Gg: AfdE7cnWws/d8T0M1HplRWq4b8Alnr2vAkNS6kXDb+4uPR+dmKSir+S1tvvPB4k1i5N
+	UO0bMVfm438bDncYb/MrGtzrz5BB3mkOxM4NAyj4mzTXVop5mqdbmtwBExCP1q/5gKqYCwjrPxQ
+	ALC/8mXF+fYlEnldBQiYNbkoYJg0iu+GBpEkEIW37ZUw3IpiNZuzXmpe+R52h84vLF9gIQLZ5NQ
+	gBXsjpzEamDh1WXJcb700QmX41b6sxWcOVyIhcsj56c53wDgz3O8A0EMCdxXV9dpiFJu2VnZsEH
+	ri5qQcAsrY0Msx+ZeUxrx6KFgfzo3cx7bFCXlMj7DSsaQ3hboDFvz0tP6Lb+/nM+CxQQ8l/EyOM
+	4di+ny6+s1a9S5v5CLgdg7BkB/trfoYvP+N+QorDodMcUbP8rmCFmDA6V5Usu+uKa68ivQt9GNP
+	S5IMIGAaQndxSeiqwXsX3ABJ9Hc5f/7VvelkjJ+Zmo63NqCcldSs3Z4z9C
+X-Received: by 2002:a05:600c:4e04:b0:493:c634:952 with SMTP id 5b1f17b1804b1-493df0379f7mr819425e9.7.1783337753356;
+        Mon, 06 Jul 2026 04:35:53 -0700 (PDT)
+Received: from Abds-MacBook-Air.local ([195.72.110.71])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-493cce11497sm300307925e9.12.2026.07.06.04.35.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Jul 2026 04:35:52 -0700 (PDT)
+From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+To: John Garry <john.g.garry@oracle.com>, song@kernel.org, yukuai@fygo.io,
+ magiclinan@didiglobal.com, xiao@kernel.org, axboe@kernel.dk,
+ vverma@digitalocean.com, martin.petersen@oracle.com,
+ linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
+Subject: Re: [PATCH v2 2/7] md/raid1: advertise atomic write limits and
+ handle runtime constraints
+In-Reply-To: <856abedc-d2f3-4248-9583-4d7e1a11abc1@oracle.com>
+References: <20260628142420.1051027-1-abd.masalkhi@gmail.com>
+ <20260628142420.1051027-3-abd.masalkhi@gmail.com>
+ <7cbaaca3-4eb5-434d-a13f-f9574c9f977b@oracle.com>
+ <m2se64zak9.fsf@gmail.com>
+ <856abedc-d2f3-4248-9583-4d7e1a11abc1@oracle.com>
+Date: Mon, 06 Jul 2026 13:35:50 +0200
+Message-ID: <m2pl1073l5.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260624155452.211646-1-nishidafmly@gmail.com>
-X-Lms-Return-Path: <lba+26a4b1962+5f1ac4+vger.kernel.org+yukuai@fygo.io>
-Reply-To: yukuai@fygo.io
-Message-Id: <aa24dd05-f231-4657-8fef-8201138da65f@fygo.io>
-X-Original-From: yu kuai <yukuai@fygo.io>
-To: "Hiroshi Nishida" <nishidafmly@gmail.com>, "Song Liu" <song@kernel.org>
-Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<yukuai@fygo.io>
-Content-Type: text/plain; charset=UTF-8
-User-Agent: Mozilla Thunderbird
-From: "yu kuai" <yukuai@fygo.io>
-Date: Mon, 6 Jul 2026 10:56:29 +0800
+MIME-Version: 1.0
+Content-Type: text/plain
 
-Hi,
+On Fri, Jul 03, 2026 at 09:28 +0100, John Garry wrote:
+> On 30/06/2026 09:39, Abd-Alrhman Masalkhi wrote:
+>> 
+>> Hi John,
+>> 
+>> On Mon, Jun 29, 2026 at 15:48 +0100, John Garry wrote:
+>>> On 28/06/2026 15:24, Abd-Alrhman Masalkhi wrote:
+>>>> Atomic writes in RAID1 must fit within a single barrier unit. Advertise
+>>>> this restriction through the queue limits by setting
+>>>> atomic_write_hw_unit_max to BARRIER_UNIT_SECTOR_SIZE so that bios which
+>>>> would cross a barrier-unit boundary are rejected by the block layer
+>>>> before reaching MD.
+>>>>
+>>>> A bio that passes block-layer validation may still become unserviceable
+>>>> within RAID1 due to bad blocks or write-behind constraints. In the former
+>>>> case, complete the bio with EIO. In the latter case, disable
+>>>> write-behind rather than failing the bio with EIO.
+>>>>
+>>>> Fixes: f2a38abf5f1c ("md/raid1: Atomic write support")
+>>>> Fixes: a4c55c902670 ("md/raid1: simplify raid1_write_request() error handling")
+>>>> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+>>>> ---
+>>>> Changes in v2:
+>>>>    - Drop the early atomic write split check from raid1_write_request().
+>>>>    - Advertise the atomic write size limit via queue limits.
+>>>>    - Disable write-behind instead of failing atomic writes when the
+>>>>      BIO_MAX_VECS limit is encountered.
+>>>>    - Link to v1: https://urldefense.com/v3/__https://lore.kernel.org/linux-raid/20260623072456.333437-3-abd.masalkhi@gmail.com/__;!!ACWV5N9M2RV99hQ!LbMSGSClRi0PNBqQti5ZNWGDVjDd34-7saYEAwNyBNjpNTjEA7veqM5RHG8KB1QiscarW4UaIefjm19ywSImtIgh$
+>>>> ---
+>>>>    drivers/md/raid1.c | 36 +++++++++++++++++++-----------------
+>>>>    1 file changed, 19 insertions(+), 17 deletions(-)
+>>>>
+>>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>>>> index afe2ca96ad8c..f322048ab3c2 100644
+>>>> --- a/drivers/md/raid1.c
+>>>> +++ b/drivers/md/raid1.c
+>>>> @@ -1522,6 +1522,7 @@ static bool raid1_write_request(struct mddev *mddev, struct bio *bio,
+>>>>    	int first_clone;
+>>>>    	bool write_behind = false;
+>>>>    	bool nowait = bio->bi_opf & REQ_NOWAIT;
+>>>> +	bool atomic = bio->bi_opf & REQ_ATOMIC;
+>>>>    	bool is_discard = op_is_discard(bio->bi_opf);
+>>>>    	sector_t sector = bio->bi_iter.bi_sector;
+>>>>    
+>>>> @@ -1603,20 +1604,6 @@ static bool raid1_write_request(struct mddev *mddev, struct bio *bio,
+>>>>    			}
+>>>>    			if (is_bad) {
+>>>>    				int good_sectors;
+>>>> -
+>>>> -				/*
+>>>> -				 * We cannot atomically write this, so just
+>>>> -				 * error in that case. It could be possible to
+>>>> -				 * atomically write other mirrors, but the
+>>>> -				 * complexity of supporting that is not worth
+>>>> -				 * the benefit.
+>>>> -				 */
+>>>> -				if (bio->bi_opf & REQ_ATOMIC) {
+>>>> -					bio->bi_status = BLK_STS_NOTSUPP;
+>>>> -					bio_endio(bio);
+>>>> -					goto err_dec_pending;
+>>>> -				}
+>>>> -
+>>>>    				good_sectors = first_bad - sector;
+>>>>    				if (good_sectors < max_sectors)
+>>>>    					max_sectors = good_sectors;
+>>>> @@ -1633,10 +1620,24 @@ static bool raid1_write_request(struct mddev *mddev, struct bio *bio,
+>>>>    	 * at a time and thus needs a new bio that can fit the whole payload
+>>>>    	 * this bio in page sized chunks.
+>>>>    	 */
+>>>> -	if (write_behind && mddev->bitmap)
+>>>> -		max_sectors = min_t(int, max_sectors,
+>>>> -				    BIO_MAX_VECS * (PAGE_SIZE >> 9));
+>>>> +	if (write_behind && mddev->bitmap) {
+>>>> +		if (atomic && max_sectors > BIO_MAX_VECS * (PAGE_SIZE >> 9))
+>>>
+>>> where does BIO_MAX_VECS * (PAGE_SIZE >> 9) even come from?
+>>>
+>> 
+>> BIO_MAX_VECS * (PAGE_SIZE >> 9) defines the maximum size supported by
+>> write-behind. The write-behind copy (alloc_behind_master_bio) uses a
+>> single bio, which can hold at most BIO_MAX_VECS pages, making this the
+>> largest payload it can carry. With a 4 KiB PAGE_SIZE, that corresponds
+>> to 256 pages, or 1 MiB (2048 sectors).
+>> This patch changes the behavior for atomic writes that exceed this
+>> limit. Instead of failing the write with -EIO when the number of sectors
+>> must be reduced, it disables write-behind and proceeds with the atomic
+>> write.
+>> 
+>>>> +			/*
+>>>> +			 * Atomic writes cannot be split, so disable
+>>>> +			 * write-behind.
+>>>> +			 */
+>>>> +			write_behind = false;
+>
+> It's a bit poor to have write_behind initially = false, then allow it to 
+> be set = true, and then later be set = false. Can this be improved?
+>
 
-=E5=9C=A8 2026/6/24 23:54, Hiroshi Nishida =E5=86=99=E9=81=93:
-> This series collects small, individually low-risk md/raid5 changes for
-> large, many-core, many-disk arrays.  Their common theme is reducing
-> per-stripe and stripe-cache contention, so the benefit appears mainly
-> when the raid5 stripe-handling worker threads are in use
-> (group_thread_cnt > 0); at the default group_thread_cnt =3D 0 (a single
-> handling thread) the series is essentially neutral.
->
->   - patches 1-3 remove signed arithmetic from a hot-path divisor, lift an
->     arbitrary stripe-cache size cap, and widen a badblock length argument
->     that currently truncates large ranges;
->   - patch 4 raises NR_STRIPE_HASH_LOCKS (8 -> 32) to spread stripe-hash
->     contention on high core-count systems;
->   - patches 5 and 8 reduce per-stripe overhead in the resync/recovery
->     path and bound the share of the stripe cache a rebuild may hold while
->     user I/O is competing;
->   - patch 6 allocates each worker group's array on its own NUMA node;
->   - patch 7 raises MAX_STRIPE_BATCH (8 -> 32).
->
-> Measured effect, treatment vs baseline, % change in mean IOPS (N=3D3),
-> swept over group_thread_cnt (RAID6 4+2, 22-core host, ramdisk members):
+Yes, I agree that setting write_behind to true and then resetting it to
+false later is not ideal. I will rework this.
 
-Testing with ramdisk does serve as a useful reference, but it does not refl=
-ect
-real world usage.
 
+>>>> +		else
+>>>> +			max_sectors = min_t(int, max_sectors,
+>>>> +					    BIO_MAX_VECS * (PAGE_SIZE >> 9));
+>>>> +	}
+>>>> +
+>>>>    	if (max_sectors < bio_sectors(bio)) {
+>>>> +		if (atomic) {
+>>>> +			bio_io_error(bio);
+>>>> +			goto err_dec_pending;
+>>>> +		}
+>>>> +
+>>>>    		bio = bio_submit_split_bioset(bio, max_sectors,
+>>>>    					      &conf->bio_split);
+>>>>    		if (!bio)
+>>>> @@ -3229,6 +3230,7 @@ static int raid1_set_limits(struct mddev *mddev)
+>>>>    	lim.max_write_zeroes_sectors = 0;
+>>>>    	lim.max_hw_wzeroes_unmap_sectors = 0;
+>>>>    	lim.logical_block_size = mddev->logical_block_size;
+>>>> +	lim.atomic_write_hw_unit_max = BARRIER_UNIT_SECTOR_SIZE;
+>>>
+>>> This BARRIER_UNIT_SECTOR_SIZE is a bit like chunk sectors, no? I am just
+>>> wondering if we just should set it to chunk sectors =
+>>> BARRIER_UNIT_SECTOR_SIZE
+>>>
+>>> I assume that it affects more than Reads and writes, e.g. discard also.
+>>>
+>> 
+>> BARRIER_UNIT_SECTOR_SIZE is the resync barrier-bucket, not the layout
+>> chunk size. Unless I'm missing something, using
+>> atomic_write_hw_unit_max seems more appropriate than using the chunk
+>> size. That way, the limit only applies to atomic writes instead of
+>> affecting other operations such.
 >
->    workload                       gtc=3D0   gtc=3D2   gtc=3D4   gtc=3D8
->    random 4K write (RMW)          +4.2%   +8.1%  +17.4%   +6.5%
->    DB mixed 75/25 8K              +0.4%   +4.2%  +10.3%   +4.7%
->    high-concurrency 70/30 4K      +3.9%   +1.2%  +10.0%   +0.2%
->    OLTP 70/30 16K                 -0.3%   +4.7%  +10.1%   +9.3%
->    partial-stripe write 8K        +1.1%   +4.8%  +11.2%  +14.2%
+> well it seems to be that everything in the driver is split over 
+> BARRIER_UNIT_SECTOR_SIZE, so is in effect a chunk size.
+>
+> Note that atomic_write_hw_unit_max is going to be small always compared 
+> to BARRIER_UNIT_SECTOR_SIZE.
+>
+> However, can you check the blk stacking code to make sure that this does 
+> as you want? As I remember, for stacking we take the atomic write limits 
+> of the first bottom device and then stack the other bottom devices and I 
+> don't think that setting atomic_write_hw_unit_max in this way has an 
+> impact - see blk_stack_atomic_writes_limits()
+>
 
-With a quick review I saw many static configurations is changed, I agree
-these changes can improve arrays with ssd/nvme and a system with large
-memory available. However, we already tested with hdd and about 8G memory
-available, these changes will not improve performance at all, with the
-extra memory overhead.
+I checked blk_stack_atomic_writes_limits(), and you are right: setting
+atomic_write_hw_unit_max here alone does not have the intended effect on
+the final stacked device.
 
-I can accept make those values configurable, but not direct modifications.
-As validation is required for numerous scenarios. Memory resources are prec=
-ious
-especially for most consumer NAS devices.
+Also, since atomic_write_hw_unit_max is expected to always be smaller
+than BARRIER_UNIT_SECTOR_SIZE, it seems that there is no need to set an
+additional atomic write limit in raid1, or even to set
+atomic_write_hw_unit_max at all. Is that what you mean?
 
+>> 
+>>>>    	lim.features |= BLK_FEAT_ATOMIC_WRITES;
+>>>>    	lim.features |= BLK_FEAT_PCI_P2PDMA;
+>>>>    	err = mddev_stack_rdev_limits(mddev, &lim, MDDEV_STACK_INTEGRITY);
+>>>
+>> 
 >
-> At the default single handling thread (group_thread_cnt =3D 0) the series=
- is
-> neutral (no regression).  As worker threads are added the gain grows,
-> peaking broadly around group_thread_cnt =3D 4 at roughly +10-17% across t=
-he
-> whole mix; at gtc =3D 8 the write-heavy workloads keep gaining while the
-> read-heavy high-concurrency case has saturated.  (Per-run cv was <1%
-> except the random-write test, ~5-9%, from a cold first run.)
->
-> These numbers are on a ramdisk, which removes device latency and so
-> overstates the CPU-side contention effect relative to a real device;
-> they show the direction and the group_thread_cnt dependence, not an
-> absolute speedup.  The stripe-hash/batch patches (4, 7) and the cache cap
-> (2) drive this; patch 6 only matters on multi-socket systems (not
-> exercised above) and patches 5/8 act on the resync/recovery path rather
-> than this steady-state workload.
->
-> Reproduction (stock mdadm + fio):
->    mdadm --create /dev/md0 --level=3D6 --raid-devices=3D6 --chunk=3D512 \
->          --assume-clean <6 members>
->    echo 16384 > /sys/block/md0/md/stripe_cache_size
->    echo N     > /sys/block/md0/md/group_thread_cnt      # N =3D 0,2,4,8
->    fio --filename=3D/dev/md0 --direct=3D1 --ioengine=3Dlibaio --group_rep=
-orting \
->        --time_based --runtime=3D15 --name=3Dw <per-workload opts>:
->      random write   : --rw=3Drandwrite              --bs=3D4k  --numjobs=
-=3D4  --iodepth=3D32
->      DB mixed       : --rw=3Drandrw --rwmixread=3D75  --bs=3D8k  --numjob=
-s=3D8  --iodepth=3D16
->      high-concur.   : --rw=3Drandrw --rwmixread=3D70  --bs=3D4k  --numjob=
-s=3D16 --iodepth=3D8
->      OLTP           : --rw=3Drandrw --rwmixread=3D70  --bs=3D16k --numjob=
-s=3D6  --iodepth=3D16
->      partial-stripe : --rw=3Drandwrite              --bs=3D8k  --numjobs=
-=3D4  --iodepth=3D32
->
-> Each patch stands on its own; I am happy to drop or defer any that is not
-> justified on its own merit.
->
-> Functional testing on RAID5 and RAID6: create, fail a member, rebuild
-> onto a spare / re-add, full data read-back verified, and scrub
-> ("check") reporting mismatch_cnt =3D=3D 0.  The series was also exercised
-> with KASAN and lockdep enabled -- including heavy group_thread_cnt
-> churn on a multi-node setup to stress the per-NUMA-node worker
-> allocation and the raid5_quiesce hash-lock-all path -- with no reports.
->
-> Hiroshi Nishida (8):
->    md: change chunk_sectors and stripe cache counts to unsigned int
->    md/raid5: raise stripe cache limit from 32768 to 262144
->    md: widen badblock sectors param from int to sector_t
->    md/raid5: raise NR_STRIPE_HASH_LOCKS from 8 to 32
->    md/raid5: submit a window of stripes during resync/recovery
->    md/raid5: allocate worker groups per NUMA node
->    md/raid5: raise MAX_STRIPE_BATCH from 8 to 32
->    md/raid5: reserve stripe cache for user I/O during rebuild
->
->   drivers/md/md.c    |   4 +-
->   drivers/md/md.h    |  10 ++--
->   drivers/md/raid5.c | 129 ++++++++++++++++++++++++++++++++-------------
->   drivers/md/raid5.h |  33 ++++++++----
->   4 files changed, 121 insertions(+), 55 deletions(-)
->
-> base-commit: 55b77337bdd088c77461588e5ec094421b89911b
->
---=20
-Thanks,
-Kuai
+
+-- 
+Best Regards,
+Abd-Alrhman
