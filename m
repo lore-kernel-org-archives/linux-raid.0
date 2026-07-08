@@ -1,104 +1,123 @@
-Received: from va-2-18.ptr.blmpb.com (va-2-18.ptr.blmpb.com [209.127.231.18])
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50F9D38C414
-	for <linux-raid@vger.kernel.org>; Wed,  8 Jul 2026 08:33:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFF414048A7
+	for <linux-raid@vger.kernel.org>; Wed,  8 Jul 2026 08:49:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783499587; cv=none; b=fNZ+MuG+akhu1NfekcRuRgjzt+gmarWC4EVKMkKVW4ux4TjBqrJ0YoDv854cySP+/oPOFxhz4zcg98d3aqwOaMBgSz/6QcruPZ08mL93MEYReMO+UlxPIonSAupmh3GtInncQPuC7aCVHpx2gxm3g3FABUT0dUUz57yLr32OFA0=
+	t=1783500556; cv=none; b=TfgmwcMtR3LCGmpKT3vctKlakLPfOxlRXnVzMofv3VKPAs9Km8erhgCO+FQR6Ds9OIgwH7BQLHAwmmySECMy7TN+sGboyDKORobL6DH8RQx2yOa2g4z3PhcRgbJJS1D8LvNR5uJjq9QxmSmqa8aevuAp2uQjJKoSdHdrMosDJok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783499587; c=relaxed/simple;
-	bh=DAIYywAR0W/NeFuMl6ZKhnDTCa6O2gpOiqJwwJ+8nUM=;
-	h=References:Cc:Message-Id:Mime-Version:In-Reply-To:To:From:Subject:
-	 Content-Type:Date; b=FhPhYUYR/7YPd/MNfQwqYuBWFZKac19kSOO88sBgrJXO2Ceq0etDmZvrIIWmY+vgg893W9eGzi//F58okL3fac5S6NIrhvKgzuFD11KPJF+zzs9iNCDDL0M7xUennIOIjxlOcKEmXNuyphKm3PoIqBFN9PV/C5IxctS+RQ0OZ8o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=m+Qdj5rS; arc=none smtp.client-ip=209.127.231.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1783500556; c=relaxed/simple;
+	bh=CjohiO+dqMRGjRDKVlufqxdXnNaBPKZAqLa3pu11X5E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mj/kzsMsxSZB7hmGoLAwqgt8jSg/YlrRzSaDc9VHbwlExsdKQ+BNqoTKmvWgsTTVMBOmb9Qe0nKvns/irldm3HTAjJG+leBhTUlVnzY/7stuX44fxI7SeA4s/Lu8+jIp0pXhPiB4pWOFiY54E/I4m4/6xlArJqioJFYSPXa3rA4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NkxA8R9d; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="m+Qdj5rS"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1783499572;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=DAIYywAR0W/NeFuMl6ZKhnDTCa6O2gpOiqJwwJ+8nUM=;
- b=m+Qdj5rSgjeJfdP2a72rpGSdZP5fkLtH99SCbPXPSmgg7HzDzcGzzrUBGxyRaI93KFtRUs
- k1F5d5h4zwiSCW7fZz3NUiiVzdHcNOqheMZH3kF2MgboBkVfqvWpCS6EXxEEaAfICpknVH
- lFBG7DIZqMK1cQYpUM2u7Tpt2MJWE4IGpJqvLvbICacP6vtsQNZRkr11IbcwExAct2015h
- fKDYH9MV9w4BxGUrI2FnWkKpxpch2QW37oYcNtSiaugP98bNu1s+unMptZKpK6aePjgYCc
- pu+ORF+Q7gluRAEeWVp8fllnwcw0fshDLbMjWVRJN4+p9nR/9KKHMyqfPq5H6g==
-Content-Transfer-Encoding: quoted-printable
-Received: from [192.168.1.104] ([39.182.0.144]) by smtp.larksuite.com with ESMTPS; Wed, 08 Jul 2026 08:32:50 +0000
-User-Agent: Mozilla Thunderbird
-X-Lms-Return-Path: <lba+26a4e0b33+bff0e9+vger.kernel.org+yukuai@fygo.io>
-References: <20260630075640.1081634-1-abd.masalkhi@gmail.com> <0a7dc7e2-30af-44de-8c29-b6e27a62fa55@fygo.io> <m2se5x6wff.fsf@gmail.com> <4f0b2516-65bd-41fa-abc3-3cd76951ec46@fygo.io> <m2mrw36qap.fsf@gmail.com>
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"sashiko-bot" <sashiko-bot@kernel.org>
-Message-Id: <f30acc2d-9153-4a9c-b6e5-79083bd9fedb@fygo.io>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NkxA8R9d"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2cce6a0c9c3so4914345ad.1
+        for <linux-raid@vger.kernel.org>; Wed, 08 Jul 2026 01:49:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783500554; x=1784105354; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=S2atXC3q4fE4OqkyNTQzT9VeYJAnSdOqbguBhd2DVe0=;
+        b=NkxA8R9ddiLM5gf+tJwHGVOUV5SzafnKO3si/lx6AZsZbT2aG3gWdKFXW+kBRJxnwL
+         DPXs40IKc43eb1TcVyLtvo8eAxQ3wrBoPnoaC0vnWMJ1ePqFeNtWmjGMavNWumztR9RD
+         /8PNAqwURPj1elCNYNGGSZGdVCzcwO6p6x923SI6kDlf/tSkV8pZ0k/R+lb4jGU6gmq9
+         aE8bPElTko2wbhkk8800U7aEYkQ9CtKEfuBJxEtxaDzxkuwGoJ4fQ/h0G6TJRNn2+Mhe
+         aTcSCynWHd/7ckQri7Rx4Qpix32LUOIZDUXTxMNaR+fwBRoeqNrCnzOCC4vTvtrixiVE
+         DLsw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783500554; x=1784105354;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=S2atXC3q4fE4OqkyNTQzT9VeYJAnSdOqbguBhd2DVe0=;
+        b=ir3Anx6n2CbpJxd19g0JGhSItE0g2CHeSR81/09uQr+8w6ahQkk18GlDdQ3CHS8AmF
+         SQ8zS4+hN3wesVOmK1FxlmOR2m3+0GogD90z8v7UK6Vn8zvauPfPmDXyHsIU1E0/hJBb
+         ko7QtZ2smt+2j/gM3s+A6dYm6ITBpu+lGfYYaNzbAgXQ8rFkVYh8ayOQp2M31LeTlrFK
+         Q83bgXKIuEJTCCkXo9sCk31DM/GGvWZhEuMFpEJg1sHZDpQJfNXAElrMG41xPHsLeSn1
+         rUCflgQ84NNTk+sk2y9GU+K4qnWxjjgBgF9oONbLnz6NeNdfD/s6cfaefx5UfyGRGQRU
+         5Muw==
+X-Forwarded-Encrypted: i=1; AHgh+Rrv8DjUzLVyVeSjXslyySKEOIgJnfSxWqc0DWaODNoC3QujOLA3kRYiBwj71CKtfnePRG8VEYKL30CZ@vger.kernel.org
+X-Gm-Message-State: AOJu0YykcQl9seDeMvLrm3j8HX7eln7h5QutL9hbVXLFBrwmFFwmjhVi
+	KuJXmdlqHdNhIkFMqOHxcd6P3dnmVs5sZ9Ua7T77Yb+MdlYH3ds5fcrE
+X-Gm-Gg: AfdE7cntK3/BQydaNVrkdl98fv9tV09lM8b4D8oVUIqXH1m/ufyWhW/S5OFEGH5LaLU
+	eFLwqXDaqV8ov1CylRY6ieEIb74wCUIWjNqTuTiqrWzsZ5nhPRI7t1vrA/OtUKatOv2i3nyiIqk
+	dRMCRAba8JWDRuoxMA3spkpj8xbI+oXCulVuwkRu9hlzAZxmUTG/HOG5UkGF4AyZ1K7oBnDLFsj
+	caZF4iIrlq1NXTmVKS/icb2YcHwE9IANat8LCgss51OACKb6q9lOOyC4lImyI8bj84I3u0+eAgv
+	Om7hALg0vkh1A3O6ruPhHjOwXQnTWuy+dtwRh55imi5mubg4EtL8Jstu/7xnYOGbpO64BVABkwE
+	6NdAbyB5iO1mpWDM5blTKGj2TMX22r3EZn48aym3kfwAKj/jwtVyedeQZ/rsHBVySdgHvXHmz7u
+	6k+B4L2g==
+X-Received: by 2002:a17:903:4684:b0:2ca:9ab:e723 with SMTP id d9443c01a7336-2ccea481a57mr17263475ad.33.1783500554279;
+        Wed, 08 Jul 2026 01:49:14 -0700 (PDT)
+Received: from lgs.. ([2001:250:5800:1000::f280])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ccc9bf77e4sm24536395ad.22.2026.07.08.01.49.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 08 Jul 2026 01:49:13 -0700 (PDT)
+From: Guangshuo Li <lgs201920130244@gmail.com>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>,
+	Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	Josh Hunt <johunt@akamai.com>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Guangshuo Li <lgs201920130244@gmail.com>
+Subject: [PATCH] md/raid10: free r10_bio on write NOWAIT exits
+Date: Wed,  8 Jul 2026 16:47:01 +0800
+Message-ID: <20260708084701.737763-1-lgs201920130244@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-In-Reply-To: <m2mrw36qap.fsf@gmail.com>
-To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, 
-	"yu kuai" <yukuai@fygo.io>, <song@kernel.org>, 
-	<magiclinan@didiglobal.com>, <xiao@kernel.org>
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH] md: avoid modifying spares while the array is not suspended
-Content-Type: text/plain; charset=UTF-8
-Reply-To: yukuai@fygo.io
-Date: Wed, 8 Jul 2026 16:32:47 +0800
-X-Original-From: yu kuai <yukuai@fygo.io>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Hi,
+The change referenced by the Fixes tag made a NOWAIT early exit in
+raid10_write_request() free the r10_bio directly instead of using
+raid_end_bio_io(), avoiding an unmatched allow_barrier() while still
+returning the r10_bio object to the mempool.
 
-=E5=9C=A8 2026/7/7 18:35, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
-> Hi Kuai,
->
-> On Tue, Jul 07, 2026 at 09:12 +0800, yu kuai wrote:
->> Hi,
->>
->> =E5=9C=A8 2026/7/6 3:58, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
->>>> The problem looks real, however, I think this will cause a change that=
- user will be awared,
->>>> if there are really spares that can be removed from conf, but array is=
- not suspended here,
->>>> user will still expect rdev will be removed from conf automatically.
->>>>
->>>> In md_start_sync, if suspend is false, can we check again after mddev_=
-lock? If suspend is
->>>> supposed to be true, we can release the lock and retry with suspend =
-=3D true.
->>>>
->>> Yes, I see, and your approach is much better. But what do you think
->>> about taking the lock first and then checking only once?
->> I don't get what you mean. If we take the lock and then check that array=
- should
->> suspend, we still have to release the lock before we suspend the array.
->>
-> Sorry, I was not clear. I meant, do we need to check twice, once before
-> taking the lock and once after? It seems that the check before taking the
-> lock is redundant. since the result would need to be checked again after
-> taking the lock anyway.
->
-> Could we drop the check before taking the lock and only check whether
-> suspension is needed once while holding it? If suspension is needed, we
-> would release the lock, suspend the array, and then reacquire the lock.
+The same function has two other NOWAIT early exits. One is before
+regular_request_wait(), where the request has not taken a barrier
+reference. The other is in the reshape metadata path, where the barrier
+reference is released explicitly with allow_barrier(). Both paths end the
+bio and return false, but neither returns the r10_bio object to the
+mempool.
 
-Thanks for the explanation, I understand now. Howerver, I still prefer to c=
-heck
-first before holding the lock. Because the checking is much lower overhead =
-than
-acquire reconfig_mutex, and the race window that rdev become spare is small=
-, so
-it's unlikely we'll acquire reconfig_mtuex twice.
+Free the r10_bio on both NOWAIT exits. Keep the existing barrier handling
+unchanged, since only the reshape path has taken a barrier reference.
 
->
->> --=20
->> Thanks,
->> Kuai
+Fixes: 7d96f3120a7f ("md/raid10: fix deadlock with check operation and nowait requests")
+Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
+---
+ drivers/md/raid10.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
---=20
-Thanks,
-Kuai
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 0a3cfdd3f5df..d480344c5b8f 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1364,6 +1364,7 @@ static bool raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 		DEFINE_WAIT(w);
+ 		/* Bail out if REQ_NOWAIT is set for the bio */
+ 		if (bio->bi_opf & REQ_NOWAIT) {
++			free_r10bio(r10_bio);
+ 			bio_wouldblock_error(bio);
+ 			return false;
+ 		}
+@@ -1397,6 +1398,7 @@ static bool raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 		md_wakeup_thread(mddev->thread);
+ 		if (bio->bi_opf & REQ_NOWAIT) {
+ 			allow_barrier(conf);
++			free_r10bio(r10_bio);
+ 			bio_wouldblock_error(bio);
+ 			return false;
+ 		}
+-- 
+2.43.0
+
