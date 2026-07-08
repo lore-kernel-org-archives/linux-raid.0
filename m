@@ -1,181 +1,313 @@
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+Received: from mail-qk1-f177.google.com (mail-qk1-f177.google.com [209.85.222.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2403943E492
-	for <linux-raid@vger.kernel.org>; Wed,  8 Jul 2026 12:43:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B28FB37D13A
+	for <linux-raid@vger.kernel.org>; Wed,  8 Jul 2026 13:35:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783514587; cv=none; b=uvRztFWkzSewgEQa4eZFs03jw03IB52s1EZHnSS/KiP7NUoxhJhjLl1AoXeXaCIKWd4oitdKn501DyKYQXjm3DrCzLsxDspVHODWhZBULlFMDlfhCfSVwlx0t9WsDAvm/XsED3kItMsE1G4Hb6Ggn4D7h6tMWu91TnkR18t9euY=
+	t=1783517756; cv=none; b=hjvc9tvZgjBYMSIMtJoGVSUZPkB3unz3WzyMhGW7mNaYeogmt0GGC3DmMeLBFp3p4OlkYkYIEAPrhSAt0BpAgp/PWyIA7rkPIJ4Y0upoGZcSvSgG4FG7RAuz1rwcc7lwj2WJp1KQiNtEwWUS1yrJDWSN0ZhvOWY1qzpaFsgCd94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783514587; c=relaxed/simple;
-	bh=JEKJH+45M0lAS4e8BrESH2HddDu9m0XdTLvwkxcOCAg=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=sSI2yEXnDrMgSbqwRzRasxo6X4Ky8D/3t92kHg4dmHMujzOfvm6VQX7VTwEFmHjKk4K3yJCLUqv/ea0OvWDWv/pwHSUWPsnP4G/65N36rF1SnCDJ6CKGSnfnpqy1Sg0ur/KGXmx+L3LDt5zscmig+j3+IX4rXhB7jM1gG0DDfeE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bqQ/0yRJ; arc=none smtp.client-ip=209.85.128.54
+	s=arc-20240116; t=1783517756; c=relaxed/simple;
+	bh=zEJ+4jAiaNq5aeK7X7y8QioWmAgpoUSpIH9N+SQ35mk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ebQAc6xcVDJ1rdyVy1SaDV6zTI0O2E4/GMPKyiGGLKqA4gwOiQNR/9e/Eb1/6c6nTaJU25CtEec2JImCIWr8QlCVp66UZlETHtlSw6EwC6VNLU+O6SI9bn4PXRZ9qsDEh53FUaqHRIBM7T5QYEAtmlvXmJEUM4APasg7rll8KRE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WXlXrP19; arc=none smtp.client-ip=209.85.222.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bqQ/0yRJ"
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-493e4cccd8dso2628785e9.2
-        for <linux-raid@vger.kernel.org>; Wed, 08 Jul 2026 05:43:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WXlXrP19"
+Received: by mail-qk1-f177.google.com with SMTP id af79cd13be357-92e51d3d83cso33036185a.2
+        for <linux-raid@vger.kernel.org>; Wed, 08 Jul 2026 06:35:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783514584; x=1784119384; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :references:in-reply-to:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=lXhqjC53+0nMAHnQTmB39qOAgVWgrR2NT4dp6WKReNw=;
-        b=bqQ/0yRJMNHS2yNHV9btVyvKz35V3Zt7ngSFxDCe4AZr41/Lt0bWkXzxNJJC/KGaB6
-         M4cXfnbgcQop8KtBayhoB41JWdyIOMwEk4NsAvlbSWC3ca9IqaZz3ErxEcPsmmkt2qAi
-         t/vDvcEjpwze+pZxy989dRq8frf2KjLovu0IU6DboZkMcK+ucdi2seDQvgA8jUXCwiZS
-         2pOBDhgk1iarIVj/TroE2PTTNIIykbhA/9avyRJ9DKcnVT8Hy9koVyNyLrJApRms0wcJ
-         oIoZ2drlEFbk05u/udfbjUFsE2UDoPlA2f06B1KArHcj2wIE5DMFdA2uBbbN+O7ZAon7
-         OX+Q==
+        d=gmail.com; s=20251104; t=1783517752; x=1784122552; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=UBjslNuGoGP7Ld9NiJrm6MjO0hs8ZPymb79f+MsISBI=;
+        b=WXlXrP191hveTL3FBjYNtQRhpNC5J/6mdlCFAs7Mw1FNkViLL44D8VW63du1qO9FL4
+         0ybjDZliovGHjKiS0qo8D/T5YoH2H5b85lGAeBQqzQYdE62B81fp12ISnkYd0/Oy1TYz
+         jB6DJA+T0xP+rfgoIyzZXxFTu7CuOk9SaQQbSiD2cMAn+SNn7z3I/hijNuQtYBTZG3p/
+         vNOVgrvLyhDN5l3PRx6E6c5cOo6e+ujC+68nmqbNPG3g7/xqe9p8VNOUv2qY1ANuXcym
+         9A90UQei7fN0W96EyV4RCAjwrv1iyfE+jDm4/uVDHK4XpAw7Aks5JXCLPP0+4ACSUMHh
+         T1ig==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783514584; x=1784119384;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :references:in-reply-to:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=lXhqjC53+0nMAHnQTmB39qOAgVWgrR2NT4dp6WKReNw=;
-        b=NeTZXL2FbCqdQDOk5BBnlXxr8WxENLnE8zlXitMpHDz0he7SW2i8sZe4lk+kK0Kddj
-         atpsgDJYtM6ASFNZeCHAj6Vq7psXzBlZW8AxeTLfuP0IgKIwn0F9PigYoamRmv16Go6h
-         Ch7dhKw5laGoYo3cSaIB8QxJJyUj+7WiXePaWTfLSBb07N8zkCyEm8mr4+lv5PFoUXeb
-         kRT73FWKkyTky4VYkgX7wBF7wJHtLKHF1Pht2dNh+66lwFGzf4o2u1UHntH2j1/6fRsr
-         agw37TBSYAETxZsmuFLPeYzXXEbPxvKM7bevl4qGP05HZieEsKgtwdD2ijOedQh6T3qF
-         PUUg==
-X-Forwarded-Encrypted: i=1; AHgh+RphYunYvuMQV0DR4TLzvxhaaBWdvjU9ufE0DdwtQkLDkyrg646AYGv3Z15HkQ8pn318epbEI+B+viJR@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzh2ZZ8AyhtE/KgTbxohI5CPKCOvrLvMkoiP58c8ligR3UkX6q+
-	Qv+3XjjsNkTf529TR/tX+FkIj87+BdB0ER85G65A6X0CONImHdjHJhjbMfZ5Gw==
-X-Gm-Gg: AfdE7cnMWR3jzErIg/nQDf7YqZI1Gi4jdpDDu03bet5umDX0RvQ8HYyY7u+RWz8TZGz
-	zg1TofLUePnThmHvRfTmXEgp8pqIdTOxFO1PUDMqurTns22ljmGso9rhJmQ5gEpSmQyeI5C+kM+
-	MCHflV6BHRXJ7W5AF0rdGyW8UHC0KDfXafCSjBOpwvE/Ig5asVDccEVdDAGja5bOD6IkoiFGfNt
-	4+rEOZdL2hsdKJoI7RNSDgMs498MXkh/frK+Gg+lvLSP3VbJdwO0j+uLxgH5+5XKDTzNC67YVbN
-	YIMYzIZSYsRw8aUcm0O8zZnydD9Ick+JJUv38ll4iAY1RBYcW1pCW+nyTRJk3FA3AZSt39ayGrG
-	nAxggJAqEwYp9kdmBXCZB9u69XqrK691rELZGWo53KPntjl2ONi77c3xsJNBkAhl3jIX2o+XOq7
-	qLaJ+ZDJxmloRG77Iw2D4svysoDE1m48mb7AjSWDAUjU/XZg==
-X-Received: by 2002:a05:600c:4e48:b0:493:e6f7:ad9d with SMTP id 5b1f17b1804b1-493e6f7af7emr18974405e9.35.1783514584282;
-        Wed, 08 Jul 2026 05:43:04 -0700 (PDT)
-Received: from Abds-MacBook-Air.local ([195.72.110.74])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-493e0fbd355sm128111035e9.13.2026.07.08.05.43.01
+        d=1e100.net; s=20251104; t=1783517752; x=1784122552;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=UBjslNuGoGP7Ld9NiJrm6MjO0hs8ZPymb79f+MsISBI=;
+        b=ZTYOa3koctdprJlUugL9/lyqKBjiM4GKFLjbLFMtYZ6BsQy9zyWnw+mp2n4K+8zmCf
+         10dC4bscMBOGVtlfvfp2DvlMJUVDNHK+R1QJ2jHURKeUP5qgXDtM0t9UXocigYK7PLJd
+         o/1SbN8uaBTmy3ilRySHL5TYYrFkUY4luFUwtpqohQ28nDK+Szz0t4RpDbXSt5L9BqR7
+         KbWQJJknjEErHv0yGmA91URZ0D9eRG+Fwrkj+bmVR5BkcM+2AeRUvpC1mwJ81Zh1PuXl
+         i80jrdBJWpZipvHXyDoYCn9xJ92wG7SP7BX3axFHdk9MaCWv9GIMAGjGvs5Y3ceihgVZ
+         wFbw==
+X-Forwarded-Encrypted: i=1; AHgh+RoZnLsmfJXVxK55LXqzJlQ2GU/BtON+mVH/QPGxL5AkMHhKRbaqyH8nNDUfKv45vGNFnKSO/Ap0wncx@vger.kernel.org
+X-Gm-Message-State: AOJu0YybvskeRE4xx2WgC6UBsATtkq2eAzDvMPJjC2bPqO9D+12dn5b1
+	8m6MxZD8RML8awb7NCJa3FcsSlwhYGzMn5fUqWA2MynaY9r8lMpBg1iozXRizaqfmG10pg==
+X-Gm-Gg: AfdE7cn4VjyvGjdQtKAASXcYZ14BW8AEQzE15oG/NmCKirtoUt293T1mmTHt2NRbEiK
+	i2xP+gtuv/ItnMLcLMhzZkoqLyQKbzv8iZd6s03QEBWl5Pn6ETFitfVFVyfkToUf+Kys5Q0yten
+	cdxDP/bRWB97BgwC6VEvnUVVatoEkuFQSy5jqR0S38z6ld5mcahy/PR7TjXbWQRg7g+SXvWL2dO
+	LwFrdqRsK8k9Q1YsG9twz/LY6KoNn4SXrXUp5pb2S+Pc57fmhOPT4UCmXnIDGrOP4JmfoQ14B8C
+	DChiGyvP8AH4BiWVMEuEPxa9q03WJwNwvKZtsLRI1EA2q+DPXbaVfGfIfBs2quI5LXO7cVhMNV5
+	dqbMfc8l7pA9nJGBmMocRZuwNx0v/o4Dp/O2DQVSXhW1R0qV01URPfZoxWlHZYmEzDE+Qha+Mjy
+	KiFQ==
+X-Received: by 2002:ad4:5743:0:b0:8f4:870f:72bc with SMTP id 6a1803df08f44-8fec3cf5d44mr20865746d6.51.1783517752089;
+        Wed, 08 Jul 2026 06:35:52 -0700 (PDT)
+Received: from lgs.. ([118.193.39.55])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8fca1c1356esm51565376d6.37.2026.07.08.06.35.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jul 2026 05:43:03 -0700 (PDT)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-Subject: Re: [PATCH v2] md: recheck spare changes before starting sync
-In-Reply-To: <20260708113713.B77311F00ACF@smtp.kernel.org>
-References: <20260708112003.474537-1-abd.masalkhi@gmail.com>
- <20260708113713.B77311F00ACF@smtp.kernel.org>
-Date: Wed, 08 Jul 2026 14:42:55 +0200
-Message-ID: <m2echdlkj4.fsf@gmail.com>
+        Wed, 08 Jul 2026 06:35:51 -0700 (PDT)
+From: Guangshuo Li <lgs201920130244@gmail.com>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>,
+	Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	Junrui Luo <moonafterrain@outlook.com>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Guangshuo Li <lgs201920130244@gmail.com>
+Subject: [PATCH] md/raid5: validate journal checksum slots during recovery
+Date: Wed,  8 Jul 2026 21:35:34 +0800
+Message-ID: <20260708133534.770770-1-lgs201920130244@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
+The change referenced by the Fixes tag added payload length validation
+before accessing journal metadata during raid5-cache recovery.
 
-Hi Kuai,
+However, the DATA and PARITY payload length is computed from the on-disk
+size field without ensuring that the checksum slots read later are
+actually present. struct r5l_payload_data_parity ends with a flexible
+checksum array, so sizeof(struct r5l_payload_data_parity) does not cover
+any checksum entries.
 
-On Wed, Jul 08, 2026 at 11:37 +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
-e(s) to consider:
->
-> Pre-existing issues:
-> - [High] Incomplete fix for a TOCTOU race condition causing a NULL pointe=
-r dereference when modifying the spare configuration without suspending the=
- array.
-> --
->
-> --- Patch [1]: [PATCH v2] md: recheck spare changes before starting sync =
+A corrupted journal can set a DATA payload size smaller than one page.
+The computed checksum count then becomes zero and the payload length only
+covers the fixed header, but recovery still reads checksum[0]. For RAID6
+PARITY payloads, recovery also reads checksum[1], so the payload must
+cover two checksum entries.
+
+Make the validated DATA and PARITY payload length include the checksum
+entries that recovery may read. Also make sure fixed payload headers are
+present before reading their fields.
+
+Fixes: b0cc3ae97e89 ("md/raid5: validate payload size before accessing journal metadata")
+Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
 ---
-> commit 0ddb3cd53c96b4255d51183f6d5da4fcd8b938bf
-> Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
->
-> md: recheck spare changes before starting sync
->
-> This patch aims to fix a race condition where spare configurations are
-> modified without suspending the array. It adds a recheck for spare
-> configuration changes after acquiring the reconfig_mutex to avoid operati=
-ng
-> on stale states.
->
-> Link: https://lore.kernel.org/linux-raid/20260630075640.1081634-1-abd.mas=
-alkhi@gmail.com/
->
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -10181,13 +10181,25 @@ static void md_start_sync(struct work_struct *=
-ws)
->
-> [ ... ]
->
->>  	mddev_lock_nointr(mddev);
->> +
->> +	/*
->> +	 * The spare configuration can change before reconfig_mutex is acquire=
-d.
->> +	 * Recheck while holding the lock and suspend if needed.
->> +	 */
->> +	if (!suspend && (mddev->reshape_position =3D=3D MaxSector || !md_is_rd=
-wr(mddev)) &&
->> +	    md_spares_need_change(mddev)) {
->> +		mddev_unlock(mddev);
->> +		mddev_suspend_and_lock_nointr(mddev);
->> +		suspend =3D true;
->> +	}
->> +
->
-> [Severity: High]
-> This is a pre-existing issue, but does this recheck completely close the =
-race
-> window?
->
-> If a faulty drive has pending I/O, md_spares_need_change() will evaluate
-> rdev_removeable(), which checks atomic_read(&rdev->nr_pending). If that is
-> greater than zero, md_spares_need_change() returns false. This causes both
-> the initial check and this new recheck to bypass suspension.
->
-> If an asynchronous I/O completion happens immediately after this recheck,
-> nr_pending can decrement to 0. When md_start_sync() continues and eventua=
-lly
-> calls remove_spares(), it will re-evaluate rdev_removeable(), find
-> nr_pending =3D=3D 0, and remove the disk. This nullifies the disk pointer.
->
+ drivers/md/raid5-cache.c | 108 +++++++++++++++++++++++++++++----------
+ 1 file changed, 82 insertions(+), 26 deletions(-)
 
-Shouldn't the Blocked flag guard against this case? It is set before the
-Faulty bit and before nr_pending is decremented, and it should only be
-cleared while holding reconfig_mutex, or am I missing something?
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 7b7546bfa21f..4aef692182b4 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -1980,6 +1980,29 @@ r5l_recovery_verify_data_checksum(struct r5l_log *log,
+ 	return (le32_to_cpu(log_checksum) == checksum) ? 0 : -EINVAL;
+ }
+ 
++static sector_t r5l_recovery_payload_data_parity_len(struct r5conf *conf,
++		const struct r5l_payload_data_parity *payload, bool parity)
++{
++	unsigned int nr_csum;
++	unsigned int min_csum = 1;
++
++	/*
++	 * The payload size determines how many checksum entries are stored,
++	 * but recovery always reads checksum[0].  For RAID6 parity payloads
++	 * it also reads checksum[1] for Q.  Make the validated payload length
++	 * cover every checksum entry that will be read below.
++	 */
++	nr_csum = le32_to_cpu(payload->size) >> (PAGE_SHIFT - 9);
++
++	if (parity && conf->max_degraded == 2)
++		min_csum = 2;
++	if (nr_csum < min_csum)
++		nr_csum = min_csum;
++
++	return sizeof(*payload) + (sector_t)sizeof(__le32) * nr_csum;
++}
++
++
+ /*
+  * before loading data to stripe cache, we need verify checksum for all data,
+  * if there is mismatch for any data page, we drop all data in the mata block
+@@ -1992,6 +2015,7 @@ r5l_recovery_verify_data_checksum_for_mb(struct r5l_log *log,
+ 	struct r5conf *conf = mddev->private;
+ 	struct r5l_meta_block *mb = page_address(ctx->meta_page);
+ 	sector_t mb_offset = sizeof(struct r5l_meta_block);
++	sector_t meta_size = le32_to_cpu(mb->meta_size);
+ 	sector_t log_offset = r5l_ring_add(log, ctx->pos, BLOCK_SECTORS);
+ 	struct page *page;
+ 	struct r5l_payload_data_parity *payload;
+@@ -2001,28 +2025,42 @@ r5l_recovery_verify_data_checksum_for_mb(struct r5l_log *log,
+ 	if (!page)
+ 		return -ENOMEM;
+ 
+-	while (mb_offset < le32_to_cpu(mb->meta_size)) {
++	while (mb_offset < meta_size) {
+ 		sector_t payload_len;
++		u16 type;
+ 
+ 		payload = (void *)mb + mb_offset;
+ 		payload_flush = (void *)mb + mb_offset;
+ 
+-		if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_DATA) {
+-			payload_len = sizeof(struct r5l_payload_data_parity) +
+-				(sector_t)sizeof(__le32) *
+-				(le32_to_cpu(payload->size) >> (PAGE_SHIFT - 9));
+-			if (mb_offset + payload_len > le32_to_cpu(mb->meta_size))
++		if (mb_offset + sizeof(payload->header) > meta_size)
++			goto mismatch;
++
++		type = le16_to_cpu(payload->header.type);
++
++		if (type == R5LOG_PAYLOAD_DATA) {
++			if (mb_offset + sizeof(*payload) > meta_size)
+ 				goto mismatch;
++
++			payload_len = r5l_recovery_payload_data_parity_len(conf,
++									  payload,
++									  false);
++			if (payload_len > meta_size - mb_offset)
++				goto mismatch;
++
+ 			if (r5l_recovery_verify_data_checksum(
+ 				    log, ctx, page, log_offset,
+ 				    payload->checksum[0]) < 0)
+ 				goto mismatch;
+-		} else if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_PARITY) {
+-			payload_len = sizeof(struct r5l_payload_data_parity) +
+-				(sector_t)sizeof(__le32) *
+-				(le32_to_cpu(payload->size) >> (PAGE_SHIFT - 9));
+-			if (mb_offset + payload_len > le32_to_cpu(mb->meta_size))
++		} else if (type == R5LOG_PAYLOAD_PARITY) {
++			if (mb_offset + sizeof(*payload) > meta_size)
+ 				goto mismatch;
++
++			payload_len = r5l_recovery_payload_data_parity_len(conf,
++									  payload,
++									  true);
++			if (payload_len > meta_size - mb_offset)
++				goto mismatch;
++
+ 			if (r5l_recovery_verify_data_checksum(
+ 				    log, ctx, page, log_offset,
+ 				    payload->checksum[0]) < 0)
+@@ -2034,15 +2072,18 @@ r5l_recovery_verify_data_checksum_for_mb(struct r5l_log *log,
+ 						 BLOCK_SECTORS),
+ 				    payload->checksum[1]) < 0)
+ 				goto mismatch;
+-		} else if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_FLUSH) {
++		} else if (type == R5LOG_PAYLOAD_FLUSH) {
++			if (mb_offset + sizeof(*payload_flush) > meta_size)
++				goto mismatch;
++
+ 			payload_len = sizeof(struct r5l_payload_flush) +
+ 				(sector_t)le32_to_cpu(payload_flush->size);
+-			if (mb_offset + payload_len > le32_to_cpu(mb->meta_size))
++			if (payload_len > meta_size - mb_offset)
+ 				goto mismatch;
+ 		} else /* not R5LOG_PAYLOAD_DATA/PARITY/FLUSH */
+ 			goto mismatch;
+ 
+-		if (le16_to_cpu(payload->header.type) != R5LOG_PAYLOAD_FLUSH) {
++		if (type != R5LOG_PAYLOAD_FLUSH) {
+ 			log_offset = r5l_ring_add(log, log_offset,
+ 						  le32_to_cpu(payload->size));
+ 		}
+@@ -2075,7 +2116,8 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 	struct r5l_meta_block *mb;
+ 	struct r5l_payload_data_parity *payload;
+ 	struct r5l_payload_flush *payload_flush;
+-	int mb_offset;
++	sector_t mb_offset;
++	sector_t meta_size;
+ 	sector_t log_offset;
+ 	sector_t stripe_sect;
+ 	struct stripe_head *sh;
+@@ -2094,22 +2136,31 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 
+ 	mb = page_address(ctx->meta_page);
+ 	mb_offset = sizeof(struct r5l_meta_block);
++	meta_size = le32_to_cpu(mb->meta_size);
+ 	log_offset = r5l_ring_add(log, ctx->pos, BLOCK_SECTORS);
+ 
+-	while (mb_offset < le32_to_cpu(mb->meta_size)) {
++	while (mb_offset < meta_size) {
+ 		sector_t payload_len;
++		u16 type;
+ 		int dd;
+ 
+ 		payload = (void *)mb + mb_offset;
+ 		payload_flush = (void *)mb + mb_offset;
+ 
+-		if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_FLUSH) {
++		if (mb_offset + sizeof(payload->header) > meta_size)
++			return -EINVAL;
++
++		type = le16_to_cpu(payload->header.type);
++
++		if (type == R5LOG_PAYLOAD_FLUSH) {
+ 			int i, count;
+ 
++			if (mb_offset + sizeof(*payload_flush) > meta_size)
++				return -EINVAL;
++
+ 			payload_len = sizeof(struct r5l_payload_flush) +
+ 				(sector_t)le32_to_cpu(payload_flush->size);
+-			if (mb_offset + payload_len >
+-			    le32_to_cpu(mb->meta_size))
++			if (payload_len > meta_size - mb_offset)
+ 				return -EINVAL;
+ 
+ 			count = le32_to_cpu(payload_flush->size) / sizeof(__le64);
+@@ -2130,13 +2181,18 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 		}
+ 
+ 		/* DATA or PARITY payload */
+-		payload_len = sizeof(struct r5l_payload_data_parity) +
+-			(sector_t)sizeof(__le32) *
+-			(le32_to_cpu(payload->size) >> (PAGE_SHIFT - 9));
+-		if (mb_offset + payload_len > le32_to_cpu(mb->meta_size))
++		if (type != R5LOG_PAYLOAD_DATA && type != R5LOG_PAYLOAD_PARITY)
++			return -EINVAL;
++
++		if (mb_offset + sizeof(*payload) > meta_size)
++			return -EINVAL;
++
++		payload_len = r5l_recovery_payload_data_parity_len(conf, payload,
++					type == R5LOG_PAYLOAD_PARITY);
++		if (payload_len > meta_size - mb_offset)
+ 			return -EINVAL;
+ 
+-		stripe_sect = (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_DATA) ?
++		stripe_sect = (type == R5LOG_PAYLOAD_DATA) ?
+ 			raid5_compute_sector(
+ 				conf, le64_to_cpu(payload->location), 0, &dd,
+ 				NULL)
+@@ -2183,7 +2239,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 			list_add_tail(&sh->lru, cached_stripe_list);
+ 		}
+ 
+-		if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_DATA) {
++		if (type == R5LOG_PAYLOAD_DATA) {
+ 			if (!test_bit(STRIPE_R5C_CACHING, &sh->state) &&
+ 			    test_bit(R5_Wantwrite, &sh->dev[sh->pd_idx].flags)) {
+ 				r5l_recovery_replay_one_stripe(conf, sh, ctx);
+@@ -2191,7 +2247,7 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+ 			}
+ 			r5l_recovery_load_data(log, sh, ctx, payload,
+ 					       log_offset);
+-		} else if (le16_to_cpu(payload->header.type) == R5LOG_PAYLOAD_PARITY)
++		} else if (type == R5LOG_PAYLOAD_PARITY)
+ 			r5l_recovery_load_parity(log, sh, ctx, payload,
+ 						 log_offset);
+ 		else
+-- 
+2.43.0
 
-> Because the array was never suspended, couldn't concurrent I/O re-read the
-> nullified pointer and crash? For example, in drivers/md/raid10.c:
->
-> err_handle() {
->     ...
->     struct md_rdev *rrdev =3D conf->mirrors[d].replacement;
->     ...
->     if (r10_bio->devs[k].repl_bio) {
->         rdev_dec_pending(rrdev, mddev);
->         r10_bio->devs[k].repl_bio =3D NULL;
->     }
-> }
->
-> If rrdev is fetched as NULL due to the concurrent removal, rdev_dec_pendi=
-ng()
-> will dereference it.
->
-> Could remove_spares() be restricted to only remove drives if the array is
-> actually suspended, or should suspension be enforced earlier regardless of
-> nr_pending?
->
-> --=20
-> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260708112003.47=
-4537-1-abd.masalkhi@gmail.com?part=3D1
-
---=20
-Best Regards,
-Abd-Alrhman
