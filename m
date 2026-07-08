@@ -1,142 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D40AD409614
-	for <linux-raid@vger.kernel.org>; Wed,  8 Jul 2026 09:06:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 436F7408023;
+	Wed,  8 Jul 2026 09:07:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783501620; cv=none; b=Anbl7/x1Hxn81xnn/HJskEMNIYf5xGbJkm2QxpGYoJZCTbtqTtHdZBY0rTRtZt3UFVafPNuwsIZunrXUViHFWt5RrwLSIFdEufWKtHL5CQJhxrYCl/eKi87FTJxu4sBjdrtNaNeOYj1qOScaU19thmIrJnW2rqsVTo9rA8XAggE=
+	t=1783501621; cv=none; b=T0CmM+BlM2pyr5cRk7nsuDrlyokV55gOIMs9w7cf3Aa58v9lPmS/PRwfFtdFu1C4QkbIpHzfSH2LQIoLPfZQ1c4B34XBq2IC+RIEoRwJ9WHGJpgPkx1igRCMimSPU1weRbHwl4FiBim4evfLBWerK70XPyDAO03ccPAfzPLVOV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783501620; c=relaxed/simple;
-	bh=ZxusXYQL32ak7oMoCeyrJDgxljR0wrPj2lrv0EnKzDo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=aCGhKjq56JsPKgAmzROqqCV+I2IoKQiYDmMf/OZ7Ik3X27lsNFGxpywxhDpQrtvTLRaNBGa1ddmbQMVpzpUxlyNd0fClQgCPAic4x9g0JyrCYRS7ObfYbdXuyZcabO46p7RxVQj1TTFa2qnhSQS54j8IsFoiYu6C/OUX9F0/VP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j28jCZLo; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783501621; c=relaxed/simple;
+	bh=+cP2WVwexuC5UoqqKdMwzVPX8zfmNlabAALFQb4lkEE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=F2cfZpWiUFks9aBPNWODzRQhT/VmiVIflJO1oTP5DubTehYYOewGc7ANAj82DGb/LeggdMfFK73kMucwLRUo/r2YdHueefxY5ERokQczSzIVQ+ggb64VQ/WnpS9nbOgv2zqqvcKoprJuyQqBq8dtwcVgB7DJaRofDhLPOBWrMLA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=A/zMyA+a; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j28jCZLo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8567A1F000E9;
-	Wed,  8 Jul 2026 09:06:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783501618;
-	bh=PfdsasGRuj40gQKKR00+s7dQTWMd7IA7wb4QiDA8ffE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=j28jCZLowbKuode6PZ0LbbsDZ0aDOR/mWcwWTmA23AesakzF/L1TJ3CT8TIfYlOtX
-	 g3Ystq4Maogy+xoJn8Esoz+W3c1XvwD7x81kIsTgEHXnoTw6oGyVKtPpnjVx4/eIgA
-	 dtSicZL2X8j3qkHkVyihXqUPqBywpZt6XHfN/J4QPZnvQAHWEZSPmoLll9mDuLpnKa
-	 3H8iSsR7N9T5YLPZKm2nzQOrDUThiQdCb9DNqXnyjLdN4QVAwYHSqj8h+j2VXBAkqS
-	 hib39q23sDm8TFW6B84amRqs3p3V8bHSGz/Kzh1IEWutPxmxgIdqirS9j5Uk0kItq1
-	 bPfOnRQnG+MDw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] md/raid10: free r10_bio on write NOWAIT exits
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Guangshuo Li" <lgs201920130244@gmail.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260708084701.737763-1-lgs201920130244@gmail.com>
-References: <20260708084701.737763-1-lgs201920130244@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 08 Jul 2026 09:06:58 +0000
-Message-Id: <20260708090658.8567A1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="A/zMyA+a"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=Gp98w6D3KlXrs0t+OeKoatgJmpe1WDrqOjQVUyffE6A=; b=A/zMyA+apAdDyO6djNbTokup3t
+	3K1C68egFqZbIEVx+pyQ69SRYw/uMltLkzUU2MwvaAbgJnA2Sic4vN7UFezX/mQOspfTqSaitqJmW
+	6KO392J3htOzWOEOhNiq+5k8oI0cj/a8YoTKsgnN0i4RMp9rhFXTyPYh03ADZpRb9LCD7Vj9YDP6J
+	zAwNwH2N76hUBqhs1bEG81l1m4m9NpJIKTK3npWZoERYbU0imAHMjkZv3b3ojOkO6aaZJ4LZY/4ks
+	rTsWRJilq5k3vYyMSyGJVchKZLyTX4hsbqqeF0VySzWUH/IK6pBLCl8x/OahuIuOSSgf+9Sxkd8c4
+	MqdnSkNA==;
+Received: from 213-147-165-125.nat.highway.webapn.at ([213.147.165.125] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1whOF9-0000000Gi2h-1vZG;
+	Wed, 08 Jul 2026 09:06:59 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Eric Biggers <ebiggers@kernel.org>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 6/8] raid6: defer implementation selection when built-in
+Date: Wed,  8 Jul 2026 11:05:20 +0200
+Message-ID: <20260708090614.1431014-7-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260708090614.1431014-1-hch@lst.de>
+References: <20260708090614.1431014-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Don't hold up early boot and defer the selection just like we've been
+doing for the RAID5 XOR code since commit 524ccdbdfb52 ("crypto: xor -
+defer load time benchmark to a later time").
 
-Pre-existing issues:
-- [High] The MD layer and RAID10 driver sleep in multiple paths while handl=
-ing a `REQ_NOWAIT` bio, violating the non-blocking semantics of the block l=
-ayer.
-- [High] The driver unconditionally uses `GFP_NOIO` for mempool and bio all=
-ocations, which can sleep when memory is low, violating `REQ_NOWAIT` non-bl=
-ocking semantics.
---
+This will also allow full use of the timing subsystem for benchmarking.
 
---- Patch [1]: [PATCH] md/raid10: free r10_bio on write NOWAIT exits ---
-commit 2e30580bb5bb2ae342c9d924bf8c217f5b6c832f
-Author: Guangshuo Li <lgs201920130244@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ lib/raid/raid6/algos.c | 37 +++++++++++++++++++++++++++----------
+ 1 file changed, 27 insertions(+), 10 deletions(-)
 
-md/raid10: free r10_bio on write NOWAIT exits
+diff --git a/lib/raid/raid6/algos.c b/lib/raid/raid6/algos.c
+index 6f5c89ab2b17..e7984bde5157 100644
+--- a/lib/raid/raid6/algos.c
++++ b/lib/raid/raid6/algos.c
+@@ -236,16 +236,6 @@ static int __init raid6_select_algo(void)
+ 	int i, cycle;
+ 	int error;
+ 
+-	if (!IS_ENABLED(CONFIG_RAID6_PQ_BENCHMARK) || raid6_nr_algos == 1) {
+-		pr_info("raid6: skipped pq benchmark and selected %s\n",
+-			raid6_algos[raid6_nr_algos - 1]->name);
+-		static_call_update(raid6_gen_syndrome_impl,
+-				raid6_algos[raid6_nr_algos - 1]->gen_syndrome);
+-		static_call_update(raid6_xor_syndrome_impl,
+-				raid6_algos[raid6_nr_algos - 1]->xor_syndrome);
+-		return 0;
+-	}
+-
+ 	/* prepare the buffer and fill it circularly with gfmul table */
+ 	disk_ptr = kmalloc(PAGE_SIZE * RAID6_TEST_DISKS, GFP_KERNEL);
+ 	if (!disk_ptr) {
+@@ -329,13 +319,40 @@ static int __init raid6_init(void)
+ 	static_call_update(raid6_recov_datap_impl, raid6_recov_algo->datap);
+ 	pr_info("raid6: using %s recovery algorithm\n", raid6_recov_algo->name);
+ 
++	if (!IS_ENABLED(CONFIG_RAID6_PQ_BENCHMARK) || raid6_nr_algos == 1) {
++		pr_info("raid6: skipped pq benchmark and selected %s\n",
++			raid6_algos[raid6_nr_algos - 1]->name);
++		goto default_algo;
++	}
++
++#ifdef MODULE
+ 	return raid6_select_algo();
++#else
++	/*
++	 * Pick the last registered implementation as the temporary default until
++	 * calibration happens.
++	 */
++#endif
++default_algo:
++	static_call_update(raid6_gen_syndrome_impl,
++			raid6_algos[raid6_nr_algos - 1]->gen_syndrome);
++	static_call_update(raid6_xor_syndrome_impl,
++			raid6_algos[raid6_nr_algos - 1]->xor_syndrome);
++	return 0;
+ }
+ 
+ static void __exit raid6_exit(void)
+ {
+ }
+ 
++/*
++ * When built-in we must register the default implementation before md
++ * initializes, but we don't want calibration to run that early as that
++ * would delay the boot process.
++ */
++#ifndef MODULE
++device_initcall(raid6_select_algo);
++#endif
+ subsys_initcall(raid6_init);
+ module_exit(raid6_exit);
+ MODULE_LICENSE("GPL");
+-- 
+2.53.0
 
-This commit fixes a memory leak in raid10_write_request() where the r10_bio
-structure was not returned to the mempool on two REQ_NOWAIT early exit
-paths. It ensures free_r10bio() is called before returning false for these
-NOWAIT cases.
-
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 0a3cfdd3f5df8..d480344c5b8f3 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1364,6 +1364,7 @@ static bool raid10_write_request(struct mddev *mdde=
-v, struct bio *bio,
->  		DEFINE_WAIT(w);
->  		/* Bail out if REQ_NOWAIT is set for the bio */
->  		if (bio->bi_opf & REQ_NOWAIT) {
-> +			free_r10bio(r10_bio);
->  			bio_wouldblock_error(bio);
->  			return false;
->  		}
-
-[ ... ]
-
-> @@ -1397,6 +1398,7 @@ static bool raid10_write_request(struct mddev *mdde=
-v, struct bio *bio,
->  		md_wakeup_thread(mddev->thread);
->  		if (bio->bi_opf & REQ_NOWAIT) {
->  			allow_barrier(conf);
-> +			free_r10bio(r10_bio);
->  			bio_wouldblock_error(bio);
->  			return false;
->  		}
-
-[Severity: High]
-This isn't a bug introduced by this patch, but are there other blocking
-operations in the NOWAIT path that could still violate the non-blocking
-semantics?
-
-If a REQ_NOWAIT bio does not hit these early exits, it proceeds down to
-wait_blocked_dev() later in raid10_write_request(), which does not check
-for REQ_NOWAIT:
-
-	raid10_find_phys(conf, r10_bio);
-	wait_blocked_dev(mddev, r10_bio);
-
-If a member device is blocked, wait_blocked_dev() drops the barrier and
-sleeps in md_wait_for_blocked_rdev() (which has a 5-second timeout) and
-then sleeps again in wait_barrier(conf, false).
-
-Additionally, if the bio crosses a chunk boundary, it reacquires the
-barrier without checking for REQ_NOWAIT:
-
-	if (r10_bio->sectors < bio_sectors(bio)) {
-		allow_barrier(conf);
-		bio =3D bio_submit_split_bioset(bio, r10_bio->sectors,
-					      &conf->bio_split);
-		wait_barrier(conf, false);
-
-Could these unconditional sleeps cause the thread submitting the async I/O
-to stall, potentially exhausting io_uring worker threads?
-
-[Severity: High]
-This is also a pre-existing issue, but does the driver unconditionally use
-GFP_NOIO for allocations when handling a REQ_NOWAIT bio?
-
-Before raid10_write_request() is even called, __make_request() allocates
-the primary r10_bio using GFP_NOIO:
-
-	r10_bio =3D mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
-
-Later, raid10_write_one_disk() clones the bio unconditionally using
-GFP_NOIO:
-
-	mbio =3D bio_alloc_clone(rdev->bdev, bio, GFP_NOIO, &mddev->bio_set);
-
-If the mempool is depleted and memory pressure requires direct reclaim,
-won't these GFP_NOIO allocations sleep and stall the IO submission thread?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260708084701.7377=
-63-1-lgs201920130244@gmail.com?part=3D1
