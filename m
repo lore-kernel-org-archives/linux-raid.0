@@ -1,134 +1,135 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92399407CC7
-	for <linux-raid@vger.kernel.org>; Wed,  8 Jul 2026 09:22:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCD8E405C3B
+	for <linux-raid@vger.kernel.org>; Wed,  8 Jul 2026 09:23:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783502565; cv=none; b=cT9+mzgzGYKrRSEVzoWWqUxc/2MfWEW7oGrpEbz3bt20BtMvcFOJzz7ilXNhw5vmmBCcFWfzEXRutJ8hDSnBpW9bjnuuFiuWq3pSJsenApE9n0fvWFbsa2iigeNClTLLfyrM9P1hgVMH2p0C0XySutZyRuYLVp5TSoOB9UpLowo=
+	t=1783502596; cv=none; b=XN5nZygHXuVf2EsuIrAYAVYw124RbFi6gE61ETdKFj0VoEASObIFfdvuOKuSbPKTj3Hn1b5uyeDzb7kzn4LXqcjF6NzBth+o8yqFTHkh9EvVET8ccfzbfVBKWjlveIC7Hj1B5A8kRVOZWOTh+wHLV4rtcZnOgCmrfsZBXqJ5Bwc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783502565; c=relaxed/simple;
-	bh=bgyM52NICicpOEpRD1fQrVQULB72SfpKtqP9kWrWMSs=;
+	s=arc-20240116; t=1783502596; c=relaxed/simple;
+	bh=xGX8DyVMvpKraGjM16TZMhpQfvzs9/7ZnyG1oF6nawc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=gxbW3ZFZy50jZgvZiZRYI3p5yVF8sjZnQdDras9zc78MfPnjDyuFNS+53F7HfnzsPVKDipd0OX0NBTpiiIKrk2eVD2WmZhDHdqiT2iMtVveERqiLayBJgGBAMxE3k76MoIH0OG3o1v/gipefa8RsR0sXGO/y61eGIj6X+U2gIh8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fv37H06e; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=aNhKvuWCII2KG/qA8iR97iiszIgxobQRF4/oVlgWQXuU3vpuQOtmJFW8etxome4ePL/zMR1OzUtqbOjK7poZ7YGQWd3x1XRLXa5C+Idj1s0N6rf1/2OO8Lsxvc8BV4H+n9RAzzFmTPJbbDbWt9foQr0bnx5QwRSK4oUP4kOg/sY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BksWhsUK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fv37H06e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7EF51F000E9;
-	Wed,  8 Jul 2026 09:22:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BksWhsUK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CFCE1F00A3F;
+	Wed,  8 Jul 2026 09:23:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783502564;
-	bh=KI8lBb4oFQNL1gAo/NKZt9jE+NNNyT46KQcniwMisVw=;
+	s=k20260515; t=1783502595;
+	bh=/A8BfLOTiqW6Ph/6EmABUuEypAVdXE2aMJi5IHobAdE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Fv37H06ea7MEIzwYsQPYnOUAS3ivxnx7k9ImbBg31XHmhlhLig3UGVaoEwxMCRhrk
-	 oyQ9AUWhLoQAChEQO6DqBw1IR8R6YibUBmAj1aBIzXXb1MHCRrig53kzfcptDB95+u
-	 xo4dyfTBYSC1MwOUUfaGZU9T7HL64EpXEZxtMPJoRPNutZ4GKjhG7CvDwaaaxBsilT
-	 odWFoQdiM10x+PFlC4ufN5jvPG3Iwq3R9vgS6VJdUUqSD9lRLj3qBBZrj1GA1sn4F6
-	 TuWQvTOug0HBnLiKlP/Et9e8IWfVqw5CG+YaaCkbzP3AYQuw5N5hEV+dHxyCjILWNK
-	 R2YLfAiq5A2Ag==
+	b=BksWhsUKJExIsM63F5VhI8UZxPjfbo5Bwp31d2blBqRhvdG50tjGYtW5Dd5UQC/YR
+	 wB5d2ShpLUR90nTtYhFQlF29X/dnCin3uFCZJeUoTpPyPlv+OeVwXTDDfShqxeXaSt
+	 4eKZs79N1hB8QCBXtmBd27diczHEA/G7RFF1bLtfYGCglrXoiRp7iPuKVvZR9qUT/d
+	 h9QHjgJOSIgxEljBQK4nEgvLphopZ+ksEqBcOIqkotCg+047SL0pkX5CSD0tFIS8hG
+	 LIN+jkZJpuozht2MPnE9UEIl09T79J2eUaJDZZu++3DylDqOiWHH+uc/Jsmv2KPsAw
+	 S9igcJw0kbTIg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 4/8] xor/kunit: add a benchmark
+Subject: Re: [PATCH 6/8] raid6: defer implementation selection when built-in
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christoph Hellwig" <hch@lst.de>
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260708090740.1433685-5-hch@lst.de>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20260708090740.1433685-7-hch@lst.de>
 References: <20260708090740.1433685-1-hch@lst.de>
- <20260708090740.1433685-5-hch@lst.de>
+ <20260708090740.1433685-7-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 08 Jul 2026 09:22:43 +0000
-Message-Id: <20260708092243.E7EF51F000E9@smtp.kernel.org>
+Date: Wed, 08 Jul 2026 09:23:14 +0000
+Message-Id: <20260708092315.2CFCE1F00A3F@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Potential divide-by-zero kernel panic in `xor_benchmark()` when ca=
-lculating the benchmark speed if the execution time is 0.
-- [Medium] The benchmark holds `preempt_disable()` for the entire duration =
-of 1000 XOR iterations, risking soft lockups on slower hardware or emulator=
-s.
+- [Medium] The boot-time RAID6 benchmark runs unconditionally when built-in=
+, ignoring the `CONFIG_RAID6_PQ_BENCHMARK` setting and the single-algorithm=
+ optimization.
 --
 
---- Patch [4]: [PATCH 4/8] xor/kunit: add a benchmark ---
-commit 4f82691a9522c9ab25bdc94cf0c1ad74dc8c3b7e
+--- Patch [6]: [PATCH 6/8] raid6: defer implementation selection when built=
+-in ---
+commit 2c9ec4f0b44515f49715b67c2e70f8628c5abd61
 Author: Christoph Hellwig <hch@lst.de>
+Subject: raid6: defer implementation selection when built-in
 
-xor/kunit: add a benchmark
+This commit defers the RAID6 implementation selection to avoid holding up
+early boot. It follows the pattern used in the RAID5 XOR code, allowing
+full use of the timing subsystem for benchmarking.
 
-This patch adds a benchmark to test the XOR functions for more
-representative block sizes and numbers of disks. It measures the execution
-time of 1000 iterations of xor_gen() for varying buffer counts and lengths,
-reporting the throughput in GB/s.
-
-> diff --git a/lib/raid/xor/tests/xor_kunit.c b/lib/raid/xor/tests/xor_kuni=
-t.c
-> index 659ae3edbc25b..648c6da9464c4 100644
-> --- a/lib/raid/xor/tests/xor_kunit.c
-> +++ b/lib/raid/xor/tests/xor_kunit.c
-
-[ ... ]
-
-> @@ -125,8 +125,70 @@ static void xor_test(struct kunit *test)
->  	}
->  }
+> diff --git a/lib/raid/raid6/algos.c b/lib/raid/raid6/algos.c
+> index 6f5c89ab2b17b..e7984bde5157f 100644
+> --- a/lib/raid/raid6/algos.c
+> +++ b/lib/raid/raid6/algos.c
+> @@ -236,16 +236,6 @@ static int __init raid6_select_algo(void)
+>  	int i, cycle;
+>  	int error;
 > =20
-> +static void xor_benchmark(struct kunit *test)
-> +{
+> -	if (!IS_ENABLED(CONFIG_RAID6_PQ_BENCHMARK) || raid6_nr_algos =3D=3D 1) {
+> -		pr_info("raid6: skipped pq benchmark and selected %s\n",
+> -			raid6_algos[raid6_nr_algos - 1]->name);
+> -		static_call_update(raid6_gen_syndrome_impl,
+> -				raid6_algos[raid6_nr_algos - 1]->gen_syndrome);
+> -		static_call_update(raid6_xor_syndrome_impl,
+> -				raid6_algos[raid6_nr_algos - 1]->xor_syndrome);
+> -		return 0;
+> -	}
+> -
+>  	/* prepare the buffer and fill it circularly with gfmul table */
+>  	disk_ptr =3D kmalloc(PAGE_SIZE * RAID6_TEST_DISKS, GFP_KERNEL);
 
 [ ... ]
 
-> +		for (j =3D 0; j < ARRAY_SIZE(len_to_test); j++) {
-> +			unsigned int len =3D len_to_test[j];
-> +			const unsigned long num_iters =3D 1000;
+> @@ -329,13 +319,40 @@ static int __init raid6_init(void)
+>  	static_call_update(raid6_recov_datap_impl, raid6_recov_algo->datap);
+>  	pr_info("raid6: using %s recovery algorithm\n", raid6_recov_algo->name);
+> =20
+> +	if (!IS_ENABLED(CONFIG_RAID6_PQ_BENCHMARK) || raid6_nr_algos =3D=3D 1) {
+> +		pr_info("raid6: skipped pq benchmark and selected %s\n",
+> +			raid6_algos[raid6_nr_algos - 1]->name);
+> +		goto default_algo;
+> +	}
 > +
-> +			KUNIT_ASSERT_GT(test, len, 0);
-> +			KUNIT_ASSERT_LE(test, len, XOR_KUNIT_MAX_BYTES);
-> +
-> +			preempt_disable();
-> +			t =3D ktime_get_ns();
-> +			for (l =3D 0; l < num_iters; l++)
-> +				xor_gen(test_dest, test_buffers, nr, len);
-> +			t =3D ktime_get_ns() - t;
-> +			preempt_enable();
+> +#ifdef MODULE
+>  	return raid6_select_algo();
+> +#else
+> +	/*
+> +	 * Pick the last registered implementation as the temporary default unt=
+il
+> +	 * calibration happens.
+> +	 */
+> +#endif
+
+[ ... ]
+
+> +/*
+> + * When built-in we must register the default implementation before md
+> + * initializes, but we don't want calibration to run that early as that
+> + * would delay the boot process.
+> + */
+> +#ifndef MODULE
+> +device_initcall(raid6_select_algo);
+> +#endif
 
 [Severity: Medium]
-Does this workload risk triggering the kernel's soft lockup detector?
+Will this unconditional device_initcall cause the benchmark to run even when
+it is intentionally disabled in the configuration?
 
-The test executes a hardcoded 1000 iterations of xor_gen() on up to 32 buff=
-ers
-of 16KB within a single preempt_disable() block. This amounts to processing
-over 500MB of data atomically.
+While raid6_init() checks CONFIG_RAID6_PQ_BENCHMARK and correctly skips the
+early calibration phase, removing that same check from raid6_select_algo()
+means this deferred call will unconditionally run the benchmarking loop lat=
+er
+in the boot process. It looks like this bypasses both the config setting and
+the single-algorithm optimization entirely.
 
-In slower environments like QEMU TCG without KVM, this large computational
-workload could take tens of seconds, which might exceed the typical 20-seco=
-nd
-soft lockup threshold.
-
-> +
-> +			speed[j] =3D div64_u64((u64)len * num_iters * nr, t);
-
-[Severity: High]
-Can this result in a divide-by-zero kernel panic?
-
-If the benchmark runs on a system with coarse timekeeping resolution (e.g.,
-using the jiffies clocksource), and the CPU completes the 1000 iterations
-within a single timer tick, the elapsed time `t` could evaluate to 0.
-
-Since `t` is used directly as the divisor in div64_u64() without being
-checked, this might trigger a hardware exception and panic the kernel.
-
-> +		}
-> +
-> +		static_assert(ARRAY_SIZE(len_to_test) =3D=3D 2);
-> +		kunit_info(test, "%3u disks:\t%5llu  GB/s\t%5llu  GB/s\n",
-> +				nr, speed[0], speed[1]);
-> +	}
-> +}
+>  subsys_initcall(raid6_init);
+>  module_exit(raid6_exit);
+>  MODULE_LICENSE("GPL");
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260708090740.1433=
-685-1-hch@lst.de?part=3D4
+685-1-hch@lst.de?part=3D6
