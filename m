@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E4FD36E497
-	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 13:36:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA78A3F871A
+	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 13:36:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783690562; cv=none; b=dd62K6LgrGLveHqFcF3xeQSnOtH9Y+bb+51IE/PQs7Y7dNmk2fSYj2Ugt5Dc4/NTMSskOQK7yRPDOtYjV4mj/C8ndunA7hn4223UYZ89tZ6IubMeYnxhpLBJjeNbh/GGNGn7pjhjwKtCac2YNleEnf+iqwG/jcjVoCqsFu/3jbU=
+	t=1783690609; cv=none; b=GGL7abyLkHlwQPa2CyAjz8aIyntgKXVwljN9yaA1k60QwOb3RcKVOXeK33rPuFAty2aRzKSrLTj47wb2/oJB4AiDdeECHGI6iJ77Ts7dLWmYRyIGTaxq2eJFhFh2qocM4eHgBMrQKkqyInzQdPBisnyv3NyuCUK9pDFo706hiqs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783690562; c=relaxed/simple;
-	bh=BxqDYZ031rZAUbEkSTPQbYNeBvyv/HXRIDW+Tk17Mdc=;
+	s=arc-20240116; t=1783690609; c=relaxed/simple;
+	bh=M5j3ddcJCvAPLEqFS8nu3ZL6ANh9fd/36Tg+GQme178=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VPPYc0I7GivFxlZ9l75ynHkIb6Q+t9Af1+iG6kQ1YEU4tQ3QObrmwf9bg0ewcvV2C2wqe1sIx/iklOCnuBy9XLCfoUKFdfggmpgMEAmdoxeZlSw9O1Ik1nQ6s9CSGO+Oks1ryG7R2n71gPRk579LFPNECb/bWQLqejZP3+fpxE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PDiBnRXd; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=SRU8Aw2c8oNirvjLE+D7kEM4siiCY4o+yydciZjRBmSvXBti3BTD45T7KIVlZCrrARFnQRPVomHvR2xPqOeieHSxDm03fFOaIdV0WdIgfYcn+3d7s8ZUuEM1BghG7KIpjrb64HMWzYs3BJ3mfkJe9AMKFPwu1Kr4PJ8EQannkwg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ugu+1yBO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PDiBnRXd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 099961F000E9;
-	Fri, 10 Jul 2026 13:36:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ugu+1yBO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43F011F000E9;
+	Fri, 10 Jul 2026 13:36:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783690561;
-	bh=7I+UC7LuDUvOiS5MBjoPKnMu7PEEBkrwV9J8po7oCIs=;
+	s=k20260515; t=1783690607;
+	bh=uO2gOo/dy3HjLUmN50hsKTkVkALIBu/Sq9siDylQAnY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PDiBnRXdJrMp+QXLR+UV9x7qDq8iTQ+Nn9UovJNfhlY46CKJuN5tqoooMpkh9zsOo
-	 57XTuaovnmVb/dvCImnL858NzPOlyXkRh+nYbdLdTlUtkA3cZuBBoznKowcAjDMZ7z
-	 PrANOMHER6n0dtHz/O1o8+gRzYpJoqqmLR6bRA3AJpD+I7KO6RY3MlRrNXnpf45UGm
-	 LUu9lCj7geGO4XLWCY4tMYZI3XsBmFDaTBZEZ8gbuaqGksMBR6eD9B+sz8Ym6UErTC
-	 0lL9TE9gqHx7g2rd0lpu+mCQ+BR8Qh6eESwVVsa+cSr38PSmoy3Cqtge0V4kc8IwtP
-	 Kht90gQ8Zm6TA==
+	b=Ugu+1yBOXJbYT8C/Ofg2F9/hJ4i2qfA0GHwCoAOnAGejbjR6N7N1bwh/FygeTLkyQ
+	 5WJDWd9NoW0Eop8MDbvIfMCXApmQfIlJ+PKe/EynWfwFAGlX/wW4dAbTYd0RKmpFKI
+	 Ni446H2tjCOSAwbxgsOixRjMFNUBreEbXAzIQDiEEL5wj4WJdhdFvSAtpHxoRK7kJj
+	 Vq4ajh3J7Y7Gfrgf5zLLhbcKGWLEc14J+gICLjzm7qPazS73bHA0ihlZWyd/ObwYR7
+	 WW04ahuS0svW6gsY10ZBxbnGnP1X59SjDlo85okmCc3Iz8GV61AX2n6f2yAvd3CNtK
+	 gEm2dGEMhetPg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] md/raid5: submit a window of stripes during
- resync/recovery
+Subject: Re: [PATCH 4/6] md/raid5: make the stripe batch size a module
+ parameter
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hiroshi Nishida" <nishidafmly@gmail.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260710132339.7284-2-nishidafmly@gmail.com>
-References: <20260710132339.7284-1-nishidafmly@gmail.com>
- <20260710132339.7284-2-nishidafmly@gmail.com>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260710132346.7295-5-nishidafmly@gmail.com>
+References: <20260710132346.7295-1-nishidafmly@gmail.com>
+ <20260710132346.7295-5-nishidafmly@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 10 Jul 2026 13:36:00 +0000
-Message-Id: <20260710133601.099961F000E9@smtp.kernel.org>
+Date: Fri, 10 Jul 2026 13:36:46 +0000
+Message-Id: <20260710133647.43F011F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -47,67 +47,50 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The batched sync loop can greedily drain the stripe cache without =
-yielding, causing severe latency spikes and potentially starving user I/O.
+- [Low] Large unsigned values of `max_stripe_batch` are incorrectly clamped=
+ to 1 instead of 32.
 --
 
---- Patch [1]: [PATCH 1/2] md/raid5: submit a window of stripes during resy=
-nc/recovery ---
-commit 2b3cdb45d82bdea6112cba5dad14b59ec3acb23a
+--- Patch [4]: [PATCH 4/6] md/raid5: make the stripe batch size a module pa=
+rameter ---
+commit 5fef4dd203fcdfd7a223e9904fbea20f876f265b
 Author: Hiroshi Nishida <nishidafmly@gmail.com>
 
-md/raid5: submit a window of stripes during resync/recovery
+md/raid5: make the stripe batch size a module parameter
 
-This patch updates the RAID5 sync path to dispatch a batch of up to 32
-stripes per call instead of just one. It throttles only on the first stripe,
-allowing subsequent stripes to be submitted without blocking to improve
-resync performance.
+This commit makes the stripe batch size a configurable module parameter to
+allow tuning for busy multi-threaded arrays. It synchronizes the dequeue
+cap and the spawn divisor by tying both to a single per-array variable.
 
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 0c5c9fb0606ee..574880e4f23fe 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
+
 [ ... ]
-> @@ -6640,13 +6632,42 @@ static inline sector_t raid5_sync_request(struct =
-mddev *mddev, sector_t sector_n
-[ ... ]
-> +	/* Submit remaining stripes in the window non-blocking.  Stop early
-> +	 * if the stripe cache is full: the disk queue is already saturated.
-> +	 * Bound by resync_max so a user- or cluster-imposed sync ceiling is
-> +	 * not overshot.
-> +	 */
-> +	win_sector =3D sector_nr + RAID5_STRIPE_SECTORS(conf);
-> +	for (submitted =3D 1;
-> +	     submitted < RAID5_SYNC_WINDOW && win_sector < max_sector &&
-> +	     win_sector < mddev->resync_max;
-> +	     submitted++, win_sector +=3D RAID5_STRIPE_SECTORS(conf)) {
-> +		sh =3D raid5_get_active_stripe(conf, NULL, win_sector,
-> +					     R5_GAS_NOBLOCK);
-> +		if (!sh)
-> +			break;
 
-[Severity: High]
-Can this batched sync loop greedily drain the stripe cache without yielding=
- to
-user I/O?
+> @@ -7640,6 +7645,10 @@ static struct r5conf *setup_conf(struct mddev *mdd=
+ev)
+>  	    !conf->temp_inactive_list)
+>  		goto abort;
+> =20
+> +	/* Resolve the stripe batch size (see STRIPE_BATCH_* in raid5.h). */
+> +	conf->max_stripe_batch =3D clamp_t(int, max_stripe_batch,
+> +					 1, STRIPE_BATCH_MAX);
 
-During array resync or recovery, this loop acquires up to 32 free stripes
-sequentially. Could this starve user I/O threads that are blocked on the
-conf->wait_for_stripe waitqueue, since it doesn't check if user I/O is wait=
-ing
-(e.g., via waitqueue_active(&conf->wait_for_stripe)) before getting the next
-stripe?
+[Severity: Low]
+Does this code incorrectly clamp large unsigned values to 1 instead of 32?
 
-> +		md_bitmap_start_sync(mddev, win_sector, &sync_blocks,
-> +				     still_degraded);
-> +		set_bit(STRIPE_SYNC_REQUESTED, &sh->state);
-> +		set_bit(STRIPE_HANDLE, &sh->state);
-> +		raid5_release_stripe(sh);
-> +	}
+Since max_stripe_batch is defined as an unsigned int, if an administrator
+provides a value greater than INT_MAX, the clamp_t(int, ...) cast will treat
+it as a negative number.
+
+This will cause it to be clamped to the minimum bound of 1, rather than the
+intended maximum bound of STRIPE_BATCH_MAX.
+
 > +
-> +	return submitted * RAID5_STRIPE_SECTORS(conf);
->  }
+>  #if PAGE_SIZE !=3D DEFAULT_STRIPE_SIZE
+>  	conf->stripe_size =3D DEFAULT_STRIPE_SIZE;
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710132339.7284=
--1-nishidafmly@gmail.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710132346.7295=
+-1-nishidafmly@gmail.com?part=3D4
