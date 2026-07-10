@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3E13C1974
-	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 13:40:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C0431E0E14
+	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 13:41:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783690816; cv=none; b=rjnqPOWbR7drHpqEG5sM1c3D6aYCxf8KORGKip/MMyJVhrcATpl2Nz4JdWTDnNMggFCiRCFfWv5KlthCYwHKKDAZDXUv0O5xFQgDZFLFNrfBj0Ng2QHsse842lOyhzUQYRSuN7enF/bQmNN7QHeze7jIr+GaJH1fSv/tDvN6ozs=
+	t=1783690869; cv=none; b=O03Wd7WkH+FASSAXEZUdJUuxh/pLCE7+FfGo9Pnx4obD2RLQHkEA/brRwsHrN7VMv1VRnj3e/jQynPVIhlyJkKyUCH/XGK4r4jljGmV2OwUpQIzK/1LenRJ3O5RkEKpiPI1W+PBjvWd6tnm29T8ChzI16jqTwLSM60LorzDR79g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783690816; c=relaxed/simple;
-	bh=G2mgY3yc17WSXGZAKH8DsxjRG4X8QpGfN2OTyMMjURk=;
+	s=arc-20240116; t=1783690869; c=relaxed/simple;
+	bh=Q9nyyo3lFedrGWj661Ej5LWM9nOL7dZu981R0cfuFIg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=A6G2U/SrFLsqkXvTC7FSWijx8A2iNtvjRnLyesjiCd8bwJM0rozvQWTcrk1muyqrIXUu46UB1khWnW4pTCvi8t6ZRQCYPvC5IduewiFt9QzQhoZ26JyWASrmLb7qD2XV3FpNwTyNkqMrgPJIeg8gSCKKqGfRayZ8+12a5GURReA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PUJ+GfmF; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=KcxPKBj2or7pljrMpYgfvZeiE+8wbQ34iOiV2x0hy0Si2RkSHqApX+Zqk0X3Oh4+MrnMgPPhIRW5r9M342Bv1WCqJ03/M09dO+buip493ptCzTj8ofA3DsnW23v+tZwqAKdlKrShqRfMJMXjFevLpokHGG7Gtf16MS/G+S6FhqM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L/bxNT7i; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PUJ+GfmF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29D761F000E9;
-	Fri, 10 Jul 2026 13:40:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L/bxNT7i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1E1F1F000E9;
+	Fri, 10 Jul 2026 13:41:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783690815;
-	bh=lUAcoA9ZMwo+tpcvpWE09Us2XPWtG4hc+gKX9rk+ivw=;
+	s=k20260515; t=1783690867;
+	bh=Mcd/q2rcYOHJUeyANeW4/f8cqjwdFQQfKHqYB2wemq0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PUJ+GfmFttlSYKLORtVDFJMKb7HIqHN1gTJ9JmWs8XZIVfsJ9UDht6gRTOyrZordn
-	 bMR7AinTmMzZgwtaEyTusdN+xgaS/p3zSbMqCdJFwBUvKXv/fHQ2Vf1Rkhc7fwm9LE
-	 5hk2dgu4UBwureCcSkPAmeO/fndDgXJvkdG5y6mlnRkjfu9YFsyT50IebeNL0S+mfx
-	 KHfe+Jy1G+UZUZn3unrC29DmgXOIgUbyje68HQFlbwn119UpfxTLN1MpBm4yTUSUHQ
-	 kL4+jC6v9IrZIInUzbFmIGkUVQ2XrvNVFeszZgja1WXz+uvfe3jEoIkaoci7sFMDKd
-	 nnrx49c1+RYfg==
+	b=L/bxNT7iLMimfm2iPr3Ue6RJ5ySvrSZqKjaoySn8UzhdK1G2lzsbAMBGhJQO7qJkl
+	 c8EMt4NwiqD/5dj/jWw0wDymae3lWr6wEaP/ojoB++kcUwFGrwB3jQtweK/2XyYhNj
+	 t0G11hkHLc3xdAqylkAU+J9P3ZSY+9lUZoKYG6NQVyMvIbpRn9jEZAUvM3yJB29S2j
+	 0y3qaolz5C4WOW8E3ToS2+zbVoCHGlLGbooH3f0reA5BzFH0tqM6xIR3qS3pyIHcTN
+	 +WjcBgGf6AqPwrwbi3Q8JtvmvsesK4pPFxJEXiew97FHFxS2zFi45HKlVq7LzntEDu
+	 TiGKQakYWatyg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/2] md: widen badblock sectors param from int to
- sector_t
+Subject: Re: [PATCH 2/6] md/raid5: size stripe-cache hash locks from the CPU
+ count
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hiroshi Nishida" <nishidafmly@gmail.com>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260710132329.7273-3-nishidafmly@gmail.com>
-References: <20260710132329.7273-1-nishidafmly@gmail.com>
- <20260710132329.7273-3-nishidafmly@gmail.com>
+In-Reply-To: <20260710132346.7295-3-nishidafmly@gmail.com>
+References: <20260710132346.7295-1-nishidafmly@gmail.com>
+ <20260710132346.7295-3-nishidafmly@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 10 Jul 2026 13:40:13 +0000
-Message-Id: <20260710134014.29D761F000E9@smtp.kernel.org>
+Date: Fri, 10 Jul 2026 13:41:07 +0000
+Message-Id: <20260710134107.A1E1F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -48,109 +48,125 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
+New issues:
+- [High] Time-of-check to time-of-use (TOCTOU) race condition in `nr_stripe=
+_hash_locks` module parameter evaluation can lead to undefined behavior and=
+ a potential kernel panic during array creation.
+
 Pre-existing issues:
-- [High] Arithmetic underflow in `is_badblock()` when a physical bad block =
-overlaps `data_offset`.
-- [High] Discarded macro results in `block/badblocks.c` make block alignmen=
-t a no-op.
+- [High] The worker threads (`r5worker->work`) are not explicitly canceled =
+or flushed during array teardown, which can lead to a Use-After-Free.
 --
 
---- Patch [2]: [PATCH 2/2] md: widen badblock sectors param from int to sec=
-tor_t ---
-commit 19521e4f1c32c01e7a6122a185436691618d94c1
+--- Patch [2]: [PATCH 2/6] md/raid5: size stripe-cache hash locks from the =
+CPU count ---
+commit bae2376a7fe52c6b3de7d64514b554d3101957fe
 Author: Hiroshi Nishida <nishidafmly@gmail.com>
 
-md: widen badblock sectors param from int to sector_t
-   =20
-This commit changes the sectors parameter in md wrappers (rdev_set_badblock=
-s,
-rdev_clear_badblocks, and rdev_has_badblock) from int to sector_t. This
-matches the core API and is_badblock() to prevent a truncation point.
+md/raid5: size stripe-cache hash locks from the CPU count
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index d1465bcd86c81..61f40fa41e781 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
+This commit modifies the stripe cache hash to use a per-array dynamic count
+of spinlocks instead of a fixed 8, automatically sizing it based on the
+online CPU count to reduce lock contention on many-core systems.
 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index d8807114a6932..7f72981121fd5 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
 [ ... ]
-
-> @@ -10553,7 +10553,7 @@ EXPORT_SYMBOL(md_finish_reshape);
->  /* Bad block management */
-> =20
->  /* Returns true on success, false on failure */
-> -bool rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
-> +bool rdev_set_badblocks(struct md_rdev *rdev, sector_t s, sector_t secto=
-rs,
->  			int is_new)
->  {
+> @@ -7448,6 +7453,9 @@ static void free_conf(struct r5conf *conf)
+>  	kfree(conf->disks);
+>  	bioset_exit(&conf->bio_split);
+>  	kfree(conf->stripe_hashtbl);
+> +	kfree(conf->hash_locks);
+> +	kfree(conf->inactive_list);
+> +	kfree(conf->temp_inactive_list);
+>  	kfree(conf->pending_data);
 
 [Severity: High]
-This isn't a bug introduced by this patch, but since this code interacts
-with the core badblocks API, I noticed a pre-existing bug in how block
-alignment is handled in block/badblocks.c.
+This is a pre-existing issue, but looking at the teardown sequence, could
+the worker threads access freed memory here?
 
-In _badblocks_set(), the code attempts to align sectors:
+During array teardown, md_stop() eventually causes a wait for
+active_stripes to reach 0. In a worker thread executing raid5_do_work(),
+active_stripes drops to 0 when handle_active_stripes() finishes releasing
+the final stripes.
 
-block/badblocks.c:_badblocks_set() {
-    ...
-    rounddown(s, 1 << bb->shift);
-    roundup(next, 1 << bb->shift);
-    sectors =3D next - s;
-    ...
-}
+At this point, raid5_quiesce() wakes up and teardown proceeds to call
+free_thread_groups() which frees the worker structures without calling
+flush_workqueue() or cancel_work_sync().
 
-Similar logic exists in _badblocks_clear() and badblocks_check().
+The still-executing worker thread could then drop its lock and continue
+to execute flush_deferred_bios() and r5l_flush_stripe_to_raid() using the
+freed structures.
 
-Because rounddown() and roundup() are macros that evaluate to the rounded
-value but do not modify their arguments in-place, aren't the alignment
-results being ignored here, leaving s and next unaligned?
-
-If bb->shift > 0, wouldn't this break bad block alignment, fragment the
-bad block table, and risk premature table exhaustion?
+Should the worker threads be explicitly canceled or flushed before the
+structures are freed?
 
 [ ... ]
-
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index b9ad26844799d..95835a3286aac 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-
-[ ... ]
-
-> @@ -311,7 +311,7 @@ static inline int is_badblock(struct md_rdev *rdev, s=
-ector_t s, sector_t sectors
->  }
+> @@ -7565,6 +7573,38 @@ static struct r5conf *setup_conf(struct mddev *mdd=
+ev)
+>  	if (conf =3D=3D NULL)
+>  		goto abort;
 > =20
->  static inline int rdev_has_badblock(struct md_rdev *rdev, sector_t s,
-> -				    int sectors)
-> +				    sector_t sectors)
->  {
->  	sector_t first_bad;
+> +	/*
+> +	 * Size the stripe cache hash-lock striping per array.  The
+> +	 * nr_stripe_hash_locks module parameter selects the count: 0 (the
+> +	 * default) auto-sizes it from the online CPU count so busier machines
+> +	 * stripe the locks wider, while a non-zero value overrides that.  The
+> +	 * result is rounded up to a power of two (the hash uses it as a
+> +	 * bitmask) and capped at NR_STRIPE_HASH_LOCKS_MAX; the auto path also
+> +	 * keeps at least the historical NR_STRIPE_HASH_LOCKS_DEFAULT so small
+> +	 * systems are unchanged.  Allocating per array means an untuned system
+> +	 * uses no more memory than before.
+> +	 */
+> +	if (nr_stripe_hash_locks =3D=3D 0)
+> +		conf->nr_hash_locks =3D clamp_t(unsigned int,
+> +				roundup_pow_of_two(num_online_cpus()),
+> +				NR_STRIPE_HASH_LOCKS_DEFAULT,
+> +				NR_STRIPE_HASH_LOCKS_MAX);
+> +	else
+> +		conf->nr_hash_locks =3D roundup_pow_of_two(
+> +				min_t(unsigned int, nr_stripe_hash_locks,
+> +				      NR_STRIPE_HASH_LOCKS_MAX));
 
 [Severity: High]
-This is a pre-existing issue, but while reviewing the badblock sector types,
-I noticed a logic error in is_badblock() located just above this function.
+Could this be vulnerable to a time-of-check to time-of-use race if the
+sysfs parameter is modified concurrently?
 
-drivers/md/md.h:is_badblock() {
-    ...
-    int rv =3D badblocks_check(&rdev->badblocks, rdev->data_offset + s,
-                             sectors, first_bad, bad_sectors);
-    if (rv)
-        *first_bad -=3D rdev->data_offset;
-    ...
-}
+If the module parameter is changed from a non-zero value to 0 right after
+the check:
 
-If userspace tools (e.g., mdadm via sysfs bb_store) write a physical bad
-block that starts before rdev->data_offset but extends into the array's data
-area, badblocks_check() returns a *first_bad physical sector less than
-data_offset.=20
+Thread 1 in setup_conf():
+    if (nr_stripe_hash_locks =3D=3D 0)
+        // check fails, proceeds to else block
 
-Could the unconditional subtraction (*first_bad -=3D rdev->data_offset)
-underflow here?
+Thread 2 writing to sysfs:
+    nr_stripe_hash_locks =3D 0;
 
-Would this create a massive false first_bad sector value, causing callers
-like raid1 to mistakenly issue I/O to a known bad sector?
+Thread 1 inside the else block:
+    conf->nr_hash_locks =3D roundup_pow_of_two(min_t(..., 0, ...));
+
+In this scenario, roundup_pow_of_two() would evaluate to 0. When kcalloc()
+is subsequently called, it would return the zero size pointer placeholder
+value (16).
+
+The safety check testing for a null pointer would fail to catch this since
+16 is non-null, and the kernel could panic when spin_lock_init()
+dereferences it.
+
+Would it be safer to read the parameter into a local variable first?
+
+    unsigned int locks =3D READ_ONCE(nr_stripe_hash_locks);
+    if (locks =3D=3D 0)
+        conf->nr_hash_locks =3D clamp_t(...);
+    else
+        conf->nr_hash_locks =3D roundup_pow_of_two(...);
+
+> +	conf->hash_locks_mask =3D conf->nr_hash_locks - 1;
+> +	conf->hash_locks =3D kcalloc(conf->nr_hash_locks,
+> +				   sizeof(*conf->hash_locks), GFP_KERNEL);
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710132329.7273=
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710132346.7295=
 -1-nishidafmly@gmail.com?part=3D2
