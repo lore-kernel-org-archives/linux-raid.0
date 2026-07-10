@@ -1,144 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mr4.vodafonemail.de (mr4.vodafonemail.de [145.253.228.164])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3E824343FA
-	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 15:44:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47D93263F5E
+	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 16:30:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=145.253.228.164
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783698282; cv=none; b=W/TM0ujT/J8xU3wpUhi8L1GivkJd+4Znpjy/EmTaBszStGGs9FH1T1wHDi3AYSEkzcmpJZeyqbmBfSYWfIhdvz3lCkfBwYCYYobbOX1YTBlNmJ/wzzrfK3ttwgpmPwYlYunuqIS4EqyqlnouAxfZwqbRLyJeAN/W/cxlFctrwGw=
+	t=1783701048; cv=none; b=WZjsvafT4eDr+LjwRXhWmUgsHQVV+CiUrbSK6YOLy+EZr9bXtDHEG6kk5SkGm/8h+GmavK4wg43HArnaG14BksOzWYJrOSp5gKj7u8qGWqp4PkGfRMp+ODTIooAdjcyQLRHnOJuDY8MVP07jY6DE54IDvt966UU/SCWn6OjjX5I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783698282; c=relaxed/simple;
-	bh=jAi/DtNIgDiZpmIHRGtoaqh0Dy48HOEc7Xzr0i379kY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=lF1ALnxVY0Jffxa8RIMXFoq1YVQaLZ8OCCQ2tLkEdNL0bWJqOl27+MByibH2oEhDFssdx+e2mSwE02bxY5233t4fTRsAGZla15Ye6VdUW1UY2hMbb0QpVBjoGpNNr5nyioi1dqqKitNJ4sAWfau2f6On9rK7Fo65w6MCgIyfmGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cv8JFKMd; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783701048; c=relaxed/simple;
+	bh=CQaI6iKjwAdpthRgr5w8NU1/C8Axme/1yLMkbkLE3pE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Sl/lpq6t71/7CdXyJEeS+/I2dzkIR5DIXlt67IsKldZLoUSKRNEbDF3qDPbNo1v2sgemE2k7qYW6vTo3qhEsvk8tNRt81CADSbT2u4ngqug8nkEcHw7rI/dLK55NXLXWLCPtSQf6uoFzB+bWFTdQMhfYVVsgdo5J7LUvaQl80do=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nexgo.de; spf=pass smtp.mailfrom=nexgo.de; dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b=hupMBLaX; arc=none smtp.client-ip=145.253.228.164
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nexgo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nexgo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cv8JFKMd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFAF91F000E9;
-	Fri, 10 Jul 2026 15:44:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783698278;
-	bh=nq/nRVS46N6o3D9GNspzdiAyiMLhLEj3UZpS1WxpIt8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Cv8JFKMd+nYnenwDBnj0qG/mNiu1DqXAWsLgbA7UO9TP8PzHAC/McZT3rJh/HjqJ8
-	 t7HJbpkh5XXWwI2gVN0oGdlZF2JO6kykdZJORsgd3eQxWnyBLkATjrc0HxH2AKmIfk
-	 oYLo1Ccj9BD9sOdt7nf7rkxHtCLzW3GQ46PoVnDFav5tdSkE5B3qJ8vZZLUWDDDhJv
-	 2SmaMJhC2K2kk/fXcp5pwcBNh8Rnyd6rdKawCz6sRCn0LZYrNVs//cXq1TzZA9GkGj
-	 2KBRHVQ2/lp/R4IV7+C3wYYgBCENtzi/eeVS1jZuSoPFsnJtii70kIBj1Q23CH5NeO
-	 agXfSUJ/TbtcA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] md: change chunk_sectors and stripe cache counts to
- unsigned int
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Hiroshi Nishida" <nishidafmly@gmail.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260710132329.7273-2-nishidafmly@gmail.com>
-References: <20260710132329.7273-1-nishidafmly@gmail.com>
- <20260710132329.7273-2-nishidafmly@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 10 Jul 2026 15:44:37 +0000
-Message-Id: <20260710154437.DFAF91F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b="hupMBLaX"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nexgo.de;
+	s=vfde-mb-mr2-23sep; t=1783700462;
+	bh=rMqY6B++xUxtE9n3rDHgl8MGkb38mNuPXNZTWrUJbFk=;
+	h=Date:From:To:Subject:Message-ID:References:Content-Type:
+	 In-Reply-To:From;
+	b=hupMBLaX0UfJ2YhBPPVwwaSu3B1qWkLBY06eVaDN2RO9LZyk5d3Wnz1wexk94zTHm
+	 sEOh1D8gDT2bdbBlI5SpyGpHngw+lOBz8B+bBxXJGq/Ka4D3lgRnL6b9UNcEBM6ngD
+	 t1TGyFv4mnyFoJOpu1cEt31L2MQU3wZXfbGiMnbM=
+Received: from smtp.vodafone.de (unknown [10.0.0.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
+	(No client certificate requested)
+	by mr4.vodafonemail.de (Postfix) with ESMTPS id 4gxcWy6Qwrz3sXYG
+	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 16:21:02 +0000 (UTC)
+Received: from lazy.lzy (p579d7d31.dip0.t-ipconnect.de [87.157.125.49])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.vodafone.de (Postfix) with ESMTPSA id 4gxcWv3srDz904x;
+	Fri, 10 Jul 2026 16:20:56 +0000 (UTC)
+Received: from lazy.lzy (localhost [127.0.0.1])
+	by lazy.lzy (8.18.2/8.14.5) with ESMTP id 66AGKtbT036006;
+	Fri, 10 Jul 2026 18:20:55 +0200
+Received: (from red@localhost)
+	by lazy.lzy (8.18.2/8.18.2/Submit) id 66AGKtoI036005;
+	Fri, 10 Jul 2026 18:20:55 +0200
+Date: Fri, 10 Jul 2026 18:20:55 +0200
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: LBS setup
+Message-ID: <alEb50Nmqt8IW2Nu@lazy.lzy>
+References: <ahLSj1Ua5WJ0GTgY@lazy.lzy>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ahLSj1Ua5WJ0GTgY@lazy.lzy>
+X-purgate-server: smtpa03
+X-purgate-type: clean
+X-purgate: clean
+X-purgate-size: 1239
+X-purgate-ID: 155817::1783700462-624E85D1-75723228/0/0
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Hi again,
 
-New issues:
-- [Medium] Lockless read race on total_cached evaluates to a negative value=
-, triggering unsigned promotion and false cache pressure signals.
+not sure, but has anybody comments
+on the topic?
 
-Pre-existing issues:
-- [Critical] The calculation of total sectors per chunk stripe (chunk size =
-multiplied by data disks) is performed using 32-bit arithmetic, which can o=
-verflow. This leads to a divide-by-zero kernel panic or incorrect boundary =
-math if a maliciously large chunk size is provided.
---
+Thanks,
 
---- Patch [1]: [PATCH 1/2] md: change chunk_sectors and stripe cache counts=
- to unsigned int ---
-commit 6fa5b599e890f5ca04407ab1005af1cc096d709e
-Author: Hiroshi Nishida <nishidafmly@gmail.com>
+bye,
 
-md: change chunk_sectors and stripe cache counts to unsigned int
+pg
 
-This commit changes various chunk and stripe counts from signed to
-unsigned int in the md/raid5 subsystem to prevent negative values.
-It allows the compiler to optimize division and modulo operations by
-power-of-two chunk sizes to right shifts in the hot I/O path.
+On Sun, May 24, 2026 at 12:27:27PM +0200, Piergiorgio Sartor wrote:
+> Hi all,
+> 
+> I've some questions about some recent
+> report from kernel.
+> I assume from 7.x.y, from what I understood.
+> Not sure about the <= 6.18 reported.
+> 
+> In the boot log there is:
+> 
+> md0: echo current LBS to md/logical_block_size to prevent data loss issues from LBS changes.
+>       Note: After setting, array will not be assembled in old kernels (<= 6.18)
+> 
+> I found the docs stating:
+> 
+> logical_block_size
+> 	... Write the value before starting array. ...
+> 
+> Now, should we really copy the value from:
+> 
+> /sys/class/block/md0/queue/logical_block_size
+> 
+> to:
+> 
+> /sys/class/block/md0/md/logical_block_size
+> 
+> ???
+> 
+> Note, the first in my system is 512, the
+> second is 0.
+> 
+> Second, the docs says "before starting array".
+> In case this is due (copy the value), how to do
+> for a system array?
+> I mean, the array where the whole OS lies.
+> 
+> If needed, is there any way to do this automatically?
+> Using mdadm or something?
+> 
+> Thanks,
+> 
+> bye,
+> 
+> -- 
+> 
+> piergiorgio
+> 
 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 0c5c9fb0606ee..28828e083c2b3 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-[ ... ]
-> @@ -7929,7 +7929,7 @@ static int raid5_run(struct mddev *mddev)
->  		sector_t here_new, here_old;
->  		int old_disks;
->  		int max_degraded =3D (mddev->level =3D=3D 6 ? 2 : 1);
-> -		int chunk_sectors;
-> +		unsigned int chunk_sectors;
->  		int new_data_disks;
+-- 
 
-[Severity: Critical]
-This isn't a bug introduced by this patch, but changing the types to
-unsigned int fails to resolve an underlying 32-bit wrapping regression.
-
-Does this code overflow when calculating total sectors per chunk stripe?
-
-In raid5_run(), if a maliciously crafted RAID superblock sets chunksize
-to 0x08000000 (64 GiB) and raid_disks to 33, the multiplication
-(chunk_sectors * new_data_disks) evaluates to 0x08000000 * 32.
-
-This wraps to 0 in 32-bit arithmetic, which is then passed to sector_div():
-
-    if (sector_div(here_new, chunk_sectors * new_data_disks)) {
-
-This triggers a divide-by-zero panic. A similar issue occurs in
-make_discard_request() where DIV_ROUND_UP_SECTOR_T() is called with a
-wrapped stripe_sectors value.
-
-> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> index cb5feae04db27..5cd9d0f36b6e0 100644
-> --- a/drivers/md/raid5.h
-> +++ b/drivers/md/raid5.h
-[ ... ]
-> @@ -572,12 +572,12 @@ struct r5conf {
->  	/* only protect corresponding hash list and inactive_list */
->  	spinlock_t		hash_locks[NR_STRIPE_HASH_LOCKS];
->  	struct mddev		*mddev;
-> -	int			chunk_sectors;
-> +	unsigned int		chunk_sectors;
->  	int			level, algorithm, rmw_level;
->  	int			max_degraded;
->  	int			raid_disks;
-> -	int			max_nr_stripes;
-> -	int			min_nr_stripes;
-> +	unsigned int		max_nr_stripes;
-> +	unsigned int		min_nr_stripes;
-
-[Severity: Medium]
-Does changing min_nr_stripes to unsigned int introduce a spurious cache
-flush regression due to type promotion?
-
-In drivers/md/raid5-cache.c:r5c_do_reclaim(), total_cached can evaluate
-to -1 if r5c_finish_stripe_write_out() concurrently decrements
-r5c_flushing_partial_stripes and r5c_cached_partial_stripes during a
-lockless read.
-
-Since min_nr_stripes is now unsigned, the -1 is promoted to UINT_MAX in
-this condition:
-
-    if (total_cached > conf->min_nr_stripes * 3 / 4 ||
-
-This makes the cache pressure check spuriously evaluate to true, leading
-to unnecessary CPU wakeups and a performance regression during writeback
-workloads.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710132329.7273=
--1-nishidafmly@gmail.com?part=3D1
+piergiorgio
