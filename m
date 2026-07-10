@@ -1,128 +1,85 @@
-Received: from mr4.vodafonemail.de (mr4.vodafonemail.de [145.253.228.164])
+Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47D93263F5E
-	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 16:30:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=145.253.228.164
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA062379C43
+	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 17:54:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.233.160.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783701048; cv=none; b=WZjsvafT4eDr+LjwRXhWmUgsHQVV+CiUrbSK6YOLy+EZr9bXtDHEG6kk5SkGm/8h+GmavK4wg43HArnaG14BksOzWYJrOSp5gKj7u8qGWqp4PkGfRMp+ODTIooAdjcyQLRHnOJuDY8MVP07jY6DE54IDvt966UU/SCWn6OjjX5I=
+	t=1783706066; cv=none; b=YwGS3cxIXBBxQOLiItqcFTVl/o8MwLqs6Ub+jnm8PmUED/NDXQcfu2IyUPqgJGbeoRp0E1Ng66sXiHPEP/pIXc5hD4XsKVWI+Uq+exsobsgd57BeFbMFdSGkA4KXh/7oonFcVQk/6QnLEOS2Vi3pFWetJhHiArFqUt94jOXVo7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783701048; c=relaxed/simple;
-	bh=CQaI6iKjwAdpthRgr5w8NU1/C8Axme/1yLMkbkLE3pE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Sl/lpq6t71/7CdXyJEeS+/I2dzkIR5DIXlt67IsKldZLoUSKRNEbDF3qDPbNo1v2sgemE2k7qYW6vTo3qhEsvk8tNRt81CADSbT2u4ngqug8nkEcHw7rI/dLK55NXLXWLCPtSQf6uoFzB+bWFTdQMhfYVVsgdo5J7LUvaQl80do=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nexgo.de; spf=pass smtp.mailfrom=nexgo.de; dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b=hupMBLaX; arc=none smtp.client-ip=145.253.228.164
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nexgo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nexgo.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b="hupMBLaX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nexgo.de;
-	s=vfde-mb-mr2-23sep; t=1783700462;
-	bh=rMqY6B++xUxtE9n3rDHgl8MGkb38mNuPXNZTWrUJbFk=;
-	h=Date:From:To:Subject:Message-ID:References:Content-Type:
-	 In-Reply-To:From;
-	b=hupMBLaX0UfJ2YhBPPVwwaSu3B1qWkLBY06eVaDN2RO9LZyk5d3Wnz1wexk94zTHm
-	 sEOh1D8gDT2bdbBlI5SpyGpHngw+lOBz8B+bBxXJGq/Ka4D3lgRnL6b9UNcEBM6ngD
-	 t1TGyFv4mnyFoJOpu1cEt31L2MQU3wZXfbGiMnbM=
-Received: from smtp.vodafone.de (unknown [10.0.0.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
-	(No client certificate requested)
-	by mr4.vodafonemail.de (Postfix) with ESMTPS id 4gxcWy6Qwrz3sXYG
-	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 16:21:02 +0000 (UTC)
-Received: from lazy.lzy (p579d7d31.dip0.t-ipconnect.de [87.157.125.49])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.vodafone.de (Postfix) with ESMTPSA id 4gxcWv3srDz904x;
-	Fri, 10 Jul 2026 16:20:56 +0000 (UTC)
-Received: from lazy.lzy (localhost [127.0.0.1])
-	by lazy.lzy (8.18.2/8.14.5) with ESMTP id 66AGKtbT036006;
-	Fri, 10 Jul 2026 18:20:55 +0200
-Received: (from red@localhost)
-	by lazy.lzy (8.18.2/8.18.2/Submit) id 66AGKtoI036005;
-	Fri, 10 Jul 2026 18:20:55 +0200
-Date: Fri, 10 Jul 2026 18:20:55 +0200
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: LBS setup
-Message-ID: <alEb50Nmqt8IW2Nu@lazy.lzy>
-References: <ahLSj1Ua5WJ0GTgY@lazy.lzy>
+	s=arc-20240116; t=1783706066; c=relaxed/simple;
+	bh=wvaqtvCvWS6xsAQNv2MOkjd3OXslkqEhWgMr/A8+3W0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Wpd32i1DtMmoxDzkod7zEh4ZR7OBCuYNR9PH1EZeYn8vPN6DizaROGC4LoCt3Jc/SPRcUDNrT83ADX581LwwvmR5vvHMyg8EqWDGW2OCKncoZ7lp1oi6FACj2hlU38wA6hUODSlNNibYAcf5nRikgZP9Q102i3MViDd5n6VaAIA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=youngman.org.uk; spf=fail smtp.mailfrom=youngman.org.uk; arc=none smtp.client-ip=85.233.160.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=youngman.org.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=youngman.org.uk
+Received: from host86-157-72-216.range86-157.btcentralplus.com ([86.157.72.216] helo=[192.168.1.70])
+	by smtp.hosts.co.uk with esmtpsa (TLS1.3:TLS_AES_256_GCM_SHA384:256)
+	(Exim)
+	(envelope-from <antlists@youngman.org.uk>)
+	id 1wiEkQ-0000000GHEW-0frN;
+	Fri, 10 Jul 2026 18:10:46 +0100
+Message-ID: <811c24a5-0c72-4b83-af19-609e42e12613@youngman.org.uk>
+Date: Fri, 10 Jul 2026 18:10:47 +0100
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ahLSj1Ua5WJ0GTgY@lazy.lzy>
-X-purgate-server: smtpa03
-X-purgate-type: clean
-X-purgate: clean
-X-purgate-size: 1239
-X-purgate-ID: 155817::1783700462-624E85D1-75723228/0/0
+User-Agent: Mozilla Thunderbird
+Subject: Re: LBS setup
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
+References: <ahLSj1Ua5WJ0GTgY@lazy.lzy> <alEb50Nmqt8IW2Nu@lazy.lzy>
+Content-Language: en-GB
+From: Wol <antlists@youngman.org.uk>
+In-Reply-To: <alEb50Nmqt8IW2Nu@lazy.lzy>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi again,
+On 10/07/2026 17:20, Piergiorgio Sartor wrote:
+> Hi again,
+> 
+> not sure, but has anybody comments
+> on the topic?
 
-not sure, but has anybody comments
-on the topic?
+I don't understand what you're asking, but I do think I remember the 
+events you're talking about.
 
-Thanks,
+Basically, some change accidentally slipped into the wild with a kernel, 
+probably a 6.x, and people started creating kernels with the new kernel.
 
-bye,
+Then, as people started upgrading kernels, they suddenly realised that 
+this change affected the raid format, such that  new kernels couldn't 
+read old arrays, and vice versa. More importantly, and more dangerously, 
+it led to arrays being trashed!
 
-pg
+What to do? They couldn't pull old kernels obviously, there were too 
+many arrays out there. They couldn't pull new kernels, there were 
+already some arrays out there.
 
-On Sun, May 24, 2026 at 12:27:27PM +0200, Piergiorgio Sartor wrote:
-> Hi all,
-> 
-> I've some questions about some recent
-> report from kernel.
-> I assume from 7.x.y, from what I understood.
-> Not sure about the <= 6.18 reported.
-> 
-> In the boot log there is:
-> 
-> md0: echo current LBS to md/logical_block_size to prevent data loss issues from LBS changes.
->       Note: After setting, array will not be assembled in old kernels (<= 6.18)
-> 
-> I found the docs stating:
-> 
-> logical_block_size
-> 	... Write the value before starting array. ...
-> 
-> Now, should we really copy the value from:
-> 
-> /sys/class/block/md0/queue/logical_block_size
-> 
-> to:
-> 
-> /sys/class/block/md0/md/logical_block_size
-> 
-> ???
-> 
-> Note, the first in my system is 512, the
-> second is 0.
-> 
-> Second, the docs says "before starting array".
-> In case this is due (copy the value), how to do
-> for a system array?
-> I mean, the array where the whole OS lies.
-> 
-> If needed, is there any way to do this automatically?
-> Using mdadm or something?
-> 
-> Thanks,
-> 
-> bye,
-> 
-> -- 
-> 
-> piergiorgio
-> 
+So they rushed out a fix, such that if a new kernel created an array, it 
+flagged it as being a new array. If you booted a new kernel with an 
+array that didn't have the flag IT WOULDN'T LOAD THE ARRAY. And they 
+trusted to luck that people wouldn't downgrade an array and try to load 
+a new array on an old kernel.
 
--- 
+So this now meant that all of a sudden new kernels wouldn't boot on old 
+systems, until the user explicitly set the flag on the array to say 
+"this is an old-style array". If they happened to be upgrading from one 
+of the few early new-style kernels, they could set the flag to "this is 
+a new-style array".
 
-piergiorgio
+Point is, this code was meant to make it very hard to upgrade your 
+kernel without being prompted what sort of array you had, so that the 
+kernel devs could try to ensure you didn't lose your array.
+
+A pretty awful way of doing it, but nobody could think of anything better.
+
+Hopefully that explains what's going on there, and you'll be able to 
+work out your own answer from this information.
+
+Cheers,
+Wol
