@@ -1,141 +1,156 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5B894229A8
-	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 13:39:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3E13C1974
+	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 13:40:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783690776; cv=none; b=iI7eP2FZO5WN6NhS/vo7BMWfqWxOGQbPBR4y2mJ/qGfc3f/uuJI2WvDXhFBb5jmVSOftr81XTFq0I82ZDVhNqhtcwYfU6aictnb86wobIqcey1N7ytdYbwgMUywKAkNHWt4lXpN7bAklYPdEjcKyjIUFZEQL2iNaCgsL2705Hko=
+	t=1783690816; cv=none; b=rjnqPOWbR7drHpqEG5sM1c3D6aYCxf8KORGKip/MMyJVhrcATpl2Nz4JdWTDnNMggFCiRCFfWv5KlthCYwHKKDAZDXUv0O5xFQgDZFLFNrfBj0Ng2QHsse842lOyhzUQYRSuN7enF/bQmNN7QHeze7jIr+GaJH1fSv/tDvN6ozs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783690776; c=relaxed/simple;
-	bh=QXWu+z2qDZM6PQu7A0TwcRb5ztN/UyPD7aYHJzwOdBk=;
+	s=arc-20240116; t=1783690816; c=relaxed/simple;
+	bh=G2mgY3yc17WSXGZAKH8DsxjRG4X8QpGfN2OTyMMjURk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=o+Fezuihc8zmmFLzQJLwAvMTh6mf15B/4W1EW1VWXjIS+vpDkGlpT2583OLvddTlYE7wN4NVCDRF9J+Hr4uplFsbu7n4t3ZhAs0CC10uXVkKuNbA/XHdcoSoYwGvyu81f92AsV3msgo9xKH1IlOw1/zgMK+9YVb6XpKxJ9xFOC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jwqHlEPv; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=A6G2U/SrFLsqkXvTC7FSWijx8A2iNtvjRnLyesjiCd8bwJM0rozvQWTcrk1muyqrIXUu46UB1khWnW4pTCvi8t6ZRQCYPvC5IduewiFt9QzQhoZ26JyWASrmLb7qD2XV3FpNwTyNkqMrgPJIeg8gSCKKqGfRayZ8+12a5GURReA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PUJ+GfmF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jwqHlEPv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1344F1F000E9;
-	Fri, 10 Jul 2026 13:39:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PUJ+GfmF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29D761F000E9;
+	Fri, 10 Jul 2026 13:40:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783690773;
-	bh=CPhfdBZzm+bg15KXrvejuOKmKPWxcKGe/u3UB+sLQO8=;
+	s=k20260515; t=1783690815;
+	bh=lUAcoA9ZMwo+tpcvpWE09Us2XPWtG4hc+gKX9rk+ivw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jwqHlEPvD1v84uByV+ygiV441W6uC+rEuOUtXabHRueqFXvPoYksKFW6wRtQX944T
-	 swcgHx4qOxOuhH4NBqsusIHHQ0bMsQ598Zq2Ah7H0fMog8fIF5WiNVn5Tiv3ygctdK
-	 ZCX7gq1N8HWEKNBUVBnDi4S0CrayKSOMT9JsC436ATHqDJItrJ8qwLPujOCDKTqL56
-	 kj1skuk8u66D5MhXSDtcbuRB1piB0zhnyRN5Cb6ufDtdJ8Z/oGKw7QN3wrIYb6mthL
-	 eu6FjWVSpB9UhZHKJoFlRCi374t27No8t9YhgHfFYyASd8LRhFRfmFRfq1lX9/kgvm
-	 digXfFY+lwrBQ==
+	b=PUJ+GfmFttlSYKLORtVDFJMKb7HIqHN1gTJ9JmWs8XZIVfsJ9UDht6gRTOyrZordn
+	 bMR7AinTmMzZgwtaEyTusdN+xgaS/p3zSbMqCdJFwBUvKXv/fHQ2Vf1Rkhc7fwm9LE
+	 5hk2dgu4UBwureCcSkPAmeO/fndDgXJvkdG5y6mlnRkjfu9YFsyT50IebeNL0S+mfx
+	 KHfe+Jy1G+UZUZn3unrC29DmgXOIgUbyje68HQFlbwn119UpfxTLN1MpBm4yTUSUHQ
+	 kL4+jC6v9IrZIInUzbFmIGkUVQ2XrvNVFeszZgja1WXz+uvfe3jEoIkaoci7sFMDKd
+	 nnrx49c1+RYfg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/6] md/raid5: size the worker group array by
- nr_node_ids
+Subject: Re: [PATCH 2/2] md: widen badblock sectors param from int to
+ sector_t
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hiroshi Nishida" <nishidafmly@gmail.com>
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260710132346.7295-2-nishidafmly@gmail.com>
-References: <20260710132346.7295-1-nishidafmly@gmail.com>
- <20260710132346.7295-2-nishidafmly@gmail.com>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20260710132329.7273-3-nishidafmly@gmail.com>
+References: <20260710132329.7273-1-nishidafmly@gmail.com>
+ <20260710132329.7273-3-nishidafmly@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 10 Jul 2026 13:39:32 +0000
-Message-Id: <20260710133933.1344F1F000E9@smtp.kernel.org>
+Date: Fri, 10 Jul 2026 13:40:13 +0000
+Message-Id: <20260710134014.29D761F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Holding reconfig_mutex while waiting for raid5_wq workers to finis=
-h can cause an ABBA deadlock if workers wait for MD_SB_CHANGE_PENDING to be=
- cleared.
+- [High] Arithmetic underflow in `is_badblock()` when a physical bad block =
+overlaps `data_offset`.
+- [High] Discarded macro results in `block/badblocks.c` make block alignmen=
+t a no-op.
 --
 
---- Patch [1]: [PATCH 1/6] md/raid5: size the worker group array by nr_node=
-_ids ---
-commit 4f7875645a221b114b23eee045960c40b057b078
+--- Patch [2]: [PATCH 2/2] md: widen badblock sectors param from int to sec=
+tor_t ---
+commit 19521e4f1c32c01e7a6122a185436691618d94c1
 Author: Hiroshi Nishida <nishidafmly@gmail.com>
 
-md/raid5: size the worker group array by nr_node_ids
+md: widen badblock sectors param from int to sector_t
+   =20
+This commit changes the sectors parameter in md wrappers (rdev_set_badblock=
+s,
+rdev_clear_badblocks, and rdev_has_badblock) from int to sector_t. This
+matches the core API and is_badblock() to prevent a truncation point.
 
-This patch fixes an out-of-bounds array access when the NUMA node map is
-sparse by sizing the worker_groups array using nr_node_ids rather than
-num_possible_nodes().
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index d1465bcd86c81..61f40fa41e781 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 0c5c9fb0606ee..d8807114a6932 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -7322,7 +7322,13 @@ static int alloc_thread_groups(struct r5conf *conf=
-, int cnt, int *group_cnt,
->  		*worker_groups =3D NULL;
->  		return 0;
->  	}
-> -	*group_cnt =3D num_possible_nodes();
-> +	/*
-> +	 * worker_groups is indexed by cpu_to_group() =3D=3D cpu_to_node(), a n=
-ode
-> +	 * id, so it must have room for the largest possible id.  Size it by
-> +	 * nr_node_ids (one past that id), not num_possible_nodes(), which is
-> +	 * only the node count and is smaller on a sparse node map.
-> +	 */
-> +	*group_cnt =3D nr_node_ids;
+[ ... ]
+
+> @@ -10553,7 +10553,7 @@ EXPORT_SYMBOL(md_finish_reshape);
+>  /* Bad block management */
+> =20
+>  /* Returns true on success, false on failure */
+> -bool rdev_set_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+> +bool rdev_set_badblocks(struct md_rdev *rdev, sector_t s, sector_t secto=
+rs,
+>  			int is_new)
+>  {
 
 [Severity: High]
-This is a pre-existing issue, but while reviewing this allocation change,
-I noticed a potential deadlock risk in the caller,
-raid5_store_group_thread_cnt(), when configuring these worker groups.
+This isn't a bug introduced by this patch, but since this code interacts
+with the core badblocks API, I noticed a pre-existing bug in how block
+alignment is handled in block/badblocks.c.
 
-When writing to the group_thread_cnt sysfs attribute,
-raid5_store_group_thread_cnt() acquires reconfig_mutex via
-mddev_suspend_and_lock() and then blocks waiting for workers in
-raid5_wq to finish:
+In _badblocks_set(), the code attempts to align sectors:
 
-drivers/md/raid5.c:raid5_store_group_thread_cnt() {
-    err =3D mddev_suspend_and_lock(mddev);
+block/badblocks.c:_badblocks_set() {
     ...
-    raid5_quiesce(mddev, true);
-
-    if (new !=3D conf->worker_cnt_per_group) {
-        old_groups =3D conf->worker_groups;
-        if (old_groups)
-            flush_workqueue(raid5_wq);
-
-        err =3D alloc_thread_groups(conf, new, &group_cnt, &new_groups);
+    rounddown(s, 1 << bb->shift);
+    roundup(next, 1 << bb->shift);
+    sectors =3D next - s;
+    ...
 }
 
-However, the raid5 workers can block waiting for the md_thread to clear
-MD_SB_CHANGE_PENDING:
+Similar logic exists in _badblocks_clear() and badblocks_check().
 
-drivers/md/raid5.c:raid5_do_work() {
+Because rounddown() and roundup() are macros that evaluate to the rounded
+value but do not modify their arguments in-place, aren't the alignment
+results being ignored here, leaving s and next unaligned?
+
+If bb->shift > 0, wouldn't this break bad block alignment, fragment the
+bad block table, and risk premature table exhaustion?
+
+[ ... ]
+
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index b9ad26844799d..95835a3286aac 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+
+[ ... ]
+
+> @@ -311,7 +311,7 @@ static inline int is_badblock(struct md_rdev *rdev, s=
+ector_t s, sector_t sectors
+>  }
+> =20
+>  static inline int rdev_has_badblock(struct md_rdev *rdev, sector_t s,
+> -				    int sectors)
+> +				    sector_t sectors)
+>  {
+>  	sector_t first_bad;
+
+[Severity: High]
+This is a pre-existing issue, but while reviewing the badblock sector types,
+I noticed a logic error in is_badblock() located just above this function.
+
+drivers/md/md.h:is_badblock() {
     ...
-    wait_event_lock_irq(mddev->sb_wait,
-        !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags),
-        conf->device_lock);
+    int rv =3D badblocks_check(&rdev->badblocks, rdev->data_offset + s,
+                             sectors, first_bad, bad_sectors);
+    if (rv)
+        *first_bad -=3D rdev->data_offset;
+    ...
 }
 
-The md_thread requires the reconfig_mutex to clear this flag:
+If userspace tools (e.g., mdadm via sysfs bb_store) write a physical bad
+block that starts before rdev->data_offset but extends into the array's data
+area, badblocks_check() returns a *first_bad physical sector less than
+data_offset.=20
 
-drivers/md/md.c:md_check_recovery() {
-    ...
-    if (mddev_trylock(mddev)) {
-        ...
-        if (mddev->sb_flags)
-            md_update_sb(mddev, 0);
-}
+Could the unconditional subtraction (*first_bad -=3D rdev->data_offset)
+underflow here?
 
-Does this sequence create a deadlock where the sysfs thread holds
-reconfig_mutex and waits for raid5_wq workers, while the workers wait for
-the md_thread to clear MD_SB_CHANGE_PENDING, but the md_thread fails to
-acquire reconfig_mutex via mddev_trylock()?
-
->  	size =3D sizeof(struct r5worker) * cnt;
->  	workers =3D kcalloc(size, *group_cnt, GFP_NOIO);
->  	*worker_groups =3D kzalloc_objs(struct r5worker_group, *group_cnt,
+Would this create a massive false first_bad sector value, causing callers
+like raid1 to mistakenly issue I/O to a known bad sector?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710132346.7295=
--1-nishidafmly@gmail.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710132329.7273=
+-1-nishidafmly@gmail.com?part=3D2
