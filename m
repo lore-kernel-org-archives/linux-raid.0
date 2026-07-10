@@ -1,120 +1,137 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B74F407CF1
-	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 10:28:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1335640BCB0
+	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 10:31:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783679317; cv=none; b=ROehjex5W1EIY59UcWmG9CCTJnu6Ck2dhSZBPY2suFPaljmfKS0AEkcTjUfNFvmjTlZr6vzDopLPKM9w/jp+3ZopqwcIflGo4WDnQoRlIXyjG03t8B2gIb2+kfEqd2UqFVtcn57vBLCf/aKxR7IMvgnZo2Fcqtde01dvXm1Ja20=
+	t=1783679512; cv=none; b=itfZnTbAO0ApzKz9/hgEYhwniMgbVnYOWj7cD7Nvg2hXb+3cw64t8jY0WNauCXa5iaB3Wh4GpLENIP9jTr25zbn3kY+efhNhsoZPwZkjlW/3bc28DoaRPt8Gm3HvECgynMroySQu8Zuuy1/dmaifCYlSzh5wJfsC440LzcltX0k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783679317; c=relaxed/simple;
-	bh=vxau3Z4SZmAhQvthdtDV6A9I31JpEe0jOqZBX5IXGGs=;
+	s=arc-20240116; t=1783679512; c=relaxed/simple;
+	bh=V70SWWFIJNksg8ci4B2Wix8FhFZgnzPWUIZTqT7Ve50=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FLuys6vn8jiRz8fvmNOro9APLEfJ9CTvyxW1OwS6ED9xG4bbAs7awEGCEnSBvGpzasdR3t+jAzMKEsMROuBYxhhJWtjoUcGDCuquLeLoS3r+Vyv2MmWUmPKfS5ZfHD2i4pwRQdtFUGXpLhOPhVnf5wmqyaLjXvR8adWErcz6DbI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j0K4OEDj; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=u9p8ZIrIsh9dzouvX2DIruOtkLDmH1JJ0y/lUDbep6JrdmkyrXcDn6FHO3IlV29UEP+X6Yw0Qd9ZE2wOEj1r90z/UYE7pCLI8Z7JGwRcD31mNPs6F37BenZ/9OK/iWavAMVvdch0ewJ76vFYcQnrrYLMzZEUYmXLaxD0HCiBzm4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g1APjh/Z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j0K4OEDj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D07391F000E9;
-	Fri, 10 Jul 2026 10:28:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g1APjh/Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB0CB1F00A3A;
+	Fri, 10 Jul 2026 10:31:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783679316;
-	bh=ZLfeAvTMa2EQGwf9ymAFvh5UA2IESYttP8hu2WKxyGE=;
+	s=k20260515; t=1783679509;
+	bh=PIRGCpubGuUF2fPM0iaj2RzB+/snkGZzYa8xD7xytaE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=j0K4OEDjxKF9l5FfQuF+4dDfoHwlTIMIz6mTnvbqHBQxe4TKdEn6pssoAvNerCK9r
-	 bQ4RG1Upjx/uKRZODRKWMwLyV2jBU8/UCkYTOW3ZXY1RT53Oq5eqaTkBKYP4GGjUe7
-	 DcN5uJkazyOI5soMw/wVoVUk/fGS+T8QLc+897l4IJ3sklmmYEVYiAMLwtb11rxaWN
-	 oZLZ/AN/5HEOKQUtm9SbHlQ/fZTyAvWjJOFMPT2JWevMD8ID5hwGYcS5xMsqJllT1z
-	 oS7s9O/Pv3cgAoQTdDAnc9qj1BJXLq1oBt0c0x9EywR7BsB6y4bmTU5anLsuFMRbNo
-	 s9zm/DTcOI8cw==
+	b=g1APjh/Zh+PLYHGy3rSuWF3vz7VQdreeGXqRmNTy7jta1+rFJsCP5AmWJiKPSexB3
+	 mT9UTb3LoG/HrRhdDNufjAlga/kGt7Z7zsuum2lpi5/toTg9w+qg78goW9GtZADETw
+	 Zt1TfUsCPpAO7XzZp+7THbD7rtM9++sW+NUdntmwkfvb+8/wsVb6R3tY+TMvuqhaWO
+	 i49eDx7BIKpNCpzQYBUkabNzfaObCFVc/PwadyLbGaZ1xT94QHXENWo+O7Hh5ZjZGi
+	 bqqPynr9pXgpv2T9NgvQY3cGcYh+Q6Nc5TCa+aclV21Bd54SOQ673Bf4XBy97PCSN5
+	 SLX2iNQEHfdvg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 3/7] md/raid10: consistently fail atomic writes that
- require splitting
+Subject: Re: [PATCH v4 1/7] md/raid10: fix r10bio leak in
+ raid10_write_request() error paths
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>
 Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260710101521.1714-4-abd.masalkhi@gmail.com>
+In-Reply-To: <20260710101521.1714-2-abd.masalkhi@gmail.com>
 References: <20260710101521.1714-1-abd.masalkhi@gmail.com>
- <20260710101521.1714-4-abd.masalkhi@gmail.com>
+ <20260710101521.1714-2-abd.masalkhi@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 10 Jul 2026 10:28:35 +0000
-Message-Id: <20260710102835.D07391F000E9@smtp.kernel.org>
+Date: Fri, 10 Jul 2026 10:31:48 +0000
+Message-Id: <20260710103148.DB0CB1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Concurrent disk removal during a failed or split write causes a NU=
-LL pointer dereference in the error handling path.
+- [High] Allocation of `r10_bio` with `GFP_NOIO` can sleep, violating `REQ_=
+NOWAIT` semantics.
+- [High] Functions in the IO path (`wait_blocked_dev()` and `wait_barrier()=
+`) sleep unconditionally, violating `REQ_NOWAIT` semantics.
 --
 
---- Patch [3]: [PATCH v4 3/7] md/raid10: consistently fail atomic writes th=
-at require splitting ---
-commit a682adb077534fe2522eacd5e431dab764a60d3f
+--- Patch [1]: [PATCH v4 1/7] md/raid10: fix r10bio leak in raid10_write_re=
+quest() error paths ---
+commit d87114f7731cb53cc142eafbf2338e5b721f84ad
 Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 
-md/raid10: consistently fail atomic writes that require splitting
+md/raid10: fix r10bio leak in raid10_write_request() error paths
 
-This patch addresses atomic writes in RAID10 by checking if they require
-splitting. If an atomic write would be split due to badblocks or other
-limits, it now correctly fails the bio with EIO rather than allowing the
-implicit EINVAL from bio_submit_split_bioset().
+When raid10_write_request() fails because REQ_NOWAIT is set, the
+allocated r10_bio is not freed before returning, resulting in a memory
+leak. Free r10_bio before returning from the REQ_NOWAIT error paths.
+
+Closes: https://lore.kernel.org/linux-raid/20260613184042.BCEC01F000E9@smtp=
+.kernel.org/
 
 > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index bd322eccdc3ff..3480fc7907f01 100644
+> index 0a3cfdd3f5df8..bd322eccdc3ff 100644
 > --- a/drivers/md/raid10.c
 > +++ b/drivers/md/raid10.c
-[ ... ]
-> @@ -1493,6 +1484,9 @@ static bool raid10_write_request(struct mddev *mdde=
+> @@ -1365,6 +1365,7 @@ static bool raid10_write_request(struct mddev *mdde=
 v, struct bio *bio,
->  		r10_bio->sectors =3D max_sectors;
-> =20
->  	if (r10_bio->sectors < bio_sectors(bio)) {
-> +		if (atomic)
-> +			goto err_handle;
+>  		/* Bail out if REQ_NOWAIT is set for the bio */
+>  		if (bio->bi_opf & REQ_NOWAIT) {
+>  			bio_wouldblock_error(bio);
+> +			free_r10bio(r10_bio);
+>  			return false;
+>  		}
 
 [Severity: High]
-This is a pre-existing issue, but can this jump to the error handling path
-trigger a NULL pointer dereference if a disk removal happens concurrently?
+This isn't a bug introduced by this patch, but while looking at REQ_NOWAIT
+handling, it appears the initial allocation of r10_bio in __make_request()
+and raid10_handle_discard() ignores the REQ_NOWAIT flag.
 
-If raid10_write_request() initiates an IO and skips a Faulty primary rdev,
-it uses the replacement (setting repl_bio and incrementing rrdev->nr_pendin=
-g).
-If md_check_recovery() concurrently calls raid10_remove_disk() for the Faul=
-ty
-primary, it can promote the replacement to primary and set p->replacement
-to NULL.
+Both functions call:
 
-When this atomic check fails, it jumps to the error unwinding loop which
-does:
+    r10_bio =3D mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
 
-    struct md_rdev *rrdev =3D conf->mirrors[d].replacement;
-    ...
-    if (r10_bio->devs[k].repl_bio) {
-        rdev_dec_pending(rrdev, mddev);
-        r10_bio->devs[k].repl_bio =3D NULL;
-    }
+Since GFP_NOIO includes __GFP_DIRECT_RECLAIM, this can sleep if the mempool
+is depleted.
 
-Since replacement is now NULL, rrdev is NULL, and rdev_dec_pending() will
-dereference it.
+Could this violate the strict non-blocking guarantees of REQ_NOWAIT IO and
+potentially starve async workers?
 
-Looking at raid10_end_write_request(), it implements a fallback to handle
-concurrent promotion by falling back to conf->mirrors[d].rdev when
-replacement is NULL.
+>  		for (;;) {
 
-Does the error unwinding loop in raid10_write_request() need a similar
-fallback?
+[ ... ]
 
-> +
->  		allow_barrier(conf);
->  		bio =3D bio_submit_split_bioset(bio, r10_bio->sectors,
->  					      &conf->bio_split);
+> @@ -1398,6 +1399,7 @@ static bool raid10_write_request(struct mddev *mdde=
+v, struct bio *bio,
+>  		if (bio->bi_opf & REQ_NOWAIT) {
+>  			allow_barrier(conf);
+>  			bio_wouldblock_error(bio);
+> +			free_r10bio(r10_bio);
+>  			return false;
+>  		}
+
+[Severity: High]
+This is a pre-existing issue, but further down in the IO path, several
+functions seem to sleep unconditionally even for REQ_NOWAIT bios.
+
+For example, wait_blocked_dev() does:
+
+    md_wait_for_blocked_rdev(blocked_rdev, mddev);
+    wait_barrier(conf, false);
+    goto retry_wait;
+
+Also, in raid10_write_request() and raid10_read_request(), when a bio spans=
+ a
+chunk boundary and is split, the code unconditionally blocks:
+
+    allow_barrier(conf);
+    bio =3D bio_submit_split_bioset(bio, max_sectors, &conf->bio_split);
+    wait_barrier(conf, false);
+
+Could these calls to wait_barrier(conf, false) and md_wait_for_blocked_rdev=
+()
+deadlock async submitters that rely on the non-blocking guarantee?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710101521.1714=
--1-abd.masalkhi@gmail.com?part=3D3
+-1-abd.masalkhi@gmail.com?part=3D1
