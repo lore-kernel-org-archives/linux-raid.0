@@ -1,62 +1,63 @@
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5603A3B42D0
-	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 10:16:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E81F3E0256
+	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 10:16:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783678572; cv=none; b=T6SfJiuRC/lqrSjsSts7Vb46GzvnvIK7pnQVXmzFfgJmzq1prp9+y2WXAKnLw89MpEFG1ckJzdLwoOs3Daam/q8s1yss+n2yeOW8tSws41VzMpOmGnyhBNrad4vsyoNDFFxYADCanBljhGqITW7HZfiET9aCYBqw7J8hOkgigQk=
+	t=1783678573; cv=none; b=IKErAuGLXYwB+5NdGaAO9pNy++WX6jLkEieZnN2oV/sMq+gPKvzPPFpxo6l/b8ZF4cZJVEl0gZzv1vUzZMpjEaGYkWUYz2RPkkrWxmkHa1I6hDuU2vnBNMcPlJHvslyiAYQH+NBdjsq0u36X4WlLAyiN5CQIlnOyAZci2q4CYng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783678572; c=relaxed/simple;
-	bh=Bfe3xB0thmKW8/yG8nKExHeAvMXcWVoeWwJ8pXNNBD8=;
+	s=arc-20240116; t=1783678573; c=relaxed/simple;
+	bh=1tlFjz/cCmyQHjce8cSURjPwovVmOpmqfVBATU2ybJU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ps9PfI0ywHLL37bIe6AAoHMApSTbHmkTGVRTvdbOeRYiTFaDtUy2Kbgar0+tiAosF879hacimBdhk/zfSA3fr+rFt1FSPbqpKziwO6Fmk5otl851m1Rx3e1QMgyN4YtrOwqRShzeSoUtTaqI3CZRfKNR1RaDA4vLogKuHofHFC8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kt9ORlkN; arc=none smtp.client-ip=209.85.128.54
+	 MIME-Version; b=P8i6OH7P+DtZ02vHY65ug1JcGeHPI9CysAi0tj+NW9zO46acFL0yGQsJUYc6V3z9fiNoUBo3tR0l45a7wvuOxubPFBz9qscqyo0OJiwBEeTiBjKGvH/X300aCYBmNyL2R9jCRZsYREroxx86itkUlmiebgd/tRWbuKZ3JMga0Ak=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kyIjCGeB; arc=none smtp.client-ip=209.85.128.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kt9ORlkN"
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-4938d5f86f3so5093135e9.1
-        for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 03:16:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kyIjCGeB"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-493b7612475so5892005e9.3
+        for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 03:16:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783678568; x=1784283368; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1783678570; x=1784283370; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=t1JCSAO04+tj+XFeggFKh3PqCgoc7uDvt/WquxeaeBY=;
-        b=kt9ORlkNc1j3uUzZUJ4BE3XENOH+1ZQJiFbzkvutp/Cs1QS+a5DL60TgRBxDrRiWUw
-         /SUvU9hbHctUo3m6h53BGf6DyB/BUd1q7xgBdwWIijXaiOZc1y/Z0r01iOTvGptuIvL6
-         Cad3bw3CeTMNpc2qfQN3eTSU1zEPUsqXDbj7gsoYvgfo0wq7k+DhN3QK2yIPLWLJKb6g
-         pxmNB4JUApE0t9NS10nXXvcp3fkwdqJG8XvEgdk45uo66WP/RbugCGtGbGY8R8ruGd+F
-         /RfMy8BNyiVw6XmWAeGLYui4o1AcHvZLUVfiD1rYVkbo6I6eS2U8WbxLNFDG37huDufq
-         6LWg==
+        bh=l+6lrXW8MRgVUIlREriBzz+n9VJVDvmnQ2y2tzCDScM=;
+        b=kyIjCGeB1zBW5vz1gqUGl2qoA5isRqdNsvYuqt+VzTpEk8q1SfdRCcyzd7o9qP5lDj
+         40exawOwB9P4WtAQOmKourc9VlJ40jJqkRgkvZfxNUSdKfv0Gz8soKjnPjVDPSbPjW4s
+         1Gav4QxEQ4R2BvH/9RKa7EY8tX46IYYsTKdx2fdyjouPL1FPvmmyoCvNd3GbArXkFMBg
+         /VXIe+Yncexy3hsdCRSeeSo2lt+roq/VcHo2yGgg30QXnk4JL68568kLKWc249pPuZ6f
+         Ak1zdYiOrTJceYUgIkjUDtfIhxwd3qG8CuQ4CeBkEO86yjkL2iijk3Y4nDybDYEAH3bc
+         uLog==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783678568; x=1784283368;
+        d=1e100.net; s=20251104; t=1783678570; x=1784283370;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=t1JCSAO04+tj+XFeggFKh3PqCgoc7uDvt/WquxeaeBY=;
-        b=TJrxfaOE6RpgtAzGY4hej7RLRpx9jWK0qsagCE68on7QcEAtg2rBzI+i1xQzdrrYW2
-         My3SlRvvNbX0v9xTtRtt6oklx2VyDGtknmFoKkKSac6Ve7Q4TEjf/oprJZJQrnB64iHl
-         cUnzkjM0um057PZBl9DKHdKhNnTw0Xyi3OKDBt54bSiu+RwtxBu1FEYpmnHyE7msf1j4
-         QEDBXIU8Myko0FP0aFvPyQ1gmhIMNLlVzxrMEydI2nABffyVSooZyhOcChR4c1GSl5eq
-         T2gajpfpWA6NwEeHIVl3+l4m4MbTwSnFfIhkm+1Z9tbyG7/jkVzoZBUrANsl+AHuRVqw
-         /d8w==
-X-Gm-Message-State: AOJu0YyoUJhDqBIzsiLcUNLQeZjOmCG+hWQz+vQlVAHAS+xz+tN2hDZH
-	92fbmCmFi+QcTceUbV7u88wlgF2pojr3ca/AvxgU+1tsbzZ7JC5onhs3
-X-Gm-Gg: AfdE7clsKASyxeDcw0gTLY5aXQfVgG0BJvwMUrWF+yNVxPs/u7+aTvEX6iqTYS/RxcB
-	syWEWwTOOolKdzSiPVnGaKZSqttWCFQidblkHhsgjpxcSItwZVwfwfgOXXSWnNyeZ26YkVqlsiQ
-	rewmBhppZIjlZvVpZrpZQ6OlBbNfjXMlx8LNEvupi87VlvDQvJaBAYk8JpnQy6yVIPGQxme1vMs
-	TevxBTfvVKYIP9xo80qnvdsgwg2PJaEIheWPzzG7JOzO6gmNjUzN5OWlF3R9CqqoCklrJ3H1tPs
-	IZVlGwMTJKrqOjJOvBMupPrU40dpMhfWkSCxEbfvbSlAJuFsW0BLrndxapROA2t3mGc0LW2tLzk
-	u7k6jK0+r3oypA6H/m4aqs2eJSsu24WX6ddN2eZ4wrowEUAGX9TpIVfkhyY7Wv4X4DjAVfv7Ti8
-	jGWiVBlih+F44SdPjs8m7vNyTX57BvMRHshlJfpZvUR1UK4H1YpHTLw8/8NWS1vsQ8
-X-Received: by 2002:a05:600c:56d3:b0:493:e2c3:af25 with SMTP id 5b1f17b1804b1-493f2b37187mr15757895e9.12.1783678566847;
-        Fri, 10 Jul 2026 03:16:06 -0700 (PDT)
+        bh=l+6lrXW8MRgVUIlREriBzz+n9VJVDvmnQ2y2tzCDScM=;
+        b=BaMLFKLPFemhw0bXhqVKChdv9UTeeYRkK0Ph4p9sR+gls6fz4UVPNYEJe6eL0cRN2z
+         jTXiHb+SjRXMdQVTwaCbtYeb23Mv8e7zvTvkGeo9md6/PqcGmqXldXeXuj6EWSdkszQZ
+         yJEgHH1OeyYDTznrMW6MNNyXOm2fI8DFsuogaSCdYIERbTcD41ncSXxUVDoaMwm5ymR8
+         eR7Dwop5KW0Vu1/h8XYXPfk1bkgB7PkiceG4tU0OGyf6JCzahWIFaUN5DV3sj0s1E7kj
+         9BUmeYm/gNG4RuYYslpNVJ4GlUnjdegDLVbrY6STpaNwDQJwFhZHhZ4FZ3Q7FLl8wvlx
+         Vmlg==
+X-Gm-Message-State: AOJu0YzVinr0glX8gHR4r1hYoZwjjtuJ1DUg0oqHNIaMGhCOmyPKbC0F
+	oOB0pg0V0kjhgLPU/ZUQ+kwiUSvFdEwFkT1WodMU122/vv0GyOcxPMTY
+X-Gm-Gg: AfdE7cmsddtif1M6YnJr3ehfU9eOSBKVGzq/6Qd1oSHwtF9ysQ42iX01T2ZH+uYmncH
+	E6WC7PiAsFXbUd3Ao7dlrbZaEiIlxVQZQLZb7gFowBfuoAmT9Fl662XXsAvXW+S9BPp+YV+mZuc
+	P/wV8xjpAw/xYc8nFo6MVGqG/08MsZbO+G00wqEqVOE4iK7MIlMZ7tLha1QdD34diP30kZxylZw
+	uC+Q2Mgkb9XFNNEuKA/erLvMHbn9HjT92+bbpy2iFNC3yMxbsA24ljCAUr8bYRw6/3hHTkP7Mru
+	gtQSiHF18rJNCV5dpjzFbXjDr+f/lGKSxuEBTsg1P8JEZ6SusUERK6XOfiHwHB+O0rIhv+EICcJ
+	ulT45yO4aAzYsr3yO73sNlUfKWrVsljq3vrT8WFHZX6o1xPlwuEPxoNH92QZcXbFl5ti46sik6E
+	5JCelUZfpXMuCJ2SnxNLkw6mjfmZ8swBTl7G6hH9fFbNYzjbwDqIqnLHGcQ2o+vPtBJkCkCQnMx
+	GQ=
+X-Received: by 2002:a05:600c:c3cf:10b0:493:f0f5:f2db with SMTP id 5b1f17b1804b1-493f0f5f3aemr32432155e9.22.1783678569482;
+        Fri, 10 Jul 2026 03:16:09 -0700 (PDT)
 Received: from yocto.. (dynamic-176-007-199-185.176.7.pool.telefonica.de. [176.7.199.185])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-493eb670a41sm123554875e9.0.2026.07.10.03.16.05
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-493eb670a41sm123554875e9.0.2026.07.10.03.16.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Jul 2026 03:16:06 -0700 (PDT)
+        Fri, 10 Jul 2026 03:16:08 -0700 (PDT)
 From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 To: song@kernel.org,
 	yukuai@fygo.io,
@@ -69,9 +70,9 @@ To: song@kernel.org,
 	abd.masalkhi@gmail.com,
 	linux-kernel@vger.kernel.org
 Cc: linux-raid@vger.kernel.org
-Subject: [PATCH v4 2/7] md/raid1: restrict atomic write limits and handle runtime constraints
-Date: Fri, 10 Jul 2026 10:15:16 +0000
-Message-ID: <20260710101521.1714-3-abd.masalkhi@gmail.com>
+Subject: [PATCH v4 3/7] md/raid10: consistently fail atomic writes that require splitting
+Date: Fri, 10 Jul 2026 10:15:17 +0000
+Message-ID: <20260710101521.1714-4-abd.masalkhi@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260710101521.1714-1-abd.masalkhi@gmail.com>
 References: <20260710101521.1714-1-abd.masalkhi@gmail.com>
@@ -83,69 +84,50 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Restrict the RAID1 atomic write limits by setting chunk_sectors to
-BARRIER_UNIT_SECTOR_SIZE so that atomic writes never straddle a barrier
-unit.
+RAID10 currently handles one badblock path explicitly by failing atomic
+writes with EIO. However, another badblock path can also reduce the
+writable range and force the bio through bio_submit_split_bioset(),
+which implicitly completes the bio with EINVAL.
 
-A bio that passes block-layer validation may still become unserviceable
-within RAID1 due to bad blocks or write-behind constraints. In the former
-case, complete the bio with EIO. In the latter case, disable
-write-behind rather than failing the bio with EIO.
+Fix this by handling atomic writes in the common split check. If RAID10
+determines that an atomic write would require splitting, complete the
+bio with EIO.
 
-Fixes: f2a38abf5f1c ("md/raid1: Atomic write support")
-Fixes: a4c55c902670 ("md/raid1: simplify raid1_write_request() error handling")
-Reviewed-by: John Garry <john.g.garry@oracle.com>
+Fixes: a1d9b4fd42d9 ("md/raid10: Atomic write support")
 Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 ---
 Changes in v4:
- - Improve the commit message.
- - Add Reviewed-by tag from John Garry.
- - Link to v3: https://lore.kernel.org/linux-raid/20260708101341.473750-3-abd.masalkhi@gmail.com/
+ - No changes.
+ - Link to v3: https://lore.kernel.org/linux-raid/20260708101341.473750-4-abd.masalkhi@gmail.com/
 
 Changes in v3:
- - Set chunk_sectors to BARRIER_UNIT_SECTOR_SIZE instead of setting
-   atomic_write_hw_unit_max.
- - Avoid enabling write-behind when the atomic write exceeds the
-   write-behind limit.
- - Link to v2: https://lore.kernel.org/linux-raid/20260628142420.1051027-3-abd.masalkhi@gmail.com/
+ - No changes.
+ - Link to v2: https://lore.kernel.org/linux-raid/20260628142420.1051027-4-abd.masalkhi@gmail.com/
 
 Changes in v2:
- - Drop the early atomic write split check from raid1_write_request().
- - Advertise the atomic write size limit via queue limits.
- - Disable write-behind instead of failing atomic writes when the
-   BIO_MAX_VECS limit is encountered.
- - Link to v1: https://lore.kernel.org/linux-raid/20260623072456.333437-3-abd.masalkhi@gmail.com/
+ - Drop the early atomic write split check from raid10_write_request()
+   and rely on queue limits instead.
+ - Link to v1: https://lore.kernel.org/linux-raid/20260623072456.333437-4-abd.masalkhi@gmail.com/
 ---
- drivers/md/raid1.c | 25 ++++++++++---------------
- 1 file changed, 10 insertions(+), 15 deletions(-)
+ drivers/md/raid10.c | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index afe2ca96ad8c..6c8beca995e6 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1522,6 +1522,7 @@ static bool raid1_write_request(struct mddev *mddev, struct bio *bio,
- 	int first_clone;
- 	bool write_behind = false;
- 	bool nowait = bio->bi_opf & REQ_NOWAIT;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index bd322eccdc3f..3480fc7907f0 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1356,6 +1356,7 @@ static bool raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 	int i, k;
+ 	sector_t sectors;
+ 	int max_sectors;
 +	bool atomic = bio->bi_opf & REQ_ATOMIC;
- 	bool is_discard = op_is_discard(bio->bi_opf);
- 	sector_t sector = bio->bi_iter.bi_sector;
  
-@@ -1577,7 +1578,8 @@ static bool raid1_write_request(struct mddev *mddev, struct bio *bio,
- 		 * write-mostly, which means we could allocate write behind
- 		 * bio later.
- 		 */
--		if (!is_discard && rdev && test_bit(WriteMostly, &rdev->flags))
-+		if (!is_discard && rdev && test_bit(WriteMostly, &rdev->flags) &&
-+		    (!atomic || max_sectors <= BIO_MAX_VECS * (PAGE_SIZE >> 9)))
- 			write_behind = true;
- 
- 		r1_bio->bios[i] = NULL;
-@@ -1603,20 +1605,6 @@ static bool raid1_write_request(struct mddev *mddev, struct bio *bio,
- 			}
+ 	if ((mddev_is_clustered(mddev) &&
+ 	     mddev->cluster_ops->area_resyncing(mddev, WRITE,
+@@ -1464,16 +1465,6 @@ static bool raid10_write_request(struct mddev *mddev, struct bio *bio,
  			if (is_bad) {
  				int good_sectors;
--
+ 
 -				/*
 -				 * We cannot atomically write this, so just
 -				 * error in that case. It could be possible to
@@ -153,37 +135,22 @@ index afe2ca96ad8c..6c8beca995e6 100644
 -				 * complexity of supporting that is not worth
 -				 * the benefit.
 -				 */
--				if (bio->bi_opf & REQ_ATOMIC) {
--					bio->bi_status = BLK_STS_NOTSUPP;
--					bio_endio(bio);
--					goto err_dec_pending;
--				}
+-				if (bio->bi_opf & REQ_ATOMIC)
+-					goto err_handle;
 -
- 				good_sectors = first_bad - sector;
+ 				good_sectors = first_bad - dev_sector;
  				if (good_sectors < max_sectors)
  					max_sectors = good_sectors;
-@@ -1636,7 +1624,13 @@ static bool raid1_write_request(struct mddev *mddev, struct bio *bio,
- 	if (write_behind && mddev->bitmap)
- 		max_sectors = min_t(int, max_sectors,
- 				    BIO_MAX_VECS * (PAGE_SIZE >> 9));
+@@ -1493,6 +1484,9 @@ static bool raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 		r10_bio->sectors = max_sectors;
+ 
+ 	if (r10_bio->sectors < bio_sectors(bio)) {
++		if (atomic)
++			goto err_handle;
 +
- 	if (max_sectors < bio_sectors(bio)) {
-+		if (atomic) {
-+			bio_io_error(bio);
-+			goto err_dec_pending;
-+		}
-+
- 		bio = bio_submit_split_bioset(bio, max_sectors,
+ 		allow_barrier(conf);
+ 		bio = bio_submit_split_bioset(bio, r10_bio->sectors,
  					      &conf->bio_split);
- 		if (!bio)
-@@ -3228,6 +3222,7 @@ static int raid1_set_limits(struct mddev *mddev)
- 	md_init_stacking_limits(&lim);
- 	lim.max_write_zeroes_sectors = 0;
- 	lim.max_hw_wzeroes_unmap_sectors = 0;
-+	lim.chunk_sectors = BARRIER_UNIT_SECTOR_SIZE;
- 	lim.logical_block_size = mddev->logical_block_size;
- 	lim.features |= BLK_FEAT_ATOMIC_WRITES;
- 	lim.features |= BLK_FEAT_PCI_P2PDMA;
 -- 
 2.43.0
 
