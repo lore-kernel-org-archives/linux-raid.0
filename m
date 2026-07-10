@@ -1,62 +1,62 @@
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 938AF432BD5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 223A6431E77
 	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 13:23:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783689834; cv=none; b=sbOoIHlKd0cqTydOqCersBeneWE0wpWPk5apWL9sphqGg4pjnFm6vIUAKTRCfUUjMki4q9svE3AlFVzF+nRvnBNIWT6I9KtIM09cBlPGn2oU2j0lbOA6ExVyPwOP/B6ZA/6LsA8sxyReEmo9FWeMEUKTwo2qcUQrOshNjmdIiYw=
+	t=1783689834; cv=none; b=ofqmB84JVHyogcHMB2ium/WG/GGzJ8VLU9Sip7tY/SOPAyoIZ2pOJKc6g6FzE0IBTDZxeDYQcEhCuqRpMo4Y5QdfPjL8zBScAUgvrKfx8EvQQfCR/mQPoRJELbxkM9CtPH/3t6weWsSfPMFeGaFGLV1lFnotaoSrw1GsOEzDKo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1783689834; c=relaxed/simple;
-	bh=ROxI8I56kgfmTN4J4BZy2V7chA2+oyHggossUsMnPoY=;
+	bh=h5a1Su9PjrEKsF0LuXoSVIdSjt3j29OkNIH0r9t+t9M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qdoV/4/iBMpyMYc1CMai+yHi5aou3KUu7a15CzhHZwVDqpu56gmvY4ZGW94F3lMCmkhTCCG0ZiBpaQE8ktBpYvoM+DAoAzp1wfYxdztMMARVubTROi/Hh+ICHihevu/ux5FkDF8QBEz+ctFkHfCVOQ2/6GikyfxJRQ6gd1TtqFM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UwhDZecj; arc=none smtp.client-ip=209.85.215.172
+	 MIME-Version; b=ID/TF72nAmNp4gNmtChoUCMReRfHqX3V7zaGtcfajqUmNUdxZfpI09wGOjvrxz2Jdwhr/z+VaxPcN/o3GSj6saM6XgJi04K65tYFz4zCCGyqVkXPeAkAJ37ELBkdnnSvdwaQeQ3CNjh/QDHhN7wVUzjYqGyGq0zFtADlMGpIrNU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=oU4TnXBG; arc=none smtp.client-ip=209.85.214.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UwhDZecj"
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-c96b08cdd1cso608319a12.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oU4TnXBG"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2cacb8416a1so7159855ad.1
         for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 06:23:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783689832; x=1784294632; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1783689831; x=1784294631; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=z1ptaSjjmJUeSpstZTVLuscns/xpL1khD7u065BJaVM=;
-        b=UwhDZecjx/s9srJmWVSfX9ZTUDWZsrNTxI59YZ4sxQgCsPLkI7jVHoCqL6aSTA+aA3
-         pgyn1qy51shf79LpkI86VqYQM8SRAPfCc/qWcUK0UhxRhqs8I5yYh4eMHjMW/1Bjoe7P
-         bFGZOrnX9sYeQYcI2MnVN273esc1gKmTFdKHrcIFOfaZlrzZhN8+9zI6q61OPT4LzJcS
-         AgWW06qxYcJCo98X1KM4xm96ibw2z5zXKotltWDKCBVRNWHNRTtTItKHSE06B2GZRztj
-         YrH6e0zcCh7jJWTk+N56LRJcQ+LOz63Ia5/0PYTlSavRszXhUoTjt5taRY5SqgoWRq9x
-         qOsQ==
+        bh=sDVSdr7r152gQiXZ3Vozdie+Fv1rp8S/dmZQcBepj3A=;
+        b=oU4TnXBG4tlyGC9o7IVozmq7RPH6k18hxtBvKtisIaqj1q+XvqRs1FDiqQ29HcZLa5
+         3fhXNgbCxBdmwyQSTJ/PWHPeZ0jTYQZqi3qd+LZ2p77bRXCcmFGzqQA1KfefuT4Bga11
+         VJM5zxO1+RLOy2KN6FQLKUFFqv1U9uaweh0jaxMkutZ6pXMjwYFFZRHMYbW/6D17HGEA
+         2SJhJzv2mwChfM1R5c34CKPx0QeegFad3AsVvXgF5v1KKNNPPr7rFUPqjCxEUK1oDoJR
+         ConSQ8jssLSqpkjs96xWw9QLXs8lK6iQPQI/bQAkz3WXOQc/i6KemBNHepFp8RxGpmMa
+         jg9Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783689832; x=1784294632;
+        d=1e100.net; s=20251104; t=1783689831; x=1784294631;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=z1ptaSjjmJUeSpstZTVLuscns/xpL1khD7u065BJaVM=;
-        b=Z6Y2gKABSaCTULDT/aWdCn1jOJjRed6u0PpjEZoVO+mnN5p9MJvKk2GJvU2jAmt8IA
-         tk6+zfCt+kbnV47bpDMObDXXdJhfNySCoOY481f0Q7Prscpj3pNa7m1LupjhuA13VCj+
-         Up3QFDeDDyKdqrlQbo9J9dOLxz266E55FqkVzNkeVYnANnnqV3DrcVUVQ8KuH6xWHIQF
-         3rS4UxzhYA5L5n+y9HKLeyHxkNaNaBvxismCEwJAseIBPeoInCj03xO88Cjl4gm7nAVT
-         6k/3NLQXkKNZTXLQzCnMoJvpILh4KbGMxnoKnxZS40NxP4TYg3GT07RwQOTps/UlGsDz
-         kZNQ==
-X-Forwarded-Encrypted: i=1; AHgh+RoK3G6WZ7J8vr+aiecpDnXA7PWquRK2+XBnSJS2fNyKFIRIRPYryHmc1DlUrMiQKWIkJJH+K96BO+8G@vger.kernel.org
-X-Gm-Message-State: AOJu0YztgShxQrV+gt7+XfxHBwJvBy4vCTJBrueJWsjw2TX1F/emKaEi
-	P8G1h3R1RHwoZ05w72LB8V0MT9nNIgtKzuI8nYyV5WikYisDS//SyTA7
-X-Gm-Gg: AfdE7cnTkA8kwo2sGSQt+bDlUQVSi0gsVtSEq3Qp3D3asr1lEOv1XujEkNlsDDhK6CP
-	PyvYS99k5NyjyCFAHv2fRqMNu3wpNYUUmqpaI3R7MYnwMy5mEm6f2unGj7cwd8QZZf6ahXHpuGP
-	sFbc/K+Bh8qNehgnVvyfs7UD8xAZ4VVrI56ui7EIt2dZq6K2uk7WhWoRwH3/2zml66JMPzIypl+
-	iw+Uq0QlbEo36PtYNlME6XcmAH9ubzPPgUfR0tS1APhtdVc9mQstvQjHok8WhaOtx/m1zThLR9a
-	mMQtdn4/OtTS2MIjeQYnnvzu9ad96Eh+VJ5f/Q55is5WkUoZcxu+84fbwwAh1fDarovxTY6OEgL
-	HPJm3gHHDzaykI35rsAi2OGsCbWdKuZhWcDJZFtUfdUh0mP9DmxddwbXtk+1tuseQHCcA3TglYl
-	oy/2b8Va0nnIe0C+4xR4f+Av1VG2mvqjraJj48ri08J04JJ5IbDU95mLxpkSZsM7j+Pxf0TrSvh
-	T4qJ1U=
-X-Received: by 2002:a05:6a20:a10e:b0:398:7df5:2dae with SMTP id adf61e73a8af0-3c0bcf49b71mr13545168637.9.1783689831988;
+        bh=sDVSdr7r152gQiXZ3Vozdie+Fv1rp8S/dmZQcBepj3A=;
+        b=D/jMlCnYxUbIlue+fHBqs20zKCUGm0Wc4dl6lG5cGYHtMjqkjLguDvzWQf44TZh30J
+         64nFhwQ4rgzqQeWMwJh6uWuOyRUUJYgJsYnkCV3bdulqyRQ3trO1lR1U+kQ2cyevaM2R
+         pYIH5jwXffxAicXVG2fVaES9Yky7f8DHBuRwqXqUgU7HdPxYBREm/Lns6gWe/3Wlwjsr
+         ATCx26QmIkvNPUWstWj8atqOoEAxGixXHiM7btV3tj8LjotY7I2KTXvZOgqdWKgh09BB
+         qA2Tdj1SUx2MOTeQYMznt+zSBW7TohwewzpF+zBWQdLUwTPPzL+B5AEOqCnbbGYyQFCx
+         bjeQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoXX63ZboR0yIN9yR2X65c2+7e/ldzFmlurmzA62ozBThBn6obkbLLLucDGUE8YStPYliYIelROWvsc@vger.kernel.org
+X-Gm-Message-State: AOJu0YyMM9TeJylbiwrt/u9GOZWNJ1rK704diTqQZGDO2D2lyCRGqOaT
+	dcgG8gyfpx30RgsQuYK3jF2kk6yEAxO2c+toy802V/MKR4e3V5fGFOYN
+X-Gm-Gg: AfdE7cmCGKMHPnZdvKZ2lgPL39Qlz/lN/rgQdCI+QM7M5kIZpxYz61o4eGoU1+WFnKU
+	WPY4G+C3kQTGC1slBebK+KkCImYfkw0HfacJ4Mu3RZp91Hn+H9UZGYlcro92aJnMfz6xMjg1COr
+	IlOVpSFCbIiPF1+NP71/pRCwa6ZPzksLj9Att/BfpgJunnEaUvEFmQM68t3NzaCW1vmqAJ8XE8N
+	olDYtP00fU3hfT190cSvt/Dx7AdtGz3OiAIEHxpVG/5QlYYdMqWgoN5iN3yUsg8YuCn2fAGAuoS
+	nXr81ZcLh/ap6hRLpnZk1TuWGS17zt4vwL98KqL2CJygMPOoTDF9wp+IW4za8Aj0Js+po1KJla5
+	3+Drgep5BBVHz5ZE6XqkGFXAno248UJyO5hesDp5VYWuZHPntcM4oZBnrIsuO95Lo1qJBrC2HGb
+	zFwKQZ3oNRAhsil+D6KVudK2H1uzrNOpsyIwvm2xUy85caMde2CAFCHuiZV5fWNAneAa04SSVAj
+	lmbYWg=
+X-Received: by 2002:a05:6300:67c7:b0:3c0:9c1a:8952 with SMTP id adf61e73a8af0-3c0bd311c69mr13059970637.74.1783689831379;
         Fri, 10 Jul 2026 06:23:51 -0700 (PDT)
 Received: from research02.. ([2601:1c1:8700:f5b:fe34:97ff:fea3:c147])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-ca5b3b251eesm4903776a12.31.2026.07.10.06.23.51
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-ca5b3b251eesm4903776a12.31.2026.07.10.06.23.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Fri, 10 Jul 2026 06:23:51 -0700 (PDT)
 From: Hiroshi Nishida <nishidafmly@gmail.com>
@@ -67,9 +67,9 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hiroshi Nishida <nishidafmly@gmail.com>
-Subject: [PATCH 4/6] md/raid5: make the stripe batch size a module parameter
-Date: Fri, 10 Jul 2026 06:23:44 -0700
-Message-ID: <20260710132346.7295-5-nishidafmly@gmail.com>
+Subject: [PATCH 3/6] md/raid5: scale the stripe_cache_size limit with system memory
+Date: Fri, 10 Jul 2026 06:23:43 -0700
+Message-ID: <20260710132346.7295-4-nishidafmly@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260710132346.7295-1-nishidafmly@gmail.com>
 References: <20260710132346.7295-1-nishidafmly@gmail.com>
@@ -81,112 +81,99 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-handle_active_stripes() dequeues up to MAX_STRIPE_BATCH (8) stripes from a
-worker group under a single device_lock acquisition, and
-raid5_wakeup_stripe_thread() divides group->stripes_cnt by the same value
-to decide how many additional workers to wake.  The two uses must move
-together: the dequeue cap bounds how many stripes one worker drains, while
-the spawn divisor sizes the worker fan-out to match.
+raid5_set_cache_size() caps how far the per-array stripe_cache_size sysfs
+knob may be raised at a fixed 32768 stripes.  The stripe cache costs
+roughly max_nr_stripes * (sizeof(stripe_head) + pool_size * (sizeof(bio) +
+PAGE_SIZE)), so 32768 stripes is about 1.5GB on a 12-disk array.  That
+fixed limit is wrong at both ends: a host with hundreds of GB of RAM
+backing a wide array cannot grow the cache past ~1.5GB even though it has
+the memory to spare, while on a small box 32768 stripes can already exceed
+total RAM.
 
-Make the batch size a per-array value chosen by a new max_stripe_batch
-module parameter (1-32, default 8, so behaviour is unchanged out of the
-box).  Both the dequeue cap and the spawn divisor read the single
-conf->max_stripe_batch, so they cannot drift apart.  The on-stack batch[]
-array in handle_active_stripes() is sized to the STRIPE_BATCH_MAX (32)
-upper bound; only conf->max_stripe_batch entries are ever used.
+Derive the limit from memory instead.  When the new stripe_cache_size_max
+module parameter is 0 (the default), the ceiling is the stripe count that
+fits in at most 1/8 of RAM for this array's width, but never less than the
+historical 32768 -- so the limit only ever grows relative to today and
+small systems are unchanged.  A non-zero stripe_cache_size_max pins a fixed
+ceiling for administrators who want one.
 
-The value is resolved when an array is created.  On busy multi-threaded
-arrays a larger batch amortises the device_lock over more stripes at some
-latency cost; unlike the hash-lock count and the cache-size limit there is
-no general hardware signal for the best batch size, so the default is left
-at the historical 8 and the value is simply exposed for tuning.
+The default stripe count (256), and thus the default memory footprint, is
+unchanged; this only changes how high an administrator may raise
+stripe_cache_size.
 
 Signed-off-by: Hiroshi Nishida <nishidafmly@gmail.com>
 ---
- drivers/md/raid5.c | 15 ++++++++++++---
- drivers/md/raid5.h | 12 +++++++++++-
- 2 files changed, 23 insertions(+), 4 deletions(-)
+ drivers/md/raid5.c | 37 ++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 36 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index e41d3fc92dd0..5f0825c5effe 100644
+index 7f72981121fd..e41d3fc92dd0 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -78,6 +78,11 @@ module_param(stripe_cache_size_max, uint, 0644);
- MODULE_PARM_DESC(stripe_cache_size_max,
- 		 "Maximum the per-array stripe_cache_size may be raised to.  0 (the default) derives the limit from system memory (never below the historical 32768), so large-memory hosts can grow the stripe cache without a recompile while small ones are not offered a limit above what RAM can back.  A non-zero value sets a fixed limit");
+@@ -44,6 +44,7 @@
+ #include <linux/seq_file.h>
+ #include <linux/cpu.h>
+ #include <linux/slab.h>
++#include <linux/mm.h>
+ #include <linux/ratelimit.h>
+ #include <linux/nodemask.h>
  
-+static unsigned int max_stripe_batch = STRIPE_BATCH_DEFAULT;
-+module_param(max_stripe_batch, uint, 0644);
-+MODULE_PARM_DESC(max_stripe_batch,
-+		 "Number of stripes a worker thread handles per device_lock acquisition, 1-32 (default 8).  Larger values amortise the lock over more stripes on busy multi-threaded arrays at some latency cost.  Read when an array is created");
+@@ -72,6 +73,11 @@ module_param(nr_stripe_hash_locks, uint, 0644);
+ MODULE_PARM_DESC(nr_stripe_hash_locks,
+ 		 "Number of spinlocks the stripe cache hash is striped across, rounded up to a power of two and capped at 32.  0 (the default) auto-sizes it from the online CPU count (never below 8); a non-zero value overrides that.  Larger values reduce lock contention on many-core systems at a small per-array memory cost.  Read when an array is created");
+ 
++static unsigned int stripe_cache_size_max;
++module_param(stripe_cache_size_max, uint, 0644);
++MODULE_PARM_DESC(stripe_cache_size_max,
++		 "Maximum the per-array stripe_cache_size may be raised to.  0 (the default) derives the limit from system memory (never below the historical 32768), so large-memory hosts can grow the stripe cache without a recompile while small ones are not offered a limit above what RAM can back.  A non-zero value sets a fixed limit");
 +
  static bool devices_handle_discard_safely = false;
  module_param(devices_handle_discard_safely, bool, 0644);
  MODULE_PARM_DESC(devices_handle_discard_safely,
-@@ -221,7 +226,7 @@ static void raid5_wakeup_stripe_thread(struct stripe_head *sh)
- 	/* at least one worker should run to avoid race */
- 	queue_work_on(sh->cpu, raid5_wq, &group->workers[0].work);
+@@ -6922,13 +6928,42 @@ raid5_show_stripe_cache_size(struct mddev *mddev, char *page)
+ 	return ret;
+ }
  
--	thread_cnt = group->stripes_cnt / MAX_STRIPE_BATCH - 1;
-+	thread_cnt = group->stripes_cnt / conf->max_stripe_batch - 1;
- 	/* wakeup more workers */
- 	for (i = 1; i < conf->worker_cnt_per_group && thread_cnt > 0; i++) {
- 		if (group->workers[i].working == false) {
-@@ -6734,11 +6739,11 @@ static int handle_active_stripes(struct r5conf *conf, int group,
- 				 struct list_head *temp_inactive_list)
- 		__must_hold(&conf->device_lock)
- {
--	struct stripe_head *batch[MAX_STRIPE_BATCH], *sh;
-+	struct stripe_head *batch[STRIPE_BATCH_MAX], *sh;
- 	int i, batch_size = 0, hash;
- 	bool release_inactive = false;
- 
--	while (batch_size < MAX_STRIPE_BATCH &&
-+	while (batch_size < conf->max_stripe_batch &&
- 			(sh = __get_priority_stripe(conf, group)) != NULL)
- 		batch[batch_size++] = sh;
- 
-@@ -7640,6 +7645,10 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	    !conf->temp_inactive_list)
- 		goto abort;
- 
-+	/* Resolve the stripe batch size (see STRIPE_BATCH_* in raid5.h). */
-+	conf->max_stripe_batch = clamp_t(int, max_stripe_batch,
-+					 1, STRIPE_BATCH_MAX);
-+
- #if PAGE_SIZE != DEFAULT_STRIPE_SIZE
- 	conf->stripe_size = DEFAULT_STRIPE_SIZE;
- 	conf->stripe_shift = ilog2(DEFAULT_STRIPE_SIZE) - 9;
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 10c45fa22955..69a41c1310af 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -490,7 +490,16 @@ struct disk_info {
- #define BYPASS_THRESHOLD	1
- #define NR_HASH			(PAGE_SIZE / sizeof(struct hlist_head))
- #define HASH_MASK		(NR_HASH - 1)
--#define MAX_STRIPE_BATCH	8
 +/*
-+ * Stripe batch size: how many stripes a worker dequeues from its group per
-+ * device_lock acquisition in handle_active_stripes(); the same value divides
-+ * group->stripes_cnt in raid5_wakeup_stripe_thread() to choose how many extra
-+ * workers to spawn, so the two stay coupled.  Selected per array by the
-+ * max_stripe_batch module parameter: STRIPE_BATCH_DEFAULT is the historical
-+ * value and STRIPE_BATCH_MAX bounds the on-stack batch[] array.
++ * Upper bound that the per-array stripe_cache_size may be raised to.  The
++ * stripe cache costs roughly max_nr_stripes * (sizeof(stripe_head) +
++ * pool_size * (sizeof(bio) + PAGE_SIZE)).  The limit was historically a fixed
++ * 32768 stripes, which both under-serves large-memory hosts backing wide
++ * arrays and, on a small box, still permits a cache larger than RAM.  Derive
++ * it from memory instead -- at most 1/8 of RAM -- but never below the
++ * historical 32768, so the limit only ever grows relative to today.  A
++ * non-zero stripe_cache_size_max module parameter overrides the heuristic.
 + */
-+#define STRIPE_BATCH_DEFAULT	8
-+#define STRIPE_BATCH_MAX	32
++#define RAID5_CACHE_SIZE_FLOOR		32768
++#define RAID5_CACHE_SIZE_RAM_SHIFT	3	/* cap the cache at 1/8 of RAM */
++
++static unsigned long raid5_max_cache_size(struct r5conf *conf)
++{
++	unsigned long per_stripe, limit;
++
++	if (stripe_cache_size_max) {
++		limit = stripe_cache_size_max;
++	} else {
++		per_stripe = sizeof(struct stripe_head) +
++			     conf->pool_size * (sizeof(struct bio) + PAGE_SIZE);
++		limit = ((totalram_pages() << PAGE_SHIFT) >>
++			 RAID5_CACHE_SIZE_RAM_SHIFT) / per_stripe;
++		limit = max_t(unsigned long, limit, RAID5_CACHE_SIZE_FLOOR);
++	}
++	return min_t(unsigned long, limit, INT_MAX);
++}
++
+ int
+ raid5_set_cache_size(struct mddev *mddev, int size)
+ {
+ 	int result = 0;
+ 	struct r5conf *conf = mddev->private;
  
- /*
-  * The stripe cache hash is striped across a power-of-two number of spinlocks,
-@@ -690,6 +699,7 @@ struct r5conf {
- 	struct r5worker_group	*worker_groups;
- 	int			group_cnt;
- 	int			worker_cnt_per_group;
-+	int			max_stripe_batch; /* stripes/dequeue, 1..STRIPE_BATCH_MAX */
- 	struct r5l_log		*log;
- 	void			*log_private;
+-	if (size <= 16 || size > 32768)
++	if (size <= 16 || size > raid5_max_cache_size(conf))
+ 		return -EINVAL;
  
+ 	WRITE_ONCE(conf->min_nr_stripes, size);
 -- 
 2.43.0
 
