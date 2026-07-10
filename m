@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E90A3B2AA
-	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 13:34:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EFF83B2AA
+	for <linux-raid@vger.kernel.org>; Fri, 10 Jul 2026 13:35:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783690495; cv=none; b=huFvgq8yOxZSHX7SH1lDAhBvDo/YGfe9JVTmdBqM7vcgQAzlketwzgef/NS02tcmLX0XuBMcojdW7qbzLm4+RIsJ4MgMkbZnq0eX62gCaf942VNVc8X9ErHttYYn5kjWVBRJXRuAXLLtJki0tsnz2AwiH/r5/m0MqDXl2CXPKP8=
+	t=1783690501; cv=none; b=c6irWITnbiYd0XI7yG9CRTiKbbU0N92CewWvIghpVEzLy9UIh7Zm0fTtU19rHcVw+ZHLytFF2y+IBxjFuy2HhlPuicmY+d/tb2geE7eWKNHLo9yv15E+z136tv2fK3U7dkithjQ9JVwBFkEuUJrd63BePdsAHzLuG97qvo0tgj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783690495; c=relaxed/simple;
-	bh=3EJKsZJS092o6OfwLIVqNhcW7++sA05FjApEN1wsQhM=;
+	s=arc-20240116; t=1783690501; c=relaxed/simple;
+	bh=KlfuIMRy1boqnkFwjsaVkTy+7xcVKSfr2zgWLUZ4ti0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=sjKyh+RmCiOnTIfXrR7jm/J4B/ps6k7AcAwY9XSxtG7SR5TsYNZeauUfO6xbuc4g48R5sCzA9/fEu6Tmk2/xhWWYa0eMJW2bTQ49BgTNirWJozVvG6iNxs8ofNDctkghIRbYDtv5NlzUvVMSaUSZS5iUYUcmytrpmtU1Y3YpJqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D2isC7Vh; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=tg/eMmRGSN/AcOmSaYJHdPOKbrHwhJTozEBb79xsBSOcRtfpcR4+SszOpX4YIMIqHWb6Qz6BezsG2F6uf6N2d7Us0AqtczfDa2F5LPBap+dvRUcF+6InVlmIS2l9tgEylf12eXWGqEGE2i/ThOoxzoGqQ2icRWGBYIEa29az3yg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J/F7tftS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D2isC7Vh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E022F1F000E9;
-	Fri, 10 Jul 2026 13:34:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J/F7tftS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6C921F000E9;
+	Fri, 10 Jul 2026 13:34:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783690494;
-	bh=uy4vjuT/RP5KktAJ+MPQOn11NxrHCNFwjIo3qojRdu8=;
+	s=k20260515; t=1783690499;
+	bh=xL2nQo9gJkBXCFrV2sdqtQ2X9nbpbDV78H8y2Hy6eF4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=D2isC7VhiOO4tJK8/pAxKOsqQ3Es3Z222TIBvNAK/A7fA/6/Ijdj7zxeCxGd+u9OI
-	 bK2Rm3dX6cduSVhMTC3gElCK3i5L4UGwDO5TuWJce4hhJ1gN1LRvASZimf/+hXnOdI
-	 /ebwMtn7wy9yexXzbLuHJgbvxl4YMB65C1MQ0z25WAJLhZgBp2/ClD1v7EMPg122rT
-	 ka4nxmOhUylqwlwbtsMth/x2fOp+JTYyDFLP+apMuRQzZfCNe6O0Ag202zGNkqpL88
-	 rDV3dz/d4kWwPPLcpGzEQmxshY2sCPjQDw5YQkUyvCELSCZ4/YybiWP1p44L7ojxA1
-	 6QMGDV4YpbF8Q==
+	b=J/F7tftSDqzL9kQRuxLK57FC9yS8SG9MtivC8zNHb+Zfjl4pcyuG0q3fCpi7+1tUC
+	 TvkGycIlQgfnOo4dW6PC+EGGNHFIaKvubtC9XBZrVutj2LSCOOapAVNKEws/weZIt3
+	 di2+hkzerO5fQGB6IUDGfnou3VfAojC9mB9hFRF2tuDAzAY1DJ1WQdWmK8n86Apx9v
+	 Bt+mJ9KT5/9PKzgXA2Ub3MoKeZWkpuO21o0DC+6A7Z56VAWiQ3Sp9Hj4iwfSAtetUu
+	 0H3hXlVHKTYthzezRuHbfYQzwqGS2d2L4/bdb1gqudEWTEg9/0yI+cuULMBICsOEPw
+	 QXBxt7eSlB6/A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/6] md/raid5: scale the stripe_cache_size limit with
- system memory
+Subject: Re: [PATCH 2/2] md/raid5: reserve stripe cache for user I/O during
+ rebuild
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hiroshi Nishida" <nishidafmly@gmail.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260710132346.7295-4-nishidafmly@gmail.com>
-References: <20260710132346.7295-1-nishidafmly@gmail.com>
- <20260710132346.7295-4-nishidafmly@gmail.com>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260710132339.7284-3-nishidafmly@gmail.com>
+References: <20260710132339.7284-1-nishidafmly@gmail.com>
+ <20260710132339.7284-3-nishidafmly@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 10 Jul 2026 13:34:53 +0000
-Message-Id: <20260710133453.E022F1F000E9@smtp.kernel.org>
+Date: Fri, 10 Jul 2026 13:34:59 +0000
+Message-Id: <20260710133459.A6C921F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -47,83 +47,74 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] Integer overflow in `raid5_max_cache_size` on 32-bit platforms w=
-ith 4GB+ RAM.
+- [High] The newly added stripe cache reservation logic is completely ineff=
+ective because it fails to throttle the calling loop in md_do_sync().
 --
 
---- Patch [3]: [PATCH 3/6] md/raid5: scale the stripe_cache_size limit with=
- system memory ---
-commit 9086a4a6d9e318381885104d84e3f0ec9bbeec13
+--- Patch [2]: [PATCH 2/2] md/raid5: reserve stripe cache for user I/O duri=
+ng rebuild ---
+commit fb8a80692f7a386d69a8bee1d9b364db1d33380f
 Author: Hiroshi Nishida <nishidafmly@gmail.com>
 
-md/raid5: scale the stripe_cache_size limit with system memory
+md/raid5: reserve stripe cache for user I/O during rebuild
 
-This commit derives the upper bound for the per-array stripe_cache_size from
-system memory rather than a fixed limit. It scales the maximum cache size to
-1/8 of RAM, allowing large-memory hosts to grow the cache while preventing
-small systems from exceeding total RAM.
+This commit attempts to prevent burst-starvation of user I/O during a RAID5
+rebuild by reserving a portion of the stripe cache. It adds checks in the
+read-ahead loop of raid5_sync_request() to yield when there is competing
+user I/O.
 
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 7f72981121fd5..e41d3fc92dd05 100644
+> index 574880e4f23fe..6575bdb84bb23 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
+> @@ -6656,6 +6656,27 @@ static inline sector_t raid5_sync_request(struct m=
+ddev *mddev, sector_t sector_n
+>  	     submitted < RAID5_SYNC_WINDOW && win_sector < max_sector &&
+>  	     win_sector < mddev->resync_max;
+>  	     submitted++, win_sector +=3D RAID5_STRIPE_SECTORS(conf)) {
+> +		/*
+> +		 * Yield to user I/O: stop the read-ahead if anyone is waiting
+> +		 * for a stripe.  The check is intentionally racy -- a waiter
+> +		 * appearing just after is serviced by the next sync_request
+> +		 * call, so no barrier is needed.
+> +		 */
+> +		if (waitqueue_active(&conf->wait_for_stripe))
+> +			break;
+> +		/*
+> +		 * Reserve cache for user I/O only when it is actually competing.
+> +		 * preread_active_stripes counts stripes queued for write I/O
+> +		 * (including the read phase of RMW); sync stripes never set
+> +		 * STRIPE_PREREAD_ACTIVE, so during a pure rebuild it stays zero
+> +		 * and the window fills freely.  Competing user reads do not bump
+> +		 * the counter but are caught by the waitqueue_active() check
+> +		 * above.
+> +		 */
+> +		if (atomic_read(&conf->preread_active_stripes) > 0 &&
+> +		    atomic_read(&conf->active_stripes) >=3D
+> +		    conf->max_nr_stripes / RAID5_SYNC_HWMARK)
+> +			break;
 
-[ ... ]
+[Severity: High]
+Does this actually throttle the rebuild as intended?
 
-> @@ -6922,13 +6928,42 @@ raid5_show_stripe_cache_size(struct mddev *mddev,=
- char *page)
->  	return ret;
->  }
-> =20
-> +/*
-> + * Upper bound that the per-array stripe_cache_size may be raised to.  T=
-he
-> + * stripe cache costs roughly max_nr_stripes * (sizeof(stripe_head) +
-> + * pool_size * (sizeof(bio) + PAGE_SIZE)).  The limit was historically a=
- fixed
-> + * 32768 stripes, which both under-serves large-memory hosts backing wide
-> + * arrays and, on a small box, still permits a cache larger than RAM.  D=
-erive
-> + * it from memory instead -- at most 1/8 of RAM -- but never below the
-> + * historical 32768, so the limit only ever grows relative to today.  A
-> + * non-zero stripe_cache_size_max module parameter overrides the heurist=
-ic.
-> + */
-> +#define RAID5_CACHE_SIZE_FLOOR		32768
-> +#define RAID5_CACHE_SIZE_RAM_SHIFT	3	/* cap the cache at 1/8 of RAM */
-> +
-> +static unsigned long raid5_max_cache_size(struct r5conf *conf)
-> +{
-> +	unsigned long per_stripe, limit;
-> +
-> +	if (stripe_cache_size_max) {
-> +		limit =3D stripe_cache_size_max;
-> +	} else {
-> +		per_stripe =3D sizeof(struct stripe_head) +
-> +			     conf->pool_size * (sizeof(struct bio) + PAGE_SIZE);
-> +		limit =3D ((totalram_pages() << PAGE_SHIFT) >>
-> +			 RAID5_CACHE_SIZE_RAM_SHIFT) / per_stripe;
+When we break out of this loop here, raid5_sync_request() returns the number
+of sectors processed so far back to md_do_sync(). Since md_do_sync()
+continuously loops calling the sync_request handler until the rate-limit wi=
+ndow
+is met, it will immediately call raid5_sync_request() again.
 
-[Severity: Medium]
-Will this calculation overflow on 32-bit platforms with 4GB or more of RAM?
+When raid5_sync_request() is re-entered, the very first stripe is allocated
+unconditionally without checking the high-water mark:
 
-Since totalram_pages() returns an unsigned long, on a 32-bit system with hi=
-gh
-memory (e.g., using PAE), totalram_pages() can be 1,048,576 or more.
-Left-shifting this by PAGE_SHIFT (12) will overflow the 32-bit integer,
-yielding a severely truncated value or 0.
+drivers/md/raid5.c:raid5_sync_request() {
+    ...
+	sh =3D raid5_get_active_stripe(conf, NULL, sector_nr, R5_GAS_NOBLOCK);
+    ...
+}
 
-This seems like it would cause the dynamic limit to inappropriately clamp to
-the RAID5_CACHE_SIZE_FLOOR on such systems, breaking the intended memory-ba=
-sed
-scaling.
-
-> +		limit =3D max_t(unsigned long, limit, RAID5_CACHE_SIZE_FLOOR);
-> +	}
-> +	return min_t(unsigned long, limit, INT_MAX);
-> +}
-> +
+Will the sync thread just rapidly consume stripes one-by-one, completely
+bypassing the 50% cache reservation and filling the cache 100% anyway?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710132346.7295=
--1-nishidafmly@gmail.com?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710132339.7284=
+-1-nishidafmly@gmail.com?part=3D2
