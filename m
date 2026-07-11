@@ -1,143 +1,120 @@
-Received: from va-2-36.ptr.blmpb.com (va-2-36.ptr.blmpb.com [209.127.231.36])
+Received: from va-2-35.ptr.blmpb.com (va-2-35.ptr.blmpb.com [209.127.231.35])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29E2E368263
-	for <linux-raid@vger.kernel.org>; Sat, 11 Jul 2026 10:04:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.36
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A9D836AB4D
+	for <linux-raid@vger.kernel.org>; Sat, 11 Jul 2026 10:04:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.35
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783764258; cv=none; b=RV4gkklrXe4/zb0v+tt7L02RPxsxic+j8NcBko5GyMUEu5/8izeaT0AE2e6cUPfZQnSMA3ThMxai80/4+P+AZaTg9yrkuZupso3bgF4zP4rFQUZ8lT9uzfp5NmaA/Wxw9h3PUoTSC2kQ2itizJGyhGp1NDmwe7aWqXxSc0RXWL0=
+	t=1783764259; cv=none; b=HUkhAB/Da9N+q2aPaCXXfrXy3qp34rvyBSpJS//9soK6jcIFLXFw4RvBTYVfwnIrV/9UYE4HSAAJiffzdt/iiaS7ZQVl0nrABfxCFgXLydfhUdTSADBwpcxrqPzAadgdNqOjChgmKqR6dHV50Kl9pWWcEtwmYakwBw0GiLr14Zo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783764258; c=relaxed/simple;
-	bh=BHH9tBoo/hepwC0eGVi8Zx/Ja5iKAxumMluAaWMIzcE=;
-	h=To:Content-Type:Cc:From:Date:Subject:Message-Id:Mime-Version; b=TQLjafFvec1+gGM4ysfluEWB1qid4NGG7X/fcxQK8FpxUW6mt5/toQqGAe4hzJ70zWNUV710Ftza4+UwG3QXr/ZRtlXhkPexGVsRVOF+7gfZ8TNVWbaJPpLQvdMXmEOTl0ydjRJnGL7+SRo8OKCAZdLyziJxAA0Q2BleNiGUuy0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=dJ6d/Fhz; arc=none smtp.client-ip=209.127.231.36
+	s=arc-20240116; t=1783764259; c=relaxed/simple;
+	bh=zO9S3Uc7S2ENZZD/Yj6G28n9IT9h2LxDSHVCu7650wE=;
+	h=From:Mime-Version:References:Message-Id:In-Reply-To:Content-Type:
+	 To:Cc:Date:Subject; b=ELqEfIFfPb8pdi7gJEgGWzCWQYSbkIE+SOdQ7e+Op4B+DDXqIebuHiYfnkS2ooDxgj+rApb6+xOQMYN0RSe7aHNF3t5rOOIUSF0Kj+XknTHLO4zMKY1B90oajY0RVxS9AdcLq2N17qLVSBSr2oBphslwIOQTtzF3kktDV96sDEE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=0aPO2VWx; arc=none smtp.client-ip=209.127.231.35
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="dJ6d/Fhz"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="0aPO2VWx"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1783764249;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1783764251;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=JrLQWy1f704E27lLw4eY04Hh4HOqqZFLXi33FT18HjY=;
- b=dJ6d/Fhz6fYDkQzfHCoIygQ+4mLtx0mECsA6DCMdknD2ICe88zlqR3u7jKFGX8KOuAOcgp
- pDaop6/R+i+aqL8vGu6zDRbj4zNuwDlgl589qP9du2/ea6AXPndqNAf/k+E0HhSCQ/MNYL
- n3VQGzQ/VK+u6Jd1xc7KndUAPZ+fWlkKx55oUhen8B/LXiVFqgpRlOU/2SqRkSajldoVFJ
- NwqgJDintZWYfh2Jdb/wM7HolGJj/XPpFx0prR23WnywFTfLa+SooULD2q2ncp3pVnbm3v
- HTialg4WA7aMR1lRrF5nFGetP5dZACHs5nLfHk8vB2bsZ4K/BcjcaEtpJncd5g==
-To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>
-X-Lms-Return-Path: <lba+26a521517+0bdd64+vger.kernel.org+chencheng@fnnas.com>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=UTF-8
-Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
-X-Original-From: chencheng@fnnas.com
+ bh=4MCbwe4EZJW2QS9n0NC3Qy3hAR1knQgcIejgOVgPr3Q=;
+ b=0aPO2VWxvL4JhntmmaeFa6dMP2LSXvI9pRXS028IRvDmAIZyVr1ZFixxq/pVXYTSJnD4c7
+ jEcLuURu2avEqoEBuyza/gs8LgWERENv/2GrF09P+1tQS/ExXQUGI73Dlwiyq8UZ+HtaiG
+ O58woahyvdsdjUbZBW4hmYJQzNi4Duf92POJhP+sd0kSrnHnhG+XtBqBb8bP3Z6IoPUxLY
+ 6zm7uBgwUiDfQJDjxMZGl7JTh46H/uV2be1E+tSB0s6E9p3DwZpdogbwHenn3cq2yxzgPy
+ yqR8SUsQzlehedmB23ibyaiHx9XtQLghXSqQQaLJdamW7dqyxwRM2Xq9I/YQHg==
 From: "Chen Cheng" <chencheng@fnnas.com>
-Date: Sat, 11 Jul 2026 18:03:49 +0800
-Received: from fedora ([183.34.162.102]) by smtp.feishu.cn with ESMTPS; Sat, 11 Jul 2026 18:04:06 +0800
-X-Mailer: git-send-email 2.54.0
-Subject: [PATCH v6 0/3] md/raid10: fix r10bio width mismatches across reshape
-Message-Id: <20260711100352.425177-1-chencheng@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+References: <20260711100352.425177-1-chencheng@fnnas.com>
+Message-Id: <20260711100352.425177-2-chencheng@fnnas.com>
+In-Reply-To: <20260711100352.425177-1-chencheng@fnnas.com>
+X-Mailer: git-send-email 2.54.0
+Content-Type: text/plain; charset=UTF-8
+To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>
+Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
+Date: Sat, 11 Jul 2026 18:03:50 +0800
+Received: from fedora ([183.34.162.102]) by smtp.feishu.cn with ESMTPS; Sat, 11 Jul 2026 18:04:08 +0800
+X-Lms-Return-Path: <lba+26a521519+d4c916+vger.kernel.org+chencheng@fnnas.com>
+Subject: [PATCH v7 1/3] md: suspend array when sync_action=reshape
+X-Original-From: chencheng@fnnas.com
 
 From: Chen Cheng <chencheng@fnnas.com>
 
-Hi,
+raid10 needs to resize/swap r10bio_pool when reshape changes
+raid_disks, and, don't let new requests keep allocating r10bio
+objects from the old pool while that transition is in progress.
 
-This series fixes slab out-of-bounds accesses in raid10 when reshape changes
-the number of raid disks while regular I/O is still reusing r10bio objects
-allocated under the previous geometry.
+suspend and lock array before mddev_start_reshape(), and resume
+it on exit.
 
-The bug is reproducible with a simple 4-disk to 5-disk reshape under write
-load, for example:
+Other sync_action ops are unchanged.
 
-  mdadm -C /dev/md777 -l10 -n4 /dev/sda /dev/sdb /dev/sdc /dev/sdd
-  mkfs.ext4 /dev/md777
-  mount /dev/md777 /mnt/test
-  fsstress -d /mnt/test -n 24000 -p 8 -l 24 &
-  mdadm /dev/md777 --add /dev/sde
-  mdadm --grow /dev/md777 --raid-devices=5 \
-    --backup-file=/tmp/md-reshape-backup
+Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+---
+ drivers/md/md.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-
-KASAN report:
-
-  BUG: KASAN: slab-out-of-bounds in free_r10bio+0x1c4/0x260 [raid10]
-  Read of size 8 at addr ffff00008c2dfac8 by task ksoftirqd/0/15
-  free_r10bio
-  raid_end_bio_io
-  one_write_done
-  raid10_end_write_request
-
-
-This series addresses the problem in three steps:
-
-  1. ensure the sync_action=reshape caller suspends and locks before start_reshape
-
-  2. resize r10bio_pool when reshape grows raid_disks
-
-  3. reorder the r10bio free flow before bio_endio in the regular and discard
-     completion paths
-
-Changes in v7:
-   - patch #1, refactor out suspend from retry block
-   - patch #3, raid_end_bio_io() refactor to:
-        free(r10_bio) -> free(master_bio) -> allow_barrier
-
-Changes in v6:
-   - suspend the array in action_store() after flush_work()
-   - free r10bio before ending the discard master bio
-
-Changes in v5 (suggested by Yu Kuai):
-   - simplify patch 2
-   - switch patch 3 from bounding reused r10bio devs[] walks by used_nr_devs
-     to reordering the free/endio flow
-
-Changes in v4:
-   - make the sync_action=reshape path invoke mddev_suspend_and_lock() before
-     calling start_reshape()
-   - leave the md-cluster and dm-raid paths unchanged; they still reach
-     start_reshape() with the mddev locked but without suspend
-
-Changes in v3:
-   - replace freeze_array()/unfreeze_array() in raid10_start_reshape() with
-     mddev_suspend_and_lock_nointr()/mddev_unlock_and_resume(); freeze_array()
-     can return while retry-list items still hold pool objects, while
-     mddev_suspend() provides the correct upper-layer quiesce interface
-
-Changes in v2:
-  - add this cover letter
-  - convert r10bio_pool to a fixed-size kmalloc mempool
-  - rebuild r10bio_pool inside the freeze window before switching live reshape
-    geometry
-  - switch raid10_quiesce() to freeze_array()/unfreeze_array()
-
-
-Testing:
-  - reproduced the original KASAN slab-out-of-bounds on 4-disk -> 5-disk
-    raid10 reshape with fsstress
-  - verified that this series fixes that reproducer
-  - exercised the 5-disk -> 4-disk reshape direction as well
-
-Thanks,
-Chen Cheng
-
-
-
-Chen Cheng (3):
-  md: suspend array when sync_action=reshape
-  md/raid10: resize r10bio_pool for reshape
-  md/raid10: free r10bio before ending master_bio in raid_end_bio_io()
-    and raid_end_discard_bio()
-
- drivers/md/md.c     | 17 +++++++++----
- drivers/md/raid10.c | 61 ++++++++++++++++++++++++++++++++-------------
- drivers/md/raid10.h |  2 +-
- 3 files changed, 56 insertions(+), 24 deletions(-)
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 096bb64e87bd..8ee2dcc116eb 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5261,25 +5261,32 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+ 	enum sync_action action;
+ 
+ 	if (!mddev->pers || !mddev->pers->sync_request)
+ 		return -EINVAL;
+ 
++	action = md_sync_action_by_name(page);
++	if (action == ACTION_RESHAPE) {
++		ret = mddev_suspend(mddev, true);
++		if (ret)
++			return ret;
++	}
+ retry:
+ 	if (work_busy(&mddev->sync_work))
+ 		flush_work(&mddev->sync_work);
+ 
+ 	ret = mddev_lock(mddev);
+-	if (ret)
++	if (ret) {
++		if (action == ACTION_RESHAPE)
++			mddev_resume(mddev);
+ 		return ret;
++	}
+ 
+ 	if (work_busy(&mddev->sync_work)) {
+ 		mddev_unlock(mddev);
+ 		goto retry;
+ 	}
+ 
+-	action = md_sync_action_by_name(page);
+-
+ 	/* TODO: mdadm rely on "idle" to start sync_thread. */
+ 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+ 		switch (action) {
+ 		case ACTION_FROZEN:
+ 			md_frozen_sync_thread(mddev);
+@@ -5345,10 +5352,12 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+ 	ret = len;
+ 
+ out:
+ 	mddev_unlock(mddev);
++	if (action == ACTION_RESHAPE)
++		mddev_resume(mddev);
+ 	return ret;
+ }
+ 
+ static struct md_sysfs_entry md_scan_mode =
+ __ATTR_PREALLOC(sync_action, S_IRUGO|S_IWUSR, action_show, action_store);
 -- 
 2.54.0
