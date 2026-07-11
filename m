@@ -1,116 +1,133 @@
-Received: from va-2-26.ptr.blmpb.com (va-2-26.ptr.blmpb.com [209.127.231.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mr3.vodafonemail.de (mr3.vodafonemail.de [145.253.228.163])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 277823BB9ED
-	for <linux-raid@vger.kernel.org>; Sat, 11 Jul 2026 10:56:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.26
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D7843191D6
+	for <linux-raid@vger.kernel.org>; Sat, 11 Jul 2026 13:30:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=145.253.228.163
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783767385; cv=none; b=Oic6iLoU1Ty541WweYWF5XoJuh3DbFe3WPO7/SZ2kd5dByGZLplNH3nsVE+crZ35A/gSCn+QxAHvvBz4DJfnlVu8Qs5bnSPpzzo6Xf0Q5ll/2woNM94lSSd41ms9Kd0G2u3MfNie9UR1PCk843xltnc2DzGajmQE7gUtep2kz6A=
+	t=1783776636; cv=none; b=SDZiu9dmcj+oVEjIhOQp1uDm9YJSgc3ljr/s4G4TkdDHRfhNllLciNT/cnaQWqQASjaT//SJW5FKgwLD9GlnAFypC3rWrnyZf8227FnCYxDaCrFbb2rUJGofwHtauN6opFmjd2ktdBBwiu590Ge0OjL6gDX5RIEK8rJfftgVo1c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783767385; c=relaxed/simple;
-	bh=AK+ACzT5VBcWQgKhvoERK4+tQo95s41v/e90QAoYcIM=;
-	h=Mime-Version:Content-Type:In-Reply-To:Cc:From:Message-Id:Subject:
-	 Date:References:To; b=Md2KE0V36ixxgoob5tu/qRtLdRzkifWcqztUN6RLZmzoRXV0E2qqDF640+95cHXcFT6z0N18TOxnQhMtli3a4oo0Pi2nUQJzMADVKYmODv5x+6yxDyALUchVkr4SpRr6z/m4QzseaePCWWbuK9BoSCt4miwm8ML9AocKxWGCQZs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=1YmW9Hpf; arc=none smtp.client-ip=209.127.231.26
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1783776636; c=relaxed/simple;
+	bh=nvIR6UN+8ptAqK58hp6PGFmypjsCYxHb7/kBqe4EwQM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hPJJ0zyNwGMk/N3oGGkf9VJJhfyAhEkbA3nQaX5fQ7Qtct3xDIqT5i2rLGkLuh4ZcKJzOOghBvLAGxYtXuktN2xku8Kzu9joio1q2knaVcs6HidNu8AU5oYpbaC0Q5lY3BGa/2eQQoAACNqVZ+NAu1EzzdrRrm1BfGjPFEF2Ln0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nexgo.de; spf=pass smtp.mailfrom=nexgo.de; dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b=RhLnYhzu; arc=none smtp.client-ip=145.253.228.163
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nexgo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nexgo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="1YmW9Hpf"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1783767374;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=f+q1M/OVRm/yFwpj4sF79wEdDC1fsuvgdteYp8P9T3E=;
- b=1YmW9HpfX6aqK2hSqiHiH9HlnvnRzV+4q38o3XNPHvdgS1FEMgmWHdcSUTd7A9JnZ01SgV
- Icg2ZBukN03USsd1EgsLdVFrlfL3zeJU1kVqM9JHyBQcjU+ueQWHTRXkkUwX4X4LhTGbx9
- 32iMsA2ha3uxpJppvWEhZSBdEvbUmMef+w9AUpkrf6iMnMis/MOMqXsNu+561Pz31QhItZ
- +CDBaPy0HM+A2zYXwCclwFjjyCTHEWjeRFMaKlS2Pb02yhLTUq8zD4i/m5SVQnBtW7dEbh
- NiKxKVeF3tyOFrmf5Luqbxo9UKlrWkAf1NwECt/YYtLURXrEJvo/wVC1lccpMw==
+	dkim=pass (1024-bit key) header.d=nexgo.de header.i=@nexgo.de header.b="RhLnYhzu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nexgo.de;
+	s=vfde-mb-mr2-23sep; t=1783776160;
+	bh=iWo2Lwt6OgEqOWgymds+FWGdCmHdO2lwycntG6DSi/s=;
+	h=Date:From:To:Subject:Message-ID:References:Content-Type:
+	 In-Reply-To:From;
+	b=RhLnYhzuQA4cuPbQIzGosGUuujvIKc5EkYxMde8MbZZ7o9hRgP5RxkFwbSsa1XjZU
+	 1dH7CFm59ZOMIF1TGcnK/zNxsEjHldrRf+8tF2bGy9ZRUmPGFCuFoLqh3aONdDiwns
+	 zLo+QmSpHWKKPePFXYWN5ZL+ENAkcyUpCQlwqk+s=
+Received: from smtp.vodafone.de (unknown [10.0.0.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
+	(No client certificate requested)
+	by mr3.vodafonemail.de (Postfix) with ESMTPS id 4gy8Wh3wCHz3sVfc;
+	Sat, 11 Jul 2026 13:22:40 +0000 (UTC)
+Received: from lazy.lzy (p579d7d31.dip0.t-ipconnect.de [87.157.125.49])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.vodafone.de (Postfix) with ESMTPSA id 4gy8WZ1Zw4z8sbL;
+	Sat, 11 Jul 2026 13:22:31 +0000 (UTC)
+Received: from lazy.lzy (localhost [127.0.0.1])
+	by lazy.lzy (8.18.2/8.14.5) with ESMTP id 66BDMUTf050617;
+	Sat, 11 Jul 2026 15:22:30 +0200
+Received: (from red@localhost)
+	by lazy.lzy (8.18.2/8.18.2/Submit) id 66BDMUPr050614;
+	Sat, 11 Jul 2026 15:22:30 +0200
+Date: Sat, 11 Jul 2026 15:22:30 +0200
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+To: Wol <antlists@youngman.org.uk>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>,
+        linux-raid@vger.kernel.org
+Subject: Re: LBS setup
+Message-ID: <alJDltJ9tc6tJCcj@lazy.lzy>
+References: <ahLSj1Ua5WJ0GTgY@lazy.lzy>
+ <alEb50Nmqt8IW2Nu@lazy.lzy>
+ <811c24a5-0c72-4b83-af19-609e42e12613@youngman.org.uk>
+ <alExwDILVwd3nVvK@lazy.lzy>
+ <a2a4e6f6-5521-44f7-b045-7432e3e8e757@youngman.org.uk>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-In-Reply-To: <m2y0g0z0ll.fsf@gmail.com>
-X-Lms-Return-Path: <lba+26a52214c+973f30+vger.kernel.org+chencheng@fnnas.com>
-User-Agent: Mozilla Thunderbird
-Cc: <linux-kernel@vger.kernel.org>
-X-Original-From: Chen Cheng <chencheng@fnnas.com>
-From: "Chen Cheng" <chencheng@fnnas.com>
-Message-Id: <2fcb6a64-25d7-4759-af6e-701a78f57e72@fnnas.com>
-Received: from [192.168.8.91] ([183.34.162.102]) by smtp.feishu.cn with ESMTPS; Sat, 11 Jul 2026 18:56:12 +0800
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH] md: protect read mddev->recovery in md_sync_action()
-Date: Sat, 11 Jul 2026 18:56:10 +0800
-References: <20260627102909.141036-1-chencheng@fnnas.com> <m25x341cro.fsf@gmail.com> <da95c106-6416-4abd-8fef-3b71986c17f8@gmail.com> <m2y0g0z0ll.fsf@gmail.com>
-To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, 
-	"Chen Cheng" <chenchneg33@gmail.com>, <linux-raid@vger.kernel.org>, 
-	<yukuai@fygo.io>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a2a4e6f6-5521-44f7-b045-7432e3e8e757@youngman.org.uk>
+X-purgate-server: smtpa05
+X-purgate-type: clean
+X-purgate: clean
+X-purgate-size: 1680
+X-purgate-ID: 155817::1783776160-CD592176-DE6D349E/0/0
 
-=E5=9C=A8 2026/6/27 19:25, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
->=20
-> Hi Chen,
->=20
-> On Sat, Jun 27, 2026 at 18:52 +0800, Chen Cheng wrote:
->> =E5=9C=A8 2026/6/27 18:46, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
->>> On Sat, Jun 27, 2026 at 18:29 +0800, Chen Cheng wrote:
->>>> From: Chen Cheng <chencheng@fnnas.com>
->>>>
->>>> md_sync_action() read mddev->recovery in lockless path, use READ_ONCE(=
-)
->>>> instead of u64 plain read.
->>>>
->>> unisgned long is not always u64...
->>> I can not see what it fixes, is this just to silence KCSAN? If so,
->>> please say so in the commit message.
->>
->> I need to find KCSAN report , I lost this one, but I think it's easy to
->> find locklessly path to call md_sync_action(), so. READ_ONCE is need.
->>
-> Thanks. Adding the KCSAN report would be helpful.
->=20
+On Fri, Jul 10, 2026 at 09:43:56PM +0100, Wol wrote:
+> On 10/07/2026 18:54, Piergiorgio Sartor wrote:
+> > Hi Wol
+> > 
+> > thanks for the answer.
+> > 
+> > My question is about "what to do?".
+> > Not much what happened.
+> > 
+> > The log says we should copy some size
+> > from somewhere to somewhere else.
+> > The docs says this should be done
+> > with array at rest.
+> > 
+> > Is there any documentation about this?
+> > Should we just ignore the log?
+> > What should be done, if any?
+> > 
+> > The log:
+> > 
+> > md1: echo current LBS to md/logical_block_size to prevent data loss issues from LBS changes.
+> >                 	Note: After setting, array will not be assembled in old kernels (<= 6.18)
+> 
+> Ah. Personally I wouldn't do anything, then. Are you using any systems with
+> kernel 6.18 or earlier?
+> 
+> Are you likely to use any kernels 6.18 or earlier in the future?
+> 
+> If the answer to both questions is no, then you're not going to have any
+> trouble ...
 
-hi Abd-Alrhman
+Thanks again for the answer.
 
-Uh... a apologize for my mislead . it's truelly report by review-bot ,=20
-and after double check ,  I think it wouldn't be reproduce in my x86-64=20
-machine , because 8B in x64-arch load is atomic +align..
+Nevertheless, sorry if I insist.
+What I understand from the log message is
+that if I do *not* copy the LBS I can get
+data loss. If I do copy the LBS, I will
+not be anymore backward compatible.
 
-thanks,
-cheng.
+This backward compatibility does not seem
+interesting for me, hence I should copy
+this LBS.
+Which then begs the question: how?
 
->>>
->>>> Fixes: e792a4c2156a3 ("md: add new helpers for sync_action")
->>>>
->>>> Signed-off-by: Chen Cheng <chencheng@fnnas.com>
->>>> ---
->>>>    drivers/md/md.c | 2 +-
->>>>    1 file changed, 1 insertion(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
->>>> index c5c50640b684..f4415c1a79d9 100644
->>>> --- a/drivers/md/md.c
->>>> +++ b/drivers/md/md.c
->>>> @@ -5074,11 +5074,11 @@ static enum sync_action md_get_active_sync_act=
-ion(struct mddev *mddev)
->>>>    	return is_recover ? ACTION_RECOVER : ACTION_IDLE;
->>>>    }
->>>>   =20
->>>>    enum sync_action md_sync_action(struct mddev *mddev)
->>>>    {
->>>> -	unsigned long recovery =3D mddev->recovery;
->>>> +	unsigned long recovery =3D READ_ONCE(mddev->recovery);
->>>>    	enum sync_action active_action;
->>>>   =20
->>>>    	/*
->>>>    	 * frozen has the highest priority, means running sync_thread will=
- be
->>>>    	 * stopped immediately, and no new sync_thread can start.
->>>> --=20
->>>> 2.54.0
->>>>
->>>
->>
->
+I mean, this seems the logical conclusion
+from what I understood from the log.
+
+Also, why to have this log in the first place?
+The kernel is 7.1.3, so if everything would
+be fine with it, no need to log anything.
+
+I do not know...
+
+Anyway, sorry again if I bother...
+
+Thanks,
+
+bye,
+
+-- 
+
+piergiorgio
