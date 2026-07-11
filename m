@@ -1,172 +1,167 @@
-Received: from va-2-51.ptr.blmpb.com (va-2-51.ptr.blmpb.com [209.127.231.51])
+Received: from va-2-56.ptr.blmpb.com (va-2-56.ptr.blmpb.com [209.127.231.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D036175A98
-	for <linux-raid@vger.kernel.org>; Sat, 11 Jul 2026 16:39:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82BF81E7C12
+	for <linux-raid@vger.kernel.org>; Sat, 11 Jul 2026 17:44:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783787990; cv=none; b=eyMXmqHivu2I67nqkqdCi2t+2cF0+Hnho7oGIERXlKg8zdwhviugL8DeYamKFjIq8pi7hLsAjplyntDFGzpa9ZCjzwAysMmuUkTLMXH6Q1l0a0JURZYo8+6IunQ3YXB+ksM4XD+YpRB1yIwxu1HGvargRLTrtPVxpBqSn/oA9SE=
+	t=1783791846; cv=none; b=CuwTQdLzyET7Y2zg7xZlMTgUz5sIthX1aqrbUAn/qRbBndaVQJeSU3wgPRVeuMfwMPyPG/QIRH1o6paN0rQzg87Hk9QF8VEMluNwl94atU6WmU4WJpwNK5CiYZF+CwBbbsLumZkl4SpjsO+bAGdpH5UVo6oqgkie93YdLqC+HCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783787990; c=relaxed/simple;
-	bh=kfm+YMoHEbDTa8tfU7Fz0x21xlfJnFvz7ZO2iMDLlgY=;
-	h=Cc:Date:Content-Type:To:Message-Id:Mime-Version:From:Subject:
-	 In-Reply-To:References; b=GV3HaJtL08KLZhO1fw9jsoAzMNGOr6bAw4qCR/cPTXx2nB9qwKRdx86RFW/MICLR8kx/WqQAenYY6nMhBvlDTKkO6foKSomui5So7F2cZr3yN9f1INtlKbQ+jCv/8k9Ri/W0rO/0RnzYYhnTqVpHEY5fzK8TcaC3GD9ymk1KzEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=M5FcIXkh; arc=none smtp.client-ip=209.127.231.51
+	s=arc-20240116; t=1783791846; c=relaxed/simple;
+	bh=QaebH4SY6lTCF+bYrqMBtdG86enntGMrHSa+tlLd8ZQ=;
+	h=From:In-Reply-To:Subject:Message-Id:Content-Type:References:To:Cc:
+	 Date:Mime-Version; b=t+J8RUAg0INgUOftpB3mai3EdiTYANE0BmzgUSBh0ZPUdQFhMIK1AmzChjfdVR+Z6iqJHl8NSfoQjQkHqgM95CAGX54k/ZM1reS4LEBQmFQRqyrpvRBMPXq+n1GQQv3Cbtpc3GpbOMzzZbZACl6ffBFSFW5hXNRNtpvnj7UYlwc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=AmlcoIx5; arc=none smtp.client-ip=209.127.231.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="M5FcIXkh"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="AmlcoIx5"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1783787977;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1783791836;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=IkHVOIgSF7tNzkUUl7Maq/x+q5QHVjYXwHA45lj15V4=;
- b=M5FcIXkhjemEBG+L9qQ66AhGdAH7kbkt8k8xWUNfcq4b86zlIMmeD2AmjIJvC4t8jnamOZ
- KzPRWY4m75wf98YY2ZeBtFlDoPDQ1ycUb4iAAzxJ7bbCyaN5cVM5znbxutv8/DxikIVQth
- sr/dK6OeSUNPnAoXx3PU3R3MkAtUF6BsfsEcmRvPwUwjwaEy3Q7V3zAh+W7WTWOYNJqSKI
- EJxFoWjkGNZQmTrSBf4MZt9vnzBg/fGeG7osVmYa/7eYDO+W35bnZIoDQ4Um8E1uZ+AmVM
- YxVrGZ1bdbUI3HlvHFZg7ElQOXG5+3wyHXZ54afJ4CJYXtQ12TsvvRjK6EDSQw==
-Reply-To: yukuai@fygo.io
-Cc: <linux-kernel@vger.kernel.org>
-Date: Sun, 12 Jul 2026 00:39:32 +0800
-Received: from [192.168.1.104] ([39.182.0.144]) by smtp.larksuite.com with ESMTPS; Sat, 11 Jul 2026 16:39:35 +0000
+ bh=wE45Zi//ngGG2zCjWxjDU+BeRdl7JaQqgxT2QqPzchI=;
+ b=AmlcoIx5kD08JGUvyAh23+uf5pNwpTxJhvEp4Ou6KpKtxvPVkOSsyHlCs9dslVsi2ljBtd
+ UhUdRYg89DvruTF46wyWmESBkcBF7Ue5OZjPYsWWEWgANRVQ7IJlkIUZUjxT3Bl8y0Tewf
+ 7/TPa0gXRfP/QAp/bmh0vCNvvo4RRjNX89wVz/WrTacAO6RTxrcufanBeKdv+kvhO7xkAV
+ 0pbqRllJx8Wom1Nc3KBnPzU3oUZTGKOoOTuwbnSK3PgKAUlghqHr6RGLZFUjqnSGOZbSQB
+ V7Ry5Tu69cTgGqlSR2hXTbz5ascQd+cYDsJOYF34n1v/j5jTJZQw+0GQAYFzsw==
+From: "yu kuai" <yukuai@fygo.io>
+In-Reply-To: <20260711100352.425177-4-chencheng@fnnas.com>
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v7 3/3] md/raid10: free r10bio before ending master_bio in raid_end_bio_io() and raid_end_discard_bio()
+Message-Id: <2a399970-710a-49fb-ab72-e1076b05cfbc@fygo.io>
 Content-Type: text/plain; charset=UTF-8
-To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>, 
-	<yukuai@fygo.io>
-Message-Id: <d0e559c0-cd0b-44b5-9d16-dda94bcd5516@fygo.io>
+User-Agent: Mozilla Thunderbird
+Reply-To: yukuai@fygo.io
+X-Lms-Return-Path: <lba+26a5280db+988982+vger.kernel.org+yukuai@fygo.io>
+References: <20260711100352.425177-1-chencheng@fnnas.com> <20260711100352.425177-4-chencheng@fnnas.com>
+Received: from [192.168.1.104] ([39.182.0.144]) by smtp.larksuite.com with ESMTPS; Sat, 11 Jul 2026 17:43:54 +0000
+To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>
+Date: Sun, 12 Jul 2026 01:43:51 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Lms-Return-Path: <lba+26a5271c8+225890+vger.kernel.org+yukuai@fygo.io>
 X-Original-From: yu kuai <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH v3] md/raid5: fix reshape deadlock while failed devices more than max degraded
-In-Reply-To: <20260624075824.2601110-1-chencheng@fnnas.com>
-User-Agent: Mozilla Thunderbird
-References: <20260624075824.2601110-1-chencheng@fnnas.com>
 
-=E5=9C=A8 2026/6/24 15:58, Chen Cheng =E5=86=99=E9=81=93:
+Hi,
 
-> From: Chen Cheng<chencheng@fnnas.com>
+=E5=9C=A8 2026/7/11 18:03, Chen Cheng =E5=86=99=E9=81=93:
+> From: Chen Cheng <chencheng@fnnas.com>
 >
-> reshape stripe lifetime:
-> - start reshape =3D=3D> reshape_request():
-> 	* get destination stripe,
-> 	  - if need to copy source data chunks, set STRIPE_EXPANDING;
-> 	  - or, if new regions past the old end of the array, zero-filled,
-> 	    no need source data, set STRIPE_EXPANDING | STRIPE_READY
-> 	* get source stripe,
-> 	  - set STRIPE_EXPAND_SOURCE
+> origin flow:
 >
-> - handle expand stripe =3D=3D> handle_stripe():
-> 	reshape use reconstruct-write to construct stripe,
-> 	four stages:
-> 	1. prepare source data chunks for old geometry stripe
-> 		- fill source stripe data by read or compute
-> 	2. move data from old geometry source stripe to new geometry
-> 	   destination stripe
-> 		- source stripe clear STRIPE_EXPAND_SOURCE
-> 		- drain data from source to destination stripe
-> 		- mark stripe chunk as R5_Expanded|R5_UPTODATE when the
-> 		  drain from source chunk to destionation chunk is completed
-> 		- all stripe chunks drain are completed, then mark
-> 		  STRIPE_EXPAND_READY
-> 	3. calculate p/q chunks for destination stripe
-> 		- if destination stripe does't depends on source dstripe,
-> 		  then we can clear STRIPE_EXPANDING
-> 	4. write-out to disks and release
-> 		- set R5_Wantwrite|R5_Locked, writeout to disk
-> 		- if write-out successed, clear STRIPE_EXPAND_READY, and
-> 		  decrement reshape_stripe, call md_done_sync() to report
-> 		  reshape progress.
+>        bio_endio(master_bio);   /* may drop active_io to zero */
+>        allow_barrier(conf);
+>        free_r10bio(r10_bio);    /* reads conf->geo, returns to pool */
 >
-> 1. cleanup the following kinds of **destination stripe**
-> 	when failed device more than max degraded:
->    - new regions past the old end of the array, zero-filled in place,
->      requires no source data.
-> 	(STRIPE_EXPANDING | STRIPE_EXPAND_READY)
->    - prepare source data chunks already done, and writeout failed
-> 	(STRIPE_EXPAND_READY)
+> one scenario is:
 >
-> 2. destination stripes that need source data
-> 	(STRIPE_EXPANDING, no STRIPE_HANDLE)
->    - these kind of stripes sit idle in the stripe cache and are never see=
-n
->      by handle_stripe(). So clean up indirectly when thier source stripe
->      (type 3) is processed.
+>    CPU A (softirq, raid_end_bio_io)         CPU B (action_store) --> resh=
+ape
+>    =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D         =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>    bio_endio(master_bio)
+>      md_end_clone_io
+>        percpu_ref_put -> 0
+>                                             wait_event wakeup, and,
+>                                             	mddev_suspend return
+>                                             raid10_start_reshape:
+>                                               setup_geo(&conf->geo, new)
+>                                               ...
+>                                               mempool_destroy(old_pool)
+>                                               conf->r10bio_pool =3D new_p=
+ool
+>    allow_barrier(conf)
+>    free_r10bio(r10_bio)
+>      put_all_bios:
+>        for (i=3D0; i<conf->geo.raid_disks; i++)
+>            =3D=3D> old obj, new geo, OOB
+>      mempool_free(r10_bio, conf->r10bio_pool)
+>            =3D=3D> old-geometry obj freed into new pool
 >
-> 3. source stripes (STRIPE_EXPAND_SOURCE)
->    - hit handle_stripe() after thier member disks are markded Faulty.
->    - clear STRIPE_EXPAND_SOURCE, finds and cleanup all dependent destinat=
-ion
->      stripes that were waiting for data.
->    - walks the source's data disks, compute the corresponding destination
->      sector, looks up the destination stripe, and do cleanup(clear flags,
->      dec counters, call md_done_sync())
+> so .. fix by reorder the flow:
 >
-> Reproducer:
->    - Create a 4-disk RAID5 with mdadm on top of 5 disposable test disks
->      wrapped by dm targets.
->    - Add the 5th device as a spare and start a 4 -> 5 reshape.
->    - Wait until /sys/block/mdX/md/sync_action reports "reshape".
->    - Inject failures on two members so reshape exceeds max_degraded.
->    - After a few seconds, write "frozen" to /sys/block/mdX/md/sync_action=
-.
->      Before this fix, the write blocks indefinitely.
+> 	free_r10bio(r10_bio)
+> 	allow_barrier(conf)
+> 	bio_endio(master_bio)
 >
-> Read-error variant:
->    - Use dm-dust on /dev/sd[b-f].
->    - Preload bad blocks on two source members, e.g. dust0 and dust1:
->        dmsetup message dust0 0 addbadblock <range>
->        dmsetup message dust1 0 addbadblock <range>
->    - Start reshape:
->        mdadm -C /dev/mdX -e 1.2 -l 5 -n 4 -c 64 --assume-clean /dev/mappe=
-r/dust{0..3}
->        mdadm --manage /dev/mdX --add /dev/mapper/dust4
->        mdadm --grow /dev/mdX -n 5 --backup-file=3D/tmp/grow.backup &
->    - Once reshape starts, enable the injected read failures:
->        dmsetup message dust0 0 enable
->        dmsetup message dust1 0 enable
->    - Then:
->        echo frozen > /sys/block/mdX/md/sync_action
->      hangs forever before the fix.
+> raid_end_discard_bio() is exactly the same.
 >
-> Write-error variant:
->    - Use dm-flakey on /dev/sd[b-f].
->    - Start the same 4 -> 5 reshape on flakey0..flakey4.
->    - Once reshape starts, switch two members, e.g. flakey3 and flakey4,
->      to error_writes.
->    - Then:
->        echo frozen > /sys/block/mdX/md/sync_action
->      hangs forever before the fix.
->
-> md_do_sync() exits its main loop on MD_RECOVERY_INTR but then blocks
-> forever at:
->
->    wait_event(mddev->recovery_wait,
-> 		!atomic_read(&mddev->recovery_active));
->
-> After the fix recovery_active drains to zero, md_do_sync() prints
->
->      md/raid:md0: Cannot continue operation (2/5 failed).
->      md: md0: reshape interrupted.
->
-> v2 -> v3:
-> - just kick sashiko-bot to review my patch..
->
-> changes v1 -> v2:
-> - handle reshape write deadlock while failed devices more than max degrad=
-ed
->
-> Signed-off-by: Chen Cheng<chencheng@fnnas.com>
+> Signed-off-by: Chen Cheng <chencheng@fnnas.com>
 > ---
->   drivers/md/raid5.c | 74 ++++++++++++++++++++++++++++++++++++++++++++++
->   1 file changed, 74 insertions(+)
-Reviewed-by: Yu Kuai <yukuai@fygo.io>
+>   drivers/md/raid10.c | 19 ++++++++++++-------
+>   1 file changed, 12 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index db68fcc9e9be..d77f60db7660 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -329,24 +329,27 @@ static void reschedule_retry(struct r10bio *r10_bio=
+)
+>    */
+>   static void raid_end_bio_io(struct r10bio *r10_bio)
+>   {
+>   	struct bio *bio =3D r10_bio->master_bio;
+>   	struct r10conf *conf =3D r10_bio->mddev->private;
+> +	unsigned long state =3D r10_bio->state;
+> +	bool returned;
+>  =20
+> -	if (!test_and_set_bit(R10BIO_Returned, &r10_bio->state)) {
+> -		if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
+> -			bio->bi_status =3D BLK_STS_IOERR;
+> +	returned =3D test_and_set_bit(R10BIO_Returned, &state);
+> +	if (!returned && !test_bit(R10BIO_Uptodate, &state))
+> +		bio->bi_status =3D BLK_STS_IOERR;
+> +
+> +	free_r10bio(r10_bio);
+> +
+> +	if (!returned)
+>   		bio_endio(bio);
+> -	}
+
+Apparently this change is not enough, the R10BIO_Returned case still return
+the master_bio before freeing r10_bio.
+
+I think you should get an active_io reference while allocating r10_bio to
+guarantee that no r10_bio is active while array is suspended.
+
+>  =20
+>   	/*
+>   	 * Wake up any possible resync thread that waits for the device
+>   	 * to go idle.
+>   	 */
+>   	allow_barrier(conf);
+> -
+> -	free_r10bio(r10_bio);
+>   }
+>  =20
+>   /*
+>    * Update disk head position estimator based on IRQ completion info.
+>    */
+> @@ -1579,13 +1582,15 @@ static void raid_end_discard_bio(struct r10bio *r=
+10bio)
+>   		if (!test_bit(R10BIO_Discard, &r10bio->state)) {
+>   			first_r10bio =3D (struct r10bio *)r10bio->master_bio;
+>   			free_r10bio(r10bio);
+>   			r10bio =3D first_r10bio;
+>   		} else {
+> +			struct bio *master_bio =3D r10bio->master_bio;
+> +
+>   			md_write_end(r10bio->mddev);
+> -			bio_endio(r10bio->master_bio);
+>   			free_r10bio(r10bio);
+> +			bio_endio(master_bio);
+>   			break;
+>   		}
+>   	}
+>   }
+>  =20
 
 --=20
 Thanks,
