@@ -1,305 +1,118 @@
-Received: from va-2-57.ptr.blmpb.com (va-2-57.ptr.blmpb.com [209.127.231.57])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from m16.mail.126.com (m16.mail.126.com [220.197.31.8])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7CAB2AD35
-	for <linux-raid@vger.kernel.org>; Sat, 11 Jul 2026 18:16:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.57
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 337C72222AC
+	for <linux-raid@vger.kernel.org>; Sun, 12 Jul 2026 14:38:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783793780; cv=none; b=HS6aOET+bgEPCxL9KDQb2Inc2tLS+oLmelxYghhe1wI3v+TFyUTuJ0aqS2NW7JUKSlJpfOXFOlueYGXXd5ZbBy/XnazPcgTQOkkvzc95DM0tk0p57CZ7AkWVilx7kajRSZw4Cp2WjRERW5oajTaWJgvwN0icbqCy8dl5GYQvG/U=
+	t=1783867140; cv=none; b=S/4mDBwBhxgweaOLBVKJSx1/o7y6Ic5cJbQMi9+LJQb/zIvnGur4T2WIF1F0rGv3SYPVmvz3qDP6Cc43UOISDBZTfHIGgJc2ce6j7sLef3zpJkn2sG8XkIOMK7WbUh7meNdEJbM+delzrCHv6YMcl5H5nHFYx0rNN49X0lXeFvI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783793780; c=relaxed/simple;
-	bh=4MPpNDsC3+zXFVdXJPxUHNRgpDH49bOaXXgALzu56o8=;
-	h=Subject:References:Cc:From:Mime-Version:Content-Type:To:Date:
-	 Message-Id:In-Reply-To; b=N0yj1iZ8ZiHCFi1/sAsA4oLaA3c8BVejk3Dq16Yq3+B73jw4fZWSTaeY2/Cjnty4B17InMYtUk6ei37DiL4nR3P8xxNFMgvZtV4gS0ScN8uAa4nWcwUF3R3VounD90Zc/bL0307rQZ9s1EYYCt12COEhinwuevHqnT/oT7tzYQU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=dsTOostP; arc=none smtp.client-ip=209.127.231.57
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1783867140; c=relaxed/simple;
+	bh=Kt51ZptCEHgauDzL4t2ee/BDflNHmlC/z1jrPcIQbhI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=nut23OBC/gK6TnkJhiRWJ2M2G9KQc5woelt1nqC2qXe+PGV75TtwNokA3oIkl//42zTJwPTs+Ghuveb5MVUbI6KvPFrNHxFuOso1ACOk/8s1UCbEeABn9ezNnmo0enJp24h5mxB/1Fq0GoQ6Z2rlcftl3GLAd6LwgIXKxbgSIoM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com; spf=pass smtp.mailfrom=126.com; dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b=pe6+p3qy; arc=none smtp.client-ip=220.197.31.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="dsTOostP"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1783793767;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=xLhOvieB8schKQ0UHProLEoOxJ4Ogx3dEe1fKxopK5A=;
- b=dsTOostPVRYDtNyfoeOuJjpbRSYMOCWoFjyAxQMzCK42aP0W/6jXuVbm+GvTDSIcImfBag
- gg2ulc45jlC/fBO1wku5XS9STQhb5Ofr5/lBtllD2GrwMInrJTrn8c0LDT+BrRKlP+AE3z
- 7yKg6AZZceVX4oAn7oXRye0z4t5QAVS7yfs1mKUcaWSuiFZbsRmPydxfpRvXNxdMmd6Ll3
- dbe4bUk95cnZd+1ee75/Kz+nym7K5X/BxqTH/cvWbFADOZLkVPFpvNqXQyeeSvFl1NcpB0
- 2EevY6LE0x4m2y1EP/p8R3xUXe+xT61SI4p61x2QNV2945jnFeBmkiSV19J3iA==
-X-Original-From: yu kuai <yukuai@fygo.io>
-Subject: Re: [PATCH] md: use READ_ONCE() for lockless reads of sb_flags
-X-Lms-Return-Path: <lba+26a528866+40e111+vger.kernel.org+yukuai@fygo.io>
-References: <20260711025121.3991689-1-chencheng@fnnas.com>
-Received: from [192.168.1.104] ([39.182.0.144]) by smtp.larksuite.com with ESMTPS; Sat, 11 Jul 2026 18:16:05 +0000
-User-Agent: Mozilla Thunderbird
-Reply-To: yukuai@fygo.io
-Cc: <linux-kernel@vger.kernel.org>, "yu kuai" <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
+	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="pe6+p3qy"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
+	Message-ID; bh=Kt51ZptCEHgauDzL4t2ee/BDflNHmlC/z1jrPcIQbhI=; b=p
+	e6+p3qyhPqvL5iwWmost+fcrREg0Ivcb5/Jxps8ygpKuMPiCFJRWQR2AwihBA3qL
+	RkozW75SvrP1fC8pOskcVML8yYdccwKR25b84NQ0WLqtHlF6Kyp04lhKRjAd9TLf
+	mgt2MDdUimEg+VIKRDwtyGFGo9+6pkGzmtPjXB+EU8=
+Received: from zhanggenjian$126.com ( [120.228.135.217] ) by
+ ajax-webmail-wmsvr-41-117 (Coremail) ; Sun, 12 Jul 2026 22:35:57 +0800
+ (CST)
+Date: Sun, 12 Jul 2026 22:35:57 +0800 (CST)
+From: "genjian zhang" <zhanggenjian@126.com>
+To: sashiko-reviews@lists.linux.dev, sashiko-bot@kernel.org
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io, zhanggenjian@126.com
+Subject: Re: [PATCH] md/raid5: complete discard bios while reshape is active
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
+ 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 126com
+In-Reply-To: <20260711162728.369B01F000E9@smtp.kernel.org>
+References: <20260711161326.962336-1-zhanggenjian@126.com>
+ <20260711162728.369B01F000E9@smtp.kernel.org>
+X-NTES-SC: AL_Qu2TAfSduUEu4SaYZukdm0sUguo4Wca4uf8v249Vc88OsiH13C8OfmVFH1zMzuCUFDKFgDudSCFA08N2foNycnt+saYB1WZ5cflr3GsDQw==
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>
-Date: Sun, 12 Jul 2026 02:16:03 +0800
-Message-Id: <654cb68a-32e1-4fa7-a735-5a6f833db39e@fygo.io>
-In-Reply-To: <20260711025121.3991689-1-chencheng@fnnas.com>
+MIME-Version: 1.0
+Message-ID: <7e927147.1c17.19f56c19f29.Coremail.zhanggenjian@126.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:dSkvCgD3r0tNplNqePUbAA--.36959W
+X-CM-SenderInfo: x2kd0wxjhqyxldq6ij2wof0z/xtbBpg0sqmpTpk1P3AAA3s
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 
-Hi,
+QXQgMjAyNi0wNy0xMiAwMDoyNzoyNywgc2FzaGlrby1ib3RAa2VybmVsLm9yZyB3cm90ZToKPlRo
+YW5rIHlvdSBmb3IgeW91ciBjb250cmlidXRpb24hIFNhc2hpa28gQUkgcmV2aWV3IGZvdW5kIDIg
+cG90ZW50aWFsIGlzc3VlKHMpIHRvIGNvbnNpZGVyOgo+Cj5OZXcgaXNzdWVzOgo+LSBbSGlnaF0g
+Q29tcGxldGluZyBibG9ja2luZyBiaW9zIHdpdGggQkxLX1NUU19BR0FJTiB2aW9sYXRlcyBibG9j
+ayBsYXllciBzZW1hbnRpY3MgYW5kIGNhdXNlcyB1bmV4cGVjdGVkIGVycm9ycyBpbiBzeW5jaHJv
+bm91cyBwYXRocy4KPgo+UHJlLWV4aXN0aW5nIGlzc3VlczoKPi0gW0hpZ2hdIG1ha2VfZGlzY2Fy
+ZF9yZXF1ZXN0KCkgbGVha3MgdGhlIGJpbyBhbmQgY2F1c2VzIGFuIHVuaW50ZXJydXB0aWJsZSBo
+YW5nIGlmIFJFUV9OT1dBSVQgaXMgc2V0Lgo+LS0KPgo+LS0tIFBhdGNoIFsxXTogW1BBVENIXSBt
+ZC9yYWlkNTogY29tcGxldGUgZGlzY2FyZCBiaW9zIHdoaWxlIHJlc2hhcGUgaXMgYWN0aXZlIC0t
+LQo+Y29tbWl0IGYxMTdkNTU4YmExMzM2NGY4MjY0NWY4NjZkZWExNjIxMGNhZGNlNTEKPkF1dGhv
+cjogR2VuamlhbiBaaGFuZyA8emhhbmdnZW5qaWFuQGt5bGlub3MuY24+Cj4KPm1kL3JhaWQ1OiBj
+b21wbGV0ZSBkaXNjYXJkIGJpb3Mgd2hpbGUgcmVzaGFwZSBpcyBhY3RpdmUKPgo+VGhpcyBwYXRj
+aCBtb2RpZmllcyB0aGUgZGlzY2FyZCByZXF1ZXN0IGhhbmRsaW5nIHRvIGNvbXBsZXRlIGJpb3Mg
+d2l0aAo+QkxLX1NUU19BR0FJTiB3aGVuIGFuIG1kcmFpZCByZXNoYXBlIGlzIGluIHByb2dyZXNz
+LiBUaGlzIHByZXZlbnRzIGNhbGxlcnMKPmZyb20gaGFuZ2luZyBpbiB1bmludGVycnVwdGlibGUg
+c2xlZXAgd2FpdGluZyBmb3IgYSBjb21wbGV0aW9uIHRoYXQgbmV2ZXIKPmFycml2ZXMuCj4KPj4g
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUuYwo+PiAt
+LS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMKPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jCj4+IEBA
+IC01NzIyLDkgKzU3MjIsMTEgQEAgc3RhdGljIHZvaWQgbWFrZV9kaXNjYXJkX3JlcXVlc3Qoc3Ry
+dWN0IG1kZGV2ICptZGRldiwgc3RydWN0IGJpbyAqYmkpCj4+ICAJaWYgKFdBUk5fT05fT05DRShi
+aS0+Ymlfb3BmICYgUkVRX05PV0FJVCkpCj4+ICAJCXJldHVybjsKPgo+W1NldmVyaXR5OiBIaWdo
+XQo+VGhpcyBpc24ndCBhIGJ1ZyBpbnRyb2R1Y2VkIGJ5IHRoaXMgcGF0Y2gsIGJ1dCBkb2VzIHRo
+aXMgZWFybHkgcmV0dXJuIGxlYWsKPnRoZSBiaW8gYW5kIGNhdXNlIGFuIHVuaW50ZXJydXB0aWJs
+ZSBoYW5nIGlmIFJFUV9OT1dBSVQgaXMgc2V0Pwo+Cj5JZiBhIGNhbGxlciBzdWJtaXRzIGEgZGlz
+Y2FyZCBiaW8gd2l0aCBSRVFfTk9XQUlULCB0aGUgZHJpdmVyIGVuY291bnRlcnMgdGhpcwo+d2Fy
+bmluZyBhbmQgcmV0dXJucyBpbW1lZGlhdGVseSB3aXRob3V0IGNhbGxpbmcgYmlvX2VuZGlvKCku
+IEJlY2F1c2UgdGhlCj5jYWxsZXIgYXNzdW1lcyB0aGUgYmlvIHdhcyBzdWNjZXNzZnVsbHkgaGFu
+ZGxlZCwgY291bGQgdGhpcyBsZWFkIHRvIGEKPnJlc291cmNlIGxlYWsgYW5kIHRhc2sgaGFuZz8K
+CkFncmVlZCChqiB0aGUgZWFybHkgcmV0dXJuIHdpdGhvdXQgYmlvX2VuZGlvKCkgaXMgYSBwcmUt
+ZXhpc3RpbmcgaXNzdWUgaW4gdGhlIHNhbWUgZnVuY3Rpb24uIFRoaXMgcGF0Y2ggaW50ZW50aW9u
+YWxseSBmb2N1c2VzIG9uIHRoZSByZXNoYXBlIGNhc2UgdGhhdCB3ZSByZXByb2R1Y2VkLCB3aGVy
+ZSBibGtkaXNjYXJkIGhhbmdzIGluIGJpb19hd2FpdCgpIGV2ZW4gYWZ0ZXIgcmVzaGFwZSBoYXMg
+ZmluaXNoZWQuIEkgd2lsbCBmaXggdGhlIFJFUV9OT1dBSVQgcGF0aCBpbiB2MiB1c2luZyBiaW9f
+d291bGRibG9ja19lcnJvcigpLCBjb25zaXN0ZW50IHdpdGggcmFpZDVfbWFrZV9yZXF1ZXN0KCku
+Cgo+Cj4+ICAKPj4gLQlpZiAobWRkZXYtPnJlc2hhcGVfcG9zaXRpb24gIT0gTWF4U2VjdG9yKQo+
+PiArCWlmIChtZGRldi0+cmVzaGFwZV9wb3NpdGlvbiAhPSBNYXhTZWN0b3IpIHsKPj4gIAkJLyog
+U2tpcCBkaXNjYXJkIHdoaWxlIHJlc2hhcGUgaXMgaGFwcGVuaW5nICovCj4+ICsJCWJpb19lbmRp
+b19zdGF0dXMoYmksIEJMS19TVFNfQUdBSU4pOwo+Cj5bU2V2ZXJpdHk6IEhpZ2hdCj5Eb2VzIGNv
+bXBsZXRpbmcgYSBibG9ja2luZyBiaW8gd2l0aCBCTEtfU1RTX0FHQUlOIHZpb2xhdGUgYmxvY2sg
+bGF5ZXIKPnNlbWFudGljcz8KPgo+U2luY2UgdGhlIFJFUV9OT1dBSVQgYmlvcyBhcmUgZmlsdGVy
+ZWQgb3V0IGp1c3QgYWJvdmUgdGhpcyBjaGVjaywgdGhpcyBwYXRoCj5pcyBvbmx5IHJlYWNoZWQg
+Ynkgc3luY2hyb25vdXMsIGJsb2NraW5nIGRpc2NhcmQgYmlvcy4gQ29tcGxldGluZyB0aGVtIHdp
+dGgKPkJMS19TVFNfQUdBSU4gd2lsbCBwcm9wYWdhdGUgYW4gdW5leHBlY3RlZCAtRUFHQUlOIGVy
+cm9yIHRvIHN5bmNocm9ub3VzIElPCj5wYXRocyBhbmQgdXNlcnNwYWNlIGFwcGxpY2F0aW9ucy4K
+Pgo+QmxvY2sgQVBJcyB0eXBpY2FsbHkgaGFuZGxlIEJMS19TVFNfTk9UU1VQUCBncmFjZWZ1bGx5
+LCBidXQgcGFzc2luZyAtRUFHQUlOCj5iYWNrIHRocm91Z2ggc3luY2hyb25vdXMgcGF0aHMgbWln
+aHQgY2F1c2UgZmlsZXN5c3RlbSB0cmFuc2FjdGlvbiBhYm9ydHMgb3IKPnVzZXJzcGFjZSBmYWls
+dXJlcy4gU2hvdWxkIHRoaXMgcmV0dXJuIEJMS19TVFNfTk9UU1VQUCBpbnN0ZWFkPwo+CgpJIGRp
+ZCBub3QgZmluZCBhIHN0YXR1cyB0aGF0IGZpdHMgcGVyZmVjdGx5LgoKSW4gbXkgdmlldywgQkxL
+X1NUU19OT1RTVVBQIGRvZXMgbm90IGZpdCB3ZWxsIGhlcmUgZWl0aGVyOiBkaXNjYXJkIGlzIHN1
+cHBvcnRlZCBvbiB0aGUgYXJyYXksIGp1c3Qgbm90IHdoaWxlIHJlc2hhcGUgaXMgaW4gcHJvZ3Jl
+c3MuIEluIGFkZGl0aW9uLCBibGtfaW9jdGxfZGlzY2FyZCgpIHRyZWF0cyAtRU9QTk9UU1VQUCBh
+cyBzdWNjZXNzIChlcnIgPSAwKSwgc28gcmV0dXJuaW5nIEJMS19TVFNfTk9UU1VQUCB3b3VsZCBy
+ZXBvcnQgc3VjY2VzcyB0byB1c2Vyc3BhY2UgZXZlbiB0aG91Z2ggbm8gZGlzY2FyZCB3YXMgcGVy
+Zm9ybWVkLgoKQkxLX1NUU19ERVZfUkVTT1VSQ0UgKC1FQlVTWSkgbWF5IGFsc28gYmUgd29ydGgg
+Y29uc2lkZXJpbmcuCgpBbHRob3VnaCB0aGUgZGV0YWlscyBkaWZmZXIgZnJvbSByYWlkMTAsIEkg
+dXNlZCBCTEtfU1RTX0FHQUlOIGZvciB0aGUgc2FtZSBjYXNlICggZGlzY2FyZCBkdXJpbmcgcmVz
+aGFwZaOpLCBjb25zaXN0ZW50IHdpdGggcmFpZDEwX2hhbmRsZV9kaXNjYXJkKCkgcmV0dXJuaW5n
+IC1FQUdBSU4uIFRoZSBtYWluIGdvYWwgcmVtYWlucyBjb21wbGV0aW5nIHRoZSBiaW8gd2l0aCBh
+IHJldHJ5YWJsZSBlcnJvciBpbnN0ZWFkIG9mIGhhbmdpbmcgY2FsbGVycy4KCj4+ICAJCXJldHVy
+bjsKPj4gKwl9Cj4+ICAKPj4gIAlpZiAoIXJhaWQ1X2Rpc2NhcmRfbGltaXRzKG1kZGV2LCBiaSkp
+Cj4+ICAJCXJldHVybjsKPgo+LS0gCj5TYXNoaWtvIEFJIHJldmlldyChpCBodHRwczovL3Nhc2hp
+a28uZGV2LyMvcGF0Y2hzZXQvMjAyNjA3MTExNjEzMjYuOTYyMzM2LTEtemhhbmdnZW5qaWFuQDEy
+Ni5jb20/cGFydD0xCgpTdWdnZXN0aW9ucyBhcmUgd2VsY29tZS4KClRoYW5rcywKR2Vuamlhbgo=
 
-=E5=9C=A8 2026/7/11 10:51, Chen Cheng =E5=86=99=E9=81=93:
-> From: Chen Cheng <chencheng@fnnas.com>
->
-> sb_flags is checked without a lock in md, raid1, raid5, and raid10.
-> KCSAN reports these reads as data races.
->
-> The write side uses atomic bit ops.
-> The read side still has plain loads in a few places.
->
-> Use READ_ONCE() for the lockless reads of sb_flags.
->
-> KCSAN reports #1:
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->
-> BUG: KCSAN: data-race in md_check_recovery / md_write_start
->
-> write (marked) to 0xffff8e39f897f030 of 8 bytes by task 248146 on cpu 8:
->    md_write_start+0x5dd/0x910
->    raid10_make_request+0x9b/0x1080
->    md_handle_request+0x4a2/0xa40
->    [........]
->
-> read to 0xffff8e39f897f030 of 8 bytes by task 250445 on cpu 11:
->    md_check_recovery+0x574/0x900
->    raid10d+0xb7/0x2950
->    [........]
->
-> KCSAN reports #2:
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> BUG: KCSAN: data-race in md_check_recovery / md_write_start
->
-> write (marked) to 0xffff8e39e953f030 of 8 bytes by task 540091 on cpu 11:
->    md_write_start+0x5dd/0x910
->    raid1_make_request+0x141/0x1990
->    [........]
->
-> read to 0xffff8e39e953f030 of 8 bytes by task 580822 on cpu 0:
->    md_check_recovery+0x574/0x900
->    raid1d+0xcc/0x3840
->    [........]
->
-> value changed: 0x0000000000000002 -> 0x0000000000000006
->
-> KCSAN reports #3:
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> BUG: KCSAN: data-race in md_check_recovery / md_do_sync.cold
->
-> write (marked) to 0xffff8e39e9404030 of 8 bytes by task 492473 on cpu 6:
->    md_do_sync.cold+0x3f6/0x1686
->    [........]
->
-> read to 0xffff8e39e9404030 of 8 bytes by task 492402 on cpu 3:
->    md_check_recovery+0x16d/0x900
->    raid1d+0xcc/0x3840
->    [........]
->
-> value changed: 0x0000000000000000 -> 0x0000000000000002
->
-> KCSAN reports #4:
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> BUG: KCSAN: data-race in md_do_sync.cold / raid5d
->
-> write (marked) to 0xffff8e39c35cb030 of 8 bytes by task 192196 on cpu 10:
->    md_do_sync.cold+0x3f6/0x1686
->    md_thread+0x15a/0x2d0
->    [........]
->
-> read to 0xffff8e39c35cb030 of 8 bytes by task 190759 on cpu 5:
->    raid5d+0x7f9/0xba0
->    md_thread+0x15a/0x2d0
->    [........]
->
-> value changed: 0x0000000000000000 -> 0x0000000000000002
->
-> Fixes: 2953079c692d ("md: separate flags for superblock changes")
->
-> Signed-off-by: Chen Cheng <chencheng@fnnas.com>
-> ---
-> v1 -> v2
-> 	- pass checkpatch.pl check.
-> ---
->   drivers/md/md.c     | 8 ++++----
->   drivers/md/raid1.c  | 2 +-
->   drivers/md/raid10.c | 4 ++--
->   drivers/md/raid5.c  | 7 ++++---
->   4 files changed, 11 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 096bb64e87bd..e72bf2010287 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6830,11 +6830,11 @@ int md_run(struct mddev *mddev)
->   		 * via sysfs - until a lack of spares is confirmed.
->   		 */
->   		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->   	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->  =20
-> -	if (mddev->sb_flags)
-> +	if (READ_ONCE(mddev->sb_flags))
->   		md_update_sb(mddev, 0);
->  =20
->   	if (IS_ENABLED(CONFIG_MD_BITMAP) && !mddev->bitmap_info.file &&
->   	    !mddev->bitmap_info.offset)
->   		md_bitmap_set_none(mddev);
-> @@ -7024,11 +7024,11 @@ static void __md_stop_writes(struct mddev *mddev)
->   			mddev->bitmap_ops->flush(mddev);
->   	}
->  =20
->   	if (md_is_rdwr(mddev) &&
->   	    ((!mddev->in_sync && !mddev_is_clustered(mddev)) ||
-> -	     mddev->sb_flags)) {
-> +	     READ_ONCE(mddev->sb_flags))) {
->   		/* mark array as shutdown cleanly */
->   		if (!mddev_is_clustered(mddev))
->   			mddev->in_sync =3D 1;
->   		md_update_sb(mddev, 1);
->   	}
-> @@ -10294,11 +10294,11 @@ static bool md_should_do_recovery(struct mddev =
-*mddev)
->   	/*
->   	 * MD_SB_CHANGE_PENDING indicates that the array is switching from cle=
-an to
->   	 * active, and no action is needed for now.
->   	 * All other MD_SB_* flags require to update the superblock.
->   	 */
-> -	if (mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING))
-> +	if (READ_ONCE(mddev->sb_flags) & ~(1<<MD_SB_CHANGE_PENDING))
->   		return true;
-
-So this should be a v3, and the above line still not fixed. Please check ch=
-eckpatch
-warnings.
-
->  =20
->   	/*
->   	 * If the array is not using external metadata and there has been no d=
-ata
->   	 * written for some time, then the array's status needs to be set to
-> @@ -10423,11 +10423,11 @@ void md_check_recovery(struct mddev *mddev)
->   			spin_lock(&mddev->lock);
->   			set_in_sync(mddev);
->   			spin_unlock(&mddev->lock);
->   		}
->  =20
-> -		if (mddev->sb_flags)
-> +		if (READ_ONCE(mddev->sb_flags))
->   			md_update_sb(mddev, 0);
->  =20
->   		/*
->   		 * Never start a new sync thread if MD_RECOVERY_RUNNING is
->   		 * still set.
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 29b58583e381..bd6808656edb 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2738,11 +2738,11 @@ static void raid1d(struct md_thread *thread)
->   			handle_read_error(conf, r1_bio);
->   		else
->   			WARN_ON_ONCE(1);
->  =20
->   		cond_resched();
-> -		if (mddev->sb_flags & ~(1<<MD_SB_CHANGE_PENDING))
-> +		if (READ_ONCE(mddev->sb_flags) & ~(1 << MD_SB_CHANGE_PENDING))
->   			md_check_recovery(mddev);
->   	}
->   	blk_finish_plug(&plug);
->   }
->  =20
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index adaf9e432e25..3ffa5a19964d 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -3030,11 +3030,11 @@ static void raid10d(struct md_thread *thread)
->   			handle_read_error(mddev, r10_bio);
->   		else
->   			WARN_ON_ONCE(1);
->  =20
->   		cond_resched();
-> -		if (mddev->sb_flags & ~(1<<MD_SB_CHANGE_PENDING))
-> +		if (READ_ONCE(mddev->sb_flags) & ~(1 << MD_SB_CHANGE_PENDING))
->   			md_check_recovery(mddev);
->   	}
->   	blk_finish_plug(&plug);
->   }
->  =20
-> @@ -4698,11 +4698,11 @@ static sector_t reshape_request(struct mddev *mdd=
-ev, sector_t sector_nr,
->   		else
->   			mddev->curr_resync_completed =3D conf->reshape_progress;
->   		conf->reshape_checkpoint =3D jiffies;
->   		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->   		md_wakeup_thread(mddev->thread);
-> -		wait_event(mddev->sb_wait, mddev->sb_flags =3D=3D 0 ||
-> +		wait_event(mddev->sb_wait, READ_ONCE(mddev->sb_flags) =3D=3D 0 ||
->   			   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
->   		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
->   			allow_barrier(conf);
->   			return sectors_done;
->   		}
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index ded6a69f7795..cb58b4353995 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -1219,11 +1219,11 @@ static void ops_run_io(struct stripe_head *sh, st=
-ruct stripe_head_state *s)
->   				break;
->  =20
->   			if (bad < 0) {
->   				set_bit(BlockedBadBlocks, &rdev->flags);
->   				if (!conf->mddev->external &&
-> -				    conf->mddev->sb_flags) {
-> +				    READ_ONCE(conf->mddev->sb_flags)) {
->   					/* It is very unlikely, but we might
->   					 * still need to write out the
->   					 * bad block log - better give it
->   					 * a chance*/
->   					md_check_recovery(conf->mddev);
-> @@ -6469,11 +6469,11 @@ static sector_t reshape_request(struct mddev *mdd=
-ev, sector_t sector_nr, int *sk
->   					rdev->recovery_offset =3D sector_nr;
->  =20
->   		conf->reshape_checkpoint =3D jiffies;
->   		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->   		md_wakeup_thread(mddev->thread);
-> -		wait_event(mddev->sb_wait, mddev->sb_flags =3D=3D 0 ||
-> +		wait_event(mddev->sb_wait, READ_ONCE(mddev->sb_flags) =3D=3D 0 ||
->   			   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
->   		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
->   			return 0;
->   		spin_lock_irq(&conf->device_lock);
->   		conf->reshape_safe =3D mddev->reshape_position;
-> @@ -6913,11 +6913,12 @@ static void raid5d(struct md_thread *thread)
->   						   conf->temp_inactive_list);
->   		if (!batch_size && !released)
->   			break;
->   		handled +=3D batch_size;
->  =20
-> -		if (mddev->sb_flags & ~(1 << MD_SB_CHANGE_PENDING)) {
-> +		if (READ_ONCE(mddev->sb_flags) &
-> +		    ~(1 << MD_SB_CHANGE_PENDING)) {
->   			spin_unlock_irq(&conf->device_lock);
->   			md_check_recovery(mddev);
->   			spin_lock_irq(&conf->device_lock);
->   		}
->   	}
-
---=20
-Thanks,
-Kuai
