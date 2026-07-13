@@ -1,118 +1,152 @@
-Received: from m16.mail.126.com (m16.mail.126.com [220.197.31.8])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 337C72222AC
-	for <linux-raid@vger.kernel.org>; Sun, 12 Jul 2026 14:38:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 128953E00B5
+	for <linux-raid@vger.kernel.org>; Mon, 13 Jul 2026 09:19:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783867140; cv=none; b=S/4mDBwBhxgweaOLBVKJSx1/o7y6Ic5cJbQMi9+LJQb/zIvnGur4T2WIF1F0rGv3SYPVmvz3qDP6Cc43UOISDBZTfHIGgJc2ce6j7sLef3zpJkn2sG8XkIOMK7WbUh7meNdEJbM+delzrCHv6YMcl5H5nHFYx0rNN49X0lXeFvI=
+	t=1783934386; cv=none; b=i9ViJ/9WY38AIVc8uqS1Wwt5HtqlaD+86cCArif+Gamxl5tGLpmmm2OfNv/oiTXTV2jWhF6uIYpHUjUmLx/7VcnKjpy7pKAfmxosNRdcJgQ1Vn2J3F84/rhyprwxG4Cjvb2BzgRInet1e4s8Brwz8BNCEhYvj65jFzuhsFuhRhc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783867140; c=relaxed/simple;
-	bh=Kt51ZptCEHgauDzL4t2ee/BDflNHmlC/z1jrPcIQbhI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=nut23OBC/gK6TnkJhiRWJ2M2G9KQc5woelt1nqC2qXe+PGV75TtwNokA3oIkl//42zTJwPTs+Ghuveb5MVUbI6KvPFrNHxFuOso1ACOk/8s1UCbEeABn9ezNnmo0enJp24h5mxB/1Fq0GoQ6Z2rlcftl3GLAd6LwgIXKxbgSIoM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com; spf=pass smtp.mailfrom=126.com; dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b=pe6+p3qy; arc=none smtp.client-ip=220.197.31.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
+	s=arc-20240116; t=1783934386; c=relaxed/simple;
+	bh=3ZfdHrAjeIKCtzgFro/qo5aWAh/WGZIlIka4TDu/DAE=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=dJy2F1+U4UJ80jZmKwcO/VIw9AXsSelzBMORad4X08Q70093318DQiL9TUsPpQS9T8mHXbSmTUtgOg02OsrzMQnwH0gHU/a2Cys9AoqMBA46bysSpJdMfPFUCLJSRV2S9P5sRqgGItjmFHj/cHVvYEftAX1HxzQooWg+WQGnzO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=a8/hl2dZ; arc=none smtp.client-ip=209.85.208.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="pe6+p3qy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
-	Message-ID; bh=Kt51ZptCEHgauDzL4t2ee/BDflNHmlC/z1jrPcIQbhI=; b=p
-	e6+p3qyhPqvL5iwWmost+fcrREg0Ivcb5/Jxps8ygpKuMPiCFJRWQR2AwihBA3qL
-	RkozW75SvrP1fC8pOskcVML8yYdccwKR25b84NQ0WLqtHlF6Kyp04lhKRjAd9TLf
-	mgt2MDdUimEg+VIKRDwtyGFGo9+6pkGzmtPjXB+EU8=
-Received: from zhanggenjian$126.com ( [120.228.135.217] ) by
- ajax-webmail-wmsvr-41-117 (Coremail) ; Sun, 12 Jul 2026 22:35:57 +0800
- (CST)
-Date: Sun, 12 Jul 2026 22:35:57 +0800 (CST)
-From: "genjian zhang" <zhanggenjian@126.com>
-To: sashiko-reviews@lists.linux.dev, sashiko-bot@kernel.org
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io, zhanggenjian@126.com
-Subject: Re: [PATCH] md/raid5: complete discard bios while reshape is active
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
- 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 126com
-In-Reply-To: <20260711162728.369B01F000E9@smtp.kernel.org>
-References: <20260711161326.962336-1-zhanggenjian@126.com>
- <20260711162728.369B01F000E9@smtp.kernel.org>
-X-NTES-SC: AL_Qu2TAfSduUEu4SaYZukdm0sUguo4Wca4uf8v249Vc88OsiH13C8OfmVFH1zMzuCUFDKFgDudSCFA08N2foNycnt+saYB1WZ5cflr3GsDQw==
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=GBK
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="a8/hl2dZ"
+Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-69c19a37eeaso5681861a12.2
+        for <linux-raid@vger.kernel.org>; Mon, 13 Jul 2026 02:19:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1783934383; x=1784539183; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:autocrypt
+         :content-language:references:cc:to:from:subject:user-agent
+         :mime-version:date:message-id:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=f5qgJIYE3jPPN16EaxeYkTdaYU5IoLrksy2JUMgb8Rk=;
+        b=a8/hl2dZfjdhZMcnMa6sUds7vxP+A/fKRCLW1yNGzA7hZAYC/aYL05PW8hAO54ydhL
+         LJiMd2LoXHkbtldGn17+RRQSZl39gDJsCNpS6JvUPLigVPbBELpEVcw069YfWh+wds+i
+         9rpU/4zJ97L/eGf1saWtXsYnWk5vi2vUAf1m32+yMhVL1rlvkGJujoBou/PIQlBqzcU6
+         pZBx3Ix2EBe3vLtbbOqMHwrgh0riOqQlaMZ03NK/FZhQ2aBAPy3Xb1kWrbMfOAetgbTW
+         XpNFiN0hwr7AgLEebXznaocdACMFPTFCiC7a/y+NlSFPjzh1Zrnrr7VhVaiO4rhgCl7G
+         gHRw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783934383; x=1784539183;
+        h=content-transfer-encoding:content-type:in-reply-to:autocrypt
+         :content-language:references:cc:to:from:subject:user-agent
+         :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=f5qgJIYE3jPPN16EaxeYkTdaYU5IoLrksy2JUMgb8Rk=;
+        b=Po0pQzCyx4F2nWqyo8YGdJ4xtINZu3k+7M7uC+cZ6v16jGyjaQlvInnXt+8M3tzb3z
+         7+wyRWRVspFEDSLM/O804lAQM/MZ2PJ+t55zokY+GegeSarnS5rpFHv9F9hk0O+liX/r
+         KFfz/Sqk051kkOH2+OMsMel+k7kaZ1fGjKBXvsAc69FBWx+iAFle8NZKw5yTX8myZKIC
+         mE9nRhVRztG0ezp3wv3a/C25ETt4dwYYABLkWN51gJrE+R2zYPOda9fif0CYw9XIUBUi
+         XlmdSwYTmR5i8NpTxCiuUCnQ+Mg4kPepkVVEdA0qjerfXMzcbNNYWXnxJRzIqrr2S1dR
+         2aRg==
+X-Forwarded-Encrypted: i=1; AHgh+RrlJcJPLr1JFGUHWFFBePPbVuzyElv9qrLSy8KJz3jK8vjG8bVTlow7/f6nNOKGVO0RLl1YiUM0SuBF@vger.kernel.org
+X-Gm-Message-State: AOJu0YzSLORI7ku8CJ0ywKE+OQ66BGjzxJ4AOnSru5dFSkuCjhAxZMef
+	eNrzvvi/rHZIVKbrZ3qzEmOKDNOR42hGxIOj9RmSNT1iSnqmlxq7EQxluil+oUC8vII=
+X-Gm-Gg: AfdE7ckMSxd2Ig5s+P1ha/GHwTYz3n648Fx3mRT5Lf1vr+VI3/K2DRu3pBJ1CJnnsZK
+	0ChYgkh/56YJhHDUsVSu/aj6igrSXOsWoTiZDuL+wKayU2H2Xnxvo0AMEzyuWDG6+afXmOTJ3rr
+	yN3+eVZDjHCtDcek9pU+Mu7XCoPyoWQbgbox9jM9toi1CrgmVlh9V9JY5SV41cYjGByzBOf0pw5
+	eFf8N4vHyIRGTshWpnlihRlpCsWknllIBJj4caL5p8dCC8ImYP+XEtKQNcKbCaO0k3cINOIzRUV
+	IWk85CIeEGkltYOJNvNXr9AzXPYV2yZc0XmrlP2Jupp3xXn50R+V1P3WdJ7DKNvO1QSY6SbJ93q
+	zwZw9O9+zG/DX16WnSuDc1u0G9twyRIytwfnranaW9HReGC5P50N0IR9MifWk4XT947f1aULg94
+	0WkOLV5w==
+X-Received: by 2002:a17:907:783:b0:c16:c65:56b5 with SMTP id a640c23a62f3a-c161e8e97b6mr384403166b.24.1783934383403;
+        Mon, 13 Jul 2026 02:19:43 -0700 (PDT)
+Received: from [172.16.0.229] ([159.196.52.54])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38d2fdd777csm3373649a91.1.2026.07.13.02.19.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 13 Jul 2026 02:19:42 -0700 (PDT)
+Message-ID: <32c03d5d-d5b4-4954-9bc7-d7f64e46fda1@suse.com>
+Date: Mon, 13 Jul 2026 18:49:37 +0930
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <7e927147.1c17.19f56c19f29.Coremail.zhanggenjian@126.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:dSkvCgD3r0tNplNqePUbAA--.36959W
-X-CM-SenderInfo: x2kd0wxjhqyxldq6ij2wof0z/xtbBpg0sqmpTpk1P3AAA3s
-X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/3] btrfs: disguise single-data-RAID56 as RAID1/RAID1C3
+From: Qu Wenruo <wqu@suse.com>
+To: linux-btrfs@vger.kernel.org, David Sterba <dsterba@suse.com>
+Cc: hch@lst.de, linux-raid@vger.kernel.org
+References: <cover.1779412152.git.wqu@suse.com>
+Content-Language: en-US
+Autocrypt: addr=wqu@suse.com; keydata=
+ xsBNBFnVga8BCACyhFP3ExcTIuB73jDIBA/vSoYcTyysFQzPvez64TUSCv1SgXEByR7fju3o
+ 8RfaWuHCnkkea5luuTZMqfgTXrun2dqNVYDNOV6RIVrc4YuG20yhC1epnV55fJCThqij0MRL
+ 1NxPKXIlEdHvN0Kov3CtWA+R1iNN0RCeVun7rmOrrjBK573aWC5sgP7YsBOLK79H3tmUtz6b
+ 9Imuj0ZyEsa76Xg9PX9Hn2myKj1hfWGS+5og9Va4hrwQC8ipjXik6NKR5GDV+hOZkktU81G5
+ gkQtGB9jOAYRs86QG/b7PtIlbd3+pppT0gaS+wvwMs8cuNG+Pu6KO1oC4jgdseFLu7NpABEB
+ AAHNGFF1IFdlbnJ1byA8d3F1QHN1c2UuY29tPsLAlAQTAQgAPgIbAwULCQgHAgYVCAkKCwIE
+ FgIDAQIeAQIXgBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXVgBQkQ/lqxAAoJEMI9kfOh
+ Jf6o+jIH/2KhFmyOw4XWAYbnnijuYqb/obGae8HhcJO2KIGcxbsinK+KQFTSZnkFxnbsQ+VY
+ fvtWBHGt8WfHcNmfjdejmy9si2jyy8smQV2jiB60a8iqQXGmsrkuR+AM2V360oEbMF3gVvim
+ 2VSX2IiW9KERuhifjseNV1HLk0SHw5NnXiWh1THTqtvFFY+CwnLN2GqiMaSLF6gATW05/sEd
+ V17MdI1z4+WSk7D57FlLjp50F3ow2WJtXwG8yG8d6S40dytZpH9iFuk12Sbg7lrtQxPPOIEU
+ rpmZLfCNJJoZj603613w/M8EiZw6MohzikTWcFc55RLYJPBWQ+9puZtx1DopW2jOwE0EWdWB
+ rwEIAKpT62HgSzL9zwGe+WIUCMB+nOEjXAfvoUPUwk+YCEDcOdfkkM5FyBoJs8TCEuPXGXBO
+ Cl5P5B8OYYnkHkGWutAVlUTV8KESOIm/KJIA7jJA+Ss9VhMjtePfgWexw+P8itFRSRrrwyUf
+ E+0WcAevblUi45LjWWZgpg3A80tHP0iToOZ5MbdYk7YFBE29cDSleskfV80ZKxFv6koQocq0
+ vXzTfHvXNDELAuH7Ms/WJcdUzmPyBf3Oq6mKBBH8J6XZc9LjjNZwNbyvsHSrV5bgmu/THX2n
+ g/3be+iqf6OggCiy3I1NSMJ5KtR0q2H2Nx2Vqb1fYPOID8McMV9Ll6rh8S8AEQEAAcLAfAQY
+ AQgAJgIbDBYhBC3fcuWlpVuonapC4cI9kfOhJf6oBQJnEXWBBQkQ/lrSAAoJEMI9kfOhJf6o
+ cakH+QHwDszsoYvmrNq36MFGgvAHRjdlrHRBa4A1V1kzd4kOUokongcrOOgHY9yfglcvZqlJ
+ qfa4l+1oxs1BvCi29psteQTtw+memmcGruKi+YHD7793zNCMtAtYidDmQ2pWaLfqSaryjlzR
+ /3tBWMyvIeWZKURnZbBzWRREB7iWxEbZ014B3gICqZPDRwwitHpH8Om3eZr7ygZck6bBa4MU
+ o1XgbZcspyCGqu1xF/bMAY2iCDcq6ULKQceuKkbeQ8qxvt9hVxJC2W3lHq8dlK1pkHPDg9wO
+ JoAXek8MF37R8gpLoGWl41FIUb3hFiu3zhDDvslYM4BmzI18QgQTQnotJH8=
+In-Reply-To: <cover.1779412152.git.wqu@suse.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-QXQgMjAyNi0wNy0xMiAwMDoyNzoyNywgc2FzaGlrby1ib3RAa2VybmVsLm9yZyB3cm90ZToKPlRo
-YW5rIHlvdSBmb3IgeW91ciBjb250cmlidXRpb24hIFNhc2hpa28gQUkgcmV2aWV3IGZvdW5kIDIg
-cG90ZW50aWFsIGlzc3VlKHMpIHRvIGNvbnNpZGVyOgo+Cj5OZXcgaXNzdWVzOgo+LSBbSGlnaF0g
-Q29tcGxldGluZyBibG9ja2luZyBiaW9zIHdpdGggQkxLX1NUU19BR0FJTiB2aW9sYXRlcyBibG9j
-ayBsYXllciBzZW1hbnRpY3MgYW5kIGNhdXNlcyB1bmV4cGVjdGVkIGVycm9ycyBpbiBzeW5jaHJv
-bm91cyBwYXRocy4KPgo+UHJlLWV4aXN0aW5nIGlzc3VlczoKPi0gW0hpZ2hdIG1ha2VfZGlzY2Fy
-ZF9yZXF1ZXN0KCkgbGVha3MgdGhlIGJpbyBhbmQgY2F1c2VzIGFuIHVuaW50ZXJydXB0aWJsZSBo
-YW5nIGlmIFJFUV9OT1dBSVQgaXMgc2V0Lgo+LS0KPgo+LS0tIFBhdGNoIFsxXTogW1BBVENIXSBt
-ZC9yYWlkNTogY29tcGxldGUgZGlzY2FyZCBiaW9zIHdoaWxlIHJlc2hhcGUgaXMgYWN0aXZlIC0t
-LQo+Y29tbWl0IGYxMTdkNTU4YmExMzM2NGY4MjY0NWY4NjZkZWExNjIxMGNhZGNlNTEKPkF1dGhv
-cjogR2VuamlhbiBaaGFuZyA8emhhbmdnZW5qaWFuQGt5bGlub3MuY24+Cj4KPm1kL3JhaWQ1OiBj
-b21wbGV0ZSBkaXNjYXJkIGJpb3Mgd2hpbGUgcmVzaGFwZSBpcyBhY3RpdmUKPgo+VGhpcyBwYXRj
-aCBtb2RpZmllcyB0aGUgZGlzY2FyZCByZXF1ZXN0IGhhbmRsaW5nIHRvIGNvbXBsZXRlIGJpb3Mg
-d2l0aAo+QkxLX1NUU19BR0FJTiB3aGVuIGFuIG1kcmFpZCByZXNoYXBlIGlzIGluIHByb2dyZXNz
-LiBUaGlzIHByZXZlbnRzIGNhbGxlcnMKPmZyb20gaGFuZ2luZyBpbiB1bmludGVycnVwdGlibGUg
-c2xlZXAgd2FpdGluZyBmb3IgYSBjb21wbGV0aW9uIHRoYXQgbmV2ZXIKPmFycml2ZXMuCj4KPj4g
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUuYwo+PiAt
-LS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMKPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkNS5jCj4+IEBA
-IC01NzIyLDkgKzU3MjIsMTEgQEAgc3RhdGljIHZvaWQgbWFrZV9kaXNjYXJkX3JlcXVlc3Qoc3Ry
-dWN0IG1kZGV2ICptZGRldiwgc3RydWN0IGJpbyAqYmkpCj4+ICAJaWYgKFdBUk5fT05fT05DRShi
-aS0+Ymlfb3BmICYgUkVRX05PV0FJVCkpCj4+ICAJCXJldHVybjsKPgo+W1NldmVyaXR5OiBIaWdo
-XQo+VGhpcyBpc24ndCBhIGJ1ZyBpbnRyb2R1Y2VkIGJ5IHRoaXMgcGF0Y2gsIGJ1dCBkb2VzIHRo
-aXMgZWFybHkgcmV0dXJuIGxlYWsKPnRoZSBiaW8gYW5kIGNhdXNlIGFuIHVuaW50ZXJydXB0aWJs
-ZSBoYW5nIGlmIFJFUV9OT1dBSVQgaXMgc2V0Pwo+Cj5JZiBhIGNhbGxlciBzdWJtaXRzIGEgZGlz
-Y2FyZCBiaW8gd2l0aCBSRVFfTk9XQUlULCB0aGUgZHJpdmVyIGVuY291bnRlcnMgdGhpcwo+d2Fy
-bmluZyBhbmQgcmV0dXJucyBpbW1lZGlhdGVseSB3aXRob3V0IGNhbGxpbmcgYmlvX2VuZGlvKCku
-IEJlY2F1c2UgdGhlCj5jYWxsZXIgYXNzdW1lcyB0aGUgYmlvIHdhcyBzdWNjZXNzZnVsbHkgaGFu
-ZGxlZCwgY291bGQgdGhpcyBsZWFkIHRvIGEKPnJlc291cmNlIGxlYWsgYW5kIHRhc2sgaGFuZz8K
-CkFncmVlZCChqiB0aGUgZWFybHkgcmV0dXJuIHdpdGhvdXQgYmlvX2VuZGlvKCkgaXMgYSBwcmUt
-ZXhpc3RpbmcgaXNzdWUgaW4gdGhlIHNhbWUgZnVuY3Rpb24uIFRoaXMgcGF0Y2ggaW50ZW50aW9u
-YWxseSBmb2N1c2VzIG9uIHRoZSByZXNoYXBlIGNhc2UgdGhhdCB3ZSByZXByb2R1Y2VkLCB3aGVy
-ZSBibGtkaXNjYXJkIGhhbmdzIGluIGJpb19hd2FpdCgpIGV2ZW4gYWZ0ZXIgcmVzaGFwZSBoYXMg
-ZmluaXNoZWQuIEkgd2lsbCBmaXggdGhlIFJFUV9OT1dBSVQgcGF0aCBpbiB2MiB1c2luZyBiaW9f
-d291bGRibG9ja19lcnJvcigpLCBjb25zaXN0ZW50IHdpdGggcmFpZDVfbWFrZV9yZXF1ZXN0KCku
-Cgo+Cj4+ICAKPj4gLQlpZiAobWRkZXYtPnJlc2hhcGVfcG9zaXRpb24gIT0gTWF4U2VjdG9yKQo+
-PiArCWlmIChtZGRldi0+cmVzaGFwZV9wb3NpdGlvbiAhPSBNYXhTZWN0b3IpIHsKPj4gIAkJLyog
-U2tpcCBkaXNjYXJkIHdoaWxlIHJlc2hhcGUgaXMgaGFwcGVuaW5nICovCj4+ICsJCWJpb19lbmRp
-b19zdGF0dXMoYmksIEJMS19TVFNfQUdBSU4pOwo+Cj5bU2V2ZXJpdHk6IEhpZ2hdCj5Eb2VzIGNv
-bXBsZXRpbmcgYSBibG9ja2luZyBiaW8gd2l0aCBCTEtfU1RTX0FHQUlOIHZpb2xhdGUgYmxvY2sg
-bGF5ZXIKPnNlbWFudGljcz8KPgo+U2luY2UgdGhlIFJFUV9OT1dBSVQgYmlvcyBhcmUgZmlsdGVy
-ZWQgb3V0IGp1c3QgYWJvdmUgdGhpcyBjaGVjaywgdGhpcyBwYXRoCj5pcyBvbmx5IHJlYWNoZWQg
-Ynkgc3luY2hyb25vdXMsIGJsb2NraW5nIGRpc2NhcmQgYmlvcy4gQ29tcGxldGluZyB0aGVtIHdp
-dGgKPkJMS19TVFNfQUdBSU4gd2lsbCBwcm9wYWdhdGUgYW4gdW5leHBlY3RlZCAtRUFHQUlOIGVy
-cm9yIHRvIHN5bmNocm9ub3VzIElPCj5wYXRocyBhbmQgdXNlcnNwYWNlIGFwcGxpY2F0aW9ucy4K
-Pgo+QmxvY2sgQVBJcyB0eXBpY2FsbHkgaGFuZGxlIEJMS19TVFNfTk9UU1VQUCBncmFjZWZ1bGx5
-LCBidXQgcGFzc2luZyAtRUFHQUlOCj5iYWNrIHRocm91Z2ggc3luY2hyb25vdXMgcGF0aHMgbWln
-aHQgY2F1c2UgZmlsZXN5c3RlbSB0cmFuc2FjdGlvbiBhYm9ydHMgb3IKPnVzZXJzcGFjZSBmYWls
-dXJlcy4gU2hvdWxkIHRoaXMgcmV0dXJuIEJMS19TVFNfTk9UU1VQUCBpbnN0ZWFkPwo+CgpJIGRp
-ZCBub3QgZmluZCBhIHN0YXR1cyB0aGF0IGZpdHMgcGVyZmVjdGx5LgoKSW4gbXkgdmlldywgQkxL
-X1NUU19OT1RTVVBQIGRvZXMgbm90IGZpdCB3ZWxsIGhlcmUgZWl0aGVyOiBkaXNjYXJkIGlzIHN1
-cHBvcnRlZCBvbiB0aGUgYXJyYXksIGp1c3Qgbm90IHdoaWxlIHJlc2hhcGUgaXMgaW4gcHJvZ3Jl
-c3MuIEluIGFkZGl0aW9uLCBibGtfaW9jdGxfZGlzY2FyZCgpIHRyZWF0cyAtRU9QTk9UU1VQUCBh
-cyBzdWNjZXNzIChlcnIgPSAwKSwgc28gcmV0dXJuaW5nIEJMS19TVFNfTk9UU1VQUCB3b3VsZCBy
-ZXBvcnQgc3VjY2VzcyB0byB1c2Vyc3BhY2UgZXZlbiB0aG91Z2ggbm8gZGlzY2FyZCB3YXMgcGVy
-Zm9ybWVkLgoKQkxLX1NUU19ERVZfUkVTT1VSQ0UgKC1FQlVTWSkgbWF5IGFsc28gYmUgd29ydGgg
-Y29uc2lkZXJpbmcuCgpBbHRob3VnaCB0aGUgZGV0YWlscyBkaWZmZXIgZnJvbSByYWlkMTAsIEkg
-dXNlZCBCTEtfU1RTX0FHQUlOIGZvciB0aGUgc2FtZSBjYXNlICggZGlzY2FyZCBkdXJpbmcgcmVz
-aGFwZaOpLCBjb25zaXN0ZW50IHdpdGggcmFpZDEwX2hhbmRsZV9kaXNjYXJkKCkgcmV0dXJuaW5n
-IC1FQUdBSU4uIFRoZSBtYWluIGdvYWwgcmVtYWlucyBjb21wbGV0aW5nIHRoZSBiaW8gd2l0aCBh
-IHJldHJ5YWJsZSBlcnJvciBpbnN0ZWFkIG9mIGhhbmdpbmcgY2FsbGVycy4KCj4+ICAJCXJldHVy
-bjsKPj4gKwl9Cj4+ICAKPj4gIAlpZiAoIXJhaWQ1X2Rpc2NhcmRfbGltaXRzKG1kZGV2LCBiaSkp
-Cj4+ICAJCXJldHVybjsKPgo+LS0gCj5TYXNoaWtvIEFJIHJldmlldyChpCBodHRwczovL3Nhc2hp
-a28uZGV2LyMvcGF0Y2hzZXQvMjAyNjA3MTExNjEzMjYuOTYyMzM2LTEtemhhbmdnZW5qaWFuQDEy
-Ni5jb20/cGFydD0xCgpTdWdnZXN0aW9ucyBhcmUgd2VsY29tZS4KClRoYW5rcywKR2Vuamlhbgo=
+Hi David,
+
+I know you hate this way to fix the problem, but considering it's 
+already 7.2-rc3, if you do not like this method I think it's time for 
+you to submit your alternative.
+
+My existing patches still apply on the latest for-next and is known to 
+avoid the extra warning from RAID6 lib.
+
+Thanks,
+Qu
+
+在 2026/5/22 18:53, Qu Wenruo 写道:
+> [CHANGELOG]
+> RFC->v1:
+> - Remove unused btrfs_chunk_map::io_(align|width) members
+>    To make space for the new member.
+> 
+> - Fix a duplicated bg->flags assignment in fill_dummy_bgs()
+>    Just exposed by the last patch which also touches that code.
+> 
+> - Use a dedicated member to record the on-disk chunk type
+>    So it's less fragile than the RFC patch.
+> 
+> The single-data-RAID56 (2 disks raid5 or 3 disks raid6) is not a feature
+> that should be supported in the first place, thus raid56 is going to
+> remove such support.
+> 
+> Meanwhile rejecting single-data-RAID56 will cause existing btrfs users
+> unable to mount their fs, even if there is only a single
+> empty chunk with that flag, mostly caused by some degraded mount.
+> 
+> So to avoid impacting existing users, implement an internal
+> single-data-RAID56 to RAID1/RAID1C3 mapping, to co-operate with the
+> upstream raid56 lib changes.
+> 
+> Qu Wenruo (3):
+>    btrfs: remove btrfs_chunk_map::io_(align|width) members
+>    btrfs: remove duplicated block group type assignment
+>    btrfs: disguise single-data-RAID56 as RAID1/RAID1C3
+> 
+>   fs/btrfs/block-group.c |  3 +--
+>   fs/btrfs/volumes.c     | 25 ++++++++++++++++++-------
+>   fs/btrfs/volumes.h     | 10 ++++++++--
+>   3 files changed, 27 insertions(+), 11 deletions(-)
+> 
 
