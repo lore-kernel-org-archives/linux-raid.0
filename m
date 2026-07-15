@@ -1,43 +1,43 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57E3039D6EC;
-	Wed, 15 Jul 2026 14:48:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1BA33A257A;
+	Wed, 15 Jul 2026 14:48:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784126930; cv=none; b=XBsETWGcMAAiWNdwsLea0llUc9yXeRcqaO5ahubhudnmzDipHGoF+9tEMplfbrU7YrIln06S7I8s7r8jH2xqZniV0KWPDFNDkkYEyOsOVC7VdkUm4tKylscwZfIASvNpGLV+CO9BtL/WZkMAxGrXnezFcRJ4wJ7w1aNsKFKFRVE=
+	t=1784126933; cv=none; b=mR/0sVblvPreQwFcgiPCRsv5MVjwKgEzC+/sS3GyfOgiZE+WhzCexzLAUHPRRcrxynzCKdbNin1CQ+60WM2Mb9XgVhN4rBq0MKJ2FV9/gdSd5gWTvYWdT7Bf73rTwQihIS7f62JYUmAX19IFWo1ebDj/aFNltqOLx4ks225bd8w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784126930; c=relaxed/simple;
-	bh=EwLk75BmYbYOqUvvR7QXsDRSBUfC8DKIfHZfhHYN+wQ=;
+	s=arc-20240116; t=1784126933; c=relaxed/simple;
+	bh=rWcHv2AxkJJpq6uaSi4YWLKfRT4km1zme0oroIvCzcg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CEJxfHvHg0+t2Y5KzpU7O2aK7tnJLDIIsx2vNx7cjchc1P4SXuhE+Lu5TAQMvUUx7janN+Z9t5qvHi4mXTlou0Z5lynsG+AQcN0tNuDtjUPQNqpXimQuPXGoXVD/WOn64Z+j5VFnGxtzXzwqBxeVUQE/x5/kmn9zCUvXrGbYOuE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=zotmbOC5; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=oTnc2X51dQd58mKyTLf8MuR2Cs3lBDC+1K5t8ASMmvr++XmqgdbvGVU61nL2Iqb7pB7EzXGHEUOOMQWr7j8XRDEP3KCpLzPRlZT1RK9zCovXjUxa88opFvF5LRLV2n7yYFovuLK0ZP2g8OwpKHdmrZHutF29VZVnXNXR+hWdKXk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=TX9vl53F; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zotmbOC5"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TX9vl53F"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=c0Almg3B1vcRAPM/occ6NILXdmIPcSVkOclM2ajVpCY=; b=zotmbOC50nk5lcej3S/LLc5wZz
-	vvlr4oWiKbAlacREhiep9Wq9W08ks8rzy2O/1nwJPBMPT+dbqbQPDLrlIzM1EagqDy6NC8zynYtDS
-	+1JsNrcHe+CtAOwLsICTLhX8EJE43TRLPipSevUGxBmfHpSLIXqqYbrjAHlXYnvTHh7/MTHdebuPb
-	jdjs7Z2hn4nbc/Mo6he7meSgcZOafMpeL3bh/G0UgbiF+gN+C8Sc9cWH5dg1KIGZrFI4TNp1QSopm
-	IZzwMJGdDAwFu+eQjfDUZOQ9LnFvlPi4wUhc0JXIjlW1WxcCA74ZBeaFVQ2hoYC/4i9zq0QHp5Unm
-	DsLHs6UA==;
+	bh=gVCF+ZyieLNZM6k+EBQ6kUMkk4dT0DZ2PNbiRabJUmI=; b=TX9vl53FwCMfh1VGN0o9bmP+z/
+	xORpK4I77kOzilL8pAjB8Oik2MbNeWc393c6aTcrFkcjTMgU7JmwlzC6mw9baknq1dxkZfxjYghS4
+	lUPsRuxpz64AXgkW9LKNBjC6sFgHFdrnMm44dJfOPVdbkkFH21j4USIODP195PW8QpcGzEJnVEseW
+	mO5FK5K3je7OhBKN5F6kmG0qylVNoDSJEbZjqykYD6avThG9BXBTgMIazvBL0cvjbk9ICSJne8FXs
+	Uaw71gFgZEQ+T0TUgu68NeiDnd1V4U2Ohhr9y8Goz3mEUYLmG/2OHlZrl5YgpHDqwc6WnXJBHoATa
+	gM8Lzf0w==;
 Received: from 2a02-8389-2301-9f00-b29a-36e9-8c1c-0994.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:b29a:36e9:8c1c:994] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wk0uk-0000000FDB8-1EvO;
-	Wed, 15 Jul 2026 14:48:46 +0000
+	id 1wk0un-0000000FDBQ-2PKF;
+	Wed, 15 Jul 2026 14:48:49 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Eric Biggers <ebiggers@kernel.org>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 5/8] raid6: enable lock context analysis
-Date: Wed, 15 Jul 2026 16:47:36 +0200
-Message-ID: <20260715144825.95432-6-hch@lst.de>
+Subject: [PATCH 6/8] raid6: defer implementation selection when built-in
+Date: Wed, 15 Jul 2026 16:47:37 +0200
+Message-ID: <20260715144825.95432-7-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260715144825.95432-1-hch@lst.de>
 References: <20260715144825.95432-1-hch@lst.de>
@@ -50,25 +50,67 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The code doesn't have any locking, so this is trivial.
+Don't hold up early boot and defer the selection just like we've been
+doing for the RAID5 XOR code since commit 524ccdbdfb52 ("crypto: xor -
+defer load time benchmark to a later time").
+
+This will also allow full use of the timing subsystem for benchmarking.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- lib/raid/raid6/Makefile | 2 ++
- 1 file changed, 2 insertions(+)
+ lib/raid/raid6/algos.c | 25 +++++++++++++++++++++----
+ 1 file changed, 21 insertions(+), 4 deletions(-)
 
-diff --git a/lib/raid/raid6/Makefile b/lib/raid/raid6/Makefile
-index 038d6c74d1ba..5cdb7223de2a 100644
---- a/lib/raid/raid6/Makefile
-+++ b/lib/raid/raid6/Makefile
-@@ -1,5 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
+diff --git a/lib/raid/raid6/algos.c b/lib/raid/raid6/algos.c
+index 6f5c89ab2b17..702e167a543a 100644
+--- a/lib/raid/raid6/algos.c
++++ b/lib/raid/raid6/algos.c
+@@ -239,10 +239,6 @@ static int __init raid6_select_algo(void)
+ 	if (!IS_ENABLED(CONFIG_RAID6_PQ_BENCHMARK) || raid6_nr_algos == 1) {
+ 		pr_info("raid6: skipped pq benchmark and selected %s\n",
+ 			raid6_algos[raid6_nr_algos - 1]->name);
+-		static_call_update(raid6_gen_syndrome_impl,
+-				raid6_algos[raid6_nr_algos - 1]->gen_syndrome);
+-		static_call_update(raid6_xor_syndrome_impl,
+-				raid6_algos[raid6_nr_algos - 1]->xor_syndrome);
+ 		return 0;
+ 	}
  
-+CONTEXT_ANALYSIS := y
+@@ -329,13 +325,34 @@ static int __init raid6_init(void)
+ 	static_call_update(raid6_recov_datap_impl, raid6_recov_algo->datap);
+ 	pr_info("raid6: using %s recovery algorithm\n", raid6_recov_algo->name);
+ 
++	/*
++	 * Pick the last registered implementation as the temporary default until
++	 * calibration happens.
++	 */
++	static_call_update(raid6_gen_syndrome_impl,
++			raid6_algos[raid6_nr_algos - 1]->gen_syndrome);
++	static_call_update(raid6_xor_syndrome_impl,
++			raid6_algos[raid6_nr_algos - 1]->xor_syndrome);
 +
- ccflags-y			+= -I $(src)
++#ifdef MODULE
+ 	return raid6_select_algo();
++#else
++	return 0;
++#endif
+ }
  
- ifeq ($(CONFIG_RAID6_PQ_ARCH),y)
+ static void __exit raid6_exit(void)
+ {
+ }
+ 
++/*
++ * When built-in we must register the default implementation before md
++ * initializes, but we don't want calibration to run that early as that
++ * would delay the boot process.
++ */
++#ifndef MODULE
++device_initcall(raid6_select_algo);
++#endif
+ subsys_initcall(raid6_init);
+ module_exit(raid6_exit);
+ MODULE_LICENSE("GPL");
 -- 
 2.53.0
 
