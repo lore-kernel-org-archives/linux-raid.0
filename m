@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7606472791
-	for <linux-raid@vger.kernel.org>; Wed, 15 Jul 2026 15:01:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AE4339A064
+	for <linux-raid@vger.kernel.org>; Wed, 15 Jul 2026 15:04:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784127694; cv=none; b=qE4F1BDeRQWoKvHM7FYiBkpmSZtTqcZ0zjVJWR8ALxhuynyqgTLrlXxlMNG8gNDJpJeBzJrcTuqEsqtcrGIQ49z/RJWUVQ++U5ZbVA68gB17Jjehk+wS4MF5NJQP5jrEmbIAppnfh6AUXc24BDayWaWDMxJuD3QDgJiaYxzQwcU=
+	t=1784127844; cv=none; b=J71IZCO82G5SPLET6RSsi7eUBLyU+hmIMYpvQi9l/E9M9ogdAUhlyfsmwzjtLzUShykzLjHGPdAzaEZcIAeFJh/RqUy7WRhEO0ZUKAGXzuCpJXlIH7jKPxOI1+isB93/xwxL+pvALO8q4EtmKaTgI/m3grNQnhKEk9rqi9lXq9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784127694; c=relaxed/simple;
-	bh=WSHE/uG04B8P6pfsZcAt6RJZM7GXp6KfoBEghpzZXxI=;
+	s=arc-20240116; t=1784127844; c=relaxed/simple;
+	bh=iox8xOPtfyJJwD38BV7bgsC8/C9Bk9jHETQnbkqtpxo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=fEq/cpynS3W6wUPxCj57zWj36budgwrtR5+fWXP9qNkRd+eo/0BVzmVYmSGZ7FDWtksvZjTwNV97my98LOZFuyyK2Ac7tEfhiA1ot90E72oEiloJ9yo4VGffTtOhMhfgx3g2I+x5iINMzktEbAwIGUqowh5F10e4uuUUCa0r6Ws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E7jL+Wpf; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=jD2HGhsNnpjX/Qb+mzSNOwr2Z91Dig83rlmssEDiZC8DSEqbY8gDBbvI6q31xtmItbvR5Ff/4acZ30nn9J9dm9W2WVBpoFsG5QSOWZ1F4Mg4I2z2dZCg4U5fy/sAzuhVhyMHqh5+kSNhIEhgS8QyXmB8ETRzQCDijGvACGPcuvo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HbvYQ0UC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E7jL+Wpf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CDC51F00A3A;
-	Wed, 15 Jul 2026 15:01:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HbvYQ0UC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93DE21F000E9;
+	Wed, 15 Jul 2026 15:04:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784127693;
-	bh=ngBYdC3G3N7uDmJ4P66CnDxrSSt9FOVjGG7d2XRBpvY=;
+	s=k20260515; t=1784127842;
+	bh=a/21DwchbsZq/7zBAiD30Ve1LcOb/ppNnFz1SW8Bte0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=E7jL+Wpf4W64jl3kPOGjUvv1+uvjtHR9z25L/IHDGgdiX0pRV19CZdafb4BJJzkNI
-	 Zv9M7YdB5h3ofaxfu99uwm56D57kphCitZ49b2Ew1Z2eCYyBHKsn/SmLmwfvwZ52RD
-	 73AyJyZTGUJPEDCvI01StSVBvZ6TUF05rURXQ5R4AVP0fifgoVcS2Pr2bAnuLJDZsi
-	 OV7l6A9r1K9H4kg0CP0SGgLjh9eRxVVngwnjKXkOv2I6vV75uCvr3TXlG2h13J1Cu/
-	 9qZzn/O7Gt/sHPRQj1Jooff/y8NSgLkIeoznReEh7u3dwPiT5vs+ravVpQrFueY7hd
-	 aksvi5fuPhInw==
+	b=HbvYQ0UCeEY4/Kw2DuBx1MiqPaX4udPmxrUxDAGjm4WOX8A+as4zRDKQcwU0i7BHo
+	 mp9u+L8x3rgRR+d/kVULN1LMWPz1QafPiecUwSR6ncGPfOjbOGKF3NdKXyZ74XMDKP
+	 1u9D/YVevZj37Q+Z/N4SAj4+DmQmY3nlsfRhFZx2JuajGfzdIj3tC00CEvmOYSQ2qJ
+	 K7BQ496Fi1bnc6Z99VxJRBoeoJ2OjOBC/3LBBufegqUKonLHqSe98uI7fP0g3I+cfJ
+	 FI6TeJ396ZbNRRzDapCBd12QY7iuupvkiMUKmppOMPe/A9DiX+xPlCOhOpJKJI2ERj
+	 echfPf2jG42rQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 8/8] raid6/kunit: add a benchmark
+Subject: Re: [PATCH 2/8] xor: improve the runtime selection benchmark
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christoph Hellwig" <hch@lst.de>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260715144825.95432-9-hch@lst.de>
+In-Reply-To: <20260715144825.95432-3-hch@lst.de>
 References: <20260715144825.95432-1-hch@lst.de>
- <20260715144825.95432-9-hch@lst.de>
+ <20260715144825.95432-3-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 15 Jul 2026 15:01:32 +0000
-Message-Id: <20260715150133.3CDC51F00A3A@smtp.kernel.org>
+Date: Wed, 15 Jul 2026 15:04:02 +0000
+Message-Id: <20260715150402.93DE21F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -46,57 +46,100 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] The benchmark loop disables preemption for an extended period, r=
-isking soft lockups and RCU stalls on slower architectures or emulators.
+- [High] Replacing clock-tick synchronization with a fixed number of loop i=
+terations causes zero-duration time deltas on coarse clocks, leading to art=
+ificial throughput inflation, integer overflow, and random algorithm select=
+ion.
 --
 
---- Patch [8]: [PATCH 8/8] raid6/kunit: add a benchmark ---
-commit c8db04a9f21fef60a9c9e7ad0c98848e405330de
+--- Patch [2]: [PATCH 2/8] xor: improve the runtime selection benchmark ---
+commit 2205984bf337f5c013e14971e819bb6346e19853
 Author: Christoph Hellwig <hch@lst.de>
 
-raid6/kunit: add a benchmark
+xor: improve the runtime selection benchmark
 
-This commit adds a benchmark to test the RAID 6 P/Q functions for more
-representative block sizes and numbers of disks. The maximum allocation
-size is split to allow benchmarking larger sizes, and results are reported
-in GB/s.
+This commit modifies the XOR block benchmark to use ktime_get_ns for timing
+and switches to 4 + 1 disks for a more realistic load. It also reports the
+throughput on the data disks instead of the parity disk.
 
-> diff --git a/lib/raid/raid6/tests/raid6_kunit.c b/lib/raid/raid6/tests/ra=
-id6_kunit.c
-> index 9f3e671a12241..7d0a1ec980013 100644
-> --- a/lib/raid/raid6/tests/raid6_kunit.c
-> +++ b/lib/raid/raid6/tests/raid6_kunit.c
+> diff --git a/lib/raid/xor/xor-core.c b/lib/raid/xor/xor-core.c
+> index 50931fbf0324e..f9d61b096b117 100644
+> --- a/lib/raid/xor/xor-core.c
+> +++ b/lib/raid/xor/xor-core.c
+
 [ ... ]
-> @@ -229,6 +230,68 @@ static void raid6_test(struct kunit *test)
-[ ... ]
-> +static void raid6_benchmark(struct kunit *test)
-> +{
-[ ... ]
-> +		for (j =3D 0; j < ARRAY_SIZE(len_to_test); j++) {
-> +			unsigned int len =3D len_to_test[j];
-> +			const unsigned long num_iters =3D 1000;
-> +
-> +			KUNIT_ASSERT_GT(test, len, 0);
-> +			KUNIT_ASSERT_LE(test, len, RAID6_KUNIT_ALLOC_BYTES);
-> +
-> +			preempt_disable();
-> +			t =3D ktime_get_ns();
-> +			for (l =3D 0; l < num_iters; l++)
-> +				raid6_gen_syndrome(nr_to_test[i],
-> +						len_to_test[j], test_buffers);
-> +			t =3D max(ktime_get_ns() - t, 1);
-> +			preempt_enable();
 
-[Severity: Medium]
-Is it safe to disable preemption across this entire 1000-iteration loop?
+> -#define BENCH_SIZE	4096
+> +#define BENCH_SIZE	SZ_4K
+> +#define NR_SRCS		4
+>  #define REPS		800U
+> =20
+> -static void __init
+> -do_xor_speed(struct xor_block_template *tmpl, void *b1, void *b2)
+> +static void __init do_xor_speed(struct xor_block_template *tmpl, void *d=
+est,
+> +		void *srcs[NR_SRCS])
+>  {
+> -	int speed;
+> -	unsigned long reps;
+> -	ktime_t min, start, t0;
+> -	void *srcs[1] =3D { b2 };
+> +	u64 t;
+> +	int i;
+> =20
+>  	preempt_disable();
+> -
+> -	reps =3D 0;
+> -	t0 =3D ktime_get();
+> -	/* delay start until time has advanced */
+> -	while ((start =3D ktime_get()) =3D=3D t0)
+> -		cpu_relax();
+> -	do {
+> +	t =3D ktime_get_ns();
+> +	for (i =3D 0; i < REPS; i++) {
+>  		mb(); /* prevent loop optimization */
+> -		tmpl->xor_gen(b1, srcs, 1, BENCH_SIZE);
+> +		tmpl->xor_gen(dest, srcs, NR_SRCS, BENCH_SIZE);
+>  		mb();
+> -	} while (reps++ < REPS || (t0 =3D ktime_get()) =3D=3D start);
+> -	min =3D ktime_sub(t0, start);
+> -
+> +	}
+> +	t =3D max(ktime_get_ns() - t, 1);
 
-For the maximum test configuration of 32 disks and 16KB buffers, this loop
-processes roughly 512MB of data in a single uninterruptible block. On slower
-environments like emulators or User-Mode Linux (which are commonly used for
-KUnit tests), could this exceed standard watchdog thresholds and trigger so=
-ft
-lockups or RCU stalls?
+[Severity: High]
+Does removing the clock-tick synchronization create an issue with low
+resolution clocks?
+
+If a high-resolution clocksource is not yet available during early boot,
+the 800 loop iterations might complete within a single clock tick. If that
+happens, the elapsed time t evaluates to 0 and gets clamped to 1.
+
+>  	preempt_enable();
+> =20
+> -	// bytes/ns =3D=3D GB/s, multiply by 1000 to get MB/s [not MiB/s]
+> -	speed =3D (1000 * reps * BENCH_SIZE) / (unsigned int)ktime_to_ns(min);
+> -	tmpl->speed =3D speed;
+> +	/* bytes/ns =3D=3D GB/s, multiply by 1000 to get MB/s [not MiB/s] */
+> +	tmpl->speed =3D div64_u64((u64)BENCH_SIZE * REPS * NR_SRCS * 1000, t);
+
+[Severity: High]
+Can this division silently overflow the 32-bit signed integer tmpl->speed?
+
+If t is clamped to 1 ns, it yields a quotient of approximately 13.1 billion.
+This overflows the 32-bit integer and could result in negative or
+astronomically high throughput values.=20
+
+This might break the calibration logic and cause the kernel to select a
+suboptimal XOR algorithm.
+
+> =20
+> -	pr_info("   %-16s: %5d MB/sec\n", tmpl->name, speed);
+> +	pr_info("   %-16s: %5d MB/sec\n", tmpl->name, tmpl->speed);
+>  }
+
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260715144825.9543=
-2-1-hch@lst.de?part=3D8
+2-1-hch@lst.de?part=3D2
