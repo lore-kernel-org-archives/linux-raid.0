@@ -1,109 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.stoffel.org (mail.stoffel.org [172.104.24.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88F27449EB8
-	for <linux-raid@vger.kernel.org>; Wed, 15 Jul 2026 15:05:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A88F275B03
+	for <linux-raid@vger.kernel.org>; Wed, 15 Jul 2026 16:34:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=172.104.24.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784127910; cv=none; b=AxXWNTDDldlmoIvdEpD/Mx+IrAXtcFfGFtMLgPkFhZagIZUfdYtHB1ipfd3heJ7w38mZn4C+ov2e2EOEK+ViWptlIhMXNc9PdCOpVPcsd65C9X6RG0WeHZgAtI55DTd6UsxrIpCD3zy1Nw+R0izdrQ7/IR91pT07nr0fUQiMxF8=
+	t=1784133254; cv=none; b=Fhf0Yu6S0smNUtkCRVKPv0kZsvKXSgeWSBYxoexqTPDog+QwJfXsjVeU8bMLn//F/vrl8w50Lm8G+w/58Y6nXuOH8xacnERiI+8cjr44INVVI3s6nwnVCC/Y/P67LoeZp+jQzUYHljaPOjmsIT8YpcrLF88i/CIjJ+LpXtT8eic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784127910; c=relaxed/simple;
-	bh=/FBM024vtcGMg1Cfik6sMJ8XqGfmnx8DPtrEgoRnPGE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=XYC1Y5WXC9B6eKTUpMS92v1czyu2w0dCJ07y6zkKImi+JVS9aMdhPnEsTVB6XUdMVWBuvmT1zEeK0HeTfedQeN1qEBEMGbyCC0DCJDbQYYDXsvuIWG5CUoGRR+RT6MtbrxYcCtOaRg2wQoPLfGQWYNp3oz2Uv4M2bv7BKN8I5Tk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dz1IJr7E; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784133254; c=relaxed/simple;
+	bh=FLIHkPu4js4uyzzAfkOqS3dr19NxiAonjfDC/btzdvo=;
+	h=MIME-Version:Content-Type:Message-ID:Date:From:To:Cc:Subject:
+	 In-Reply-To:References; b=tv/SxRF5/wBBt09BmZDlYhQO16X+4/JK6PQXCbvUfU4miS3gCEEt2bUkZqWLlzT5HTvSKwJ8Oyd2QXUzzVJHLwW1CFtCGX+LKgaHavfy840NHJrRwOtiQzAf0HDloLcsjLv5uoPU0ki6iHc0Sx7bp+DI41CMb2969U2l4ohfuk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stoffel.org; spf=pass smtp.mailfrom=stoffel.org; dkim=pass (2048-bit key) header.d=stoffel.org header.i=@stoffel.org header.b=RLpzeOkO; arc=none smtp.client-ip=172.104.24.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=stoffel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stoffel.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dz1IJr7E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F03D41F000E9;
-	Wed, 15 Jul 2026 15:05:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784127909;
-	bh=YPeroB/0mtYBuoiYRx2aD+o2CLcR3ehin90NRk4mrPo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Dz1IJr7ENZ2HahsWiaBAtSEu1K078WLKAeWY2gL/L4LwxwchGb4JJfs7hNLQd56rg
-	 E9sxS3p87RRZ6Z5rXa7DBBD9TB0e10x8cEt589q3La3o3AjOAdLiyDlz79TAaRyskH
-	 X6VUT8v87c3S2tXTEvFKb++NyaUDWOqZo7ppJgNJW1xzMNsBHCmiW7MOMmg+1KUgQS
-	 Z1/iiIkb+i9IYpNN3JGIbPfmVywkDGTgY1V/rUco5eaJkFAg4gNSmwT3YXm2H9u/tn
-	 3cbMFvKzHOLw+v7VSrJCvRNlbIRlkRLyG/1rbTXs0VVO10+QCpwZHGXV/d12wky707
-	 7tb3FJ4s/VrDg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 4/8] xor/kunit: add a benchmark
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Christoph Hellwig" <hch@lst.de>
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260715144825.95432-5-hch@lst.de>
-References: <20260715144825.95432-1-hch@lst.de>
- <20260715144825.95432-5-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 15 Jul 2026 15:05:08 +0000
-Message-Id: <20260715150508.F03D41F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=stoffel.org header.i=@stoffel.org header.b="RLpzeOkO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stoffel.org;
+ i=@stoffel.org; q=dns/txt; s=20250308; t=1784132871; h=mime-version :
+ content-type : content-transfer-encoding : message-id : date : from :
+ to : cc : subject : in-reply-to : references : from;
+ bh=FLIHkPu4js4uyzzAfkOqS3dr19NxiAonjfDC/btzdvo=;
+ b=RLpzeOkO2dv/0SdRX17n730Otp8iGUg9TWgGDRYmUrixhDc3LCeybhPNZOKFJFi+e6+af
+ W5ezVIcT5172W4ErwxvsDdbAxB8j5ON2RrQn+5zQ3bUID0czvAasJp7U/iOg2Fxf+gm3kS3
+ mjF5kCERIHNkHQT//zLn3Le0NNwJg6TPzDKOqPJtyDF6uebTbRP0kLna6i+IEQGnkcESS3O
+ +hjkxOWqBV5s3f0U5xPu/BfUod4DV2PPocdTgThk2ZNktCSay7dqc0J0z6ARSPQUSHdhlaB
+ HHW4jHkLpAel25vOGdI+xZZ99+Ly4G7zE+cAdHLIhIfkCQhP9hkJMlCnJpIg==
+Received: from quad.stoffel.org (unknown [24.177.6.168])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by mail.stoffel.org (Postfix) with ESMTPSA id 09D821E2FB;
+	Wed, 15 Jul 2026 12:27:51 -0400 (EDT)
+Received: by quad.stoffel.org (Postfix, from userid 1000)
+	id 8BC8AA30E9; Wed, 15 Jul 2026 12:27:50 -0400 (EDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Message-ID: <27223.46342.543928.404779@quad.stoffel.home>
+Date: Wed, 15 Jul 2026 12:27:50 -0400
+From: "John Stoffel" <john@stoffel.org>
+To: "G.W. Kant - Hunenet B.V." <g.w.kant@hunenet.nl>
+Cc: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>,
+    "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+    "yukuai@fygo.io" <yukuai@fygo.io>
+X-Clacks-Overhead: GNU Terry Pratchett
+Subject: Re: Subject: RFC: Read repair for md RAID1 after mirror read failures
+In-Reply-To: <cff97a09-ee38-4785-9a45-1fd562fbaf5e@hunenet.nl>
+References: <8dcbfa43-c687-49bb-81b5-e6b8e8848c77@hunenet.nl>
+	<m2y0fcesbe.fsf@gmail.com>
+	<cff97a09-ee38-4785-9a45-1fd562fbaf5e@hunenet.nl>
+X-Mailer: VM 8.3.2 under 28.2 (x86_64-pc-linux-gnu)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Unbounded preemption-disabled region in `xor_benchmark` causes sof=
-tlockup panics and RCU stall warnings on slower architectures.
---
+>>>>> "G" =3D=3D "G W Kant <- Hunenet B.V." <g.w.kant@hunenet.nl>> writes:
 
---- Patch [4]: [PATCH 4/8] xor/kunit: add a benchmark ---
-commit f403ad2f80a6eb7a690f9b948152ad30281caf15
-Author: Christoph Hellwig <hch@lst.de>
-xor/kunit: add a benchmark
+> Hi Abd,
+> On 7/15/26 7:27 AM, Abd-Alrhman Masalkhi wrote:
+>>> With today's 18=E2=80=9324 TB HDDs and backup/archive workloads, where data may
+>>> remain unchanged for years, latent media degradation seems increasingly
+>>> relevant. A successful read from the alternate mirror may be one of the
+>>> last opportunities to refresh such a sector before it becomes
+>>> permanently unreadable.
+>>>=20
+>> And Check/Repair is the right defense for cold archival data on large
+>> drives.
 
-This commit adds a benchmark to the XOR KUnit test suite to evaluate
-performance across varying block sizes and numbers of disks. The benchmark
-reports runtime speeds in GB/s.
 
-> diff --git a/lib/raid/xor/tests/xor_kunit.c b/lib/raid/xor/tests/xor_kuni=
-t.c
-> --- a/lib/raid/xor/tests/xor_kunit.c
-> +++ b/lib/raid/xor/tests/xor_kunit.c
-[ ... ]
-> +static void xor_benchmark(struct kunit *test)
-> +{
-[ ... ]
-> +		for (j =3D 0; j < ARRAY_SIZE(len_to_test); j++) {
-> +			unsigned int len =3D len_to_test[j];
-> +			const unsigned long num_iters =3D 1000;
-> +
-> +			KUNIT_ASSERT_GT(test, len, 0);
-> +			KUNIT_ASSERT_LE(test, len, XOR_KUNIT_MAX_BYTES);
-> +
-> +			preempt_disable();
-> +			t =3D ktime_get_ns();
-> +			for (l =3D 0; l < num_iters; l++)
-> +				xor_gen(test_dest, test_buffers, nr, len);
-> +			t =3D max(ktime_get_ns() - t, 1);
-> +			preempt_enable();
+> I have been looking into your suggestion that periodic check/repair is=20
+> the appropriate defense for cold archival data on large drives.
 
-[Severity: High]
-Will this preemption-disabled region cause softlockup panics or RCU stalls
-on slower architectures?
+> Before I start reading the resync code, I would like to make sure I=20
+> understand what repair actually does.
 
-In xor_benchmark(), preempt_disable() is called before processing 1,000
-iterations of up to 32 blocks of 16KB each. On a slow emulated architecture
-without hardware acceleration, this loop will synchronously process over
-500 MB of memory.
+> Suppose all mirrors read successfully and contain identical data. In=20
+> other words, there are no read errors and no mismatches.
 
-If the memory bandwidth is low enough, could this tight loop exceed the
-default 20-second softlockup and 21-second RCU stall timeouts, resulting
-in a kernel panic during CI testing?
+> Does repair simply verify the data and move on, or does it also rewrite=20
+> each successfully read block to the corresponding LBA on every mirror?
 
-Would it be safer to place the preemption-disabled block inside the
-iteration loop and accumulate the time, or dynamically scale the number
-of iterations based on a time threshold so the scheduler has a chance to ru=
-n?
+> The distinction is important for what I have in mind.
 
-> +
-> +			speed[j] =3D div64_u64((u64)len * num_iters * nr, t);
-> +		}
-[ ... ]
+So you have to also think of other situations.  You have a RAID1
+array, and one block gets corrupted, but is still readable.  How do
+you tell which block is the proper one?  You need checksums or parity
+or more copies to check against for consistency.=20=20
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260715144825.9543=
-2-1-hch@lst.de?part=3D4
+It's not a simple problem.   For long term archiving, I would try to
+use something with RAID6 or more, and ideally have a filesystem which
+also checksums data.  This is what ZFS does, and which bcachefs does
+as well, but since they're both out of kernel, I don't use either with
+my current home linux setup.=20=20
+
+But for long term storage, that could be the way to go.  but then you
+need to periodically scrub your data, which means reading it all,
+checking the checksums and re-writing and fixing corruption.=20=20
+
+> My concern is not recovery from an existing read error=E2=80=94that is already=20
+> handled by fix_read_error()=E2=80=94but rather the long-term aging of cold=20
+> magnetic recordings.
+
+You really need three or more disks with multiple parity and checksums
+for long term storage.=20=20
+
+
+> If a sector is still readable today but is approaching the point where=20
+> the drive's ECC will eventually no longer be able to reconstruct it,=20
+> then a successful rewrite would effectively establish a new "write time"=20
+> for that sector. If the drive can no longer reliably store the data at=20
+> that location, the rewrite would also give the firmware an opportunity=20
+> to remap the sector.
+
+> So my question is essentially:
+
+> Does repair perform such a rewrite of successfully read blocks, or does=20
+> it only rewrite blocks when a read error or mismatch has already been=20
+> detected?
+
+> Regards,
+
+> Dion
