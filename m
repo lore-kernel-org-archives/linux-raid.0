@@ -1,48 +1,45 @@
-Received: from va-2-42.ptr.blmpb.com (va-2-42.ptr.blmpb.com [209.127.231.42])
+Received: from va-2-60.ptr.blmpb.com (va-2-60.ptr.blmpb.com [209.127.231.60])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 463983EB0FA
-	for <linux-raid@vger.kernel.org>; Wed, 15 Jul 2026 09:09:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6118D3E8686
+	for <linux-raid@vger.kernel.org>; Wed, 15 Jul 2026 09:10:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.60
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784106579; cv=none; b=Rg8avDbJaw1Vb9ruW48Q4eDWLIGBxa2TjqzNC6jIBrn4wINCNiLOF9kGQpIoEzA9kkAMswM0unInamyucyZlnmw9D+QPnzymt4F14oZ/J9KqUWjE/jfvrhSf1Ggn1iH1SujNhNByO0NarE90w9saiD+5PkFOESyyB3GfB/J5X0Y=
+	t=1784106652; cv=none; b=CGgD5FCr0V7TD4nBlrmqcyY4k5567js3JGVqdb50cm2TpNZ5m3JwpEA7pcZFe97q4oeEmiwJAsjIyK6PqwejuSBplytiOQYfcl0TFxokiFBpQIc+9i8IW0lJN4AIU72IlZKX53gZyvw3vxon6dJsT+GCU3MBIEr2aNfm3oBPSNU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784106579; c=relaxed/simple;
-	bh=gjQ0L4cjLtJI1SBhLwbcua00QZ5yXbEE8/6yBzuKPjw=;
-	h=References:To:Content-Type:Cc:From:Subject:Date:Message-Id:
-	 Mime-Version:In-Reply-To; b=bVJA+C+7S7vSHaKqpBZOOB+yg9fcaEkR+Or9p+Iv0MXZp7dDsSykuWSq9isiUKVZjIajDTbSJnnv/XpN1C5LoGBBDXKdSFJSrBDUbPV2eynUY0YCnb+N6BsZ57Ae5VdBhi67mSt3IcIW+Nb+zs31CZPSL//4YCCweTOkZNobmO8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=iP/Y4CUe; arc=none smtp.client-ip=209.127.231.42
+	s=arc-20240116; t=1784106652; c=relaxed/simple;
+	bh=btqayxoqiXiqpQXBkVDNPPHzll/Lc3vmjofDfeui+zs=;
+	h=Cc:From:References:To:Message-Id:Mime-Version:In-Reply-To:Subject:
+	 Date:Content-Type; b=gZTKvEHz345HuETEtGUXXIHh1JK5Ceg6PnJ8qb7dl4/FPPtLyqMfE6PeA41FdkTlO1tjEEbc3DlpfQGlbiy1hVZ7wn0eot0pnMPyhpETsYsG2VvwaNkshnRHIfL9R+dhCKfSWUmxjK5vA8SzOjs/Bg8sA9FYmM0IYOVbE6rtro8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=h6zflTCj; arc=none smtp.client-ip=209.127.231.60
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="iP/Y4CUe"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="h6zflTCj"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1784106562;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1784106636;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=i7XbYNbE/Tm0dN6OZO1KNd8nDbLx0PGrBUuDMn5mlVk=;
- b=iP/Y4CUeIYyOAtm4qoeTgSEWd8lR0J3tJ9dMgTSEDApkQjd2gN7a22zYrr4y2lgnMMbf+3
- hEQk/uMz9LwbfdtSKGAwazoWZOEjADKXr8cUNojA2eJJ7XUNzYUSKHskfZ++Hop61U9kQ/
- /GZ7gKpQXUnIcq0G6mx7GWl4MBnXYEIFVge0GlScw+Z/02p/xnNN2ZHcVub/3U3F/+VMvk
- xyiDCiALFehs/Cf78FnLaPG+NwZDtvn8v4sx7rA0IautoTpwuqwQ2+RfFcZm/wkiiGYRmH
- wi+ywM9cp38pdToNpnOMmEK1/qjeu3cT38wFB+fExBniMaqTxDFrraPkLnj00g==
-User-Agent: Mozilla Thunderbird
-X-Lms-Return-Path: <lba+26a574e41+2fa024+vger.kernel.org+yukuai@fygo.io>
-References: <20260710101521.1714-1-abd.masalkhi@gmail.com> <20260710101521.1714-3-abd.masalkhi@gmail.com>
+ bh=69sbYCT1PNe8Uf6rkuJM+T+srtrVJzzUw1N+k0bSBHE=;
+ b=h6zflTCj9zFYWlcpPgjnY8nhUw14302JcvX3Zyf00FnwVYsxryCF7Fj68xPTivHPfzBM6J
+ rmlHv7SYac9yAkHUWioPZpP6liPpikQysS8ZamurfODGlSwgxjOXBkNJjYXpkYRWUXWHKW
+ fZ5+zFTRk0na+f1k5xEUUU8tiHvOeHNzSnSYF0HYXfRE7qLt+XhWNCQFtHYQRPV+LZvDQH
+ MAVqU21bXG+RlH7pGUDNpzG/DkQ2RGt75iJtnek4Dgh3Od/OzyHY8BqYy3XEJkegmd1BsU
+ 5KdogMfoCLq0tYQS4B0d2py6jF9u//18WoLK4epbgslslg7PNvr0LNB8yLszpA==
+Cc: <linux-raid@vger.kernel.org>
+From: "yu kuai" <yukuai@fygo.io>
+References: <20260710101521.1714-1-abd.masalkhi@gmail.com> <20260710101521.1714-4-abd.masalkhi@gmail.com>
+Received: from [192.168.1.104] ([39.182.0.157]) by smtp.larksuite.com with ESMTPS; Wed, 15 Jul 2026 09:10:35 +0000
 Reply-To: yukuai@fygo.io
 To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, <song@kernel.org>, 
 	<magiclinan@didiglobal.com>, <xiao@kernel.org>, <axboe@kernel.dk>, 
 	<vverma@digitalocean.com>, <john.g.garry@oracle.com>, 
 	<martin.petersen@oracle.com>, <linux-kernel@vger.kernel.org>, 
 	"yu kuai" <yukuai@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.157]) by smtp.larksuite.com with ESMTPS; Wed, 15 Jul 2026 09:09:20 +0000
-Content-Type: text/plain; charset=UTF-8
-Cc: <linux-raid@vger.kernel.org>
 Content-Transfer-Encoding: quoted-printable
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH v4 2/7] md/raid1: restrict atomic write limits and handle runtime constraints
-Date: Wed, 15 Jul 2026 17:09:17 +0800
-Message-Id: <6b0b5038-d9d6-4b4f-b750-adbf790e83ac@fygo.io>
+User-Agent: Mozilla Thunderbird
+Message-Id: <9c000a0f-9c83-48a3-be78-e08aefb16db2@fygo.io>
+X-Lms-Return-Path: <lba+26a574e8b+d0b42c+vger.kernel.org+yukuai@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -50,49 +47,43 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 X-Original-From: yu kuai <yukuai@fygo.io>
-In-Reply-To: <20260710101521.1714-3-abd.masalkhi@gmail.com>
+In-Reply-To: <20260710101521.1714-4-abd.masalkhi@gmail.com>
+Subject: Re: [PATCH v4 3/7] md/raid10: consistently fail atomic writes that require splitting
+Date: Wed, 15 Jul 2026 17:10:31 +0800
+Content-Type: text/plain; charset=UTF-8
 
 =E5=9C=A8 2026/7/10 18:15, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
 
-> Restrict the RAID1 atomic write limits by setting chunk_sectors to
-> BARRIER_UNIT_SECTOR_SIZE so that atomic writes never straddle a barrier
-> unit.
+> RAID10 currently handles one badblock path explicitly by failing atomic
+> writes with EIO. However, another badblock path can also reduce the
+> writable range and force the bio through bio_submit_split_bioset(),
+> which implicitly completes the bio with EINVAL.
 >
-> A bio that passes block-layer validation may still become unserviceable
-> within RAID1 due to bad blocks or write-behind constraints. In the former
-> case, complete the bio with EIO. In the latter case, disable
-> write-behind rather than failing the bio with EIO.
+> Fix this by handling atomic writes in the common split check. If RAID10
+> determines that an atomic write would require splitting, complete the
+> bio with EIO.
 >
-> Fixes: f2a38abf5f1c ("md/raid1: Atomic write support")
-> Fixes: a4c55c902670 ("md/raid1: simplify raid1_write_request() error hand=
-ling")
-> Reviewed-by: John Garry<john.g.garry@oracle.com>
+> Fixes: a1d9b4fd42d9 ("md/raid10: Atomic write support")
 > Signed-off-by: Abd-Alrhman Masalkhi<abd.masalkhi@gmail.com>
 > ---
 > Changes in v4:
->   - Improve the commit message.
->   - Add Reviewed-by tag from John Garry.
->   - Link to v3:https://lore.kernel.org/linux-raid/20260708101341.473750-3=
+>   - No changes.
+>   - Link to v3:https://lore.kernel.org/linux-raid/20260708101341.473750-4=
 -abd.masalkhi@gmail.com/
 >
 > Changes in v3:
->   - Set chunk_sectors to BARRIER_UNIT_SECTOR_SIZE instead of setting
->     atomic_write_hw_unit_max.
->   - Avoid enabling write-behind when the atomic write exceeds the
->     write-behind limit.
+>   - No changes.
 >   - Link to v2:https://lore.kernel.org/linux-raid/20260628142420.1051027-=
-3-abd.masalkhi@gmail.com/
+4-abd.masalkhi@gmail.com/
 >
 > Changes in v2:
->   - Drop the early atomic write split check from raid1_write_request().
->   - Advertise the atomic write size limit via queue limits.
->   - Disable write-behind instead of failing atomic writes when the
->     BIO_MAX_VECS limit is encountered.
->   - Link to v1:https://lore.kernel.org/linux-raid/20260623072456.333437-3=
+>   - Drop the early atomic write split check from raid10_write_request()
+>     and rely on queue limits instead.
+>   - Link to v1:https://lore.kernel.org/linux-raid/20260623072456.333437-4=
 -abd.masalkhi@gmail.com/
 > ---
->   drivers/md/raid1.c | 25 ++++++++++---------------
->   1 file changed, 10 insertions(+), 15 deletions(-)
+>   drivers/md/raid10.c | 14 ++++----------
+>   1 file changed, 4 insertions(+), 10 deletions(-)
 Reviewed-by: Yu Kuai <yukuai@fygo.io>
 
 --=20
