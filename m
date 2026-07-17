@@ -1,105 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 741DD3C0A17
-	for <linux-raid@vger.kernel.org>; Fri, 17 Jul 2026 06:51:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784271120; cv=none; b=Rk4+W9bNih91pXbl1cogSO14UgMH9JjuQUBJWMlygz12qbBXa3duK6ACWZS0GxPj9qLIvfCkrOYGuU2IyBMILil0uzNEZWf9yq0GapKpVYATj5Kb1kwfWCqL71Ys38907msxQt7YpbjIZu4Ly9kkmXHCTKmPKXfasppHpUKMFLc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784271120; c=relaxed/simple;
-	bh=43Nj//BlR4DOOHfep5NcSPzMBbhzfRJASXFtIyIRFBM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=U0iZRr05OUYH11vw+bVikp3hySX/irOynan38xq1/b9YrDvDhWRsO3kojERekx2N6JJZUKuJ1f6CawXyPGkgIkOsukKpkoS7QrsXQA1p09a1oMdvshlpwLleq7T9gFi8T/3gmqENesx5Gnu7LivLrXnL8bLqL9aPklAAV/Jyu+A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GqTWPkap; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E43973F1AB0
+	for <linux-raid@vger.kernel.org>; Fri, 17 Jul 2026 10:55:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.45
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784285765; cv=pass; b=sMhWjw3qfoHdM/D/vYvP2ce6Fq7VEyaGB3R2sDPb/o1RF/O7kuvL2Nab9Ug9orNIPPldHAoN5HN0ofgmn6XXF6ftSPJxV9a91Gi9FlSadsoiSuv1Ca3uyf8Y5mR3jInc1ETV1cuBFbC9/JvH/xiSttWp2x+OPtJ6MbVLcpGftwg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784285765; c=relaxed/simple;
+	bh=Kda3YFaCY0wSzxzuFDCO6UFCLjDITUKucDaor/KsumI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=gukT5PBxve6roMAIo+6bAL73olofg6fC2zTzGK4g9HiwG8/1GUfW0lNQNu+e42/tN2naFapuhNYbmPqeDDTI1+iBhB6ScAaIBSZVbotEG/s0q2+tySeLGl/sk7wc1S1kzYoQH8ISx7Q4sdiyJyAj0BByl5U6lC9MDUR0lg+PfFI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jxYuTax2; arc=pass smtp.client-ip=209.85.218.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GqTWPkap"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C97AC1F000E9;
-	Fri, 17 Jul 2026 06:51:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784271119;
-	bh=0YJOIil6IqvqDt7v54lEhVyefnQECkMUrzecZ3ZAcl4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GqTWPkapdjDoK2nfpqZoid7zMw6De387PXH5wRXYvJ0clSTHK/LI0Lp3x1zpg29Yd
-	 qMxR787nMRd1oKlqzUzXhA6WLjnH7L26OdgxcaOoeSUN9O/ApmeGqwE5wt4nTrOVbW
-	 cW7DBsOlcQUlUil6qMSDii8v7ycwd8zwGzL0vqsVcfBrSjj45+UOR7D/8XdKPF2NZr
-	 gJr1nFVmoKTZRE4vZAbWrGRWOcjVRn5ZnxkM5HrRcJbEPxn5g2S6s39KbKywgyBJeM
-	 J5RmWB4/oW/wr+ublLpY1lXjQG1UeLtelyjPhTbVWRyjbfvQ8JvGxgcSANUFn5wdJj
-	 PEg5ZwPMJjnqw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] md: fix soft lockup during resync when sync is
- repeatedly skipped
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yunye Zhao" <yunye.zhao@linux.alibaba.com>
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260717062743.128189-1-yunye.zhao@linux.alibaba.com>
-References: <20260717062743.128189-1-yunye.zhao@linux.alibaba.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 06:51:58 +0000
-Message-Id: <20260717065158.C97AC1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jxYuTax2"
+Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-c160420289bso1070323766b.0
+        for <linux-raid@vger.kernel.org>; Fri, 17 Jul 2026 03:55:52 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784285748; cv=none;
+        d=google.com; s=arc-20260327;
+        b=s0twcE+NLN+hK8UUAwo26vt+yGA+lHhQ+YeynXL5J3EKSWoFsxeJqvFVqFHIjdTMTu
+         jwJ9fZgTzRnUIHSy7mJVSlugJNwJOTEZOaDcjViEjgrQvqWh4scdUGbn/vauQPv8wN3c
+         eDTLifRZ3JS64/UfszejnV+ig35c6kW/az7e8ztQQQP4ntQkH2Z4jr+Ab9vfibTS3n97
+         H/+URJfHf/OV7v/5edraLikOm7H/sU8K1afw3oo1pZriFGU6jgL6FmC0xXNocjFfaayK
+         Y3VhnulZIyRgpC/19NUjeWdJYVCj/wpqDok5MZ+GK6i5zBuC/I/qPFUhwLoqm2p2QpWY
+         +iew==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=1W9mOBWe8snHEbUrgd6IOO4i3t8dLiUueUtkFhJutTc=;
+        fh=eDEjund4mqjgVyQ9q4ziO/kTr5N62VvGw4iu47CeTVE=;
+        b=Rbk3MUoFBiEcAWldohGz6cdlQw8Xmaac6fWtGJck+fZAqh1/0bLJXbm9OfxOL5F6gm
+         99OcG3QBcFJrPfgGixLIHPKKIr6FF1UmzqmrbMrgK1mefyQpiLAmnZQ17A6ifGtegvwi
+         rgezCKeqcV2pGKyCmS4I7/nVCZ14p0ajO/zCKBbarYUgnPRkA1aZ0rm2YwDfQ2R7aYF/
+         EQAfHP+fPkdjKYXR7p3VxBk+ud7J7/NC5xZSQzs5XpZX4Dx2ARFl4dJ8FnD7zlt42CXX
+         xRnZ40OfuAIH061ZS/EVHoMafOxjDGdMY8LyX/QX6yf7PnfTga7ApJAtgC6ravtd8Q8r
+         D5cA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784285748; x=1784890548; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=1W9mOBWe8snHEbUrgd6IOO4i3t8dLiUueUtkFhJutTc=;
+        b=jxYuTax2FmkvyugtfygwzPJjgQH1tUehwPVzKiGaoyCijhyY2l3i8Bp3cEcvc686xy
+         PyjZvkvmD5/Gv3jYYOyG7mm0OasfLAi3JO2Gr3oEK4QcOcNGlcsQKkyK7EChLwQIpiGz
+         47WuIJy0mECR9aE0wYHcdBd4Yfkuf/XCn9QxOOzwaz/0kyrK17nmLGkDnU5G/kISSWRg
+         Naa1fc8XbQfOkSme5lTHW8qf8LasY90EIpn5qGfSqHsRsi+ORti1nQEq7MCrkCZOochi
+         A+j8CIh7OA11fL7o3OWyQmjvVH/XVTTKFHj4T2DryNbxjtsrq7zkaqLUjr9vAuYVAOcb
+         A6oA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784285748; x=1784890548;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=1W9mOBWe8snHEbUrgd6IOO4i3t8dLiUueUtkFhJutTc=;
+        b=lpLdNu8cQ08LiDWuowMJ1inuFogR5r1sT4xz5Se4mGj4eb62mhmZAppsFdunEXwADL
+         lnStAyWFsiHb0CRC2mTjJSZd51nrl/qhtaPo+1G9JlwJ8HfBendau4IBH525TpBGlp0Y
+         JXdU+kdw8LkQ75d07AFxANPDeYrNQWfAzXGe/eNHJamhKIhNSs17YJM+BSi5U2+giapU
+         s6qOhGruIK4GYFk0xsv2l8T2WjoaGQiERc6LY38mOJ6kk/EwMJqrI1dGPjK/mDSJqjlH
+         t0l+h/4SOuJJb/O1+H9+WmcFfTJJzz9FIqttHyYHQVhcbdcq+mbIM26RLcVD+UDLqK3b
+         PV8Q==
+X-Forwarded-Encrypted: i=1; AHgh+RoJAA+s8fLQBG3EyUckZmnoNfdM9QvOoPbY4+ZcKeTzRBCz3lAhUbAsDybYFONkTKIH9HWtDRaC+B8D@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw8Xawz3ZrqdVm02Y6ycJJ2vJZUSHWxWFDaKMhYtCqyYAcji/wE
+	iYx+8SCZ6gV+7HNAzIs5pR6SdIKfWV2DSMh5vI2+fVwLiJ8Er09+SU/MJ1vRtpIBtqbxpZyhRKV
+	0iptG3erBaKirb7rPGFBuUplpxEaFi/A=
+X-Gm-Gg: AfdE7ckS8HZs3MCVAg2DNzPlrNNXhjFsl61hnmmqsD7USswqdvzkDFQsAtB4RuLm7DJ
+	2VvqltfOF3RpS9Vr4h+LCtDw8ZK4ZKT3x3Kp9JXa53pmmNmxtL4x0t60mHhKMXuEtTKk3COqkYY
+	rpYazuoqGhGejorWsb5cHTCEzXK6RKR41DmdVge71Kdy82+Ell9DhpfqhHMo7ll1Qtt0hX825Rd
+	p1wCJNJR8+mXNKPze2B4XEKT1HByu/uSt2+tJwZUqYVI7Iwup1IUgNaZ0+Kf+lV9hNfyzo=
+X-Received: by 2002:a17:907:1c9b:b0:c12:86a5:3ada with SMTP id
+ a640c23a62f3a-c16b47d7e5dmr93165966b.36.1784285747987; Fri, 17 Jul 2026
+ 03:55:47 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <8dcbfa43-c687-49bb-81b5-e6b8e8848c77@hunenet.nl>
+ <m2y0fcesbe.fsf@gmail.com> <cff97a09-ee38-4785-9a45-1fd562fbaf5e@hunenet.nl>
+ <m2jyqwduba.fsf@f8410a22-cd7b-4baf-acf5-82353315d5e5.fritz.box>
+ <m2ech4dt8k.fsf@f8410a22-cd7b-4baf-acf5-82353315d5e5.fritz.box> <59fa3f9f-eda1-4f8a-917d-8f6612639a1b@hunenet.nl>
+In-Reply-To: <59fa3f9f-eda1-4f8a-917d-8f6612639a1b@hunenet.nl>
+From: Roger Heflin <rogerheflin@gmail.com>
+Date: Fri, 17 Jul 2026 05:55:36 -0500
+X-Gm-Features: AUfX_mwbL7Sq7b51hFcnPWnkcWgEtAQMRp0_odATQLZf1NTDp7SpjtKt0EOFofk
+Message-ID: <CAAMCDeefBEP0c4oW3iX4_cbZBLDuyfuAtCREtFgiH-qS4ZaiXQ@mail.gmail.com>
+Subject: Re: Subject: RFC: Read repair for md RAID1 after mirror read failures
+To: "G.W. Kant - Hunenet B.V." <g.w.kant@hunenet.nl>
+Cc: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>, 
+	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "yukuai@fygo.io" <yukuai@fygo.io>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On Fri, Jul 17, 2026 at 1:42=E2=80=AFAM G.W. Kant - Hunenet B.V.
+<g.w.kant@hunenet.nl> wrote:
+>
+> On 7/15/26 8:04 PM, Abd-Alrhman Masalkhi wrote:
+> > On Wed, Jul 15, 2026 at 19:41 +0200, Abd-Alrhman Masalkhi wrote:
+> >> Hi Dion,
+> >>
+> >
+> > I'm not entirely sure about the media refresh part on modern drives...,
+> > I'll have to look into that first.
+> >
+>
+> Maybe, we could ask the smartmontools people about this. They should
+> know this. But I have never read about a refresh action in their
+> documentation.
+>
+> Best regards,
+>
+> Dion
 
-Pre-existing issues:
-- [High] Repeatedly skipped I/O blocks cause an event storm, calling md_new=
-_event() millions of times in a tight loop.
---
+I am not sure why you believe the smartmontools people would have ANY
+idea about the refresh action.  Smartmontools simply exposes the
+internal drive counters that the drive manufacturer exposes and/or
+documents.
 
---- Patch [1]: [PATCH] md: fix soft lockup during resync when sync is repea=
-tedly skipped ---
-commit 02c063c34357030eaa8514f57d5e37328d410c0b
-Author: Yunye Zhao <yunye.zhao@linux.alibaba.com>
+The refresh action is 100% entirely controlled by the drive's firmware
+and has nothing to do with the smartmontools, and the smart counters
+may not show any of the internal ECC forced rewrites.
 
-md: fix soft lockup during resync when sync is repeatedly skipped
-
-The md_do_sync() main loop advances io_sectors only when I/O is actually
-issued. When regions are skipped, io_sectors never increases and the loop
-takes the continue branch, eventually triggering a soft lockup on
-non-preemptive kernels. This patch adds cond_resched() to this continue
-path to prevent the soft lockup.
-
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index d1465bcd86c81..e7411b0334901 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9881,9 +9881,10 @@ void md_do_sync(struct md_thread *thread)
->  			 */
->  			md_new_event();
-> =20
-> -		if (last_check + window > io_sectors || j =3D=3D max_sectors)
-> +		if (last_check + window > io_sectors || j =3D=3D max_sectors) {
-> +			cond_resched();
->  			continue;
-
-[Severity: High]
-This is a pre-existing issue, but can this loop in md_do_sync() cause an ev=
-ent
-storm when I/O is repeatedly skipped?
-
-During array recovery or resync with a sparse bitmap, io_sectors remains 0
-when regions are skipped. Because last_check starts at 0, the check
-(last_check + window > io_sectors) evaluates to true, causing the loop to
-continue.
-
-Since last_check is only updated after this continue statement, it remains 0
-permanently across skipped regions. As a result, the preceding check for
-(last_check =3D=3D 0) remains true, calling md_new_event() on every skipped
-iteration. This repeatedly wakes up user-space processes polling /proc/mdst=
-at
-and causes lock contention.
-
-> -
-> +		}
->  		last_check =3D io_sectors;
->  	repeat:
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717062743.1281=
-89-1-yunye.zhao@linux.alibaba.com?part=3D1
+As far as I can tell in general the drive does what it wants to
+(refresh or not, relocation bad sectors or not) and there is NO way
+that I have ever found to force the firmware do do something else.
