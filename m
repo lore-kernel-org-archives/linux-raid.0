@@ -1,209 +1,226 @@
-Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11023098.outbound.protection.outlook.com [40.107.159.98])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1FA235C1A9
-	for <linux-raid@vger.kernel.org>; Fri, 17 Jul 2026 18:12:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 597E238228A
+	for <linux-raid@vger.kernel.org>; Fri, 17 Jul 2026 19:15:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.98
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784311923; cv=pass; b=RGcF3WDrBtKVizs++66IMSHP+eJFbyUVV+FXP7rzwcDYUWQ6YQEGSVqm/bZQAT8lOyeVx/d3u3iXJPbutL+m3ya3G4ik2ftsIjI4iTmFS0Su3szTJHQ9vhwaE0Yfh//WCiD+isvzEnQSyUI+OIGZhVH1ZvauM3X63xCmt4/iyZM=
+	t=1784315711; cv=fail; b=JMo2pKWozgDAYZbtNaH+CUEZHCwMeLh9fZRktKFOzomGkiBC0uX6X7TOYk4NXZOj7/3MQPKLeybpafYZgq5rfX1q45dlIp+SUX61hv3yLUws1TSzJqy5r8nUqXgFXkLfd8TmV7ZPAxgqa+bsL7TD8ml91BinhkxGXha2YHy2yDE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784311923; c=relaxed/simple;
-	bh=uUEDXeVaOVJQS4j0uEhTQisiTfLSqU5Vw2Lm4mCmlJA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ToxYM/f5PDSkbuqUSNoHKow/2CyREegl/G11tdPiLAJwoz0siH1pjLsqDufO9UpkR4dFyDbBujXPTT61XJ9M13XDTTqp1OIkwbF42ZfN3wFptGhUosexQ3c7Obq3LG2c4W96mxMNCu1N3TXd39hSbVVOkMb/LAL0O11AKh1SJik=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WdVZ8sCl; arc=pass smtp.client-ip=209.85.218.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784315711; c=relaxed/simple;
+	bh=4SL+mqNgn9kCiKXcARl//GLAjCivuS2tTOij+0ETvAM=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=e5S5By5QsHwR0XhRgPwyBxgIVzyIPe1HPlIhtUcGT1xaBr200yZ+X+kgXILS4RYtBcwHPiK0F2MuBAKLxUzeD7Ig9M31lGEKZpGFvR/ANh8gK+RiNeSyTctuZqbn7HlbAHUcIHGgOGNbRU7qqug78ddpl/G86ivMed7JGxZgMmM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=hunenet.nl; spf=pass smtp.mailfrom=hunenet.nl; dkim=pass (2048-bit key) header.d=hunenet.nl header.i=@hunenet.nl header.b=MM1wiXuI; arc=fail smtp.client-ip=40.107.159.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=hunenet.nl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hunenet.nl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WdVZ8sCl"
-Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-c12614b81c9so1467935766b.3
-        for <linux-raid@vger.kernel.org>; Fri, 17 Jul 2026 11:12:01 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784311920; cv=none;
-        d=google.com; s=arc-20260327;
-        b=aYgNjFGKLfoAR9mole7Z/xeG0p4KgBKac2UGK/O+eev8v4f8nE764ZYkD1vkwdothu
-         TUEIefGlQFQ63cEMe+rbImwmsR82huEu850IihlyGJOSbU1pMKdk3xSmUFo8XDgEJ0pg
-         JGYZC9TQjYATGwK02LZ4YVVsiyYEAIRVJMjXS9+AludrPMz1RVE+hw4Wajj+MNc/3pyP
-         n21FbWwngFSsHtR/0W5JG1UpfJI8nyTw3Npb3MjpXKuCsqCV3ppb8tsWj/FBpEsN1H+C
-         ucTvXyTLv+Mf2zmsMBwDk1JtlmIugyNmyuAb2AlIXrAAJhaIidy+W2xkbxYoLvEv5Lr/
-         K6Pg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=8Gr5If/L4JBCYnFefWnEGp7Am+p00nB6GuXb7MIqkwM=;
-        fh=rscoZJZG1rDNojWDJtQ46cZ72Ssib48QpvEhqw/2Mgc=;
-        b=j1hqpcUGhboMl/a7gk4QwPcaZCW6P/ADBBgjFfhpL8UlwHanv1uTnl7jpF2Ve78AyF
-         uXXadoGriaGGDxlhOPfT8KV0StGrY8w9EIRNhQvRMdlnaShVFvnZsTZkTb8Z84wAtmlr
-         KFmsGnJMNdemEW4CWZm1UKuKmdBxrCkBWgsc1NDO97JaYwXKTSLdAsmtB2IjHHZccIjS
-         NFGATRs4CgU3JwN96L01aCHJe9IQEYwyPa2y+XZI7/VwVXG8euSW6nb9OERdv7ShSw2M
-         pB2bBvkeva35XtEVweAVvHtxZjOcvUzmj4wkle+XR0KDYdOeftNsoRjOpfLXtVNoXRkz
-         5WaQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784311920; x=1784916720; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=8Gr5If/L4JBCYnFefWnEGp7Am+p00nB6GuXb7MIqkwM=;
-        b=WdVZ8sClDTgEPjlrVIOOzqAOBdv3Aeq6p4kP6mfKkz9wVmt8O+OwqoNo1N5eFKaBqp
-         EcbwQ7/JxMiV9/QmNQGPGVXH8sbkXvFNNEyqOhkKBPmXNCVgbLCnjeXCIK5YSnGLevSI
-         fw2Pt2KZ595QbNKzccfg8jl6lsGZRQQnqDUfZlvSjoeK1/t46P55daPnvy0cQyBOsQA4
-         4sD0yh/NEk/4KNyM5FIdyvVZeu6mA6+2CpnGYndTBga6SNBLwymkmWjqmF3FhAUCbkWJ
-         EW9NqcDG1YLT6XiWm4otF9W86wuRjWBadJ+p1O0Xt0p7w5vp4Fk/71agXA7I/uesn0Hc
-         nZ7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784311920; x=1784916720;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=8Gr5If/L4JBCYnFefWnEGp7Am+p00nB6GuXb7MIqkwM=;
-        b=k3FxfEfeAs6gJXiNUYgX8Pwa0HA1ot9+aJCh/9Ul5qseAx2YbgyZOKUz4BDwGOcP7s
-         0kb1MyQKZjdTDSa90gONeALSsFRVCRjroLztC4lJihKAv5XTEuOFponfO9laOshk97jz
-         5A6nuCYSZ20L9LF7B4dq4rg1Obk3sPDPg3/e9ZHKmjYQe7aTYz6y1HVOt5eIeT772U55
-         b3LvebWVeRp3xPykl0kklY3LG9tRUICnKg/LvU8QNIIHhYpGscRhIkwtXe8unrDarFqD
-         uNer0ZqONi92jADUs4OvDBMLyk8vltn/MmotrbcogQCIuusNXxbIr1QDTjIMPjFhK/LD
-         eQGA==
-X-Forwarded-Encrypted: i=1; AHgh+RqtcXDWPAYXhGLsKlnQp8Rbpml65FnxEAWT0wr3HWWsPL3YTX+wBaclnoazmsRWL+80FqHvJ5G/jouU@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxhq3cL7JZnsG2V0qzkzB6ofr9G3FyaRqP5RIvFHHK2Lm6V3pJ+
-	SjXgUA1Hzgk2YaZJ8QvjoSzvWD2DVi7YpzPaz7nfTKWutAccmgzMZRkS5Tj3dcLGMj5C8rvKysW
-	A6wgwkUC66pRHnlGD1CEE41A4H17kwvk=
-X-Gm-Gg: AfdE7ck1+EnfAg02VijUN1m7dV5YqyYR7S88dSj2cmuxF6beU4Jo/6SsggsHzXRhJJh
-	ZK6/G75dzwVAC+Y7tRF4yzZt8aadFqLXfTr0KzoxIGambc+QbaqozuFFXOUSZnbVqUDjOcDXhar
-	nYePV+F+NzoyRm9VrJ9mfoekrgBqOphhSHN3fmY6pJkb0go5zHaOOh+KNfIstBWQ7PRso1fY4N6
-	FMgllJbJWksvS0xcDFm8S/7G3bjkEMt561GIYO2QLZqPPJ0qk2vr2tYmH6Ql4pPaUG/wWU=
-X-Received: by 2002:a17:906:f049:b0:c15:f395:ac31 with SMTP id
- a640c23a62f3a-c16b48969aemr170809166b.61.1784311919730; Fri, 17 Jul 2026
- 11:11:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=hunenet.nl header.i=@hunenet.nl header.b="MM1wiXuI"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=pWhstw+YWNwkriJuoRpd/SWs30ys6n0SdGlPqNpAoLT31mn90xlq5hruTLbjJbu7TQftBomRNYYPD8wwLfVbsO0PpcsNdDatlYjZB782xKTJJG8XFNaVGP4ZxYttbhgKONw96T2P4JpJRKrR9zFAlEB/i+bt0mm04lrA7rf/wMAbGg1aBlRKOFpUWCXR8QXu5GHVHdI8gL3DLag5B1zoOiaxnbmS6etM7uhQZJ2nCFp+eP/1ziQJMkH8MGRqGxixCib0QFLTvEoLTxtq3G3aONnx118TW29B4RT7LB34cpU/dorrr4bf74lkHHvvN8P/k+ZbyRRfFiqdsv2U3QYapw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4SL+mqNgn9kCiKXcARl//GLAjCivuS2tTOij+0ETvAM=;
+ b=A2iMTKu+GwMrSCkrhfDqmT0mxr6XvkVnOHR4PivZfKsRqMRvM87j0M6A6ZEysOrbaHQANWXxgs547nJsyDb24bcorhLALg2MOBwB8oI/UoSt2PIL6iAs3mIOV9EfU+6KnUA3VRwn9y7oTFapNDR7g3MJDI1GrRIJBw39EqkxFTAYXHxM5cAzZLvba27k4TfPWuAzRKXXReqtuWOocbQl4MBLKsMMQBpUByxsePadGPZxhRox5oKabZSEvud7nwmf8vfS2mMfZ/+6QLy97B0+JUGS3R10hrLPYAyVycJhMLHa0lJu/Ptk/OdAtpUy/qvYtdb6HHnpGx4UZYiEwS4Skg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=hunenet.nl; dmarc=pass action=none header.from=hunenet.nl;
+ dkim=pass header.d=hunenet.nl; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hunenet.nl;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4SL+mqNgn9kCiKXcARl//GLAjCivuS2tTOij+0ETvAM=;
+ b=MM1wiXuInNbMSca1yp5GLFf+i7MPHQdpsJQBLpobFjHgz/8HNzq1rP4CbDCbvoY9h6MCA0n3fkgCFcPdNMQSHoNTEtpxLIxmT15ZsV63M5mngK/u2u5LsuVYhsyiwrqxuHxqc1DK9AO81V+rTKUdItbFleIgEA99k6cE6GVOG6DRf8RAfBTgHVaLbw5FCaFtzExT8sD+BLULGDQLqUiCNFxILDWjcu7Nk4nd0exwO8vkfxhUDrcd6rVrs898DGd+GL9K2RCaRptUfKMX0F8GRVPuL8v7guq+AhD211tyuWmKPLLjeDlv0XDHIs78/pTvOYN3QTU5ULADrhNVA7Yz6g==
+Received: from AM0PR05MB6131.eurprd05.prod.outlook.com (2603:10a6:208:127::11)
+ by PA6PR05MB11904.eurprd05.prod.outlook.com (2603:10a6:102:523::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.12; Fri, 17 Jul
+ 2026 19:15:03 +0000
+Received: from AM0PR05MB6131.eurprd05.prod.outlook.com
+ ([fe80::6627:e315:c3e6:bf01]) by AM0PR05MB6131.eurprd05.prod.outlook.com
+ ([fe80::6627:e315:c3e6:bf01%5]) with mapi id 15.21.0223.011; Fri, 17 Jul 2026
+ 19:15:03 +0000
+From: "G.W. Kant - Hunenet B.V." <g.w.kant@hunenet.nl>
+To: Roger Heflin <rogerheflin@gmail.com>
+CC: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>,
+	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "yukuai@fygo.io"
+	<yukuai@fygo.io>
+Subject: Re: Subject: RFC: Read repair for md RAID1 after mirror read failures
+Thread-Topic: Subject: RFC: Read repair for md RAID1 after mirror read
+ failures
+Thread-Index:
+ AQHdFAT9gXN+3UMPxEiBW2BLzju2krZuDRaAgACTK4CAADoKgIAABn6AgAJl+ACAAEbMAIAAUbUAgAAoKwCAABGrAA==
+Date: Fri, 17 Jul 2026 19:15:02 +0000
+Message-ID: <629fb5df-9c20-4fe0-8513-1993332bdb50@hunenet.nl>
+References: <8dcbfa43-c687-49bb-81b5-e6b8e8848c77@hunenet.nl>
+ <m2y0fcesbe.fsf@gmail.com> <cff97a09-ee38-4785-9a45-1fd562fbaf5e@hunenet.nl>
+ <m2jyqwduba.fsf@f8410a22-cd7b-4baf-acf5-82353315d5e5.fritz.box>
+ <m2ech4dt8k.fsf@f8410a22-cd7b-4baf-acf5-82353315d5e5.fritz.box>
+ <59fa3f9f-eda1-4f8a-917d-8f6612639a1b@hunenet.nl>
+ <CAAMCDeefBEP0c4oW3iX4_cbZBLDuyfuAtCREtFgiH-qS4ZaiXQ@mail.gmail.com>
+ <fd1f940e-4382-4a8a-9d16-e70a708da3cb@hunenet.nl>
+ <CAAMCDefN+a_mMWByAMPEkCo6sT2iyi-b8J2et5LsJpxZtZBzQQ@mail.gmail.com>
+In-Reply-To:
+ <CAAMCDefN+a_mMWByAMPEkCo6sT2iyi-b8J2et5LsJpxZtZBzQQ@mail.gmail.com>
+Accept-Language: nl-NL, en-US
+Content-Language: nl-NL
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=hunenet.nl;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: AM0PR05MB6131:EE_|PA6PR05MB11904:EE_
+x-ms-office365-filtering-correlation-id: 581fc0e4-4207-4913-f660-08dee437b423
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|23010399003|376014|366016|1800799024|38070700021|6133799003|56012099006|4143699003|10067099003|22082099003|18002099003|3023799007;
+x-microsoft-antispam-message-info:
+ x99Q5MNlk6LhRRLzJgXAOqMXRDwvybdb9yw9f9fe735tfpU936rn1fFmBbRz4rQiwibriNKv8nRWgduteeakMnnKhEchRYLNx8q0dxEKhgPMuNrbGCZDyF8xEP2EaK3h7YBNDRDZLY4IlWJkZ5qdRAjwkWSP06auvU6UECj87TmS24HWtFgQpCWGOCjO+2JEa5AG6NJHSKb2d/J6beOrPCHDBGkuvWNmPpEHbunyuklPE+Ct2W3Dx+et6/UQq3NBaiDOrsjzWWg5jW2DbItBp53VqJnizGZHA+ECEjHXd2+SLTqpnNTGJy23EBWO12W2xoY+4EXmrdn9N2npk5ePUrp2gcUqY2/yN0/m82JaLVjaciSdXiirDianJxkHwc0+oDU4lwy2JsKkLQjsS+WsmOtDzlbDsK/Um3G63LMcQvb1TF/2OFqed/S5g37byp6UNvWBMnklaoxNN3GAE1xE6hnRlGm/h6daS4XTEig7kIsYvwxqf2ptzTEEQlQbIAdFBcQlJPCI/DaTvMtNBb5uqn6DA86yjVlDNHCUEOE0AgP11SEoy7rhito6POvif8AJYaBLhKDnHmP3K7SBsl+/jWyrNxBXQQSASe9ndI3b7jgGlX+sWR1kti7ejbA3K3nvyJdxhvLhOM2kHl15+iB1FcRLp0uM9c593oZm67SlbpDpJ+Q13GAFTdNyGf6TjlALHcYoI6w//HUzkX2AVu6WX/8frFzoaIb0YWNp3/yInNQ=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM0PR05MB6131.eurprd05.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(366016)(1800799024)(38070700021)(6133799003)(56012099006)(4143699003)(10067099003)(22082099003)(18002099003)(3023799007);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?WE14eTFYcUduYjlpMkJkQlFjcDNyODZqN1NoUTkvU2tKTlBmd2U3endvWDFa?=
+ =?utf-8?B?alVvRzNXQjlscm4xVVVPOUZJQ1IycHp6ZFNQaWdwcGJZbWVvNzZockxNK3VL?=
+ =?utf-8?B?ZkI2Y0FjTE5vWEtLSjI3OTg0cTlOb0EyNFBGSkZLaXcxcVVUbFViNUJDSzJW?=
+ =?utf-8?B?eEdVajVXMzhaM2RaRGNDM0h3SXh2ZnFDTGIzQ0wvZEhWSU5HTVZnKzR4UjRW?=
+ =?utf-8?B?MVAwclRkZ2F1R0Mxd2tFblJaMEZFeEVlK0dxZUFQY2dJL2FFOHNKY3E3NGN6?=
+ =?utf-8?B?UDRvMG1XRU04WUhZa21oWDg1TU0xQ253aTN1OTlxQXZqbzBIdEV1R3pSQkpw?=
+ =?utf-8?B?NGF6SFlSNUlVT3BmL1UwUk91SVRRTGwzOXhKMm9iTytQUjVrQnFJeFlqWVZ2?=
+ =?utf-8?B?NUsxUThqM24vTm5wV09maUFzUlNhMDNyOFdGL2F6NFY1QVJPeUczcmpNdzA2?=
+ =?utf-8?B?dFNNRnFMR01pZGUvQzlSSFplTU4zc2piZjY0QUJpei81U2hLVWlvTjR3QUpW?=
+ =?utf-8?B?eDBHVHdYcnRac0JHbGZWODB4SlpzSktxWGVUN0FOV3dpdytmWjc3MTJRU2JF?=
+ =?utf-8?B?Mkt3eXM4OWJmMzdYOEdFeXZwMENkRHlDNWYzbHY4cUN3N0FpdmFhektCTGMw?=
+ =?utf-8?B?d3BhYjVLenl2WG5CeDAvb2Z2ZE9qYVgyc1Y2WTF5bWtoMGtCVkwvNitJMDdj?=
+ =?utf-8?B?WE1ZNWh5cms2Nk9YMVZGdU1PK1haSlRiNGJWNGYzMi9jMktJWG10Zk50UEg4?=
+ =?utf-8?B?aWJEc3JNbE5tV3dxYnpSWjFGSWx4MllhZTdWOVRXUFc3V2M2ZEpsejdMR25U?=
+ =?utf-8?B?cXcrNGl3UXA3TnlidUZ0MlNiU1NHc3FnVmZvTHdzeHVRWEl4dCt2V1N2a2ZI?=
+ =?utf-8?B?Wmg2Wml5VU93K0tteEZZTmcvQ3lSSmEwM2tReW5kdnhaK0dCY2FkcVRlMW1E?=
+ =?utf-8?B?YmVGVW90NEQ3UkcxRGo2ZXN0RnIwTTNjZWcvMlNuLzJIUW5kQTZ2RkhKblZD?=
+ =?utf-8?B?RnVqbVhKWmprSFk4UUpoUzQrcFp1OUhhRFlGZWNrKzlhTTlPQlJwaUpsU090?=
+ =?utf-8?B?K0tOMVNLNTdJNkplS282akxHdlNUcFowb2NHa3FkN1NZek0zYXlNYWdEQlFE?=
+ =?utf-8?B?Q3RodnYyQzdxTGFpOUlDNHZtWkdsSzNZR3M2cklSK0hPRklkeW1QeTJMRFZr?=
+ =?utf-8?B?d1VEMXJSQldPQmlYWng4dWNrNjRiaWdyclNqOVZIVjFQZkViVzM3YjJpalhr?=
+ =?utf-8?B?Ui84K1NLM0o5OXREbTl4SUNidFhhMnZseTE5OTZFaWt5NjZJQmYyWEVEV0xt?=
+ =?utf-8?B?Q21pZXZSTi96R2c0QzNaVmdoNjhrb09XZmlZNzV0YnRNSlNVa21zcVhrR0k2?=
+ =?utf-8?B?UTl3cmRlVlpVTVBvRXFyN29aZXI4UVcvdHBhZmxESUY5TmhvVmVjc2c3Szgy?=
+ =?utf-8?B?dWErZW9WWWZMZ2haZ2V2UEZDaUVOcjZOZU42N2VVUU1HS1dha0hjTEJlQU1S?=
+ =?utf-8?B?aGEzZWNNcEM3bDQ0M1Rtd3NsUUl3LzBKeTNERmxTTDc4Nno1eGR2SVJ6dW5Y?=
+ =?utf-8?B?WnV3M3lnM3gvSXhUWm5lWkZsOGs0RmJhTHZoVmR6S1RjdG9ZVURoWEhPY25M?=
+ =?utf-8?B?aEluUnlzVnp0a0RrZDdqZ3hXNmpmSThwWTRvMFhrdmVuWC9XTjVJdm1zWjZt?=
+ =?utf-8?B?eWZWU25zTW9XdGlib2grYno4TCswQU85R0JKMk95cjJoTjk5Q2VnUXF2dTFm?=
+ =?utf-8?B?U0RxWW9LWUZjcHgzcE5jMFc4czQ2VXpkaDAxTHRXUUU5NlBQQ255bWV5Z1pU?=
+ =?utf-8?B?YzFzY3VGOU1WcFZldFhoNUZYcjZkWXp6R0N0bFZRWGlxNTVsZlExN3ZuRzZF?=
+ =?utf-8?B?WkR4V29qU3hSYklERXlkcTAxSFpsaG1nMzJWQThObVRUbkl3UUdFeGFXS3FZ?=
+ =?utf-8?B?ckJxT20zYnVFR1BpMzJyalZnelJFZUZlSmFFUVd4YzRnR3dBdkI2QWF0cUFn?=
+ =?utf-8?B?SW1qc25MRUhCQVM1K1JIeGxoUFVyaThjcVFsTTl4bldKem9GZWpsSWoxOGRO?=
+ =?utf-8?B?cmlnTFpyT05Idm9URWR0NnNsWkhGSTVMYzlXRTBNQTVVRHRzRVd1aUxrellK?=
+ =?utf-8?B?c3hpT3k2QXBJZHFaNDc2S3ZyT3ptZE5UTlV2aHcwYWZMYjZzbWZWb2xOZDdO?=
+ =?utf-8?B?b3plVzVHOTZhSWllQndXek5VQ0xLc1FXWmtreXh0N0d3bUg5cWRXelNicFo4?=
+ =?utf-8?B?aEd4KzluSmQ1Nnk2WmFuZjdBeFhCbkc5N0xCM3g4YmZCblNlYnRtQjJjTUpB?=
+ =?utf-8?Q?pQhYxSd56g4EBHGMG1?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <36D6DBB394B6E346B2547EA58D2D6CF0@eurprd05.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <8dcbfa43-c687-49bb-81b5-e6b8e8848c77@hunenet.nl>
- <m2y0fcesbe.fsf@gmail.com> <cff97a09-ee38-4785-9a45-1fd562fbaf5e@hunenet.nl>
- <m2jyqwduba.fsf@f8410a22-cd7b-4baf-acf5-82353315d5e5.fritz.box>
- <m2ech4dt8k.fsf@f8410a22-cd7b-4baf-acf5-82353315d5e5.fritz.box>
- <59fa3f9f-eda1-4f8a-917d-8f6612639a1b@hunenet.nl> <CAAMCDeefBEP0c4oW3iX4_cbZBLDuyfuAtCREtFgiH-qS4ZaiXQ@mail.gmail.com>
- <fd1f940e-4382-4a8a-9d16-e70a708da3cb@hunenet.nl>
-In-Reply-To: <fd1f940e-4382-4a8a-9d16-e70a708da3cb@hunenet.nl>
-From: Roger Heflin <rogerheflin@gmail.com>
-Date: Fri, 17 Jul 2026 13:11:48 -0500
-X-Gm-Features: AUfX_myRA90NUAgPg9Eng2Vwkfn7itbObBVthCS6pdyzIruZ4djKUQ5qABmqcL8
-Message-ID: <CAAMCDefN+a_mMWByAMPEkCo6sT2iyi-b8J2et5LsJpxZtZBzQQ@mail.gmail.com>
-Subject: Re: Subject: RFC: Read repair for md RAID1 after mirror read failures
-To: "G.W. Kant - Hunenet B.V." <g.w.kant@hunenet.nl>
-Cc: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>, 
-	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "yukuai@fygo.io" <yukuai@fygo.io>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-OriginatorOrg: hunenet.nl
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: AM0PR05MB6131.eurprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 581fc0e4-4207-4913-f660-08dee437b423
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jul 2026 19:15:02.9198
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 887aa16f-e08f-4cfb-bc70-8f3f25a72a41
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: kFHthRYyjVzdQLxdSyrkKIggz/GKsZNO5B1czSMxw6ltb0wOJM6JpiP9oQJoGyE6NkWFqHTjSn9HNhCIlFSAUQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA6PR05MB11904
 
-The drives are said to do refreshes when it finds a weak sector when
-doing a long media test.
-
-The manufactures do not seem to document any disk internals, they
-never have.    All manufactures claim their magic firmware/processes
-give them a competitive advantage and so don't disclose what goes on.
- Pretty much all of the hardware is handled this way, with poor
-external documentation.
-
-Smart seems to only disclose the common settings/errors, and don't
-seem to allow anything except setting changes, and to run defined
-tests (short, long and similar).
-
-I have been told by a WD engineer that their internal tools have the
-ability to read out a number of other parameters that aren't exposed
-to SMART, and may also be able to do other things.  Those tools are
-not externally available and the when I had access to one of those
-tools (for a few hours so I could get it into a high security site
-with the WD engineer) I had to agree to not keep it.
-
-I watched one of the tools be used on some disks by a WD engineer that
-went onsite (but I don't remember if I saw any non-SMART like data on
-the screen--it was 20 years ago) to check for errors and determine if
-WD would RMA/replace (without media return) around 1000 disks.
-
-I have been reading smart data for as long as smart has been around,
-and outside of maybe at most 10 parameters, most of the rest of the
-parms are rather useless because the manufacturer does not supply a
-decoder ring to make any sense of what said parameter is really
-measuring.
-
-And whatever the manufactures document would be what was documented
-before the disk firmware was completely finished, and may or may not
-have really worked in the given firmware.   I have ran into disks that
-would refuse to relocate most bad sectors (even though older disk by
-the same company did this just fine), and a number of other weird disk
-actions indicating that the firmware does not always even implement
-the features that they are supposed to correctly in all disks.
-
-Basically if the smart tools team actually knows anything about the
-disk internals, they are almost certainly under an NDA and cannot tell
-you (likely this is not the case), and if they aren't under an NDA
-they were not told anything.
-
-And contrary to what other experts claim (that disks regularly will
-return bad data--ie 1 in 1e15 sectors), I have never seen the disk
-itself return bad data(I have seen raid controllers deliver corrupted
-data many times from both hardware failures and defective raid
-controller firmware), if the sector is read successfully it is the
-right data simply because the disks ECC correction uses so many bits
-that the chance of a corrupted sector being corrupted and still
-passing ECC is so low as to not be worried about.
-
-On Fri, Jul 17, 2026 at 10:48=E2=80=AFAM G.W. Kant - Hunenet B.V.
-<g.w.kant@hunenet.nl> wrote:
->
-> On 7/17/26 12:55 PM, Roger Heflin wrote:
-> > On Fri, Jul 17, 2026 at 1:42=E2=80=AFAM G.W. Kant - Hunenet B.V.
-> > <g.w.kant@hunenet.nl> wrote:
-> >>
-> >> On 7/15/26 8:04 PM, Abd-Alrhman Masalkhi wrote:
-> >>> On Wed, Jul 15, 2026 at 19:41 +0200, Abd-Alrhman Masalkhi wrote:
-> >>>> Hi Dion,
-> >>>>
-> >>>
-> >>> I'm not entirely sure about the media refresh part on modern drives..=
-.,
-> >>> I'll have to look into that first.
-> >>>
-> >>
-> >> Maybe, we could ask the smartmontools people about this. They should
-> >> know this. But I have never read about a refresh action in their
-> >> documentation.
-> >>
-> >> Best regards,
-> >>
-> >> Dion
-> >
-> > I am not sure why you believe the smartmontools people would have ANY
-> > idea about the refresh action.  Smartmontools simply exposes the
-> > internal drive counters that the drive manufacturer exposes and/or
-> > documents.
-> >
-> > The refresh action is 100% entirely controlled by the drive's firmware
-> > and has nothing to do with the smartmontools, and the smart counters
-> > may not show any of the internal ECC forced rewrites.
-> >
-> > As far as I can tell in general the drive does what it wants to
-> > (refresh or not, relocation bad sectors or not) and there is NO way
-> > that I have ever found to force the firmware do do something else.
->
-> When you refer to "the refresh action", are you referring to a
-> documented firmware mechanism that periodically rewrites successfully
-> readable sectors, or are you using the term more generally for any
-> internal media maintenance the drive may perform?
->
-> I have not yet found documentation describing such a refresh mechanism
-> for commodity HDDs. That is why I mentioned the smartmontools
-> developers: not because I expect smartmontools to implement or control
-> such a mechanism, but because they are familiar with the capabilities
-> that modern drives expose through SMART and related standards.
->
-> I'm trying to understand what is publicly known about this.
->
-> Best regards,
->
-> Dion Kant
->
+T24gNy8xNy8yNiA4OjExIFBNLCBSb2dlciBIZWZsaW4gd3JvdGU6DQo+IFRoZSBkcml2ZXMgYXJl
+IHNhaWQgdG8gZG8gcmVmcmVzaGVzIHdoZW4gaXQgZmluZHMgYSB3ZWFrIHNlY3RvciB3aGVuDQo+
+IGRvaW5nIGEgbG9uZyBtZWRpYSB0ZXN0Lg0KPiANCj4gVGhlIG1hbnVmYWN0dXJlcyBkbyBub3Qg
+c2VlbSB0byBkb2N1bWVudCBhbnkgZGlzayBpbnRlcm5hbHMsIHRoZXkNCj4gbmV2ZXIgaGF2ZS4g
+ICAgQWxsIG1hbnVmYWN0dXJlcyBjbGFpbSB0aGVpciBtYWdpYyBmaXJtd2FyZS9wcm9jZXNzZXMN
+Cj4gZ2l2ZSB0aGVtIGEgY29tcGV0aXRpdmUgYWR2YW50YWdlIGFuZCBzbyBkb24ndCBkaXNjbG9z
+ZSB3aGF0IGdvZXMgb24uDQo+ICAgUHJldHR5IG11Y2ggYWxsIG9mIHRoZSBoYXJkd2FyZSBpcyBo
+YW5kbGVkIHRoaXMgd2F5LCB3aXRoIHBvb3INCj4gZXh0ZXJuYWwgZG9jdW1lbnRhdGlvbi4NCj4g
+DQo+IFNtYXJ0IHNlZW1zIHRvIG9ubHkgZGlzY2xvc2UgdGhlIGNvbW1vbiBzZXR0aW5ncy9lcnJv
+cnMsIGFuZCBkb24ndA0KPiBzZWVtIHRvIGFsbG93IGFueXRoaW5nIGV4Y2VwdCBzZXR0aW5nIGNo
+YW5nZXMsIGFuZCB0byBydW4gZGVmaW5lZA0KPiB0ZXN0cyAoc2hvcnQsIGxvbmcgYW5kIHNpbWls
+YXIpLg0KPiANCj4gSSBoYXZlIGJlZW4gdG9sZCBieSBhIFdEIGVuZ2luZWVyIHRoYXQgdGhlaXIg
+aW50ZXJuYWwgdG9vbHMgaGF2ZSB0aGUNCj4gYWJpbGl0eSB0byByZWFkIG91dCBhIG51bWJlciBv
+ZiBvdGhlciBwYXJhbWV0ZXJzIHRoYXQgYXJlbid0IGV4cG9zZWQNCj4gdG8gU01BUlQsIGFuZCBt
+YXkgYWxzbyBiZSBhYmxlIHRvIGRvIG90aGVyIHRoaW5ncy4gIFRob3NlIHRvb2xzIGFyZQ0KPiBu
+b3QgZXh0ZXJuYWxseSBhdmFpbGFibGUgYW5kIHRoZSB3aGVuIEkgaGFkIGFjY2VzcyB0byBvbmUg
+b2YgdGhvc2UNCj4gdG9vbHMgKGZvciBhIGZldyBob3VycyBzbyBJIGNvdWxkIGdldCBpdCBpbnRv
+IGEgaGlnaCBzZWN1cml0eSBzaXRlDQo+IHdpdGggdGhlIFdEIGVuZ2luZWVyKSBJIGhhZCB0byBh
+Z3JlZSB0byBub3Qga2VlcCBpdC4NCj4gDQo+IEkgd2F0Y2hlZCBvbmUgb2YgdGhlIHRvb2xzIGJl
+IHVzZWQgb24gc29tZSBkaXNrcyBieSBhIFdEIGVuZ2luZWVyIHRoYXQNCj4gd2VudCBvbnNpdGUg
+KGJ1dCBJIGRvbid0IHJlbWVtYmVyIGlmIEkgc2F3IGFueSBub24tU01BUlQgbGlrZSBkYXRhIG9u
+DQo+IHRoZSBzY3JlZW4tLWl0IHdhcyAyMCB5ZWFycyBhZ28pIHRvIGNoZWNrIGZvciBlcnJvcnMg
+YW5kIGRldGVybWluZSBpZg0KPiBXRCB3b3VsZCBSTUEvcmVwbGFjZSAod2l0aG91dCBtZWRpYSBy
+ZXR1cm4pIGFyb3VuZCAxMDAwIGRpc2tzLg0KPiANCj4gSSBoYXZlIGJlZW4gcmVhZGluZyBzbWFy
+dCBkYXRhIGZvciBhcyBsb25nIGFzIHNtYXJ0IGhhcyBiZWVuIGFyb3VuZCwNCj4gYW5kIG91dHNp
+ZGUgb2YgbWF5YmUgYXQgbW9zdCAxMCBwYXJhbWV0ZXJzLCBtb3N0IG9mIHRoZSByZXN0IG9mIHRo
+ZQ0KPiBwYXJtcyBhcmUgcmF0aGVyIHVzZWxlc3MgYmVjYXVzZSB0aGUgbWFudWZhY3R1cmVyIGRv
+ZXMgbm90IHN1cHBseSBhDQo+IGRlY29kZXIgcmluZyB0byBtYWtlIGFueSBzZW5zZSBvZiB3aGF0
+IHNhaWQgcGFyYW1ldGVyIGlzIHJlYWxseQ0KPiBtZWFzdXJpbmcuDQo+IA0KPiBBbmQgd2hhdGV2
+ZXIgdGhlIG1hbnVmYWN0dXJlcyBkb2N1bWVudCB3b3VsZCBiZSB3aGF0IHdhcyBkb2N1bWVudGVk
+DQo+IGJlZm9yZSB0aGUgZGlzayBmaXJtd2FyZSB3YXMgY29tcGxldGVseSBmaW5pc2hlZCwgYW5k
+IG1heSBvciBtYXkgbm90DQo+IGhhdmUgcmVhbGx5IHdvcmtlZCBpbiB0aGUgZ2l2ZW4gZmlybXdh
+cmUuICAgSSBoYXZlIHJhbiBpbnRvIGRpc2tzIHRoYXQNCj4gd291bGQgcmVmdXNlIHRvIHJlbG9j
+YXRlIG1vc3QgYmFkIHNlY3RvcnMgKGV2ZW4gdGhvdWdoIG9sZGVyIGRpc2sgYnkNCj4gdGhlIHNh
+bWUgY29tcGFueSBkaWQgdGhpcyBqdXN0IGZpbmUpLCBhbmQgYSBudW1iZXIgb2Ygb3RoZXIgd2Vp
+cmQgZGlzaw0KPiBhY3Rpb25zIGluZGljYXRpbmcgdGhhdCB0aGUgZmlybXdhcmUgZG9lcyBub3Qg
+YWx3YXlzIGV2ZW4gaW1wbGVtZW50DQo+IHRoZSBmZWF0dXJlcyB0aGF0IHRoZXkgYXJlIHN1cHBv
+c2VkIHRvIGNvcnJlY3RseSBpbiBhbGwgZGlza3MuDQo+IA0KPiBCYXNpY2FsbHkgaWYgdGhlIHNt
+YXJ0IHRvb2xzIHRlYW0gYWN0dWFsbHkga25vd3MgYW55dGhpbmcgYWJvdXQgdGhlDQo+IGRpc2sg
+aW50ZXJuYWxzLCB0aGV5IGFyZSBhbG1vc3QgY2VydGFpbmx5IHVuZGVyIGFuIE5EQSBhbmQgY2Fu
+bm90IHRlbGwNCj4geW91IChsaWtlbHkgdGhpcyBpcyBub3QgdGhlIGNhc2UpLCBhbmQgaWYgdGhl
+eSBhcmVuJ3QgdW5kZXIgYW4gTkRBDQo+IHRoZXkgd2VyZSBub3QgdG9sZCBhbnl0aGluZy4NCj4g
+DQo+IEFuZCBjb250cmFyeSB0byB3aGF0IG90aGVyIGV4cGVydHMgY2xhaW0gKHRoYXQgZGlza3Mg
+cmVndWxhcmx5IHdpbGwNCj4gcmV0dXJuIGJhZCBkYXRhLS1pZSAxIGluIDFlMTUgc2VjdG9ycyks
+IEkgaGF2ZSBuZXZlciBzZWVuIHRoZSBkaXNrDQo+IGl0c2VsZiByZXR1cm4gYmFkIGRhdGEoSSBo
+YXZlIHNlZW4gcmFpZCBjb250cm9sbGVycyBkZWxpdmVyIGNvcnJ1cHRlZA0KPiBkYXRhIG1hbnkg
+dGltZXMgZnJvbSBib3RoIGhhcmR3YXJlIGZhaWx1cmVzIGFuZCBkZWZlY3RpdmUgcmFpZA0KPiBj
+b250cm9sbGVyIGZpcm13YXJlKSwgaWYgdGhlIHNlY3RvciBpcyByZWFkIHN1Y2Nlc3NmdWxseSBp
+dCBpcyB0aGUNCj4gcmlnaHQgZGF0YSBzaW1wbHkgYmVjYXVzZSB0aGUgZGlza3MgRUNDIGNvcnJl
+Y3Rpb24gdXNlcyBzbyBtYW55IGJpdHMNCj4gdGhhdCB0aGUgY2hhbmNlIG9mIGEgY29ycnVwdGVk
+IHNlY3RvciBiZWluZyBjb3JydXB0ZWQgYW5kIHN0aWxsDQo+IHBhc3NpbmcgRUNDIGlzIHNvIGxv
+dyBhcyB0byBub3QgYmUgd29ycmllZCBhYm91dC4NCg0KUm9nZXIsDQoNClRoYW5rcyBmb3Igc2hh
+cmluZyB0aGlzLiBJIGxpa2UgeW91ciBvYnNlcnZhdGlvbjoNCg0KIi4uLmlmIHRoZSBzZWN0b3Ig
+aXMgcmVhZCBzdWNjZXNzZnVsbHkgaXQgaXMgdGhlIHJpZ2h0IGRhdGEuLi4iDQoNCkl0IG1hZGUg
+bWUgbG9vayBhdCB0aGUgcHJvYmxlbSBmcm9tIGFuIGluZm9ybWF0aW9uLXRoZW9yeSBwZXJzcGVj
+dGl2ZS4NCg0KVG8gbWUgdGhlcmUgYXJlIGFjdHVhbGx5IHR3byBjYXNjYWRlZCBjb21tdW5pY2F0
+aW9uIGNoYW5uZWxzLg0KDQpUaGUgZmlyc3QgaXMgdGhlIHRpbWUgY2hhbm5lbDogZnJvbSB0aGUg
+bW9tZW50IHRoZSBkYXRhIGlzIHdyaXR0ZW4gdG8gDQp0aGUgbWFnbmV0aWMgbWVkaXVtIHVudGls
+IHRoZSBkcml2ZSBmaXJtd2FyZSBoYXMgcmVjb25zdHJ1Y3RlZCB0aGUgDQpzZWN0b3IgdXNpbmcg
+aXRzIEVDQy4gSWYgdGhlIEVDQyBkZWNvZGVyIHN1Y2NlZWRzLCB0aGVuLCBhcyB5b3UgcG9pbnQg
+DQpvdXQsIHRoZSBwcm9iYWJpbGl0eSB0aGF0IHRoZSByZXR1cm5lZCBzZWN0b3IgaXMgc3RpbGwg
+aW5jb3JyZWN0IGlzIA0KZXh0cmFvcmRpbmFyaWx5IHNtYWxsLiBJbiBvdGhlciB3b3JkcywgdGhl
+IGluZm9ybWF0aW9uIGhhcyBzdXJ2aXZlZCANCnN0b3JhZ2UgaW4gdGltZS4NCg0KT25seSBhZnRl
+ciB0aGF0IGRvZXMgdGhlIHNlY29uZCBjaGFubmVsIGJlZ2luOiB0cmFuc3BvcnQgb2YgdGhhdCBz
+ZWN0b3IgDQp0aHJvdWdoIHRoZSBTQVRBL1NBUyBsaW5rLCBjb250cm9sbGVyLCBETUEsIG1lbW9y
+eSwgUkFJRCBsYXllciBhbmQgDQpmaW5hbGx5IHRvIHRoZSBmaWxlc3lzdGVtLiBUaGlzIGlzIHRo
+ZSBzcGFjZSBjaGFubmVsLiBDb3JydXB0aW9uIGhlcmUgaXMgDQphIGRpZmZlcmVudCBjbGFzcyBv
+ZiBlcnJvci4gQXMgeW91IG1lbnRpb24sIFJBSUQgY29udHJvbGxlcnMgb3Igb3RoZXIgDQpoYXJk
+d2FyZSBjYW4gaW50cm9kdWNlIGNvcnJ1cHRpb24gYWZ0ZXIgdGhlIGRpc2sgaGFzIGFscmVhZHkg
+DQpyZWNvbnN0cnVjdGVkIHRoZSBjb3JyZWN0IHNlY3Rvci4NCg0KVmlld2VkIHRoaXMgd2F5LCB0
+aGUgZGlzayBFQ0MgYW5kIGEgZmlsZXN5c3RlbSBjaGVja3N1bSAoc3VjaCBhcyBCdHJmcyANCm9y
+IFpGUykgYXJlIG5vdCBjb21wZXRpbmcgbWVjaGFuaXNtc+KAlHRoZXkgcHJvdGVjdCB0d28gZGlm
+ZmVyZW50IA0KY29tbXVuaWNhdGlvbiBjaGFubmVscy4NCg0KRGlzayBFQ0MgcHJvdGVjdHMgdGhl
+IHRlbXBvcmFsIHN0b3JhZ2UgY2hhbm5lbC4NCkJ0cmZzIGNoZWNrc3VtcyBwcm92aWRlIGVuZC10
+by1lbmQgcHJvdGVjdGlvbiBvdmVyIHRoZSB0cmFuc3BvcnQgKHNwYWNlKSANCmNoYW5uZWwuDQoN
+CkR1cmluZyBteSByZWNlbnQgaW52ZXN0aWdhdGlvbiBpbnRvIGEgQnRyZnMgZGV2aWNlIHJlbW92
+YWwgd2l0aCBodW5kcmVkcyANCm9mIEFUQSBVTkMgZXJyb3JzLCB0aGlzIGRpc3RpbmN0aW9uIGJl
+Y2FtZSBxdWl0ZSB1c2VmdWwuIFRoZSBMaW51eCANCnN0b3JhZ2Ugc3RhY2sgKE1EIFJBSUQxIGlu
+IHBhcnRpY3VsYXIpIG1hbmFnZWQgdG8gcmVjb3ZlciB0aGUgc2VjdG9yIA0KZnJvbSB0aGUgZGlz
+aywgYW5kIG9uY2UgdGhlIGRyaXZlIGRlbGl2ZXJlZCBpdCBzdWNjZXNzZnVsbHksIHRoZSBCdHJm
+cyANCmNoZWNrc3VtIHZlcmlmaWVkIHRoYXQgdGhlIGRhdGEgaGFkIGFsc28gc3Vydml2ZWQgdGhl
+IHJlbWFpbmRlciBvZiB0aGUgDQpwYXRoIHRocm91Z2ggdGhlIHN5c3RlbS4NCg0KSSB0aG91Z2h0
+IHlvdSBtaWdodCBhcHByZWNpYXRlIHRoaXMgd2F5IG9mIGxvb2tpbmcgYXQgaXQuDQo=
