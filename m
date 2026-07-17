@@ -1,177 +1,209 @@
-Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11023096.outbound.protection.outlook.com [40.107.162.96])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A2C2314D35
-	for <linux-raid@vger.kernel.org>; Fri, 17 Jul 2026 15:48:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.96
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1FA235C1A9
+	for <linux-raid@vger.kernel.org>; Fri, 17 Jul 2026 18:12:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.51
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784303291; cv=fail; b=ZwdUgb3UaovrEUpWZF2zyJHLzQjGLR70a9hdw8ioD6MqYkbME+irFHTttbXC/jslGltLZLdrfOLvr/6pBYv443qGYSYJSwgmQ4p7A0yLsXEFtKMUdXjXVHoRkHnV7qeLhs/1XlAvsq45F1Fhwf8iB4haBync496lmv+1RSrOn9s=
+	t=1784311923; cv=pass; b=RGcF3WDrBtKVizs++66IMSHP+eJFbyUVV+FXP7rzwcDYUWQ6YQEGSVqm/bZQAT8lOyeVx/d3u3iXJPbutL+m3ya3G4ik2ftsIjI4iTmFS0Su3szTJHQ9vhwaE0Yfh//WCiD+isvzEnQSyUI+OIGZhVH1ZvauM3X63xCmt4/iyZM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784303291; c=relaxed/simple;
-	bh=5mhUZDtK/X4AWAw7MBPBHaunq0MEDsjI8XYHtlFWlOI=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=IXSN/5epRlpVc+IgNkPl3cufDUid9B1GRewTQQ/HlMripAuoDLoeWuZFE6cXQ+twPN6TeByNAqBjad8StTNI+ma7T37FV/WDZQd8JJSF8edFGLGPkOJVJ5yHDvBAmlz7XqhCarbRknI274t3kA1220HqsfINjvd44TJgONNmAMI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=hunenet.nl; spf=pass smtp.mailfrom=hunenet.nl; dkim=pass (2048-bit key) header.d=hunenet.nl header.i=@hunenet.nl header.b=jnzNH3CO; arc=fail smtp.client-ip=40.107.162.96
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=hunenet.nl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hunenet.nl
+	s=arc-20240116; t=1784311923; c=relaxed/simple;
+	bh=uUEDXeVaOVJQS4j0uEhTQisiTfLSqU5Vw2Lm4mCmlJA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ToxYM/f5PDSkbuqUSNoHKow/2CyREegl/G11tdPiLAJwoz0siH1pjLsqDufO9UpkR4dFyDbBujXPTT61XJ9M13XDTTqp1OIkwbF42ZfN3wFptGhUosexQ3c7Obq3LG2c4W96mxMNCu1N3TXd39hSbVVOkMb/LAL0O11AKh1SJik=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WdVZ8sCl; arc=pass smtp.client-ip=209.85.218.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=hunenet.nl header.i=@hunenet.nl header.b="jnzNH3CO"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Bz8a+JuorXkwoGqocm6XlxZehd5gHOKqNvvGC/a/FKhiJr3vw3oRvY0xkzffwaYiXxpESt/7XYEA1J+C5BccnGP/oufaNkOM/fXJmC4kKCMUEX+WtyfpWrEiWnkt7XEX48T8IUbOmIBU3nsThedQNK3v0NVDYHAAzOK8jBFLs3fo6CkvfF2v3b/XP/BsHKRtbFP1lnSL+vJxvAYjAVl/rcwJJ3xKDljBmRYShXSZDhv4oWoneL3WapjNkIAQ0JpQtgw1OxP8R7um8RrQ2S7EbjfSECQnWK1M+A7YW6iQh4m2ktk/XPz6/CMmS92qMYgXK8jqmrU4kkyb358wpHklGg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5mhUZDtK/X4AWAw7MBPBHaunq0MEDsjI8XYHtlFWlOI=;
- b=gexoeVlUj8nkKVwsHcFrGJ3OzYuOF56l6Dgwf4m2Q47edRmQRGKeKlr8jAfusHXeQGRRpkI9kIakG2Bf9r7bu/+ehlBpuwQiMdc6Qdi5AzEuVP36YZk3uA55kP0Rmz1CxCiYKEDp9fmbOxVmadsDVQbG53GZy22r0hSaJXsinC3CWBUGhouk+vc80O1qMEs670Zu6ASD7oBDR/5dLAoWXbI+n8Yf+9GeQwi6KDDE8ljE5KaJu7EsbGUxrkWCsM1zjL4JBFdCdbrt89ImhIYOCHpq5g4ond2cAyk7hDUvqO0j0/hy505Fc17rW1McKb7LK4ZWkUu6FzXu5fFgt4OqpA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=hunenet.nl; dmarc=pass action=none header.from=hunenet.nl;
- dkim=pass header.d=hunenet.nl; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hunenet.nl;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5mhUZDtK/X4AWAw7MBPBHaunq0MEDsjI8XYHtlFWlOI=;
- b=jnzNH3CONXWDnD0C0BAy1gbC98iSyfPzkGrpOEW53TI+YOMd9R+NL2U4cVMF0K+/aKaX5dVg0ifgHlrFcTDWuttz5bJ2mHjLS4xKraP3cH90oGk1uEP8bh3bvjDrTdBfWI4yen8GeJza9HnBR92rWuzBTNQa1f9nHCbG2hmQtJ23IseIRuMNezH47V8yNvz0qA1gUWKqhOp6O+8U5PBi5MSZ4W4HORMil5hmtA22+jrveitGUv84KO2H2nlup9/AYlCSXAgSs5hqNacJqNRz5bFH3FhDtExsOO2f02q+2+c3GNY9QHmLklZij1LLzQLqb8cIipVb40Pzbf2avn69Jg==
-Received: from VI1PR05MB6144.eurprd05.prod.outlook.com (2603:10a6:803:e8::33)
- by GVXPR05MB11556.eurprd05.prod.outlook.com (2603:10a6:150:1c1::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.13; Fri, 17 Jul
- 2026 15:48:03 +0000
-Received: from VI1PR05MB6144.eurprd05.prod.outlook.com
- ([fe80::6c89:8ead:10b6:b5a5]) by VI1PR05MB6144.eurprd05.prod.outlook.com
- ([fe80::6c89:8ead:10b6:b5a5%5]) with mapi id 15.21.0223.008; Fri, 17 Jul 2026
- 15:48:03 +0000
-From: "G.W. Kant - Hunenet B.V." <g.w.kant@hunenet.nl>
-To: Roger Heflin <rogerheflin@gmail.com>
-CC: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>,
-	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "yukuai@fygo.io"
-	<yukuai@fygo.io>
-Subject: Re: Subject: RFC: Read repair for md RAID1 after mirror read failures
-Thread-Topic: Subject: RFC: Read repair for md RAID1 after mirror read
- failures
-Thread-Index:
- AQHdFAT9gXN+3UMPxEiBW2BLzju2krZuDRaAgACTK4CAADoKgIAABn6AgAJl+ACAAEbMAIAAUbUA
-Date: Fri, 17 Jul 2026 15:48:02 +0000
-Message-ID: <fd1f940e-4382-4a8a-9d16-e70a708da3cb@hunenet.nl>
-References: <8dcbfa43-c687-49bb-81b5-e6b8e8848c77@hunenet.nl>
- <m2y0fcesbe.fsf@gmail.com> <cff97a09-ee38-4785-9a45-1fd562fbaf5e@hunenet.nl>
- <m2jyqwduba.fsf@f8410a22-cd7b-4baf-acf5-82353315d5e5.fritz.box>
- <m2ech4dt8k.fsf@f8410a22-cd7b-4baf-acf5-82353315d5e5.fritz.box>
- <59fa3f9f-eda1-4f8a-917d-8f6612639a1b@hunenet.nl>
- <CAAMCDeefBEP0c4oW3iX4_cbZBLDuyfuAtCREtFgiH-qS4ZaiXQ@mail.gmail.com>
-In-Reply-To:
- <CAAMCDeefBEP0c4oW3iX4_cbZBLDuyfuAtCREtFgiH-qS4ZaiXQ@mail.gmail.com>
-Accept-Language: nl-NL, en-US
-Content-Language: nl-NL
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=hunenet.nl;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: VI1PR05MB6144:EE_|GVXPR05MB11556:EE_
-x-ms-office365-filtering-correlation-id: 6cba605a-a2e6-439e-4af8-08dee41ac93b
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|10070799003|376014|23010399003|1800799024|366016|38070700021|6133799003|5023799004|56012099006|10067099003|4143699003|18002099003|22082099003;
-x-microsoft-antispam-message-info:
- HhZm9ELZXWKvi3s975oV8HSiOS3DPh5BwU/69jG4iUQ5LYPxYJt2tDEYUvLLzQ5n1xodlTqykFiF9Z3WqqeLxcC5Y3Jgnrcn+GHySzME8uJApTG02++v3gAredHLvuoxpCuVqgIlchIPv+/OkrJoLsUqk3aoWeqRrBnB7oHL5YKPS8ZmKrVyP72SXU8dJYXBp3TAyi83DsPRlh3YIYNpUb9VDQ7HHFQTFx1UTL4UKeyWPpdJ0OK609av8anppx9pM1SB0UPTbbTLu/+uf/I/iRCQl9fCStk6Mn89YjozfVvGyzaTmJrhz1KJLIDAoWiRmI4wHHO32Yf05Jt1KluWhRoP7LbUowqVO9ENc1yFp+Cw/imXq2BgicCo9TzrvI+bGmyoxtdTr1NIQPgq23aYWg6BB3S5Gjira0fjZ+8rEXjO+o3zh2O+G57Q/7OwlaOpxV/KUn7ZnDz2Nm54ZUCltf26PAdZSU2ESxH43xKZS+DuGh63CpCxaFJGDSn1uL1doT/yJ/MzfOezWYfzIWFPgBvRSmroAgTh8FGIFN6H+PDdK3f4MzFxoNvTL8SIb4g0+blJrRzy6oQbC32LAlsZMWeOm/bA3zGq2RNmuiFcni3IlvSASWnkTnFONrT8t7cupMV/TLJ3LixnVwoahJ9a8P6OpTPLFRQzWAS98+9ljli94Kx8GONN+i4Ukl9bpTg7sWux2fFvhNOtUKw7xH9ehCC2ubnkdsVNIcfIQhtd++E=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI1PR05MB6144.eurprd05.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(376014)(23010399003)(1800799024)(366016)(38070700021)(6133799003)(5023799004)(56012099006)(10067099003)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?bUZrMmFtSmJWOHZYdVQxMVBoSTZNaC8wUXBnRWQyaWhNMmxJRjhNUC9lMzhP?=
- =?utf-8?B?TnhZQ25YVHN5K3JheGlhdFgxUkdmS3czdW5nT3BVb1NaOGdOcEkxc1prUFQ1?=
- =?utf-8?B?YUN6L0N1Mjc2N1JCL0w1R3lmMnQrcStLRjZUZEM2dyttalpUeFZlMTgwVGoy?=
- =?utf-8?B?Qm03WXdMRk9vcEc2cDZXTTJDSFFzUFVOcHkrTmFFaWFqekh5b1FYTXkybHFl?=
- =?utf-8?B?eUxYYVJtc3pPOWZpSldNRldyaGJQbUQzVVdxd1lMcWdlVnVGZ2diZ1BKWGJr?=
- =?utf-8?B?aGt0WWpzN0hhckZzU2VYeWxOSUFHdGN5UTJNVjJxVk9nZnE3U0VwYS9lSk95?=
- =?utf-8?B?SEZMTGF3eTZ5dmU3T0MweVZDcHZleGNaN2tFM2d0K0tJUFgxWE5SNDgyakZj?=
- =?utf-8?B?RXVHRzc4YWJ5b0lkZWQrR0hlR1ZRcnJYSzZ6R1V1azlMRVNvWUVhWkRnZUlB?=
- =?utf-8?B?Tk9vV1QvOTRDS2xjeUQ5bHlFUTlmSkNpLzR6cjgvSzVUdFlNOHlycmpOTzk0?=
- =?utf-8?B?TE9ZdUFvT3ZFajlzVkNvVGpTZ1RiZEQ5UGgrZWdTelZGUWFPT1JMM1BvN202?=
- =?utf-8?B?TTdVa09yM0ZHai9EMWJZb2tnY2luaFpaYlVuT25yYnhTNHMxeXBYaUJJRVJw?=
- =?utf-8?B?VmZicnB3NzhEbUpjaUNBaDloa282MEF6amxvQncxdENzVmd3S1BGUjY5NUNi?=
- =?utf-8?B?WHZzaENBNWpUL0E1UDBYd2NoWUxOLy9PYTQyUGJpcUc4enBaRFBHMFJQcStJ?=
- =?utf-8?B?Q05RblRKOEFkZUJIOVJaWDJsM0pZNitEZjVYMHRSVzF1RFhvNk5sa25CcDVW?=
- =?utf-8?B?TmVCRGgxV2Q2ZDE3aURsWTg0MTBLeEExZzQxYTFYMVNUc0g4UHhnS01keHQy?=
- =?utf-8?B?bWZaUkJDbndMckJpS0U4ZjBwbkt0MUExKzZpNmduRmhpcGdRS0lIbjQvc3lE?=
- =?utf-8?B?K1U1dVJ6YVhxN1dlSWk1bUltbVFhSzE3WmsvZ2ZCZmRHT1lCR3JON2V2dUxH?=
- =?utf-8?B?THBFc2FzQVdYaEJJaVc4UzBzU2dSL2xhTzQwa1orOVpuT1RibE5CYkJwMEJG?=
- =?utf-8?B?WVkyLzlLY2VKeHJBQXNuT1EyT2RYek1HVGRUMUlzNkRaVUM4aWlpeXNXLzB4?=
- =?utf-8?B?dndudXREMytIZ2ZmMFptbGpwUTBSaGpuUnVMdzQwWk1yVHUzd1BOK2tSdkha?=
- =?utf-8?B?dFZJQUQ5cm02Rzd1akc0TG1lam9DT2d4WHRrbHNiVWgvL0xBSlRrbzFJUnFY?=
- =?utf-8?B?VFM2L2Q1Z0xKZ1RYSlJkTnFTcmF6bnY5eGRtMU1oYzNSaVA1RzRDVlZlQ09j?=
- =?utf-8?B?NVVBclhHQkVFK0NValFZWEh4eUV1eWR6Tkt3YnhkdjVHWW5ocmpXbXJ3YXNP?=
- =?utf-8?B?MXpLTWNlMml6T3dZWkV6WFZReGV2dWRiWDZJNVY0bGpvMzdHcFBDT01jTkVh?=
- =?utf-8?B?dzdZSGtlRUt2VmE4ZVB1VHZpb2ZJcEY4WkkrYldwTUk3WXl3L21NTjJOb1BY?=
- =?utf-8?B?MEh3T3Q5aHlhcmsvbTBSTGZidnZQRDk0VkcyS2pYVzl4cGNIdld2WXZEV2U5?=
- =?utf-8?B?U0tJdzIxMUkyTWFXM1VCczh4U1B3S1R5YjVKTlFJZ1Rnd040MzZEYXF2K3dB?=
- =?utf-8?B?cmUwTnFMdjBKU1VqQ0ZyM3FEa2p4VmVZRysvcG5tQTVKR1dQMUhReW93K2tk?=
- =?utf-8?B?UVJvbElBNk5BMk1RU21kNVJGZkpWRTdoODlOSkpOOHRraVNPSFBpSDJJVU0x?=
- =?utf-8?B?d0ZmWlc4dmxjK3M4VDNpdmVKSDJOZEM4d0EwRzNrSGV1UG1qeDY4SkJNVVhu?=
- =?utf-8?B?TmFnOFVzd2FPa1hqb3FVcHd2RFJEUGg4RlFsWFFCYlI2djRIZWtvM3pNOW1z?=
- =?utf-8?B?OWNhMjUyNWlaWUMxUCtnK0VJV3Q0ZWc2UHg2ZkMrYnZiN1J0NWttNWRXcXdS?=
- =?utf-8?B?SUtOWHB1L2ZJcDBzT05UVUZEeHpWUU8xNGc1SThVdVNLOEwyaDdrQjJQbTE1?=
- =?utf-8?B?TGJidUsvdGIxV25XWkRKaC9IalZ0YU10bHlXY0Y1WjhzRXVWaWRsUkprd08v?=
- =?utf-8?B?dEg2OUp0QWowWDJSU0pzcmx6dmJTaWtVa29WYzgvN0Q1REtaTmNxZVByWEcy?=
- =?utf-8?B?bWRRcEtJTi9GVElrb3ZzdVZybTZlK2NrWFMza0RhNjRQQ21WTVpvQktpdzdW?=
- =?utf-8?B?WWNpb3dSanorUDBnZUFoQ3pkSUZwSUNRT3Raa0VjS0tmZ0orNmpBcXN3YnhT?=
- =?utf-8?B?RHdZdnNsdllNU0lzUFRWdU10M0NMQXV2RzVFZjF3dUNpSHNGdE1FOTdvOUpX?=
- =?utf-8?B?QmorQTNwZE1QQzUweEVES0tSdGVtTnUwb2psZ3pvMmdjNE9QWnBwd0JkZFBS?=
- =?utf-8?Q?2q0z/0AFRsmBl5AiDQKDTzkN1Fa5PMymxkTbu?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <F1BE98FD8F052C46B73B5500D22A4904@eurprd05.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WdVZ8sCl"
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-c12614b81c9so1467935766b.3
+        for <linux-raid@vger.kernel.org>; Fri, 17 Jul 2026 11:12:01 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784311920; cv=none;
+        d=google.com; s=arc-20260327;
+        b=aYgNjFGKLfoAR9mole7Z/xeG0p4KgBKac2UGK/O+eev8v4f8nE764ZYkD1vkwdothu
+         TUEIefGlQFQ63cEMe+rbImwmsR82huEu850IihlyGJOSbU1pMKdk3xSmUFo8XDgEJ0pg
+         JGYZC9TQjYATGwK02LZ4YVVsiyYEAIRVJMjXS9+AludrPMz1RVE+hw4Wajj+MNc/3pyP
+         n21FbWwngFSsHtR/0W5JG1UpfJI8nyTw3Npb3MjpXKuCsqCV3ppb8tsWj/FBpEsN1H+C
+         ucTvXyTLv+Mf2zmsMBwDk1JtlmIugyNmyuAb2AlIXrAAJhaIidy+W2xkbxYoLvEv5Lr/
+         K6Pg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=8Gr5If/L4JBCYnFefWnEGp7Am+p00nB6GuXb7MIqkwM=;
+        fh=rscoZJZG1rDNojWDJtQ46cZ72Ssib48QpvEhqw/2Mgc=;
+        b=j1hqpcUGhboMl/a7gk4QwPcaZCW6P/ADBBgjFfhpL8UlwHanv1uTnl7jpF2Ve78AyF
+         uXXadoGriaGGDxlhOPfT8KV0StGrY8w9EIRNhQvRMdlnaShVFvnZsTZkTb8Z84wAtmlr
+         KFmsGnJMNdemEW4CWZm1UKuKmdBxrCkBWgsc1NDO97JaYwXKTSLdAsmtB2IjHHZccIjS
+         NFGATRs4CgU3JwN96L01aCHJe9IQEYwyPa2y+XZI7/VwVXG8euSW6nb9OERdv7ShSw2M
+         pB2bBvkeva35XtEVweAVvHtxZjOcvUzmj4wkle+XR0KDYdOeftNsoRjOpfLXtVNoXRkz
+         5WaQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784311920; x=1784916720; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=8Gr5If/L4JBCYnFefWnEGp7Am+p00nB6GuXb7MIqkwM=;
+        b=WdVZ8sClDTgEPjlrVIOOzqAOBdv3Aeq6p4kP6mfKkz9wVmt8O+OwqoNo1N5eFKaBqp
+         EcbwQ7/JxMiV9/QmNQGPGVXH8sbkXvFNNEyqOhkKBPmXNCVgbLCnjeXCIK5YSnGLevSI
+         fw2Pt2KZ595QbNKzccfg8jl6lsGZRQQnqDUfZlvSjoeK1/t46P55daPnvy0cQyBOsQA4
+         4sD0yh/NEk/4KNyM5FIdyvVZeu6mA6+2CpnGYndTBga6SNBLwymkmWjqmF3FhAUCbkWJ
+         EW9NqcDG1YLT6XiWm4otF9W86wuRjWBadJ+p1O0Xt0p7w5vp4Fk/71agXA7I/uesn0Hc
+         nZ7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784311920; x=1784916720;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=8Gr5If/L4JBCYnFefWnEGp7Am+p00nB6GuXb7MIqkwM=;
+        b=k3FxfEfeAs6gJXiNUYgX8Pwa0HA1ot9+aJCh/9Ul5qseAx2YbgyZOKUz4BDwGOcP7s
+         0kb1MyQKZjdTDSa90gONeALSsFRVCRjroLztC4lJihKAv5XTEuOFponfO9laOshk97jz
+         5A6nuCYSZ20L9LF7B4dq4rg1Obk3sPDPg3/e9ZHKmjYQe7aTYz6y1HVOt5eIeT772U55
+         b3LvebWVeRp3xPykl0kklY3LG9tRUICnKg/LvU8QNIIHhYpGscRhIkwtXe8unrDarFqD
+         uNer0ZqONi92jADUs4OvDBMLyk8vltn/MmotrbcogQCIuusNXxbIr1QDTjIMPjFhK/LD
+         eQGA==
+X-Forwarded-Encrypted: i=1; AHgh+RqtcXDWPAYXhGLsKlnQp8Rbpml65FnxEAWT0wr3HWWsPL3YTX+wBaclnoazmsRWL+80FqHvJ5G/jouU@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxhq3cL7JZnsG2V0qzkzB6ofr9G3FyaRqP5RIvFHHK2Lm6V3pJ+
+	SjXgUA1Hzgk2YaZJ8QvjoSzvWD2DVi7YpzPaz7nfTKWutAccmgzMZRkS5Tj3dcLGMj5C8rvKysW
+	A6wgwkUC66pRHnlGD1CEE41A4H17kwvk=
+X-Gm-Gg: AfdE7ck1+EnfAg02VijUN1m7dV5YqyYR7S88dSj2cmuxF6beU4Jo/6SsggsHzXRhJJh
+	ZK6/G75dzwVAC+Y7tRF4yzZt8aadFqLXfTr0KzoxIGambc+QbaqozuFFXOUSZnbVqUDjOcDXhar
+	nYePV+F+NzoyRm9VrJ9mfoekrgBqOphhSHN3fmY6pJkb0go5zHaOOh+KNfIstBWQ7PRso1fY4N6
+	FMgllJbJWksvS0xcDFm8S/7G3bjkEMt561GIYO2QLZqPPJ0qk2vr2tYmH6Ql4pPaUG/wWU=
+X-Received: by 2002:a17:906:f049:b0:c15:f395:ac31 with SMTP id
+ a640c23a62f3a-c16b48969aemr170809166b.61.1784311919730; Fri, 17 Jul 2026
+ 11:11:59 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: hunenet.nl
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: VI1PR05MB6144.eurprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6cba605a-a2e6-439e-4af8-08dee41ac93b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jul 2026 15:48:02.9092
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 887aa16f-e08f-4cfb-bc70-8f3f25a72a41
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 7UP9HwKRIsUwQlPY3MIz/Q8KD5IPb5n1JBbKQKlthkIcGKcAYeGxI8WygMM8CbUaJCFvRiWNGOcdCbAGwY+09g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR05MB11556
+References: <8dcbfa43-c687-49bb-81b5-e6b8e8848c77@hunenet.nl>
+ <m2y0fcesbe.fsf@gmail.com> <cff97a09-ee38-4785-9a45-1fd562fbaf5e@hunenet.nl>
+ <m2jyqwduba.fsf@f8410a22-cd7b-4baf-acf5-82353315d5e5.fritz.box>
+ <m2ech4dt8k.fsf@f8410a22-cd7b-4baf-acf5-82353315d5e5.fritz.box>
+ <59fa3f9f-eda1-4f8a-917d-8f6612639a1b@hunenet.nl> <CAAMCDeefBEP0c4oW3iX4_cbZBLDuyfuAtCREtFgiH-qS4ZaiXQ@mail.gmail.com>
+ <fd1f940e-4382-4a8a-9d16-e70a708da3cb@hunenet.nl>
+In-Reply-To: <fd1f940e-4382-4a8a-9d16-e70a708da3cb@hunenet.nl>
+From: Roger Heflin <rogerheflin@gmail.com>
+Date: Fri, 17 Jul 2026 13:11:48 -0500
+X-Gm-Features: AUfX_myRA90NUAgPg9Eng2Vwkfn7itbObBVthCS6pdyzIruZ4djKUQ5qABmqcL8
+Message-ID: <CAAMCDefN+a_mMWByAMPEkCo6sT2iyi-b8J2et5LsJpxZtZBzQQ@mail.gmail.com>
+Subject: Re: Subject: RFC: Read repair for md RAID1 after mirror read failures
+To: "G.W. Kant - Hunenet B.V." <g.w.kant@hunenet.nl>
+Cc: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>, 
+	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "yukuai@fygo.io" <yukuai@fygo.io>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-T24gNy8xNy8yNiAxMjo1NSBQTSwgUm9nZXIgSGVmbGluIHdyb3RlOg0KPiBPbiBGcmksIEp1bCAx
-NywgMjAyNiBhdCAxOjQy4oCvQU0gRy5XLiBLYW50IC0gSHVuZW5ldCBCLlYuDQo+IDxnLncua2Fu
-dEBodW5lbmV0Lm5sPiB3cm90ZToNCj4+DQo+PiBPbiA3LzE1LzI2IDg6MDQgUE0sIEFiZC1BbHJo
-bWFuIE1hc2Fsa2hpIHdyb3RlOg0KPj4+IE9uIFdlZCwgSnVsIDE1LCAyMDI2IGF0IDE5OjQxICsw
-MjAwLCBBYmQtQWxyaG1hbiBNYXNhbGtoaSB3cm90ZToNCj4+Pj4gSGkgRGlvbiwNCj4+Pj4NCj4+
-Pg0KPj4+IEknbSBub3QgZW50aXJlbHkgc3VyZSBhYm91dCB0aGUgbWVkaWEgcmVmcmVzaCBwYXJ0
-IG9uIG1vZGVybiBkcml2ZXMuLi4sDQo+Pj4gSSdsbCBoYXZlIHRvIGxvb2sgaW50byB0aGF0IGZp
-cnN0Lg0KPj4+DQo+Pg0KPj4gTWF5YmUsIHdlIGNvdWxkIGFzayB0aGUgc21hcnRtb250b29scyBw
-ZW9wbGUgYWJvdXQgdGhpcy4gVGhleSBzaG91bGQNCj4+IGtub3cgdGhpcy4gQnV0IEkgaGF2ZSBu
-ZXZlciByZWFkIGFib3V0IGEgcmVmcmVzaCBhY3Rpb24gaW4gdGhlaXINCj4+IGRvY3VtZW50YXRp
-b24uDQo+Pg0KPj4gQmVzdCByZWdhcmRzLA0KPj4NCj4+IERpb24NCj4gDQo+IEkgYW0gbm90IHN1
-cmUgd2h5IHlvdSBiZWxpZXZlIHRoZSBzbWFydG1vbnRvb2xzIHBlb3BsZSB3b3VsZCBoYXZlIEFO
-WQ0KPiBpZGVhIGFib3V0IHRoZSByZWZyZXNoIGFjdGlvbi4gIFNtYXJ0bW9udG9vbHMgc2ltcGx5
-IGV4cG9zZXMgdGhlDQo+IGludGVybmFsIGRyaXZlIGNvdW50ZXJzIHRoYXQgdGhlIGRyaXZlIG1h
-bnVmYWN0dXJlciBleHBvc2VzIGFuZC9vcg0KPiBkb2N1bWVudHMuDQo+IA0KPiBUaGUgcmVmcmVz
-aCBhY3Rpb24gaXMgMTAwJSBlbnRpcmVseSBjb250cm9sbGVkIGJ5IHRoZSBkcml2ZSdzIGZpcm13
-YXJlDQo+IGFuZCBoYXMgbm90aGluZyB0byBkbyB3aXRoIHRoZSBzbWFydG1vbnRvb2xzLCBhbmQg
-dGhlIHNtYXJ0IGNvdW50ZXJzDQo+IG1heSBub3Qgc2hvdyBhbnkgb2YgdGhlIGludGVybmFsIEVD
-QyBmb3JjZWQgcmV3cml0ZXMuDQo+IA0KPiBBcyBmYXIgYXMgSSBjYW4gdGVsbCBpbiBnZW5lcmFs
-IHRoZSBkcml2ZSBkb2VzIHdoYXQgaXQgd2FudHMgdG8NCj4gKHJlZnJlc2ggb3Igbm90LCByZWxv
-Y2F0aW9uIGJhZCBzZWN0b3JzIG9yIG5vdCkgYW5kIHRoZXJlIGlzIE5PIHdheQ0KPiB0aGF0IEkg
-aGF2ZSBldmVyIGZvdW5kIHRvIGZvcmNlIHRoZSBmaXJtd2FyZSBkbyBkbyBzb21ldGhpbmcgZWxz
-ZS4NCg0KV2hlbiB5b3UgcmVmZXIgdG8gInRoZSByZWZyZXNoIGFjdGlvbiIsIGFyZSB5b3UgcmVm
-ZXJyaW5nIHRvIGEgDQpkb2N1bWVudGVkIGZpcm13YXJlIG1lY2hhbmlzbSB0aGF0IHBlcmlvZGlj
-YWxseSByZXdyaXRlcyBzdWNjZXNzZnVsbHkgDQpyZWFkYWJsZSBzZWN0b3JzLCBvciBhcmUgeW91
-IHVzaW5nIHRoZSB0ZXJtIG1vcmUgZ2VuZXJhbGx5IGZvciBhbnkgDQppbnRlcm5hbCBtZWRpYSBt
-YWludGVuYW5jZSB0aGUgZHJpdmUgbWF5IHBlcmZvcm0/DQoNCkkgaGF2ZSBub3QgeWV0IGZvdW5k
-IGRvY3VtZW50YXRpb24gZGVzY3JpYmluZyBzdWNoIGEgcmVmcmVzaCBtZWNoYW5pc20gDQpmb3Ig
-Y29tbW9kaXR5IEhERHMuIFRoYXQgaXMgd2h5IEkgbWVudGlvbmVkIHRoZSBzbWFydG1vbnRvb2xz
-IA0KZGV2ZWxvcGVyczogbm90IGJlY2F1c2UgSSBleHBlY3Qgc21hcnRtb250b29scyB0byBpbXBs
-ZW1lbnQgb3IgY29udHJvbCANCnN1Y2ggYSBtZWNoYW5pc20sIGJ1dCBiZWNhdXNlIHRoZXkgYXJl
-IGZhbWlsaWFyIHdpdGggdGhlIGNhcGFiaWxpdGllcyANCnRoYXQgbW9kZXJuIGRyaXZlcyBleHBv
-c2UgdGhyb3VnaCBTTUFSVCBhbmQgcmVsYXRlZCBzdGFuZGFyZHMuDQoNCkknbSB0cnlpbmcgdG8g
-dW5kZXJzdGFuZCB3aGF0IGlzIHB1YmxpY2x5IGtub3duIGFib3V0IHRoaXMuDQoNCkJlc3QgcmVn
-YXJkcywNCg0KRGlvbiBLYW50DQoNCg==
+The drives are said to do refreshes when it finds a weak sector when
+doing a long media test.
+
+The manufactures do not seem to document any disk internals, they
+never have.    All manufactures claim their magic firmware/processes
+give them a competitive advantage and so don't disclose what goes on.
+ Pretty much all of the hardware is handled this way, with poor
+external documentation.
+
+Smart seems to only disclose the common settings/errors, and don't
+seem to allow anything except setting changes, and to run defined
+tests (short, long and similar).
+
+I have been told by a WD engineer that their internal tools have the
+ability to read out a number of other parameters that aren't exposed
+to SMART, and may also be able to do other things.  Those tools are
+not externally available and the when I had access to one of those
+tools (for a few hours so I could get it into a high security site
+with the WD engineer) I had to agree to not keep it.
+
+I watched one of the tools be used on some disks by a WD engineer that
+went onsite (but I don't remember if I saw any non-SMART like data on
+the screen--it was 20 years ago) to check for errors and determine if
+WD would RMA/replace (without media return) around 1000 disks.
+
+I have been reading smart data for as long as smart has been around,
+and outside of maybe at most 10 parameters, most of the rest of the
+parms are rather useless because the manufacturer does not supply a
+decoder ring to make any sense of what said parameter is really
+measuring.
+
+And whatever the manufactures document would be what was documented
+before the disk firmware was completely finished, and may or may not
+have really worked in the given firmware.   I have ran into disks that
+would refuse to relocate most bad sectors (even though older disk by
+the same company did this just fine), and a number of other weird disk
+actions indicating that the firmware does not always even implement
+the features that they are supposed to correctly in all disks.
+
+Basically if the smart tools team actually knows anything about the
+disk internals, they are almost certainly under an NDA and cannot tell
+you (likely this is not the case), and if they aren't under an NDA
+they were not told anything.
+
+And contrary to what other experts claim (that disks regularly will
+return bad data--ie 1 in 1e15 sectors), I have never seen the disk
+itself return bad data(I have seen raid controllers deliver corrupted
+data many times from both hardware failures and defective raid
+controller firmware), if the sector is read successfully it is the
+right data simply because the disks ECC correction uses so many bits
+that the chance of a corrupted sector being corrupted and still
+passing ECC is so low as to not be worried about.
+
+On Fri, Jul 17, 2026 at 10:48=E2=80=AFAM G.W. Kant - Hunenet B.V.
+<g.w.kant@hunenet.nl> wrote:
+>
+> On 7/17/26 12:55 PM, Roger Heflin wrote:
+> > On Fri, Jul 17, 2026 at 1:42=E2=80=AFAM G.W. Kant - Hunenet B.V.
+> > <g.w.kant@hunenet.nl> wrote:
+> >>
+> >> On 7/15/26 8:04 PM, Abd-Alrhman Masalkhi wrote:
+> >>> On Wed, Jul 15, 2026 at 19:41 +0200, Abd-Alrhman Masalkhi wrote:
+> >>>> Hi Dion,
+> >>>>
+> >>>
+> >>> I'm not entirely sure about the media refresh part on modern drives..=
+.,
+> >>> I'll have to look into that first.
+> >>>
+> >>
+> >> Maybe, we could ask the smartmontools people about this. They should
+> >> know this. But I have never read about a refresh action in their
+> >> documentation.
+> >>
+> >> Best regards,
+> >>
+> >> Dion
+> >
+> > I am not sure why you believe the smartmontools people would have ANY
+> > idea about the refresh action.  Smartmontools simply exposes the
+> > internal drive counters that the drive manufacturer exposes and/or
+> > documents.
+> >
+> > The refresh action is 100% entirely controlled by the drive's firmware
+> > and has nothing to do with the smartmontools, and the smart counters
+> > may not show any of the internal ECC forced rewrites.
+> >
+> > As far as I can tell in general the drive does what it wants to
+> > (refresh or not, relocation bad sectors or not) and there is NO way
+> > that I have ever found to force the firmware do do something else.
+>
+> When you refer to "the refresh action", are you referring to a
+> documented firmware mechanism that periodically rewrites successfully
+> readable sectors, or are you using the term more generally for any
+> internal media maintenance the drive may perform?
+>
+> I have not yet found documentation describing such a refresh mechanism
+> for commodity HDDs. That is why I mentioned the smartmontools
+> developers: not because I expect smartmontools to implement or control
+> such a mechanism, but because they are familiar with the capabilities
+> that modern drives expose through SMART and related standards.
+>
+> I'm trying to understand what is publicly known about this.
+>
+> Best regards,
+>
+> Dion Kant
+>
