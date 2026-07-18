@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16D133AFCE3;
-	Sat, 18 Jul 2026 16:58:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B5B53E0233;
+	Sat, 18 Jul 2026 16:58:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784393883; cv=none; b=JBswGC/XZ5/4+ai61miWOwHK+U/QSQQMW3a0jF2VjYDyysNIO0NPRsxGTBH/1jrQoYGeNfUupF9e/aFKfn9gysa5yPfNTi6XJJp+6Pl+GFofKk/prLAGrpZxCU7xuD3kUZRhYTnDEf4z8FxYxdyXIwOaHXgIG3PlcoMrkoWIkR0=
+	t=1784393920; cv=none; b=Ylj95ZXrmsIGqJclIY7xpgnPTtGoxt4mZZj7tmdUzHKaV/s6m2tYC3XZ54ePLK69eRMS4NE5pnQyq5ogxZMCbZqv+hVAuCYiXu7pvgS3mASQTFCNVqgNP1gdr0vo8AUiw+wkI9FPyYLbn6o9GouE0I89ycTvQ8k1LOQrdlYCRGA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784393883; c=relaxed/simple;
-	bh=7k46JtU0lVBARPJx5X+pE5SQTSM0M5vywM9gPCZhzQ8=;
+	s=arc-20240116; t=1784393920; c=relaxed/simple;
+	bh=Dm50SiCA8UKllVv8M1wkrIl6Bas+4HGt2/GL5DkR91A=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TqGU4DNgp9oEwxzfTm2ODcyCv5YUGYBlHrkskfPYE4e/RiRdSvyryMdIqTHS0hW1AIPqr6zlm8lWOHRqu76jOC5RXuACBebFQk65KpwYOgQ+mx97QfJ37cFlmpAuEl7mycKjIUm196JoTcRRkBy1SPD88s3ebC12AJVLFzmc9CM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QvzovrO2; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Uk2eRpuHatkYaApy5KR1JP6M4D4jcVf+Vrld+rrUiTp/oRJWwnm6nqxLtTM159Wkf/bt15B/ThC6CiUr5MCAOMAP1IGidD1XzIE6kUUPWTrUEvARSQKWfG8qCAKAxD+ATDAw+0lEou5e9ni9rZZw2McC1mBLM5fy7rq1HdJJy8c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jc5lAKtw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QvzovrO2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BCF71F000E9;
-	Sat, 18 Jul 2026 16:58:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jc5lAKtw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BC5F1F000E9;
+	Sat, 18 Jul 2026 16:58:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784393881;
-	bh=tQ8TBhzbe6Y7Z+nrK1UnUqzvk6zVNAL1kqoOx5pCtXA=;
+	s=k20260515; t=1784393918;
+	bh=gDjsq/c3v22vsS/P9jqfcxZ3lEgUrv84Ne5Yq7vvFZY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QvzovrO2My5FLSI/RW7uHOgE04hznFE6zuGj1fUFgjBYrAFqhVOjiE0tt4SQXIPkB
-	 UJ2Uau7NMSU0pQdEOB0+ucT3+AjoDZiNaQkUAoeUgTzQDdcaGmkmTLZk4wuBNIjf7Y
-	 p0Z+xIxR4ejRfDGaGRR3jsXVy3bUy6j0SLwK0q3d4ojRFip5LxV52O7tGNF6XoWxIz
-	 FUGKuEebGviKOy9HXi4vJ0SNAtHYip5rnHWCGl0giFiMUqX8DJLDtI2YL5oNO9up8b
-	 03V0qgxQWmGfMjIOQcsYZOBigBxvhPCt5ws/UeZ/B8Lvv8Se3g7Vm4vbeV3W6T0kV7
-	 MYk8J0vRSHgsA==
+	b=jc5lAKtwAP22dZ/NYGagm/Brf0TLstQMGcUi2gOAY3r/tmcMidhXzTN1oHUM6xLq8
+	 mR5+PPeyqY7z0Dw0zHIhejuxTpvF2RQKUiMMmCs/AsRM78BEdaaLgBdBlUDnzhMLk2
+	 0y0iBSDeeaLrfYZkuw6fhGtWtetoPnG63O1bfUTbbPlHTC4co7w6ZJf3Kh3IXy3sox
+	 4ZtTLGSo9GwfK50SK/0dyn6imZ9S8nGRGNVrUyg8rIrDgQeXYBN/0MgjeKW7huV5P7
+	 eRFH+EQhOnylZBLYBaCtBxr/aCBTNlZADAlpMfIm6ZJP5RHf8CBc+LmXP1wv2D38Bs
+	 ybyB1hYLAZydw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 4/6] md/raid1,raid10: keep REQ_NOMERGE on
- narrow_write_error() retry clones
+Subject: Re: [PATCH 3/6] md/raid1: don't use write-behind for P2PDMA bios
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Mykola Marzhan" <mykola@meshstor.io>
-Cc: yukuai@fygo.io, linux-pci@vger.kernel.org, linux-raid@vger.kernel.org
-In-Reply-To: <20260718162547.448892-5-mykola@meshstor.io>
+Cc: linux-pci@vger.kernel.org, yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260718162547.448892-4-mykola@meshstor.io>
 References: <20260718162547.448892-1-mykola@meshstor.io>
- <20260718162547.448892-5-mykola@meshstor.io>
+ <20260718162547.448892-4-mykola@meshstor.io>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 18 Jul 2026 16:58:00 +0000
-Message-Id: <20260718165801.6BCF71F000E9@smtp.kernel.org>
+Date: Sat, 18 Jul 2026 16:58:37 +0000
+Message-Id: <20260718165838.6BC5F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -49,87 +48,88 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] narrow_write_error() silently drops REQ_FUA, REQ_PREFLUSH, and REQ=
-_SYNC flags during block-by-block write retries by overwriting the bio's op=
- flags with a bare REQ_OP_WRITE.
+- [Critical] P2PDMA bios bypass write-behind but fail to serialize against =
+outstanding write-behind I/O, leading to silent data corruption on write-mo=
+stly devices.
 --
 
---- Patch [4]: [PATCH 4/6] md/raid1,raid10: keep REQ_NOMERGE on narrow_writ=
-e_error() retry clones ---
-commit 2b72bc4b60daf0429fd1c6c62c181f2b0048e81d
+--- Patch [3]: [PATCH 3/6] md/raid1: don't use write-behind for P2PDMA bios=
+ ---
+commit bbb98e00f3bb1bd5712cfce20170706425ddb589
 Author: Mykola Marzhan <mykola@meshstor.io>
 
-md/raid1,raid10: keep REQ_NOMERGE on narrow_write_error() retry clones
+md/raid1: don't use write-behind for P2PDMA bios
 
-This commit ensures that REQ_NOMERGE is retained on P2PDMA retry bios in
-narrow_write_error(). It addresses an issue where resetting bi_opf to a
-bare REQ_OP_WRITE dropped this protection, potentially allowing unsafe
-merging.
+alloc_behind_master_bio() copies the bio's data with bio_copy_data(),
+a CPU copy. P2PDMA pages are peer device (BAR) memory; generic code
+must not assume CPU load/store access to them is safe or fast on
+every architecture, and bouncing peer memory through the CPU defeats
+the point of a peer-to-peer transfer.
+
+Skip write-behind for P2PDMA bios: they are written directly to all
+members, including write-mostly ones.
 
 > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 57f64e8901024..a300323211911 100644
+> index afe2ca96ad8c2..57f64e8901024 100644
 > --- a/drivers/md/raid1.c
 > +++ b/drivers/md/raid1.c
-
-[ ... ]
-
-> @@ -2565,6 +2565,9 @@ static void narrow_write_error(struct r1bio *r1_bio=
-, int i)
->  		}
+> @@ -1575,9 +1575,12 @@ static bool raid1_write_request(struct mddev *mdde=
+v, struct bio *bio,
+>  		/*
+>  		 * The write-behind io is only attempted on drives marked as
+>  		 * write-mostly, which means we could allocate write behind
+> -		 * bio later.
+> +		 * bio later. P2PDMA bios are excluded: write-behind copies
+> +		 * the data with bio_copy_data(), a CPU copy that cannot be
+> +		 * assumed safe or fast on P2PDMA (device BAR) pages.
+>  		 */
+> -		if (!is_discard && rdev && test_bit(WriteMostly, &rdev->flags))
+> +		if (!is_discard && rdev && test_bit(WriteMostly, &rdev->flags) &&
+> +		    !md_bio_is_p2pdma(bio))
+>  			write_behind =3D true;
 > =20
->  		wbio->bi_opf =3D REQ_OP_WRITE;
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does this overwrite of
-bi_opf with a bare REQ_OP_WRITE drop important operational flags?
+[Severity: Critical]
+This is a pre-existing issue, but by excluding P2PDMA bios from
+write-behind, does this expose them to silent data corruption due to
+missing serialization checks?
 
-If the original write contains data integrity flags like REQ_FUA, REQ_PREFL=
-USH,
-or REQ_SYNC, losing these flags during a retry means the retried write might
-only be placed in the disk's volatile cache.
+When a normal write to a sector uses write-behind, it can be acknowledged
+to the caller once fast devices complete, leaving the write-behind bio
+in-flight to the write-mostly device.
 
-Since bio_alloc_clone() already copies bi_opf from the master bio, overwrit=
-ing
-it here wipes out those flags, which could risk silent data corruption on p=
-ower
-loss if a transient failure triggers this retry path in narrow_write_error(=
-).
+If a subsequent P2PDMA write is issued to the same sector, this patch
+explicitly disables write-behind for it. Because of this,
+r1_bio->behind_master_bio remains NULL, and execution falls into the else
+branch further down in raid1_write_request():
 
-> +		/* Keep P2PDMA retry bios unmergeable, like the original */
-> +		if (md_bio_is_p2pdma(wbio))
-> +			wbio->bi_opf |=3D REQ_NOMERGE;
->  		wbio->bi_iter.bi_sector =3D r1_bio->sector;
->  		wbio->bi_iter.bi_size =3D r1_bio->sectors << 9;
-> =20
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 0a3cfdd3f5df8..f7ef903a3d4ec 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
+drivers/md/raid1.c:raid1_write_request() {
+    ...
+		if (r1_bio->behind_master_bio) {
+			mbio =3D bio_alloc_clone(rdev->bdev,
+					       r1_bio->behind_master_bio,
+					       GFP_NOIO, &mddev->bio_set);
+			if (test_bit(CollisionCheck, &rdev->flags))
+				wait_for_serialization(rdev, r1_bio);
+                ...
+		} else {
+			mbio =3D bio_alloc_clone(rdev->bdev, bio, GFP_NOIO,
+					       &mddev->bio_set);
 
-[ ... ]
+			if (test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
+				wait_for_serialization(rdev, r1_bio);
+		}
+    ...
+}
 
-> @@ -2831,6 +2831,9 @@ static void narrow_write_error(struct r10bio *r10_b=
-io, int i)
->  		wbio->bi_iter.bi_sector =3D wsector +
->  				   choose_data_offset(r10_bio, rdev);
->  		wbio->bi_opf =3D REQ_OP_WRITE;
+Because the else branch skips the CollisionCheck test,
+wait_for_serialization() is bypassed (unless MD_SERIALIZE_POLICY is globally
+set). Can the block layer then reorder these concurrent requests, overwriti=
+ng
+the newer P2PDMA data with the older in-flight write-behind data?
 
-[Severity: High]
-This isn't a bug introduced by this patch, but similarly here in raid10
-narrow_write_error(), does assigning a bare REQ_OP_WRITE silently drop flags
-like REQ_FUA and REQ_PREFLUSH?
-
-If an original write has these flags set, the retry might succeed without
-them, leading the array to consider the disk perfectly synced while the data
-only resides in the disk's volatile cache.
-
-> +		/* Keep P2PDMA retry bios unmergeable, like the original */
-> +		if (md_bio_is_p2pdma(wbio))
-> +			wbio->bi_opf |=3D REQ_NOMERGE;
-> =20
->  		if (submit_bio_wait(wbio) &&
->  		    !rdev_set_badblocks(rdev, wsector, sectors, 0)) {
+>  		r1_bio->bios[i] =3D NULL;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260718162547.4488=
-92-1-mykola@meshstor.io?part=3D4
+92-1-mykola@meshstor.io?part=3D3
