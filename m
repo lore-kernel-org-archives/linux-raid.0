@@ -1,133 +1,318 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-27.ptr.blmpb.com (va-2-27.ptr.blmpb.com [209.127.231.27])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 160C12E8897
-	for <linux-raid@vger.kernel.org>; Sat, 18 Jul 2026 08:56:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E830D36CDE3
+	for <linux-raid@vger.kernel.org>; Sat, 18 Jul 2026 10:56:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.27
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784364990; cv=none; b=dRA09py0kykBDbvvFdkJ14UnD8Yl0fkIRFGUL77f+w0a3ZRZ9475N3lJqMsYwyE2XkP1Sw1CuhPnGb5oJ4/JKMXEfJKrXc2laFdulwKLk1V6cqQ1jTC6M/7+rD/Y+E4ikpQVZE2PjVSyfnrB/hXM2Jv2PLnEbPpQaxuVl8ev4iM=
+	t=1784372179; cv=none; b=GCpvkY8FR0Ltnbk35dTzUBZXpKtTRpHVDc6/27HMy8WVDluDKmm5g0CaxDLmQSGs71W8K+qOie4Uy1srnHXi+1oii7OpZrpUmWfZPRSgirScXATLTllVuIGyqe7bP5/YHRjvASNdplpukyPNJvsRwZ4BTMDotp/r8Qcb1HuPwFk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784364990; c=relaxed/simple;
-	bh=Qp9dkJI88IYdbS30dWIc3IlmydB+ch5HmadXCISablc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=RlkJPcADJE4tSSpVCmupcBnIzh2/ei/0603LElP9gmp4A1Cm0b9BQczm4FRVAy9CqT+p6tdTIRh9W/2+uWAK8rSAWspwwg4vwAoHAbXJQpEW//P1/kZgWT4U212gw3MH5pktnXyQjNwy8Qy3z6cYPPQtYAq/U+MHwq3QgQoj+hs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OM3DLbqE; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784372179; c=relaxed/simple;
+	bh=UDhROFw0gnRn5iZUWXiAuT6ATAYBJBDbmSgSLNiNzeY=;
+	h=To:Cc:Message-Id:Mime-Version:From:Content-Type:Subject:Date; b=CiuIiLm/ejgwCbNVdc6TATmS/Wr8uR4v/7IXoU2n0mD6KN/mRLwo9MN8IoRrgIFeTf9ik5tulpSAQG3qJPRKqFyok5NEfHhfHVQ3jIB1Nc1JAzhr0mJmhmOH3Uw7AjSYNEAevb3OkVe6zyelj2VKPMNmz7DYrDoh0vm1rwWtOys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=zPhdkGlZ; arc=none smtp.client-ip=209.127.231.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OM3DLbqE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E8CE1F000E9;
-	Sat, 18 Jul 2026 08:56:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784364988;
-	bh=37HuYJuiK0JXgivqqg5W0gWLBLH//07gg6SG/hHf9DU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OM3DLbqEu3RtnQd2F6yDVg3f6g3yzuXL5PCZTjXeYhfUcd7E9G83eYmSGQfm8SUI+
-	 QVOpIlgRBsv4T6I7HNFk9GMZeWwVxy5iZ50bcYh/uV7A7wpKCnrjW2rGhiA+svPetV
-	 fE8Y9r+Eqt8RqFLpn702PbYH0JpbeE1xrWP6oXC9a5DP/mcmCQYwuz7pJ1Mu08E7Aa
-	 D8qywHl9k9+2Wfm3lv3VxZ2/WXz7P4XJbhDAOQoqU2n0sRPRue8xfH2aM8zFYRDK/6
-	 TsAS70+EzxGiwAUIg2MmFIr9I/RFy0KqOK/1GQs6VMjcH9YLTjREwL50K8KyHWQKaN
-	 sWiibFSCEDZ+g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] md: scope memalloc_noio to allocation critical
- sections
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chen Cheng" <chencheng@fnnas.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260718084218.417895-1-chencheng@fnnas.com>
-References: <20260718084218.417895-1-chencheng@fnnas.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 18 Jul 2026 08:56:28 +0000
-Message-Id: <20260718085628.7E8CE1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="zPhdkGlZ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1784372164;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=llYGPliUlsafPkxBoJcNHTZUlVrqfw6/0St3IdiJCNk=;
+ b=zPhdkGlZwpWi5l7oBCj5R1c3FH17GCcJ2A9tOvTC2w/BaUf0ktniqL+BgF0Dmmyc7vqwEN
+ atQQpsdVyxRhfKLeOUC27VK5OZwGAijKVENqdVu+9JPme5BB0/JQD6jfFDOm+M89dUgwL8
+ pwr2zIuZbdC83FKeAgzMC3UXKAmPGoW2JIX5hmEj0+2w+s52+EbqYogK8AklZO8MfgS+0X
+ ggqm0HMSGjjwHGsmyJNDfx/xa6IHMDe3mNjmbg7AAdKfalEqhKmw1Nmg/chY1cyjMJYX4d
+ R5YrI5tO/CeL0T3zHjqwOG06CHT53KIuM+6WC/6AER/gUW7+QjJ+fXDm2WSsNQ==
+Content-Transfer-Encoding: 7bit
+To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>
+Cc: <chencheng@fnnas.com>, <chencheng@fygo.io>, 
+	<linux-kernel@vger.kernel.org>
+Message-Id: <20260718105551.608500-1-chencheng@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+From: "Chen Cheng" <chencheng@fnnas.com>
+X-Lms-Return-Path: <lba+26a5b5bc2+e9d24e+vger.kernel.org+chencheng@fnnas.com>
+Received: from fedora ([183.34.161.69]) by smtp.feishu.cn with ESMTPS; Sat, 18 Jul 2026 18:56:01 +0800
+X-Mailer: git-send-email 2.54.0
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH] md: handle serial pool allocation failures
+Date: Sat, 18 Jul 2026 18:55:51 +0800
+X-Original-From: chencheng@fnnas.com
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+From: Chen Cheng <chencheng@fnnas.com>
 
-Pre-existing issues:
-- [High] In `backlog_store()`, an error path unlocks the mddev but fails to=
- resume it, leaving the array permanently suspended.
---
+sashiko-bot report a issue:
+mddev_create_serial_pool() silently ignored allocation failures, allowing
+callers to continue with incomplete serialization state.
 
---- Patch [1]: [PATCH v2] md: scope memalloc_noio to allocation critical se=
-ctions ---
-commit 6df6cebcdd6ace34da5732a820e0ad95df14d0fc
-Author: Chen Cheng <chencheng@fnnas.com>
+validation:
 
-    md: scope memalloc_noio to allocation critical sections
+fail_page_alloc with a stacktrace filter for rdev_init_serial() to force
+the serial allocation and its kvmalloc fallback to fail.
 
-This patch fixes a token leak issue where PF_MEMALLOC_NOIO could leak across
-tasks when saving the token in mddev_suspend() and restoring it in
-mddev_resume(). It refactors the code to call memalloc_noio_save() directly
-before memory allocation in mdraid operations after the array has been
-successfully suspended.
+A/B result:
+- Without this patch, serialize_policy accepts the write despite the
+	injected allocation failure, leaving serialization state
+	incomplete.
+- With this patch, the write returns -ENOMEM and serialize_policy remains
+	unchanged.
 
-Link: https://github.com/chencheng-fnnas/reproducer/blob/main/repro-md-noio=
--token-leak.sh
+Fixes: 3938f5fb82ae ("md: add serialize_policy sysfs node for raid1")
+Link: https://github.com/chencheng-fnnas/reproducer/blob/main/test-serial-pool-oom.sh
 
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 0f02e2956398d..f005bc9494ecf 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -2629,10 +2629,12 @@ static ssize_t
->  location_store(struct mddev *mddev, const char *buf, size_t len)
->  {
->  	int rv;
-> +	unsigned int noio_flags;
-> =20
->  	rv =3D mddev_suspend_and_lock(mddev);
->  	if (rv)
->  		return rv;
-> +	noio_flags =3D memalloc_noio_save();
-
-[ ... ]
-
-While reviewing this file, I noticed a pre-existing issue in backlog_store(=
-):
+sashiko-bot report:
+=====================
+[Severity: Critical]
+This is a pre-existing issue, but further down in backlog_store(), is it
+possible for mddev_create_serial_pool() to fail silently?
 
 drivers/md/md-bitmap.c:backlog_store() {
     ...
-	rv =3D mddev_suspend_and_lock(mddev);
-	if (rv)
-		return rv;
-
-	/*
-	 * Without write mostly device, it doesn't make sense to set
-	 * backlog for max_write_behind.
-	 */
-	rdev_for_each(rdev, mddev) {
-		if (test_bit(WriteMostly, &rdev->flags)) {
-			has_write_mostly =3D true;
-			break;
-		}
-	}
-	if (!has_write_mostly) {
-		pr_warn_ratelimited("%s: can't set backlog, no write mostly device availa=
-ble\n",
-				    mdname(mddev));
-		mddev_unlock(mddev);
-		return -EINVAL;
-	}
+    } else if (backlog && !mddev->serial_info_pool) {
+        /* serial_info_pool is needed since backlog is not zero */
+        rdev_for_each(rdev, mddev)
+            mddev_create_serial_pool(mddev, rdev);
+    }
     ...
 }
 
-[Severity: High]
-This is a pre-existing issue, but the error path for !has_write_mostly in
-backlog_store() calls mddev_unlock(mddev) instead of
-mddev_unlock_and_resume(mddev).
+Since mddev_create_serial_pool() returns void, it hides memory allocation
+failures. If it fails for a disk in this loop, that device is left without
+initialization. Does this silently bypass write-behind serialization for
+that disk, leading to overlapping writes and silent data corruption?
 
-If a privileged user writes to the bitmap/backlog sysfs file when there are=
- no
-write-mostly devices in the array, mddev_suspend_and_lock(mddev) is called,=
- but
-the array is never resumed on this error path.=20
+Similarly, if MD_SERIALIZE_POLICY is active, check_and_add_serial() in
+drivers/md/raid1.c will unconditionally dereference rdev->serial:
 
-Does this permanently leave mddev->suspended elevated, blocking normal I/O
-processing and any future suspend/resume operations on the array?
+    int idx = sector_to_idx(r1_bio->sector);
+    struct serial_in_rdev *serial = &rdev->serial[idx];
+    struct serial_info *head_si;
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260718084218.4178=
-95-1-chencheng@fnnas.com?part=3D1
+    spin_lock_irqsave(&serial->serial_lock, flags);
+
+Can this cause a NULL pointer dereference for devices that failed
+initialization?
+
+Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+---
+ drivers/md/md-bitmap.c | 20 +++++++++++++++-----
+ drivers/md/md.c        | 33 ++++++++++++++++++++++-----------
+ drivers/md/md.h        |  2 +-
+ drivers/md/raid1.c     |  9 +++++++--
+ 4 files changed, 45 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 6d495cdf3fb2..e0510e3cae3e 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2211,12 +2211,15 @@ static int bitmap_load(struct mddev *mddev)
+ 	struct md_rdev *rdev;
+ 
+ 	if (!bitmap)
+ 		goto out;
+ 
+-	rdev_for_each(rdev, mddev)
+-		mddev_create_serial_pool(mddev, rdev);
++	rdev_for_each(rdev, mddev) {
++		err = mddev_create_serial_pool(mddev, rdev);
++		if (err)
++			goto out;
++	}
+ 
+ 	if (mddev_is_clustered(mddev))
+ 		mddev->cluster_ops->load_bitmaps(mddev, mddev->bitmap_info.nodes);
+ 
+ 	/* Clear out old bitmap info first:  Either there is none, or we
+@@ -2868,18 +2871,25 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
+ 		/* serial_info_pool is not needed if backlog is zero */
+ 		if (!test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
+ 			mddev_destroy_serial_pool(mddev, NULL);
+ 	} else if (backlog && !mddev->serial_info_pool) {
+ 		/* serial_info_pool is needed since backlog is not zero */
+-		rdev_for_each(rdev, mddev)
+-			mddev_create_serial_pool(mddev, rdev);
++		rdev_for_each(rdev, mddev) {
++			rv = mddev_create_serial_pool(mddev, rdev);
++			if (rv) {
++				mddev->bitmap_info.max_write_behind = old_mwb;
++				mddev_destroy_serial_pool(mddev, NULL);
++				goto out;
++			}
++		}
+ 	}
+ 	if (old_mwb != backlog)
+ 		bitmap_update_sb(mddev->bitmap);
+ 
++out:
+ 	mddev_unlock_and_resume(mddev);
+-	return len;
++	return rv ?: len;
+ }
+ 
+ static struct md_sysfs_entry bitmap_backlog =
+ __ATTR(backlog, S_IRUGO|S_IWUSR, backlog_show, backlog_store);
+ 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 25e06f088dc1..048ffd28869b 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -228,18 +228,19 @@ static int rdev_need_serial(struct md_rdev *rdev)
+ /*
+  * Init resource for rdev(s), then create serial_info_pool if:
+  * 1. rdev is the first device which return true from rdev_enable_serial.
+  * 2. rdev is NULL, means we want to enable serialization for all rdevs.
+  */
+-void mddev_create_serial_pool(struct mddev *mddev, struct md_rdev *rdev)
++int mddev_create_serial_pool(struct mddev *mddev, struct md_rdev *rdev)
+ {
+ 	int ret = 0;
+ 	unsigned int noio_flags;
+ 
+ 	if (rdev && !rdev_need_serial(rdev) &&
+-	    !test_bit(CollisionCheck, &rdev->flags))
+-		return;
++	    !test_bit(CollisionCheck, &rdev->flags) &&
++	    !test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
++		return 0;
+ 
+ 	noio_flags = memalloc_noio_save();
+ 	if (!rdev)
+ 		ret = rdevs_init_serial(mddev);
+ 	else
+@@ -248,18 +249,22 @@ void mddev_create_serial_pool(struct mddev *mddev, struct md_rdev *rdev)
+ 		goto out;
+ 
+ 	if (mddev->serial_info_pool == NULL) {
+ 		mddev->serial_info_pool =
+ 			mempool_create_kmalloc_pool(NR_SERIAL_INFOS,
+-						sizeof(struct serial_info));
++						    sizeof(struct serial_info));
+ 		if (!mddev->serial_info_pool) {
++			if (rdev)
++				rdev_uninit_serial(rdev);
+ 			rdevs_uninit_serial(mddev);
+ 			pr_err("can't alloc memory pool for serialization\n");
++			ret = -ENOMEM;
+ 		}
+ 	}
+ out:
+ 	memalloc_noio_restore(noio_flags);
++	return ret;
+ }
+ 
+ /*
+  * Free resource from rdev(s), and destroy serial_info_pool under conditions:
+  * 1. rdev is the last device flaged with CollisionCheck.
+@@ -2605,12 +2610,15 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
+ 	strreplace(b, '/', '!');
+ 
+ 	rdev->mddev = mddev;
+ 	pr_debug("md: bind<%s>\n", b);
+ 
+-	if (mddev->raid_disks)
+-		mddev_create_serial_pool(mddev, rdev);
++	if (mddev->raid_disks) {
++		err = mddev_create_serial_pool(mddev, rdev);
++		if (err)
++			return err;
++	}
+ 
+ 	if ((err = kobject_add(&rdev->kobj, &mddev->kobj, "dev-%s", b)))
+ 		goto fail;
+ 
+ 	/* failure here is OK */
+@@ -3118,13 +3126,15 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+ 				md_new_event();
+ 			}
+ 		}
+ 	} else if (cmd_match(buf, "writemostly")) {
+ 		set_bit(WriteMostly, &rdev->flags);
+-		mddev_create_serial_pool(rdev->mddev, rdev);
+-		need_update_sb = true;
+-		err = 0;
++		err = mddev_create_serial_pool(rdev->mddev, rdev);
++		if (err)
++			clear_bit(WriteMostly, &rdev->flags);
++		else
++			need_update_sb = true;
+ 	} else if (cmd_match(buf, "-writemostly")) {
+ 		mddev_destroy_serial_pool(rdev->mddev, rdev);
+ 		clear_bit(WriteMostly, &rdev->flags);
+ 		need_update_sb = true;
+ 		err = 0;
+@@ -5943,12 +5953,13 @@ serialize_policy_store(struct mddev *mddev, const char *buf, size_t len)
+ 		err = -EINVAL;
+ 		goto unlock;
+ 	}
+ 
+ 	if (value) {
+-		mddev_create_serial_pool(mddev, NULL);
+-		set_bit(MD_SERIALIZE_POLICY, &mddev->flags);
++		err = mddev_create_serial_pool(mddev, NULL);
++		if (!err)
++			set_bit(MD_SERIALIZE_POLICY, &mddev->flags);
+ 	} else {
+ 		mddev_destroy_serial_pool(mddev, NULL);
+ 		clear_bit(MD_SERIALIZE_POLICY, &mddev->flags);
+ 	}
+ unlock:
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 76488cd9e81e..e6ea0cc3669a 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -959,11 +959,11 @@ extern void mddev_resume(struct mddev *mddev);
+ extern void md_idle_sync_thread(struct mddev *mddev);
+ extern void md_frozen_sync_thread(struct mddev *mddev);
+ extern void md_unfrozen_sync_thread(struct mddev *mddev);
+ 
+ extern void md_update_sb(struct mddev *mddev, int force);
+-extern void mddev_create_serial_pool(struct mddev *mddev, struct md_rdev *rdev);
++extern int mddev_create_serial_pool(struct mddev *mddev, struct md_rdev *rdev);
+ extern void mddev_destroy_serial_pool(struct mddev *mddev,
+ 				      struct md_rdev *rdev);
+ struct md_rdev *md_find_rdev_nr_rcu(struct mddev *mddev, int nr);
+ struct md_rdev *md_find_rdev_rcu(struct mddev *mddev, dev_t dev);
+ 
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 5b9368bd9e70..ef3812806f30 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -90,11 +90,11 @@ static int check_and_add_serial(struct md_rdev *rdev, struct r1bio *r1_bio,
+ static void wait_for_serialization(struct md_rdev *rdev, struct r1bio *r1_bio)
+ {
+ 	struct mddev *mddev = rdev->mddev;
+ 	struct serial_info *si;
+ 
+-	if (WARN_ON(!mddev->serial_info_pool))
++	if (WARN_ON(!mddev->serial_info_pool || !rdev->serial))
+ 		return;
+ 	si = mempool_alloc(mddev->serial_info_pool, GFP_NOIO);
+ 	INIT_LIST_HEAD(&si->waiters);
+ 	INIT_LIST_HEAD(&si->list_node);
+ 	init_completion(&si->ready);
+@@ -109,11 +109,16 @@ static void remove_serial(struct md_rdev *rdev, sector_t lo, sector_t hi)
+ 	struct serial_info *si, *iter_si;
+ 	unsigned long flags;
+ 	int found = 0;
+ 	struct mddev *mddev = rdev->mddev;
+ 	int idx = sector_to_idx(lo);
+-	struct serial_in_rdev *serial = &rdev->serial[idx];
++	struct serial_in_rdev *serial;
++
++	if (WARN_ON(!mddev->serial_info_pool || !rdev->serial))
++		return;
++
++	serial = &rdev->serial[idx];
+ 
+ 	spin_lock_irqsave(&serial->serial_lock, flags);
+ 	for (si = raid1_rb_iter_first(&serial->serial_rb, lo, hi);
+ 	     si; si = raid1_rb_iter_next(si, lo, hi)) {
+ 		if (si->start == lo && si->last == hi) {
+-- 
+2.54.0
