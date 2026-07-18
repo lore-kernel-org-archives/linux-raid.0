@@ -1,318 +1,313 @@
-Received: from va-2-27.ptr.blmpb.com (va-2-27.ptr.blmpb.com [209.127.231.27])
+Received: from va-2-40.ptr.blmpb.com (va-2-40.ptr.blmpb.com [209.127.231.40])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E830D36CDE3
-	for <linux-raid@vger.kernel.org>; Sat, 18 Jul 2026 10:56:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.27
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F856279DCC
+	for <linux-raid@vger.kernel.org>; Sat, 18 Jul 2026 11:02:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.40
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784372179; cv=none; b=GCpvkY8FR0Ltnbk35dTzUBZXpKtTRpHVDc6/27HMy8WVDluDKmm5g0CaxDLmQSGs71W8K+qOie4Uy1srnHXi+1oii7OpZrpUmWfZPRSgirScXATLTllVuIGyqe7bP5/YHRjvASNdplpukyPNJvsRwZ4BTMDotp/r8Qcb1HuPwFk=
+	t=1784372574; cv=none; b=jIUhz+WW3q/v9UrOsBK4UF5HLw0cyFSAkuUx/GBSoOHp+vdnyaoVwL6HUIBiUlJl1I7uEr/nd646z83PShXGJYvStBMfZqc1gd2EHbqu+TExQ55wNDZqalq8OnZn5G1w8nQSZYA/0t+oRVD7ACIEMVs5I5hSTtsnXaCeLZXF1P4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784372179; c=relaxed/simple;
-	bh=UDhROFw0gnRn5iZUWXiAuT6ATAYBJBDbmSgSLNiNzeY=;
-	h=To:Cc:Message-Id:Mime-Version:From:Content-Type:Subject:Date; b=CiuIiLm/ejgwCbNVdc6TATmS/Wr8uR4v/7IXoU2n0mD6KN/mRLwo9MN8IoRrgIFeTf9ik5tulpSAQG3qJPRKqFyok5NEfHhfHVQ3jIB1Nc1JAzhr0mJmhmOH3Uw7AjSYNEAevb3OkVe6zyelj2VKPMNmz7DYrDoh0vm1rwWtOys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=zPhdkGlZ; arc=none smtp.client-ip=209.127.231.27
+	s=arc-20240116; t=1784372574; c=relaxed/simple;
+	bh=jSeaIFQvoPKLjFQRrTPlgKP55rLNKw6HebqoNA4UtUQ=;
+	h=From:Mime-Version:Subject:Message-Id:References:In-Reply-To:
+	 Content-Type:To:Cc:Date; b=IBhbLdseZNKZIcNRrvLlKJ2iAkkPJWUqmeJxaDTstMtA1XnITPYC8xv0uQIQecOS9VbF+3PJvueLVAgojETnc3GbU5j7YAxqvvCoHDq0jp5hbbj2xBsoDWdc7b1PKHw1Ovp72dgIYfym50gMP5iicC1nR5auNL/hhpV14ahoEEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=G46JFx6o; arc=none smtp.client-ip=209.127.231.40
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="zPhdkGlZ"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="G46JFx6o"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1784372164;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1784372566;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=llYGPliUlsafPkxBoJcNHTZUlVrqfw6/0St3IdiJCNk=;
- b=zPhdkGlZwpWi5l7oBCj5R1c3FH17GCcJ2A9tOvTC2w/BaUf0ktniqL+BgF0Dmmyc7vqwEN
- atQQpsdVyxRhfKLeOUC27VK5OZwGAijKVENqdVu+9JPme5BB0/JQD6jfFDOm+M89dUgwL8
- pwr2zIuZbdC83FKeAgzMC3UXKAmPGoW2JIX5hmEj0+2w+s52+EbqYogK8AklZO8MfgS+0X
- ggqm0HMSGjjwHGsmyJNDfx/xa6IHMDe3mNjmbg7AAdKfalEqhKmw1Nmg/chY1cyjMJYX4d
- R5YrI5tO/CeL0T3zHjqwOG06CHT53KIuM+6WC/6AER/gUW7+QjJ+fXDm2WSsNQ==
-Content-Transfer-Encoding: 7bit
-To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>
-Cc: <chencheng@fnnas.com>, <chencheng@fygo.io>, 
-	<linux-kernel@vger.kernel.org>
-Message-Id: <20260718105551.608500-1-chencheng@fnnas.com>
+ bh=ARBGJvNNnklAEL9/AW7ooWp1niqTNXuSz1X3lLQK18I=;
+ b=G46JFx6ofrWdzX0FHgVwbi3egKLhq8rIxt4VSYWvzONHnppQDYT8eVDol32ZcDf4DEtQ5D
+ cfFsO4gFWnKkGyBjjF9B8MR+/vdUF6wRvE/ARhLPo3p1+nnVfQNuHoqFPeiaLhON6pIcb6
+ U9u+B9hhEqigCNXBUIUydgllbAo5kPosRSVzi2KAPxdrJ1WpcDq/s8NJG+d7m59if1jQOH
+ z57ThmsWnRkqEb2EbRguGZk/jmxxZQuEiKwS11GPywx35uhL8zVYBcBkCqB4+nmjvszdVA
+ Q9CBzeRvSQLg2qRqk7gzY9NvkXDYbDixP/z3+PdRSUIr3/ASeyocBrwrbYd1Zw==
+From: "Chen Cheng" <chencheng@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-From: "Chen Cheng" <chencheng@fnnas.com>
-X-Lms-Return-Path: <lba+26a5b5bc2+e9d24e+vger.kernel.org+chencheng@fnnas.com>
-Received: from fedora ([183.34.161.69]) by smtp.feishu.cn with ESMTPS; Sat, 18 Jul 2026 18:56:01 +0800
-X-Mailer: git-send-email 2.54.0
+Subject: Re: [PATCH] md: use READ_ONCE() for lockless reads of sb_flags
+Message-Id: <71b83357-0fd2-4537-9a96-8b5bf894718e@fnnas.com>
+References: <20260711025121.3991689-1-chencheng@fnnas.com> <654cb68a-32e1-4fa7-a735-5a6f833db39e@fygo.io>
+User-Agent: Mozilla Thunderbird
+In-Reply-To: <654cb68a-32e1-4fa7-a735-5a6f833db39e@fygo.io>
 Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH] md: handle serial pool allocation failures
-Date: Sat, 18 Jul 2026 18:55:51 +0800
-X-Original-From: chencheng@fnnas.com
+Received: from [192.168.8.80] ([183.34.161.69]) by smtp.feishu.cn with ESMTPS; Sat, 18 Jul 2026 19:02:43 +0800
+X-Original-From: Chen Cheng <chencheng@fnnas.com>
+Content-Transfer-Encoding: quoted-printable
+X-Lms-Return-Path: <lba+26a5b5d54+2ba37e+vger.kernel.org+chencheng@fnnas.com>
+To: <yukuai@fygo.io>, <linux-raid@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>
+Date: Sat, 18 Jul 2026 19:02:42 +0800
 
-From: Chen Cheng <chencheng@fnnas.com>
+=E5=9C=A8 2026/7/12 02:16, yu kuai =E5=86=99=E9=81=93:
+> Hi,
+>=20
+> =E5=9C=A8 2026/7/11 10:51, Chen Cheng =E5=86=99=E9=81=93:
+>> From: Chen Cheng <chencheng@fnnas.com>
+>>
+>> sb_flags is checked without a lock in md, raid1, raid5, and raid10.
+>> KCSAN reports these reads as data races.
+>>
+>> The write side uses atomic bit ops.
+>> The read side still has plain loads in a few places.
+>>
+>> Use READ_ONCE() for the lockless reads of sb_flags.
+>>
+>> KCSAN reports #1:
+>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>>
+>> BUG: KCSAN: data-race in md_check_recovery / md_write_start
+>>
+>> write (marked) to 0xffff8e39f897f030 of 8 bytes by task 248146 on cpu 8:
+>>     md_write_start+0x5dd/0x910
+>>     raid10_make_request+0x9b/0x1080
+>>     md_handle_request+0x4a2/0xa40
+>>     [........]
+>>
+>> read to 0xffff8e39f897f030 of 8 bytes by task 250445 on cpu 11:
+>>     md_check_recovery+0x574/0x900
+>>     raid10d+0xb7/0x2950
+>>     [........]
+>>
+>> KCSAN reports #2:
+>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>> BUG: KCSAN: data-race in md_check_recovery / md_write_start
+>>
+>> write (marked) to 0xffff8e39e953f030 of 8 bytes by task 540091 on cpu 11=
+:
+>>     md_write_start+0x5dd/0x910
+>>     raid1_make_request+0x141/0x1990
+>>     [........]
+>>
+>> read to 0xffff8e39e953f030 of 8 bytes by task 580822 on cpu 0:
+>>     md_check_recovery+0x574/0x900
+>>     raid1d+0xcc/0x3840
+>>     [........]
+>>
+>> value changed: 0x0000000000000002 -> 0x0000000000000006
+>>
+>> KCSAN reports #3:
+>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>> BUG: KCSAN: data-race in md_check_recovery / md_do_sync.cold
+>>
+>> write (marked) to 0xffff8e39e9404030 of 8 bytes by task 492473 on cpu 6:
+>>     md_do_sync.cold+0x3f6/0x1686
+>>     [........]
+>>
+>> read to 0xffff8e39e9404030 of 8 bytes by task 492402 on cpu 3:
+>>     md_check_recovery+0x16d/0x900
+>>     raid1d+0xcc/0x3840
+>>     [........]
+>>
+>> value changed: 0x0000000000000000 -> 0x0000000000000002
+>>
+>> KCSAN reports #4:
+>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>> BUG: KCSAN: data-race in md_do_sync.cold / raid5d
+>>
+>> write (marked) to 0xffff8e39c35cb030 of 8 bytes by task 192196 on cpu 10=
+:
+>>     md_do_sync.cold+0x3f6/0x1686
+>>     md_thread+0x15a/0x2d0
+>>     [........]
+>>
+>> read to 0xffff8e39c35cb030 of 8 bytes by task 190759 on cpu 5:
+>>     raid5d+0x7f9/0xba0
+>>     md_thread+0x15a/0x2d0
+>>     [........]
+>>
+>> value changed: 0x0000000000000000 -> 0x0000000000000002
+>>
+>> Fixes: 2953079c692d ("md: separate flags for superblock changes")
+>>
+>> Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+>> ---
+>> v1 -> v2
+>> 	- pass checkpatch.pl check.
+>> ---
+>>    drivers/md/md.c     | 8 ++++----
+>>    drivers/md/raid1.c  | 2 +-
+>>    drivers/md/raid10.c | 4 ++--
+>>    drivers/md/raid5.c  | 7 ++++---
+>>    4 files changed, 11 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 096bb64e87bd..e72bf2010287 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -6830,11 +6830,11 @@ int md_run(struct mddev *mddev)
+>>    		 * via sysfs - until a lack of spares is confirmed.
+>>    		 */
+>>    		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+>>    	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>>   =20
+>> -	if (mddev->sb_flags)
+>> +	if (READ_ONCE(mddev->sb_flags))
+>>    		md_update_sb(mddev, 0);
+>>   =20
+>>    	if (IS_ENABLED(CONFIG_MD_BITMAP) && !mddev->bitmap_info.file &&
+>>    	    !mddev->bitmap_info.offset)
+>>    		md_bitmap_set_none(mddev);
+>> @@ -7024,11 +7024,11 @@ static void __md_stop_writes(struct mddev *mddev=
+)
+>>    			mddev->bitmap_ops->flush(mddev);
+>>    	}
+>>   =20
+>>    	if (md_is_rdwr(mddev) &&
+>>    	    ((!mddev->in_sync && !mddev_is_clustered(mddev)) ||
+>> -	     mddev->sb_flags)) {
+>> +	     READ_ONCE(mddev->sb_flags))) {
+>>    		/* mark array as shutdown cleanly */
+>>    		if (!mddev_is_clustered(mddev))
+>>    			mddev->in_sync =3D 1;
+>>    		md_update_sb(mddev, 1);
+>>    	}
+>> @@ -10294,11 +10294,11 @@ static bool md_should_do_recovery(struct mddev=
+ *mddev)
+>>    	/*
+>>    	 * MD_SB_CHANGE_PENDING indicates that the array is switching from c=
+lean to
+>>    	 * active, and no action is needed for now.
+>>    	 * All other MD_SB_* flags require to update the superblock.
+>>    	 */
+>> -	if (mddev->sb_flags & ~ (1<<MD_SB_CHANGE_PENDING))
+>> +	if (READ_ONCE(mddev->sb_flags) & ~(1<<MD_SB_CHANGE_PENDING))
+>>    		return true;
+>=20
+> So this should be a v3, and the above line still not fixed. Please check =
+checkpatch
+> warnings.
 
-sashiko-bot report a issue:
-mddev_create_serial_pool() silently ignored allocation failures, allowing
-callers to continue with incomplete serialization state.
+hi.
 
-validation:
+I run checkpatch.pl to double-check again .. 0 err 0 warn report .
 
-fail_page_alloc with a stacktrace filter for rdev_init_serial() to force
-the serial allocation and its kvmalloc fallback to fail.
+thanks
+cheng.
 
-A/B result:
-- Without this patch, serialize_policy accepts the write despite the
-	injected allocation failure, leaving serialization state
-	incomplete.
-- With this patch, the write returns -ENOMEM and serialize_policy remains
-	unchanged.
-
-Fixes: 3938f5fb82ae ("md: add serialize_policy sysfs node for raid1")
-Link: https://github.com/chencheng-fnnas/reproducer/blob/main/test-serial-pool-oom.sh
-
-sashiko-bot report:
-=====================
-[Severity: Critical]
-This is a pre-existing issue, but further down in backlog_store(), is it
-possible for mddev_create_serial_pool() to fail silently?
-
-drivers/md/md-bitmap.c:backlog_store() {
-    ...
-    } else if (backlog && !mddev->serial_info_pool) {
-        /* serial_info_pool is needed since backlog is not zero */
-        rdev_for_each(rdev, mddev)
-            mddev_create_serial_pool(mddev, rdev);
-    }
-    ...
-}
-
-Since mddev_create_serial_pool() returns void, it hides memory allocation
-failures. If it fails for a disk in this loop, that device is left without
-initialization. Does this silently bypass write-behind serialization for
-that disk, leading to overlapping writes and silent data corruption?
-
-Similarly, if MD_SERIALIZE_POLICY is active, check_and_add_serial() in
-drivers/md/raid1.c will unconditionally dereference rdev->serial:
-
-    int idx = sector_to_idx(r1_bio->sector);
-    struct serial_in_rdev *serial = &rdev->serial[idx];
-    struct serial_info *head_si;
-
-    spin_lock_irqsave(&serial->serial_lock, flags);
-
-Can this cause a NULL pointer dereference for devices that failed
-initialization?
-
-Signed-off-by: Chen Cheng <chencheng@fnnas.com>
----
- drivers/md/md-bitmap.c | 20 +++++++++++++++-----
- drivers/md/md.c        | 33 ++++++++++++++++++++++-----------
- drivers/md/md.h        |  2 +-
- drivers/md/raid1.c     |  9 +++++++--
- 4 files changed, 45 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 6d495cdf3fb2..e0510e3cae3e 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -2211,12 +2211,15 @@ static int bitmap_load(struct mddev *mddev)
- 	struct md_rdev *rdev;
- 
- 	if (!bitmap)
- 		goto out;
- 
--	rdev_for_each(rdev, mddev)
--		mddev_create_serial_pool(mddev, rdev);
-+	rdev_for_each(rdev, mddev) {
-+		err = mddev_create_serial_pool(mddev, rdev);
-+		if (err)
-+			goto out;
-+	}
- 
- 	if (mddev_is_clustered(mddev))
- 		mddev->cluster_ops->load_bitmaps(mddev, mddev->bitmap_info.nodes);
- 
- 	/* Clear out old bitmap info first:  Either there is none, or we
-@@ -2868,18 +2871,25 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
- 		/* serial_info_pool is not needed if backlog is zero */
- 		if (!test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
- 			mddev_destroy_serial_pool(mddev, NULL);
- 	} else if (backlog && !mddev->serial_info_pool) {
- 		/* serial_info_pool is needed since backlog is not zero */
--		rdev_for_each(rdev, mddev)
--			mddev_create_serial_pool(mddev, rdev);
-+		rdev_for_each(rdev, mddev) {
-+			rv = mddev_create_serial_pool(mddev, rdev);
-+			if (rv) {
-+				mddev->bitmap_info.max_write_behind = old_mwb;
-+				mddev_destroy_serial_pool(mddev, NULL);
-+				goto out;
-+			}
-+		}
- 	}
- 	if (old_mwb != backlog)
- 		bitmap_update_sb(mddev->bitmap);
- 
-+out:
- 	mddev_unlock_and_resume(mddev);
--	return len;
-+	return rv ?: len;
- }
- 
- static struct md_sysfs_entry bitmap_backlog =
- __ATTR(backlog, S_IRUGO|S_IWUSR, backlog_show, backlog_store);
- 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 25e06f088dc1..048ffd28869b 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -228,18 +228,19 @@ static int rdev_need_serial(struct md_rdev *rdev)
- /*
-  * Init resource for rdev(s), then create serial_info_pool if:
-  * 1. rdev is the first device which return true from rdev_enable_serial.
-  * 2. rdev is NULL, means we want to enable serialization for all rdevs.
-  */
--void mddev_create_serial_pool(struct mddev *mddev, struct md_rdev *rdev)
-+int mddev_create_serial_pool(struct mddev *mddev, struct md_rdev *rdev)
- {
- 	int ret = 0;
- 	unsigned int noio_flags;
- 
- 	if (rdev && !rdev_need_serial(rdev) &&
--	    !test_bit(CollisionCheck, &rdev->flags))
--		return;
-+	    !test_bit(CollisionCheck, &rdev->flags) &&
-+	    !test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
-+		return 0;
- 
- 	noio_flags = memalloc_noio_save();
- 	if (!rdev)
- 		ret = rdevs_init_serial(mddev);
- 	else
-@@ -248,18 +249,22 @@ void mddev_create_serial_pool(struct mddev *mddev, struct md_rdev *rdev)
- 		goto out;
- 
- 	if (mddev->serial_info_pool == NULL) {
- 		mddev->serial_info_pool =
- 			mempool_create_kmalloc_pool(NR_SERIAL_INFOS,
--						sizeof(struct serial_info));
-+						    sizeof(struct serial_info));
- 		if (!mddev->serial_info_pool) {
-+			if (rdev)
-+				rdev_uninit_serial(rdev);
- 			rdevs_uninit_serial(mddev);
- 			pr_err("can't alloc memory pool for serialization\n");
-+			ret = -ENOMEM;
- 		}
- 	}
- out:
- 	memalloc_noio_restore(noio_flags);
-+	return ret;
- }
- 
- /*
-  * Free resource from rdev(s), and destroy serial_info_pool under conditions:
-  * 1. rdev is the last device flaged with CollisionCheck.
-@@ -2605,12 +2610,15 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
- 	strreplace(b, '/', '!');
- 
- 	rdev->mddev = mddev;
- 	pr_debug("md: bind<%s>\n", b);
- 
--	if (mddev->raid_disks)
--		mddev_create_serial_pool(mddev, rdev);
-+	if (mddev->raid_disks) {
-+		err = mddev_create_serial_pool(mddev, rdev);
-+		if (err)
-+			return err;
-+	}
- 
- 	if ((err = kobject_add(&rdev->kobj, &mddev->kobj, "dev-%s", b)))
- 		goto fail;
- 
- 	/* failure here is OK */
-@@ -3118,13 +3126,15 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
- 				md_new_event();
- 			}
- 		}
- 	} else if (cmd_match(buf, "writemostly")) {
- 		set_bit(WriteMostly, &rdev->flags);
--		mddev_create_serial_pool(rdev->mddev, rdev);
--		need_update_sb = true;
--		err = 0;
-+		err = mddev_create_serial_pool(rdev->mddev, rdev);
-+		if (err)
-+			clear_bit(WriteMostly, &rdev->flags);
-+		else
-+			need_update_sb = true;
- 	} else if (cmd_match(buf, "-writemostly")) {
- 		mddev_destroy_serial_pool(rdev->mddev, rdev);
- 		clear_bit(WriteMostly, &rdev->flags);
- 		need_update_sb = true;
- 		err = 0;
-@@ -5943,12 +5953,13 @@ serialize_policy_store(struct mddev *mddev, const char *buf, size_t len)
- 		err = -EINVAL;
- 		goto unlock;
- 	}
- 
- 	if (value) {
--		mddev_create_serial_pool(mddev, NULL);
--		set_bit(MD_SERIALIZE_POLICY, &mddev->flags);
-+		err = mddev_create_serial_pool(mddev, NULL);
-+		if (!err)
-+			set_bit(MD_SERIALIZE_POLICY, &mddev->flags);
- 	} else {
- 		mddev_destroy_serial_pool(mddev, NULL);
- 		clear_bit(MD_SERIALIZE_POLICY, &mddev->flags);
- 	}
- unlock:
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 76488cd9e81e..e6ea0cc3669a 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -959,11 +959,11 @@ extern void mddev_resume(struct mddev *mddev);
- extern void md_idle_sync_thread(struct mddev *mddev);
- extern void md_frozen_sync_thread(struct mddev *mddev);
- extern void md_unfrozen_sync_thread(struct mddev *mddev);
- 
- extern void md_update_sb(struct mddev *mddev, int force);
--extern void mddev_create_serial_pool(struct mddev *mddev, struct md_rdev *rdev);
-+extern int mddev_create_serial_pool(struct mddev *mddev, struct md_rdev *rdev);
- extern void mddev_destroy_serial_pool(struct mddev *mddev,
- 				      struct md_rdev *rdev);
- struct md_rdev *md_find_rdev_nr_rcu(struct mddev *mddev, int nr);
- struct md_rdev *md_find_rdev_rcu(struct mddev *mddev, dev_t dev);
- 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 5b9368bd9e70..ef3812806f30 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -90,11 +90,11 @@ static int check_and_add_serial(struct md_rdev *rdev, struct r1bio *r1_bio,
- static void wait_for_serialization(struct md_rdev *rdev, struct r1bio *r1_bio)
- {
- 	struct mddev *mddev = rdev->mddev;
- 	struct serial_info *si;
- 
--	if (WARN_ON(!mddev->serial_info_pool))
-+	if (WARN_ON(!mddev->serial_info_pool || !rdev->serial))
- 		return;
- 	si = mempool_alloc(mddev->serial_info_pool, GFP_NOIO);
- 	INIT_LIST_HEAD(&si->waiters);
- 	INIT_LIST_HEAD(&si->list_node);
- 	init_completion(&si->ready);
-@@ -109,11 +109,16 @@ static void remove_serial(struct md_rdev *rdev, sector_t lo, sector_t hi)
- 	struct serial_info *si, *iter_si;
- 	unsigned long flags;
- 	int found = 0;
- 	struct mddev *mddev = rdev->mddev;
- 	int idx = sector_to_idx(lo);
--	struct serial_in_rdev *serial = &rdev->serial[idx];
-+	struct serial_in_rdev *serial;
-+
-+	if (WARN_ON(!mddev->serial_info_pool || !rdev->serial))
-+		return;
-+
-+	serial = &rdev->serial[idx];
- 
- 	spin_lock_irqsave(&serial->serial_lock, flags);
- 	for (si = raid1_rb_iter_first(&serial->serial_rb, lo, hi);
- 	     si; si = raid1_rb_iter_next(si, lo, hi)) {
- 		if (si->start == lo && si->last == hi) {
--- 
-2.54.0
+>=20
+>>   =20
+>>    	/*
+>>    	 * If the array is not using external metadata and there has been no=
+ data
+>>    	 * written for some time, then the array's status needs to be set to
+>> @@ -10423,11 +10423,11 @@ void md_check_recovery(struct mddev *mddev)
+>>    			spin_lock(&mddev->lock);
+>>    			set_in_sync(mddev);
+>>    			spin_unlock(&mddev->lock);
+>>    		}
+>>   =20
+>> -		if (mddev->sb_flags)
+>> +		if (READ_ONCE(mddev->sb_flags))
+>>    			md_update_sb(mddev, 0);
+>>   =20
+>>    		/*
+>>    		 * Never start a new sync thread if MD_RECOVERY_RUNNING is
+>>    		 * still set.
+>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> index 29b58583e381..bd6808656edb 100644
+>> --- a/drivers/md/raid1.c
+>> +++ b/drivers/md/raid1.c
+>> @@ -2738,11 +2738,11 @@ static void raid1d(struct md_thread *thread)
+>>    			handle_read_error(conf, r1_bio);
+>>    		else
+>>    			WARN_ON_ONCE(1);
+>>   =20
+>>    		cond_resched();
+>> -		if (mddev->sb_flags & ~(1<<MD_SB_CHANGE_PENDING))
+>> +		if (READ_ONCE(mddev->sb_flags) & ~(1 << MD_SB_CHANGE_PENDING))
+>>    			md_check_recovery(mddev);
+>>    	}
+>>    	blk_finish_plug(&plug);
+>>    }
+>>   =20
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index adaf9e432e25..3ffa5a19964d 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -3030,11 +3030,11 @@ static void raid10d(struct md_thread *thread)
+>>    			handle_read_error(mddev, r10_bio);
+>>    		else
+>>    			WARN_ON_ONCE(1);
+>>   =20
+>>    		cond_resched();
+>> -		if (mddev->sb_flags & ~(1<<MD_SB_CHANGE_PENDING))
+>> +		if (READ_ONCE(mddev->sb_flags) & ~(1 << MD_SB_CHANGE_PENDING))
+>>    			md_check_recovery(mddev);
+>>    	}
+>>    	blk_finish_plug(&plug);
+>>    }
+>>   =20
+>> @@ -4698,11 +4698,11 @@ static sector_t reshape_request(struct mddev *md=
+dev, sector_t sector_nr,
+>>    		else
+>>    			mddev->curr_resync_completed =3D conf->reshape_progress;
+>>    		conf->reshape_checkpoint =3D jiffies;
+>>    		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+>>    		md_wakeup_thread(mddev->thread);
+>> -		wait_event(mddev->sb_wait, mddev->sb_flags =3D=3D 0 ||
+>> +		wait_event(mddev->sb_wait, READ_ONCE(mddev->sb_flags) =3D=3D 0 ||
+>>    			   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
+>>    		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+>>    			allow_barrier(conf);
+>>    			return sectors_done;
+>>    		}
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index ded6a69f7795..cb58b4353995 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -1219,11 +1219,11 @@ static void ops_run_io(struct stripe_head *sh, s=
+truct stripe_head_state *s)
+>>    				break;
+>>   =20
+>>    			if (bad < 0) {
+>>    				set_bit(BlockedBadBlocks, &rdev->flags);
+>>    				if (!conf->mddev->external &&
+>> -				    conf->mddev->sb_flags) {
+>> +				    READ_ONCE(conf->mddev->sb_flags)) {
+>>    					/* It is very unlikely, but we might
+>>    					 * still need to write out the
+>>    					 * bad block log - better give it
+>>    					 * a chance*/
+>>    					md_check_recovery(conf->mddev);
+>> @@ -6469,11 +6469,11 @@ static sector_t reshape_request(struct mddev *md=
+dev, sector_t sector_nr, int *sk
+>>    					rdev->recovery_offset =3D sector_nr;
+>>   =20
+>>    		conf->reshape_checkpoint =3D jiffies;
+>>    		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+>>    		md_wakeup_thread(mddev->thread);
+>> -		wait_event(mddev->sb_wait, mddev->sb_flags =3D=3D 0 ||
+>> +		wait_event(mddev->sb_wait, READ_ONCE(mddev->sb_flags) =3D=3D 0 ||
+>>    			   test_bit(MD_RECOVERY_INTR, &mddev->recovery));
+>>    		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+>>    			return 0;
+>>    		spin_lock_irq(&conf->device_lock);
+>>    		conf->reshape_safe =3D mddev->reshape_position;
+>> @@ -6913,11 +6913,12 @@ static void raid5d(struct md_thread *thread)
+>>    						   conf->temp_inactive_list);
+>>    		if (!batch_size && !released)
+>>    			break;
+>>    		handled +=3D batch_size;
+>>   =20
+>> -		if (mddev->sb_flags & ~(1 << MD_SB_CHANGE_PENDING)) {
+>> +		if (READ_ONCE(mddev->sb_flags) &
+>> +		    ~(1 << MD_SB_CHANGE_PENDING)) {
+>>    			spin_unlock_irq(&conf->device_lock);
+>>    			md_check_recovery(mddev);
+>>    			spin_lock_irq(&conf->device_lock);
+>>    		}
+>>    	}
+>
