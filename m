@@ -1,226 +1,151 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11023098.outbound.protection.outlook.com [40.107.159.98])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 597E238228A
-	for <linux-raid@vger.kernel.org>; Fri, 17 Jul 2026 19:15:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.98
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784315711; cv=fail; b=JMo2pKWozgDAYZbtNaH+CUEZHCwMeLh9fZRktKFOzomGkiBC0uX6X7TOYk4NXZOj7/3MQPKLeybpafYZgq5rfX1q45dlIp+SUX61hv3yLUws1TSzJqy5r8nUqXgFXkLfd8TmV7ZPAxgqa+bsL7TD8ml91BinhkxGXha2YHy2yDE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784315711; c=relaxed/simple;
-	bh=4SL+mqNgn9kCiKXcARl//GLAjCivuS2tTOij+0ETvAM=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=e5S5By5QsHwR0XhRgPwyBxgIVzyIPe1HPlIhtUcGT1xaBr200yZ+X+kgXILS4RYtBcwHPiK0F2MuBAKLxUzeD7Ig9M31lGEKZpGFvR/ANh8gK+RiNeSyTctuZqbn7HlbAHUcIHGgOGNbRU7qqug78ddpl/G86ivMed7JGxZgMmM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=hunenet.nl; spf=pass smtp.mailfrom=hunenet.nl; dkim=pass (2048-bit key) header.d=hunenet.nl header.i=@hunenet.nl header.b=MM1wiXuI; arc=fail smtp.client-ip=40.107.159.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=hunenet.nl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hunenet.nl
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12BF143F0B5
+	for <linux-raid@vger.kernel.org>; Sat, 18 Jul 2026 03:56:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784347002; cv=none; b=oJuXgKDoNiXkS5UtBZ6FFMcWyPGRSUQKCgeGF3DQWQn1X6YPzLtJ0h+WjklgXxyJYxkombtBYYYbit9v84noe5Qtm0jIxUtfdS40MG74wlsdFu5KjiaYKUkPiUJ3KRVROwJ1pQJ5umHluYUIwDeJSoKCfDRSekLhtVTd5fYkHQM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784347002; c=relaxed/simple;
+	bh=fMsk1ZkEqV8OetY/0IQTkw993pGrA02QXu6gsNQW19c=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=soT/k/XasQUrx4Zgliu82aFhVwK0mlL1em/zwqr5XjZt0R2GOee14fbPYXwhN16Grphjp4UW+Cz2x9Z/uXPbcZE2bjWxBYX/wbZLiKvVh1/56iqlq67QZpH6fGvOFEdU312cRZrFALwZdPmObD8MK7CmhrjOVXfbCnopQKaF2R4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cf3qeC+B; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=hunenet.nl header.i=@hunenet.nl header.b="MM1wiXuI"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=pWhstw+YWNwkriJuoRpd/SWs30ys6n0SdGlPqNpAoLT31mn90xlq5hruTLbjJbu7TQftBomRNYYPD8wwLfVbsO0PpcsNdDatlYjZB782xKTJJG8XFNaVGP4ZxYttbhgKONw96T2P4JpJRKrR9zFAlEB/i+bt0mm04lrA7rf/wMAbGg1aBlRKOFpUWCXR8QXu5GHVHdI8gL3DLag5B1zoOiaxnbmS6etM7uhQZJ2nCFp+eP/1ziQJMkH8MGRqGxixCib0QFLTvEoLTxtq3G3aONnx118TW29B4RT7LB34cpU/dorrr4bf74lkHHvvN8P/k+ZbyRRfFiqdsv2U3QYapw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4SL+mqNgn9kCiKXcARl//GLAjCivuS2tTOij+0ETvAM=;
- b=A2iMTKu+GwMrSCkrhfDqmT0mxr6XvkVnOHR4PivZfKsRqMRvM87j0M6A6ZEysOrbaHQANWXxgs547nJsyDb24bcorhLALg2MOBwB8oI/UoSt2PIL6iAs3mIOV9EfU+6KnUA3VRwn9y7oTFapNDR7g3MJDI1GrRIJBw39EqkxFTAYXHxM5cAzZLvba27k4TfPWuAzRKXXReqtuWOocbQl4MBLKsMMQBpUByxsePadGPZxhRox5oKabZSEvud7nwmf8vfS2mMfZ/+6QLy97B0+JUGS3R10hrLPYAyVycJhMLHa0lJu/Ptk/OdAtpUy/qvYtdb6HHnpGx4UZYiEwS4Skg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=hunenet.nl; dmarc=pass action=none header.from=hunenet.nl;
- dkim=pass header.d=hunenet.nl; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hunenet.nl;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4SL+mqNgn9kCiKXcARl//GLAjCivuS2tTOij+0ETvAM=;
- b=MM1wiXuInNbMSca1yp5GLFf+i7MPHQdpsJQBLpobFjHgz/8HNzq1rP4CbDCbvoY9h6MCA0n3fkgCFcPdNMQSHoNTEtpxLIxmT15ZsV63M5mngK/u2u5LsuVYhsyiwrqxuHxqc1DK9AO81V+rTKUdItbFleIgEA99k6cE6GVOG6DRf8RAfBTgHVaLbw5FCaFtzExT8sD+BLULGDQLqUiCNFxILDWjcu7Nk4nd0exwO8vkfxhUDrcd6rVrs898DGd+GL9K2RCaRptUfKMX0F8GRVPuL8v7guq+AhD211tyuWmKPLLjeDlv0XDHIs78/pTvOYN3QTU5ULADrhNVA7Yz6g==
-Received: from AM0PR05MB6131.eurprd05.prod.outlook.com (2603:10a6:208:127::11)
- by PA6PR05MB11904.eurprd05.prod.outlook.com (2603:10a6:102:523::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.12; Fri, 17 Jul
- 2026 19:15:03 +0000
-Received: from AM0PR05MB6131.eurprd05.prod.outlook.com
- ([fe80::6627:e315:c3e6:bf01]) by AM0PR05MB6131.eurprd05.prod.outlook.com
- ([fe80::6627:e315:c3e6:bf01%5]) with mapi id 15.21.0223.011; Fri, 17 Jul 2026
- 19:15:03 +0000
-From: "G.W. Kant - Hunenet B.V." <g.w.kant@hunenet.nl>
-To: Roger Heflin <rogerheflin@gmail.com>
-CC: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>,
-	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "yukuai@fygo.io"
-	<yukuai@fygo.io>
-Subject: Re: Subject: RFC: Read repair for md RAID1 after mirror read failures
-Thread-Topic: Subject: RFC: Read repair for md RAID1 after mirror read
- failures
-Thread-Index:
- AQHdFAT9gXN+3UMPxEiBW2BLzju2krZuDRaAgACTK4CAADoKgIAABn6AgAJl+ACAAEbMAIAAUbUAgAAoKwCAABGrAA==
-Date: Fri, 17 Jul 2026 19:15:02 +0000
-Message-ID: <629fb5df-9c20-4fe0-8513-1993332bdb50@hunenet.nl>
-References: <8dcbfa43-c687-49bb-81b5-e6b8e8848c77@hunenet.nl>
- <m2y0fcesbe.fsf@gmail.com> <cff97a09-ee38-4785-9a45-1fd562fbaf5e@hunenet.nl>
- <m2jyqwduba.fsf@f8410a22-cd7b-4baf-acf5-82353315d5e5.fritz.box>
- <m2ech4dt8k.fsf@f8410a22-cd7b-4baf-acf5-82353315d5e5.fritz.box>
- <59fa3f9f-eda1-4f8a-917d-8f6612639a1b@hunenet.nl>
- <CAAMCDeefBEP0c4oW3iX4_cbZBLDuyfuAtCREtFgiH-qS4ZaiXQ@mail.gmail.com>
- <fd1f940e-4382-4a8a-9d16-e70a708da3cb@hunenet.nl>
- <CAAMCDefN+a_mMWByAMPEkCo6sT2iyi-b8J2et5LsJpxZtZBzQQ@mail.gmail.com>
-In-Reply-To:
- <CAAMCDefN+a_mMWByAMPEkCo6sT2iyi-b8J2et5LsJpxZtZBzQQ@mail.gmail.com>
-Accept-Language: nl-NL, en-US
-Content-Language: nl-NL
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=hunenet.nl;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: AM0PR05MB6131:EE_|PA6PR05MB11904:EE_
-x-ms-office365-filtering-correlation-id: 581fc0e4-4207-4913-f660-08dee437b423
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|23010399003|376014|366016|1800799024|38070700021|6133799003|56012099006|4143699003|10067099003|22082099003|18002099003|3023799007;
-x-microsoft-antispam-message-info:
- x99Q5MNlk6LhRRLzJgXAOqMXRDwvybdb9yw9f9fe735tfpU936rn1fFmBbRz4rQiwibriNKv8nRWgduteeakMnnKhEchRYLNx8q0dxEKhgPMuNrbGCZDyF8xEP2EaK3h7YBNDRDZLY4IlWJkZ5qdRAjwkWSP06auvU6UECj87TmS24HWtFgQpCWGOCjO+2JEa5AG6NJHSKb2d/J6beOrPCHDBGkuvWNmPpEHbunyuklPE+Ct2W3Dx+et6/UQq3NBaiDOrsjzWWg5jW2DbItBp53VqJnizGZHA+ECEjHXd2+SLTqpnNTGJy23EBWO12W2xoY+4EXmrdn9N2npk5ePUrp2gcUqY2/yN0/m82JaLVjaciSdXiirDianJxkHwc0+oDU4lwy2JsKkLQjsS+WsmOtDzlbDsK/Um3G63LMcQvb1TF/2OFqed/S5g37byp6UNvWBMnklaoxNN3GAE1xE6hnRlGm/h6daS4XTEig7kIsYvwxqf2ptzTEEQlQbIAdFBcQlJPCI/DaTvMtNBb5uqn6DA86yjVlDNHCUEOE0AgP11SEoy7rhito6POvif8AJYaBLhKDnHmP3K7SBsl+/jWyrNxBXQQSASe9ndI3b7jgGlX+sWR1kti7ejbA3K3nvyJdxhvLhOM2kHl15+iB1FcRLp0uM9c593oZm67SlbpDpJ+Q13GAFTdNyGf6TjlALHcYoI6w//HUzkX2AVu6WX/8frFzoaIb0YWNp3/yInNQ=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM0PR05MB6131.eurprd05.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(366016)(1800799024)(38070700021)(6133799003)(56012099006)(4143699003)(10067099003)(22082099003)(18002099003)(3023799007);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?WE14eTFYcUduYjlpMkJkQlFjcDNyODZqN1NoUTkvU2tKTlBmd2U3endvWDFa?=
- =?utf-8?B?alVvRzNXQjlscm4xVVVPOUZJQ1IycHp6ZFNQaWdwcGJZbWVvNzZockxNK3VL?=
- =?utf-8?B?ZkI2Y0FjTE5vWEtLSjI3OTg0cTlOb0EyNFBGSkZLaXcxcVVUbFViNUJDSzJW?=
- =?utf-8?B?eEdVajVXMzhaM2RaRGNDM0h3SXh2ZnFDTGIzQ0wvZEhWSU5HTVZnKzR4UjRW?=
- =?utf-8?B?MVAwclRkZ2F1R0Mxd2tFblJaMEZFeEVlK0dxZUFQY2dJL2FFOHNKY3E3NGN6?=
- =?utf-8?B?UDRvMG1XRU04WUhZa21oWDg1TU0xQ253aTN1OTlxQXZqbzBIdEV1R3pSQkpw?=
- =?utf-8?B?NGF6SFlSNUlVT3BmL1UwUk91SVRRTGwzOXhKMm9iTytQUjVrQnFJeFlqWVZ2?=
- =?utf-8?B?NUsxUThqM24vTm5wV09maUFzUlNhMDNyOFdGL2F6NFY1QVJPeUczcmpNdzA2?=
- =?utf-8?B?dFNNRnFMR01pZGUvQzlSSFplTU4zc2piZjY0QUJpei81U2hLVWlvTjR3QUpW?=
- =?utf-8?B?eDBHVHdYcnRac0JHbGZWODB4SlpzSktxWGVUN0FOV3dpdytmWjc3MTJRU2JF?=
- =?utf-8?B?Mkt3eXM4OWJmMzdYOEdFeXZwMENkRHlDNWYzbHY4cUN3N0FpdmFhektCTGMw?=
- =?utf-8?B?d3BhYjVLenl2WG5CeDAvb2Z2ZE9qYVgyc1Y2WTF5bWtoMGtCVkwvNitJMDdj?=
- =?utf-8?B?WE1ZNWh5cms2Nk9YMVZGdU1PK1haSlRiNGJWNGYzMi9jMktJWG10Zk50UEg4?=
- =?utf-8?B?aWJEc3JNbE5tV3dxYnpSWjFGSWx4MllhZTdWOVRXUFc3V2M2ZEpsejdMR25U?=
- =?utf-8?B?cXcrNGl3UXA3TnlidUZ0MlNiU1NHc3FnVmZvTHdzeHVRWEl4dCt2V1N2a2ZI?=
- =?utf-8?B?Wmg2Wml5VU93K0tteEZZTmcvQ3lSSmEwM2tReW5kdnhaK0dCY2FkcVRlMW1E?=
- =?utf-8?B?YmVGVW90NEQ3UkcxRGo2ZXN0RnIwTTNjZWcvMlNuLzJIUW5kQTZ2RkhKblZD?=
- =?utf-8?B?RnVqbVhKWmprSFk4UUpoUzQrcFp1OUhhRFlGZWNrKzlhTTlPQlJwaUpsU090?=
- =?utf-8?B?K0tOMVNLNTdJNkplS282akxHdlNUcFowb2NHa3FkN1NZek0zYXlNYWdEQlFE?=
- =?utf-8?B?Q3RodnYyQzdxTGFpOUlDNHZtWkdsSzNZR3M2cklSK0hPRklkeW1QeTJMRFZr?=
- =?utf-8?B?d1VEMXJSQldPQmlYWng4dWNrNjRiaWdyclNqOVZIVjFQZkViVzM3YjJpalhr?=
- =?utf-8?B?Ui84K1NLM0o5OXREbTl4SUNidFhhMnZseTE5OTZFaWt5NjZJQmYyWEVEV0xt?=
- =?utf-8?B?Q21pZXZSTi96R2c0QzNaVmdoNjhrb09XZmlZNzV0YnRNSlNVa21zcVhrR0k2?=
- =?utf-8?B?UTl3cmRlVlpVTVBvRXFyN29aZXI4UVcvdHBhZmxESUY5TmhvVmVjc2c3Szgy?=
- =?utf-8?B?dWErZW9WWWZMZ2haZ2V2UEZDaUVOcjZOZU42N2VVUU1HS1dha0hjTEJlQU1S?=
- =?utf-8?B?aGEzZWNNcEM3bDQ0M1Rtd3NsUUl3LzBKeTNERmxTTDc4Nno1eGR2SVJ6dW5Y?=
- =?utf-8?B?WnV3M3lnM3gvSXhUWm5lWkZsOGs0RmJhTHZoVmR6S1RjdG9ZVURoWEhPY25M?=
- =?utf-8?B?aEluUnlzVnp0a0RrZDdqZ3hXNmpmSThwWTRvMFhrdmVuWC9XTjVJdm1zWjZt?=
- =?utf-8?B?eWZWU25zTW9XdGlib2grYno4TCswQU85R0JKMk95cjJoTjk5Q2VnUXF2dTFm?=
- =?utf-8?B?U0RxWW9LWUZjcHgzcE5jMFc4czQ2VXpkaDAxTHRXUUU5NlBQQ255bWV5Z1pU?=
- =?utf-8?B?YzFzY3VGOU1WcFZldFhoNUZYcjZkWXp6R0N0bFZRWGlxNTVsZlExN3ZuRzZF?=
- =?utf-8?B?WkR4V29qU3hSYklERXlkcTAxSFpsaG1nMzJWQThObVRUbkl3UUdFeGFXS3FZ?=
- =?utf-8?B?ckJxT20zYnVFR1BpMzJyalZnelJFZUZlSmFFUVd4YzRnR3dBdkI2QWF0cUFn?=
- =?utf-8?B?SW1qc25MRUhCQVM1K1JIeGxoUFVyaThjcVFsTTl4bldKem9GZWpsSWoxOGRO?=
- =?utf-8?B?cmlnTFpyT05Idm9URWR0NnNsWkhGSTVMYzlXRTBNQTVVRHRzRVd1aUxrellK?=
- =?utf-8?B?c3hpT3k2QXBJZHFaNDc2S3ZyT3ptZE5UTlV2aHcwYWZMYjZzbWZWb2xOZDdO?=
- =?utf-8?B?b3plVzVHOTZhSWllQndXek5VQ0xLc1FXWmtreXh0N0d3bUg5cWRXelNicFo4?=
- =?utf-8?B?aEd4KzluSmQ1Nnk2WmFuZjdBeFhCbkc5N0xCM3g4YmZCblNlYnRtQjJjTUpB?=
- =?utf-8?Q?pQhYxSd56g4EBHGMG1?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <36D6DBB394B6E346B2547EA58D2D6CF0@eurprd05.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cf3qeC+B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DE7B1F000E9;
+	Sat, 18 Jul 2026 03:56:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784347000;
+	bh=monfxFXIahkCi88MikFug+8ZJXB/PDecBItvsDuSOZ4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Cf3qeC+BoIetU8IMVY/BEir/661kk3tcHSJbGU9D+JMtK8PvtzQicUZxubOe1EIDo
+	 HpteSsktf4d4jXAnKl4/u+ROEJ9vJLT+3lsijfNDZ1l1s2fv7IK1cDgTG8u89Geu1Q
+	 VEUxmzR7MZnbW6HQ81nf3ZM6Tou8pulgrAwYi0gz9xfVC1/HEbo/jIPNnPQSREpSDh
+	 almZGMQhneNlQs/NvYBQbFSY5o1lTzLF7eMV/X2zGMjsVKofyXiX6c1hVRkBPtXlnk
+	 vttm8+mQs6geODPviT/FMQD8qvoxVudrqQg2aOI5xG8ztrNGQVpdBnUc+uUr7+ccqh
+	 LgPqMWN/ref6A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] md/bitmap: resume array on backlog_store() error path
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chen Cheng" <chencheng@fnnas.com>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260718034236.4119093-1-chencheng@fnnas.com>
+References: <20260718034236.4119093-1-chencheng@fnnas.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 18 Jul 2026 03:56:39 +0000
+Message-Id: <20260718035640.6DE7B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-OriginatorOrg: hunenet.nl
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: AM0PR05MB6131.eurprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 581fc0e4-4207-4913-f660-08dee437b423
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jul 2026 19:15:02.9198
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 887aa16f-e08f-4cfb-bc70-8f3f25a72a41
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: kFHthRYyjVzdQLxdSyrkKIggz/GKsZNO5B1czSMxw6ltb0wOJM6JpiP9oQJoGyE6NkWFqHTjSn9HNhCIlFSAUQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA6PR05MB11904
 
-T24gNy8xNy8yNiA4OjExIFBNLCBSb2dlciBIZWZsaW4gd3JvdGU6DQo+IFRoZSBkcml2ZXMgYXJl
-IHNhaWQgdG8gZG8gcmVmcmVzaGVzIHdoZW4gaXQgZmluZHMgYSB3ZWFrIHNlY3RvciB3aGVuDQo+
-IGRvaW5nIGEgbG9uZyBtZWRpYSB0ZXN0Lg0KPiANCj4gVGhlIG1hbnVmYWN0dXJlcyBkbyBub3Qg
-c2VlbSB0byBkb2N1bWVudCBhbnkgZGlzayBpbnRlcm5hbHMsIHRoZXkNCj4gbmV2ZXIgaGF2ZS4g
-ICAgQWxsIG1hbnVmYWN0dXJlcyBjbGFpbSB0aGVpciBtYWdpYyBmaXJtd2FyZS9wcm9jZXNzZXMN
-Cj4gZ2l2ZSB0aGVtIGEgY29tcGV0aXRpdmUgYWR2YW50YWdlIGFuZCBzbyBkb24ndCBkaXNjbG9z
-ZSB3aGF0IGdvZXMgb24uDQo+ICAgUHJldHR5IG11Y2ggYWxsIG9mIHRoZSBoYXJkd2FyZSBpcyBo
-YW5kbGVkIHRoaXMgd2F5LCB3aXRoIHBvb3INCj4gZXh0ZXJuYWwgZG9jdW1lbnRhdGlvbi4NCj4g
-DQo+IFNtYXJ0IHNlZW1zIHRvIG9ubHkgZGlzY2xvc2UgdGhlIGNvbW1vbiBzZXR0aW5ncy9lcnJv
-cnMsIGFuZCBkb24ndA0KPiBzZWVtIHRvIGFsbG93IGFueXRoaW5nIGV4Y2VwdCBzZXR0aW5nIGNo
-YW5nZXMsIGFuZCB0byBydW4gZGVmaW5lZA0KPiB0ZXN0cyAoc2hvcnQsIGxvbmcgYW5kIHNpbWls
-YXIpLg0KPiANCj4gSSBoYXZlIGJlZW4gdG9sZCBieSBhIFdEIGVuZ2luZWVyIHRoYXQgdGhlaXIg
-aW50ZXJuYWwgdG9vbHMgaGF2ZSB0aGUNCj4gYWJpbGl0eSB0byByZWFkIG91dCBhIG51bWJlciBv
-ZiBvdGhlciBwYXJhbWV0ZXJzIHRoYXQgYXJlbid0IGV4cG9zZWQNCj4gdG8gU01BUlQsIGFuZCBt
-YXkgYWxzbyBiZSBhYmxlIHRvIGRvIG90aGVyIHRoaW5ncy4gIFRob3NlIHRvb2xzIGFyZQ0KPiBu
-b3QgZXh0ZXJuYWxseSBhdmFpbGFibGUgYW5kIHRoZSB3aGVuIEkgaGFkIGFjY2VzcyB0byBvbmUg
-b2YgdGhvc2UNCj4gdG9vbHMgKGZvciBhIGZldyBob3VycyBzbyBJIGNvdWxkIGdldCBpdCBpbnRv
-IGEgaGlnaCBzZWN1cml0eSBzaXRlDQo+IHdpdGggdGhlIFdEIGVuZ2luZWVyKSBJIGhhZCB0byBh
-Z3JlZSB0byBub3Qga2VlcCBpdC4NCj4gDQo+IEkgd2F0Y2hlZCBvbmUgb2YgdGhlIHRvb2xzIGJl
-IHVzZWQgb24gc29tZSBkaXNrcyBieSBhIFdEIGVuZ2luZWVyIHRoYXQNCj4gd2VudCBvbnNpdGUg
-KGJ1dCBJIGRvbid0IHJlbWVtYmVyIGlmIEkgc2F3IGFueSBub24tU01BUlQgbGlrZSBkYXRhIG9u
-DQo+IHRoZSBzY3JlZW4tLWl0IHdhcyAyMCB5ZWFycyBhZ28pIHRvIGNoZWNrIGZvciBlcnJvcnMg
-YW5kIGRldGVybWluZSBpZg0KPiBXRCB3b3VsZCBSTUEvcmVwbGFjZSAod2l0aG91dCBtZWRpYSBy
-ZXR1cm4pIGFyb3VuZCAxMDAwIGRpc2tzLg0KPiANCj4gSSBoYXZlIGJlZW4gcmVhZGluZyBzbWFy
-dCBkYXRhIGZvciBhcyBsb25nIGFzIHNtYXJ0IGhhcyBiZWVuIGFyb3VuZCwNCj4gYW5kIG91dHNp
-ZGUgb2YgbWF5YmUgYXQgbW9zdCAxMCBwYXJhbWV0ZXJzLCBtb3N0IG9mIHRoZSByZXN0IG9mIHRo
-ZQ0KPiBwYXJtcyBhcmUgcmF0aGVyIHVzZWxlc3MgYmVjYXVzZSB0aGUgbWFudWZhY3R1cmVyIGRv
-ZXMgbm90IHN1cHBseSBhDQo+IGRlY29kZXIgcmluZyB0byBtYWtlIGFueSBzZW5zZSBvZiB3aGF0
-IHNhaWQgcGFyYW1ldGVyIGlzIHJlYWxseQ0KPiBtZWFzdXJpbmcuDQo+IA0KPiBBbmQgd2hhdGV2
-ZXIgdGhlIG1hbnVmYWN0dXJlcyBkb2N1bWVudCB3b3VsZCBiZSB3aGF0IHdhcyBkb2N1bWVudGVk
-DQo+IGJlZm9yZSB0aGUgZGlzayBmaXJtd2FyZSB3YXMgY29tcGxldGVseSBmaW5pc2hlZCwgYW5k
-IG1heSBvciBtYXkgbm90DQo+IGhhdmUgcmVhbGx5IHdvcmtlZCBpbiB0aGUgZ2l2ZW4gZmlybXdh
-cmUuICAgSSBoYXZlIHJhbiBpbnRvIGRpc2tzIHRoYXQNCj4gd291bGQgcmVmdXNlIHRvIHJlbG9j
-YXRlIG1vc3QgYmFkIHNlY3RvcnMgKGV2ZW4gdGhvdWdoIG9sZGVyIGRpc2sgYnkNCj4gdGhlIHNh
-bWUgY29tcGFueSBkaWQgdGhpcyBqdXN0IGZpbmUpLCBhbmQgYSBudW1iZXIgb2Ygb3RoZXIgd2Vp
-cmQgZGlzaw0KPiBhY3Rpb25zIGluZGljYXRpbmcgdGhhdCB0aGUgZmlybXdhcmUgZG9lcyBub3Qg
-YWx3YXlzIGV2ZW4gaW1wbGVtZW50DQo+IHRoZSBmZWF0dXJlcyB0aGF0IHRoZXkgYXJlIHN1cHBv
-c2VkIHRvIGNvcnJlY3RseSBpbiBhbGwgZGlza3MuDQo+IA0KPiBCYXNpY2FsbHkgaWYgdGhlIHNt
-YXJ0IHRvb2xzIHRlYW0gYWN0dWFsbHkga25vd3MgYW55dGhpbmcgYWJvdXQgdGhlDQo+IGRpc2sg
-aW50ZXJuYWxzLCB0aGV5IGFyZSBhbG1vc3QgY2VydGFpbmx5IHVuZGVyIGFuIE5EQSBhbmQgY2Fu
-bm90IHRlbGwNCj4geW91IChsaWtlbHkgdGhpcyBpcyBub3QgdGhlIGNhc2UpLCBhbmQgaWYgdGhl
-eSBhcmVuJ3QgdW5kZXIgYW4gTkRBDQo+IHRoZXkgd2VyZSBub3QgdG9sZCBhbnl0aGluZy4NCj4g
-DQo+IEFuZCBjb250cmFyeSB0byB3aGF0IG90aGVyIGV4cGVydHMgY2xhaW0gKHRoYXQgZGlza3Mg
-cmVndWxhcmx5IHdpbGwNCj4gcmV0dXJuIGJhZCBkYXRhLS1pZSAxIGluIDFlMTUgc2VjdG9ycyks
-IEkgaGF2ZSBuZXZlciBzZWVuIHRoZSBkaXNrDQo+IGl0c2VsZiByZXR1cm4gYmFkIGRhdGEoSSBo
-YXZlIHNlZW4gcmFpZCBjb250cm9sbGVycyBkZWxpdmVyIGNvcnJ1cHRlZA0KPiBkYXRhIG1hbnkg
-dGltZXMgZnJvbSBib3RoIGhhcmR3YXJlIGZhaWx1cmVzIGFuZCBkZWZlY3RpdmUgcmFpZA0KPiBj
-b250cm9sbGVyIGZpcm13YXJlKSwgaWYgdGhlIHNlY3RvciBpcyByZWFkIHN1Y2Nlc3NmdWxseSBp
-dCBpcyB0aGUNCj4gcmlnaHQgZGF0YSBzaW1wbHkgYmVjYXVzZSB0aGUgZGlza3MgRUNDIGNvcnJl
-Y3Rpb24gdXNlcyBzbyBtYW55IGJpdHMNCj4gdGhhdCB0aGUgY2hhbmNlIG9mIGEgY29ycnVwdGVk
-IHNlY3RvciBiZWluZyBjb3JydXB0ZWQgYW5kIHN0aWxsDQo+IHBhc3NpbmcgRUNDIGlzIHNvIGxv
-dyBhcyB0byBub3QgYmUgd29ycmllZCBhYm91dC4NCg0KUm9nZXIsDQoNClRoYW5rcyBmb3Igc2hh
-cmluZyB0aGlzLiBJIGxpa2UgeW91ciBvYnNlcnZhdGlvbjoNCg0KIi4uLmlmIHRoZSBzZWN0b3Ig
-aXMgcmVhZCBzdWNjZXNzZnVsbHkgaXQgaXMgdGhlIHJpZ2h0IGRhdGEuLi4iDQoNCkl0IG1hZGUg
-bWUgbG9vayBhdCB0aGUgcHJvYmxlbSBmcm9tIGFuIGluZm9ybWF0aW9uLXRoZW9yeSBwZXJzcGVj
-dGl2ZS4NCg0KVG8gbWUgdGhlcmUgYXJlIGFjdHVhbGx5IHR3byBjYXNjYWRlZCBjb21tdW5pY2F0
-aW9uIGNoYW5uZWxzLg0KDQpUaGUgZmlyc3QgaXMgdGhlIHRpbWUgY2hhbm5lbDogZnJvbSB0aGUg
-bW9tZW50IHRoZSBkYXRhIGlzIHdyaXR0ZW4gdG8gDQp0aGUgbWFnbmV0aWMgbWVkaXVtIHVudGls
-IHRoZSBkcml2ZSBmaXJtd2FyZSBoYXMgcmVjb25zdHJ1Y3RlZCB0aGUgDQpzZWN0b3IgdXNpbmcg
-aXRzIEVDQy4gSWYgdGhlIEVDQyBkZWNvZGVyIHN1Y2NlZWRzLCB0aGVuLCBhcyB5b3UgcG9pbnQg
-DQpvdXQsIHRoZSBwcm9iYWJpbGl0eSB0aGF0IHRoZSByZXR1cm5lZCBzZWN0b3IgaXMgc3RpbGwg
-aW5jb3JyZWN0IGlzIA0KZXh0cmFvcmRpbmFyaWx5IHNtYWxsLiBJbiBvdGhlciB3b3JkcywgdGhl
-IGluZm9ybWF0aW9uIGhhcyBzdXJ2aXZlZCANCnN0b3JhZ2UgaW4gdGltZS4NCg0KT25seSBhZnRl
-ciB0aGF0IGRvZXMgdGhlIHNlY29uZCBjaGFubmVsIGJlZ2luOiB0cmFuc3BvcnQgb2YgdGhhdCBz
-ZWN0b3IgDQp0aHJvdWdoIHRoZSBTQVRBL1NBUyBsaW5rLCBjb250cm9sbGVyLCBETUEsIG1lbW9y
-eSwgUkFJRCBsYXllciBhbmQgDQpmaW5hbGx5IHRvIHRoZSBmaWxlc3lzdGVtLiBUaGlzIGlzIHRo
-ZSBzcGFjZSBjaGFubmVsLiBDb3JydXB0aW9uIGhlcmUgaXMgDQphIGRpZmZlcmVudCBjbGFzcyBv
-ZiBlcnJvci4gQXMgeW91IG1lbnRpb24sIFJBSUQgY29udHJvbGxlcnMgb3Igb3RoZXIgDQpoYXJk
-d2FyZSBjYW4gaW50cm9kdWNlIGNvcnJ1cHRpb24gYWZ0ZXIgdGhlIGRpc2sgaGFzIGFscmVhZHkg
-DQpyZWNvbnN0cnVjdGVkIHRoZSBjb3JyZWN0IHNlY3Rvci4NCg0KVmlld2VkIHRoaXMgd2F5LCB0
-aGUgZGlzayBFQ0MgYW5kIGEgZmlsZXN5c3RlbSBjaGVja3N1bSAoc3VjaCBhcyBCdHJmcyANCm9y
-IFpGUykgYXJlIG5vdCBjb21wZXRpbmcgbWVjaGFuaXNtc+KAlHRoZXkgcHJvdGVjdCB0d28gZGlm
-ZmVyZW50IA0KY29tbXVuaWNhdGlvbiBjaGFubmVscy4NCg0KRGlzayBFQ0MgcHJvdGVjdHMgdGhl
-IHRlbXBvcmFsIHN0b3JhZ2UgY2hhbm5lbC4NCkJ0cmZzIGNoZWNrc3VtcyBwcm92aWRlIGVuZC10
-by1lbmQgcHJvdGVjdGlvbiBvdmVyIHRoZSB0cmFuc3BvcnQgKHNwYWNlKSANCmNoYW5uZWwuDQoN
-CkR1cmluZyBteSByZWNlbnQgaW52ZXN0aWdhdGlvbiBpbnRvIGEgQnRyZnMgZGV2aWNlIHJlbW92
-YWwgd2l0aCBodW5kcmVkcyANCm9mIEFUQSBVTkMgZXJyb3JzLCB0aGlzIGRpc3RpbmN0aW9uIGJl
-Y2FtZSBxdWl0ZSB1c2VmdWwuIFRoZSBMaW51eCANCnN0b3JhZ2Ugc3RhY2sgKE1EIFJBSUQxIGlu
-IHBhcnRpY3VsYXIpIG1hbmFnZWQgdG8gcmVjb3ZlciB0aGUgc2VjdG9yIA0KZnJvbSB0aGUgZGlz
-aywgYW5kIG9uY2UgdGhlIGRyaXZlIGRlbGl2ZXJlZCBpdCBzdWNjZXNzZnVsbHksIHRoZSBCdHJm
-cyANCmNoZWNrc3VtIHZlcmlmaWVkIHRoYXQgdGhlIGRhdGEgaGFkIGFsc28gc3Vydml2ZWQgdGhl
-IHJlbWFpbmRlciBvZiB0aGUgDQpwYXRoIHRocm91Z2ggdGhlIHN5c3RlbS4NCg0KSSB0aG91Z2h0
-IHlvdSBtaWdodCBhcHByZWNpYXRlIHRoaXMgd2F5IG9mIGxvb2tpbmcgYXQgaXQuDQo=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+
+Pre-existing issues:
+- [Critical] Silent allocation failures in `mddev_create_serial_pool()` lea=
+d to NULL pointer dereferences and silent data corruption.
+- [High] Cross-ioctl and error path usage of `mddev_suspend()` in `dm-raid`=
+ leaks `PF_MEMALLOC_NOIO` task flag.
+--
+
+--- Patch [1]: [PATCH] md/bitmap: resume array on backlog_store() error pat=
+h ---
+Hi,
+
+Thank you for the patch. I noticed a few pre-existing issues in the related
+code paths that might be worth addressing.
+
+commit 5425190104cdbeefa8ae0eda1f825b462b6535ca
+Author: Chen Cheng <chencheng@fnnas.com>
+
+md/bitmap: resume array on backlog_store() error path
+   =20
+backlog_store() suspends the array before checking whether a write-mostly
+device exists. If no such device exists, the error path only unlocks
+reconfig_mutex and leaves the array suspended, blocking subsequent I/O.
+Use mddev_unlock_and_resume() to release both states.
+
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index 0f02e2956398d..c90fa1e106e26 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -2862,7 +2862,7 @@ backlog_store(struct mddev *mddev, const char *buf,=
+ size_t len)
+>  	if (!has_write_mostly) {
+>  		pr_warn_ratelimited("%s: can't set backlog, no write mostly device ava=
+ilable\n",
+>  				    mdname(mddev));
+> -		mddev_unlock(mddev);
+> +		mddev_unlock_and_resume(mddev);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but since this patch fixes an er=
+ror
+path missing a resume, does this same missing resume problem exist in
+dm-raid.c?
+
+In drivers/md/dm-raid.c:raid_postsuspend(), the code suspends the mddev and
+acquires the PF_MEMALLOC_NOIO flag, but returns to userspace without resumi=
+ng:
+
+    mddev_suspend(&rs->md, false);
+
+If a user-space process issues a DM_DEV_SUSPEND ioctl, this leaves the flag
+set. When DM_DEV_RESUME is later issued, potentially by a different task,
+raid_resume() calls mddev_resume(), which applies the saved flags to the
+new task.
+
+Also, in raid_ctr(), if setup fails, the error path skips the restore
+completely and permanently leaks the flag:
+
+bad_unlock:
+    md_stop(&rs->md);
+    mddev_unlock(&rs->md);
+
+Could this permanently leak the PF_MEMALLOC_NOIO task flag and cause
+memory reclaim deadlocks?
+
+[Severity: Critical]
+This is a pre-existing issue, but further down in backlog_store(), is it
+possible for mddev_create_serial_pool() to fail silently?
+
+drivers/md/md-bitmap.c:backlog_store() {
+    ...
+    } else if (backlog && !mddev->serial_info_pool) {
+        /* serial_info_pool is needed since backlog is not zero */
+        rdev_for_each(rdev, mddev)
+            mddev_create_serial_pool(mddev, rdev);
+    }
+    ...
+}
+
+Since mddev_create_serial_pool() returns void, it hides memory allocation
+failures. If it fails for a disk in this loop, that device is left without
+initialization. Does this silently bypass write-behind serialization for th=
+at
+disk, leading to overlapping writes and silent data corruption?
+
+Similarly, if MD_SERIALIZE_POLICY is active, check_and_add_serial() in
+drivers/md/raid1.c will unconditionally dereference rdev->serial:
+
+    int idx =3D sector_to_idx(r1_bio->sector);
+    struct serial_in_rdev *serial =3D &rdev->serial[idx];
+    struct serial_info *head_si;
+
+    spin_lock_irqsave(&serial->serial_lock, flags);
+
+Can this cause a NULL pointer dereference for devices that failed
+initialization?
+
+>  		return -EINVAL;
+>  	}
+>
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260718034236.4119=
+093-1-chencheng@fnnas.com?part=3D1
