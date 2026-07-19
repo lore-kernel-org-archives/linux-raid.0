@@ -1,163 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from lf-1-33.ptr.blmpb.com (lf-1-33.ptr.blmpb.com [103.149.242.33])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B25881E531;
-	Sun, 19 Jul 2026 11:20:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 598AE153BE9
+	for <linux-raid@vger.kernel.org>; Sun, 19 Jul 2026 12:55:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.149.242.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784460057; cv=none; b=Ev+AiqDub7KVWe6fNQEmu8mw5Qr4TEO7lDt9lhb1Z97XT19RK0pLyhJy/KEJ5vL1/dpu0W+a/8eSgFpROo4+Qg3LD3I+2WeghOdoFPtRH3Hw5tZcPB8VTQQODwbPd0rKVnS+1Ecx4A/uu5y49s6esQ3LH0ZKVtWhghbP2S0Pmq4=
+	t=1784465742; cv=none; b=ldFaQFsVhRTWTENNCpZlvR4k8+AtV/tAahdWdjoiCslG0reCiSUveSHgcNVOhfF9ht0DqUSKt9HxlXTyM5zQQrZKEodeFd5Tktwv3tcTI/DjcGJhFQ3JWhWkXr4CE2nC3Vhs3L0pZ1hWR69vp2Kv2SRCvOqX7N5K9MZtm3YE+M8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784460057; c=relaxed/simple;
-	bh=e7mbOyVCQWdBhI0rJuxG1QYS3hPCYztlpiaUXKKUy0E=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Su8Oj4wD467nN+4My/Xv6xZ6Qvle+2/Z9V1sAMalHKVbxME/oVOCkFsTt+jvTZlDlKjt63mo07m+hFP2qCecdXVq/Lt61fSLDcYk8W3kFLd0H+HpsHGuTZeKmeb8XRRvHx+I+Rpy0YDhQzC8yL6/EXIdPe5eupGxDRsF0gBlIE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b39/ELgI; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784465742; c=relaxed/simple;
+	bh=5bQfoukhnRMLow/ae/cLGbR/mU0M4WOo8QxdTYHv2+c=;
+	h=From:Message-Id:In-Reply-To:References:Date:Mime-Version:
+	 Content-Type:To:Subject:Cc; b=hf7WrHP0UgYBGcpZeI1wC3tGf8Qw6F2sKiORqrTey6JdzLZ9auTXdpzjwG8JxkPUpYRvx37mkua+IXp9CxKs2lSzI8nlslsyMiobAUmg4AKaE67WcptO8p4+qf/AhqKiZRL8IO7+k6fsw7tZ5G5aU+sufU4CzdhKKaBhnyKni0A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=K9bxAFxL; arc=none smtp.client-ip=103.149.242.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b39/ELgI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34F201F000E9;
-	Sun, 19 Jul 2026 11:20:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784460056;
-	bh=LCrma1I/f2IGlnHDFLFLXtmJkpEBMQX+nfD3WJ6fZ0M=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=b39/ELgId8g6erwu+vSq+EnVh61PlzyU8zMhjY34Ko/y3FZf788tr0yKA5Ve6trH2
-	 Znfy5MejGqIu0ZXLd+jI/thrUHtNeyqJ0jkSk+sf9hLydh043d1Y6N2SsEA3TY4Rhj
-	 K0YN2wWTZ8sfyESCnYTPQbhGhULvOAnn+Cx1MgXMbPuTw+r7TEANE4kiTK8dsXkKzU
-	 3QACM475eSh+VmSUL10+N4sZhHY0qWz4My5o/rtmdjpYqUmxyPJcSdQ9xwP6M03JIq
-	 ul2HXpUnNsCoT354lkFlWH4BNfCsYHcOsRUmL8DcPSym2qSphMVtrph5glHg9nv+e3
-	 +cS4euZ+a8Cdg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 5/7] md/raid1,raid10: keep REQ_NOMERGE on
- narrow_write_error() retry clones
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mykola Marzhan" <mykola@meshstor.io>
-Cc: linux-pci@vger.kernel.org, yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260719105327.864949-6-mykola@meshstor.io>
-References: <20260719105327.864949-1-mykola@meshstor.io>
- <20260719105327.864949-6-mykola@meshstor.io>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 19 Jul 2026 11:20:55 +0000
-Message-Id: <20260719112056.34F201F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="K9bxAFxL"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1784465687;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=1dYjN/TVTrbtFCweYWA2tWVnGUbGDz2RlP0EYcx9uGU=;
+ b=K9bxAFxLAZ83JRkHHADNHHcw4+0RJOJ2jNNlhOWjiVbeVwCLn8DaxG/PxV1qrJkqc4Ftw9
+ +ibEVe4G4Y1Q/n7QlCFtpgDGijgVmkjpAWB1WQpRTt/BONEJefMQ5m6GPmd52Y+4+CRwxl
+ QkskbJlLj1e6mVT7oZJ10dN84Z32NrZRJp2hr3MNvIz49eed4YsNgWMpxMVgGMnav5yKIx
+ bwAEaDyAXB2V61B8lC0wz7XWYgnArspPJIO/EVs4PRBiPC0G3UnIv0hzizV3JiAIYqlzuR
+ asznrkvjhfwE2xJpMAd2o2CH46AS9TBOsXHj7tP3dU0eVw0Z/4JhzW/TxscFJA==
+From: "yu kuai" <yukuai@fygo.io>
+Message-Id: <8ff91547-4841-4cea-87bc-9d6979df61ab@fygo.io>
+In-Reply-To: <20260711161326.962336-1-zhanggenjian@126.com>
+User-Agent: Mozilla Thunderbird
+Reply-To: yukuai@fygo.io
+References: <20260711161326.962336-1-zhanggenjian@126.com>
+Date: Sun, 19 Jul 2026 20:54:42 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+To: "Genjian" <zhanggenjian@126.com>, <song@kernel.org>, <yukuai@fygo.io>, 
+	<magiclinan@didiglobal.com>, <xiao@kernel.org>
+Subject: Re: [PATCH] md/raid5: complete discard bios while reshape is active
+X-Original-From: yu kuai <yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.157]) by smtp.larksuite.com with ESMTPS; Sun, 19 Jul 2026 12:54:46 +0000
+X-Lms-Return-Path: <lba+26a5cc916+983ed5+vger.kernel.org+yukuai@fygo.io>
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	"Genjian Zhang" <zhanggenjian@kylinos.cn>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+Hi,
 
-New issues:
-- [High] The newly added `md_bio_is_p2pdma(wbio)` check evaluates a cloned =
-bio after its operation type has been forcibly overwritten to `REQ_OP_WRITE=
-`, defeating the `bio_has_data()` guard and leading to a kernel panic for d=
-ata-less bios.
+=E5=9C=A8 2026/7/12 0:13, Genjian =E5=86=99=E9=81=93:
+> From: Genjian Zhang <zhanggenjian@kylinos.cn>
+>
+> make_discard_request() returns without completing the bio when reshape
+> is in progress. Discard callers block in submit_bio_wait()
+> waiting for a completion that never arrives.  The caller hangs in
+> uninterruptible sleep, and this does not resolve when reshape finishes.
+>
+> Complete the bio with BLK_STS_AGAIN so userspace can retry after reshape,
+> consistent with the existing policy of not processing discard during
+> reshape.
+>
+> Tested on a loop-backed RAID5 array during mdadm --grow: without this
+> patch, blkdiscard hangs in bio_await() and remains in uninterruptible
+> sleep after md reports "reshape done"; with this patch it returns
+> -EAGAIN instead.
+>
+> Signed-off-by: Genjian Zhang <zhanggenjian@kylinos.cn>
+> ---
+>   drivers/md/raid5.c | 4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index ffb5fcde54a9..4c3b42b2af85 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -5722,9 +5722,11 @@ static void make_discard_request(struct mddev *mdd=
+ev, struct bio *bi)
+>   	if (WARN_ON_ONCE(bi->bi_opf & REQ_NOWAIT))
+>   		return;
 
-Pre-existing issues:
-- [High] Pre-existing data integrity bug: `narrow_write_error()` unconditio=
-nally overwrites `bi_opf` to `REQ_OP_WRITE`, silently stripping essential f=
-lags like `REQ_FUA` and `REQ_PREFLUSH`.
-- [High] Pre-existing block layer crash: `narrow_write_error()` blindly ove=
-rwrites data-less operations with `REQ_OP_WRITE`, submitting invalid bios t=
-o underlying block drivers.
---
+As nowait will be removed soon, I'm fine leaving it here.
 
---- Patch [5]: [PATCH v2 5/7] md/raid1,raid10: keep REQ_NOMERGE on narrow_w=
-rite_error() retry clones ---
-commit 21dea61208137a1862fe54775b5bbeea8b5691ab
-Author: Mykola Marzhan <mykola@meshstor.io>
+Reviewed-by: Yu Kuai <yukuai@fygo.io>
 
-md/raid1,raid10: keep REQ_NOMERGE on narrow_write_error() retry clones
-
-This commit fixes an issue where narrow_write_error drops the REQ_NOMERGE
-flag on P2PDMA bios during a write error retry. It adds a check to restore
-the flag for P2PDMA bios, preventing invalid merges across pgmaps.
-
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 914fb86452c03..f562b6bd438b9 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2573,6 +2573,9 @@ static void narrow_write_error(struct r1bio *r1_bio=
-, int i)
->  		}
-> =20
->  		wbio->bi_opf =3D REQ_OP_WRITE;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does the unconditional
-assignment to REQ_OP_WRITE in narrow_write_error() strip essential flags
-like REQ_FUA and REQ_PREFLUSH?
-
-If an I/O error occurs on a write that carries these flags, dropping them
-could silently break flush guarantees and cause data corruption after a
-power failure. Could we preserve the existing flags via a mask instead?
-
-[Severity: High]
-This is also a pre-existing issue, but does overwriting data-less
-operations with REQ_OP_WRITE in narrow_write_error() submit invalid bios
-to the block drivers?
-
-When operations like REQ_OP_WRITE_ZEROES fail, they are transformed into a
-standard write with a non-zero bi_size but no initialized data vectors.
-Attempting to map this payload for DMA via bio_for_each_segment() might
-dereference uninitialized memory and cause a crash.
-
-> +		/* Keep P2PDMA retry bios unmergeable, like the original */
-> +		if (md_bio_is_p2pdma(wbio))
-> +			wbio->bi_opf |=3D REQ_NOMERGE;
-
-[Severity: High]
-Does checking md_bio_is_p2pdma() immediately after forcing the operation
-type to REQ_OP_WRITE defeat the bio_has_data() guard?
-
-Because the operation is now a standard write, bio_has_data() will return
-true even for originally data-less operations. This would cause the function
-to evaluate the uninitialized page pointer in the bio vector, potentially
-leading to a kernel panic. Should the check evaluate the original bio
-instead of the modified clone?
-
->  		wbio->bi_iter.bi_sector =3D r1_bio->sector;
->  		wbio->bi_iter.bi_size =3D r1_bio->sectors << 9;
-
-[ ... ]
-
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 0a3cfdd3f5df8..f7ef903a3d4ec 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -2831,6 +2831,9 @@ static void narrow_write_error(struct r10bio *r10_b=
-io, int i)
->  		wbio->bi_iter.bi_sector =3D wsector +
->  				   choose_data_offset(r10_bio, rdev);
->  		wbio->bi_opf =3D REQ_OP_WRITE;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but this overwrite has the same
-issue as in raid1.c. Does this unconditional assignment strip operation fla=
-gs
-like REQ_FUA and REQ_PREFLUSH, leading to potential data integrity issues?
-
-[Severity: High]
-This is also a pre-existing issue, but does this similarly submit invalid
-bios to the block layer by changing failed data-less operations into standa=
-rd
-writes without initialized data pages?
-
-> +		/* Keep P2PDMA retry bios unmergeable, like the original */
-> +		if (md_bio_is_p2pdma(wbio))
-> +			wbio->bi_opf |=3D REQ_NOMERGE;
-
-[Severity: High]
-Similar to the raid1.c code, does calling md_bio_is_p2pdma() right after
-the operation code is forced to REQ_OP_WRITE neutralize the bio_has_data()
-guard? Evaluating the uninitialized memory for data-less operations could
-cause a kernel panic here as well.
-
-> =20
->  		if (submit_bio_wait(wbio) &&
->  		    !rdev_set_badblocks(rdev, wsector, sectors, 0)) {
+>  =20
+> -	if (mddev->reshape_position !=3D MaxSector)
+> +	if (mddev->reshape_position !=3D MaxSector) {
+>   		/* Skip discard while reshape is happening */
+> +		bio_endio_status(bi, BLK_STS_AGAIN);
+>   		return;
+> +	}
+>  =20
+>   	if (!raid5_discard_limits(mddev, bi))
+>   		return;
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260719105327.8649=
-49-1-mykola@meshstor.io?part=3D5
+Thanks,
+Kuai
