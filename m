@@ -1,178 +1,172 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 797AB25B086
-	for <linux-raid@vger.kernel.org>; Sun, 19 Jul 2026 14:57:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F9AC1E1024
+	for <linux-raid@vger.kernel.org>; Sun, 19 Jul 2026 15:00:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784473068; cv=none; b=qvCkLr/h14vHasBpelNEwNq4pMLOqHOlaLfLbeSd54rCf/dYldJaWeBTvYPVSBqHkmysCL51s6VPMElz7o3bN3JnI+NVQS/N3L5rF369USiP4/cAyEAcldz7nQXC8QrRCWKksWm4/uHBJC5VXxDYQjcLrEizgqAFtk5WzeCkWZE=
+	t=1784473229; cv=none; b=ZzvVLRftfF10KKMfEclB3N8JTHMPjR728Lk3cwgFabxGSA8n8SBSG4s9H0RMlcyWzgRufBLpIcbfFI9yEdFLMvjQYZgenu3ASxzyhnZ7m+fW0qGPUDjbcu7VB/plnaCVae2MSv49KD25fjthQVWROhXyl5rTHtqmMVFq7WUpBoE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784473068; c=relaxed/simple;
-	bh=nXAjFajh1VgcBn0A50LZwv4a5PLiGiOnWZVzfbmn9Fw=;
+	s=arc-20240116; t=1784473229; c=relaxed/simple;
+	bh=5CEQmtRbSaq0plCFFZSrLEwfdn3X2jqyMGfWUsld7OM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QjxzW8I6pCaLPyO5C+e6u25S9UIha2g4raxjFgZbkNuietNlyy/j4Haxc2+l+YS5gfQc9zVctWRYb62+JxePrh4gPvlMtZZSbfKMvk2sWIrH6smsJCvfbae6QtIG2HUfFtwElSCdQbyspjcd7mIZSLRdGMPmWXcBuFBiHic+kTs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XsvNZS7D; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=dZ9n2Sal70WUlMUVxVpOgTkplBs2HXKahfSi553glUO8CkBpBcEZHok6pvmcl9pIl6qafSfO/q55D7Hq9MdYfzJAzln6NesPfafYKm5mbF3uZf2aUFR0sKcRB2+nxOE6Rn93ASgyWepDFtG7Bk1hD3dABCsLlTZNYhPdHeEgGzE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iUZyuC0W; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XsvNZS7D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 936DA1F00A3A;
-	Sun, 19 Jul 2026 14:57:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iUZyuC0W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D04B21F000E9;
+	Sun, 19 Jul 2026 15:00:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784473066;
-	bh=Ph1met4GxWVxk4LfFfqFgQierAMnyJnuOKK0svR9iDk=;
+	s=k20260515; t=1784473228;
+	bh=bl+SnW1fu5KM+2kVRIBmi9E/Cf3pkRl/hj3ZwgQG9Uc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XsvNZS7DfOnSw4vkq0mFVBNcqUbWtP4QfP/bXMAy1E+LNvnySQLeVBJayhfZuLGch
-	 TL/8Q+r2ZUvtqEfwBrufQsW95u9mtZDXIRbcAp2LWb4cw16EIYFQmnT7/fFAqmTbkg
-	 B5LGur1J5JDR0bR/R49pS54LwFbANXeDP+A+WvD/nVj28yfI8R47fhEVpl3QrUFFVf
-	 HuvXSWMz+xWwQb44yfxRwYJVlP3ljh6fInwm57/Oz/EvTZgJpCY1OeVLoGsf4JrThD
-	 74Ury5ATI+80Fzuf+EP6hyFDo7pps+OzLTOuaOF7ocITwm+QuN2o5mqbMWVwGp5YlW
-	 TT4KrSpjiZ0Ug==
+	b=iUZyuC0WHxehiMti+7RjZ7oP8yLx4YDRdr8Cip1F60fIJaHU+5Yx3UyngKjrf2Tjx
+	 WkoSIpFMsjE+MpouwhzgpE8rfMWCE9Y70CyGgLCkPiXYT4G3UdUdAKqNoOSzf7Qd7P
+	 kNjL+6PBmtVgTH2/XGBwTKbAL/HHwpnVbeZE6csF53lfrJ1ZPsgDH0MY7JNoBEwUNz
+	 x9csdLjcsGvp7pLrSbVOUDrfd3Gbma/5DMWMRKB3CDpl+/UZjS+oEalwlnkGUHoS9E
+	 lyOmRHwAlb06P1nv7Ek/nCaGqvtzlYCIRpvBQJ+iamHGegMRq+th/RF7pUoOEe2RtV
+	 MO10CiSI7mtvQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/4] md/md-llbitmap: unmap sb page before freeing it
+Subject: Re: [PATCH 2/4] md/md-llbitmap: mask sb->state on load to drop
+ runtime-only bits
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Mykola Marzhan" <mykola@meshstor.io>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260719144409.940492-4-mykola@meshstor.io>
+In-Reply-To: <20260719144409.940492-3-mykola@meshstor.io>
 References: <20260719144409.940492-1-mykola@meshstor.io>
- <20260719144409.940492-4-mykola@meshstor.io>
+ <20260719144409.940492-3-mykola@meshstor.io>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 19 Jul 2026 14:57:46 +0000
-Message-Id: <20260719145746.936DA1F00A3A@smtp.kernel.org>
+Date: Sun, 19 Jul 2026 15:00:27 +0000
+Message-Id: <20260719150027.D04B21F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Integer Truncation of 64-bit event counter causes spurious array r=
-ecoveries on 32-bit architectures
-- [High] Use-After-Free in teardown sequence due to re-arming timer
-- [High] Lost Write to `sb->sync_size` during superblock load
-- [High] Integer overflow causing division by zero when calculating minimum=
- chunksize
-- [High] Integer overflow in page count calculation leading to out-of-bound=
-s heap access
+- [High] Teardown symmetry bug: `llbitmap_destroy()` deletes the daemon tim=
+er and waits for the daemon work, but the work can re-arm the timer, leadin=
+g to a use-after-free when the timer fires on the freed `llbitmap` object.
+- [High] Preexisting UAF in llbitmap_create() error path due to clearing md=
+dev->bitmap outside the mutex after kfree.
+- [High] Preexisting race condition in llbitmap_write_page() iterating mdde=
+v->disks without required locks.
+- [High] A maliciously crafted `sectors_reserved` value in the llbitmap sup=
+erblock can cause an integer overflow during a bitwise shift on 32-bit syst=
+ems, resulting in a zero divisor and a kernel panic.
 --
 
---- Patch [3]: [PATCH 3/4] md/md-llbitmap: unmap sb page before freeing it =
----
-commit 6be442dfef7ad93b44cadb093b6d078f152b2522
+--- Patch [2]: [PATCH 2/4] md/md-llbitmap: mask sb->state on load to drop r=
+untime-only bits ---
+commit 48600506c718f0300f8ce2473c95dff7a9e47cc2
 Author: Mykola Marzhan <mykola@meshstor.io>
 
-md/md-llbitmap: unmap sb page before freeing it
+md/md-llbitmap: mask sb->state on load to drop runtime-only bits
 
-The patch swaps __free_page(sb_page) and kunmap_local(sb) in
-llbitmap_read_sb() to avoid unmapping a page after it has been freed.
+This commit masks the loaded superblock state in llbitmap_read_sb() to only
+keep STALE, FIRST_USE, and CLEAN bits. It prevents runtime-only flags like
+WRITE_ERROR from being loaded from disk and permanently disabling the bitma=
+p.
+
+Cc: stable@vger.kernel.org # v6.18+
 
 > diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index 2d3de38f9b784..2d6c7ad0923a1 100644
+> index 5a4e2abaa7577..2d3de38f9b784 100644
 > --- a/drivers/md/md-llbitmap.c
 > +++ b/drivers/md/md-llbitmap.c
-> @@ -1035,8 +1035,8 @@ static int llbitmap_read_sb(struct llbitmap *llbitm=
-ap)
->  	ret =3D llbitmap_cache_pages(llbitmap);
+> @@ -981,7 +981,15 @@ static int llbitmap_read_sb(struct llbitmap *llbitma=
+p)
+>  		else
+>  			mddev->bitmap_info.space =3D mddev->bitmap_info.default_space;
+>  	}
 
 [Severity: High]
-This is a pre-existing issue, but is there an integer overflow when
-calculating nr_pages on 32-bit architectures inside llbitmap_cache_pages()?
+This isn't a bug introduced by this patch, but can this sectors_reserved
+check lead to an integer overflow?
 
-drivers/md/md-llbitmap.c:llbitmap_cache_pages() {
-    ...
-    unsigned int nr_pages =3D DIV_ROUND_UP(llbitmap->chunks +
-                                         BITMAP_DATA_OFFSET, PAGE_SIZE);
-    ...
-    llbitmap->pctl =3D kmalloc_array(nr_pages, sizeof(void *),
-                                   GFP_KERNEL | __GFP_ZERO);
-    ...
-}
+In llbitmap_read_sb(), we read the untrusted value:
 
-If a malicious superblock sets a high resync_max_sectors and chunksize of 2,
-could llbitmap->chunks + BITMAP_DATA_OFFSET overflow to 0? Would this result
-in a zero-sized array allocation and subsequent out-of-bounds access?
+    int room =3D le32_to_cpu(sb->sectors_reserved);
+    if (room)
+        mddev->bitmap_info.space =3D room;
 
-> =20
->  out_put_page:
-> -	__free_page(sb_page);
->  	kunmap_local(sb);
-> +	__free_page(sb_page);
+Later in the same function:
 
-[Severity: High]
-This is a pre-existing issue, but is the update to sb->sync_size lost here?
-
-Earlier in llbitmap_read_sb(), sb->sync_size is updated:
-
-    sb->sync_size =3D cpu_to_le64(mddev->resync_max_sectors);
-
-Since sb_page is unmapped and unconditionally freed here without being
-written back to disk or retained in memory, does the runtime state lose
-this update?
-
->  	return ret;
->  }
-
-There are a few other pre-existing issues in this file that might need
-attention.
-
-[Severity: High]
-This is a pre-existing issue, but does assigning the 64-bit sb->events to t=
-he
-unsigned long events variable truncate it on 32-bit architectures?
-
-drivers/md/md-llbitmap.c:llbitmap_read_sb() {
-    unsigned long events;
-    ...
-    events =3D le64_to_cpu(sb->events);
-    if (events < mddev->events) {
-        ...
-    }
-}
-
-When the 64-bit counter exceeds 4 billion, would this truncation cause a
-spurious full array resync by incorrectly making the bitmap appear stale?
-
-
-[Severity: High]
-This is a pre-existing issue, but can the timer fire on freed memory during
-teardown?
-
-drivers/md/md-llbitmap.c:llbitmap_destroy() {
-    ...
-    timer_delete_sync(&llbitmap->pending_timer);
-    flush_workqueue(md_llbitmap_io_wq);
-    ...
-}
-
-drivers/md/md-llbitmap.c:md_llbitmap_daemon_fn() {
-    ...
-    if (restart)
-        mod_timer(&llbitmap->pending_timer, ...);
-}
-
-If llbitmap_destroy() deletes the timer and flushes the workqueue, could
-md_llbitmap_daemon_fn() unconditionally re-arm the timer at the end of its
-execution, leading to a use-after-free when llbitmap is subsequently freed?
-
-
-[Severity: High]
-This is a pre-existing issue, but can this overflow and cause a division by
-zero panic?
-
-drivers/md/md-llbitmap.c:llbitmap_read_sb() {
-    ...
     if (chunksize < DIV_ROUND_UP_SECTOR_T(mddev->resync_max_sectors,
                                           mddev->bitmap_info.space << SECTO=
 R_SHIFT)) {
-    ...
-}
 
-On 32-bit systems, mddev->bitmap_info.space is a 32-bit unsigned long. If an
-attacker-controlled superblock sets a value where space << 9 overflows to 0,
-would DIV_ROUND_UP_SECTOR_T divide by zero?
+Could a crafted superblock with sectors_reserved =3D 0x00800000 cause
+(mddev->bitmap_info.space << SECTOR_SHIFT) to wrap to 0 on 32-bit systems,
+resulting in a division by zero panic?
+
+> -	llbitmap->flags =3D le32_to_cpu(sb->state);
+> +	/*
+> +	 * Mask the loaded state to the bits this loader consumes.
+[ ... ]
+
+[Severity: High]
+This is a pre-existing issue, but does the teardown path have a symmetry
+issue?
+
+In llbitmap_destroy():
+
+    timer_delete_sync(&llbitmap->pending_timer);
+    flush_workqueue(md_llbitmap_io_wq);
+
+If md_llbitmap_daemon_fn() is actively running and finds unexpired pages:
+
+    if (restart)
+        mod_timer(&llbitmap->pending_timer, ...);
+
+Does this allow the daemon to blindly re-arm the timer after
+timer_delete_sync() has finished, leading to a use-after-free when the timer
+fires on the freed llbitmap object?
+
+[Severity: High]
+This is a pre-existing issue, but is there a use-after-free in the
+llbitmap_create() error path?
+
+When llbitmap_create() fails, it does this:
+
+    mutex_unlock(&mddev->bitmap_info.mutex);
+    if (ret) {
+        kfree(llbitmap);
+        mddev->bitmap =3D NULL;
+    }
+
+Can a concurrent reader like metadata_show() acquire the lock and dereferen=
+ce
+the freed object?
+
+metadata_show() does:
+
+    mutex_lock(&mddev->bitmap_info.mutex);
+    llbitmap =3D mddev->bitmap;
+    if (!llbitmap) {
+    ...
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does llbitmap_write_page()
+iterate the disks without required locks?
+
+In llbitmap_write_page(), executed from workqueues:
+
+        rdev_for_each(rdev, mddev) {
+            sector_t sector;
+
+This iterates a dynamic, RCU-protected linked list without taking
+rcu_read_lock() or reconfig_mutex.
+
+If a disk is concurrently hot-removed, can list_del_rcu() and
+synchronize_rcu() free the element while llbitmap_write_page() is traversing
+it?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260719144409.9404=
-92-1-mykola@meshstor.io?part=3D3
+92-1-mykola@meshstor.io?part=3D2
