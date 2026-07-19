@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7962835E950
-	for <linux-raid@vger.kernel.org>; Sun, 19 Jul 2026 15:05:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F18A735E950
+	for <linux-raid@vger.kernel.org>; Sun, 19 Jul 2026 15:06:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784473548; cv=none; b=ibGpQUQJsJiTx29v9pDROZAU/tSWgvRkr5MnPqBWkrVFRdqvWNfM66f2sXRK69FARjP/68zICJaxA2Zica0lPqpgMkd/IHxWk8QeUSJIYqBljlVIQejcimosXgUjCs6DoWdK8yH+agS0ef1VIC1rhAVoCXs8/bDAJuQ4ycBbytk=
+	t=1784473610; cv=none; b=KrH5VBdyctuvm7Q86TajIIhpRPf0oIrVhFMe3/8y6NN2E0pZ9jnYObFkCaD8WTWzLvIw8cuX7VuRG75fgElKl6Cd2SvGqVNjWYm6imevgNtgB1u+bnr9qIdEl0NCOS9srWG+QFRSsbOtfr8ke30FOZFo0fT4TaDn9PYh71EHahk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784473548; c=relaxed/simple;
-	bh=+eJvQa4zgqslw/OLnQZWXNlFU2fdPdxmYEY7gP3fEBA=;
+	s=arc-20240116; t=1784473610; c=relaxed/simple;
+	bh=XRsTnxTCIS4TWncRZgUHXkYZpuna0lOJ5LHOjsCtS1w=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ApQbS95VsxUBpXUSvkpiwu/oOcJ/p8FPDjhgX/rJY1nxnQ2OdeGKLqGbmyyyHcPE/WrXSmfeSqXf/RbUmhZqWn+uUMCTouIWnCXwA+lwjWDeEqTk967FVq8fH33JJ6738Xar8alHIYyTsyEUt0m8btcEiOZiwMgOego20YSgXO8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jZVeCkHM; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=NaMh/9WQ3jj66ezM6v7O4AyO6sO9yw3pqqtoIFjuU03qDdI0TQDj9D2AhG6X2kqS7G7y6/GGp3cpPSSkbnqRtMTbYK6wa/dFoaAwdL/gTPJgynFZJG1qz6kpKWLLsfXGzowZzNjCM1sUI7O9MBfa+ukqfoxN09/pHaKhBb6uLFg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hZlv1jRa; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jZVeCkHM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3F801F000E9;
-	Sun, 19 Jul 2026 15:05:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hZlv1jRa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C6511F000E9;
+	Sun, 19 Jul 2026 15:06:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784473547;
-	bh=fEQ5oQ8S+1+6Y6NjLicrLG9NVIABH34xlVbkh/6VEAM=;
+	s=k20260515; t=1784473608;
+	bh=BrX2EB94vE7t+g0WFoH4zho93BlaOq52BV9ONpQGTks=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jZVeCkHMgcoilaV0wvbBKB+dSQXnMqqow1tIFGNJa2eCZjFSEAD99O3khiDFdBGJH
-	 iEbxmQBttAsljCFdu2ZKlTUtvQ4hYIv5XC+BMl8vG7UzOWLjrpxUV0uBcG6CJH+GDh
-	 X9UVCv2FyX8N5ygzmXPnbmI0HltYOxiDPYrjPIJ3+lha9n9m1qeqbEaDs0AhWfpnLe
-	 9l3lggmTt9e2frQv3w5ODGV4mNOMSoorclgIIyiWR8I96O/3dYQxWxJKUtCiDjhURo
-	 JUyxFtbxukEkQcgGgrzVzTlecOw+vPGBorlvK/7CRj/QK4Vd+LLqC/Cxs2STa1KRsu
-	 tfJJ1kwsYGLkg==
+	b=hZlv1jRa5J5a+OwHxFkH0avuq8dymY3RzH3FcEDT2qXQtOTcBsdPX8Eqyn+nRESw7
+	 XD/n6BInU8KG/Nljqy+8AoHjk+iV4SF1UclTVWZV5qP2IzuSEfkic7tBYcdTMtpEnl
+	 6GF3+KvtdyDAcVK7++Txacw0ty0y7SdsMXmVIQVYPQM/Lvv/70PhMZxjsfQ3oseQW1
+	 IAOglxj0y4apAYvMgvNCLjsJxjuxYsFo/Sf4w0lo8cIv11OpIKtM1Fr4hpnZhRD+Pa
+	 TnmUtZ/Gm3a5NIFOzwW+W8i7V+Ckv9C0HcjOdkZltvGLTW5tHzPVROKMRSlNGuhAYK
+	 arqbe9e6cHN/Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/3] md/md-llbitmap: fail resize that needs more bitmap
- pages
+Subject: Re: [PATCH 1/4] md/md-bitmap: mask sb->state on load to drop
+ runtime-only bits
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Mykola Marzhan" <mykola@meshstor.io>
 Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260719144227.940444-4-mykola@meshstor.io>
-References: <20260719144227.940444-1-mykola@meshstor.io>
- <20260719144227.940444-4-mykola@meshstor.io>
+In-Reply-To: <20260719144409.940492-2-mykola@meshstor.io>
+References: <20260719144409.940492-1-mykola@meshstor.io>
+ <20260719144409.940492-2-mykola@meshstor.io>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 19 Jul 2026 15:05:46 +0000
-Message-Id: <20260719150546.F3F801F000E9@smtp.kernel.org>
+Date: Sun, 19 Jul 2026 15:06:48 +0000
+Message-Id: <20260719150648.6C6511F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -48,115 +48,94 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
-New issues:
-- [High] The newly added in-memory bounds check is vulnerable to integer ov=
-erflow, allowing out-of-bounds heap access.
-
 Pre-existing issues:
-- [Critical] llbitmap_resize() and llbitmap_init() allow the on-disk bitmap=
- size to exceed the allocated space, causing out-of-bounds disk writes.
-- [High] Array growth leaves newly added space unsynced due to uninitialize=
-d bitmap states.
+- [High] The lockless bitmap implementation (llbitmap) remains vulnerable t=
+o the exact same persistent WRITE_ERROR bug that this commit fixes for the =
+standard bitmap.
+- [High] Internal bitmap pages allocated with alloc_page() are leaked durin=
+g array teardown when CONFIG_MD_BITMAP_FILE is enabled.
+- [High] Cluster superblock flags leak across `re_read` loop iterations, ca=
+using spurious state inheritance from node 0.
 --
 
---- Patch [3]: [PATCH 3/3] md/md-llbitmap: fail resize that needs more bitm=
-ap pages ---
-commit 938426872ff1437636e82451faff612783d42c3f
+--- Patch [1]: [PATCH 1/4] md/md-bitmap: mask sb->state on load to drop run=
+time-only bits ---
+commit f4f8e55ab2fda3c56252ec133561c13874aeb19a
 Author: Mykola Marzhan <mykola@meshstor.io>
 
-md/md-llbitmap: fail resize that needs more bitmap pages
+md/md-bitmap: mask sb->state on load to drop runtime-only bits
 
-llbitmap_resize() only updates chunkshift/chunksize/chunks.  The
-page cache backing the bitmap (pctl[] and nr_pages) is sized at
-creation and never grown, so a grow whose chunk count crosses into a
-never-allocated page leaves the data path indexing past the end of
-pctl[].
+This patch masks the loaded state to BITMAP_STALE in md_bitmap_read_sb() so
+any runtime-only bits like BITMAP_WRITE_ERROR are dropped. This fixes an
+issue where an array refuses to assemble if it previously hit a transient
+bitmap write error under an older kernel.
 
-> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index 5a4e2abaa7577..e8f853e8461d7 100644
-> --- a/drivers/md/md-llbitmap.c
-> +++ b/drivers/md/md-llbitmap.c
-> @@ -1150,6 +1150,32 @@ static int llbitmap_resize(struct mddev *mddev, se=
-ctor_t blocks, int chunksize)
->  		chunks =3D DIV_ROUND_UP_SECTOR_T(blocks, chunksize);
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index 0f02e2956398d..4dd3fc2a9e15b 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -931,8 +931,13 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
+>  		}
 >  	}
-
-[Severity: Critical]
-This is a pre-existing issue, but does this loop condition allow the on-disk
-bitmap size to exceed the allocated space?
-
-The lockless bitmap requires chunks + BITMAP_DATA_OFFSET bytes of space on =
-disk,
-but the while loop check ignores BITMAP_DATA_OFFSET:
-
-	while (chunks > mddev->bitmap_info.space << SECTOR_SHIFT) {
-		chunksize =3D chunksize << 1;
-		chunks =3D DIV_ROUND_UP_SECTOR_T(blocks, chunksize);
-	}
-
-If chunks is close to the total space, adding BITMAP_DATA_OFFSET before
-dividing by PAGE_SIZE can result in an nr_pages value whose total size exce=
-eds
-the allocated on-disk space. When __llbitmap_flush() writes these pages to
-disk, could it overwrite adjacent data like the md superblock or actual arr=
-ay
-data?
-
 > =20
+> -	/* assign fields using values from superblock */
+> -	bitmap->flags |=3D le32_to_cpu(sb->state);
 > +	/*
-> +	 * A changed chunksize would require remapping every on-disk bit:
-> +	 * each chunk would cover a different sector range.  Refuse rather
-> +	 * than corrupt the existing intent record.
+> +	 * Only BITMAP_STALE is meaningful to this loader from sb->state:
+> +	 * WRITE_ERROR and DAEMON_BUSY are kernel-runtime signals (kernels
+> +	 * before v4.15 persisted WRITE_ERROR), FIRST_USE/CLEAN are
+> +	 * llbitmap-only, and HOSTENDIAN is derived from sb->version below.
 > +	 */
-> +	if (chunksize !=3D llbitmap->chunksize) {
-
-[ ... ]
-
-> +	/*
-> +	 * pctl[]/nr_pages are sized at creation and not grown here; a
-> +	 * grow past the last allocated page would index past pctl[].
-> +	 */
-> +	if (DIV_ROUND_UP(chunks + BITMAP_DATA_OFFSET, PAGE_SIZE) >
-> +	    llbitmap->nr_pages) {
+> +	bitmap->flags |=3D le32_to_cpu(sb->state) & BIT(BITMAP_STALE);
 
 [Severity: High]
-Can the chunks + BITMAP_DATA_OFFSET calculation overflow on 32-bit systems?
+This isn't a bug introduced by this patch, but does this bitwise OR cause
+cluster superblock flags to leak across re_read loop iterations?
 
-Since chunks is an unsigned long, if a user requests a huge array size
-(e.g., > 2.2 TB with 512-byte chunks), chunks can be close to ULONG_MAX. The
-addition of BITMAP_DATA_OFFSET would then wrap around to a small number,
-causing this bounds check to evaluate to false and bypassing the safeguard.
+In md_bitmap_read_sb(), when nodes > 0, the code reads offset 0 initially a=
+nd
+accumulates flags into bitmap->flags. It then computes a new offset for its
+own cluster_slot and jumps back to the re_read label, but bitmap->flags is
+never cleared.
 
-Could this allow llbitmap_read() to index the pctl[] array far out of bound=
-s?
-
-> +		pr_warn("md/llbitmap: %s: cannot grow to %lu chunks: needs %lu bitmap =
-pages, only %u allocated; growing the bitmap is not yet supported\n",
-> +			mdname(mddev), chunks,
-> +			DIV_ROUND_UP(chunks + BITMAP_DATA_OFFSET, PAGE_SIZE),
-> +			llbitmap->nr_pages);
-> +		return -ENOSPC;
-> +	}
-> +
->  	llbitmap->chunkshift =3D ffz(~chunksize);
->  	llbitmap->chunksize =3D chunksize;
->  	llbitmap->chunks =3D chunks;
+Could this cause a local node to spuriously inherit BITMAP_STALE or
+BITMAP_HOSTENDIAN from node 0, incorrectly forcing a full array recovery?
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does updating llbitmap->chun=
-ks
-without initializing the newly exposed chunks leave the added space unsynce=
-d?
+This is a pre-existing issue, but does the lockless bitmap implementation in
+drivers/md/md-llbitmap.c remain vulnerable to the exact same WRITE_ERROR bug
+this patch fixes for standard bitmaps?
 
-When an array is grown, the newly added chunks in the page cache default to
-BitUnwritten (0) or stale values instead of BitNeedSync. When
-llbitmap_start_sync() evaluates them, it will see them as BitNone and return
-false.
+In llbitmap_read_sb():
 
-Does this cause md_do_sync() to skip syncing the newly added sectors entire=
-ly,
-leading to silent data inconsistency across mirrors?
+    llbitmap->flags =3D le32_to_cpu(sb->state);
+
+Since it reads the superblock state entirely unmasked, wouldn't a single
+instance of on-disk corruption or transient error set BITMAP_WRITE_ERROR
+permanently and force a full resync on every restart?
+
+[Severity: High]
+This is also a pre-existing issue, but do internal bitmap pages leak during
+array teardown when CONFIG_MD_BITMAP_FILE is enabled?
+
+In md_bitmap_file_unmap(), free_buffers() is called for each page:
+
+drivers/md/md-bitmap.c:free_buffers() {
+    ...
+    if (!PagePrivate(page))
+        return;
+    ...
+}
+
+For internal bitmaps, reads and writes use sync_page_io() without buffer
+heads, so PagePrivate is never set. Does this early return skip put_page()
+and permanently leak all dynamically allocated metadata pages whenever the
+array is stopped or the bitmap is resized?
+
+>  	if (le32_to_cpu(sb->version) =3D=3D BITMAP_MAJOR_HOSTENDIAN)
+>  		set_bit(BITMAP_HOSTENDIAN, &bitmap->flags);
+>  	bitmap->events_cleared =3D le64_to_cpu(sb->events_cleared);
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260719144227.9404=
-44-1-mykola@meshstor.io?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260719144409.9404=
+92-1-mykola@meshstor.io?part=3D1
