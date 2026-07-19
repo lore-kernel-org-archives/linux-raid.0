@@ -1,142 +1,170 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-48.ptr.blmpb.com (va-2-48.ptr.blmpb.com [209.127.231.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 494433D9040;
-	Sat, 18 Jul 2026 17:12:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A97722370A
+	for <linux-raid@vger.kernel.org>; Sun, 19 Jul 2026 06:29:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784394782; cv=none; b=qKDFtXIFSSmbksf8poi97vx+RDKkwY7ANYADvp3+HfK8/NqKfqo7wkbYOL2tFSZLXdcWRcbHgxgQwGDbTa+bjl5uDMoParHWh7VbhYShWHV+YW/AhJVqs0XsqjMYxMpDsrFSmhEeNg01O3b28gmjCNCv3sIKLjXk67qZZHnJ4xA=
+	t=1784442599; cv=none; b=o9/RAhtW81HtYoKvVC/EzgqHzdFrZz26H3Ml9/qz/VbKVyb84pXMXLxXX2caEfHlhLBnYmXE9YUZkkFukDhqV6YOAga+UECQHHa9BwhETKtzkRh2kUMJvDolPkKJx7I2lFaO18V3Xaku9+HA0NcLbzxabnRpc+2ubq/kTn5P5II=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784394782; c=relaxed/simple;
-	bh=351ghL5Z+w/cYuvFapUULxw90ykB594R9BtgHTsFdQo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=h9T2CISLfFnHJDRL49BFuxvb1HiUXl/yPGwEGpNQT4wksiqHNxt2RmAA74uaXZfrYTDcr2lQbTN/MnU0O3Jjw6fxyfR7/NrRIOq5eNLVcv9o4GMFqbcye/Wp067kU74NbvOvEoPpIrz0Rn4SiFS6kGdY3xeMcMoRcZhc/PqSofU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cHSboXUb; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784442599; c=relaxed/simple;
+	bh=tElvLjH8Lpq8ioT/UTwsQdCCIZv/nMbwqr8KQZ165KY=;
+	h=Mime-Version:Subject:Date:Message-Id:To:In-Reply-To:References:Cc:
+	 From:Content-Type; b=PwJf3Z5pLc8yL/HHO913L6+jXvuigBqj7GtdgRgLsM0z3+wIxp0DhufyWg9VnFq/Ecc7qt/U5ROkFoU06f7rCWcGwcNkmDgiDMtbLNV/hHU/XAB/pH341/VzYGjX9z9yb8p1agDNUnfalobUzIslB7/dX+aq6gZKfVLy6Q2+jiQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=HVyuo3Xa; arc=none smtp.client-ip=209.127.231.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cHSboXUb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEF181F000E9;
-	Sat, 18 Jul 2026 17:12:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784394779;
-	bh=5zIMFPvbU4ox3idC4iHNoP0VPGwWmJp4Xv96z2HD8+k=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cHSboXUbAufnEvdw7iHuFQGr7bnYGnFDEV7bkhBSJiVjDq2+UfMWSBg7E/8IPPyAx
-	 BOAH2YqpQExB2O1yblDJfNGBSqwSemdpsR/wIr/URD4i6AhqMb7sScOZIoOh/CI+cp
-	 GY9jeU6InucSMJgqji46QzGxpUM/iLzjgJ/MBy2VALJqlggfCSxqH1zxeEEkwof/U5
-	 H4gMXBUnzAIXYgsFbugz1TaiYLaec5Eo+teirNdSGVdrMERR8nIOL1dmx2pxeVNMTk
-	 xrBOkt5ggrviZ0qCFRS4L6NpPJpkrNNXr+Sf2k3tAl5Xd98hYkQuiblQNh9VNcfNLr
-	 Q0jwIrrRnhh9g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 6/6] nvme-rdma: return BLK_STS_TARGET for unsupported
- P2P transfers
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mykola Marzhan" <mykola@meshstor.io>
-Cc: yukuai@fygo.io, linux-pci@vger.kernel.org, linux-raid@vger.kernel.org
-In-Reply-To: <20260718162547.448892-7-mykola@meshstor.io>
-References: <20260718162547.448892-1-mykola@meshstor.io>
- <20260718162547.448892-7-mykola@meshstor.io>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 18 Jul 2026 17:12:58 +0000
-Message-Id: <20260718171258.BEF181F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="HVyuo3Xa"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1784442586;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=1jYdcWH5zuPZpWXqFFBCG42D3l/XgPxImBFHmUgDb0c=;
+ b=HVyuo3Xa6sitXPUBpdxUn6zPEEvUMvsGoCvK/QZ4Aqc72sP7lhvKqvZNDauNP0dAnztUux
+ FS7tfEi4Utu5Y7BjE16/uzpsIggRFZC/t1GBrFhbnk6828ZkZnUh7T3v4HlH2wbh+hDs+1
+ v5GwOSAwSRO9NyNck4yoOUDgTCelcT6TBn5Edp//g3GJTRAExirCLsvgmfLuPgEALa+BL7
+ TH0wg2efyDp0DIVSVlD4rct36WFTcu6MJOWrIFH7QhyqBh1WFoQ/bPIA7Qglc73tdUOuJR
+ ikBhkqJYBvp75vOtY0+GiVNX2lXRAHOgrLkY8p2tVO5nHgs9k4TBrXv8huvGXA==
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Reply-To: yukuai@fygo.io
+Subject: Re: [PATCHv2] md: clear MD_CLOSING when array_state_store() bails on interrupted lock
+Date: Sun, 19 Jul 2026 14:29:41 +0800
+Message-Id: <eded31de-2e92-4a3b-9384-03dbebc5e9e7@fygo.io>
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+To: "Jack Wang" <jinpu.wang@ionos.com>, "Song Liu" <song@kernel.org>, 
+	"Yu Kuai" <yukuai@fygo.io>
+In-Reply-To: <20260717051233.383373-1-jinpu.wang@ionos.com>
+X-Lms-Return-Path: <lba+26a5c6eda+3aa1f7+vger.kernel.org+yukuai@fygo.io>
+References: <20260717051233.383373-1-jinpu.wang@ionos.com>
+Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	"Jack Wang" <jinpu.wang@cloud.ionos.com>
+From: "yu kuai" <yukuai@fygo.io>
+X-Original-From: yu kuai <yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.157]) by smtp.larksuite.com with ESMTPS; Sun, 19 Jul 2026 06:29:45 +0000
+Content-Type: text/plain; charset=UTF-8
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Hi,
 
-New issues:
-- [High] Data corruption and PI validation failure due to modifying integri=
-ty metadata after DMA mapping.
+=E5=9C=A8 2026/7/17 13:12, Jack Wang =E5=86=99=E9=81=93:
+> From: Jack Wang <jinpu.wang@cloud.ionos.com>
+>
+> Writing "clear", "readonly", "inactive" or "read_auto" to array_state
+> calls mddev_set_closing_and_sync_blockdev(), which sets MD_CLOSING so the
+> array cannot be reopened while it is being torn down. The flag is only
+> cleared again at the tail of array_state_store() (for readonly, read_auto=
+,
+> inactive, or the failed-clear case).
+>
+> Between setting the flag and reaching that tail there is an early return:
+>
+> 	err =3D mddev_lock(mddev);
+> 	if (err)
+> 		return err;
+>
+> mddev_lock() is mutex_lock_interruptible() on reconfig_mutex. If the
+> writing task is signalled while blocked there - easy to hit when the mute=
+x
+> is held for a long time by a running resync/recovery or reshape - it
+> returns -EINTR and array_state_store() returns with MD_CLOSING still set.
+> do_md_stop()/md_set_readonly() never ran, so the array keeps working
+> internally, but every subsequent md_open() now returns -ENODEV for all
+> callers: the device still shows up in /proc/mdstat and sysfs is fully
+> populated, yet it cannot be opened and cannot be recovered without a
+> reboot (the remaining clear paths either need the device open or re-enter
+> test_and_set_bit(MD_CLOSING) and bail with -EBUSY before the clear).
+>
+> Route the interrupted-lock exit through a common label so the flag is
+> released. Guard the clear with a set_closing flag that records whether
+> this write actually set MD_CLOSING: when mddev->pers is already NULL (for
+> example a concurrent STOP_ARRAY is mid-teardown) this write skips the
+> mddev_set_closing_and_sync_blockdev() call above, so it must not clear a
+> MD_CLOSING that the other thread owns - doing so could let the array be
+> reopened while it is being destroyed. This also tightens the pre-existing
+> tail clear, which had the same unconditional behaviour.
+>
+> mddev_unlock() is correctly skipped on the goto path since the lock was
+> never acquired.
+>
+> Fixes: 99b902ac1725 ("md: sync blockdev before stopping raid or setting r=
+eadonly")
+> Assisted-by: Claude:claude-opus-4-8 [Claude Code]
+> Signed-off-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+> ---
+>   drivers/md/md.c | 17 ++++++++++++++---
+>   1 file changed, 14 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index d1465bcd86c8..7b7a4d925907 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -4649,6 +4649,7 @@ array_state_store(struct mddev *mddev, const char *=
+buf, size_t len)
+>   {
+>   	int err =3D 0;
+>   	enum array_state st =3D match_word(buf, array_states);
+> +	bool set_closing =3D false;
+>  =20
+>   	/* No lock dependent actions */
+>   	switch (st) {
+> @@ -4668,6 +4669,7 @@ array_state_store(struct mddev *mddev, const char *=
+buf, size_t len)
+>   		err =3D mddev_set_closing_and_sync_blockdev(mddev, 0);
+>   		if (err)
+>   			return err;
+> +		set_closing =3D true;
+>   		break;
+>   	default:
+>   		break;
+> @@ -4696,7 +4698,7 @@ array_state_store(struct mddev *mddev, const char *=
+buf, size_t len)
+>   	}
+>   	err =3D mddev_lock(mddev);
+>   	if (err)
+> -		return err;
+> +		goto out_clear_closing;
 
-Pre-existing issues:
-- [High] Use-After-Free of request and PDU on the -EIO error path.
---
+Can you just clear MD_CLOSING here and still return err directly? I think t=
+his is much
+simpler.
 
---- Patch [6]: [PATCH 6/6] nvme-rdma: return BLK_STS_TARGET for unsupported=
- P2P transfers ---
-commit efc6b55af9178f85e847e999c50cc6efb530a8b9
-Author: Mykola Marzhan <mykola@meshstor.io>
-
-nvme-rdma: return BLK_STS_TARGET for unsupported P2P transfers
-
-This patch addresses an issue where mapping failures for peer memory are
-misreported as path errors instead of target errors. It changes DMA
-mapping to use ib_dma_map_sgtable_attrs() to preserve error codes and maps
--EREMOTEIO to BLK_STS_TARGET. It also reorders nvme_start_request() to
-execute after the mapping succeeds.
-
-Cc: stable@vger.kernel.org # v7.1
-
-> diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
-> index 6909e35427942..b8642cd2fb793 100644
-> --- a/drivers/nvme/host/rdma.c
-> +++ b/drivers/nvme/host/rdma.c
-[ ... ]
-> @@ -2039,11 +2038,13 @@ static blk_status_t nvme_rdma_queue_rq(struct blk=
-_mq_hw_ctx *hctx,
-> =20
->  	err =3D nvme_rdma_map_data(queue, rq, c);
->  	if (unlikely(err < 0)) {
-> -		dev_err(queue->ctrl->ctrl.device,
-> -			     "Failed to map data (%d)\n", err);
-> +		dev_err_ratelimited(queue->ctrl->ctrl.device,
-> +				    "Failed to map data (%d)\n", err);
->  		goto err;
->  	}
-> =20
-> +	nvme_start_request(rq);
-> +
-
-[Severity: High]
-Does moving nvme_start_request() after nvme_rdma_map_data() cause Protection
-Information (PI) validation failures?
-
-nvme_start_request() calls blk_mq_start_request(), which eventually calls
-blk_integrity_prepare() to insert reference tags into the metadata payload.
-
-Since nvme_rdma_map_data() has already mapped the metadata for DMA
-(potentially using SWIOTLB or syncing caches), wouldn't the device receive
-stale metadata without the newly generated tags?
-
->  	sqe->cqe.done =3D nvme_rdma_send_done;
-> =20
->  	ib_dma_sync_single_for_device(dev, sqe->dma,
-[ ... ]
-> @@ -2063,6 +2064,13 @@ static blk_status_t nvme_rdma_queue_rq(struct blk_=
-mq_hw_ctx *hctx,
->  		ret =3D nvme_host_path_error(rq);
->  	else if (err =3D=3D -ENOMEM || err =3D=3D -EAGAIN)
->  		ret =3D BLK_STS_RESOURCE;
+>  =20
+>   	switch (st) {
+>   	case inactive:
+> @@ -4769,8 +4771,17 @@ array_state_store(struct mddev *mddev, const char =
+*buf, size_t len)
+>   	}
+>   	mddev_unlock(mddev);
+>  =20
+> -	if (st =3D=3D readonly || st =3D=3D read_auto || st =3D=3D inactive ||
+> -	    (err && st =3D=3D clear))
+> +out_clear_closing:
 > +	/*
-> +	 * The DMA layer refused to map peer memory to this device: a
-> +	 * property of the pairing, not a path failure.  Match nvme-pci
-> +	 * and do not retry (see blk_path_error()).
+> +	 * Only clear MD_CLOSING if this write actually set it. Otherwise a
+> +	 * concurrent teardown (e.g. STOP_ARRAY) may own the flag - this write
+> +	 * would have skipped setting it above when mddev->pers was already
+> +	 * NULL - and clearing it here would let the array be reopened while it
+> +	 * is being destroyed.
+
+I don't think the comment is correct. Only one caller can set MD_CLOSING, c=
+oncurrent
+teardown can't own the flag since this context already own the flag.
+
 > +	 */
-> +	else if (err =3D=3D -EREMOTEIO)
-> +		ret =3D BLK_STS_TARGET;
->  	else
->  		ret =3D BLK_STS_IOERR;
->  	nvme_cleanup_cmd(rq);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does the -EIO error path
-trigger a use-after-free of rq and req?
-
-If nvme_rdma_map_data() fails with -EIO, we call nvme_host_path_error(), wh=
-ich
-synchronously completes and frees rq via blk_mq_end_request().
-
-The code then falls through to nvme_cleanup_cmd(rq) and ib_dma_unmap_single=
-(),
-which access the freed rq and its PDU (req).
-
-If the request was immediately re-allocated for another command, could this
-read the wrong DMA address and unmap an active DMA mapping?
+> +	if (set_closing &&
+> +	    (st =3D=3D readonly || st =3D=3D read_auto || st =3D=3D inactive ||
+> +	     (err && st =3D=3D clear)))
+>   		clear_bit(MD_CLOSING, &mddev->flags);
+>  =20
+>   	return err ?: len;
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260718162547.4488=
-92-1-mykola@meshstor.io?part=3D6
+Thanks,
+Kuai
