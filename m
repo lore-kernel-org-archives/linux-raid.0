@@ -1,106 +1,116 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from out30-111.freemail.mail.aliyun.com (out30-111.freemail.mail.aliyun.com [115.124.30.111])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE5A71CD2C;
-	Mon, 20 Jul 2026 04:32:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C14F235045;
+	Mon, 20 Jul 2026 06:20:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.111
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784521977; cv=none; b=B20jN6JAY7tuw5kFHN8hdm1A3I1Mc3l/frg0CUavrD0DOWzvP6Jcvha+wTVCDQ+IWzFuz76YtuV2mMSu9TzYq+71AFytr2CaDPbZoJX+tIeqN7Y03X2ksApglBSXWazj1nIDva8PeUWLEw8DzYUeW+sCBL3kdlu7RDKpXPegGvQ=
+	t=1784528441; cv=none; b=p4l/m55z4NuIUBq3oyzm1+zyxkpemaILHA0Kqu3rhZtq8NjYeQT+VTZzUGn3rjBx+2gDfeF+6IazpX9DD2vtC14J/B0lPmhek0C+eZYIkqr96LBRjm/W0Uo6UltHBY1nvCHJIM+FEOfBARX70ZHg1rK3IV9yej9RGmfCQQK87Yc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784521977; c=relaxed/simple;
-	bh=LXaj+nu0eZIl+i2OfDpS8hj5G/abum1C1jQJrEulTXo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=T19Yj1FL73WqQ5y8p7UPOPD/c/cfKQ9meRwMPfb0wW7erAsjSmxHDhkU5CsCf1UCWnP0csLLEm3T7dZev9y6kEc0i0rsnWnurM7z7EHqtkiP5DN1BztrogEEEdfdzTzqGRKT6ml3UpuEL1TTbVeZz3dKp+jqZdtVM/kjpGfytiQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [192.168.2.227] (p57bd989f.dip0.t-ipconnect.de [87.189.152.159])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 1DEE44C2C37F01;
-	Mon, 20 Jul 2026 06:32:12 +0200 (CEST)
-Message-ID: <76692ee2-e45a-4728-94cd-f65eabe397c1@molgen.mpg.de>
-Date: Mon, 20 Jul 2026 06:32:08 +0200
+	s=arc-20240116; t=1784528441; c=relaxed/simple;
+	bh=Baal0uqnNyXL2c4/a+ed4TzaILPB0CYvf9p8AmJr2oA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=rJ/tLNEABe7pXdnAoAQ4g68o2pfxJ1qhIOD4IhMziMIUPc2Jp6Wf+jtkWmlT1in8AfvArJ1otthIZ5euw15OKixhVwmWDZz1ftan5HVXpmKYb/G9/3W3qA/g+k4Pa4t7BNAw8GGUtsbRfOEImwk7leVTjvcBpgi0jkSjyLwzofE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=GnHnS1Vu; arc=none smtp.client-ip=115.124.30.111
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="GnHnS1Vu"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1784528427; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=bI2r72nbTUuXwx8i+nfeTcgcOhOf1UakBrDJM9zuSYo=;
+	b=GnHnS1VuFL8ujel+TXnNZVNh+y+y3BkmrJmU0nIXNipnhwydNdHCov5tDmRQv/XbzpaiX5CGyBouWnfnm5br2Ga3yHNTSbzPbpjVgVeHk04jOCBjX4BUOkShuRGYir0lCJZvHJisunCcQCER3EQN/qHI0N9uTI70qdSe0FT4EBg=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R411e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045098064;MF=yunye.zhao@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0X7O9rU5_1784528426;
+Received: from j66c13357.sqa.eu95.tbsite.net(mailfrom:yunye.zhao@linux.alibaba.com fp:SMTPD_---0X7O9rU5_1784528426 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Mon, 20 Jul 2026 14:20:27 +0800
+From: Yunye Zhao <yunye.zhao@linux.alibaba.com>
+To: Yu Kuai <yukuai@fygo.io>,
+	Song Liu <song@kernel.org>
+Cc: Yunye Zhao <yunye.zhao@linux.alibaba.com>,
+	Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	Joseph Qi <joseph.qi@linux.alibaba.com>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] md: fix soft lockup during resync when sync is repeatedly skipped
+Date: Mon, 20 Jul 2026 14:20:26 +0800
+Message-Id: <20260720062026.19245-1-yunye.zhao@linux.alibaba.com>
+X-Mailer: git-send-email 2.19.1.6.gb485710b
+In-Reply-To: <7abeaff6-1387-4046-bea3-f1b04465addd@fygo.io>
+References: <20260717062743.128189-1-yunye.zhao@linux.alibaba.com> <7abeaff6-1387-4046-bea3-f1b04465addd@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] md/raid10: restore still_degraded detection in
- recovery
-To: Mykola Marzhan <mykola@meshstor.io>
-Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
- Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
- Hannes Reinecke <hare@suse.de>, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260719144227.940444-1-mykola@meshstor.io>
- <20260719144227.940444-2-mykola@meshstor.io>
-Content-Language: en-US
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20260719144227.940444-2-mykola@meshstor.io>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Dear Mykola,
+Hi Kuai,
 
+On 2026/7/17 14:27, Yu Kuai wrote:
+>> md_do_sync()'s main loop advances io_sectors only when I/O is actually
+>> issued (skipped == 0).  When sync_request() keeps returning skipped == 1,
+>> io_sectors never increases, [...]
+>
+> That's not expected, io_sectors should always increase in the skip case.
 
-Thank you for your patch.
+Sorry, my description was not accurate. The problem is not that io_sectors
+stays 0. md_do_sync()'s loop exit condition is j == max_sectors, and in
+raid10_sync_request()'s recovery path sectors is always 128, so for a very
+large max_sectors the loop iterates a huge number of times.
 
-Am 19.07.26 um 16:42 schrieb Mykola Marzhan:
-> raid10_sync_request()'s recovery arm passes still_degraded -- "will
-> the array still be degraded after this recovery completes?" -- to
-> md_bitmap_start_sync(), whose !degraded branch consumes the chunk's
-> NEEDED marker, the write-intent record.  That is only safe when the
-> recovery restores full redundancy; otherwise the record still
-> describes writes an absent member missed.
-> 
-> Commit fe6a19d40ceb ("md/md-bitmap: merge md_bitmap_start_sync()
-> into bitmap_operations") turned the detection loop's only assignment
-> from "still_degraded = 1" into "still_degraded = false" in its
-> int-to-bool styling pass, so the flag has been constant false ever
-> since.  raid1 and raid5 were converted to "= true"; only raid10 was
-> inverted.
-> 
-> The result is silent data loss on a classic-bitmap raid10 that stays
-> degraded across a recovery.  With mirror pairs {A,B} and {C,D}: lose
-> D, keep writing, lose B, add a spare.  The rebuild into B's slot
-> strips NEEDED from every chunk -- including chunks whose only
-> unsatisfied intent belonged to D -- so a later --re-add of D sees an
-> empty intent record, completes instantly, and serves stale data.
-> 
-> Restore the pre-conversion assignment.  Only the classic-bitmap
-> recovery arm is affected: llbitmap ignores the degraded parameter,
-> and the resync arm passes mddev->degraded directly.
-> 
-> Fixes: fe6a19d40ceb ("md/md-bitmap: merge md_bitmap_start_sync() into bitmap_operations")
-> Cc: stable@vger.kernel.org # v6.12+
-> Assisted-by: Claude-Code:claude-opus-4-8
-> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
-> ---
->   drivers/md/raid10.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 0a3cfdd3f5df..54cddb3a98cd 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -3365,7 +3365,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->   				struct md_rdev *rdev = conf->mirrors[j].rdev;
->   
->   				if (rdev == NULL || test_bit(Faulty, &rdev->flags)) {
-> -					still_degraded = false;
-> +					still_degraded = true;
->   					break;
->   				}
->   			}
+raid10_sync_request(), recovery branch:
 
-Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
+    max_sync = RESYNC_PAGES << (PAGE_SHIFT-9);      /* 128 */
+    must_sync = md_bitmap_start_sync(mddev, sect, &sync_blocks, true);
+    if (sync_blocks < max_sync)   /* sync_blocks huge, never true */
+        max_sync = sync_blocks;   /* so max_sync stays 128 */
+    ...
+    if (biolist == NULL) {
+        *skipped = 1;
+        return max_sync;          /* 128; the large span is discarded */
+    }
 
+Back in md_do_sync()'s main loop, j then crawls forward 128 sectors per
+call until it reaches max_sectors:
 
-Kind regards,
+    while (j < max_sectors) {
+        sectors = mddev->pers->sync_request(mddev, j, max_sectors, &skipped);
+        if (!skipped)             /* skipped == 1 -> io_sectors stays 0 */
+            io_sectors += sectors;
+        j += sectors;             /* j += 128 only */
+        if (last_check + window > io_sectors || j == max_sectors)
+            continue;
+    }
 
-Paul
+From the vmcore:
+
+    sync_blocks returned = 0x5ED03680 (~1.59e8 sectors), clamped to 128
+    recovery max_sectors = dev_sectors = 2^40
+    iterations = 2^40 / 128 = 2^33 (~8.6e9)
+
+> What kernel version you're testing?
+
+6.6.102. I also tested mainline and hit the same problem.
+
+> If this is latest kernel, bitmap_start_sync() need to be fixed. It can't
+> return skip while setting skipping sectors to 0.
+
+bitmap_start_sync() is actually fine -- it returns a large clean span
+(0x5ED03680 above). The recovery path just discards it: max_sync is only
+ever clamped down, so it returns 128 regardless.
+
+> And since this is dead loop, a cond_resched() will not fix anything.
+
+Agreed -- cond_resched() only stops the watchdog; the thread still spins
+~8.6e9 no-op iterations and pins a CPU for ~313s.
+
+For v2 I'd fix this at the source: make the recovery path honour the clean
+span reported by the bitmap instead of capping the skip at 128. Does that
+direction look right to you?
+
+Thanks,
+Yunye
