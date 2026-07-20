@@ -1,127 +1,124 @@
-Received: from va-2-18.ptr.blmpb.com (va-2-18.ptr.blmpb.com [209.127.231.18])
+Received: from va-2-59.ptr.blmpb.com (va-2-59.ptr.blmpb.com [209.127.231.59])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2502A27A916
-	for <linux-raid@vger.kernel.org>; Mon, 20 Jul 2026 02:03:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8DC7296BD2
+	for <linux-raid@vger.kernel.org>; Mon, 20 Jul 2026 02:14:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.59
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784512982; cv=none; b=chlwyf36aVBtImCf+mpA51Gt2YAwuDH+HvGgKDdmdzmev+qxIZdJU8NEIA9xkQlZ2WzzIf4KK9q6y/7Dg/So7s2VTl6l0cbgnLmfFFRO4mDMDrwvZw5uTucNmOncueoFMlXXAls3rTy58qq1ZaJ88tLGDP/tr3yqL0u3N3uB3as=
+	t=1784513674; cv=none; b=b2NyxODFsifjRV+BLm8j01zLOtVtjrxLQxXSR383zoIYOeIlDQ4+EF9fLCc+qhEccLGz9/E7vADaWXuB+4uUnLQFIM1FCQQtFaKpoUYFkGCubVh6u/urC+MnUZY0tvFAWlzophTpp8J3W1JZUj2uHkNsOBcZ7qP2cwtRcGznmRA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784512982; c=relaxed/simple;
-	bh=2vhdK8SV5JqfvqQVNWm4NB1R9TrHHENqvnh86PrVRaQ=;
-	h=Cc:Subject:In-Reply-To:Message-Id:Content-Type:Mime-Version:
-	 References:To:From:Date; b=NDQf1VvVQMNYRrWxEhteSznHKYgdVgppiafaZF3QlP3m7fxSnEZW9CXipdfLpf438FeopP4PuC/umTxenxayyx3IXFRiUEA2qo5c1f1Lria2H8HDMSnVUGYcFRNEeodD+7SDCYHzw+WHsHRx5OVpslhI+vBT/NtI9quKLB/KrOo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=fBeCgYmU; arc=none smtp.client-ip=209.127.231.18
+	s=arc-20240116; t=1784513674; c=relaxed/simple;
+	bh=M4TgcBPe3Z30dLa/4BB7450eAUzd4+RpvxaH3OMCNbs=;
+	h=Message-Id:Mime-Version:References:From:Date:Content-Type:
+	 In-Reply-To:To:Cc:Subject; b=trNtY2R3BFttLa1PSVzZLGWZg1Fl13c1/ywwmWkA64Af+tVLNVEKg+XOHOOTKTAELw61yEo/JxSwEwHb8z9A6n0FNaAXXQ7EhJ05tU0DtUUBeoPPGWeulDSm0SY4JfiL8GHMu6QEb1HA0h4a25hDHpUIzYW9ZnDRYeuCLwB8lzE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=gwbzP9aT; arc=none smtp.client-ip=209.127.231.59
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="fBeCgYmU"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="gwbzP9aT"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1784512852;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1784513664;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=Pkg7lQdXfFXPqIgzbfDB7s7eqwINU6zVilzTRpl4bnI=;
- b=fBeCgYmUO39vqDk8nuV4h/FTzDC7UbAr6BIsBzf3OQu7in1DqdTdevEkNvrn8/krJrBsdh
- q0z2F9qJ1aHoZ+zOTPzZGQloYGR+SLSw98hl6r2ODG8sOxCVb6EeFAoH0yWaBuv58EtL/+
- 9TS9rnAy3Ency1WiUVRdaKwX4QXCuq1R2mXxpWzAfLZqgbfdXw4cftDs2GdQLBtNaXekxS
- gA6ZwmqiYlWQnCll8KKntgaZM9PkIfGylKlbaeM+LWV9WKuk+wqdRM6KOqv4XuAN2H3/7E
- naz7ah7r2it2Zi8jqXIRRr8TCQFQb0hs7Ba8GoJnsDcG7lWGvMUlYHMAIGLk1Q==
-Content-Transfer-Encoding: quoted-printable
-Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/4] md/md-llbitmap: mask sb->state on load to drop runtime-only bits
-X-Lms-Return-Path: <lba+26a5d8153+474c33+vger.kernel.org+yukuai@fygo.io>
+ bh=CLeWNEBG5YoIGpJff8b6+Q1H22MYvvqlFwBXFhR8z48=;
+ b=gwbzP9aTzWz7Dy9wZfu+VAtFT9lzDZ1FKGPTCcGyR8KorVVVz0FT/0qBzUYqOVIDnqI/1H
+ 4Xe+CBLV3jeHnsF3uoDwdTH+IhfL/UW2uTB1JOVcnRPpHDPlnJn5sdtU0vsryWapP0kQ9s
+ 1gbxndMQza6bPs554zfRmIVJ+CT1EuvqNgiprEYQF4+gZoEUhRe36Tdb9ybxLSfEC9MfGA
+ 4X97UkW6af1MZSQO8/q03rv2J2jwMDM1BaPMKJDiE8C522pZ906GrYOGJRhnX3XQExiZKC
+ b+ElEW/qI893wf0RL7LQ/U/p0C+2lpl4BIPqLr6jhu7DSfnDieB0R1bMmP2kRg==
 Reply-To: yukuai@fygo.io
-In-Reply-To: <20260719144409.940492-3-mykola@meshstor.io>
-User-Agent: Mozilla Thunderbird
-Message-Id: <235ba45b-3f68-4f08-8955-ca79959a5b1c@fygo.io>
-X-Original-From: yu kuai <yukuai@fygo.io>
-Content-Type: text/plain; charset=UTF-8
+Message-Id: <62a37894-c752-42b2-a54e-92b6247af3df@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Received: from [192.168.1.104] ([39.182.0.157]) by smtp.larksuite.com with ESMTPS; Mon, 20 Jul 2026 02:00:50 +0000
-References: <20260719144409.940492-1-mykola@meshstor.io> <20260719144409.940492-3-mykola@meshstor.io>
+X-Lms-Return-Path: <lba+26a5d847f+1676e1+vger.kernel.org+yukuai@fygo.io>
+User-Agent: Mozilla Thunderbird
+References: <20260719144409.940492-1-mykola@meshstor.io> <20260719144409.940492-5-mykola@meshstor.io>
+X-Original-From: yu kuai <yukuai@fygo.io>
+From: "yu kuai" <yukuai@fygo.io>
+Date: Mon, 20 Jul 2026 10:14:19 +0800
+Content-Type: text/plain; charset=UTF-8
+Received: from [192.168.1.104] ([39.182.0.157]) by smtp.larksuite.com with ESMTPS; Mon, 20 Jul 2026 02:14:22 +0000
+In-Reply-To: <20260719144409.940492-5-mykola@meshstor.io>
 To: "Mykola Marzhan" <mykola@meshstor.io>, "Song Liu" <song@kernel.org>, 
 	"Yu Kuai" <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Date: Mon, 20 Jul 2026 10:00:46 +0800
+Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 4/4] md: include events counters when kicking non-fresh device
+Content-Transfer-Encoding: quoted-printable
 
 Hi,
 
 =E5=9C=A8 2026/7/19 22:44, Mykola Marzhan =E5=86=99=E9=81=93:
-> llbitmap_read_sb() copies sb->state straight into llbitmap->flags
-> with no mask, so any bit set in the on-disk state field becomes a
-> runtime flag.  With BITMAP_WRITE_ERROR (bit 2) on disk,
-> llbitmap_enabled() returns false for the array's entire lifetime:
-> llbitmap_update_sb() early-returns, the state machine returns
-> BitNone, the bits attribute reports "bitmap io error", and on-disk
-> sb->events stops advancing.  The bitmap is silently disabled with no
-> log line attributing the cause, and the next clean reassemble forces
-> a full resync because sb->events is stale.
+> When analyze_sbs() kicks a member with a stale events counter, the
+> warning names the device but not the divergence that caused the
+> kick, so judging whether the kicked member is salvageable means
+> running mdadm --examine on every member.  Print the member's on-disk
+> events counter and the freshest events counter in the warning
+> itself.
 
-For llbitmap, it's using md_write_metadata(), if it's failed for one rdev,
-md_error() is called directly for this rdev. So if BITMAP_WRITE_ERROR exist=
-,
-the array is already broken. And in this case, if array can still reassembl=
-e,
-a full resync is the expected behavior.
+If user space tools can do this already, then user space tools should be
+considered preferred.
 
 >
-> Runtime bits do reach disk: llbitmap_update_sb() writes the raw
-> flags word, so BITMAP_DAEMON_BUSY is persisted whenever a superblock
-> update coincides with a daemon-period overrun -- the condition that
-> logs "daemon_work not finished".  WRITE_ERROR itself has no
-> reachable write-side path today (its only setter is update_sb's own
-> read-failure branch, which returns before writing), but on-disk
-> corruption or an external write plants it all the same.
+> rdev->sb_events cannot be used here: it is only assigned when a
+> superblock is written and still reads 0 during assemble.  Read the
+> counter from the superblock page instead -- md_event() for 0.90
+> metadata, the little-endian events field for 1.x.
 >
-> Mask the loaded state to the bits this loader consumes (STALE,
-> FIRST_USE and CLEAN), as the previous patch did for the classic
-> loader.  Masking at load neutralises whatever is on disk and is the
-> minimal backportable fix; masking the write side is left as a
-> follow-up cleanup.
+> The legacy substring "kicking non-fresh %pg from array!" is
+> unchanged, so existing log parsers continue to match.
 >
-> Reproducer: write 0x04 into byte offset 48 (the state field) of the
-> llbitmap superblock on every member (a forge on a single member can
-> be masked by another member's clean copy), then assemble.  Without this
-> fix the bits attribute reports "bitmap io error" and sb->events is
-> frozen; with it the bitmap is alive and sb->events advances
-> normally.
->
-> Fixes: 5ab829f1971d ("md/md-llbitmap: introduce new lockless bitmap")
-> Cc: stable@vger.kernel.org # v6.18+
 > Assisted-by: Claude-Code:claude-opus-4-8
 > Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
 > ---
->   drivers/md/md-llbitmap.c | 10 +++++++++-
->   1 file changed, 9 insertions(+), 1 deletion(-)
+>   drivers/md/md.c | 25 +++++++++++++++++++++++--
+>   1 file changed, 23 insertions(+), 2 deletions(-)
 >
-> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index e8f853e8461d..0b591124dc63 100644
-> --- a/drivers/md/md-llbitmap.c
-> +++ b/drivers/md/md-llbitmap.c
-> @@ -981,7 +981,15 @@ static int llbitmap_read_sb(struct llbitmap *llbitma=
-p)
->   		else
->   			mddev->bitmap_info.space =3D mddev->bitmap_info.default_space;
->   	}
-> -	llbitmap->flags =3D le32_to_cpu(sb->state);
-> +	/*
-> +	 * Mask the loaded state to the bits this loader consumes.
-> +	 * WRITE_ERROR and DAEMON_BUSY are kernel-runtime signals; a stray
-> +	 * WRITE_ERROR trusted from disk silently disables the bitmap for
-> +	 * the array's entire lifetime.
-> +	 */
-> +	llbitmap->flags =3D le32_to_cpu(sb->state) &
-> +			  (BIT(BITMAP_STALE) | BIT(BITMAP_FIRST_USE) |
-> +			   BIT(BITMAP_CLEAN));
->   	if (test_and_clear_bit(BITMAP_FIRST_USE, &llbitmap->flags)) {
->   		ret =3D llbitmap_init(llbitmap);
->   		goto out_put_page;
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index d60ea7aaca3a..9ec87375a717 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -3934,8 +3934,29 @@ static int analyze_sbs(struct mddev *mddev)
+>   		if (rdev !=3D freshest) {
+>   			if (super_types[mddev->major_version].
+>   			    validate_super(mddev, freshest, rdev)) {
+> -				pr_warn("md: kicking non-fresh %pg from array!\n",
+> -					rdev->bdev);
+> +				u64 rdev_events =3D 0;
+> +
+> +				/*
+> +				 * rdev->sb_events is only assigned when
+> +				 * writing a superblock and reads 0 during
+> +				 * assemble; read events from the on-disk
+> +				 * superblock instead.
+> +				 */
+> +				if (rdev->sb_page) {
+> +					if (mddev->major_version =3D=3D 1) {
+> +						struct mdp_superblock_1 *sb =3D
+> +							page_address(rdev->sb_page);
+> +						rdev_events =3D le64_to_cpu(sb->events);
+> +					} else if (mddev->major_version =3D=3D 0) {
+> +						mdp_super_t *sb =3D
+> +							page_address(rdev->sb_page);
+> +						rdev_events =3D md_event(sb);
+> +					}
+> +				}
+> +				pr_warn("md: kicking non-fresh %pg from array! (events=3D%llu, fresh=
+est=3D%llu)\n",
+> +					rdev->bdev,
+> +					(unsigned long long)rdev_events,
+> +					(unsigned long long)mddev->events);
+
+And I don't like the above changes. If you really want such log, please add
+it inside validate_super() methods.
+
+>   				md_kick_rdev_from_array(rdev);
+>   				continue;
+>   			}
 
 --=20
 Thanks,
