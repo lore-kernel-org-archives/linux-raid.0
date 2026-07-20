@@ -1,123 +1,75 @@
-Received: from va-2-57.ptr.blmpb.com (va-2-57.ptr.blmpb.com [209.127.231.57])
+Received: from va-2-46.ptr.blmpb.com (va-2-46.ptr.blmpb.com [209.127.231.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7135143F08E
-	for <linux-raid@vger.kernel.org>; Mon, 20 Jul 2026 01:55:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.57
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C8514086A
+	for <linux-raid@vger.kernel.org>; Mon, 20 Jul 2026 02:02:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784512512; cv=none; b=nBuskOofTVdJonEPU0FfXse36oucbz6C1BoPE2x+qGFEQVngCFWIm3tzzzpa314MBpywkh1jhixb16RFuZ3IxrqsSv2Gi1WUhH4r/MgDLTXWfXJvP8iRdGhM5y6CDpJ72TOddFnSxUCFjRX/IQOCQYWS682kXSzNeswm8ovML20=
+	t=1784512980; cv=none; b=klzrY0Jg6PuwC5ni1it/nbxRn9jnAvTPkN/9qZRdHdmNBHID61cKsna4vGAjSYuA/OlNkZN2M3QaxwkzHLqTMC+HGTPkTK0jXVN6V3PwQSNiYmXZfoV9x+cH+R8tQIZcVVuYYqD5/CBF6numCEuLUOk/kHJAupIvWNlT3JpuCfw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784512512; c=relaxed/simple;
-	bh=wm6vsqiF4Ss9fbh4k02X7o96s1TxhVf4xk/+qHf55k4=;
-	h=Cc:Subject:Message-Id:Mime-Version:In-Reply-To:To:Date:References:
-	 From:Content-Type; b=QAsfPmyPq4cE2HPMqtpstyAYd5qpFqtM1gP/BfWjGzyovyjlDBlgLyLFBM1MWwgJeaZ4iB5fZaO/gJOAjWnZPJOEhojESRbeH5tS2wS8qwDnX0fmo1DQoq2wAq5TF4Q0CPz6mABpICGecFWDwejx/+daQKLzJA0tO+yf+7C5GfU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=nld/pizE; arc=none smtp.client-ip=209.127.231.57
+	s=arc-20240116; t=1784512980; c=relaxed/simple;
+	bh=hpZDvPir2hDtltyxdICt+piPcKut/7oujDFIgSE+Kh0=;
+	h=Message-Id:References:Mime-Version:In-Reply-To:To:Cc:Date:From:
+	 Subject:Content-Type; b=rwpawmeItXEDznF2S0N3Hc1BCAW7KBXN8Em0pGZzbne5aLWQJ0lpUemhp3lU4CmjlORZ//NK51h9YpXylCT2BesI16XCebV3CEy/PswcyHu3zfqj+eEM+N6YhT9uJV+6Oq2EL7vF8yXQnd2RC51wym1ajTdGKyEnflZa31mLCqg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=POFqDvyv; arc=none smtp.client-ip=209.127.231.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="nld/pizE"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="POFqDvyv"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1784512495;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1784512974;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=iDf28J912wX7QDORooDDXfhqW+8ZXpVd5MKnwrDp1L8=;
- b=nld/pizEMVEhbvYfOFFWo3I7jrACCt8xi5r2Jhhy6ShBBDpgKVZJYivOqpjbaftElIOWEq
- /exKuDEki5mAIo4GjunRXSCa1HTl3aAXQLa9Anzx2bmyNGz74i0Wwlm5u6djJzWaBbVXJn
- OHwJS4RCxb3egenEaOodG4qodLM+1GD+v+CnoFPpxkIluMSA7EUTZs1fg9O/ZVe1M6HFps
- 5ohK66XyoXDZFO6zllDMivilRZarwG+W/nBeqNAMj7JohlS/xclydro2OOMPRyhlb7qxl9
- iJ0z7iZSOke+kGsgEUHT9p9DVlNEOWs8ax0/17WKt7yJ8K9k4VMcahccz0sOIw==
-Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/4] md/md-bitmap: mask sb->state on load to drop runtime-only bits
-Message-Id: <60d2ad98-193c-4319-85ba-057466171bc5@fygo.io>
+ bh=+6P4MmkH9fpYQ29POx/UAVnBwGssmmicbVi3PDCSIng=;
+ b=POFqDvyvCXFjOM5x7pg+99y/tg0GpnqcVRhYeUlNmpdxohu8G3evu9DReYjy/rEE0oBGvD
+ f8opJ/EFL049Y8I1waFCLuBmForkIfwE2k2ib9PtGix7wjc92QIJJJVCiBnkNPoz5haFNe
+ 2EImFfqt1jSku7etxB7q9SDrNCk/dIFNOloayrRg+QKEQxTFxpPzpxXwUPMgXcbEe+6LkB
+ 0oBYAG5CjSe/R4RQSJ7bYCPC8kkp1EqHwxTfa2ji6oKkblHS/RtKDj0uEYGpoYAnXn79I6
+ XYjFHXfSU77Bw+qENaVezjCrzDUe8B2UEK3L3jfqMDlD9WnB/KW994G0fDDg3A==
+Received: from [192.168.1.104] ([39.182.0.157]) by smtp.larksuite.com with ESMTPS; Mon, 20 Jul 2026 02:02:52 +0000
+Reply-To: yukuai@fygo.io
+Message-Id: <266b1203-6555-450d-9140-8f81ecb58979@fygo.io>
+References: <20260719144409.940492-1-mykola@meshstor.io> <20260719144409.940492-4-mykola@meshstor.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Lms-Return-Path: <lba+26a5d7fee+e76d46+vger.kernel.org+yukuai@fygo.io>
-Reply-To: yukuai@fygo.io
-In-Reply-To: <20260719144409.940492-2-mykola@meshstor.io>
-Received: from [192.168.1.104] ([39.182.0.157]) by smtp.larksuite.com with ESMTPS; Mon, 20 Jul 2026 01:54:54 +0000
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20260719144409.940492-4-mykola@meshstor.io>
+X-Original-From: yu kuai <yukuai@fygo.io>
 To: "Mykola Marzhan" <mykola@meshstor.io>, "Song Liu" <song@kernel.org>, 
 	"Yu Kuai" <yukuai@fygo.io>
-Date: Mon, 20 Jul 2026 09:54:50 +0800
-References: <20260719144409.940492-1-mykola@meshstor.io> <20260719144409.940492-2-mykola@meshstor.io>
-User-Agent: Mozilla Thunderbird
+Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Date: Mon, 20 Jul 2026 10:02:49 +0800
 From: "yu kuai" <yukuai@fygo.io>
-X-Original-From: yu kuai <yukuai@fygo.io>
+Subject: Re: [PATCH 3/4] md/md-llbitmap: unmap sb page before freeing it
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
 Content-Type: text/plain; charset=UTF-8
-
-Hi,
+X-Lms-Return-Path: <lba+26a5d81cd+463241+vger.kernel.org+yukuai@fygo.io>
 
 =E5=9C=A8 2026/7/19 22:44, Mykola Marzhan =E5=86=99=E9=81=93:
-> md_bitmap_read_sb() does `bitmap->flags |=3D le32_to_cpu(sb->state)`
-> with no mask, so any bit set in the on-disk state field becomes a
-> runtime flag.  With BITMAP_WRITE_ERROR (bit 2) set on disk,
-> md_bitmap_create() fails with -EIO and the array refuses to assemble
-> until the bitmap superblock is rewritten externally.
+> Every path in llbitmap_read_sb() that maps the superblock page ends
+> at the out_put_page label, which frees the page and only then unmaps
+> it:
 >
-> That bit can genuinely be on disk: kernels before v4.15 wrote
-> sb->state unmasked -- commit 97f0eb9f0fec ("md/bitmap: clear
-> BITMAP_WRITE_ERROR bit before writing it to sb") added the
-> write-side clear -- so an array that hit a transient bitmap write
-> error under an older kernel carries the bit forever.  On-disk
-> corruption or an external write plants it today.
+> 	__free_page(sb_page);
+> 	kunmap_local(sb);
 >
-> The write side has masked WRITE_ERROR out since v4.15; the load side
-> is the missing half.  Mask the loaded state to BITMAP_STALE, the
-> only bit this loader consumes: WRITE_ERROR and DAEMON_BUSY are
-> kernel-runtime signals, FIRST_USE and CLEAN are used only by the
-> llbitmap loader (a superblock this loader accepts cannot carry
-> them, since versions above BITMAP_MAJOR_CLUSTERED are rejected),
-> and HOSTENDIAN is derived from sb->version, not sb->state.
+> The page comes from alloc_page(GFP_KERNEL), so kunmap_local() is
+> currently a no-op everywhere except CONFIG_DEBUG_KMAP_LOCAL_FORCE_MAP
+> builds -- where the page really is freed while a live mapping still
+> points at it.  Unmap before freeing.
 >
-> Reproducer: write 0x04 into byte offset 48 (the state field) of the
-> bitmap superblock on every member (a single forged member can be
-> masked by another member's clean copy), then assemble: RUN_ARRAY
-> fails with -EIO.  With this fix the array starts and sb->events
-> advances normally.
-
-This is not a reproducer, BITMAP_WRITE_ERROR indicate that bitmap to all me=
-mber disks
-failed, and bitmap no longer works for the array, so it's not safe to assem=
-ble with this
-bitmap.
-
-I think it's reasonable to assemble this array with bitmap=3Dnone.
-
->
-> Fixes: 32a7627cf3a3 ("[PATCH] md: optimised resync using Bitmap based int=
-ent logging")
-> Cc: stable@vger.kernel.org
+> Fixes: 5ab829f1971d ("md/md-llbitmap: introduce new lockless bitmap")
 > Assisted-by: Claude-Code:claude-opus-4-8
-> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
+> Signed-off-by: Mykola Marzhan<mykola@meshstor.io>
 > ---
->   drivers/md/md-bitmap.c | 9 +++++++--
->   1 file changed, 7 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 0f02e2956398..4dd3fc2a9e15 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -931,8 +931,13 @@ static int md_bitmap_read_sb(struct bitmap *bitmap)
->   		}
->   	}
->  =20
-> -	/* assign fields using values from superblock */
-> -	bitmap->flags |=3D le32_to_cpu(sb->state);
-> +	/*
-> +	 * Only BITMAP_STALE is meaningful to this loader from sb->state:
-> +	 * WRITE_ERROR and DAEMON_BUSY are kernel-runtime signals (kernels
-> +	 * before v4.15 persisted WRITE_ERROR), FIRST_USE/CLEAN are
-> +	 * llbitmap-only, and HOSTENDIAN is derived from sb->version below.
-> +	 */
-> +	bitmap->flags |=3D le32_to_cpu(sb->state) & BIT(BITMAP_STALE);
->   	if (le32_to_cpu(sb->version) =3D=3D BITMAP_MAJOR_HOSTENDIAN)
->   		set_bit(BITMAP_HOSTENDIAN, &bitmap->flags);
->   	bitmap->events_cleared =3D le64_to_cpu(sb->events_cleared);
+>   drivers/md/md-llbitmap.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+Reviewed-by: Yu Kuai <yukuai@fygo.io>
 
 --=20
 Thanks,
