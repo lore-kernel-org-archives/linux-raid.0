@@ -1,124 +1,92 @@
-Received: from va-2-59.ptr.blmpb.com (va-2-59.ptr.blmpb.com [209.127.231.59])
+Received: from va-2-49.ptr.blmpb.com (va-2-49.ptr.blmpb.com [209.127.231.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8DC7296BD2
-	for <linux-raid@vger.kernel.org>; Mon, 20 Jul 2026 02:14:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.59
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D281723EAA0
+	for <linux-raid@vger.kernel.org>; Mon, 20 Jul 2026 02:17:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784513674; cv=none; b=b2NyxODFsifjRV+BLm8j01zLOtVtjrxLQxXSR383zoIYOeIlDQ4+EF9fLCc+qhEccLGz9/E7vADaWXuB+4uUnLQFIM1FCQQtFaKpoUYFkGCubVh6u/urC+MnUZY0tvFAWlzophTpp8J3W1JZUj2uHkNsOBcZ7qP2cwtRcGznmRA=
+	t=1784513840; cv=none; b=qyYGCeDhbBXJ6+75UKDnD5Mt/Rj8j9oPTrAMZg3kPtvTTq8cgl1/8c2FSpEbcbzuzWO84m7bMT1qRKpq2KE+uL6KaiJ0xjOt54TDDC4YKcnN9hPBp2l+KaMpDD/+tlYgj8uqnvMKFfAovv9P/Ow+I4bKlbEcD+OUDIFEvyATggA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784513674; c=relaxed/simple;
-	bh=M4TgcBPe3Z30dLa/4BB7450eAUzd4+RpvxaH3OMCNbs=;
-	h=Message-Id:Mime-Version:References:From:Date:Content-Type:
-	 In-Reply-To:To:Cc:Subject; b=trNtY2R3BFttLa1PSVzZLGWZg1Fl13c1/ywwmWkA64Af+tVLNVEKg+XOHOOTKTAELw61yEo/JxSwEwHb8z9A6n0FNaAXXQ7EhJ05tU0DtUUBeoPPGWeulDSm0SY4JfiL8GHMu6QEb1HA0h4a25hDHpUIzYW9ZnDRYeuCLwB8lzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=gwbzP9aT; arc=none smtp.client-ip=209.127.231.59
+	s=arc-20240116; t=1784513840; c=relaxed/simple;
+	bh=wq5onmj3z56JRKLjT1Z3vE4bsCyYBS+8qiyyEdN+X48=;
+	h=To:Cc:In-Reply-To:References:Subject:Date:Content-Type:From:
+	 Message-Id:Mime-Version; b=eGoKe7RjkC7tVkwW3CZp3G9d6mgUQk9PbaikJebd40wraJJfLmoPb/9bxQxfKqLij0BeuI3ObX2+UDjcR7BPi1rBOxeYuBsHzYAFy1trnl8z2hJU/2iuKwbqrrkPquMCgdOsrCNM6GUeuyjjYER6G9TgeeWQinYAdd+c5BsW5sQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=HEK5Utu6; arc=none smtp.client-ip=209.127.231.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="gwbzP9aT"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="HEK5Utu6"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1784513664;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1784513829;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=CLeWNEBG5YoIGpJff8b6+Q1H22MYvvqlFwBXFhR8z48=;
- b=gwbzP9aTzWz7Dy9wZfu+VAtFT9lzDZ1FKGPTCcGyR8KorVVVz0FT/0qBzUYqOVIDnqI/1H
- 4Xe+CBLV3jeHnsF3uoDwdTH+IhfL/UW2uTB1JOVcnRPpHDPlnJn5sdtU0vsryWapP0kQ9s
- 1gbxndMQza6bPs554zfRmIVJ+CT1EuvqNgiprEYQF4+gZoEUhRe36Tdb9ybxLSfEC9MfGA
- 4X97UkW6af1MZSQO8/q03rv2J2jwMDM1BaPMKJDiE8C522pZ906GrYOGJRhnX3XQExiZKC
- b+ElEW/qI893wf0RL7LQ/U/p0C+2lpl4BIPqLr6jhu7DSfnDieB0R1bMmP2kRg==
-Reply-To: yukuai@fygo.io
-Message-Id: <62a37894-c752-42b2-a54e-92b6247af3df@fygo.io>
+ bh=AVGndNr7JKcSJm9Ofxs6ACxgZtpM1U8v/ptHvvgCuNE=;
+ b=HEK5Utu6AsVK0px//Hh/gBDzofnG269y6U9CSRYRJyWAH1Yo7fP54aJGhMUQY7jT6vYEZp
+ 5bA42vqVL+W2i4tpMI11jXi2xZrb/eo+2PUoeHmsFxGgy7o2JSp4qkAuQPXd9ZZMv+3WCB
+ p4BAlr4+Hfn1nKsfxXlgQdt5iwv1I2FBGxR3l0ZQ7r7cPvreqqNEOSRWBr/RIY8Xvu+QxN
+ qFZjQq9vLhTxhaYz862fR1m10CfWXG1ZCW1xqbuOiJTtIsuxi6GokaEDVueOCtQ0rKkU2I
+ MLqjX1I+nlM6qyFdbVVamXw8fF8o5OSY4JBJf013Ax3e5ipazxF9R4ZKcGujnw==
+To: "Mykola Marzhan" <mykola@meshstor.io>, "Song Liu" <song@kernel.org>, 
+	"Yu Kuai" <yukuai@fygo.io>
+Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	"Hannes Reinecke" <hare@suse.de>, <linux-raid@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>
+X-Lms-Return-Path: <lba+26a5d8524+714532+vger.kernel.org+yukuai@fygo.io>
+In-Reply-To: <20260719144227.940444-2-mykola@meshstor.io>
+References: <20260719144227.940444-1-mykola@meshstor.io> <20260719144227.940444-2-mykola@meshstor.io>
+Subject: Re: [PATCH 1/3] md/raid10: restore still_degraded detection in recovery
+Date: Mon, 20 Jul 2026 10:17:04 +0800
+Content-Type: text/plain; charset=UTF-8
+Received: from [192.168.1.104] ([39.182.0.157]) by smtp.larksuite.com with ESMTPS; Mon, 20 Jul 2026 02:17:07 +0000
+From: "yu kuai" <yukuai@fygo.io>
+Message-Id: <0f8c2dc8-8c3b-44f0-b81b-84e0adb9ab1e@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Lms-Return-Path: <lba+26a5d847f+1676e1+vger.kernel.org+yukuai@fygo.io>
+Reply-To: yukuai@fygo.io
 User-Agent: Mozilla Thunderbird
-References: <20260719144409.940492-1-mykola@meshstor.io> <20260719144409.940492-5-mykola@meshstor.io>
 X-Original-From: yu kuai <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Date: Mon, 20 Jul 2026 10:14:19 +0800
-Content-Type: text/plain; charset=UTF-8
-Received: from [192.168.1.104] ([39.182.0.157]) by smtp.larksuite.com with ESMTPS; Mon, 20 Jul 2026 02:14:22 +0000
-In-Reply-To: <20260719144409.940492-5-mykola@meshstor.io>
-To: "Mykola Marzhan" <mykola@meshstor.io>, "Song Liu" <song@kernel.org>, 
-	"Yu Kuai" <yukuai@fygo.io>
-Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 4/4] md: include events counters when kicking non-fresh device
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+=E5=9C=A8 2026/7/19 22:42, Mykola Marzhan =E5=86=99=E9=81=93:
 
-=E5=9C=A8 2026/7/19 22:44, Mykola Marzhan =E5=86=99=E9=81=93:
-> When analyze_sbs() kicks a member with a stale events counter, the
-> warning names the device but not the divergence that caused the
-> kick, so judging whether the kicked member is salvageable means
-> running mdadm --examine on every member.  Print the member's on-disk
-> events counter and the freshest events counter in the warning
-> itself.
-
-If user space tools can do this already, then user space tools should be
-considered preferred.
-
+> raid10_sync_request()'s recovery arm passes still_degraded -- "will
+> the array still be degraded after this recovery completes?" -- to
+> md_bitmap_start_sync(), whose !degraded branch consumes the chunk's
+> NEEDED marker, the write-intent record.  That is only safe when the
+> recovery restores full redundancy; otherwise the record still
+> describes writes an absent member missed.
 >
-> rdev->sb_events cannot be used here: it is only assigned when a
-> superblock is written and still reads 0 during assemble.  Read the
-> counter from the superblock page instead -- md_event() for 0.90
-> metadata, the little-endian events field for 1.x.
+> Commit fe6a19d40ceb ("md/md-bitmap: merge md_bitmap_start_sync()
+> into bitmap_operations") turned the detection loop's only assignment
+> from "still_degraded =3D 1" into "still_degraded =3D false" in its
+> int-to-bool styling pass, so the flag has been constant false ever
+> since.  raid1 and raid5 were converted to "=3D true"; only raid10 was
+> inverted.
 >
-> The legacy substring "kicking non-fresh %pg from array!" is
-> unchanged, so existing log parsers continue to match.
+> The result is silent data loss on a classic-bitmap raid10 that stays
+> degraded across a recovery.  With mirror pairs {A,B} and {C,D}: lose
+> D, keep writing, lose B, add a spare.  The rebuild into B's slot
+> strips NEEDED from every chunk -- including chunks whose only
+> unsatisfied intent belonged to D -- so a later --re-add of D sees an
+> empty intent record, completes instantly, and serves stale data.
 >
+> Restore the pre-conversion assignment.  Only the classic-bitmap
+> recovery arm is affected: llbitmap ignores the degraded parameter,
+> and the resync arm passes mddev->degraded directly.
+>
+> Fixes: fe6a19d40ceb ("md/md-bitmap: merge md_bitmap_start_sync() into bit=
+map_operations")
+> Cc:stable@vger.kernel.org # v6.12+
 > Assisted-by: Claude-Code:claude-opus-4-8
-> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
+> Signed-off-by: Mykola Marzhan<mykola@meshstor.io>
 > ---
->   drivers/md/md.c | 25 +++++++++++++++++++++++--
->   1 file changed, 23 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index d60ea7aaca3a..9ec87375a717 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -3934,8 +3934,29 @@ static int analyze_sbs(struct mddev *mddev)
->   		if (rdev !=3D freshest) {
->   			if (super_types[mddev->major_version].
->   			    validate_super(mddev, freshest, rdev)) {
-> -				pr_warn("md: kicking non-fresh %pg from array!\n",
-> -					rdev->bdev);
-> +				u64 rdev_events =3D 0;
-> +
-> +				/*
-> +				 * rdev->sb_events is only assigned when
-> +				 * writing a superblock and reads 0 during
-> +				 * assemble; read events from the on-disk
-> +				 * superblock instead.
-> +				 */
-> +				if (rdev->sb_page) {
-> +					if (mddev->major_version =3D=3D 1) {
-> +						struct mdp_superblock_1 *sb =3D
-> +							page_address(rdev->sb_page);
-> +						rdev_events =3D le64_to_cpu(sb->events);
-> +					} else if (mddev->major_version =3D=3D 0) {
-> +						mdp_super_t *sb =3D
-> +							page_address(rdev->sb_page);
-> +						rdev_events =3D md_event(sb);
-> +					}
-> +				}
-> +				pr_warn("md: kicking non-fresh %pg from array! (events=3D%llu, fresh=
-est=3D%llu)\n",
-> +					rdev->bdev,
-> +					(unsigned long long)rdev_events,
-> +					(unsigned long long)mddev->events);
-
-And I don't like the above changes. If you really want such log, please add
-it inside validate_super() methods.
-
->   				md_kick_rdev_from_array(rdev);
->   				continue;
->   			}
+>   drivers/md/raid10.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+Reviewed-by: Yu Kuai <yukuai@fygo.io>
 
 --=20
 Thanks,
