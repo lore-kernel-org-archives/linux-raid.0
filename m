@@ -1,144 +1,116 @@
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04D7D415F23
-	for <linux-raid@vger.kernel.org>; Tue, 21 Jul 2026 17:51:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C0A6415F27
+	for <linux-raid@vger.kernel.org>; Tue, 21 Jul 2026 17:52:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.48
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784656268; cv=pass; b=FJgqDwLBC7Az7bDSBixO5GjDq+62qu+Y/AnM0BbXsybpIbsCLfE8XQ9sSDNoDxF7bZ4mQJgCnbl0QXPBAm++q6ixxrbZFIrrdUrgyZ6awj6V7qPDrgOJ/jTfh9iuthnr++xoCozFKgRdEkYARu/Y3J9y2FAyRjnsg5Q39nWQ1lo=
+	t=1784656327; cv=pass; b=OyxZQiq1hITMXqxwGlHLr6hz0RxVFqTxJzE9dV3TfOFOXOoLzJmSBb9LbD8O3zlc7Sfk+bQuOxzJHTIff2eB9qMnuN1p9YEIkydMTehFmbo54M+ntOc193AZFLu/Jo3Wvx6lXZk/gos8NlXnqAvOXt/iPXJtHOmbTmNsrxGe2yc=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784656268; c=relaxed/simple;
-	bh=fk82OUiWTbfj+Bj8rJw44IZWjsVv95l8951dHoMMtw4=;
+	s=arc-20240116; t=1784656327; c=relaxed/simple;
+	bh=U1weix+8QOcbtdINHI0GYDYejwzqLj6PgDCfT9nNcoc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FU8HGdxbHFipaR7DSz4+0I1OHl+LLL9h+b6crfLUsgb83iFMQDndu47RDUw1lEiZPSiDpIbCjbLiBORYD6OZx0t5MNANkPw1Yy9tUypKvNKUncO4GNS8zvh6+Y05zQlXmgGuY3ZM2YhHc7lTm5dg1wGKMYaWe1z2YIoujXCvZMY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=B2YpB9l1; arc=pass smtp.client-ip=209.85.216.47
+	 To:Cc:Content-Type; b=pbw//QCaz7HfgvLe2fGzMKiNn8e6vs1JUPaJhS9+RPrzchQ8j+XVdRStfVaL9cg/K6XTo5EpgbBBan/124aO+oYwqC4qIO2TZgpMblpLWaOE5gzKWDo+tGRVu8M9vo29hV8uW0VqoOn0BrEKXt7VVHCwEjMqkkklxM+uo9CV4u4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=ciM98YPw; arc=pass smtp.client-ip=209.85.216.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meshstor.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="B2YpB9l1"
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-38e69bdb0fcso2315813a91.1
-        for <linux-raid@vger.kernel.org>; Tue, 21 Jul 2026 10:51:06 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784656266; cv=none;
+	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="ciM98YPw"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-381216921aaso11061228a91.1
+        for <linux-raid@vger.kernel.org>; Tue, 21 Jul 2026 10:52:06 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784656326; cv=none;
         d=google.com; s=arc-20260327;
-        b=IA8Pty8oOwJoO2lQLAovhzhGJ3cB+u2a1jpYFLmoZbCqym9O7U+Mjh7uA//+TO6B56
-         o+HnPRQlg4UI7k1CyCfKt/+BfKEsfz7X1R9sB7okMzG3ctRvk4Qm3sK+072PW/Ob/UVk
-         lg1XAgnS6iC7agFBVgKbFz0CxGUqmZFlFzGAKwFRjIDO1ziYvQrzC47+/rLutxlog2Kf
-         307fpYh8cPR6RrDtuKIgOs80bqANQzqLjqDe27B8s0L0Lxxw5jc/QTWHmuR6Q2DsO7/C
-         vfagm+jRLd8483R2V3/dXtiJRMNCiuEIKnClBokL275IrO48cNeiHXcVEmyioXxIPgA1
-         2Z3w==
+        b=m97ziSq2ZY5meOITGAXJ2E4kO0RQIv3Z9RX+S1DA+65LTVcsWLZtoNfH2pMxanVheU
+         TiNcCq5B+yB99lc4Ifr/jC14UF+Y5AXyonvEaY9BiJgRmlF4PTaYdrQTcWFv6yVFQwfi
+         2dbj6YQn04hH+Jm+uXDXGY7MHImQNbmZgmktoMjcDQ+5QmxoAJVoMppD6Va/GOGL/bD8
+         lKx75PLincazX/HYQrE7eRrE1m1u/UogOxV0IRrBd4SqFr6hlZlyZdHSYpO+H1tDVM1j
+         aFwfkI5MHQF7kQxSiL+odDdvo0u643zYGwtn0UpgASL4BghFFiQXYXh5kUm57XquGEzN
+         TSxw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:dkim-signature;
-        bh=bqJhHZxbGEvXYhualzcQpDQcrx6Nf+L7xXv1g9Mul7I=;
-        fh=RXELh+X3CAWPoaTc5ulYhbOTdsWi+XHJqjZh0CNXXaY=;
-        b=W39HtYk+B38xMHb6jcThsXvjVs3JSSrxGi3js4DYVGpig7De6FN5wVFC6YLRsdPKye
-         yr2UR7V7527C0EO5h33lQtNW62zto3OU1U1f2/GPOWmICnDEmzYfh5COWvhpKpxC4yxb
-         OOYQnLq5/CJNXG7ut1NGFPjQTJfXyRN1lE8N7de/pNFIWIuOBVv481kHxwe4GQDW7J39
-         mLGDjcGGLkfuUYq56YBCMq3XVp32ilY5n3eGjn3PAVCttEIsl+prVr/36MaP1vJqx1gn
-         7H77F8yQI+IDMRSK0P5XoAFSMzgMpjoDwBFqZy41gyjEqPSmlewZmYhigmf7XZsI2CrM
-         fT2Q==;
+        bh=U1weix+8QOcbtdINHI0GYDYejwzqLj6PgDCfT9nNcoc=;
+        fh=eL0QM7H7A6ZIfroh3qH1LtNK39lBG/kUKFI0+sb+KXk=;
+        b=fv78WlAaJHFzXxfWk7hsaRTxf7vi36mknVT0RIAaBWgV732/4W0Bok/XjyslEJaM1g
+         JDy80NRWdJiAnkH0aHCsccqAVZqnNMfu1UK1r6kKXa2o6JYJpvap5UbQf+R/afECs6wn
+         LydOnpAcp/09LANccrqxAKA4r07Ltt4LbcDbcANgyrMrGI1+wtW3TzcBpX+2ayj690Vl
+         P1ZcP+7bAvou+AtM/M2ODvTo+K0HkrHfzArDqILZSyDUhF2ODTqeo2cpKwNzEg/rerJu
+         mSgftMt7OFRW2Zc7oNRHkdwBOomxpCFOENSfa1Q1YRVtLzKZL0ZN5yOuTxgmUJCXCs5m
+         V+Lg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=meshstor.io; s=google; t=1784656266; x=1785261066; darn=vger.kernel.org;
+        d=meshstor.io; s=google; t=1784656326; x=1785261126; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=bqJhHZxbGEvXYhualzcQpDQcrx6Nf+L7xXv1g9Mul7I=;
-        b=B2YpB9l1/TObhAYO5TnNeLkPfQxNXrt4FLbJyfF4b6YsB+3mtpbrLC451fbUEPr63Q
-         NGNBLAOy40rqXGxxjmU5vU/QmC+jmwpBDFL6ttXHav+6+8uSI1bxu2+SDcUQKocYcmeU
-         76hn3dxT5HBpSSNFeebJZejdZ4Of6NVZvekz3E/0JEmzyUg1uVZOoqWE3ozRZIz7Yw/g
-         aV4g00IZWHMy1bMsdWmPSGpXeuw4SbTJR+fwdbgnVoKtSm6mjyNQNMkQF2BdW73TrjIE
-         HHlteqCJSX2KsaZYaghGCnm4F7hyNlV4rp1cwqBvLgVdBAGiQxXY+zV1e3E7rOuSt15t
-         wBFw==
+        bh=U1weix+8QOcbtdINHI0GYDYejwzqLj6PgDCfT9nNcoc=;
+        b=ciM98YPwwqhVDh39wBw+AH4bzjh7xU/N/H9aik3M5yBvwF1UCf4YAQy5msJ+4GYErU
+         GuzrwUMPXRtMbduUVSvtYyerXesojT+AKo6LuobEd3zGS3krQ0v3K3CiO0MoGDlvRR2d
+         YwQWsf92fTVscp0PI6EsFqtvArWWi6JlPi+0lXIbcva2+LjMWSheh2y+qebh1iwX6nlv
+         /zue2udrnV4TyGi1x/P02OjHk7AWixl7D0avY02fPtazPCrtdPjGHrczQoJgYws2T32j
+         ci6WxZ4oInTDjyHSWWDQIN0Y9wR5ZuXOLLouoEKSkL29s6p+QTsUV+pD5bCx2RTmybWX
+         MQow==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784656266; x=1785261066;
+        d=1e100.net; s=20251104; t=1784656326; x=1785261126;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=bqJhHZxbGEvXYhualzcQpDQcrx6Nf+L7xXv1g9Mul7I=;
-        b=F+bw2qPfb0Vs5MSLJDsnjuMm+uGGxXoFXpn4c572p1Xw/8p4dW7RxwoqlYAq5j6hR9
-         8qUT4ns0L7BmEVa4aeN4UW08EVYbMcuS6NYThTc/jCvyMDORWXDrbJ4UlvqoPYw4Theg
-         VNdTpp1FuBkqaCFHJIbAhZJ76W6PL3IYf+IhKbhkc5uG4VIvfTX+TppGjYrKN57Lnm4Q
-         GT2X+74sTFRgo85WM3un3Q+sGdFQaKnJvh9ApfcntZsUzhhGY5c6PLzoYYonq0DWN6OA
-         wlSWODPzRw9ZwfQRvKlDDECWMUxVYKWBwCe5hAPz0uGxLVbiXgI0aWTJjxUgICIUES88
-         qUZQ==
-X-Forwarded-Encrypted: i=1; AHgh+RqecJL0Sfx7xSmd19pVWFjYuQt2xYM0E1Str1o25igmS76xaXrl7RhSOOhEwV+ExUfxh/9Kj4PQJs1r@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJOAT+H7J0R924SPnGP5O//5wgIEdAItzd7kHRvHSPy0V1oG3f
-	gGrFrbSVw3IwSCB60IW1aFHslsaNEeqCkdKRkQT+/yDTwSTh/T3PdIBB7G/xccqn+htw6drrZPc
-	gFAcy/JdfNwIKnqrfHbEqHX1ShG4yeJ/szgxVOYI+
-X-Gm-Gg: AR+sD13DSgm2a2I0UjYeJOtVRvvD4a6PbbR2tqsRlXIohhvpq2TyzZGhMCbkSJ1cxtR
-	RYMtWjQV1mG7JAJeyLJiuVZjffpW3YBskVirzwEYVE8col0gioDzQKhabV8gNGstHYtWv5Nh1rZ
-	4rUjj5RtZ55bZp4cjqgny/iOzNvpMnnc1VJ7Y0PXaTaiiYadgGA+ACYBS95a0jJP5sYeIqZy7N7
-	TO+B14yBo0HcEivxBVqgEkbIo+qxh0uuOb3DbjeMAuhkn32Gkmhk35oSfmW5EYj/Lc1AqUTozEo
-	h4NZxmVVOZGH93VEuErmCwgF046V4O/RdQsXBBUgF/c=
-X-Received: by 2002:a17:90b:2e90:b0:368:ed26:15b2 with SMTP id
- 98e67ed59e1d1-38e4b43c408mr19724564a91.8.1784656266239; Tue, 21 Jul 2026
- 10:51:06 -0700 (PDT)
+        bh=U1weix+8QOcbtdINHI0GYDYejwzqLj6PgDCfT9nNcoc=;
+        b=OZeEgFwERNTYFWqpdOo/3P4wy3Qnt4deg4KNf5MQD4WAKmwy2kWjrBsFHaeJ+VYdfK
+         NINJAzpyEJ5mo20DMXF4DtDADKoPSjtUFqLyhlhRWZEHq+owBlCPwy+F1WM+B4YVjrDh
+         3gnUohe/2EYCKw1SfVy24N5WU7F+VQPLcchao8OZabem/mS/+M1+SBt5kFMbsoCsZaCh
+         fbEYNjIIWkJ7b7ru4vzP6NN9SBhDdRj25lITvnB9svBoN1jnofQvJY9TbZk3bJ+4xuLe
+         K6vUvoiXyneA2X08/caTgbob1MMifuFHQtPDI6qMTy0meaOS778Wk3tnTvKXh2J1jFb+
+         e8BA==
+X-Forwarded-Encrypted: i=1; AHgh+RrddAx4zzkEmuYKWnVd11jOdzpZQJpZPQfIe9xXxcqdJAGMhxB47jiVdvDQwffc30HToHA5kjwyjVzj@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw9j9gH5H9xlUBYl/nvNo8SlP3eShIp/6VRJjBcn/BpqfKKxYAK
+	Y/1pKhy7WHBNGE3VqPoCNk7Xmo3qMZFVKZPAPv/SapRbbZgxCIwlMzRrrJBnFuHS0qZg2XVmrF/
+	5GdYh+4iKBRoc5F0KRx0R/OG9mRVdCrIrmSV83tLq
+X-Gm-Gg: AR+sD10YUY1tms8zeEoBeaOLzq6e03oB11jlOrd6RfixLx2vYhzSt5i/FwRrX+Yb1YO
+	lc6xu8U1+yJTklgiSheTagcUBiEtO/yQy77nsLF0Z6MfvkM0yngZaIz3hQYOZIOHD/6wQO+Z2iR
+	Zc1nIq7ih7D9faxMFNgAp5Qku2OQzP4qPB2ni340wjH3HcMjOqdQH8otjkk9Qaa6qVlZCC4beGy
+	76ObEkJVUe0KyzG+mVga/s2C+8sWcrbtqpXLsoB4AWkgFzojro4limfPNm7QZjPA+UYPYYVr0gD
+	VhST3+zAMiuA2vmeK5KxTqAYGjnJJ7dBBzFgkYXOk5g=
+X-Received: by 2002:a17:90a:d2cb:b0:37f:ad36:8fc5 with SMTP id
+ 98e67ed59e1d1-38e4b515bfamr20269142a91.23.1784656326031; Tue, 21 Jul 2026
+ 10:52:06 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260719105327.864949-1-mykola@meshstor.io> <20260719105327.864949-7-mykola@meshstor.io>
- <ee312bcb-92f4-4884-91cd-3bd56180c8c7@deltatee.com>
-In-Reply-To: <ee312bcb-92f4-4884-91cd-3bd56180c8c7@deltatee.com>
+References: <20260718162547.448892-1-mykola@meshstor.io> <20260720124304.GE110966@unreal>
+ <al5IJb-L0FpztnYz@kbusch-mbp> <20260721124944.GL110966@unreal>
+In-Reply-To: <20260721124944.GL110966@unreal>
 From: Mykola Marzhan <mykola@meshstor.io>
-Date: Tue, 21 Jul 2026 19:50:54 +0200
-X-Gm-Features: AUfX_mys0lIoq4Q-xmicA-5OIV7AmcAZv6tYBswRu-bPoovrkHLh5N1N3P5Onu0
-Message-ID: <CAPzsNDsLr_BABgizujN0CgnLNfzS3S37vQ133fjbJzFMvRs7CQ@mail.gmail.com>
-Subject: Re: [PATCH v2 6/7] md/raid1,raid10: skip futile retries on P2PDMA
- mapping failures
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>, 
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+Date: Tue, 21 Jul 2026 19:51:53 +0200
+X-Gm-Features: AUfX_mzytkhLoaPSiTn9RmB0hwu7xEFpMpTLbojjFKRzqIcqMRM-jx5SaIRHGbs
+Message-ID: <CAPzsNDuY9OB8FWb8aPTpxpVYC0u1ewCmFnvQXfSKQO6xqEJhBA@mail.gmail.com>
+Subject: Re: [PATCH 0/6] block,md,nvme: correct handling of unsupported P2PDMA transfers
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, 
+	Yu Kuai <yukuai@fygo.io>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
 	linux-block@vger.kernel.org, linux-raid@vger.kernel.org, 
 	linux-nvme@lists.infradead.org, Li Nan <magiclinan@didiglobal.com>, 
-	Xiao Ni <xiao@kernel.org>, Guoqing Jiang <guoqing.jiang@linux.dev>, 
-	Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	Xiao Ni <xiao@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>, 
 	Kiran Kumar Modukuri <kmodukuri@nvidia.com>, Chaitanya Kulkarni <kch@nvidia.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Shivaji Kant <shivajikant@google.com>, 
-	Pranjal Shrivastava <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>, 
-	linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, 
-	linux-pci@vger.kernel.org
+	Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava <praan@google.com>, 
+	Henrique Carvalho <henrique.carvalho@suse.com>, linux-kernel@vger.kernel.org, 
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-Thanks you!
+On Tue, Jul 21, 2026 at 03:49:44PM +0300, Leon Romanovsky wrote:
+> Yeah, too verbose and conveys almost no useful information.
+>
+> Lately, I've started ignoring such submissions to prioritize commits
+> from people who put real effort into explaining what they are doing.
 
-On 2026-07-20 10:49, Logan Gunthorpe wrote:
-> My eyes glazed over a bit. But one point is that maybe this could be
-> split into multiple patches: one patch introduces R1BIO_P2PDMA, one
-> patch for raid1 and another patch for raid10? That might make it a bit
-> more manageable.
+Point taken, thank you. Please check v3, I reworked descriptions.
 
-I have split it in v3 into a raid1 patch and a raid10 patch.
-I am not sure about separate "introduce the bit" patches.
-R1BIO_P2PDMA and R10BIO_P2PDMA are entries in the two personalities'
-with own r*bio state enums.
-The commit messages are shorter now.
-
-> Also, I'm not sure if it's possible without digging deeper but, instead
-> of adding a !p2pdma_unmappable check to every if() statement in the
-> raid*_end_write_request() functions, might it be possible to factor out
-> a helper function and return early from it?
-
-An early return doesn't work here: on a mapping failure the
-function must still fall through to set R1BIO_WriteError, so the
-completion path runs the (single, whole-range) retry and records
-the bad range -- only WantReplacement and the FailFast md_error()
-are skipped.  v3 folds the two tests into one branch now,
-which reads better and keeps the fall-through. Please check v3.
-
-> Maybe the helper could be
-> shared between raid10 and raid1 as they look very similar. The
-> differences between the two are minimal -- there might be a bug fix that
-> was applied to one that should be applied to both?
-
-I compared the two sides after splitting: the P2PDMA handling is
-symmetric, and the remaining differences are pre-existing
-personality differences rather than missed fixes.
-A shared helper would be heavier than the two open-coded branches,
-so I kept it per-personality.
+In any case, the problem is real, Leon, I would really appreciate if
+you could review the RDMA changes.
 
 Mykola
