@@ -1,63 +1,63 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6FFB46E01A
-	for <linux-raid@vger.kernel.org>; Tue, 21 Jul 2026 17:46:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25E08470429
+	for <linux-raid@vger.kernel.org>; Tue, 21 Jul 2026 17:46:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784655971; cv=none; b=nRO7JAg9Kd8xucIBcADQOnzKbrB4si/fkFVsy+cyUiGTVriA2GeLZWjqSHOTznt5Rizr1LBtqZOzC+Kvo0aYmLKeEEW4sBX9AqkQjPeGVTLypT3JkNpixa6oudYdIMj/Sc7EwiGSZSC65kpd1XS7bEdO09m41SflVtf+ufr/LiY=
+	t=1784655976; cv=none; b=alqa/erzPSeXz42HVKP+4zCXipFpr49Ha9EtFsYwS1G/q6uvAQjyyum84/eOMTpVE4tPFu33puVa33Du7ck27eK0l7oVr53qwMHwnrhfRbpOGSExUIFpqyypcdkVm+AtdlPBt6uVmcuyxyHDwa4ns4jdQhRsJnfuetiYkREaeUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784655971; c=relaxed/simple;
-	bh=cD3SxDgYRV4P07YCyZ3D6dpRoOb3a5AG7H6z997kprs=;
+	s=arc-20240116; t=1784655976; c=relaxed/simple;
+	bh=7tCnvUVxAg7gfBg1vhZ0oYTg4SOqF5x+kKhvNqafOrA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=N8F4knCl/n+/486pGJk6ozqIqgmicVcePqc2zQH/ETmM7yLdV7sqnTvGMaTu3+5RkbnZ+lgrFx7HyBGNEyUAAKQgacmX8X5V0nh7sUt76ZRlpcmM6DnsmXwqjTj73bOR9CDxb/CTlwD+cBg0W2lTBjYiz0eqnE29yYh6Hc5l/58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=oUIFIvsB; arc=none smtp.client-ip=209.85.221.46
+	 MIME-Version; b=VP37Of3QtHxupP42Y0lmXMVfSE4CjMmRn6oksFU8ksU7C9n7HBMM9xHjkuCepsgjy5WYNeJkYixircjvcKfqsLUWV7yN99dlx1OvcujF3j/Xo5ketU7eHxv+wJiwb7VpzN6zlWX29e+7RSVcFquL7Tlh6i3eJ7UHgbJpQIS4vLg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=D62pSTFs; arc=none smtp.client-ip=209.85.221.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meshstor.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="oUIFIvsB"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-4758bd3731bso4273730f8f.0
-        for <linux-raid@vger.kernel.org>; Tue, 21 Jul 2026 10:46:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="D62pSTFs"
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-474560436c3so6355869f8f.0
+        for <linux-raid@vger.kernel.org>; Tue, 21 Jul 2026 10:46:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=meshstor.io; s=google; t=1784655968; x=1785260768; darn=vger.kernel.org;
+        d=meshstor.io; s=google; t=1784655972; x=1785260772; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=dWf575YMSf1W7NtVvbE0zlmvwqtjFzi0s/WGa1kQOeI=;
-        b=oUIFIvsBg3mo3dDAlk47n4w5O0Cc3AJoV0IGlW9f+z1B/kGJvyG4I1Hw/QZ/nXXX+J
-         q2aKBdDgrtO83PofGhUhWOvDjbW4R+YOwoBc2m6Q00HU/SpzdYEhI6YXSFmhDUhJZq1R
-         M81sjSglpEZAb0JgqlOhxVFbuUIBXFxLijbvsebJG064/AFroA80Beuzcf/IUzYYPywr
-         RBE88+0gxMagu80LRIepOWdR9XNFVLs4RFEQmmTg2sOo+hZNkOnqpDrqCnvIzFsw/1OH
-         Srns4yMDUT20apg9S8/QtMhSr2hXVCtkT6p07X62clOjHgznrh0X8w6x3bCc5unicf4w
-         zwuQ==
+        bh=RI/ofRS9U+6ig5kLdN1LCndM4I9pFM5i9E2zRYc1mtk=;
+        b=D62pSTFs7Im3Odtzxs7tM+9rPr5cT1fZr9f6DzFAlgVIGNAA1VY6CIW1WeJCKs7rMs
+         NRwaLOyeE5y1uO5MeCgDfEjgJzQ+xCNDOc5fjvfn/6tYYtdZ2CWN49/+EvWKC5w8YY4D
+         M0gfTF8GZ/kv7P1yOY+P3PT0olPJ9gjCCBXylV4k4TPeD0aP/zQYj46UYasw5FT1yJfg
+         NKTxgungizusLj/huwqURpAa6qE2fyWLOu75vgKF9Mk9v5559vbDg8sLpj81ARz4oc0h
+         o8xTpLg4zCjtAw7hW2SqpPMxtUNr9X1Lc8nxdjM6qcm/Uq0kYSvDpSutoUO1nJZ2iwY3
+         EnQg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784655968; x=1785260768;
+        d=1e100.net; s=20251104; t=1784655972; x=1785260772;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=dWf575YMSf1W7NtVvbE0zlmvwqtjFzi0s/WGa1kQOeI=;
-        b=iA8VjSaOD85UGmbTOFY/AI9SPW5neg4Qlb03wy8MB3LGFs4thAjxBmr7uZLQKt7BHE
-         lmCk3WDv+qmKjLzwnF0sNuvW1mJ89Q30Kgwlu7JenhKMPQoODGGo00+7Gatu05fG0z6j
-         +qTwTKi+dxhAC2PXDr37qDCszhw1vcpQBCTO/rUFMkUZ5SCB6qj+FblwNrhoC+Exyh6i
-         bm8fUeabj/nvGD2BPSP2Fs1ZtRCdUSN4GvII8CPcuQVyJN07iMBs2BRWFMN1RfjSXcP8
-         7GgxkA1+15pW2cbeMc057LYiGFNf16Uirxb4ZNn81Ly3oZ3A97MF0xO//mIm3QRNVMI+
-         +Irw==
-X-Forwarded-Encrypted: i=1; AHgh+RqLp3KzCA+jVVW0dWKooN8r4I5+tgyTmL0208l3fJ6gRpzXWWoPRHSaO+k/5XE765e5vNFvCS1xFswe@vger.kernel.org
-X-Gm-Message-State: AOJu0YwOt58xU2ISq7WgLafSH4l+1lBaOJgNYiiMqQtxuQiO5/YYWuQg
-	XqL1tS65VFrt3wMjR2DoLYynqNZ5MAT4BIDM8zLfvqzfTU3D54V8UHeOHFQDqt9DmA==
-X-Gm-Gg: AR+sD11wujIjwnT2Rr+JXNa8/XNQ+7Gal1h461NSM1axh3Th+eefxVdpA3+65TD7mgU
-	nBWev2ybWUrJjYia62MqBFOubJXIoUSACCKCr6tQwiwez+NCNH4fQ8loqbF+1r7dpfO3Zly3vT3
-	3EwO+H9ym/ModYMGOZ1+qVUZd6l3phKveLoJE7NksdYwMlWtxzkrzDQvtWe0amv6OuyrR9FhIu9
-	9TZX9L2KtZaMiSg7P53ycy5kqBgVAqrr/0Q+F/lcUEGNbVJIjTuYiMLqUbIuDXA2NV52ay+tDxl
-	NTgENqk29fo2ToB7B9PnoKVEeEUBHsjkLJ3YtZ6s6e8QpXiMeYzTGeb1Cayhk6CfIETuZchfwib
-	DNw8kjGZNjVjUMn+oidYe6YtVErlRB+lJPputai+0ETir+FTR3c+1zlqfMQZljM0/1GULvmSPHn
-	N6vwWdOXkLTbZrJfKIE3pGJoXaAKlSKYNyZ3ThG8tMlC77x68=
-X-Received: by 2002:a05:6000:2903:b0:47f:7864:1b7b with SMTP id ffacd0b85a97d-47f840c596amr727053f8f.24.1784655967970;
-        Tue, 21 Jul 2026 10:46:07 -0700 (PDT)
+        bh=RI/ofRS9U+6ig5kLdN1LCndM4I9pFM5i9E2zRYc1mtk=;
+        b=WBlzrtNSDAKBxY+4Om3DCIH8kXEu6aAk8/6s5B69DkVlojJ5wGE1eEU7hqOskxOKif
+         ZT2yN67EoAOBlQqZi2AySUql+5/DdD9lGBF0jLVz6RzMj2kOqhL47X72YJOcaXQcsy21
+         6nQDPqemkuudXJxnGzzweKpkt+THUagsYEi0n3sy3WAkyVvT30y3KoDEXmmkfLZAcCcO
+         ju+sWHY4eysps67Xmm1JvoAcoNBt87DLBiaNbDhN+Nlakt/rN0SLp53+clQ1Uy3F1H4p
+         WNaNmrQO8HjxUohcSnF6pPgWRcgB/KzVzdtrKrbfZs/zB92qlZhsSQDX1I5ivWiPfYpG
+         h9cQ==
+X-Forwarded-Encrypted: i=1; AHgh+Rpzs3rafTBPqi4G40L0rgSW6ZmJgN8ILpVc7S2kou2NEJH1rH01lFzQOyX3c+Jbhfyx0MM8DotZJSWK@vger.kernel.org
+X-Gm-Message-State: AOJu0YwCIhDThSqdRtSKa/vPwwh6UgZ3Rfb2Hfu997M8Dc8BuaPX/pc5
+	VFfeE+0yjx3KrJ1S/S8r5mJ4gXdQOnF3ihwpNXgjm2FJUg1DGU9MrreBNYYoaDHdKw==
+X-Gm-Gg: AR+sD10swolTxsbOWPamQcLSQ98eZEmFuBkpwN/Knz+EvpSlESfaiYzb/3drb2u7j8r
+	6XxsYpKCl60ZDvOIQWRZm5DHzs/Qab3qSuitFuMXGpaYqVht0sjihf2KoxX5TCJweP85SJJ0Xth
+	kEoAwTShE1pYz8k9cLf4Saxx1RE2hiGO3RXQskpUhEbyyYZ3HCqFPVcwNVxqAiKO6CS8WgE7K7V
+	VLk6aHRXv44UiUn9+TpxgRMgVWBMEtxGyI2ETNJvyrZiMNcPEDesME4wilZM18U6giNlmFpX1vZ
+	YVARTRDHqvR6O0s5e9iNZUurrhpIt6IGXVzLLumH5fxnD8UrnrmE3BNcJYJyfwZs21hKUQbSbDS
+	CHjZcY1imN/A9YxUYt+YBuxGMV06XEb2xzt6+ux8Twjb2aZO+VSP9veq5d2t19GYR3lWa4RN++d
+	GBLHMzr0e8S0MrYZU99oF9tYXcpLN4BOWfgAddopNK2uiBJUI=
+X-Received: by 2002:a05:6000:41e1:b0:47f:6d9a:d7a6 with SMTP id ffacd0b85a97d-47f6d9ad948mr17562857f8f.25.1784655972302;
+        Tue, 21 Jul 2026 10:46:12 -0700 (PDT)
 Received: from ai-pc ([46.172.241.174])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f63eddd27sm40860513f8f.28.2026.07.21.10.46.06
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f63eddd27sm40860513f8f.28.2026.07.21.10.46.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jul 2026 10:46:07 -0700 (PDT)
+        Tue, 21 Jul 2026 10:46:11 -0700 (PDT)
 From: Mykola Marzhan <mykola@meshstor.io>
 To: Jens Axboe <axboe@kernel.dk>,
 	Song Liu <song@kernel.org>,
@@ -83,9 +83,9 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	linux-kernel@vger.kernel.org,
 	linux-rdma@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: [PATCH v3 4/8] md/raid1: don't use write-behind for P2PDMA bios
-Date: Tue, 21 Jul 2026 19:44:58 +0200
-Message-ID: <20260721174502.111503-5-mykola@meshstor.io>
+Subject: [PATCH v3 6/8] md/raid1: skip futile retries on P2PDMA mapping failures
+Date: Tue, 21 Jul 2026 19:45:00 +0200
+Message-ID: <20260721174502.111503-7-mykola@meshstor.io>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260721174502.111503-1-mykola@meshstor.io>
 References: <20260721174502.111503-1-mykola@meshstor.io>
@@ -97,55 +97,173 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-alloc_behind_master_bio() copies the bio's data with bio_copy_data(),
-a CPU copy. P2PDMA pages are peer device (BAR) memory; generic code
-must not assume CPU load/store access to them is safe or fast on
-every architecture, and bouncing peer memory through the CPU defeats
-the point of a peer-to-peer transfer.
+A member that cannot DMA-map peer memory fails the leg bio with
+BLK_STS_TARGET.  The failure is a property of the peer/member
+pairing -- retrying the same pages against the same member cannot
+succeed, and there is nothing on the medium to repair -- but the
+error machinery treats it as a medium error: narrow_write_error()
+grinds through hundreds of doomed chunk retries per write,
+WantReplacement burns a spare and evicts the healthy member,
+fix_read_error()'s host-page probe "succeeds" so mixed host/P2P
+reads charge the read-error budget until a healthy member is
+kicked (~1s in testing), and FailFast evicts on the first
+unroutable I/O.
 
-Skip write-behind for P2PDMA bios: they are written directly to all
-members, including write-mostly ones.  Ordering against write-behind
-I/O in flight to overlapping sectors is preserved: the non-behind
-clone path serializes on CollisionCheck rdevs (see the preceding
-fix), which covers these bios like any other write that bypasses
-write-behind.
+Flag P2PDMA master bios with a new R1BIO_P2PDMA state bit at
+submission.  On a BLK_STS_TARGET leg failure for a flagged bio:
+retry writes once as a single whole range, recording one bad range
+if that also fails (TARGET can be a transient device condition,
+e.g. NVME_SC_NS_NOT_READY, so the retry is not skipped outright);
+don't set WantReplacement; mark failed read legs IO_BLOCKED without
+charging the read-error budget; and don't treat the failure as
+FailFast evidence -- the request never reached the wire -- as
+commit f7b24c7b41f2 ("md/raid1,raid10: don't fail devices for
+invalid IO errors") did for BLK_STS_INVAL.
 
 Fixes: 02666132403a ("md: propagate BLK_FEAT_PCI_P2PDMA from member devices to RAID device")
 Assisted-by: Claude:claude-opus-4-8
 Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
-
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/md/raid1.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/md/raid1.c | 54 ++++++++++++++++++++++++++++++++++------------
+ drivers/md/raid1.h |  2 ++
+ 2 files changed, 42 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 997f79c05db7..7d769b6460ca 100644
+index 16b7465c233a..6334032c4bb8 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -1523,6 +1523,7 @@ static bool raid1_write_request(struct mddev *mddev, struct bio *bio,
- 	bool write_behind = false;
- 	bool nowait = bio->bi_opf & REQ_NOWAIT;
- 	bool is_discard = op_is_discard(bio->bi_opf);
-+	bool is_p2pdma = md_bio_is_p2pdma(bio);
- 	sector_t sector = bio->bi_iter.bi_sector;
+@@ -483,16 +483,22 @@ static void raid1_end_write_request(struct bio *bio)
+ 	 * 'one mirror IO has finished' event handler:
+ 	 */
+ 	if (bio->bi_status && !ignore_error) {
+-		set_bit(WriteErrorSeen,	&rdev->flags);
+-		if (!test_and_set_bit(WantReplacement, &rdev->flags))
+-			set_bit(MD_RECOVERY_NEEDED, &
+-				conf->mddev->recovery);
++		/* Peer/member pairing failure, not member health. */
++		bool p2pdma_unmappable = bio->bi_status == BLK_STS_TARGET &&
++			test_bit(R1BIO_P2PDMA, &r1_bio->state);
  
- 	if (mddev_is_clustered(mddev) &&
-@@ -1575,9 +1576,12 @@ static bool raid1_write_request(struct mddev *mddev, struct bio *bio,
+-		if (test_bit(FailFast, &rdev->flags) &&
+-		    (bio->bi_opf & MD_FAILFAST) &&
+-		    /* We never try FailFast to WriteMostly devices */
+-		    !test_bit(WriteMostly, &rdev->flags)) {
+-			md_error(r1_bio->mddev, rdev);
++		set_bit(WriteErrorSeen,	&rdev->flags);
++		if (!p2pdma_unmappable) {
++			if (!test_and_set_bit(WantReplacement, &rdev->flags))
++				set_bit(MD_RECOVERY_NEEDED,
++					&conf->mddev->recovery);
++
++			if (test_bit(FailFast, &rdev->flags) &&
++			    (bio->bi_opf & MD_FAILFAST) &&
++			    /* We never try FailFast to WriteMostly devices */
++			    !test_bit(WriteMostly, &rdev->flags)) {
++				md_error(r1_bio->mddev, rdev);
++			}
+ 		}
+ 
  		/*
- 		 * The write-behind io is only attempted on drives marked as
- 		 * write-mostly, which means we could allocate write behind
--		 * bio later.
-+		 * bio later. P2PDMA bios are excluded: write-behind copies
-+		 * the data with bio_copy_data(), a CPU copy that cannot be
-+		 * assumed safe or fast on P2PDMA (device BAR) pages.
- 		 */
--		if (!is_discard && rdev && test_bit(WriteMostly, &rdev->flags))
-+		if (!is_discard && !is_p2pdma && rdev &&
-+		    test_bit(WriteMostly, &rdev->flags))
- 			write_behind = true;
+@@ -1378,6 +1384,8 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 	else
+ 		init_r1bio(r1_bio, mddev, bio);
+ 	r1_bio->sectors = max_read_sectors;
++	if (md_bio_is_p2pdma(bio))
++		set_bit(R1BIO_P2PDMA, &r1_bio->state);
  
- 		r1_bio->bios[i] = NULL;
+ 	/*
+ 	 * make_request() can abort the operation when read-ahead is being
+@@ -1557,6 +1565,8 @@ static bool raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 
+ 	r1_bio = alloc_r1bio(mddev, bio);
+ 	r1_bio->sectors = max_sectors;
++	if (md_bio_is_p2pdma(bio))
++		set_bit(R1BIO_P2PDMA, &r1_bio->state);
+ 
+ 	/* first select target devices under rcu_lock and
+ 	 * inc refcount on their rdev.  Record them by setting
+@@ -2522,7 +2532,7 @@ static void fix_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ 	}
+ }
+ 
+-static void narrow_write_error(struct r1bio *r1_bio, int i)
++static void narrow_write_error(struct r1bio *r1_bio, int i, bool coarse)
+ {
+ 	struct mddev *mddev = r1_bio->mddev;
+ 	struct r1conf *conf = mddev->private;
+@@ -2536,6 +2546,9 @@ static void narrow_write_error(struct r1bio *r1_bio, int i)
+ 	 * It is conceivable that the bio doesn't exactly align with
+ 	 * blocks.  We must handle this somehow.
+ 	 *
++	 * With 'coarse', retry the whole range as one bio: P2PDMA
++	 * mapping failures fail every block identically.
++	 *
+ 	 * We currently own a reference on the rdev.
+ 	 */
+ 
+@@ -2550,9 +2563,12 @@ static void narrow_write_error(struct r1bio *r1_bio, int i)
+ 		block_sectors = roundup(1 << rdev->badblocks.shift, lbs);
+ 
+ 	sector = r1_bio->sector;
+-	sectors = ((sector + block_sectors)
+-		   & ~(sector_t)(block_sectors - 1))
+-		- sector;
++	if (coarse)
++		sectors = sect_to_write;
++	else
++		sectors = ((sector + block_sectors)
++			   & ~(sector_t)(block_sectors - 1))
++			- sector;
+ 
+ 	while (sect_to_write) {
+ 		struct bio *wbio;
+@@ -2633,8 +2649,12 @@ static void handle_write_finished(struct r1conf *conf, struct r1bio *r1_bio)
+ 			 * narrow down and record precise write
+ 			 * errors.
+ 			 */
++			bool coarse = r1_bio->bios[m]->bi_status ==
++					BLK_STS_TARGET &&
++				test_bit(R1BIO_P2PDMA, &r1_bio->state);
++
+ 			fail = true;
+-			narrow_write_error(r1_bio, m);
++			narrow_write_error(r1_bio, m, coarse);
+ 			rdev_dec_pending(conf->mirrors[m].rdev,
+ 					 conf->mddev);
+ 		}
+@@ -2661,6 +2681,9 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ {
+ 	struct md_rdev *rdev = conf->mirrors[r1_bio->read_disk].rdev;
+ 	struct bio *bio = r1_bio->bios[r1_bio->read_disk];
++	/* evaluate before the bio_put() below */
++	bool p2pdma_error = bio->bi_status == BLK_STS_TARGET &&
++		test_bit(R1BIO_P2PDMA, &r1_bio->state);
+ 	struct mddev *mddev = conf->mddev;
+ 	sector_t sector;
+ 
+@@ -2680,6 +2703,9 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
+ 	 */
+ 	if (mddev->ro) {
+ 		r1_bio->bios[r1_bio->read_disk] = IO_BLOCKED;
++	} else if (p2pdma_error) {
++		/* Peer can't reach this member: just redirect the read. */
++		r1_bio->bios[r1_bio->read_disk] = IO_BLOCKED;
+ 	} else if (test_bit(FailFast, &rdev->flags)) {
+ 		md_error(mddev, rdev);
+ 	} else {
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index c98d43a7ae99..61b788a99d14 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -184,6 +184,8 @@ enum r1bio_state {
+ 	R1BIO_MadeGood,
+ 	R1BIO_WriteError,
+ 	R1BIO_FailFast,
++/* the master bio carries PCI P2PDMA (peer device memory) pages */
++	R1BIO_P2PDMA,
+ };
+ 
+ static inline int sector_to_idx(sector_t sector)
 -- 
 2.52.0
 
