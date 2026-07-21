@@ -1,117 +1,88 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from m16.mail.126.com (m16.mail.126.com [220.197.31.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 499CE38E5C4;
-	Mon, 20 Jul 2026 18:49:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6B3D41B366;
+	Tue, 21 Jul 2026 06:51:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784573396; cv=none; b=ZmzD/2qg2j2yn0LtavdQn6e0aGYfkne6POWiU0LbqbaUnYI9oTHQmKKhbuSmfsYOHYMnospdrNebquV4R6kbeAkJ5TEq0fW9zd+Zh1TujPIMlYsWCRF+qT2qadlfsxlLBMk3GdSsYd/PkErRErF/WOkOA7eTiCQHqh/AqIY0M5A=
+	t=1784616675; cv=none; b=QKoRfk9JusQv7rgW2nhUOxP5bbSsxAQJoDJaXqh8QImni4d6Wv9ikvVpjCHbOmJz+KVi4zNjq4Ah3QgDrQQKjGm43tPdYU7zHh9ricdCG5gETzRa/Oi32yjkYSy21jLk0Jrxo5zzK+gJhuhJyvuDdZPnn//RZuQxnlTu131pUjk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784573396; c=relaxed/simple;
-	bh=bp9PWqqNTdwflSARWr4K4KpBa8aHoCHw6zWBhwJssIQ=;
-	h=Message-ID:Date:MIME-Version:From:To:Cc:References:In-Reply-To:
-	 Content-Type:Subject; b=flTKtzAknrMc72SzJKdUDhlGXTEmN9VPrvPQxDNOfe0bZCKpOwkdn+5W2WZZ1SYBsPtzn0YEQQvhmBk6B6nkEHCcWXnorL03z/tvvR6i9AISAhrOFP1qNgjJZvLO0IYGimoI7EWjfglgood8+oxbpfl7KPWkDI8VaaJjzTQBnjs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=AZbZhiSJ; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1784616675; c=relaxed/simple;
+	bh=Dc33vAc3v+XVxehd19mEai/0bRAPw8R6ND1gxZf8g/w=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=pKShT2GS2bN9TZ4RBVwZNXCvOCL5OY2Yetx5pFbeK1xNHVdUOdkq6kW26AZUeKi4qephyvNUwH7E+QZeX5DjOqr5T1Xf8vSLYT1gM/z84yzdPjDbCV38SrTCcvzlPC+tGqVohr8R3NFkj+dRQARvTaXb2QaJljdeMBe3fJDVBuU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com; spf=pass smtp.mailfrom=126.com; dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b=nXMfablK; arc=none smtp.client-ip=220.197.31.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="AZbZhiSJ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:References:Cc:To:From:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=tWVcfovXhN8cxDj/Xsa7BNxive3cX8kl3EtbJmWADi0=; b=AZbZhiSJqYd3Zz72aRzaU2Q+7r
-	LeHCfYG/DCURfZzP0tmeStZbYIgmTYtJBtAAUpV9AIineZrVT2anzIPDHsduvcAazBuhSH7uuYiu4
-	yCnQ1pN3uusFysYxxTRM+xQ85WuBSNqX5iOTYNrPPPls3lDtgw0btWJ5oSSaAwRv0y8ARiVMsa7+b
-	9/RzsOOwSpCVDDm7Xw4SxMiKqWs6WiF9JscB4LgWxTyjEoak6tEdMmm1m3krjjJENiXJMSWahzWMM
-	89u0YkHKTGFZXEBSs7eXuA5ewRYSMMWexkmYsc49e53+W9k/KDLJv9xHs0ftQT72hBnxSO1oHrr+C
-	lQEChNyA==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1wlt3h-0000000B7lj-3Vlj;
-	Mon, 20 Jul 2026 12:49:46 -0600
-Message-ID: <cb297ebf-3731-425a-8f48-6be3c7944366@deltatee.com>
-Date: Mon, 20 Jul 2026 12:49:45 -0600
+	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="nXMfablK"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
+	Message-ID; bh=Dc33vAc3v+XVxehd19mEai/0bRAPw8R6ND1gxZf8g/w=; b=n
+	XMfablKFIUxepfB4d52G+8xNZcnnl9KErdFuZWJ317l14qV+aBQDF+2xSuMOQrMu
+	NQRMMOTxPESXA7RtvW20YpBGHSPgzHNQuQyoFLeLZPq0nqE6liVfS3j4ubU3gIVd
+	uVLdQTLBOF6a00HeIvyz/RP+sf6B2p7Yhj5hAG4CT0=
+Received: from zhanggenjian$126.com ( [116.128.244.171] ) by
+ ajax-webmail-wmsvr-41-111 (Coremail) ; Tue, 21 Jul 2026 14:48:19 +0800
+ (CST)
+Date: Tue, 21 Jul 2026 14:48:19 +0800 (CST)
+From: "genjian zhang" <zhanggenjian@126.com>
+To: yukuai@fygo.io
+Cc: song@kernel.org, magiclinan@didiglobal.com, xiao@kernel.org,
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Genjian Zhang" <zhanggenjian@kylinos.cn>
+Subject: Re: [PATCH] md/raid5: complete discard bios while reshape is active
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
+ 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 126com
+In-Reply-To: <8ff91547-4841-4cea-87bc-9d6979df61ab@fygo.io>
+References: <20260711161326.962336-1-zhanggenjian@126.com>
+ <8ff91547-4841-4cea-87bc-9d6979df61ab@fygo.io>
+X-NTES-SC: AL_Qu2TBvqauUwi7yaaYukdmkwUheY2WcW2s/4n34BWc/MOkj7nwCEFbHl5Flf4/MWDFiySjzipYjJXz8ZWWKJZpBR3I/ZzcBRrBmIjr1go6A==
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Mykola Marzhan <mykola@meshstor.io>, Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
- Yu Kuai <yukuai@fygo.io>, Keith Busch <kbusch@kernel.org>,
- Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
- Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
- Guoqing Jiang <guoqing.jiang@linux.dev>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
- Chaitanya Kulkarni <kch@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava
- <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>,
- linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260719105327.864949-1-mykola@meshstor.io>
- <20260719105327.864949-2-mykola@meshstor.io> <20260720144943.GA17375@lst.de>
- <CAPzsNDv6hUV3gHdaxuwjRcr4couUKq_M5DKObFNaYqCHnm7ZMw@mail.gmail.com>
- <b2c37f4f-79dd-428f-915a-2a862d20924c@deltatee.com>
-Content-Language: en-CA
-In-Reply-To: <b2c37f4f-79dd-428f-915a-2a862d20924c@deltatee.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: mykola@meshstor.io, hch@lst.de, axboe@kernel.dk, song@kernel.org, yukuai@fygo.io, kbusch@kernel.org, sagi@grimberg.me, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org, magiclinan@didiglobal.com, xiao@kernel.org, guoqing.jiang@linux.dev, leon@kernel.org, jgg@ziepe.ca, kmodukuri@nvidia.com, kch@nvidia.com, bhelgaas@google.com, shivajikant@google.com, praan@google.com, henrique.carvalho@suse.com, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v2 1/7] blk-mq-dma: restore BLK_STS_TARGET for unsupported
- P2P transfers
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Message-ID: <67782c56.401d.19f836eb9b0.Coremail.zhanggenjian@126.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:bykvCgD3X6s0Fl9qX_YgAA--.50505W
+X-CM-SenderInfo: x2kd0wxjhqyxldq6ij2wof0z/xtbBtBQFg2pfFjQv4wAA39
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 
-
-
-On 2026-07-20 12:42, Logan Gunthorpe wrote:
-> 
-> 
-> On 2026-07-20 11:30, Mykola Marzhan wrote:
->> On Mon, Jul 20, 2026 at 4:49 PM Christoph Hellwig <hch@lst.de
->>> This is a really weird writing style, and suggested to me you neither
->>> understand the code nor the problem.  Please actually think yourself,
->>> write the patches and commit logs yourself instdad of this garbage.
->>>
->>> And please also explain how you even generate the I/O that fails this
->>> way.
->> - md mirrors the write: the copy to member 1 succeeds, the copy to far
->> member fails as BLK_STS_INVAL.
->> - md deliberately ignores BLK_STS_INVAL, so the write is counted as
->> written and the mirror silently diverges.
-> 
-> Seeing I just reviewed this and answered it for myself I'll expand on
-> what's going on here:
-> 
-> The switch statement will take the default branch when
-> pci_p2pdma_state() returns PCI_P2PDMA_MAP_NOT_SUPPORTED. This indicates
-> the memory that's trying to be mapped in this way will not succeed
-> because it's going through an unsupported host bridge (or if the device
-> isn't a PCI device, etc, but this is rarer or perhaps not possible).
-> Returning BLK_STS_INVAL doesn't seem correct here, to me. (Arguably it
-> might have been clearer if the switch case explicitly stated
-> PCI_P2PDMA_MAP_NOT_SUPPORTED instead of relying on the default).
-> 
-> Returning -EREMOTEIO/BLK_STS_TARGET was the convention for this I had
-> originally set when I wrote some of this and differentiating the error
-> does seem important in Patch 6 in this series.
-
-Sorry, one other note I almost forgot about which is probably important:
-BLK_STS_INVAL will attempt a retry, where BLK_STS_TARGET will not (I
-think that's part of why I chose that specific error in the first
-place). A retry here doesn't make any sense because it will always hit
-the same case and fail. So it's probably worth applying this patch even
-without the specific error being used in Patch 6.
-
-Logan
-
-
+QXQgMjAyNi0wNy0xOSAyMDo1NDo0MiwgInl1IGt1YWkiIDx5dWt1YWlAZnlnby5pbz4gd3JvdGU6
+Cj5IaSwKPgo+1NogMjAyNi83LzEyIDA6MTMsIEdlbmppYW4g0LS1wDoKPj4gRnJvbTogR2Vuamlh
+biBaaGFuZyA8emhhbmdnZW5qaWFuQGt5bGlub3MuY24+Cj4+Cj4+IG1ha2VfZGlzY2FyZF9yZXF1
+ZXN0KCkgcmV0dXJucyB3aXRob3V0IGNvbXBsZXRpbmcgdGhlIGJpbyB3aGVuIHJlc2hhcGUKPj4g
+aXMgaW4gcHJvZ3Jlc3MuIERpc2NhcmQgY2FsbGVycyBibG9jayBpbiBzdWJtaXRfYmlvX3dhaXQo
+KQo+PiB3YWl0aW5nIGZvciBhIGNvbXBsZXRpb24gdGhhdCBuZXZlciBhcnJpdmVzLiAgVGhlIGNh
+bGxlciBoYW5ncyBpbgo+PiB1bmludGVycnVwdGlibGUgc2xlZXAsIGFuZCB0aGlzIGRvZXMgbm90
+IHJlc29sdmUgd2hlbiByZXNoYXBlIGZpbmlzaGVzLgo+Pgo+PiBDb21wbGV0ZSB0aGUgYmlvIHdp
+dGggQkxLX1NUU19BR0FJTiBzbyB1c2Vyc3BhY2UgY2FuIHJldHJ5IGFmdGVyIHJlc2hhcGUsCj4+
+IGNvbnNpc3RlbnQgd2l0aCB0aGUgZXhpc3RpbmcgcG9saWN5IG9mIG5vdCBwcm9jZXNzaW5nIGRp
+c2NhcmQgZHVyaW5nCj4+IHJlc2hhcGUuCj4+Cj4+IFRlc3RlZCBvbiBhIGxvb3AtYmFja2VkIFJB
+SUQ1IGFycmF5IGR1cmluZyBtZGFkbSAtLWdyb3c6IHdpdGhvdXQgdGhpcwo+PiBwYXRjaCwgYmxr
+ZGlzY2FyZCBoYW5ncyBpbiBiaW9fYXdhaXQoKSBhbmQgcmVtYWlucyBpbiB1bmludGVycnVwdGli
+bGUKPj4gc2xlZXAgYWZ0ZXIgbWQgcmVwb3J0cyAicmVzaGFwZSBkb25lIjsgd2l0aCB0aGlzIHBh
+dGNoIGl0IHJldHVybnMKPj4gLUVBR0FJTiBpbnN0ZWFkLgo+Pgo+PiBTaWduZWQtb2ZmLWJ5OiBH
+ZW5qaWFuIFpoYW5nIDx6aGFuZ2dlbmppYW5Aa3lsaW5vcy5jbj4KPj4gLS0tCj4+ICAgZHJpdmVy
+cy9tZC9yYWlkNS5jIHwgNCArKystCj4+ICAgMSBmaWxlIGNoYW5nZWQsIDMgaW5zZXJ0aW9ucygr
+KSwgMSBkZWxldGlvbigtKQo+Pgo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5jIGIv
+ZHJpdmVycy9tZC9yYWlkNS5jCj4+IGluZGV4IGZmYjVmY2RlNTRhOS4uNGMzYjQyYjJhZjg1IDEw
+MDY0NAo+PiAtLS0gYS9kcml2ZXJzL21kL3JhaWQ1LmMKPj4gKysrIGIvZHJpdmVycy9tZC9yYWlk
+NS5jCj4+IEBAIC01NzIyLDkgKzU3MjIsMTEgQEAgc3RhdGljIHZvaWQgbWFrZV9kaXNjYXJkX3Jl
+cXVlc3Qoc3RydWN0IG1kZGV2ICptZGRldiwgc3RydWN0IGJpbyAqYmkpCj4+ICAgCWlmIChXQVJO
+X09OX09OQ0UoYmktPmJpX29wZiAmIFJFUV9OT1dBSVQpKQo+PiAgIAkJcmV0dXJuOwo+Cj5BcyBu
+b3dhaXQgd2lsbCBiZSByZW1vdmVkIHNvb24sIEknbSBmaW5lIGxlYXZpbmcgaXQgaGVyZS4KPgo+
+UmV2aWV3ZWQtYnk6IFl1IEt1YWkgPHl1a3VhaUBmeWdvLmlvPgo+Cj4+ICAgCj4+IC0JaWYgKG1k
+ZGV2LT5yZXNoYXBlX3Bvc2l0aW9uICE9IE1heFNlY3RvcikKPj4gKwlpZiAobWRkZXYtPnJlc2hh
+cGVfcG9zaXRpb24gIT0gTWF4U2VjdG9yKSB7Cj4+ICAgCQkvKiBTa2lwIGRpc2NhcmQgd2hpbGUg
+cmVzaGFwZSBpcyBoYXBwZW5pbmcgKi8KPj4gKwkJYmlvX2VuZGlvX3N0YXR1cyhiaSwgQkxLX1NU
+U19BR0FJTik7Cj4+ICAgCQlyZXR1cm47Cj4+ICsJfQo+PiAgIAo+PiAgIAlpZiAoIXJhaWQ1X2Rp
+c2NhcmRfbGltaXRzKG1kZGV2LCBiaSkpCj4+ICAgCQlyZXR1cm47Cj4KPi0tIAo+VGhhbmtzLAo+
+S3VhaQoKVGhhbmtzIGZvciB0aGUgcmV2aWV3LgpJJ2xsIGxlYXZlIHRoZSBSRVFfTk9XQUlUIHBh
+dGggdW5jaGFuZ2VkIGFuZCB3b24ndCBzZW5kIGEgdjIgZm9yIGl0LgoKVGhhbmtzLApHZW5qaWFu
+Cg==
