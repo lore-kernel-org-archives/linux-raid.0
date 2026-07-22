@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59136470E8B;
-	Wed, 22 Jul 2026 19:05:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19BDF470EA7;
+	Wed, 22 Jul 2026 19:06:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784747147; cv=none; b=deLBKyyjpFxtAX5BpFzBk6QkJHP26Dsn9kuELnjtRQmTLtTSfRkrbSXTevzOEHhjcCgx7TNPRay+1olYZc7oMsM2s+YP+EkHYbTNweJoyz9pLeu4ojFK0+3XqtRbyJ5S4Wk6+JXZVMuY1gXjBBwjV8l/WOGpQt6wNfmULBmrb7A=
+	t=1784747215; cv=none; b=mHBr1zvAOOWLVW3Mx2YW0wKeTBprCj8SGCgeyMgYjFhayJ/CHYPRLNWzWRLsEHuMMMxtf1qnM6tyMnC4KzbQWS3MJ/5cU2R/rOsr2uo/30ylstrp6jBbbif0JUkihu/2MElXWHY8rsejkXspIMO+SBn8SI5pAt7mt0MdGpUEAoY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784747147; c=relaxed/simple;
-	bh=5zHhL/GTKl6/tuHAxlRNGG3pDyMAnSavcqnSvY+Q+lU=;
+	s=arc-20240116; t=1784747215; c=relaxed/simple;
+	bh=VrSotu7uz3ZTRi+/4/UGVnS3rRSacg/dhKM+dIdk7cA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=feOB/V0N9rhRmYs5zXVb95dKHRlvdEgtQ6T0rzrnoQGdzbMhAX6M1ljhxdceiMAOfTjTciMcfjC6SAM4i4iAkgItCU0YCn7loQJc5RbkAdiDVpNmB8ddqL/I+k2zV9Cqdah65sqMHynwQQQdU1lWOj3OWZedmZCIKo91dQfSk+c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AarEnpwm; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=HdedZvH9LQSmH5e7+OZRRo+Az4GhkeU4qQ0QLUDChsLhtzpc4axhFtznpFV6ou0sBBzRXghLmSAHsLG56/flDN8deiFcaQrCmujajc48t3zV1NEJaXGQ6kwOKIou7icrgK2KXtMxoWkXIl3weJrG5dbXMVyOU3q6QOfEg+7Hh4U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jQDIoKCI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AarEnpwm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DA951F000E9;
-	Wed, 22 Jul 2026 19:05:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jQDIoKCI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F6C21F000E9;
+	Wed, 22 Jul 2026 19:06:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784747142;
-	bh=5zHhL/GTKl6/tuHAxlRNGG3pDyMAnSavcqnSvY+Q+lU=;
+	s=k20260515; t=1784747213;
+	bh=hwad+3Aao7WK/vG7ulyV9XJPUmIaeZue1fzRWZGxRlM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=AarEnpwmXIulE1TU5TH9hic2RdKg6VJyOSVS2jOqd3rbyZ0HjGCVJcyOi/sAug6xo
-	 3/6a6KGmu0nK+Q1vedZDIptIQwAW/EPv6G2GmGjV695L/rSEq2fV1G+DchmfD1pj5Q
-	 hMSwHC2xhc+BaKrD6GcC9/ZzJtDkBHjNsSK7mFbuXb9oWghRknDi+Lt8FjB4hxIC+E
-	 xxID2woWShph9z3g71+sOvIMvjybmxmavrRF0xN9dindWv/Sh5rhAhzDrkYBeMq96G
-	 ubV7RLksY1nSlXBTIvQytwbDxFF2N2UX2izWcCqLONFTP+0Eq8rpZdqJ0VQQHag7v1
-	 +6rW1voGupRWg==
+	b=jQDIoKCIDM8EdvLzP3Iw/o1kMl8v/i8dkCsh9JNXNyNUVkhPg6CKiS1O31v/MjB2e
+	 ta+gMWlAeUj4z5nvs4Lj1+x5dM1v0H10ZUEGVW9a4gpM/aUuOpNIRjyULNrnlkfbDA
+	 1XUAhhFkluxIlVCXIxiOB8jTaAg4+qO9Z5ctPit2WeDlAqPGu4c8NTzn++z/Z2cE0B
+	 9gqhIuVVXEueLnS5LpIQzKooxFTeMbqrN/4l3+OupUFsvWrU6/F6+vh1gyylTM0pjX
+	 WfwMiZR17iGYZ3TClozoDUKIz4uii5jDodVuA69jb9poXouiRQ21yyrDiPjcEPjOtP
+	 lUTmYf23nzZJA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 5/9] md/raid1,raid10: factor out raid1_write_error()
- helper
+Subject: Re: [PATCH v4 1/9] block: add BLK_STS_P2PDMA for unsupported
+ peer-to-peer transfers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Mykola Marzhan" <mykola@meshstor.io>
-Cc: yukuai@fygo.io, linux-pci@vger.kernel.org, linux-raid@vger.kernel.org
-In-Reply-To: <20260722185841.449934-6-mykola@meshstor.io>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io, linux-pci@vger.kernel.org
+In-Reply-To: <20260722185841.449934-2-mykola@meshstor.io>
 References: <20260722185841.449934-1-mykola@meshstor.io>
- <20260722185841.449934-6-mykola@meshstor.io>
+ <20260722185841.449934-2-mykola@meshstor.io>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 22 Jul 2026 19:05:41 +0000
-Message-Id: <20260722190542.2DA951F000E9@smtp.kernel.org>
+Date: Wed, 22 Jul 2026 19:06:52 +0000
+Message-Id: <20260722190653.0F6C21F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -47,11 +47,21 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 > From: Logan Gunthorpe <logang@deltatee.com>
 >=20
-> Factor out a common raid1_write_error() helper from raid1.c and
-> raid10.c.
+> blk_dma_map_iter_start() reports BLK_STS_INVAL when a P2PDMA transfer
+> is attempted between two devices whose PCIe topology cannot route it.
+> blk_path_error() treats INVAL as retryable, so multipath requeues the
+> I/O forever, and callers cannot tell it apart from an invalid request.
+> md also ignores it for member failures, so a mirror silently diverges.
 >=20
-> This will help reduce code duplication in subsequent patches.
+> Restoring the old BLK_STS_TARGET would stay ambiguous -- nvme maps
+> NS_NOT_READY, LBA_RANGE and CMD_INTERRUPTED to it too.  Add a dedicated
+> BLK_STS_P2PDMA, non-retryable in blk_path_error(), and return it from
+> blk_dma_map_iter_start().
 >=20
+> Fixes: 858299dc6160 ("block: add scatterlist-less DMA mapping helpers")
+> Fixes: 7ce3c1dd78fc ("nvme-pci: convert the data mapping to blk_rq_dma_ma=
+p")
+> Cc: stable@vger.kernel.org # v6.17
 > Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 > Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
 
@@ -59,5 +69,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260722185841.4499=
-34-1-mykola@meshstor.io?part=3D5
+34-1-mykola@meshstor.io?part=3D1
 
