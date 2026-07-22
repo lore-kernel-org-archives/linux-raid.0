@@ -1,130 +1,100 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-45.ptr.blmpb.com (va-2-45.ptr.blmpb.com [209.127.231.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 986D13CB2E0;
-	Tue, 21 Jul 2026 23:39:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1EFD23BD02
+	for <linux-raid@vger.kernel.org>; Wed, 22 Jul 2026 02:29:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784677170; cv=none; b=umGZ58jmbFiUcWIPBIItuY07COSEIIxSPEiC0XSWbca2TbZLSNC0SQprnURtEjM4+cvhid9+sGBB0q3H3srrT8MrjthQKQFbvWSZKGxGdKT3DDsAczPfMJh95PRm1caAk+qvhsvVa4a7sUdIoiJqiT822zH16VCuRguUFgNwhDE=
+	t=1784687401; cv=none; b=b2LgQAo2TvQM5LbCFvqjoq0cysJuStiU7jxSinAJPaqtRCswroisKbLg8qPGL2EZ63QBYalDKxZw6FwfXaWV2NMp30s0NKVqG+0be9dUHpHI1GDO7jawGaH7FLO6D0b5DV2n+CzQbYDnEbGGOwa9gvhDYhydzbqx3Z6SdP47je4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784677170; c=relaxed/simple;
-	bh=U5noW1vviCeKRF6aP5p06WfDdj+QI3t2g3PPfILXppM=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=FT15IYAkO+b5yOJEwX193CNMtychNgnoJ81YQI2beXqyOeDYTOBzt18/C9CTm3spbQmLvmuPiKn6jQrpL50sJr0c9eEUzjKMBSWe/HAQJMfoemACfeDUSx//QisdQxzYa40tpDwO4cKaPU/eaDwhkR800tZhQ5JvgUo9M8I8VE8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=JePFvpH8; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1784687401; c=relaxed/simple;
+	bh=QJm9imkkBkLNMyOfyzyd9mU/P2OJi6Is5RNRwjMDOcA=;
+	h=Mime-Version:References:Date:Cc:From:Message-Id:In-Reply-To:To:
+	 Content-Type:Subject; b=i6LyuLUMf2U4uEirUwoZWd26wvvzefpMy7EucZJWpPUXXUJf88TpclgibENCG5i2W0QxHjioQoJLQjpVaWivkdIGdp4b1nReFQJUc4ZIMFp0El5iN0HvSGpxITUFS5/VG36TRFMq/pYPkZeNZrJsoa8xJdQYMpdC+c/U7t4fSSU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=OJOP9Rjq; arc=none smtp.client-ip=209.127.231.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="JePFvpH8"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="OJOP9Rjq"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=HbarWDj744NAcsuxjg2Rf91YA+KE2onmHu1JCGxVkMk=; b=JePFvpH8O3DliRZI9R402wwaly
-	fzTJoa1IC/gAX7iXrnp+PZZCWWxrbTrYtLFQQlDJAALmHAAHkvl9BS90oj/6KpknU6eecrU2DIvi9
-	bmrZYjqv2t5S1XlQ3svKNmfTRdxjLDyYuYYN5R0CnhkFkXqnziZ4oteFmlKz/LkSjjght2dXUlK4G
-	lSy6UgIhh4jH6/6xxQjEneuIobFofIakqQK67iX4Sf7KN3RdxfHjzseGs93v9EKKTnUngrXY2fMU/
-	8U6x0Acyjia92PkagrInKbsSkY9SyISp9cl/sfJWAk+AcZDTbYCeUs056xXviAH1IzKUT6kALehs1
-	CBt7pp9w==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1wmK3R-0000000BuOW-0FPO;
-	Tue, 21 Jul 2026 17:39:17 -0600
-Message-ID: <9f846c85-f427-433a-b87d-8e9e3a4406e7@deltatee.com>
-Date: Tue, 21 Jul 2026 17:38:53 -0600
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1784687394;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=n/7jmLesY/oUgrDE9Omk4IvRB0bZedKyJweWBYqBPWg=;
+ b=OJOP9RjqpBvbZc3ceVURZhB9Y1mlnl5eewz4W+UAGvMambUFMRabtME743Pr5lotFf35Vr
+ ANOit3SG40cD0ruOUqICRXXWSQhNUIcwJEFagm7WAQvTnoxPpy7ws/EuOgL0+yjJ3Cw+J6
+ rV7xBEyM7Zd5CR4Ke7cBHWkW/P+oQlEWwDjAL1zY2BRcZalhYCUv/HYW1v8S+QwnWhDNSk
+ fInjGX9diOjJlsjSXhKfVw8WyfW8MecXeXb9lS4WbJU8GDJ2IHcJGjO26fBS7hb4/6/K5T
+ HBhMjyFXyYC1VN8srPqL0IXiqNkUKOrYXd1r1MM6G0BR2MuSAZEqIECUDLwetw==
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
+References: <20260720111400.2120834-1-colyli@fygo.io>
+Date: Wed, 22 Jul 2026 10:29:49 +0800
+Cc: <linux-raid@vger.kernel.org>, <linux-block@vger.kernel.org>, 
+	<stable@vger.kernel.org>, "Ramesh Adhikari" <adhikari.resume@gmail.com>
+From: "yu kuai" <yukuai@fygo.io>
+Message-Id: <20119f4b-a671-4484-82e3-7c12d9472413@fygo.io>
+In-Reply-To: <20260720111400.2120834-1-colyli@fygo.io>
+To: <colyli@fygo.io>, <yukuai@fygo.io>
 User-Agent: Mozilla Thunderbird
-To: Mykola Marzhan <mykola@meshstor.io>
-Cc: Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
- Yu Kuai <yukuai@fygo.io>, Keith Busch <kbusch@kernel.org>,
- Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
- linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
- linux-nvme@lists.infradead.org, Li Nan <magiclinan@didiglobal.com>,
- Xiao Ni <xiao@kernel.org>, Guoqing Jiang <guoqing.jiang@linux.dev>,
- Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
- Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
- Chaitanya Kulkarni <kch@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava
- <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>,
- linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260719105327.864949-1-mykola@meshstor.io>
- <20260719105327.864949-7-mykola@meshstor.io>
- <ee312bcb-92f4-4884-91cd-3bd56180c8c7@deltatee.com>
- <CAPzsNDsLr_BABgizujN0CgnLNfzS3S37vQ133fjbJzFMvRs7CQ@mail.gmail.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <CAPzsNDsLr_BABgizujN0CgnLNfzS3S37vQ133fjbJzFMvRs7CQ@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: mykola@meshstor.io, axboe@kernel.dk, song@kernel.org, yukuai@fygo.io, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org, magiclinan@didiglobal.com, xiao@kernel.org, guoqing.jiang@linux.dev, leon@kernel.org, jgg@ziepe.ca, kmodukuri@nvidia.com, kch@nvidia.com, bhelgaas@google.com, shivajikant@google.com, praan@google.com, henrique.carvalho@suse.com, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v2 6/7] md/raid1,raid10: skip futile retries on P2PDMA
- mapping failures
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Reply-To: yukuai@fygo.io
+X-Lms-Return-Path: <lba+26a602b21+b06af2+vger.kernel.org+yukuai@fygo.io>
+X-Original-From: yu kuai <yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.167]) by smtp.larksuite.com with ESMTPS; Wed, 22 Jul 2026 02:29:53 +0000
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH] md: do overflow check for sb->bblog_shift in super_1_load()
 
+=E5=9C=A8 2026/7/20 19:14, colyli@fygo.io =E5=86=99=E9=81=93:
 
+> In super_1_load(), sb->bblog_shift is an __u8 type value loaded from on-
+> disk superblock. It is used for badblocks API badblocks_set() by the
+> following sequence,
+>
+>   1930   rdev->badblocks.shift =3D sb->bblog_shift;
+>   1931   for (i =3D 0 ; i < (sectors << (9-3)) ; i++, bbp++) {
+>   1932           u64 bb =3D le64_to_cpu(*bbp);
+>   1933           int count =3D bb & (0x3ff);
+>   1934           u64 sector =3D bb >> 10;
+>   1935           sector <<=3D sb->bblog_shift;
+>   1936           count <<=3D sb->bblog_shift;
+>   1937           if (bb + 1 =3D=3D 0)
+>   1938                   break;
+>   1939           if (!badblocks_set(&rdev->badblocks, sector, count, 1))
+>   1940                   return -EINVAL;
+>   1941   }
+>
+> bb->bblog_shit is in range of 0-255, variable sector is 64bit width, for
+> an invalid bb->bblog_shit, it is possible to make sector be overflowed
+> by the following calculation,
+>   1935           sector <<=3D sb->bblog_shift;
+> Then in turn when call badblocks_set() at line 1939 with the invalid
+> rdev->badblocks.shift set at line 1930, may result an overflow inside
+> _badblocks_clear() in block/badblocks.c.
+>
+> Although there are many places to call badblocks APIs, the non-zero
+> shift value is only used in super_1_load(), other places always use 0 as
+> the shift value. Therefore it is unnecessary to do a general shift value
+> overflow check inside badblock API, and just check here as the caller.
+>
+> This may avoid unnecessary check, make the badblocks API code more simple
+> and elegant.
+>
+> Fixes: 2699b67223aca ("md: load/store badblock list from v1.x metadata")
+> Fixes: 1726c77467833 ("badblocks: improve badblocks_set() for multiple ra=
+nges handling")
+> Cc:stable@vger.kernel.org
+> Cc: Ramesh Adhikari<adhikari.resume@gmail.com>
+> Signed-off-by: Coly Li<colyli@fygo.io>
+> ---
+>   drivers/md/md.c | 7 +++++++
+>   1 file changed, 7 insertions(+)
+Reviewed-by: Yu Kuai <yukuai@fygo.io>
 
-On 2026-07-21 11:50, Mykola Marzhan wrote:
-> I have split it in v3 into a raid1 patch and a raid10 patch.
-> I am not sure about separate "introduce the bit" patches.
-> R1BIO_P2PDMA and R10BIO_P2PDMA are entries in the two personalities'
-> with own r*bio state enums.
-> The commit messages are shorter now.
-
-That helps a bit, thanks.
-
-
-> An early return doesn't work here: on a mapping failure the
-> function must still fall through to set R1BIO_WriteError, so the
-> completion path runs the (single, whole-range) retry and records
-> the bad range -- only WantReplacement and the FailFast md_error()
-> are skipped.  v3 folds the two tests into one branch now,
-> which reads better and keeps the fall-through. Please check v3.
-
-The early return works if you create a helper.
-
-> I compared the two sides after splitting: the P2PDMA handling is
-> symmetric, and the remaining differences are pre-existing
-> personality differences rather than missed fixes.
-> A shared helper would be heavier than the two open-coded branches,
-> so I kept it per-personality.
-
-Yeah, I still think it's a bit of a mess so I dug into it a bit more
-myself.
-
-I realized the real problem in this patch set was reusing
-BLK_STS_TARGET. I think I may have used that a long time ago and those
-paths have since been removed. Using it here doesn't quite make sense
-because we end up with those awkward checks (is P2PDMA enabled *and* the
-error is a BLK_STS_TARGET). I don't think that can ever really be
-correct here seeing something could, in theory return BLK_STS_TARGET for
-another reason even when P2PDMA is enabled. So that should be cleaned up.
-
-Instead, I think it makes more sense to introduce a new BLK_STS_P2PDMA
-error and use that. Then we don't need to know if a transaction is
-P2PDMA when processing the result which simplifies patch 6 and 7
-significantly.
-
-I created a basic sketch which demonstrates what I'm thinking here:
-
-https://github.com/lsgunth/linux blk-sts-p2p-err
-
-Feel free to run with that.
-
-(Note: I omitted the narrow_write_error() from the sketch because I
-didn't dig into it enough to understand it. It'll need to be added to
-this, preferably cleaning up the tabbing style a bit.)
-
-Logan
-
-
+--=20
+Thanks,
+Kuai
