@@ -1,126 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2893411F92;
-	Wed, 22 Jul 2026 19:16:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3EDB381EB6;
+	Wed, 22 Jul 2026 19:18:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784747809; cv=none; b=noO/CjfWgAgrdCSpgl2ZmFJ73mv93+CK2TMxH1AEdOUe0f+aJuMnNEY9ty/+3Il6YIr9cUm5DF4qE9OV87nbE5CgleEFLcfWkUeok4u2gYQK0T9I8AYpmj7lDSZSwCpWUEbyvQtIdLO0sRQSYaYPcCz5t4SXnTCsXQNd+Y/og5s=
+	t=1784747940; cv=none; b=Ab32Wxt7DedjfJKm7wDiZVQm/ZzQB0ZkQ3C8xualV0Vr2m1hJqEhfoUyROJJjVW/LAGZxX93PUqFJo8pRJ6ythfsnXwy3u3zpPNRhhrO34Z3LCZNl+THIWd11MI23o7TEnpPAC60kZxwZtTI548d3by+pktcS7BNdJ0Sk2KXZxs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784747809; c=relaxed/simple;
-	bh=zXqpDuaksru2jHIO8DfdyA2NhNdn4G+RQcT5d9ZyVQo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WGhVOOIq50MSpRvm9+lEI5HaMScGzs+/2IltwWE1f7cyGB+R3kZzpNeQXWNIzU/9rLdurfnS4s5uy4JgvJZR5GLPIQqI08iX3U9m0ofwAthZMhz6D5Hx8YL34NbJKlU4dfw05gxlBZYfZOoXjxklZ5j99uLiOjU11rXVjmDm9zY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=buyrAIne; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784747940; c=relaxed/simple;
+	bh=v1VDjxT8i25rfWDR0HJMRa5K/VncR5EaDtE/10jurtA=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=oxpTkb3fW8+WYvzrrrzVjzvXPC/NeWHBYQFVfT/VNGLU0E/1buDx0/vmJtr2ZoB8w2EeWMsQEoJFaKua/z1vb+NTBsJAdInZVpKxTlL8hOj/iqu+moiQNUL2C1E1HkpuIgRw/pL5TCEkWbWvb3oYogC3hVLZ+1qRSHg3s+14ME0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=mQRIs3wk; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="buyrAIne"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AC511F000E9;
-	Wed, 22 Jul 2026 19:16:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784747806;
-	bh=oiKz9Do/vPJ0TfnhlihNppYWPOr/C/hYs9a1jk9QGEw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=buyrAInerrZ832uGlVqiZk1N0nPmL6xcISUbCj2aT4OCOkMvvBjpSmqTodOnyZKnM
-	 k0XZBcuiGZiibM2nk1ZHA6ZUUG5aVxI421dOmqW0UDFoaU9P2FAqNZV4nKdGNho7C3
-	 7DQ2qQ29i4g8RMQO8EmUhV9fIWTKzANimtxHM4A8fKiZWXGYZ0efw6JbDL2lQS7e8C
-	 wHRzJZTtARLCAP/YE4Kvo5K3uza3sNEd5C9NUrxJAAPhqG4jvOHHsPoHtzLyaJ6T95
-	 v79p5JHW5ZpJEp7no4EKUuGSLt0KSsA6Acy4e92PbI9ZrMm32dGtczd5e5W5o6c3X9
-	 CftpETY0EJrmw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 6/9] md/raid1,raid10: keep REQ_NOMERGE on
- narrow_write_error() retry clones
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mykola Marzhan" <mykola@meshstor.io>
-Cc: linux-raid@vger.kernel.org, linux-pci@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260722185841.449934-7-mykola@meshstor.io>
-References: <20260722185841.449934-1-mykola@meshstor.io>
- <20260722185841.449934-7-mykola@meshstor.io>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 22 Jul 2026 19:16:45 +0000
-Message-Id: <20260722191646.3AC511F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="mQRIs3wk"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=d+TcFgqQukObtCSZvW9VgUWZR2p8E5ySHAMVDnChiis=; b=mQRIs3wkfvk8mukQPjS6/uHcq4
+	5tZrNMWxPfrEuKuF3obOH9P+n5ni+wANeG2QV8ZQxeElcgt1o1fQFeTgHuY5qHD4MehFKNjbDQ1nx
+	LMMVNpHW74oJNrb7pa2a65oUPkStLb6kxtmVh3bWDnLnajXYk6L/yJIOgeENrD10BgP1HJGba4Mn3
+	AGcbgO59VYN5xvVe03XYgvcJBUdWqjk5YsNMkg3E8sKPWXNCR7tvaz7NZUxuIwJQzxf/0mpd412FP
+	GeW1wo8P4dZIXeekoOdsD5PWpQopBz8ckA3c+Dv2Xx4jLPm4mqQNm9HCngQKRGoRpDvxbmqURV4CY
+	yuejIiJA==;
+Received: from d172-219-145-25.abhsia.telus.net ([172.219.145.25] helo=[192.168.11.155])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1wmcSm-0000000CaBm-2qki;
+	Wed, 22 Jul 2026 13:18:41 -0600
+Message-ID: <38c44536-51c0-43a1-b83c-b94915890aa2@deltatee.com>
+Date: Wed, 22 Jul 2026 13:18:27 -0600
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: Mykola Marzhan <mykola@meshstor.io>, Jens Axboe <axboe@kernel.dk>,
+ Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
+ Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
+ Guoqing Jiang <guoqing.jiang@linux.dev>, Leon Romanovsky <leon@kernel.org>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
+ Chaitanya Kulkarni <kch@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava
+ <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>,
+ linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20260722185841.449934-1-mykola@meshstor.io>
+ <20260722185841.449934-8-mykola@meshstor.io>
+Content-Language: en-US
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20260722185841.449934-8-mykola@meshstor.io>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.219.145.25
+X-SA-Exim-Rcpt-To: mykola@meshstor.io, axboe@kernel.dk, song@kernel.org, yukuai@fygo.io, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org, magiclinan@didiglobal.com, xiao@kernel.org, guoqing.jiang@linux.dev, leon@kernel.org, jgg@ziepe.ca, kmodukuri@nvidia.com, kch@nvidia.com, bhelgaas@google.com, shivajikant@google.com, praan@google.com, henrique.carvalho@suse.com, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH v4 7/9] md/raid1,raid10: skip futile retries on P2PDMA
+ mapping failures
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
 
-Pre-existing issues:
-- [High] narrow_write_error() incorrectly coerces dataless operations into =
-data-bearing REQ_OP_WRITE states, causing block layer crashes.
---
 
---- Patch [6]: [PATCH v4 6/9] md/raid1,raid10: keep REQ_NOMERGE on narrow_w=
-rite_error() retry clones ---
-commit 4017c1a8ef243dcaefd606ee7c22696e4aaccaa1
-Author: Mykola Marzhan <mykola@meshstor.io>
+On 2026-07-22 12:58, Mykola Marzhan wrote:
+> From: Logan Gunthorpe <logang@deltatee.com>
+> 
+> BLK_STS_P2PDMA reflects the peer/member pairing, not member health:
+> retrying the same pages on the same member cannot succeed.  Keep
+> WriteErrorSeen so the range stays fenced, but skip WantReplacement and
+> FailFast eviction, as commit f7b24c7b41f2 ("md/raid1,raid10: don't fail
+> devices for invalid IO errors") did for BLK_STS_INVAL.
+> 
+> The failure is whole-range and deterministic, so narrow_write_error()'s
+> block-by-block submit_bio_wait() retries are pointless.  Record the
+> whole range as a bad block in the completion handler instead.
+> 
+> Fixes: 02666132403a ("md: propagate BLK_FEAT_PCI_P2PDMA from member devices to RAID device")
+> Assisted-by: Claude:claude-fable-5
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Co-developed-by: Mykola Marzhan <mykola@meshstor.io>
+> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
+> ---
+>  drivers/md/raid1-10.c |  3 +++
+>  drivers/md/raid1.c    | 12 +++++++++---
+>  drivers/md/raid10.c   |  8 +++++++-
+>  3 files changed, 19 insertions(+), 4 deletions(-)
 
-md/raid1,raid10: keep REQ_NOMERGE on narrow_write_error() retry clones
+Maybe drop my authorship from this patch. I only did the first hunk and
+don't fully understand the bulk of it.
 
-This commit fixes a missing REQ_NOMERGE flag on P2PDMA retry clones in
-narrow_write_error(). It ensures that member queues do not merge P2PDMA
-segments incorrectly when a bio is retried after a write error.
 
+> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+> index cee21452e066..89daf8558251 100644
+> --- a/drivers/md/raid1-10.c
+> +++ b/drivers/md/raid1-10.c
+> @@ -309,6 +309,9 @@ static inline void raid1_write_error(struct mddev *mddev, struct md_rdev *rdev,
+>  {
+>  	set_bit(WriteErrorSeen, &rdev->flags);
+>  
+> +	if (bio->bi_status == BLK_STS_P2PDMA)
+> +		return;
+> +
+>  	if (!test_and_set_bit(WantReplacement, &rdev->flags))
+>  		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>  
 > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 19c4dec450de..917d694ef401 100644
 > --- a/drivers/md/raid1.c
 > +++ b/drivers/md/raid1.c
-> @@ -2561,6 +2561,9 @@ static void narrow_write_error(struct r1bio *r1_bio=
-, int i)
->  		}
-> =20
->  		wbio->bi_opf =3D REQ_OP_WRITE;
-> +		/* Keep P2PDMA retry bios unmergeable, like the original */
-> +		if (md_bio_is_p2pdma(wbio))
-> +			wbio->bi_opf |=3D REQ_NOMERGE;
+> @@ -2624,10 +2624,16 @@ static void handle_write_finished(struct r1conf *conf, struct r1bio *r1_bio)
+>  			 * narrow down and record precise write
+>  			 * errors.
+>  			 */
+> +			struct md_rdev *rdev = conf->mirrors[m].rdev;
+> +
+>  			fail = true;
+> -			narrow_write_error(r1_bio, m);
+> -			rdev_dec_pending(conf->mirrors[m].rdev,
+> -					 conf->mddev);
+> +			/* Mapping failures are whole-range and deterministic */
 
-[Severity: High]
-This is a pre-existing issue, but does setting wbio->bi_opf unconditionally=
- to
-REQ_OP_WRITE here cause a NULL pointer dereference for dataless requests?
+I'm not sure I follow the point of this new comment here.
 
-If the array is processing a REQ_OP_SECURE_ERASE request (which has bi_size=
- > 0
-but bi_io_vec is NULL) and hits a write error, narrow_write_error() will fo=
-rce
-the operation to REQ_OP_WRITE. Because REQ_OP_WRITE expects a data vector, =
-the
-subsequent call to bio_trim() in this loop will attempt to advance a NULL
-bi_io_vec during chunk iteration, resulting in a crash.
 
->  		wbio->bi_iter.bi_sector =3D r1_bio->sector;
->  		wbio->bi_iter.bi_size =3D r1_bio->sectors << 9;
+Thanks,
 
-[ ... ]
+Logan
 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -2823,6 +2823,9 @@ static void narrow_write_error(struct r10bio *r10_b=
-io, int i)
->  		wbio->bi_iter.bi_sector =3D wsector +
->  				   choose_data_offset(r10_bio, rdev);
->  		wbio->bi_opf =3D REQ_OP_WRITE;
-> +		/* Keep P2PDMA retry bios unmergeable, like the original */
-> +		if (md_bio_is_p2pdma(wbio))
-> +			wbio->bi_opf |=3D REQ_NOMERGE;
-
-[Severity: High]
-This is a pre-existing issue, but similar to the raid1.c case above, could
-this coercion to REQ_OP_WRITE crash lower-level drivers?
-
-If a REQ_OP_SECURE_ERASE request hits a write error and is retried here,
-wbio->bi_opf is overridden to REQ_OP_WRITE before calling submit_bio_wait().
-When this malformed write bio with a NULL bi_io_vec is sent to lower layers
-(like NVMe or SCSI), it can cause a panic during DMA mapping since those
-drivers expect a valid bvec for REQ_OP_WRITE.
-
-> =20
->  		if (submit_bio_wait(wbio) &&
->  		    !rdev_set_badblocks(rdev, wsector, sectors, 0)) {
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260722185841.4499=
-34-1-mykola@meshstor.io?part=3D6
