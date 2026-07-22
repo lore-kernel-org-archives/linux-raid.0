@@ -1,145 +1,165 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22FEF470E8A;
-	Wed, 22 Jul 2026 19:19:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDC2C470E8A;
+	Wed, 22 Jul 2026 19:20:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784747978; cv=none; b=vCN7zFSjYp9P7u/Zg+W+1rpTDH6/xdXe68i1SWKL1OzfSSTxwxLit6gh3By5t1QX9SBGP9e3vr1Z9nWrswdUqQRkPcyYVA4omWY3K63t103hUkWbd4VH+MKpXx1JfQJHjhvKLhhvmOCTexnDAXuxMYFW8qLm0oteac2BaJWfiDs=
+	t=1784748040; cv=none; b=hbnJf4ivdPUjxbIV6jt2xltsw/J481qoKDpSohJdkPYWU+2RHkpi+SIc+5fPZqogz2IYtP7fLHYFpU+Bu931RXcOTVcqu8QXXaXEFn+YVZZJNLmgkofDxNccOLcxD/uk0gg/KGRXuCjsMYb4tq4gdtQyZ7AqCCtKmiBiOJmUH6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784747978; c=relaxed/simple;
-	bh=w4ohT//4srnT//XbpT91/xlrNycZFUuC2JhcXtoooJg=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=PaSwlxNDImrC8w6dJYMCuO+XUoKj7KJ+s1VyUFmQX5CgYBNBgMvcp/iu2CqNiIcsyqESxkz9VMzrDVLYkY/abTRWoFfJ245TFeLCJLQ/DjUm2CfqHlG8OrM2hDuyULK31udEClKayEbJiWZ3x6WTIqEfg6YSOtVsNwukQroNZV8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=cRN/668f; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1784748040; c=relaxed/simple;
+	bh=eg8pLUwVLVPA/yVBDNNOlsmabbZvAA49CbsGyaQuL5w=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=HEM8wA7dsjSGlSHO8FKWffy87mid020oiCVYwJgoF1skdPF5AV1bxmSP3wbGu+bcxtcI2avgVQwc7rLMTRQK6MAVesswIWHbctdyiVUDW3k4DMhQCvsLmqTH7PxtAgeCjaGCgC9cmd2zR8ERoR+NKmXDLLRw6ZULha/NcS49Cc4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JS6leCF9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="cRN/668f"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=Ag7JybFwd1Hljy8FXU4GMOuS37EW2IpYIz19SCB7FmY=; b=cRN/668fxd1DGWOTgoIoSTt7Te
-	OxVzTKBp/YlJSgXLQ44VW8bAYhP6LezdoIIsBSZDPbBMhcTHoBDQBwDTZsJIRrIG6rEO811rEpRW3
-	T/yPw+BJly9z3pXslNbGadE35GvW2pAu3L5ch9pAsJypoHocuFmjMFIghW0LLSaGzacdEUOMs0OxD
-	z4dqjV1HobwfKr6gefBIPdEjPf+ERneFK22S7t4yBFTT4Co5bYJwoPzbD4fFNZNAMzT3TuHmHTHH9
-	MK8ozXJ4XCbUq2QsGfp1Q246wH1X5JybsmZKLSCRuPHk9IrxvyCmSMyKQza7yR/BxC2zvhLIH6h7f
-	lfN4z2cw==;
-Received: from d172-219-145-25.abhsia.telus.net ([172.219.145.25] helo=[192.168.11.155])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1wmcTa-0000000CaCN-19fj;
-	Wed, 22 Jul 2026 13:19:31 -0600
-Message-ID: <536428fd-9c23-45c3-be0a-5eaaf8f3939a@deltatee.com>
-Date: Wed, 22 Jul 2026 13:19:29 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JS6leCF9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E4631F000E9;
+	Wed, 22 Jul 2026 19:20:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784748038;
+	bh=qN7gQzfJG7zTzZ8AXbhBDczYb83olBLvlhCwun1q6TY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=JS6leCF9DuZhJp+o4OfkdoBMbBKzZ93nd+WvcYYWXKzYlrxa7j6aNk+8eXz3gVdcg
+	 eVJIvunsBKdbYlkdF7T7ttEOKAOPK3QbEO/QxKGWowVKhmCNkwgPu4g/YYaNMC0Zr5
+	 6OYPfduwGcAEkjUAFvd9LxJlV+GNvkv5zsdDEgx93aFdb6pj6ceDxQ3szR2RWUMsVf
+	 5P1LSKBAxY3TQGgJ02EcXGSK4B1QVscRzAKglbkoEeGwfzA4vZYAJbeyQpTtsp4w7T
+	 BBJluJTy9UJqqmIUm5foIZJfXznYK1jcR0GrKRFcWyUC+wtCvv4x+YmkL65HEovslo
+	 /72aYWRfyphZA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 9/9] nvme-rdma: return BLK_STS_P2PDMA for unsupported
+ P2P transfers
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Mykola Marzhan" <mykola@meshstor.io>
+Cc: yukuai@fygo.io, linux-pci@vger.kernel.org, linux-raid@vger.kernel.org
+In-Reply-To: <20260722185841.449934-10-mykola@meshstor.io>
+References: <20260722185841.449934-1-mykola@meshstor.io>
+ <20260722185841.449934-10-mykola@meshstor.io>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 22 Jul 2026 19:20:37 +0000
+Message-Id: <20260722192038.2E4631F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Mykola Marzhan <mykola@meshstor.io>, Jens Axboe <axboe@kernel.dk>,
- Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
- Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
- Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
- Guoqing Jiang <guoqing.jiang@linux.dev>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
- Chaitanya Kulkarni <kch@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava
- <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>,
- linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260722185841.449934-1-mykola@meshstor.io>
- <20260722185841.449934-9-mykola@meshstor.io>
-Content-Language: en-US
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260722185841.449934-9-mykola@meshstor.io>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.219.145.25
-X-SA-Exim-Rcpt-To: mykola@meshstor.io, axboe@kernel.dk, song@kernel.org, yukuai@fygo.io, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org, magiclinan@didiglobal.com, xiao@kernel.org, guoqing.jiang@linux.dev, leon@kernel.org, jgg@ziepe.ca, kmodukuri@nvidia.com, kch@nvidia.com, bhelgaas@google.com, shivajikant@google.com, praan@google.com, henrique.carvalho@suse.com, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v4 8/9] md/raid1,raid10: set IO_BLOCKED in case of
- BLK_STS_P2PDMA
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
 
+New issues:
+- [High] Calling nvme_start_request() after mapping the data for DMA causes=
+ stale metadata to be read by the RDMA device on non-coherent architectures.
 
-On 2026-07-22 12:58, Mykola Marzhan wrote:
-> From: Logan Gunthorpe <logang@deltatee.com>
-> 
-> A read that fails with BLK_STS_P2PDMA cannot succeed against that
-> member, so mark the leg IO_BLOCKED and let the retry redirect elsewhere.
-> Skip the read-error machinery: there is nothing on the medium to fix,
-> fix_read_error()'s probe reads into host pages and would "succeed", and
-> charging the read-error budget would evict a healthy member under a P2P
-> read workload.  FailFast eviction is skipped for the same reason -- the
-> request never reached the wire.
-> 
-> Fixes: 02666132403a ("md: propagate BLK_FEAT_PCI_P2PDMA from member devices to RAID device")
-> Assisted-by: Claude:claude-fable-5
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Co-developed-by: Mykola Marzhan <mykola@meshstor.io>
-> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
-> ---
->  drivers/md/raid1.c  | 4 +++-
->  drivers/md/raid10.c | 5 ++++-
->  2 files changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 917d694ef401..76a1426e64f0 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2658,6 +2658,8 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
->  {
->  	struct md_rdev *rdev = conf->mirrors[r1_bio->read_disk].rdev;
->  	struct bio *bio = r1_bio->bios[r1_bio->read_disk];
-> +	/* evaluate before the bio_put() below */
-> +	bool p2pdma_error = bio->bi_status == BLK_STS_P2PDMA;
->  	struct mddev *mddev = conf->mddev;
->  	sector_t sector;
->  
-> @@ -2675,7 +2677,7 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
->  	 * read error.  This is all done synchronously while the array is
->  	 * frozen.
->  	 */
-> -	if (mddev->ro) {
-> +	if (mddev->ro || p2pdma_error) {
->  		r1_bio->bios[r1_bio->read_disk] = IO_BLOCKED;
->  	} else if (test_bit(FailFast, &rdev->flags)) {
->  		md_error(mddev, rdev);
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 9045a3f02dae..e35aeac29f06 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -2848,6 +2848,7 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
->  {
->  	int slot = r10_bio->read_slot;
->  	struct bio *bio;
-> +	bool p2pdma_error;
->  	struct r10conf *conf = mddev->private;
->  	struct md_rdev *rdev = r10_bio->devs[slot].rdev;
->  
-> @@ -2860,10 +2861,12 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
->  	 * frozen.
->  	 */
->  	bio = r10_bio->devs[slot].bio;
-> +	/* evaluate before the bio_put() below */
-> +	p2pdma_error = bio->bi_status == BLK_STS_P2PDMA;
+Pre-existing issues:
+- [Critical] Accessing `rq` and `req->sqe.dma` in the error path after `nvm=
+e_host_path_error(rq)` completes and frees the request.
+- [High] Returning BLK_STS_IOERR or BLK_STS_P2PDMA directly to the block la=
+yer after nvme_start_request() has been called leaks the multipath nr_activ=
+e counter and I/O stats.
+--
 
-I see why we needed to add the p2pdma_error variable now. I guess I
-missed that. But can we maybe do both raid10 and raid1 the same even if
-it means moving the `bio =` line up a bit? I think it would be better to
-move the code more towards similarity with raid1 instead of diverging it
-further. Maybe someday it can be cleaned up into more common code and
-that will be easier if we make both changes the same.
+--- Patch [9]: [PATCH v4 9/9] nvme-rdma: return BLK_STS_P2PDMA for unsuppor=
+ted P2P transfers ---
+commit 53acbc82938f48638ba2fe9095582a69fb22439e
+Author: Mykola Marzhan <mykola@meshstor.io>
 
-Thanks,
+nvme-rdma: return BLK_STS_P2PDMA for unsupported P2P transfers
 
-Logan
+When the PCIe topology cannot route a P2P transfer between two devices,
+the DMA layer fails the mapping with -EREMOTEIO, but ib_dma_map_sg()
+returns 0 and the error is lost. nvme-rdma then fails the I/O with a
+retryable status, so multipath requeues it forever and a single path
+wastes its whole retry budget on an I/O that can never succeed.
+
+> diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
+> index 6909e35427942..2f50509a7a616 100644
+> --- a/drivers/nvme/host/rdma.c
+> +++ b/drivers/nvme/host/rdma.c
+[ ... ]
+> @@ -2026,8 +2029,6 @@ static blk_status_t nvme_rdma_queue_rq(struct blk_m=
+q_hw_ctx *hctx,
+>  	if (ret)
+>  		goto unmap_qe;
+> =20
+> -	nvme_start_request(rq);
+> -
+>  	if (IS_ENABLED(CONFIG_BLK_DEV_INTEGRITY) &&
+>  	    queue->pi_support &&
+>  	    (c->common.opcode =3D=3D nvme_cmd_write ||
+> @@ -2039,11 +2040,13 @@ static blk_status_t nvme_rdma_queue_rq(struct blk=
+_mq_hw_ctx *hctx,
+> =20
+>  	err =3D nvme_rdma_map_data(queue, rq, c);
+>  	if (unlikely(err < 0)) {
+> -		dev_err(queue->ctrl->ctrl.device,
+> -			     "Failed to map data (%d)\n", err);
+> +		dev_err_ratelimited(queue->ctrl->ctrl.device,
+> +				    "Failed to map data (%d)\n", err);
+>  		goto err;
+>  	}
+> =20
+> +	nvme_start_request(rq);
+> +
+
+[Severity: High]
+Does moving nvme_start_request() here cause stale metadata to be read on
+non-coherent architectures?
+
+nvme_start_request() invokes blk_integrity_prepare(), which writes to the PI
+metadata buffer via the CPU. Since this now happens after the metadata has
+already been mapped for DMA in nvme_rdma_map_data(), these CPU writes won't
+be flushed to main memory before the RDMA device accesses them.
+
+>  	sqe->cqe.done =3D nvme_rdma_send_done;
+> =20
+>  	ib_dma_sync_single_for_device(dev, sqe->dma,
+> @@ -2063,6 +2066,9 @@ static blk_status_t nvme_rdma_queue_rq(struct blk_m=
+q_hw_ctx *hctx,
+>  		ret =3D nvme_host_path_error(rq);
+
+[Severity: Critical]
+This is a pre-existing issue, but does this lead to a use-after-free?
+
+nvme_host_path_error() synchronously completes the request via
+__nvme_complete_rq(), freeing it back to the block layer where it can be
+immediately reallocated.
+
+The error path then continues to dereference rq and req->sqe.dma:
+
+	nvme_cleanup_cmd(rq);
+unmap_qe:
+	ib_dma_unmap_single(dev, req->sqe.dma, sizeof(struct nvme_command),
+			    DMA_TO_DEVICE);
+
+Could this corrupt the newly reallocated request if it's reused by another =
+CPU?
+
+>  	else if (err =3D=3D -ENOMEM || err =3D=3D -EAGAIN)
+>  		ret =3D BLK_STS_RESOURCE;
+> +	/* Peer memory unreachable from this device: don't retry. */
+> +	else if (err =3D=3D -EREMOTEIO)
+> +		ret =3D BLK_STS_P2PDMA;
+>  	else
+>  		ret =3D BLK_STS_IOERR;
+>  	nvme_cleanup_cmd(rq);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does returning an error stat=
+us
+directly to the block layer after nvme_start_request() leak multipath
+counters?
+
+When nvme_start_request() is executed, it increments the queue depth counter
+(nr_active) and starts I/O accounting via nvme_mpath_start_request().
+
+If the driver then returns an error status (like BLK_STS_P2PDMA or
+BLK_STS_IOERR) to blk-mq, blk-mq completes the request directly, bypassing =
+the
+driver's nvme_mpath_end_request() hook. This permanently leaks the nr_active
+counter.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260722185841.4499=
+34-1-mykola@meshstor.io?part=3D9
