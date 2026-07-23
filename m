@@ -1,272 +1,134 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7E9537189C
-	for <linux-raid@vger.kernel.org>; Thu, 23 Jul 2026 08:43:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE8C2443AAD
+	for <linux-raid@vger.kernel.org>; Thu, 23 Jul 2026 11:28:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784796241; cv=none; b=I22neKJaiN+xwAzDa1HdhCDBFyEMfaEpO4E1Ju6qqEksfohf00qfhdFt3tD3GBp6DTrP2LuRSbEEeFCJxyXMPf2uTddYfUD3qH3giixT2D+rQqjYyumUB3cQDgOUWhNmCaJTlh7dZXobpQX00TXyTxM6j2cJ3QCK6K6/6I/fAr0=
+	t=1784806082; cv=none; b=RlCpCeHUNFnS1l4IjKKUDL/vfYRaeDIoOVggUzsa+MsywEAozEqWqE8Bv5O93v72gFq5Qung2m/d+T7UvnzCGXsjb/FtqxOgVhbje+r5ZYbjqoHeKeRZrpVCThQ8VXUIznpqGWLkE2225my7OfD1WafUsXiiqfUfV5/kGsgCyZs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784796241; c=relaxed/simple;
-	bh=RbE7d6gsctmm21faRui6ZAI00ChVGPRmhZtvFEqAfIs=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=Fb4WRCD2lVZvJNQzYVmlgc3pTqChQRPk0RX5gyQlpuf6c7G54cFEyh4wMBBceWyXNLUVNG5Kv1n2px9LWbk02YM3ir7YNVpPZUK2i4NE52QzzYcg1IhpVNLyykxIL6pc5JU9nZAQBzC9zHdAwuJhkTltPvHUbXGMjy2tfKJxwBA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WzeiBrjH; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784806082; c=relaxed/simple;
+	bh=odyyg+HPT8/8Rbv0fSnbNWFS2RKUju0DtQyJ04gVCME=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=j2mKhkFfBnd+ZUcR35p51V4bpKiFb2vQnsy4qv2fw+KMAfYdKUJamA0a4CzsmKePyaLybCR95ov/KKMytq36jMTEsr6Xl8f4DaHixXcFSGtkwxN4Xy9OVZqHjjL9v9qglCZ9EAfZzzHcqE/N+Muu+amStLqsOMMprMx6gLgQNCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Idaa5Ug9; arc=none smtp.client-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WzeiBrjH"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-49558ce01afso2629425e9.1
-        for <linux-raid@vger.kernel.org>; Thu, 23 Jul 2026 01:43:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Idaa5Ug9"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-49548e01d02so3025315e9.0
+        for <linux-raid@vger.kernel.org>; Thu, 23 Jul 2026 04:28:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784796234; x=1785401034; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :references:in-reply-to:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=VBogyPWF3oFXvaSdHD3r/gmjurcyzCvj+SpCnxHnxhA=;
-        b=WzeiBrjHbqoGm1QZhJa9n7wocDS6Gi83V7SS7HuywtDlb+a3pbEo4ojEuIrDW8RumU
-         HL0I+rKKfFI8cP9I4rLc8zQhGMuGNCatO5tgz5SPxduAxubgUTYtTaOuxFoJI+95BfBU
-         KwdTd9e2hG08aksFQYur6A20/Xwk9PcaCNvDQVVEbsyZCgVuHY2F/q0/L2T0me743FRy
-         rVo6AzXSwoqkW9AJI0wwgWkLbvZCoyC8a1mm9GyblUcxezWcNSc760EitUr/mKNC11Ub
-         brEbyXO67zEoRE7lA0GazvPjYCXm+V4bkogFE2HVAOny5xirUG+Dktxdpq62o4VCOYxo
-         CLTg==
+        d=suse.com; s=google; t=1784806079; x=1785410879; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=DaeaoMFhGhjg/ZgMyu5VolNB8j2MUtp7YENXxIH2a+Y=;
+        b=Idaa5Ug9jRTwOCDeiLsFlt9dRPRdzAwmtsZRigYdCDmfOntuIznpEt1srchhjBOq5H
+         pLCfAIwUoCmGaM3qp2yzuK3VIn4OfSyDdq3aofwJlAiDD0h/otdZ934mhl1yBGTGl0G2
+         frog2xBL4b+EHpLiSpgnAlYV6t9sRoaIvWtG7cC+oL85JC+wXAxww61LHRZXG75tXxHB
+         /UQXcqyA7Ygdeah5GSJ9IM/4smh18mjVo/UHhrTSusjfVW3bktJeERUMMzxTys9KSVUd
+         IycK5YuDaj4kcSivxoNniF3jRf2GBvHFy71zKE9l2RXfB41XEO6wyWkmAwKLbcTTPA38
+         ekmA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784796234; x=1785401034;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :references:in-reply-to:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=VBogyPWF3oFXvaSdHD3r/gmjurcyzCvj+SpCnxHnxhA=;
-        b=fii4fXz7Hfi5Xi7GYwCigGpkvHnx8/GCW32krXZaQM0wcD9nMY+sZ1TUqKFu4Dq3cR
-         WQ8EaU4Lr4zJxR+tBSRx+ZyMaFn79qwWZyD01dfy9VKah7QLNt4S/pRJ78K5MBlgaR8D
-         FpqMnzkqnVJxWeq1WScno48Vw/8VD/aNLERFgBqFtWZBdvBnxLyrOb9apy54Y5ptiiwX
-         SwlJ2EW5n8M1FrOWc5MPCLtAdT5pQdmsK8thZhNXoR4bnJH8JI9Ys4yGg0FkEqrNEp8o
-         wxSKsDYNENukLkvAeiSZvTd4uhs1q/SZNeSmHIpHAav2qxQZNJSScPr+kThE68+SzjN+
-         RNAw==
-X-Gm-Message-State: AOJu0YwYjGIrM+4Srevkw8xpNjpawN5IWqpKLywJeszsI7dyjTW5RzUc
-	HImEdnJZk/DJOpfdTzHUJGUffZ9AzpucQqOpi41NkqMt2r0y9gB0P5AFYOM8Wg==
-X-Gm-Gg: AR+sD10CMdUaMwX2rgBAcUZE/wtDcYqfYT8BPeHVtTlh3YWmK02xi3En42ZC24HA0wl
-	0cROH9GUZqJnfvwZ+rS2p1YXiJp5aBXZhia3nap7C0UbD/QqDqAhekKZrhmBdUWURgOhrf3MC2t
-	sadWj5q/cLuNnE5UGKKLlBl9yAXrftnl8COe3hBSEbjbAfzTsVoZyQK7xo4F3v+zpexYPRT1Ml1
-	I4WadxWw86ftPm1usL+Q2+F2iaVrLWBpI2wUooDTI2+7j4fkndQYu+cliMxpHhG//gva3k1w7I4
-	BhLAeNtz3iYEc6PQN0VA+ws6+mG4PPr3XkNSMYNUGuuvI9CAwvZb9/Hxu1iAu90OHPrg6OCprJv
-	zfIlYqfhg6IjWx+prqeSEZHHXUR2hq8QyMKgtNckQQSQLG7GTLL46oRRh98JOvEAgqdBFs8hx29
-	MqVj/9vnfL8pdFp9/hvTfL2yrNOkCyfLXx/5+6ZqaU1TFO
-X-Received: by 2002:a05:600c:5657:b0:493:dcad:84da with SMTP id 5b1f17b1804b1-49573cb9344mr14293155e9.1.1784796234031;
-        Thu, 23 Jul 2026 01:43:54 -0700 (PDT)
-Received: from Abds-MacBook-Air.local ([2a02:3037:60f:13ba:30c7:a701:6d69:5fe1])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4956b01a758sm121394035e9.4.2026.07.23.01.43.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2026 01:43:53 -0700 (PDT)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: yu kuai <yukuai@fygo.io>, song@kernel.org, magiclinan@didiglobal.com,
- xiao@kernel.org, axboe@kernel.dk, vverma@digitalocean.com,
- john.g.garry@oracle.com, martin.petersen@oracle.com,
- linux-kernel@vger.kernel.org, yu kuai <yukuai@fygo.io>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: [PATCH v4 7/7] md/raid10: simplify read request error handling
-In-Reply-To: <feae08aa-7ce3-4375-91d0-42d501627908@fygo.io>
-References: <20260710101521.1714-1-abd.masalkhi@gmail.com>
- <20260710101521.1714-8-abd.masalkhi@gmail.com>
- <feae08aa-7ce3-4375-91d0-42d501627908@fygo.io>
-Date: Thu, 23 Jul 2026 10:43:48 +0200
-Message-ID: <m2a4ridrjv.fsf@gmail.com>
+        d=1e100.net; s=20251104; t=1784806079; x=1785410879;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=DaeaoMFhGhjg/ZgMyu5VolNB8j2MUtp7YENXxIH2a+Y=;
+        b=GyesNT5chhy8wWiAlvFAGiFj9n+U6nrOESkXm9M79KBaxE7El8/GvaVLSsnEeyzSex
+         aAdcZ651h7FUzCK+G+y3p4I2ZSQJ/Hf9rJdwK738ewHrKo33D/AVdAd/VOjaKry7i6s0
+         ADRBA50Y69zMV4OwADVk7lASL2KtmTFtyIWI+WZfGzbmL8aOj2XI4oEg6rgpByctRSHo
+         A3EcavJCbLyOpUcFpOaXFzFF+n9PGFdhFzXc06n2WgY9yIgOBVolSsBwPEmqnJ3UbrL1
+         GvGopBJElaiEn8cwqVoKYOJ8wBAfrtWN4uns7HBWyQVn3YnsJu6PYaKb/hiZDlo6bvDa
+         gkeQ==
+X-Forwarded-Encrypted: i=1; AHgh+RrL6Vok+OjorX0VQzpRW70CXhHfrnUU/6DI7ccm1tQ6+3yYma3dJ6J8H71zC4qS41D5oGIK6I8hXCVH@vger.kernel.org
+X-Gm-Message-State: AOJu0YyuhjOOBNl4xiSxNwEmktey9deSoCXVqie08BGzWgetGJdISDKa
+	FKBPQH+OGwXX+c66g6pV1ttFBCJYoiTD2mFbsWZu4VmVMpykzdHFO2fpgNySPnfvuiM=
+X-Gm-Gg: AR+sD10pB3PdTSHAj7j7d+VwT+2kCfy6azVDtW5s0MAg6+8GPaOHZqHW7ChkCZ17pik
+	rvP0Rp8hkVXGUrdLrZu1wKeMk5dZxgXlxD3G2jFLK7a7g8cPRqf28R7WfnSwPY3P9TjMr8d+ZJp
+	UqId+o169KLMsluRFfCRdinRc757Scyl1kMQ/fIuMI66y8VEd2GI8GLyKZrn5G0myItUdu0F4ob
+	nPAp4vxnrW7zlDW80N4dnxRJjKc7tr352sguLSVSnL0yDtPSuaVCn2NJE0vuTkfJzOawPzunbx5
+	zXrccnOXE7E1i28rYWnZx+w1qWzaq5Vygt3XQT7EER8J8qRfeYO7tjOaZUpFudSCEELnVq0bbpl
+	2xbcENJgAfybCkzWgH393kDV8uLHW0Y1aDtTojwc7ZgZ2gK3rn1c1j8/spWbMlG1J8U3OKfL5BU
+	jwITXVoLFYo9YM3s0ArT/xNEFDmNSSiqBdVUX0Mr0CxRD158SZGAAfp7/g+Ioxe8dD1g==
+X-Received: by 2002:a05:600c:1f92:b0:495:4c62:9d43 with SMTP id 5b1f17b1804b1-49573d1ff7bmr28170775e9.34.1784806078926;
+        Thu, 23 Jul 2026 04:27:58 -0700 (PDT)
+Received: from localhost (p200300de37461100f390c52e1c249082.dip0.t-ipconnect.de. [2003:de:3746:1100:f390:c52e:1c24:9082])
+        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-4956a509901sm249432115e9.8.2026.07.23.04.27.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 23 Jul 2026 04:27:58 -0700 (PDT)
+From: Martin Wilck <martin.wilck@suse.com>
+X-Google-Original-From: Martin Wilck <mwilck@suse.com>
+To: Yu Kuai <yukuai@kernel.org>,
+	Song Liu <songliubraving@fb.com>
+Cc: Xiao Ni <xni@redhat.com>,
+	Li Nan <linan122@huawei.com>,
+	linux-raid@vger.kernel.org,
+	Martin Wilck <mwilck@suse.com>
+Subject: [PATCH] md/raid1: create serial pool adding rdev to array with serialize_policy=1
+Date: Thu, 23 Jul 2026 13:27:41 +0200
+Message-ID: <20260723112741.1206836-1-mwilck@suse.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
+The following bug has been observed with kernel 7.1.3 after adding a new
+rdev to an existing RAID1 array that had enabled serialize_policy:
 
-Hi Kuai,
+[ 1754.091836][T19639] Oops: Oops: 0002 [#1] SMP NOPTI
+[ 1754.092679][T19639] CPU: 0 UID: 0 PID: 19639 Comm: ext4lazyinit Not tainted 7.1.3-1-default #1 PREEMPT(full) openSUSE Tumbleweed  b041a6527f6e58424f4cd3de0fade8d408b378fd
+[ 1754.095245][T19639] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS unknown 02/02/2022
+[ 1754.096772][T19639] RIP: 0010:_raw_spin_lock_irqsave+0x27/0x50
+[ 1754.097769][T19639] Code: 90 90 90 f3 0f 1e fa 0f 1f 44 00 00 53 9c 58 0f 1f 40 00 48 89 c3 fa 0f 1f 44 00 00 65 ff 05 c0 bc d8 01 31 c0 ba 01 00 00 00 <3e> 0f b1 17 75 09 48 89 d8 5b e9 85 8d fc fe 89 c6 e8 c3 08 00 00
+[ 1754.100996][T19639] RSP: 0018:ffffcfbbc0a5bab8 EFLAGS: 00010046
+[ 1754.102037][T19639] RAX: 0000000000000000 RBX: 0000000000000212 RCX: 61c8864680b583eb
+[ 1754.103367][T19639] RDX: 0000000000000001 RSI: 000000000000092a RDI: 0000000000004960
+[ 1754.104723][T19639] RBP: ffff8efae2b12700 R08: 00000000ffffffff R09: 0000000000000000
+[ 1754.106038][T19639] R10: ffffffffa0605ac0 R11: 0000000000000001 R12: ffff8efad4199400
+[ 1754.107343][T19639] R13: 0000000000004950 R14: ffff8efaf9164600 R15: 000000000004043e
+[ 1754.108697][T19639] FS:  0000000000000000(0000) GS:ffff8efbdc754000(0000) knlGS:0000000000000000
+[ 1754.110190][T19639] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1754.111280][T19639] CR2: 0000000000004960 CR3: 000000000d830001 CR4: 0000000000770ef0
+[ 1754.112580][T19639] PKRU: 55555554
+[ 1754.113182][T19639] Call Trace:
+[ 1754.113754][T19639]  <TASK>
+[ 1754.114256][T19639]  wait_for_serialization+0xb9/0x260 [raid1 9ad4618e4becc97c5a7140f7aa35cc4730d97dd9]
+[ 1754.115869][T19639]  raid1_make_request+0x762/0xaff [raid1 9ad4618e4becc97c5a7140f7aa35cc4730d97dd9]
+[ 1754.118368][T19639]  md_handle_request+0x1c9/0x2e0 [md_mod a261f96e3d61eb9d00ceb34dc9439cf6487db185]
 
-Thanks for the feedback.
+The raid1.c code calls wait_for_serialization() if the MD_SERIALIZE_POLICY
+is set, and wait_for_serialization assumes that rdev->serial is
+initialized. Normally this will be the case for arrays that have
+the serialize_policy sysfs attribute set to 1.
 
-On Thu, Jul 16, 2026 at 17:52 +0800, yu kuai wrote:
-> Hi,
->
-> =E5=9C=A8 2026/7/10 18:15, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
->> raid10_read_request() currently handles bio completion, barrier
->> handling, and r10_bio lifetime management in several different error
->> paths. This results in duplicated cleanup logic and increases the risk
->> of introducing bugs in future modifications.
->>
->> Make raid10_read_request() return a status to its callers, consolidate
->> the read error paths, and free r10_bio from a single location in the
->> callers. Since the callers allocate r10_bio, they should also be
->> responsible for freeing it when the request fails.
->>
->> This makes the read path follow the same ownership model as the write
->> path and simplifies the error handling flow.
->>
->> Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
->> ---
->> Changes in v4:
->>   - No changes.
->>   - Link to v3: https://lore.kernel.org/linux-raid/20260708101341.473750=
--8-abd.masalkhi@gmail.com/
->>
->> Changes in v3:
->>   - No changes.
->>   - Link to v2: https://lore.kernel.org/linux-raid/20260628142420.105102=
-7-8-abd.masalkhi@gmail.com/
->>
->> Changes in v2:
->>   - Fix a compilation error (bi -> bio).
->>   - Link to v1: https://lore.kernel.org/linux-raid/20260623072456.333437=
--8-abd.masalkhi@gmail.com/
->> ---
->>   drivers/md/raid10.c | 45 +++++++++++++++++++++++++--------------------
->>   1 file changed, 25 insertions(+), 20 deletions(-)
->
-> I don't think patch 6 and 7 are actually simplifications, and 7 in partic=
-ular introduces
-> a fragile dependency I'd rather not take as-is. The diff lines also said =
-this and I'd
-> rather not take as-is.
->
+But when a new rdev is added to an existing array in bind_rdev_to_array(),
+the condition at mddev_create_serial_pool() causes creation of rdev->serial
+to be skipped. Fix it.
 
-I see your point about the fragile dependency, especially in
-handle_read_error(). I'll drop those patchs from this series and revisit
-the cleanup in a future submission if I can find a better approach that
-doesn't introduce that dependency.
+Fixes: 69b00b5bb235 ("md: introduce a new struct for IO serialization")
+Signed-off-by: Martin Wilck <mwilck@suse.com>
+---
+ drivers/md/md.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
->>
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index d94c1f28a6f6..01162c483644 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -1143,7 +1143,7 @@ static bool regular_request_wait(struct mddev *mdd=
-ev, struct r10conf *conf,
->>   	return true;
->>   }
->>=20=20=20
->> -static void raid10_read_request(struct mddev *mddev, struct bio *bio,
->> +static bool raid10_read_request(struct mddev *mddev, struct bio *bio,
->>   				struct r10bio *r10_bio)
->>   {
->>   	struct r10conf *conf =3D mddev->private;
->> @@ -1191,8 +1191,7 @@ static void raid10_read_request(struct mddev *mdde=
-v, struct bio *bio,
->>=20=20=20
->>   	if (!regular_request_wait(mddev, conf, bio, r10_bio->sectors)) {
->>   		bio_wouldblock_error(bio);
->> -		free_r10bio(r10_bio);
->> -		return;
->> +		return false;
->>   	}
->>=20=20=20
->>   	rdev =3D read_balance(conf, r10_bio, &max_sectors);
->> @@ -1202,8 +1201,8 @@ static void raid10_read_request(struct mddev *mdde=
-v, struct bio *bio,
->>   					    mdname(mddev), b,
->>   					    (unsigned long long)r10_bio->sector);
->>   		}
->> -		raid_end_bio_io(r10_bio);
->> -		return;
->> +		bio_io_error(bio);
->> +		goto err_allow_barrier;
->>   	}
->>   	if (err_rdev)
->>   		pr_err_ratelimited("md/raid10:%s: %pg: redirecting sector %llu to an=
-other mirror\n",
->> @@ -1215,10 +1214,8 @@ static void raid10_read_request(struct mddev *mdd=
-ev, struct bio *bio,
->>   		bio =3D bio_submit_split_bioset(bio, max_sectors,
->>   					      &conf->bio_split);
->>   		wait_barrier(conf, false);
->> -		if (!bio) {
->> -			set_bit(R10BIO_Returned, &r10_bio->state);
->> -			goto err_handle;
->> -		}
->> +		if (!bio)
->> +			goto err_dec_pending;
->>=20=20=20
->>   		r10_bio->master_bio =3D bio;
->>   		r10_bio->sectors =3D max_sectors;
->> @@ -1244,10 +1241,16 @@ static void raid10_read_request(struct mddev *md=
-dev, struct bio *bio,
->>   	read_bio->bi_private =3D r10_bio;
->>   	mddev_trace_remap(mddev, read_bio, r10_bio->sector);
->>   	submit_bio_noacct(read_bio);
->> -	return;
->> -err_handle:
->> +
->> +	return true;
->> +
->> +err_dec_pending:
->>   	atomic_dec(&rdev->nr_pending);
->> -	raid_end_bio_io(r10_bio);
->> +
->> +err_allow_barrier:
->> +	allow_barrier(conf);
->> +
->> +	return false;
->>   }
->>=20=20=20
->>   static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *=
-r10_bio,
->> @@ -1538,14 +1541,13 @@ static bool __make_request(struct mddev *mddev, =
-struct bio *bio, int sectors)
->>   	memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) *
->>   			conf->geo.raid_disks);
->>=20=20=20
->> -	ret =3D true;
->>   	if (bio_data_dir(bio) =3D=3D READ)
->> -		raid10_read_request(mddev, bio, r10_bio);
->> -	else {
->> +		ret =3D raid10_read_request(mddev, bio, r10_bio);
->> +	else
->>   		ret =3D raid10_write_request(mddev, bio, r10_bio);
->> -		if (!ret)
->> -			free_r10bio(r10_bio);
->> -	}
->> +
->> +	if (!ret)
->> +		free_r10bio(r10_bio);
->>=20=20=20
->>   	return ret;
->>   }
->> @@ -1875,6 +1877,7 @@ static bool raid10_make_request(struct mddev *mdde=
-v, struct bio *bio)
->>   	sector_t chunk_mask =3D (conf->geo.chunk_mask & conf->prev.chunk_mask=
-);
->>   	int chunk_sects =3D chunk_mask + 1;
->>   	int sectors =3D bio_sectors(bio);
->> +	bool write =3D bio_data_dir(bio) =3D=3D WRITE;
->>=20=20=20
->>   	if (unlikely(bio->bi_opf & REQ_PREFLUSH)
->>   	    && md_flush_request(mddev, bio))
->> @@ -1898,7 +1901,7 @@ static bool raid10_make_request(struct mddev *mdde=
-v, struct bio *bio)
->>   		sectors =3D chunk_sects -
->>   			(bio->bi_iter.bi_sector &
->>   			 (chunk_sects - 1));
->> -	if (!__make_request(mddev, bio, sectors))
->> +	if (!__make_request(mddev, bio, sectors) && write)
->>   		md_write_end(mddev);
->>=20=20=20
->>   	/* In case raid10d snuck in to freeze_array */
->> @@ -2866,7 +2869,9 @@ static void handle_read_error(struct mddev *mddev,=
- struct r10bio *r10_bio)
->>=20=20=20
->>   	rdev_dec_pending(rdev, mddev);
->>   	r10_bio->state =3D 0;
->> -	raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
->> +	if (!raid10_read_request(mddev, r10_bio->master_bio, r10_bio))
->> +		free_r10bio(r10_bio);
->> +
->>   	/*
->>   	 * allow_barrier after re-submit to ensure no sync io
->>   	 * can be issued while regular io pending.
->
-> --=20
-> Thanks,
-> Kuai
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index d1465bcd86c8..baf79c501c9e 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -234,7 +234,8 @@ void mddev_create_serial_pool(struct mddev *mddev, struct md_rdev *rdev)
+ {
+ 	int ret = 0;
+ 
+-	if (rdev && !rdev_need_serial(rdev) &&
++	if (!test_bit(MD_SERIALIZE_POLICY, &mddev->flags) &&
++	    rdev && !rdev_need_serial(rdev) &&
+ 	    !test_bit(CollisionCheck, &rdev->flags))
+ 		return;
+ 
+-- 
+2.51.0
 
---=20
-Best Regards,
-Abd-Alrhman
