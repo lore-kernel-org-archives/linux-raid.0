@@ -1,135 +1,199 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC8283090C5
-	for <linux-raid@vger.kernel.org>; Thu, 23 Jul 2026 14:16:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B96AE43B6FD
+	for <linux-raid@vger.kernel.org>; Thu, 23 Jul 2026 20:42:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784816191; cv=none; b=TAObev6iFyRw4D+gKfWoNv6b2sapigccINebPlJ18iTyDkonr0QXunxXd726LlqvD0XO416viih73PP5nhaZSw39JeTkNhEmlm1uc9BIkQxfKyzmmrcz3rxyiNof2OQLYL6iBGiPaxeTaBDO0p9G3Rj1bBbFIcr8XKKeqUT/ixI=
+	t=1784839383; cv=none; b=Zdho+IjHpxXPOhDcx4/skfgzsegtIQqJQxfS4VG5mD2k07yrG/KbONg8dm4MNroCRC4xOf7Dd5xkbD6KtUVfAEP0enN4VHMU6F/Zh6rNCNqbYeXkjN/mnsnb4yoRMqmqJZFKt3RNtvH7Ed5eiUMAo9Ggp3NdKDCyA6B4uqXitME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784816191; c=relaxed/simple;
-	bh=jIPxxK0t6c/6GPVTK2bQcU6AZzrhWHMp2MyG+t0uu9s=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Iq6G1Dhp4kcqNW0pxFb+5fC56EauPA8Xdent+4rcRo/z9pxvHuxxnW2iQu2vo3lgpreLpRiYynu2wOJbfIsOvYeXD9ncbbXY38wwObKCqsc8ZsLFe90neKmqvbsur0y72ikCDe9BBJRziVYQku3Co4qI3IuOqU8i8OKZfkQRqnQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 026F31F00A3A;
-	Thu, 23 Jul 2026 14:16:27 +0000 (UTC)
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 3/3] md/raid10: skip clean regions in bulk during
- recovery
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yunye Zhao" <yunye.zhao@linux.alibaba.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260723135535.101995-4-yunye.zhao@linux.alibaba.com>
-References: <20260717062743.128189-1-yunye.zhao@linux.alibaba.com>
- <20260723135535.101995-1-yunye.zhao@linux.alibaba.com>
- <20260723135535.101995-4-yunye.zhao@linux.alibaba.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 14:16:20 +0000
-Message-Id: <20260723141628.026F31F00A3A@smtp.kernel.org>
+	s=arc-20240116; t=1784839383; c=relaxed/simple;
+	bh=duiRRHdzIykrisUAseIhJOxQn/X2Aiz678fZQ0WGdro=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZnuqHqtsXT4pI1ClcB8s8aRD2gczxt0BzfGcmLFhqxuGA72Vre9GAF1HGlbydZNAlzCnZZXjIVADPEA/G92ASSH1+J671cjn4k3apyniyGGa4HWfuhsIogio8FScMpByIiUGK3nmES7Ell5HLWNORVbz1zJZFxUOBW6ZtKbXAaY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=GRRp3Z9O; arc=none smtp.client-ip=209.85.221.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meshstor.io
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="GRRp3Z9O"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-47c2b362ee2so947931f8f.1
+        for <linux-raid@vger.kernel.org>; Thu, 23 Jul 2026 13:42:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=meshstor.io; s=google; t=1784839373; x=1785444173; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=E5idRe2CDp786J3ag0YcRdkJhpW3jRwxGiXDWMRNXt4=;
+        b=GRRp3Z9OchYW9aYVO2Z5s4bG+ngjTlLw9V/1GOLi/ER7ZRSMR1kDntz2NBmZW6UdsX
+         A423uxBjPyl5vs8fDoa3yGtnSmrTO2LPBDV3GYHtDwOzSowGDBbMl56bY+yLeuc3L4+a
+         N83TaUE92jVEeDeHQE2vmzszgdY2pXLvM81SCH0KqhE5QdnLZmlMcxugU/96mFYgcuKE
+         k3E5ZeBQltBrS0HVv0Q299axZhbfr21TF8stCmc7a1n2e2CtRK5dUDAP2+tidTk0iDgJ
+         SQBkUEjHEwSuWPr/lrAcbCRy/8LSHn4Leya87/Ayt/4ZnVEECxuu/wkzsRy6FyF6kCbR
+         D2nw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784839373; x=1785444173;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=E5idRe2CDp786J3ag0YcRdkJhpW3jRwxGiXDWMRNXt4=;
+        b=NXsAckIXyOk9NDO2FPLpU04nj+voj+VeqbRqGT3dD8JSGFgfjyHLSQF0m57MarZ6LO
+         wRxnn1mhAekLO6ARCrpMm6JXjdoXPnJiP2xU/i0/MH0mx0atl8QHvfDx1Mh9z3BF3N5H
+         ysXYzRnXGDsJMfjAH3jJGb+BeODg985hV/76gcKkg7xa+63mCfGLvTX3PtxVGN9Kn716
+         iE4+m3MQ/lJPkxczyVZLHANWJXR2QSGn61Q4TvU0NSB/y+trKs/VgPggThrP2H+y8/wn
+         esKUQdl7iORpPjsaXlK/uWsr5hVXpZRUGZDxMFn2+Z1QPC6wL+7zAnwva4lGPeeSUV1q
+         iP0Q==
+X-Forwarded-Encrypted: i=1; AHgh+RraGUbwwcsm57Rvj/2m5DZvnTkPf93xecQsaSQ6NOQVacFix8ABxmt02R8e+bPtvrmMCPqWSvQ5rOjN@vger.kernel.org
+X-Gm-Message-State: AOJu0YzE6R9pPA/8crPllD4NkrjrDQ7Waxe4RFDDuvmIQzYECNc+9BGd
+	ae57ug8ffDAw4MMkimkRjy2qFSGrAWLhRV05paWu8d0gkyXVy3Q2MZ1tAMaLca0hAg==
+X-Gm-Gg: AR+sD13Hv2SC8T4m1cZij0o2eUpEeLhxl3wTOoQ5qfb/G24pZAPI4H7JdgBzsKxuv/l
+	aBzoCXzUladW31XSO305KQCSFnnaOWYOfG4Pu8zmnX1k8lCpkrOz7W54mHgv1GrJVfmPp8YoiN0
+	1/RlB93sktjqZG9bQayBfiw9uceIKP1HP/3Xt6394CaQ9rFlzdC0YZiB9/1LLu+nbYHwfnzrpJn
+	ekWUBZ1FJ6vyylvYfbckr+upOZXAWu105v76KBi76v+WHx6evvrUZr4q7HX1oDrvWlUm1vHmdhX
+	tr3SUKCVTLUGJSbEGEuyjP7sPxBdsA0HaxVKs2T3uzuG+zHkqPB6HWpBmXfFwDimQWEhTd8TJ7+
+	bNC1klds0dLXLcLsz54Zwrn+H1v2jGKnVkRKpIkKpLQ9TNlJvwBmGS+mwxyNeBT+Mo4YV2jzScV
+	So/MPYeuoHB7iGilAWGYg8Da7Gfb+m9ena35p5GyuHXzLROVOAXzPZMiqPsrkGcE8PPwC6IA7AB
+	7tGd6N7MwWV1jQyNFEvGIeO5sGiACjdLXmyTjiTxA==
+X-Received: by 2002:a05:6000:46d4:b0:47f:93b9:b76c with SMTP id ffacd0b85a97d-47f93b9b770mr1881409f8f.56.1784839373145;
+        Thu, 23 Jul 2026 13:42:53 -0700 (PDT)
+Received: from meshstor-pc ([185.87.42.56])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85c52fc0sm18268192f8f.23.2026.07.23.13.42.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Jul 2026 13:42:52 -0700 (PDT)
+From: Mykola Marzhan <mykola@meshstor.io>
+To: Jens Axboe <axboe@kernel.dk>,
+	Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>,
+	Keith Busch <kbusch@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	linux-block@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	Guoqing Jiang <guoqing.jiang@linux.dev>,
+	Leon Romanovsky <leon@kernel.org>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shivaji Kant <shivajikant@google.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Henrique Carvalho <henrique.carvalho@suse.com>,
+	stable@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-rdma@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v5 00/10] block,md,nvme: correct handling of unsupported P2PDMA transfers
+Date: Thu, 23 Jul 2026 22:41:56 +0200
+Message-ID: <20260723204206.76930-1-mykola@meshstor.io>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+md treats an unsupported P2PDMA transfer to a member as success, and
+nvme-rdma retries one forever.  Whether peer memory can be DMA-mapped
+depends on the PCIe topology between the two devices, and since v6.17
+the failure completes as BLK_STS_INVAL: retryable for multipath and
+deliberately ignored by md for member failures, so mirrors silently
+diverge.
 
-Pre-existing issues:
-- [Critical] Fallback to an unscaled `max_sync` mixes array and device sect=
-ors, overshooting the recovery cursor and silently skipping dirty sectors.
---
+v1-v3 restored BLK_STS_TARGET for these failures and tagged P2PDMA
+bios in md.  Logan Gunthorpe proposed a dedicated BLK_STS_P2PDMA
+instead, so no consumer needs to know whether an I/O was P2P, and
+wrote the core patches; v5 is built on them.  Patches 1 and 5 are
+his and keep his authorship.
 
---- Patch [3]: [PATCH v2 3/3] md/raid10: skip clean regions in bulk during =
-recovery ---
-commit 4abce2392f76451810793b3efca0299da30d9898
-Author: Yunye Zhao <yunye.zhao@linux.alibaba.com>
+  1  block: add BLK_STS_P2PDMA (stable, v6.17)
+  2  md: ensure REQ_NOMERGE is set on P2PDMA bios
+  3  md/raid1: serialize non-write-behind writes on CollisionCheck
+     rdevs (pre-existing bug patch 4 would widen; stable)
+  4  md/raid1: no write-behind for P2PDMA bios
+  5  md/raid1,raid10: factor out raid1_write_error() helper
+  6  md/raid1,raid10: keep REQ_NOMERGE on narrow_write_error()
+     retry clones
+  7  md/raid1,raid10: skip futile retries on P2PDMA mapping
+     failures
+  8  md/raid1,raid10: set IO_BLOCKED in case of BLK_STS_P2PDMA
+  9  nvme-rdma: use ib_dma_map_sgtable_attrs() (stable, v7.1;
+     dependency of patch 10)
+ 10  nvme-rdma: return BLK_STS_P2PDMA (stable, v7.1; needs patches
+     1 and 9)
 
-md/raid10: skip clean regions in bulk during recovery
+Routing: patch 1 block, 2-8 md, 9-10 nvme; 7, 8 and 10 use the new
+status.  Patch 1 alone stops the divergence and the dm-multipath
+requeue loop; the nvme-rdma loop also needs 9-10; everything else
+refines the fallout, so the series bisects safely.  The md patches
+fix a v7.2-rc1 regression (02666132403a), except 3 (older bug,
+stable) and 5 (refactor).
 
-During recovery of a degraded RAID10 array with a mostly-clean bitmap, this
-patch calculates the skipped clean span in bulk. It tracks the minimum clean
-span across skipped devices, converts it to device sectors, and skips it in
-one step to reduce CPU spinning.
+Tested with the QEMU raid1/raid10 error matrix and a ConnectX-4 Lx.
+After patch 1, block-layer error injection accepts status=P2PDMA, so
+the md completion paths can be exercised on any member with no P2P
+hardware.  The patches were developed with AI assistance (see the
+Assisted-by trailers); all code was human-reviewed and tested.
 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 54cddb3a98cd6..8acbd5ef618b4 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
+Against v7.2-rc4 (Logan's base).
 
-[ ... ]
+Changes in v5:
+ - patches 7, 8: From: is now Mykola (Logan's request)
+   Logan keeps Signed-off-by on both, Co-developed-by on 8
+ - patch 8: raid10 declares bio up front and bi_status sits in a
+   blk_status_t local in both files.
+ - old patch 9 split: 9 is the mechanical sgtable conversion,
+   10 the -EREMOTEIO -> BLK_STS_P2PDMA translation; both stable
+   since 10 needs 9
 
-> @@ -3514,6 +3530,8 @@ static sector_t raid10_sync_request(struct mddev *m=
-ddev, sector_t sector_nr,
->  			}
->  		}
->  		if (biolist =3D=3D NULL) {
-> +			sector_t skip_sectors =3D max_sync;
-> +
->  			while (r10_bio) {
->  				struct r10bio *rb2 =3D r10_bio;
->  				r10_bio =3D (struct r10bio*) rb2->master_bio;
-> @@ -3521,7 +3539,29 @@ static sector_t raid10_sync_request(struct mddev *=
-mddev, sector_t sector_nr,
->  				put_buf(rb2);
->  			}
->  			*skipped =3D 1;
-> -			return max_sync;
-> +
-> +			/*
-> +			 * min_sync_blocks is in array sectors, but the return
-> +			 * value advances the per-device cursor; for a near
-> +			 * layout the two spaces differ by the factor
-> +			 * raid_disks / near_copies.
-> +			 */
-> +			if (!missing_source &&
-> +			    conf->geo.far_copies =3D=3D 1 && !conf->geo.far_offset &&
-> +			    conf->geo.raid_disks % conf->geo.near_copies =3D=3D 0 &&
-> +			    min_sync_blocks !=3D MaxSector) {
-> +				sector_t clean_sectors =3D min_sync_blocks;
-> +
-> +				clean_sectors *=3D conf->geo.near_copies;
-> +				sector_div(clean_sectors, conf->geo.raid_disks);
-> +				clean_sectors &=3D ~chunk_mask;
-> +				if (clean_sectors > sync_end - sector_nr)
-> +					clean_sectors =3D sync_end - sector_nr;
-> +				if (clean_sectors > skip_sectors)
-> +					skip_sectors =3D clean_sectors;
-> +			}
-> +
-> +			return skip_sectors;
+Changes in v4:
+ - new BLK_STS_P2PDMA (Logan) replaces restoring BLK_STS_TARGET; the
+   R1BIO_P2PDMA/R10BIO_P2PDMA state bits are gone and the md changes
+   shrink to completion-time status tests
+ - blk_dma_map_iter_start() gets the explicit
+   PCI_P2PDMA_MAP_NOT_SUPPORTED case (Logan's patch; v3 kept
+   default: only)
+ - write completions record the whole failed range as bad blocks
+   instead of narrow_write_error()'s per-block retries; v3's coarse
+   retry is gone -- the new status is deterministic, nothing to
+   re-attempt
+ - read path: bi_status is evaluated before bio_put()
 
-[Severity: Critical]
-This is a pre-existing issue, but does returning the unscaled max_sync mix
-array and device sectors here?
+Link: https://lore.kernel.org/linux-raid/20260718162547.448892-1-mykola@meshstor.io/ [v1]
+Link: https://lore.kernel.org/linux-raid/20260719105327.864949-1-mykola@meshstor.io/ [v2]
+Link: https://lore.kernel.org/linux-raid/20260721174502.111503-1-mykola@meshstor.io/ [v3]
+Link: https://lore.kernel.org/linux-raid/20260722185841.449934-1-mykola@meshstor.io/ [v4]
+Link: https://lore.kernel.org/linux-raid/9f846c85-f427-433a-b87d-8e9e3a4406e7@deltatee.com/ [Logan's proposal]
 
-When recovering a degraded RAID10 array, md_bitmap_start_sync() returns
-sync_blocks in array sectors, which is then assigned to max_sync.
+Logan Gunthorpe (2):
+  block: add BLK_STS_P2PDMA for unsupported peer-to-peer transfers
+  md/raid1,raid10: factor out raid1_write_error() helper
 
-If a clean span is small or not chunk-aligned, the truncation:
+Mykola Marzhan (8):
+  md: ensure REQ_NOMERGE is set on P2PDMA bios
+  md/raid1: serialize non-write-behind writes on CollisionCheck rdevs
+  md/raid1: don't use write-behind for P2PDMA bios
+  md/raid1,raid10: keep REQ_NOMERGE on narrow_write_error() retry clones
+  md/raid1,raid10: skip futile retries on P2PDMA mapping failures
+  md/raid1,raid10: set IO_BLOCKED in case of BLK_STS_P2PDMA
+  nvme-rdma: use ib_dma_map_sgtable_attrs()
+  nvme-rdma: return BLK_STS_P2PDMA for unsupported P2P transfers
 
-    clean_sectors &=3D ~chunk_mask;
+ block/blk-core.c          |  3 +++
+ block/blk-mq-dma.c        |  3 ++-
+ drivers/md/md.c           | 10 +++++++--
+ drivers/md/md.h           | 15 +++++++++++++
+ drivers/md/raid1-10.c     | 16 +++++++++++++
+ drivers/md/raid1.c        | 47 +++++++++++++++++++++++----------------
+ drivers/md/raid10.c       | 27 +++++++++++-----------
+ drivers/nvme/host/rdma.c  | 38 ++++++++++++++++++-------------
+ include/linux/blk_types.h | 10 +++++++++
+ 9 files changed, 118 insertions(+), 51 deletions(-)
 
-can force the scaled clean_sectors to 0. When that happens, the condition:
 
-    if (clean_sectors > skip_sectors)
-        skip_sectors =3D clean_sectors;
+base-commit: 1590cf0329716306e948a8fc29f1d3ee87d3989f
+-- 
+2.52.0
 
-fails, leaving skip_sectors as the unscaled max_sync value.
-
-Because raid10_sync_request() then returns skip_sectors (an array-sector
-distance) to advance the physical per-device cursor in md_do_sync(), could
-the physical cursor overstep the actual clean physical span?
-
-For layouts where array sectors advance faster than device sectors
-(e.g., near_copies > 1), won't this silently skip dirty sectors and leave
-mirrors out of sync?
-
->  		}
->  	} else {
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723135535.1019=
-95-1-yunye.zhao@linux.alibaba.com?part=3D3
