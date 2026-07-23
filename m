@@ -1,204 +1,197 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04AA43F58E1;
-	Thu, 23 Jul 2026 21:13:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 249553F5BDA;
+	Thu, 23 Jul 2026 21:19:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784841193; cv=none; b=HE+rU6ywboSjf3XGFsfUWHQM2b7JKe4ru33pLI4ylpq8b/d3DfRCRvxbw3PX5QmegGkLYIYpDPGx9xfgpnm/vDqrRde0feND1U+JfoZ/tAwqk9nb757+H4/hWemIr5NjSC0MfLfwf637F9FeVcNzvsj2vdoLN5lZXw64kVhrssc=
+	t=1784841581; cv=none; b=S2csCWDRbJ7F33F1LT2v00hoPuNDzsDRiamsPaRFzG+LdoG39ZxYMpqgiqLMzLZ8hL9aDbSrU2gTKmvf15Sjs4h/8F5030t0v/kDsdDIUEfoirXgpr6s9XhJXV7+LAKUlkVPeIKuxR7CjaqvVXfMwKmFqL0HKJj68DaEdnoAbK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784841193; c=relaxed/simple;
-	bh=+G6WmaDtCQ1/qnRxFTuek7207uv8qT5jx8xUA6fFn9s=;
+	s=arc-20240116; t=1784841581; c=relaxed/simple;
+	bh=lZo1+S9zFdC/mZ/rk1SozNQMmjqU6tGravGTGaKZ7iY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TOT+pfV5/ZBs0ZlJAHlv+yQUResd9bd5shBBw0nsX1ii/Nlcv9ubBXM+vVTz9qzzILeg8ZC9LsDGtZZJRPNxS4woKXRmKkFDE80PHv1+J8H695IXnGD4zBIxtk3coK0xhvp5aViKvO/B4m6L/19RnSPPl0zPCei/aHF/f5m/SVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BQ/hVzBH; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=q/ULfthZDDjnezIjh4R8RNw/6g050RTiM/JAkoAyZc3Hsfr2+V7xrrxRCW/frAciM2tXI3rgPorS5uEB9wtw1kN2GeoxedU5MA7RpcFEZxjSBpoWPYLQDquSikxi+hph1EX3DS2ARFaN2xNJ+nCZUnoGeNfCg3k9A6tu/CUVneU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fud/RHdE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BQ/hVzBH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4058D1F000E9;
-	Thu, 23 Jul 2026 21:13:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fud/RHdE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EB041F000E9;
+	Thu, 23 Jul 2026 21:19:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784841188;
-	bh=xCy5gErw1QYEeJmbO8xAUk7bv2N+eh3/oeB2zOswipI=;
+	s=k20260515; t=1784841579;
+	bh=eO3oK6CIOhONmLL2gFy9UcTeJQ+F3rDCgOy6Lyo16NA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BQ/hVzBHh+EEtWibMKkPgnwN8O0H5u3TozP3beI5ByN1MtgVkRi4EnSFcfxvRB/9L
-	 nJQ8gYbNpGnSobMVpgAgbkgXebUe5ySQuKrGbWQYJru237rLJ5SErjAGkyYE3sUqGh
-	 rnZPfe1ECTchrdCFJgzLhNQR3wXkNeXVNP0n7+4SGDzorzLREylq/pWgrNc4XnC/mX
-	 ghiy2dGpV7wGA3mEVsS/J50+KJOR/153Vi+GzfQfEjzHgrVHSCxto2BCdaQhabh695
-	 Na6r5lcKoYjH8MP7ju0U9rNZ2OmVLautMQ93hil/R4utdkbjQbQFX4++rqACkkQyUE
-	 Jf1qrP+gh0rrQ==
+	b=fud/RHdEfJ91mHwN10oBNdLaIFzv/qk+yU0Y5xm7/Li0HQQkPplTRvL3N1075S3Gf
+	 ICP7rZz12xuk60dXimN3665E+rxaA+MICndM8+mdKuJSuSWY+OLjGJv7gFmJAAVpnz
+	 8PWc7+p8hNpNqQUuBwKaUjKGKkqalkwccfLQZCSp++jcDKttkq3AUcH6W+Hu7kSwgH
+	 mPePqB4N0JvUePGfCGiJVvoK5jiSaDd6cHMReSCriORCNLKQsJFl+mTg07VE3UIgY3
+	 /nCLyP6BPlvl2rSF06xCILB96/t6FzZnY0nDMhOr1hd21WKp2yuFy15o9av/SEcO5A
+	 ggybu967erMIg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 08/10] md/raid1,raid10: set IO_BLOCKED in case of
- BLK_STS_P2PDMA
+Subject: Re: [PATCH v5 10/10] nvme-rdma: return BLK_STS_P2PDMA for
+ unsupported P2P transfers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Mykola Marzhan" <mykola@meshstor.io>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io, linux-pci@vger.kernel.org
-In-Reply-To: <20260723204206.76930-9-mykola@meshstor.io>
+In-Reply-To: <20260723204206.76930-11-mykola@meshstor.io>
 References: <20260723204206.76930-1-mykola@meshstor.io>
- <20260723204206.76930-9-mykola@meshstor.io>
+ <20260723204206.76930-11-mykola@meshstor.io>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 21:13:07 +0000
-Message-Id: <20260723211308.4058D1F000E9@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 21:19:39 +0000
+Message-Id: <20260723211939.8EB041F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
 New issues:
-- [High] Bypassing `freeze_array()` for `BLK_STS_P2PDMA` in `raid1.c` intro=
-duces a hard deadlock against concurrent array freezes.
+- [High] Modifying the PI metadata buffer via nvme_start_request() after it=
+ has been mapped for DMA causes cache coherency issues on non-coherent arch=
+itectures.
 
 Pre-existing issues:
-- [High] Race condition leading to a NULL pointer dereference in `raid1_rea=
-d_request()` when logging an unrecoverable read error.
-- [High] Double barrier drop (`nr_pending` underflow) when a `REQ_NOWAIT` r=
-ead fails while the array is frozen.
+- [High] Accessing the block request and its associated PDU after being fre=
+ed on the error handling path when mapping or post_send fails with -EIO.
+- [High] Returning BLK_STS_RESOURCE after the request has been started trig=
+gers kernel warnings and false timeouts.
+- [Medium] Returning a hard error from queue_rq after calling nvme_start_re=
+quest() bypasses nvme_mpath_end_request(), leaking the nr_active counter.
 --
 
---- Patch [8]: [PATCH v5 08/10] md/raid1,raid10: set IO_BLOCKED in case of =
-BLK_STS_P2PDMA ---
-commit 39fd90f26512b119562fa95bb3bbc654fa9ed8a3
+--- Patch [10]: [PATCH v5 10/10] nvme-rdma: return BLK_STS_P2PDMA for unsup=
+ported P2P transfers ---
+commit 2111f8ba9b5738dc4d1ef4e08339058c75231ebd
 Author: Mykola Marzhan <mykola@meshstor.io>
 
-md/raid1,raid10: set IO_BLOCKED in case of BLK_STS_P2PDMA
+nvme-rdma: return BLK_STS_P2PDMA for unsupported P2P transfers
 
-A read that fails with BLK_STS_P2PDMA cannot succeed against that
-member, so mark the leg IO_BLOCKED and let the retry redirect elsewhere.
-Skip the read-error machinery: there is nothing on the medium to fix,
-fix_read_error()'s probe reads into host pages and would "succeed", and
-charging the read-error budget would evict a healthy member under a P2P
-read workload.  FailFast eviction is skipped for the same reason -- the
-request never reached the wire.
+> A P2P transfer the PCIe topology cannot route fails DMA mapping
+> with -EREMOTEIO.  nvme-rdma folds every mapping error into -EIO, a
+> retryable host-path error: multipath requeues the I/O forever, a
+> single path burns its whole retry budget.
+>=20
+> Propagate the real error code and return the unroutable case as the
+> non-retryable BLK_STS_P2PDMA.  As in nvme-pci, -ENOMEM now requeues
+> (BLK_STS_RESOURCE) and -EINVAL fails (BLK_STS_IOERR); -EIO stays a
+> retryable host-path error.  While at it, start the request only
+> after mapping succeeds -- nvme-pci's order -- and ratelimit the
+> map-failure message.
 
-Fixes: 02666132403a ("md: propagate BLK_FEAT_PCI_P2PDMA from member devices=
- to RAID device")
-Assisted-by: Claude:claude-fable-5
-Co-developed-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
-
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 83ebf40237d57..16a47568679f0 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-
-[ ... ]
-
-> @@ -2674,7 +2676,7 @@ static void handle_read_error(struct r1conf *conf, =
-struct r1bio *r1_bio)
->  	 * read error.  This is all done synchronously while the array is
->  	 * frozen.
->  	 */
-> -	if (mddev->ro) {
-> +	if (mddev->ro || status =3D=3D BLK_STS_P2PDMA) {
->  		r1_bio->bios[r1_bio->read_disk] =3D IO_BLOCKED;
-
-[Severity: High]
-Does skipping freeze_array() for P2PDMA errors here risk a hard deadlock?
-
-If a concurrent thread calls freeze_array(conf, 0) during a management comm=
-and,
-it sets array_frozen =3D 1 and waits for get_unqueued_pending() =3D=3D 0.
-
-Meanwhile, this handle_read_error() thread bypasses freeze_array() and
-proceeds to call raid1_read_request() while holding the original nr_pending
-reference.
-
-When raid1_read_request() calls wait_read_barrier():
-
-drivers/md/raid1.c:raid1_read_request() {
-    ...
-    if (!wait_read_barrier(conf, bio->bi_iter.bi_sector, nowait)) {
-    ...
-}
-
-And wait_read_barrier() sees the array is frozen:
-
-drivers/md/raid1.c:wait_read_barrier() {
-    ...
-    if (unlikely(conf->array_frozen)) {
-        ...
-        wait_event_lock_irq_cmd(...)
-    ...
-}
-
-The raid1d thread will block on array_frozen, but because it still holds its
-nr_pending reference, get_unqueued_pending() will remain >=3D 1. The freezer
-thread will wait forever for the reference to drop, and raid1d will wait
-forever for the array to unfreeze.
-
->  	} else if (test_bit(FailFast, &rdev->flags)) {
->  		md_error(mddev, rdev);
+> diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
+> index 63830334c73e2..2f50509a7a616 100644
+> --- a/drivers/nvme/host/rdma.c
+> +++ b/drivers/nvme/host/rdma.c
+> [ ... ]
+> @@ -2033,8 +2029,6 @@ static blk_status_t nvme_rdma_queue_rq(struct blk_m=
+q_hw_ctx *hctx,
+>  	if (ret)
+>  		goto unmap_qe;
+> =20
+> -	nvme_start_request(rq);
+> -
+>  	if (IS_ENABLED(CONFIG_BLK_DEV_INTEGRITY) &&
+>  	    queue->pi_support &&
+>  	    (c->common.opcode =3D=3D nvme_cmd_write ||
+> @@ -2046,11 +2040,13 @@ static blk_status_t nvme_rdma_queue_rq(struct blk=
+_mq_hw_ctx *hctx,
+> =20
+>  	err =3D nvme_rdma_map_data(queue, rq, c);
+>  	if (unlikely(err < 0)) {
+> -		dev_err(queue->ctrl->ctrl.device,
+> -			     "Failed to map data (%d)\n", err);
+> +		dev_err_ratelimited(queue->ctrl->ctrl.device,
+> +				    "Failed to map data (%d)\n", err);
+>  		goto err;
+>  	}
+> =20
+> +	nvme_start_request(rq);
 
 [Severity: High]
-This is a pre-existing issue, but does dropping the active reference to the
-failing device later in handle_read_error() introduce a race condition with
-concurrent disk removal?
+Since the patch moves nvme_start_request() to execute after
+nvme_rdma_map_data() has mapped the metadata buffer for streaming DMA, can =
+this
+cause cache coherency issues on non-coherent architectures?
 
-Looking further down in handle_read_error():
+nvme_start_request() invokes blk_integrity_prepare(), which writes to the PI
+tags directly in the CPU cache.=20
 
-    rdev_dec_pending(rdev, conf->mddev);
-    sector =3D r1_bio->sector;
-    ...
-    raid1_read_request(mddev, bio, r1_bio->sectors, r1_bio);
+Because this now happens after the memory is mapped, those modifications mi=
+ght
+not be synced to main memory, causing the RDMA NIC to read stale PI tags and
+leading to silent data corruption and I/O failures.
 
-Since raid1d doesn't hold reconfig_mutex, a concurrent raid1_remove_disk() =
-can
-observe nr_pending =3D=3D 0 and clear the device pointer. If the subsequent=
- call
-to raid1_read_request() fails to find an alternative disk in read_balance(),
-it attempts to log a critical error:
-
-drivers/md/raid1.c:raid1_read_request() {
-    ...
-    if (r1_bio->read_disk < 0) {
-        ...
-        pr_crit_ratelimited("md/raid1:%s: %pg: unrecoverable I/O read...\n",
-                            mdname(mddev),
-                            conf->mirrors[r1_bio->read_disk].rdev->bdev,
-                            ...);
-    ...
-}
-
-Dereferencing conf->mirrors[r1_bio->read_disk].rdev->bdev when rdev has been
-set to NULL would cause a fatal page fault.
-
+> +
+>  	sqe->cqe.done =3D nvme_rdma_send_done;
+> =20
+>  	ib_dma_sync_single_for_device(dev, sqe->dma,
+> [ ... ]
+> @@ -2070,6 +2066,9 @@ static blk_status_t nvme_rdma_queue_rq(struct blk_m=
+q_hw_ctx *hctx,
+> =20
+>  err_unmap:
+>  	nvme_rdma_unmap_data(queue, rq);
+>  err:
+>  	if (err =3D=3D -EIO)
+>  		ret =3D nvme_host_path_error(rq);
 
 [Severity: High]
-This is also a pre-existing issue, but could the unconditional allow_barrie=
-r()
-at the end of handle_read_error() lead to a double barrier drop if a
-REQ_NOWAIT read fails while the array is frozen?
+This is a pre-existing issue, but does this lead to a use-after-free when
+nvme_rdma_map_data() or nvme_rdma_post_send() fails with -EIO?
 
-Looking at the end of the function:
+nvme_host_path_error() synchronously completes the request via
+blk_mq_set_request_complete() and __nvme_complete_rq(). This frees the requ=
+est
+and its PDU back to the tag allocator, where it can be immediately realloca=
+ted.
 
-    raid1_read_request(mddev, bio, r1_bio->sectors, r1_bio);
-    allow_barrier(conf, sector);
+The code then falls through and accesses the freed request by calling
+nvme_cleanup_cmd(rq) and reading req->sqe.dma during ib_dma_unmap_single().
 
-If wait_read_barrier() inside raid1_read_request() encounters a frozen array
-and returns false due to REQ_NOWAIT, it does not increment nr_pending:
+>  	else if (err =3D=3D -ENOMEM || err =3D=3D -EAGAIN)
+>  		ret =3D BLK_STS_RESOURCE;
 
-drivers/md/raid1.c:raid1_read_request() {
-    ...
-    if (!wait_read_barrier(conf, bio->bi_iter.bi_sector, nowait)) {
-        bio_wouldblock_error(bio);
-        raid_end_bio_io(r1_bio);
-        return;
-    ...
-}
+[Severity: High]
+This is a pre-existing issue, but does returning BLK_STS_RESOURCE here cause
+false I/O timeouts?
 
-raid_end_bio_io() internally calls allow_barrier() to drop the original
-reference. After raid1_read_request() returns, handle_read_error() will
-unconditionally execute this second allow_barrier(conf, sector).
+At this point, nvme_start_request() has already been called, placing the
+request in the MQ_RQ_IN_FLIGHT state and starting its timeout timer.=20
 
-This would cause nr_pending to underflow, leading to a permanent deadlock on
-any subsequent array freeze since raise_barrier() will block forever waiting
-for nr_pending =3D=3D 0.
+When returning BLK_STS_RESOURCE, the block layer requeues the request witho=
+ut
+reverting its state to MQ_RQ_IDLE. This leaves the timer ticking while the
+request is on the dispatch queue, eventually triggering a false timeout and
+controller reset.
+
+> +	/* Peer memory unreachable from this device: don't retry. */
+> +	else if (err =3D=3D -EREMOTEIO)
+> +		ret =3D BLK_STS_P2PDMA;
+>  	else
+>  		ret =3D BLK_STS_IOERR;
+>  	nvme_cleanup_cmd(rq);
+
+[Severity: Medium]
+This is a pre-existing issue, but does returning a hard error here leak the
+multipath nr_active counter?
+
+When a hard error is returned to the block layer from nvme_rdma_queue_rq(),
+it directly completes the request via blk_mq_end_request(), bypassing the
+driver's .complete callback.=20
+
+Since nvme_start_request() was already called and incremented the multipath
+nr_active counter, bypassing the completion callback means
+nvme_mpath_end_request() is never invoked to balance the counter.
+
+>  unmap_qe:
+>  	ib_dma_unmap_single(dev, req->sqe.dma, sizeof(struct nvme_command),
+>  			    DMA_TO_DEVICE);
+>  	return ret;
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723204206.7693=
-0-1-mykola@meshstor.io?part=3D8
+0-1-mykola@meshstor.io?part=3D10
