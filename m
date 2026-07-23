@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1F1B3EAC60;
-	Thu, 23 Jul 2026 21:04:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F85D3DDB18;
+	Thu, 23 Jul 2026 21:05:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784840692; cv=none; b=I/l2lLLuEdWIcqs7vIhQJAQUPPFvdyDHoHnmWGgbg+JytlVA27RMOhVU4QkGCmAXg4sogGk1YejxgSQc9RFO+/988g1ZmXip8YJvu4kGw8GL0ytqkNDPkhMK6uK/KP6FJk+z+uSARBE5jnvmGoJ/Uo4csdb8cD6zuMyr0+bxyRM=
+	t=1784840760; cv=none; b=RnCN99WTxa6yBDZcxFtvwgqvzreMN2db5dZrQ4DDvzPPucNKK4gx91rzVnC8vWwl/NsdhPVngCx01uKZ4cbi2yDToaBkgToz8iIIER6qAjvzgnMqjJLLtOO4RiIAVLVBmacvh6yxvsWC1XVuv/8gQ/++BP5DdT8gVwHPGC+e6vE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784840692; c=relaxed/simple;
-	bh=SbUgXBaeETIL3kRVtGjIO68xME3MaBWJ/TamGG0NaL4=;
+	s=arc-20240116; t=1784840760; c=relaxed/simple;
+	bh=NEPZ44y/ugXZkmffqF0Y5C5I47PdmhOX15mskq50dEA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Auvdz91bTm/XOe71etu+CCIngyzig8oAv+DjVoDyt4l+Qtorcym9zsXVhMbPdG3Bvs9BY3ZLBKBK0/H7aHBRChYWjBLJSux6CojNY3vbAwT0GwHYUCgMgIs5JVWO3nz5ddYIacsuz6aVV98RrDX+lQdTzkXUU/CKocyhR/zn934=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VFcG6q47; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Sm5fV74xOvvSvfBz3iVYqPfP+mFoWXr2eI25vtZSZ5WZSTlqxy7aJwGH4KgdTnKkJM0+3QVr5703yi4efk1bOfXEsCV5KFocJa74jPpwt86RB97UKc7i7TFcIEAxyBG9FA0QqCdvrnssPiw/haHbwDRTzHd8hrJWCv+pw3v929w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z4OoFmbX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VFcG6q47"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 278EA1F000E9;
-	Thu, 23 Jul 2026 21:04:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z4OoFmbX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D66A1F000E9;
+	Thu, 23 Jul 2026 21:05:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784840681;
-	bh=bmEW5YMfrwCWDNPR9cYoHo8wVg8j/QbeVnphV5sWjFY=;
+	s=k20260515; t=1784840757;
+	bh=rnAMsAfB3h0Xta+lRsnYIaF/Qow0skM8kPo/jwbXJAM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VFcG6q479q3W9Ftvvdyt3HYQA5/ScjJtRtYzRuSe8lE9y6Zbuds3kktL8/Bgm2FSS
-	 OCLWLdiPbr61NgkY99AcMfDaEMaLzETLxfu7FPG8w8DexKFE3wJEehBnvbEy3pR3Ht
-	 GZY8m1hsfvzWmKyEaO9BOsp/e1Xs/YGtHe+mOhC+4gNWTlEQ0tFTTJwB3p8enTsR4Q
-	 8XCi/Id257eL/3men/WgUF5zLY9S1lW3Fj3hXf7CT0SqPQkEglnHJ0PlgMw+Pw8n9q
-	 1sKeaUTGM2iaZEo7eizbVyve9o7ZRjmda6IMo5wy6i9ur/9/huEe8ZGuHQbEkMdEgR
-	 whntO/bfuRPRg==
+	b=Z4OoFmbXkS4LzAmUgmv2EdethFNeSHIDOImkQ19EfZfkYljiQPqY3qrA5aM3Gy3b6
+	 V5svdNQKAbqSSKkS2x2tGRv/MIDeSSW0QLOUUs8G6ReTiPsXmFiPvSiiosm/pStNYy
+	 8kQcWIm2TQJaI5pGLoSPBEt09NbLbrSowRD0e35NzfYYLAhVhQ1ylxe5uge6IzGLno
+	 VCgqViRthwST3N6HaHv78hSe1VG1d+nnd4XKDy5NCUOvNIimoFoacYFIxRXiZBgyYC
+	 e/DMpKBdJlmnFyDVUYJMSWNeEPRH6qo1R7n1Gtyar+1VyFvvBKRs4wS3DIerRq+x4z
+	 QNFvjRt8KlZVw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 03/10] md/raid1: serialize non-write-behind writes on
- CollisionCheck rdevs
+Subject: Re: [PATCH v5 06/10] md/raid1,raid10: keep REQ_NOMERGE on
+ narrow_write_error() retry clones
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Mykola Marzhan" <mykola@meshstor.io>
-Cc: yukuai@fygo.io, linux-pci@vger.kernel.org, linux-raid@vger.kernel.org
-In-Reply-To: <20260723204206.76930-4-mykola@meshstor.io>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io, linux-pci@vger.kernel.org
+In-Reply-To: <20260723204206.76930-7-mykola@meshstor.io>
 References: <20260723204206.76930-1-mykola@meshstor.io>
- <20260723204206.76930-4-mykola@meshstor.io>
+ <20260723204206.76930-7-mykola@meshstor.io>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 21:04:40 +0000
-Message-Id: <20260723210441.278EA1F000E9@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 21:05:57 +0000
+Message-Id: <20260723210557.8D66A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -48,100 +48,83 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
-New issues:
-- [High] Hot-added devices silently bypass the array's `MD_SERIALIZE_POLICY=
-`, leaving them vulnerable to overlap write data corruption.
-
 Pre-existing issues:
-- [High] Dynamic evaluation of `CollisionCheck` during write-behind I/O com=
-pletion races with sysfs state changes, leading to use-after-free and memor=
-y leaks.
+- [High] narrow_write_error() dangerously converts failed dataless operatio=
+ns into normal writes (REQ_OP_WRITE), causing crashes during trimming or bl=
+ock layer submission.
+- [High] narrow_write_error() resets bi_opf to a bare REQ_OP_WRITE, silentl=
+y dropping critical data integrity flags like REQ_FUA.
 --
 
---- Patch [3]: [PATCH v5 03/10] md/raid1: serialize non-write-behind writes=
- on CollisionCheck rdevs ---
-commit b12be35453573f37c0313dbe2cfc0eb2808cb133
+--- Patch [6]: [PATCH v5 06/10] md/raid1,raid10: keep REQ_NOMERGE on narrow=
+_write_error() retry clones ---
+commit 63dc9314df6c2490722e42dfb137e9e52bd9544f
 Author: Mykola Marzhan <mykola@meshstor.io>
-md/raid1: serialize non-write-behind writes on CollisionCheck rdevs
 
-This patch changes the serialization gate in raid1 to use CollisionCheck
-instead of MD_SERIALIZE_POLICY. It aims to correctly serialize on
-write-mostly members when write-behind is armed, and remove a latent NULL
-dereference.
+md/raid1,raid10: keep REQ_NOMERGE on narrow_write_error() retry clones
 
-Cc: stable@vger.kernel.org
+narrow_write_error() re-issues a failed write in badblock-granularity chunk=
+s,
+cloning from the master bio and resetting bi_opf to a bare REQ_OP_WRITE. Th=
+is
+drops REQ_NOMERGE for P2PDMA bios, so the patch restores the flag on P2PDMA
+retry clones.
 
 > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index afe2ca96ad8c2..997f79c05db7b 100644
+> index f07edeac6e5a3..19c4dec450de0 100644
 > --- a/drivers/md/raid1.c
 > +++ b/drivers/md/raid1.c
-> @@ -564,7 +564,7 @@ static void raid1_end_write_request(struct bio *bio)
->  				call_bio_endio(r1_bio);
->  			}
+> @@ -2561,6 +2561,9 @@ static void narrow_write_error(struct r1bio *r1_bio=
+, int i)
 >  		}
-> -	} else if (test_bit(MD_SERIALIZE_POLICY, &rdev->mddev->flags))
-> +	} else if (test_bit(CollisionCheck, &rdev->flags))
-
-[Severity: High]
-This is a pre-existing issue, but does this unlocked dynamic check of
-CollisionCheck create a time-of-check to time-of-use race against sysfs
-state changes?
-
-When -writemostly is echoed to sysfs, mddev_suspend() is called. For
-write-behind I/O, mddev->active_io is decremented early when non-writemostly
-clones finish, which allows mddev_suspend() to return while the write-mostly
-clone is still in flight.
-
-Then state_store() in drivers/md/md.c calls mddev_destroy_serial_pool()
-which frees rdev->serial and clears CollisionCheck:
-
-drivers/md/md.c:rdev_uninit_serial() {
-    if (!test_and_clear_bit(CollisionCheck, &rdev->flags))
-        return;
-
-    kvfree(rdev->serial);
-    rdev->serial =3D NULL;
-}
-
-When the in-flight write-mostly clone subsequently completes here in
-raid1_end_write_request(), could it check CollisionCheck and either call
-remove_serial() on the freed pointer, or skip it and leak the serial_info
-elements?
-
->  		remove_serial(rdev, lo, hi);
->  	if (r1_bio->bios[mirror] =3D=3D NULL)
->  		rdev_dec_pending(rdev, conf->mddev);
-
-[ ... ]
-
-> @@ -1677,7 +1677,11 @@ static bool raid1_write_request(struct mddev *mdde=
-v, struct bio *bio,
->  			mbio =3D bio_alloc_clone(rdev->bdev, bio, GFP_NOIO,
->  					       &mddev->bio_set);
 > =20
-> -			if (test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
-> +			/*
-> +			 * CollisionCheck marks every rdev with a serial
-> +			 * tree; order against in-flight write-behind I/O.
-> +			 */
-> +			if (test_bit(CollisionCheck, &rdev->flags))
+>  		wbio->bi_opf =3D REQ_OP_WRITE;
 
 [Severity: High]
-By gating serialization exclusively on CollisionCheck, do hot-added devices
-now silently bypass serialization?
+This is a pre-existing issue, but does forcing wbio->bi_opf to REQ_OP_WRITE
+cause crashes for dataless operations?
 
-When an array has MD_SERIALIZE_POLICY enabled and a new device is hot-added,
-mddev_create_serial_pool() skips initializing the device's serial tree
-because it doesn't check the global policy flag.
+If an underlying device fails an operation like REQ_OP_SECURE_ERASE or
+REQ_OP_WRITE_ZEROES, forcing it to REQ_OP_WRITE means it is no longer
+recognized as dataless.
 
-Since CollisionCheck remains unset for the new device, this change masks
-the previous NULL pointer dereference crash by skipping serialization for
-the hot-added device entirely. Will this leave the array vulnerable to
-overlap write data corruption when stale data persists?
+Would bio_trim() then attempt to advance the bio iterator and dereference
+a NULL bi_io_vec array? Even if it doesn't span multiple badblocks and
+bypasses the trim crash, would it be submitted to the lower-level driver as
+a malformed payloadless write?
 
->  				wait_for_serialization(rdev, r1_bio);
->  		}
+> +		/* Keep P2PDMA retry bios unmergeable, like the original */
+> +		if (md_bio_is_p2pdma(wbio))
+> +			wbio->bi_opf |=3D REQ_NOMERGE;
+>  		wbio->bi_iter.bi_sector =3D r1_bio->sector;
+>  		wbio->bi_iter.bi_size =3D r1_bio->sectors << 9;
+> =20
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 5b63175fb3826..428bddddfe71d 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -2823,6 +2823,9 @@ static void narrow_write_error(struct r10bio *r10_b=
+io, int i)
+>  		wbio->bi_iter.bi_sector =3D wsector +
+>  				   choose_data_offset(r10_bio, rdev);
+>  		wbio->bi_opf =3D REQ_OP_WRITE;
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does resetting bi_opf to a
+bare REQ_OP_WRITE silently drop critical data integrity flags?
+
+By overwriting the opcode rather than modifying it, it appears flags like
+REQ_FUA and REQ_SYNC that were present on the master bio would be lost on t=
+he
+retry clone, potentially leading to data loss if a power failure occurs.
+
+> +		/* Keep P2PDMA retry bios unmergeable, like the original */
+> +		if (md_bio_is_p2pdma(wbio))
+> +			wbio->bi_opf |=3D REQ_NOMERGE;
+> =20
+>  		if (submit_bio_wait(wbio) &&
+>  		    !rdev_set_badblocks(rdev, wsector, sectors, 0)) {
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723204206.7693=
-0-1-mykola@meshstor.io?part=3D3
+0-1-mykola@meshstor.io?part=3D6
