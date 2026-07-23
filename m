@@ -1,30 +1,30 @@
-Received: from out30-124.freemail.mail.aliyun.com (out30-124.freemail.mail.aliyun.com [115.124.30.124])
+Received: from out30-132.freemail.mail.aliyun.com (out30-132.freemail.mail.aliyun.com [115.124.30.132])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C2064C77DF;
-	Thu, 23 Jul 2026 13:55:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEFCF4D98EF;
+	Thu, 23 Jul 2026 13:55:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.132
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784814969; cv=none; b=RmanNK2a90RRSwAwBhNF8w8padywHSx0WjAmwOUnBb+JCPRLILIJN1paeGIJlrRpt7amqftDIixOZdcFHF9JMNTopTnr6CjWAIMZbBEzvrGYk8gR757o6cgngTMUQS3nyvAyRFclLcV2Adt1m2IvXyeHJZO1g0/MXGdVobO+tBU=
+	t=1784814974; cv=none; b=Ejj05HLAGGdbA0bKYtldb4CRnfBF8F3Ga+U4oO7RWGQQp/tNj0vnrgU2pANI6G5hbcCozX8ZzloaGdIGcitEH/BGJL/QKS6gC1ZJA7o+1X6aT1DsY8DF01zb4hm9d7dtQf6IJyYHhcRXmIqEPuCaKFV5jKxrIli5t3C09ez6BC4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784814969; c=relaxed/simple;
-	bh=39mkJPwtzNFZ8nRNEFnHXySP+q5lQynf/eepMujHrrg=;
+	s=arc-20240116; t=1784814974; c=relaxed/simple;
+	bh=urCA+GgVdz1b+HfsPe6dOn2NDcT/bTNRXhBkmyYNk/8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=FLuTBRrOetJnm8LKU80NN93exK3wTh8jd68vxhJY/ab3kpHZW+7o7hlQEfCCF6UBGrrYM6fnsHsZ5RSSxa4YC1sR8Y94VqcyqCMbxFhOaKnnpRvYeym9Si98ZecB3bNr2HOolXl6zAuCrhgjfvoxn5C1SChUUZPz7Afy8JbCN1Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=TaguCRR9; arc=none smtp.client-ip=115.124.30.124
+	 MIME-Version; b=nb3l91pICJC2HUGZJfTeUNuWuN7ICLu10irYcaX/KdOpEEzUlrWHW9MWh7ngFEDFHyRaz5FmQuzpKnYhf9hQLalI65VBFoZfk8bG7ccBPJs070XvZHVWt+Xv0DCN9HfmMUHf2ivCnEATfdc3uSmUiyVPRKWalfxqF7uyW1O3tNM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=b55fYvXJ; arc=none smtp.client-ip=115.124.30.132
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="TaguCRR9"
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="b55fYvXJ"
 DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux.alibaba.com; s=default;
-	t=1784814945; h=From:To:Subject:Date:Message-Id:MIME-Version;
-	bh=rTKyGSGgkShjZzpP3QRx1yF53Mb5XhDQUXW+TRrvk/U=;
-	b=TaguCRR9tz2jWTkiTJ9IK2/jBMqJkkhDIIEbZCeP8KQBivwFrYzfRD+kXGiJMJ7Esz6+WtWqYbWuMpV8y4L+wfndhrEfHQF58fZcA/Ih60gILT3SH1qvOwWrSneGxon6uGk/bOLCwDq7jkC4lkQ+HDeW/bb1VJdGCV3/DBtq/ow=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R911e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045133197;MF=yunye.zhao@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0X7gKXb1_1784814940;
-Received: from j66c13357.sqa.eu95.tbsite.net(mailfrom:yunye.zhao@linux.alibaba.com fp:SMTPD_---0X7gKXb1_1784814940 cluster:ay36)
+	t=1784814946; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=oZ+Cf5N5adrT2q/yc6Pli6T3HIhz3F5tsUmqStQxS9o=;
+	b=b55fYvXJR6Dk8K1PwUcsxpnZTG8MyA8rBJL+q0rFzDlnYT2sccehmHDbzsYaLStQKTCwfBHoWTRztK8fFliYsH88ChMp3XHl7DQ/frQgPkVZ6HVi3bcy/nZXEKayW0IEI/jQeZrBpg4gb20GuqTEh7TGbN5At34ZlzYDuYzdvAw=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R281e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037009110;MF=yunye.zhao@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0X7gKXcP_1784814945;
+Received: from j66c13357.sqa.eu95.tbsite.net(mailfrom:yunye.zhao@linux.alibaba.com fp:SMTPD_---0X7gKXcP_1784814945 cluster:ay36)
           by smtp.aliyun-inc.com;
-          Thu, 23 Jul 2026 21:55:44 +0800
+          Thu, 23 Jul 2026 21:55:46 +0800
 From: Yunye Zhao <yunye.zhao@linux.alibaba.com>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fygo.io>
@@ -34,9 +34,9 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Yunye Zhao <yunye.zhao@linux.alibaba.com>
-Subject: [PATCH v2 1/3] md/raid10: fix still_degraded being inverted in raid10_sync_request()
-Date: Thu, 23 Jul 2026 21:55:33 +0800
-Message-Id: <20260723135535.101995-2-yunye.zhao@linux.alibaba.com>
+Subject: [PATCH v2 2/3] md: add cond_resched() to md_do_sync()'s skip path
+Date: Thu, 23 Jul 2026 21:55:34 +0800
+Message-Id: <20260723135535.101995-3-yunye.zhao@linux.alibaba.com>
 X-Mailer: git-send-email 2.19.1.6.gb485710b
 In-Reply-To: <20260723135535.101995-1-yunye.zhao@linux.alibaba.com>
 References: <20260717062743.128189-1-yunye.zhao@linux.alibaba.com>
@@ -49,52 +49,52 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Commit fe6a19d40ceb ("md/md-bitmap: merge md_bitmap_start_sync() into
-bitmap_operations") converted still_degraded from int to bool, but
-inverted the assignment in the loop that checks whether the array will
-still be degraded after the current device is recovered:
-"still_degraded = 1" became "still_degraded = false".
+When sync_request() reports a skipped region (*skipped == 1),
+md_do_sync()'s main loop advances the cursor and takes an early
+continue:
 
-As a result, recovering a device while another mirror is still missing
-calls md_bitmap_start_sync() with degraded == false, which clears bitmap
-bits that the still-missing device needs.  When that device is re-added,
-its bitmap-based recovery finds the bits already cleared and skips every
-region written while the array was degraded, so it is marked In_sync
-while holding stale data: silent corruption.
+	j += sectors;
+	...
+	if (last_check + window > io_sectors || j == max_sectors)
+		continue;
 
-Reproducer (raid10 near=2, 4 disks, internal bitmap):
- - fail and remove one disk of each mirror pair
- - write to the degraded array
- - re-add both disks and let recovery finish
- - "check" reports mismatch_cnt=262272 after 256 MiB of degraded
-   writes and file contents differ; the second disk's "recovery"
-   completes in milliseconds because everything is skipped
+If the personality returns a small span per call (raid10 recovery
+returns only 128 sectors), syncing a large, mostly clean array iterates
+this branch an enormous number of times without ever yielding the CPU.
+On a non-preemptive kernel the resync thread then trips the soft-lockup
+watchdog:
 
-The same conversion in raid1 got it right (still_degraded = true).
-Restore the correct value.
+  watchdog: BUG: soft lockup - CPU#149 stuck for 313s! [mdX_resync]
+   md_bitmap_start_sync+0x6f/0xe0
+   raid10_sync_request+0x2c9/0x1530 [raid10]
+   md_do_sync+0x810/0x1030
+   md_thread+0xa7/0x150
 
-Fixes: fe6a19d40ceb ("md/md-bitmap: merge md_bitmap_start_sync() into bitmap_operations")
+Add a cond_resched().  This does not reduce the wasted iterations; the
+excessive iteration count is a raid10 problem addressed separately.
+
 Cc: stable@vger.kernel.org
 Signed-off-by: Yunye Zhao <yunye.zhao@linux.alibaba.com>
 ---
- drivers/md/raid10.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/md.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 0a3cfdd3f5df..54cddb3a98cd 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -3365,7 +3365,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 				struct md_rdev *rdev = conf->mirrors[j].rdev;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index d1465bcd86c8..c2e8b203c4db 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9881,8 +9881,10 @@ void md_do_sync(struct md_thread *thread)
+ 			 */
+ 			md_new_event();
  
- 				if (rdev == NULL || test_bit(Faulty, &rdev->flags)) {
--					still_degraded = false;
-+					still_degraded = true;
- 					break;
- 				}
- 			}
-
-base-commit: 4539944e515183668109bdf4d0c3d7d228383d88
+-		if (last_check + window > io_sectors || j == max_sectors)
++		if (last_check + window > io_sectors || j == max_sectors) {
++			cond_resched();
+ 			continue;
++		}
+ 
+ 		last_check = io_sectors;
+ 	repeat:
 -- 
 2.19.1.6.gb485710b
 
