@@ -1,116 +1,93 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48EFA347BA7;
-	Thu, 23 Jul 2026 03:13:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD02C3191D6;
+	Thu, 23 Jul 2026 06:11:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784776413; cv=none; b=F5ZyAGDB4P8WPSKoffXyZJnwdV31iayOST8IjdxxX6zITW71xcTExZKDmDDn7IzJG/8VxtzuB1qCSSId0uKvWZ3tNM5OCcy6BqMAtDCHFaj+yL33ozdy6jBfWwqVRUes/uYexj63jxvnJaeENjG9NHJJ1mDnLC2SaSW1HlJFcvc=
+	t=1784787085; cv=none; b=BnvpvhSdb+eAOoBNyoFjly0KMwg+rF11H+yI/7ejBIdL8dZphLu7rAPIIvpsUmbh9VjIi1I+qQuI8mjkKaeR9M8DvshrtwAp9dwSQyFYt56l7WcY0f1Uw8CpSeSo+K+3womS+LIUTeIwYlPLV337VWy9KonWup4sjWvZh0BVcoY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784776413; c=relaxed/simple;
-	bh=XyMab+OUkxBKHtu8UDWuPDUjftyh4T1RtvzWSNwjydY=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=E0WnfMesaUFQhb1Ca6IDdIugYdeH9yqTfnH5VO+7iHflgm/aRaHPxkTTyIvurasLs9SDy3O/KnEXi+Lu/JaVGV1GtOTrW3zXxqZ1wO7A40a4eYQ3MzWgMrD6cRvTHCJxVhb4F+nUlyPYdEdTdO6vhITKZDZoM1jmlGi+W7v1Rbc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=q+v6LAw8; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1784787085; c=relaxed/simple;
+	bh=Qae+3iD0gUpcR0ak4mkDHhk+7oPwN70ONsdbSH40q5o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cI1iS3LmMja5Oz8/ygAVGHc9cbZvrAjzcRT2OabmsOr2yYGyJI+MLUHxvFgSUHkvgYf3JImR8LRp1tlxsObFZtHck7NnhnrdJIchxxo1DuqVF8z/LELhaBdriIH1gTxVtX06Ey0v7rTgWk/IApEGRlepeO6Yd1Dz6QOIA8Nebr4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jQI35ZHF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="q+v6LAw8"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=rC+XBUGFmySIn3VPBg9GBg/XbZWxt1FvpkzqM8RzAE4=; b=q+v6LAw8gBxwqa3cOIQEXC3cMJ
-	5756S4TXTL4zSiuUzMe7/27YHQiwEj2NiG58xC4WGPsEogiXd4aNH0NiQKiMGKQDRYhy28+R9Us8A
-	S3/LYRjonw7QSDPJONdDVL84N1x8hi9e8CYS2M2oLa1ArrwIfsPkWM32waaBEuKpm8pVVWgs89+Hi
-	shfawWP5ZD2XU8jhY+4r+ACVr6ngu9egpW2Jg/yBYsRjil73XH5Ji4LZqH8H9P7hGIaCPmXuTtidN
-	lwRb7AMjkgpBYB/Zxfi92semLE1yV8AXiFNJRWR4A0FLEJs0p/74dPjiBQLJR4dV3+/5NYMjyvInc
-	EOVWi+Ow==;
-Received: from [104.157.31.28] (helo=[192.168.1.251])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1wmjs7-0000000Cf7r-20SR;
-	Wed, 22 Jul 2026 21:13:20 -0600
-Message-ID: <38fc491b-ce80-4bb0-85b4-7987936afb26@deltatee.com>
-Date: Wed, 22 Jul 2026 21:11:33 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jQI35ZHF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7994E1F000E9;
+	Thu, 23 Jul 2026 06:11:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784787084;
+	bh=VBdn2EWjCzaB/LsGvu5JNC2sbY5O5dhhwEkMKQrKz6Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jQI35ZHFBTChYjQ6kfiY3FIG5lc5U7yuTiFHA0MAJuCB5lQhyHKzfGFvMqu0Vg7oS
+	 wbmqZnrDUGLV+3FxAGADTsdviVKQKmKxL5b42UsWs1FHa/mxdTow2mrTa9oHPGfiFq
+	 7VcDodqNgInG29zaRfj9Q59DE3247biTYu4J02Ld6oUHDbnanBWeSf2IeYtx8nhSGh
+	 C4UgTQZqxfkmK2AoIZyCTBNAVlrVMRTOt7Unzfeklkfjs4POShPbXDmJPwwg+nCZOz
+	 P8UMjW2HY0eW3UKLb58b2RFEDv2qDkLqgPOUN6Ue6Zq6qTLfJTgAqH/sJ3VXsHAVsq
+	 IPE4/hdrctM0g==
+Date: Thu, 23 Jul 2026 09:11:18 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Mykola Marzhan <mykola@meshstor.io>
+Cc: Logan Gunthorpe <logang@deltatee.com>, Jens Axboe <axboe@kernel.dk>,
+	Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
+	linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+	Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
+	Guoqing Jiang <guoqing.jiang@linux.dev>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shivaji Kant <shivajikant@google.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Henrique Carvalho <henrique.carvalho@suse.com>,
+	linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 6/7] md/raid1,raid10: skip futile retries on P2PDMA
+ mapping failures
+Message-ID: <20260723061118.GA110966@unreal>
+References: <20260719105327.864949-1-mykola@meshstor.io>
+ <20260719105327.864949-7-mykola@meshstor.io>
+ <ee312bcb-92f4-4884-91cd-3bd56180c8c7@deltatee.com>
+ <CAPzsNDsLr_BABgizujN0CgnLNfzS3S37vQ133fjbJzFMvRs7CQ@mail.gmail.com>
+ <9f846c85-f427-433a-b87d-8e9e3a4406e7@deltatee.com>
+ <20260722083015.GU110966@unreal>
+ <CAPzsNDuGfneEmx_nWqw5vYLyPyK8krfWChNRcsxO7icTEDDX5g@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Mykola Marzhan <mykola@meshstor.io>, Jens Axboe <axboe@kernel.dk>,
- Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
- Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
- Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
- Guoqing Jiang <guoqing.jiang@linux.dev>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
- Chaitanya Kulkarni <kch@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava
- <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>,
- linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260722185841.449934-1-mykola@meshstor.io>
- <20260722185841.449934-9-mykola@meshstor.io>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260722185841.449934-9-mykola@meshstor.io>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 104.157.31.28
-X-SA-Exim-Rcpt-To: mykola@meshstor.io, axboe@kernel.dk, song@kernel.org, yukuai@fygo.io, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org, magiclinan@didiglobal.com, xiao@kernel.org, guoqing.jiang@linux.dev, leon@kernel.org, jgg@ziepe.ca, kmodukuri@nvidia.com, kch@nvidia.com, bhelgaas@google.com, shivajikant@google.com, praan@google.com, henrique.carvalho@suse.com, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v4 8/9] md/raid1,raid10: set IO_BLOCKED in case of
- BLK_STS_P2PDMA
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAPzsNDuGfneEmx_nWqw5vYLyPyK8krfWChNRcsxO7icTEDDX5g@mail.gmail.com>
 
-
-
-On 2026-07-22 12:58 p.m., Mykola Marzhan wrote:
-> From: Logan Gunthorpe <logang@deltatee.com>
+On Wed, Jul 22, 2026 at 09:00:16PM +0200, Mykola Marzhan wrote:
+> > I had thoughts about this series too. It seems best to avoid
+> > the P2P path entirely unless all legs support P2P.
+> >
+> > Can the md/raid code determine P2P support in advance?
 > 
-> A read that fails with BLK_STS_P2PDMA cannot succeed against that
-> member, so mark the leg IO_BLOCKED and let the retry redirect elsewhere.
-> Skip the read-error machinery: there is nothing on the medium to fix,
-> fix_read_error()'s probe reads into host pages and would "succeed", and
-> charging the read-error budget would evict a healthy member under a P2P
-> read workload.  FailFast eviction is skipped for the same reason -- the
-> request never reached the wire.
+> Yes, and it already does: the block layer ANDs the P2PDMA queue
+> feature across all legs, so an array with a non-P2P member
+> (e.g. an nvme-tcp leg) never advertises P2P at all.
 > 
-> Fixes: 02666132403a ("md: propagate BLK_FEAT_PCI_P2PDMA from member devices to RAID device")
-> Assisted-by: Claude:claude-fable-5
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Co-developed-by: Mykola Marzhan <mykola@meshstor.io>
-> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
-> ---
->  drivers/md/raid1.c  | 4 +++-
->  drivers/md/raid10.c | 5 ++++-
->  2 files changed, 7 insertions(+), 2 deletions(-)
+> But that flag can only say "this driver can do P2P in general".
+> md cannot see which HCA device does the DMA for a fabrics leg —
+> and with multipath failover it can change at any time.
 > 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 917d694ef401..76a1426e64f0 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2658,6 +2658,8 @@ static void handle_read_error(struct r1conf *conf, struct r1bio *r1_bio)
->  {
->  	struct md_rdev *rdev = conf->mirrors[r1_bio->read_disk].rdev;
->  	struct bio *bio = r1_bio->bios[r1_bio->read_disk];
-> +	/* evaluate before the bio_put() below */
-> +	bool p2pdma_error = bio->bi_status == BLK_STS_P2PDMA;
+> So the up-front gate covers what is knowable up front.
+> This series is about the remainder.
+> In mixed case, one local P2P leg plus a remote replica, with it:
+> 1) a failed read just redirects to a capable mirror;
+> 2) a failed write records bad blocks instead of retrying forever.
 
+Thanks for the explanation.
 
-Sorry, I had one late nit-picky thought tonight I thought I'd suggest:
-
-It might be better to store bi_status in a local variable instead of the
-much more specific p2pdma_error value. I think this would read a lot
-better, make the intent a little more clear and be reusable if other
-bi_status conditions need to be handled specially.
-
-Thanks,
-
-Logan
+> 
+> Mykola
+> 
