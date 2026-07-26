@@ -1,61 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A2D02AE8D;
-	Sun, 26 Jul 2026 11:53:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B8C7387359;
+	Sun, 26 Jul 2026 11:57:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785066806; cv=none; b=qUlCst1/2F3CjMOCGq0Ja9T84sC9TjpxAoTot9H0zFE+HCyUWwyR5JSb9NE+jYHvQwkAYNWMWQvvaleW+VNmbRuk0q0KfX/AiErDmzzwnVLIh/pd5lPZulyFTX/RyjqBUaTE9vayobVfrPD4n4BYLe0PHtXfAgxzfupV0vcYH6g=
+	t=1785067074; cv=none; b=ftmVGkh/HWClw3UWl7KqdBkQ0FbydAe6aM8S21PkvatZCQIdICteB44m3ri5h15iN45t1f1KJ+3cvzpEXLB3qNXbE6vn7A24K2F+EQ62DUzUcwePhl5tTD4lE0ry4sQRE9tjWCcuiB/A1d0mOu+UK+aKVB08Y3vg0OX9EXqzMME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785066806; c=relaxed/simple;
-	bh=O6VmtaJ8IK5m0R9cDl5x4psJjs0WT+IN87Gf8s2Xo/E=;
+	s=arc-20240116; t=1785067074; c=relaxed/simple;
+	bh=qt8Gj1gUu07JTZnKFSzdOFqeolf8RODCn5QHTZztdOs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=c5Ki3yQhOaWmKzmxc4IWogEFFu0c5vXF9ra3Af97WC6h6xXz7KeT9nIIrvlm7kLROYHo8lAPgYUKg9C53NC3OodK6IxTsJid0Iadky/v4tou2ct9dBuwwSIG8eFuVfv1feKBlFAiichxxZdtRHQxeFtxvrejc92ZZi6JHUzliks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CeVkAQm3; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=sPLEaP5JIeHacTvIMYyKKClLQNrlvx5FdgMBvYFKKYRzvv+f2U4HCorhp1B0q3+QbRPyD87ZHBR8socYAhoOMnb8AB5FZe26AJbRsq9BQwzSNRf0/twYhWAjo8cP0698wGpX7+hjth0yy44tmecdgKK3CTuy2VY5rD+EBLIgBjE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IICqYxgT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CeVkAQm3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94BA31F000E9;
-	Sun, 26 Jul 2026 11:53:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IICqYxgT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 172F81F000E9;
+	Sun, 26 Jul 2026 11:57:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785066804;
-	bh=W2jaBqmRPcmiZj5ATxtqHhVF3HbCgGf4tJUyRiwLEbQ=;
+	s=k20260515; t=1785067073;
+	bh=qt8Gj1gUu07JTZnKFSzdOFqeolf8RODCn5QHTZztdOs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=CeVkAQm31l3QmL1nzXN6eXM8VwqECjbZF91RTRFgivlhVp3hpb9Lw76rhLXDf6tlJ
-	 Rbpob5RXMECyuL0sjZ5xnjYKYN73tEF21UiLrFbYhQnDekUoOOdzUn7gW9XBZW9hak
-	 h1v8YScQBEuxqVm8zrdbKNCZ7gZnAnv+aEaXK6zHdMJtQ/jpdDppYB6ZaU3zg7r/Fb
-	 UIF+RWpgMAwbVXOM2vhLQWNt7Fm2pZMYMx9thGC6cHP71Cgv0GcePgnVoEvRAMzH5B
-	 H+71bp80O+JDqSc9K/4/BwiD7kYJkkPZ0FdC7/2vb8UtnW56kJG9AAlHGiZYj9j4sd
-	 JI33bx9K6WdLQ==
+	b=IICqYxgTzdo8RHnPvSvt6sFh41p4ovtF0Hi34cfC4JOJuUnvikYLvusJtffLDhnrM
+	 CDHAquSmqFFwTDSoI1lOITaETDjzJCQXaNekBZzyZGmq75oeDYGewLVNCZ90ILFS1A
+	 eJIZKbrJx10763dssxRRprIR0sGbMoK684vKMTFVATuKC7xykS13KW8TS1PkKth58S
+	 YJwEIp0JKoP91KqUENA54iWKIAdarCGfP3DHiQdRcnwI2iW5jYsKavy4bcwfiQpTjI
+	 3TDPyINVZ7a0KEXIJfTUYGNjfxQjJrz6jiGT7UVD0bx0fCMIDsAsSz7Edq5L6JnMM+
+	 8WBNsXpKF8H6Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 11/12] nvme-rdma: ratelimit the map-failure error
- message
+Subject: Re: [PATCH v6 05/12] md/raid1,raid10: factor out
+ raid1_write_error() helper
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Mykola Marzhan" <mykola@meshstor.io>
-Cc: yukuai@fygo.io, linux-pci@vger.kernel.org, linux-raid@vger.kernel.org
-In-Reply-To: <20260726113229.2154269-12-mykola@meshstor.io>
+Cc: linux-pci@vger.kernel.org, linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20260726113229.2154269-6-mykola@meshstor.io>
 References: <20260726113229.2154269-1-mykola@meshstor.io>
- <20260726113229.2154269-12-mykola@meshstor.io>
+ <20260726113229.2154269-6-mykola@meshstor.io>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 26 Jul 2026 11:53:24 +0000
-Message-Id: <20260726115324.94BA31F000E9@smtp.kernel.org>
+Date: Sun, 26 Jul 2026 11:57:52 +0000
+Message-Id: <20260726115753.172F81F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-> A mapping failure is per-request and, for an unroutable P2P transfer,
-> deterministic: a workload that keeps issuing one turns this into a
-> log line per I/O.  Ratelimit it, as nvme's per-I/O error logging
-> (nvme_log_error()) already is.
+> From: Logan Gunthorpe <logang@deltatee.com>
 >=20
-> Assisted-by: Claude:claude-fable-5
+> Factor out a common raid1_write_error() helper from raid1.c and
+> raid10.c.
+>=20
+> This will help reduce code duplication in subsequent patches.
+>=20
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 > Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260726113229.2154=
-269-1-mykola@meshstor.io?part=3D11
+269-1-mykola@meshstor.io?part=3D5
 
