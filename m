@@ -1,161 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 409F538BF75;
-	Sun, 26 Jul 2026 12:10:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6DCE1C84DC;
+	Sun, 26 Jul 2026 12:10:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785067816; cv=none; b=ZrHSgw2ehI0HpVFoR24ZFI1BUkO+lizTSYoYvGdCmZHI1jhHRuxuB7nr3FYSYdNgQiIy7c5l8D4kPifKswJyO9k7WSdI1vOaYgMwrbcaAvEPtOYLuXoS9JJuTBHK6V7dGsgYN6ixQ3xAfdQAtdqPJPtTcGAQiKVxIN7WnVRT1pw=
+	t=1785067841; cv=none; b=URpT1d79azZxBAXAcNVEct7DJbocKTs9RwX0LNyEAnexSGKGAmSDYhktQOdVn/bTONYQdl+tyJgpa5dMEEcPzEApRRrjud4rb3ejD7Sn6auNWfrY9X57FFVuEOe028UQBPwYs5BJxEmfdumgFfo9wDnVdKSKItEwCF6CGIKgf9s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785067816; c=relaxed/simple;
-	bh=CVvO+SeTkEXhTn5LUH5gVB4mH5oYpJYGgwPKG9OcWmA=;
+	s=arc-20240116; t=1785067841; c=relaxed/simple;
+	bh=Gx8sK5Lcu8DgaaXGC0Efi+q5oN+5Y0XzeSsQolG/Uds=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=U4X8GzfuK87E5CTdaDlpmAutZ9tYlNTPgNNNF/YHa+kLck8aI5Y9FjMMxLIadAa+AZWr6m0F/IxCIeEDHNLlJTtXjeB/R4vBIPAUJztvjxdqIiUtqs1Xm3L2EA1F9CqnYk6/q/qZ76qX4T9XDDQJVh7KzBT6iQjmu3LzVE6E59k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NxZP8yVO; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=psXpz7k0uscY82EtSUYzvxCTtamTA1TYY8ltORFts2xwQ0ajHX2g/lNhGiJE+X+vzZSCD/aXVt4Mi15SMgHHZeBZ5WNbcZt0dMCiIWMr8mb9Pdb/lWJPpbOMVJJixdHKaomVOg6NDEagW+1VCSgI3I4Fe9rbHOJUDMLVHXwLTW4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k29WUKuW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NxZP8yVO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4337F1F000E9;
-	Sun, 26 Jul 2026 12:10:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k29WUKuW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E67031F000E9;
+	Sun, 26 Jul 2026 12:10:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785067814;
-	bh=Yuu76qoatS/WuUxH0cxHXw7GAWjI07S6yWQP/vcix9s=;
+	s=k20260515; t=1785067840;
+	bh=GOAn7GTuELbCprA8aMRtaEC1Bk48QqZEQs+QTEgvA9w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NxZP8yVOcIaoJyFMkehEtTnsCl0QFHJs20lUXSM+Y4tvrWigR50o1vN7fM2RLEWM+
-	 CCUMmQtHTefKf8pzResuzvi9kWgNd+2ICYVPpUYlSspDPDL+Yt7YK7unyil2s4J/st
-	 UCIO31UCPq+7rW21kdTzFYR69PHyZupdCeyLYs33tFiPWVuT9VgKLWRQRoPCLre+My
-	 m6tNZWlm99yh/3S5z3ervAWkQXncT1Erf2rnsFf0pvhL9xhXMMj4Ob7iOhqddHOWYV
-	 asf6H0jJTvcXzYMSOniWusIqF2RTr1zlbK2kxYx++l17jccKVDu3UMXTDk6IC1mhOK
-	 EtXoDVnhnKHSw==
+	b=k29WUKuWt9/KVWxZKFSlNA2wQV4mW9CswTirvwgriuw2Svk536L6xjOMGxm/ga7hD
+	 LOFeGXPdm3Ecv2TWBQ4u4Yv+rYSWbxVuln55hmyTd/ojT+eMXgXCYZT4/F8NCG99ax
+	 IE/3ocEwNPc4ENderOAEjZCwdEPp8S+Tw0HM9YyaXYDvxB6oqymb/39NtaM4+0Hor2
+	 oytnNxdr15auI45CdmpsixcR0xlYEdhXimQYusxvrJUN5zbrosdQiS3o9//aOLCIBc
+	 tzQNBEVBufHzJjvxPY+8g57ZFlohZ+w1usV+bPwTK2uyyKFzbqP9YsYJxvDi6qmqby
+	 7/ExCwEdUNBWw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 10/12] nvme-rdma: return BLK_STS_P2PDMA for
- unsupported P2P transfers
+Subject: Re: [PATCH v6 03/12] md/raid1: serialize non-write-behind writes on
+ CollisionCheck rdevs
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Mykola Marzhan" <mykola@meshstor.io>
-Cc: linux-raid@vger.kernel.org, linux-pci@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260726113229.2154269-11-mykola@meshstor.io>
+Cc: yukuai@fygo.io, linux-pci@vger.kernel.org, linux-raid@vger.kernel.org
+In-Reply-To: <20260726113229.2154269-4-mykola@meshstor.io>
 References: <20260726113229.2154269-1-mykola@meshstor.io>
- <20260726113229.2154269-11-mykola@meshstor.io>
+ <20260726113229.2154269-4-mykola@meshstor.io>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 26 Jul 2026 12:10:13 +0000
-Message-Id: <20260726121014.4337F1F000E9@smtp.kernel.org>
+Date: Sun, 26 Jul 2026 12:10:39 +0000
+Message-Id: <20260726121039.E67031F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
-New issues:
-- [High] DMA API violation causing stale PI metadata (Data Corruption).
-
 Pre-existing issues:
-- [High] Incomplete fix: multipath I/O accounting leak on nvme_rdma_post_se=
-nd() failure.
+- [High] A Time-of-Check to Time-of-Use (TOCTOU) race condition exists duri=
+ng concurrent device removal, leading to a NULL pointer dereference in both=
+ the read and write I/O submission paths.
 --
 
---- Patch [10]: [PATCH v6 10/12] nvme-rdma: return BLK_STS_P2PDMA for unsup=
-ported P2P transfers ---
-commit d3d8febf3662843e41333a6adc3c3ea1d88ff373
+--- Patch [3]: [PATCH v6 03/12] md/raid1: serialize non-write-behind writes=
+ on CollisionCheck rdevs ---
+commit c5339979d08defedb52fda8881d721fd1180c172
 Author: Mykola Marzhan <mykola@meshstor.io>
+   =20
+md/raid1: serialize non-write-behind writes on CollisionCheck rdevs
+   =20
+This commit serializes non-write-behind writes on CollisionCheck rdevs
+to prevent older behind data from landing last and leaving stale data.
+It replaces the previous MD_SERIALIZE_POLICY check with CollisionCheck,
+which properly accounts for write-mostly members.
 
-nvme-rdma: return BLK_STS_P2PDMA for unsupported P2P transfers
+Link: https://lore.kernel.org/linux-raid/20260723112741.1206836-1-mwilck@su=
+se.com/
 
-This commit propagates -EREMOTEIO from ib_dma_map_sgtable_attrs() as BLK_ST=
-S_P2PDMA
-to prevent infinite multipath requeues. It also delays nvme_start_request()=
- until
-after data mapping succeeds to avoid multipath accounting leaks on mapping =
-errors.
-
-Cc: stable@vger.kernel.org # v7.1: requires BLK_STS_P2PDMA and the ib_dma_m=
-ap_sgtable_attrs() conversion
-
-> diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
-> index 63830334c73e2..c38d949502b7c 100644
-> --- a/drivers/nvme/host/rdma.c
-> +++ b/drivers/nvme/host/rdma.c
-> @@ -2033,8 +2029,6 @@ static blk_status_t nvme_rdma_queue_rq(struct blk_m=
-q_hw_ctx *hctx,
->  	if (ret)
->  		goto unmap_qe;
-> =20
-> -	nvme_start_request(rq);
-> -
->  	if (IS_ENABLED(CONFIG_BLK_DEV_INTEGRITY) &&
->  	    queue->pi_support &&
->  	    (c->common.opcode =3D=3D nvme_cmd_write ||
-> @@ -2051,6 +2045,8 @@ static blk_status_t nvme_rdma_queue_rq(struct blk_m=
-q_hw_ctx *hctx,
->  		goto err;
->  	}
-> =20
-> +	nvme_start_request(rq);
-> +
-
-[Severity: High]
-Does moving nvme_start_request() after nvme_rdma_map_data() violate the DMA=
- API?
-
-nvme_start_request() calls blk_mq_start_request(), which invokes
-blk_integrity_prepare(). This modifies the PI metadata buffers in CPU memory
-to update reference tags.
-
-Because nvme_rdma_map_data() has already mapped these buffers for DMA
-(DMA_TO_DEVICE), could CPU writes happening after the map operation remain
-unsynced on non-coherent architectures or when bounce buffers are used?
-
-This might cause the device to read stale PI metadata, leading to PI
-verification failures or data corruption.
-
->  	sqe->cqe.done =3D nvme_rdma_send_done;
-> =20
->  	ib_dma_sync_single_for_device(dev, sqe->dma,
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index afe2ca96ad8c2..997f79c05db7b 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
 
 [ ... ]
 
-> @@ -2070,6 +2066,9 @@ static blk_status_t nvme_rdma_queue_rq(struct blk_m=
-q_hw_ctx *hctx,
->  		ret =3D nvme_host_path_error(rq);
->  	else if (err =3D=3D -ENOMEM || err =3D=3D -EAGAIN)
->  		ret =3D BLK_STS_RESOURCE;
-> +	/* Peer memory unreachable from this device: don't retry. */
-> +	else if (err =3D=3D -EREMOTEIO)
-> +		ret =3D BLK_STS_P2PDMA;
->  	else
->  		ret =3D BLK_STS_IOERR;
+> @@ -1677,7 +1677,11 @@ static bool raid1_write_request(struct mddev *mdde=
+v, struct bio *bio,
+>  			mbio =3D bio_alloc_clone(rdev->bdev, bio, GFP_NOIO,
+>  					       &mddev->bio_set);
+> =20
 
 [Severity: High]
-This is a pre-existing issue, but I noticed a potential multipath I/O
-accounting leak if nvme_rdma_post_send() fails.
+This is a pre-existing issue, but can this second loop in
+raid1_write_request() encounter a NULL pointer dereference during
+concurrent device removal?
 
-The commit message notes that starting the request before a failure causes
-multipath accounting leaks when blk-mq hard-completes the request directly.
+The loop re-fetches rdev from conf->mirrors[i].rdev which might have
+been set to NULL by a concurrent raid1_remove_conf(). If
+raid1_remove_conf() executes after the first loop incremented
+nr_pending on the old pointer, re-fetching it here and accessing
+rdev->bdev in bio_alloc_clone() could trigger a kernel panic.
 
-If nvme_rdma_post_send() fails (e.g., returns -EINVAL), execution jumps to
-err_unmap and falls through to the err: block, returning a hard error status
-like BLK_STS_IOERR:
+A similar issue appears to exist in the read path where
+update_read_sectors() implicitly re-fetches info->rdev after an active
+disk is selected in choose_best_rdev(), potentially crashing on
+atomic_inc(&info->rdev->nr_pending).
 
-	err =3D nvme_rdma_post_send(queue, sqe, ...);
-	if (unlikely(err))
-		goto err_unmap;
-	...
-err:
-	...
-	else
-		ret =3D BLK_STS_IOERR;
-
-Since nvme_start_request() was already called, will blk-mq hard-complete the
-request directly, bypassing the driver's nvme_mpath_end_request() and leaki=
-ng
-multipath accounting like bd_stats->in_flight and nr_active?
-
-This could permanently block block device teardown.
-
->  	nvme_cleanup_cmd(rq);
+> -			if (test_bit(MD_SERIALIZE_POLICY, &mddev->flags))
+> +			/*
+> +			 * CollisionCheck marks every rdev with a serial
+> +			 * tree; order against in-flight write-behind I/O.
+> +			 */
+> +			if (test_bit(CollisionCheck, &rdev->flags))
+>  				wait_for_serialization(rdev, r1_bio);
+>  		}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260726113229.2154=
-269-1-mykola@meshstor.io?part=3D10
+269-1-mykola@meshstor.io?part=3D3
