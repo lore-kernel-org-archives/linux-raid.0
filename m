@@ -1,66 +1,65 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26266364926;
-	Sun, 26 Jul 2026 12:01:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A111155757;
+	Sun, 26 Jul 2026 12:02:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785067314; cv=none; b=IYylUS3tyEARbPlNN5+VUdZBOROlZjYyGFKtmM7vhNcn8TDrg5mhdgzY6ucVwUIH4YuckCjsquE1pq7YhXEsdRkH+VUFFTxfgn8u/P03NWJP44LzYWEFn0BjYotlp6IJuTBqorn7zrNPQzDgvi77ZAGlN+mrmjmHULOnJw2lTUc=
+	t=1785067365; cv=none; b=jWClC2n8HLzQsh/5rGQgU1O4vNN4yV8LU3Ogjmdl1KyMi2sih/Fzem+vb5azIGZzU5rkqtuLjsIg6LTO1hmWdJ6CM/LVl8q0QLJGvy/4coCupD6sL8qQ0JpMfJEPhrnIZEkrYzxbKibIrZEhZjRfsQdxPdOXHA3NUtxNQ1siK1w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785067314; c=relaxed/simple;
-	bh=KqZV2QCn8J53FGe/xJ5n1oT3HiMRBERge9K+tFJyp50=;
+	s=arc-20240116; t=1785067365; c=relaxed/simple;
+	bh=lw3CJZHn/sHdwjDEhGSIj+H7YHSxDLawa/UKdh3y9z8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=AE55e4ohPd8FKHM5zrFu+7yGV4HzNxWK+rEw5LfUxYGfjhszQZl2f0ZNL/VRXxp+sbStlqAvEI1FwYJyqPyczWlqX958cQaf9YdZroIBTyzH5XWEwnKFsxNtLT5GCDaXid4dPYxbSpmYSZF5XzwxkwBwyGLUl018AX85zUEXwKU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pz/KnSOO; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=AlKKtzx1zspugm9BjUY420OAqWAzFTkQO8hmkrr6u0QISOTW/crg/35CUVbJlcUCbxIkE8upjYt+0RcauviJ08mZZaXE3VZiZY2o9UXtv0sRJZTufwKNPMHf101AvXqSuWrPlJWfyqz26E9YUGHLzNMYco9/uASYeVoHD5mJDj0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NL7N3H1/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pz/KnSOO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 903FF1F000E9;
-	Sun, 26 Jul 2026 12:01:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NL7N3H1/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D4A61F000E9;
+	Sun, 26 Jul 2026 12:02:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785067312;
-	bh=010KAmYRFaF48Fcf8Emg54DnKkpRdU8jVWhJ0A++z0o=;
+	s=k20260515; t=1785067363;
+	bh=Ph6h/Kg/xAZG1eiHM9mYihsGwb5JkG+EejQ1aukQuD0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Pz/KnSOOvnARtB6mEG2dj1uZ9vqe0RR0iKUTALau++xcS2H5Maz3vu4lRFcTcjzU8
-	 eAYFcBjWiPh7odVaOADUsXKES3gsMlDHFsjDC54f1EWtFImgTf9aGkMjwapeXM25xz
-	 9KXyo6Nuu/w0TBMr8dWadco5PUMUncuvcYCg/iifQMg7wU5c8xE6GDiyzKogYyW0fm
-	 HQj/ySTXUYvSzB8vrPE/RI0hgza7t1yX/5RNz1SVAr7dhT5Fs8IGivIr9F8tbHOxXt
-	 K0HN10/QVrfmWOA1107n3DUYLeVkTp2/4o4EbbcxH3DDhzruR1LP0pXbIcHy1W594Q
-	 +X9k81TsxQGGQ==
+	b=NL7N3H1/qlNxU4L8EbMs7QF9AzRg9/9g3+9jaaqB09f/bSNRgWnzyEhiSeAmFXHNa
+	 T9JObUC285Y+uroAJLZcRFPcrXfC4QBLqfz/UhmHesIMXLNm4PK3EpPNaVpE2jEbJs
+	 FME3XdQrTtpW5r1FxIAmjwJ/8vouf25qB1JJzTu4aC5WZxiig53DGUVylDoS6YR8uB
+	 xJnz9rzIEkwkmVyrqQUWThOO277HreXydr/0cuNun3QpIPVwFUJZ/4937buvOcUHrt
+	 7oHslhYo/QIBrgFcHbW15aHjZpQK9s6W3xjchx+pNceNpJ4axt9gPxwGd2prhpIrG7
+	 GjcjQjf/J0DKA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 09/12] nvme-rdma: use ib_dma_map_sgtable_attrs()
+Subject: Re: [PATCH v6 12/12] nvme-rdma: factor out the scatterlist DMA
+ mapping helper
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Mykola Marzhan" <mykola@meshstor.io>
-Cc: linux-pci@vger.kernel.org, linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260726113229.2154269-10-mykola@meshstor.io>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io, linux-pci@vger.kernel.org
+In-Reply-To: <20260726113229.2154269-13-mykola@meshstor.io>
 References: <20260726113229.2154269-1-mykola@meshstor.io>
- <20260726113229.2154269-10-mykola@meshstor.io>
+ <20260726113229.2154269-13-mykola@meshstor.io>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 26 Jul 2026 12:01:52 +0000
-Message-Id: <20260726120152.903FF1F000E9@smtp.kernel.org>
+Date: Sun, 26 Jul 2026 12:02:42 +0000
+Message-Id: <20260726120243.5D4A61F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-> ib_dma_map_sg() folds every mapping error into a zero return, losing
-> the DMA layer's error code.  Switch both scatterlist mappings to
-> ib_dma_map_sgtable_attrs(), which preserves it for the next patch to
-> act on.  No behavior change: failures are still reported as -EIO.
+> The data and the metadata mapping do the same thing: describe the
+> segments blk_rq_map_sg() produced in a local sg_table -- the embedded
+> one's orig_nents is the allocated size, not the valid-segment count --
+> map that, and hand back the DMA-mapped count.  Fold both into a
+> helper.
 >=20
-> A local sg_table is needed: dma_map_sgtable() maps orig_nents
-> entries, and the embedded table's orig_nents is the allocated count,
-> not the count blk_rq_map_sg() produced.  rdma_rw_ctx_init() does the
-> same.
+> No functional change.
 >=20
+> Suggested-by: Logan Gunthorpe <logang@deltatee.com>
 > Assisted-by: Claude:claude-fable-5
-> Cc: stable@vger.kernel.org # v7.1
 > Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260726113229.2154=
-269-1-mykola@meshstor.io?part=3D9
+269-1-mykola@meshstor.io?part=3D12
 
