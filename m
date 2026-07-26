@@ -1,124 +1,123 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C5E03ACEE1
-	for <linux-raid@vger.kernel.org>; Sun, 26 Jul 2026 12:25:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37437288C0E
+	for <linux-raid@vger.kernel.org>; Sun, 26 Jul 2026 18:56:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785068751; cv=none; b=ZeoymQICBzUbx52DDvD8fn6wUq9rBcPhf4fFvmXACbtbZk9oklGR5RPIgkD88lYtEEHXPx08FMDDyCJpcNdPoXw4ahUx9smXO6JJaNB7tYDhc/nQx+Byi3Vtp6cpwENb5Xrt9JGx/HSk+vTQ3fEBco8cO//DQvAhuFjbioBV7uI=
+	t=1785092207; cv=none; b=Pmx4itU+UDHZObIaVobarHUc5DVEE+ctPy1ADsf8F9rbZu8nzV7WSJKrrQkQ9bNjwgd6NUaEF27tO4q0XcJcjOz0Obvd37c3rCm6u95OZfvbBAzmeGGkudc/il0AkpsELzX3LFnUuccqlDNXeV/63QGont15jR8gI16L8pYeTDs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785068751; c=relaxed/simple;
-	bh=JaKpvmu/bz/vC8QBqDOSptyd2EhANT5RZrXa8eSchqc=;
+	s=arc-20240116; t=1785092207; c=relaxed/simple;
+	bh=PC9UbpBEosFiHmE8YA248xLUf2DTD2qxAB1rbceuJj8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iorPOYR/nxZge0a9FIIqYm9RWM28/hwoijWsmZA8AVujboVeHY4vP0k5OaZe3zrys/HawJEkSecXWGwR9YtgXrtdiMGkA3KNEpc532GTTDu9xm4HP2vNXotS+pJVkvDsSjSy+e0bpwxjAOztme3T8ouuDiSUnlRYOnIY1R5X+AM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=c1dOz/QQ; arc=none smtp.client-ip=209.85.128.41
+	 MIME-Version:Content-Type; b=ily/xYKlT4JKTjzGDuGGxZcmyj/67YU1pmOqD1YitZq2W6ULhxDtwZ5QfmLcmoOJD8OJ3Q12en1kSjjZ5hRUYjVvT2y5CyFlkeMC08ZkLedLeFuqnmtGOt981bC2XB8GzRsmOBhZbtPqOn2XxXA2h54w+e7Cgy1qKTlMtApgkgw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=ofqwA761; arc=none smtp.client-ip=209.85.128.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meshstor.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="c1dOz/QQ"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4955de8797cso10969515e9.3
-        for <linux-raid@vger.kernel.org>; Sun, 26 Jul 2026 05:25:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="ofqwA761"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-495437bb891so18491425e9.1
+        for <linux-raid@vger.kernel.org>; Sun, 26 Jul 2026 11:56:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=meshstor.io; s=google; t=1785068746; x=1785673546; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=7zlaUYhyfyu8eZmeK1wxZbQdj2lnxJyQyFF/To5B+NQ=;
-        b=c1dOz/QQjAkaizZut38trd0b4pE1SFfRNOXjhBxgqNJSgsdyKKjmCL++KshzK/Q9w8
-         OoF200zYN3Q9cLt6pAF11F6QQ3m6N7/mLxajERd3aKM9wTjDclVL98rM5qvxrpLGOMQq
-         FAkTpOGfCFavn4ApARwZluSdC7I37PHbcp9SUG9T06RVr3Z9v6oMkLghHdIayuIT+3Zv
-         CKksOYciBmnVOpinwu8yEwrIAuziFLyQkscr4O0OdxpBOoWwe9guWJGD7XR05Ld8k5gy
-         HUXMTi9BzJJBO1Mh/4J76dySmPNw8d1eGzI2dOWjjl61kBzWJL0VF60JSFmAZydduUyC
-         DY+A==
+        d=meshstor.io; s=google; t=1785092204; x=1785697004; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=qupflK8iXoDh4KFHUKqHaRiN+EfApzg+gs90R8aqEB4=;
+        b=ofqwA761HZL2q+szPl9D7B7EJeM46Y+T0p+SmixljRl/t4VngrVeoPeS4axMZsSGqz
+         l+xoPu+3PAlXDNI5uEYQH0egDrgwgL9BEllxiDv5oepQRUqE9IxsnevhnwL1ZPMna0Xt
+         EXL48h5CC6JYTtodo/CRe0QSWa+W2WOna2Arv/uNiqukSM7chNggtFrmxdzT+QBT15gz
+         M5p1RC3b1Zdu72J5jojihRsvscxpl8zfCqkrusWdypcynA+BVe+jUGQa8zOhZ9jSXQe3
+         F5ZfPc4/6ktOVlDCaoCFNqZocIAhzMXRcee4Nta7pOv8wqjm6mJ4LmzX+EvJ73Qtao85
+         /o/g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785068746; x=1785673546;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=7zlaUYhyfyu8eZmeK1wxZbQdj2lnxJyQyFF/To5B+NQ=;
-        b=caT8w+8yLZiv+tQb2RgW6arx9f8y6bDfIhOEFczUl2wYIgtMHw0Dz+bB/kvwPljBo/
-         XKkVI94eTKr0dHQ7WZ1SnqH/VIGwFHeqISDsOMeJH5Y3xwNR/myMu0HFnEpNi41ad29u
-         iQtdNRJ2k3PNC0yrtbIUEZT/IiUqGCV78BN7QX/ZFPsOf0xvMBvT3kQ3pMoWr43l02Y+
-         UEiDoLECIRN75D6X8EydS1xZA7zOynT8KP6KJn7TuxcZpJ7JSORNKhrzgrVtvW15Eola
-         CZSCytP5k21b8RqeejBhL60I40f5hM5xMhw5j8uIAhXsOcuyb2R37tq7lCiwq36WDfza
-         rvwg==
-X-Forwarded-Encrypted: i=1; AHgh+RqJbMwjdscutSDvaAX9yuuYe5p4MLGTWF0qVPBJLZuD66LWfkceyLHYY0SBj0qy9MD1XM9DADTgO3MS@vger.kernel.org
-X-Gm-Message-State: AOJu0YxlMJUOyM39oh/QDzv10tkzjaOhYPvqSOgUs/5xyyrUB2ezkqzr
-	WJhzrkC0qE1nRptPXf7qpFhYyrhY+IG0N/sM17xcocP7XUMvo/jdPAyh3L1TeWcxqg==
-X-Gm-Gg: AR+sD11WLkcvK6Xu1vPFPnxD2Tk/kWjvjbkK9UMlnsTvzh7TTXyd4JfZqufFy6W4nXW
-	ZyDk0pTVNRfQm6r0gz58JLaVt7CxTsVawSOc6oDaOCygWns4lULjS0gTX7qyEG6XZ+xloAKOz2L
-	skgv/N62mW9i4wgSoEpWr8HBQw1tuvy72hMDcmTbUSxuF8lCCFuQAFxcACXdxqb/n7xNPfzYYS7
-	HQ+pJHcDyjRbtgRk9UWEBDrpItHwJoq1i+sfdy9Dytf/4fiGjCq5sQc41eToVb0ulzFl68Le5X+
-	kf1qAt8oJaIhlfZcpBXciXhr1WKqx62b45wLZtciXLFS1bNRwOT3XmusYtKvuX20YWoOU8AN2ns
-	0Y1ZvW5whh5h5t+qipTo4NtA6xxHPmavcA6iZCgT7LORRRH5TpEkrkWeJOQYb5jPmtwGaBntT57
-	Ih4P4bSF7uQy4XWC7W7IDIefSCz3ej7a3k6oBqSv8T6Lu5menoCi337Fc+03MMOcqsL0sxkgUHf
-	ZmoHY9X3LswbFELrwwSZRxWB8+G82iHMbHoLkFYeZil6YIpV91T
-X-Received: by 2002:a05:600c:5492:b0:495:7eab:3abd with SMTP id 5b1f17b1804b1-496b5736f4fmr69919305e9.33.1785068745663;
-        Sun, 26 Jul 2026 05:25:45 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1785092204; x=1785697004;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=qupflK8iXoDh4KFHUKqHaRiN+EfApzg+gs90R8aqEB4=;
+        b=HXESu/iK5Vw9L/M7E1lPhG+rTbMFkhDlaJpvnVdcraN5ReJe2a6993NYEN/kWM4wAn
+         R0GauyNcLpBi+Koy5D+aOnn+YERwvoRFeo3hoKVPVcJ/t5lyNpYuQMtq5sRoc5/fFkL5
+         9OYmlrFnptG/ofdv8zCle8M5lCW4e3SjyKVislaH4Pgf+olXydwf4xYf1Lcbh3zOdBub
+         e2JAHeRcYdZ5PQmcsDy0RdsgEiUuT0tvZnIrTofVp9Z2IFL1t5zkX/f9UG2lICD7KJ+z
+         12dRj6Etnwwhrgqa3ibu1u1vT4jTgSyJA27BONFuhTUjQjOR0sf6k85zhP9DscAGiVfq
+         fZeg==
+X-Gm-Message-State: AOJu0YyXnqHGE2Kc7KnN64D6CHcjpuQgrM2rAVjuRjETB8k4z7ft8PPP
+	0X23FCdh1h+ls8niRDcN8xAF4CHds67UaCK3T+qk8OPyWH5y4jaMq1cR4mwAjmoSuA==
+X-Gm-Gg: AR+sD12vdKfiujcpcFCpTo7P3o+bOfktTLfuUIUp6Piyq1vynGTdTLg2LlY15y5IllJ
+	j8+DaEdr1LhUCRvvlAnJqmzr/DsqubJDAKPqTQhQal7Y91yjhNw+6NnAiEn4/fbXytMkr3Fd2fx
+	AYec+RsWkbzYfhkjBBM9vg7/ctrGcr5qXfiNNEFj1XpiN65+qQcJbqawm1gQbC3SBtq2Kfob542
+	GrV8lowaz27Dcilg8PHECps/606mSzfmMWrS1rWUT7YwollMGGxK4eHqHKoLTwOyEmzo2Epy+3o
+	RYkjDuzrGUBNM592WGQZpuWPO3gvS+cBn/ciL6Fz3URaGvky8Bl00ckkGb32IWsDxbvGgKkYw8N
+	mGFzWio4gSFQSTwbBiuDYG0GAAHC7etJ9s2PWfwLIG7L/FWvW3yO3R5B1v8wpNGruk92M8KHcRU
+	gXJtp1vBxGeYS4p20BSVi3F6YxiS8nFGcNgrVdgPSUFn95mTYNVxQ6LeAMoS3LAQgIwMmHj6BIk
+	3wZ4peMJD5SjXR1FqQTFVfieqg8s3FveHzJCk566rjeHGfOFE2s
+X-Received: by 2002:a05:600c:1d0c:b0:495:3c6f:7c18 with SMTP id 5b1f17b1804b1-496b5b3b22cmr79955665e9.3.1785092203837;
+        Sun, 26 Jul 2026 11:56:43 -0700 (PDT)
 Received: from meshstor-pc ([185.87.42.56])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4957f9ae5c3sm221458535e9.3.2026.07.26.05.25.43
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496b4f2639csm154318645e9.10.2026.07.26.11.56.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Jul 2026 05:25:44 -0700 (PDT)
+        Sun, 26 Jul 2026 11:56:43 -0700 (PDT)
 From: Mykola Marzhan <mykola@meshstor.io>
-To: yukuai@fygo.io
-Cc: Song Liu <song@kernel.org>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	Hannes Reinecke <hare@suse.de>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] md: only consult skip_sync_blocks when 'j' is in the bitmap's domain
-Date: Sun, 26 Jul 2026 14:25:32 +0200
-Message-ID: <20260726122538.2176316-1-mykola@meshstor.io>
+To: Chen Cheng <chencheng@fnnas.com>
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yu Kuai <yukuai@fygo.io>,
+	Song Liu <song@kernel.org>
+Subject: Re: [PATCH v7 0/3] md/raid10: fix r10bio width mismatches across reshape
+Date: Sun, 26 Jul 2026 20:56:37 +0200
+Message-ID: <20260726185640.2222714-1-mykola@meshstor.io>
 X-Mailer: git-send-email 2.52.0
-In-Reply-To: <7aa16dbf-9931-4c7d-9368-a828a1767034@fygo.io>
-References: <20260719144227.940444-1-mykola@meshstor.io> <20260719144227.940444-3-mykola@meshstor.io> <7aa16dbf-9931-4c7d-9368-a828a1767034@fygo.io>
+In-Reply-To: <20260711100352.425177-1-chencheng@fnnas.com>
+References: <20260711100352.425177-1-chencheng@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-> There is already a patchset to support llbitmap reshape for raid10 and raid5:
->
-> [PATCH v2 00/20] md/md-llbitmap: support reshape for RAID10 and RAID5 -
-> Yu Kuai <https://lore.kernel.org/linux-raid/cover.1782282042.git.yukuai@kernel.org/>
->
-> Before this set, reshape for raid10 or raid5 is not safe. Kernel panic or
-> data lost is observed. Please check if your problems still exist with this set.
+Hi Cheng,
 
-I applied your v2 (all 20, clean on 0e35b9b6ec0f) and re-ran the test.
-The problem still happens.
+Independent confirmation of the bug this series fixes, in case more
+evidence helps it land.
 
-raid10 near-2, four members, lockless bitmap, no --assume-clean.
-Write a region while healthy, fail and remove one member, rewrite the
-same region while degraded, add a spare, then check whether the rebuilt
-spare physically holds the degraded-era pattern:
+While running a KASAN campaign against the llbitmap reshape v2 series
+(base 55b77337 — unrelated to your fix) every raid10 grow under IO hit
+both faces of the width mismatch:
 
-  base                        spare does NOT have it
-  base + this patch           spare has it
-  base + your 20              spare does NOT have it
-  base + your 20 + this patch spare has it
+  BUG: KASAN: slab-out-of-bounds in free_r10bio+0x97/0x110
+  Read of size 8 at addr ffff888149044ec8 by task ksoftirqd/2/28
+   free_r10bio+0x97/0x110
+   raid10_end_write_request+0x260/0x500
+   blk_update_request+0x18b/0x6b0
+  Allocated by task 232:
+   mempool_alloc_noprof+0x108/0x1d0
+   raid10_make_request+0x18b/0x1100
 
-The mirror partner holds the pattern in all four runs, so the region
-really did land on that mirror pair.
+  BUG: KASAN: slab-out-of-bounds in raid10_make_request+0x214/0x1100
+  Write of size 192 at addr ffff88814da7aa48 by task fio/460
+   __asan_memset+0x23/0x50
+   raid10_make_request+0x214/0x1100
 
-Only two of the 20 touch llbitmap_skip_sync_blocks():
+(192 bytes = 6 x sizeof(struct r10dev) memset into a 4-disk
+allocation.)
 
-  11/20 returns 0 for MD_RECOVERY_RESHAPE.  That is the reshape case,
-        which this patch also excludes.
+456 reports across 5 grow cycles (n2, 4->6 disks, four fio randwrite
+jobs) on the plain base kernel. The mempool face matches your 2/3
+exactly: the 256 preallocated r10bios keep the old width, so any
+allocation that dips into the reserve after the grow is a guaranteed
+OOB write, not just a read.
 
-  10/20 adds "p >= llbitmap->chunks".  That bound does not fire here:
-        raid10 recovery walks per-device offsets, which are always below
-        the array-space bound, so p stays in range and simply addresses
-        the wrong chunk.
+The storm is dense enough that raid10 grow under IO is not testable
+under KASAN at all right now — which is how we ran into it, and why
+we would like to see this land.
 
-Nothing in the series changes the md_do_sync() call site, so recovery
-still consults the hook with an offset raid10's bitmap cannot interpret.
+We plan to run v7 through the same rig and will follow up with the
+result.
 
-The two are independent.  Your series applies first and this one on top;
-the only conflict is context in md.h and the raid5 personality tables.
-
+Thanks,
 Mykola
