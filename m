@@ -1,151 +1,217 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACEBD388393;
-	Fri, 24 Jul 2026 18:51:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FEB9346FAE
+	for <linux-raid@vger.kernel.org>; Sun, 26 Jul 2026 11:32:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784919092; cv=none; b=EwHMnvXOxlDJ9I5brIs4NFfc0cnBC9U1cIJrcXKmiYlLUdH1A6/mUOPOMULXkcuvDfzC+YyBMxMl7/QC4zm67tZyP0it07GYJ71yQfpQmFnk2u7YVqNxIBole4r39w2S3MpBmYQ1jFisZ4cfemPzIdXMpPAhRosIQWeRFXnZ2/A=
+	t=1785065560; cv=none; b=TPHhhe1B/Of6VlAvoel5OllI83NYDYMWyJF3iLHVsI+b3XXnbmM6eZDAyTZPpw78TdDHqpKOlcgC0TExaaYeFNOXgnqw3n3hMHldpHiWHOeO3nJAJqI4W3JwW+fyAXnJDt2Y/6DJ8GgvzbOcwX0q3RacW3P3m2vu9u8UJUYMWKA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784919092; c=relaxed/simple;
-	bh=sX031qyb3snFrJjKmoNKk/6/fJJWgyZ7ikchVOkegLc=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=UyTQsIkSihx/j6jUcNiJFVIWvu6+Hq4f0+QAfmEA4/wElRDrRpCVQRDhfMxGv5yOJVJK80zwCHXJyuPXz7jKb5lpmWH4JFdZh6bx7yJP3P8+AMb+PoN3lwsr3NH2AmvmfpCq1v644nkExC3aw2oPyPKFmosOfLEQysSjWkSPNoA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=jjg68SQ2; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1785065560; c=relaxed/simple;
+	bh=YgfpfgE1On3sKHo6BvwUe+munCme3srUBUyovRvl9UY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PqTcWqOD1j885FlF0n2bjpg0sNpJe4H6Tcnsj/7DFss89lQDSegISKn+84M/s8DXIh0QENQltd6i3Os1RLxJRvj8CXo7d2wcFyN1onVlLlvvEoovFtt1wTkbI+Oai66z7tPMBXYLGpy/TLVyHfmy8ugbYeP5cguJcWpjnJCXGuE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=OSGX6LbX; arc=none smtp.client-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meshstor.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="jjg68SQ2"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=HeLi3cYbc3bVGppW4plLifn1UQG3PWFSk8cImbFB1Pg=; b=jjg68SQ2itQQU+efSypVQfQV2J
-	lbOB4CouCbkRF2sBRX6sYzLPn9f3kq0kv0gWydzWQ+3s1s+gTW07PARHqOoSPrPFBEDkD5iIVCRpI
-	GPnwepRfWEnaZozV+hzEq+uDhFTVTsFr4TfoSnHyc529MF+F94O4beKkwFj1KSFSqiRRe2c5VnKjB
-	42eUHlf0kWy8GMassW93ZTVDDULkoG72VvEB/ZlQqteSejvffLwHqVFyErhseTvUKObOlSKjqMPPm
-	FOIBs2Dd5ER0ZPltO9t4SOGmI1kGz4y7xtSGI+5mq8Z34i29DeCsZqxINkGrLCVRxiOBO3GqXcXyW
-	veCk0MJw==;
-Received: from s0106ac1f6bb1ecac.cg.shawcable.net ([96.51.150.74] helo=[10.0.33.8])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1wnKzT-0000000E1Q5-0fGd;
-	Fri, 24 Jul 2026 12:51:23 -0600
-Message-ID: <15a1fc13-f70d-4403-8084-2836fb05cd0e@deltatee.com>
-Date: Fri, 24 Jul 2026 12:50:18 -0600
+	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="OSGX6LbX"
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-4758bd3731bso1263150f8f.0
+        for <linux-raid@vger.kernel.org>; Sun, 26 Jul 2026 04:32:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=meshstor.io; s=google; t=1785065555; x=1785670355; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=1Z37TstzxvLPhvEDUnNTL3PywZ4xjkcbPX0WwT+YK50=;
+        b=OSGX6LbX76Zqq2kb96PLZpasCB9IkQdkf/FxFirQzWlppmHzHIkVwIkMSsVhlV6dzp
+         hrTvEif46cVHBUMJUlNw4bqMd6krHBUysk0fV0YAYkMNGSfr8sykr1Z50//XkyfrlKe5
+         jYvEEFYP1PWvArF6+PtPDYki+BXnDE8LmdhKkIdsFQ4aqwRVK38atattfvMqzPb83zT5
+         9SVUbFVu1pJ3JMDvjjuJZMHNvnMbTvPiwJ5y//1+Ye7wUn3g5FTJIdZhxwoYd9Ar9j2O
+         PWx9/bwXI56c0JOWOo/4xQkDTz1yFdB24O493/lMabcWNKT3hJ0vsuBuxRAcLpWXML4o
+         yatA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785065555; x=1785670355;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=1Z37TstzxvLPhvEDUnNTL3PywZ4xjkcbPX0WwT+YK50=;
+        b=VJUubEbb7vX7d7bQHc8qnxEVfmIszYvSgNDsOZehAA6iXLG1fSZDmRWYpKaOF2d9ux
+         Qz9QoDNLReNFrIZplgNXQgzh4wUnfqGHzPMTZKzOETVNU2efEeA4g+8MGdXX3OTHUBK2
+         1bZsZY2rBkgm4+QYB3qA22CyKazrLKPX8PHbAKrxPsGH+uHC8VLOICPzTjjMrw7xwnwK
+         /P3UyQK4p3r5HsHI2zKOWiwCBr6UYvHTek/8J2PnscdPsTTuTn8tyq7Bngqu9oO3oLjh
+         +Z4kK41vL9E1JOInpBcQzC/cedC10Rr4uzs7WKxm3R413RwlsaGBavnOfgekf4UD6CJt
+         VawA==
+X-Forwarded-Encrypted: i=1; AHgh+Rovuw0b6a5eqdO3Jc20iZFA9k9Y4H+QHS0M53kejZ1Z84yJY4sQKlz3THjAnmq+hX4/MC+kIlI3DDnJ@vger.kernel.org
+X-Gm-Message-State: AOJu0YyXOHzi52Vk9Fqx7+ZzhFxtPBjs12CuUv4M0iT9hNSZonSS/5Sq
+	224yQQM6USvhOKbhzpk0drfw4qyZoncRRmQRSZkOxuPLCCvqmnzHjiPmVOoQb7lRzw==
+X-Gm-Gg: AR+sD11MDJynLtDarejVOPuOHmEODLI2MsQ7rfJNaJIai7U00lKcdPgNY4kj8DHM5rP
+	wEAsvXy9WgBMw61kyuZpCxdTrx9q7qjObccDwC8P+9jtb6PQV7leJwNFnwcZ6Q6QufwBl00Dd35
+	8HO9g4WcYb1/RscVzB42BpelyRDff4OyHJ8PHlnnH2zWTdw7trvCx+d9gIBgMfDMcA6WNJwQEug
+	4k5F1yOolof+ZpplRXvCJVJkoHsuQIVXHsEritRYYcqakyIufxS3bzF10+43fCnKXUF3nn5HUkR
+	3/rofud2GYmXEwLAFb9CWxGu1/l3PrgOodp9bfEAJs3zZsXBFUG4DZnTUltEJ/SOdtDNhyphfPo
+	jizoTJUIqiHctRSV8ypfBZn+P1nx7eAcMds2V6zRO5agdMfXPTNB3Ar49kBhvBg0IzNVqKBTEOf
+	hHF14FopQD6ZX5EmeuFMIwhnlKkGxxT+1Au7bBILLgdvEdo97hKXiQnN4bWnGCr0iq547dADMwQ
+	+lQbHfjLoyF1DIIUDdYCdgLwmbsJtb76hT6mVzK2w==
+X-Received: by 2002:a05:6000:490b:b0:47f:9158:5924 with SMTP id ffacd0b85a97d-47f9fc9c6c8mr6246245f8f.9.1785065554907;
+        Sun, 26 Jul 2026 04:32:34 -0700 (PDT)
+Received: from meshstor-pc ([185.87.42.56])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85bb57cfsm40533083f8f.11.2026.07.26.04.32.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 26 Jul 2026 04:32:34 -0700 (PDT)
+From: Mykola Marzhan <mykola@meshstor.io>
+To: Jens Axboe <axboe@kernel.dk>,
+	Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>,
+	Keith Busch <kbusch@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	linux-block@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	Guoqing Jiang <guoqing.jiang@linux.dev>,
+	Leon Romanovsky <leon@kernel.org>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shivaji Kant <shivajikant@google.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Henrique Carvalho <henrique.carvalho@suse.com>,
+	stable@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-rdma@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Thorsten Leemhuis <regressions@leemhuis.info>,
+	Martin Wilck <mwilck@suse.com>
+Subject: [PATCH v6 00/12] block,md,nvme: correct handling of unsupported P2PDMA transfers
+Date: Sun, 26 Jul 2026 13:32:17 +0200
+Message-ID: <20260726113229.2154269-1-mykola@meshstor.io>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Mykola Marzhan <mykola@meshstor.io>, Jens Axboe <axboe@kernel.dk>,
- Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
- Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
- Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
- Guoqing Jiang <guoqing.jiang@linux.dev>, Leon Romanovsky <leon@kernel.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
- Chaitanya Kulkarni <kch@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava
- <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>,
- stable@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20260723204206.76930-1-mykola@meshstor.io>
- <20260723204206.76930-11-mykola@meshstor.io>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20260723204206.76930-11-mykola@meshstor.io>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 96.51.150.74
-X-SA-Exim-Rcpt-To: mykola@meshstor.io, axboe@kernel.dk, song@kernel.org, yukuai@fygo.io, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org, magiclinan@didiglobal.com, xiao@kernel.org, guoqing.jiang@linux.dev, leon@kernel.org, jgg@ziepe.ca, kmodukuri@nvidia.com, kch@nvidia.com, bhelgaas@google.com, shivajikant@google.com, praan@google.com, henrique.carvalho@suse.com, stable@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v5 10/10] nvme-rdma: return BLK_STS_P2PDMA for unsupported
- P2P transfers
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Transfer-Encoding: 8bit
+
+md treats an unsupported P2PDMA transfer to a member as success, and
+nvme-rdma retries one forever.  Whether peer memory can be DMA-mapped
+depends on the PCIe topology between the two devices, and since v6.17
+the failure completes as BLK_STS_INVAL: retryable for multipath and
+deliberately ignored by md for member failures, so mirrors silently
+diverge.
+
+v1-v3 restored BLK_STS_TARGET for these failures and tagged P2PDMA
+bios in md.  Logan Gunthorpe proposed a dedicated BLK_STS_P2PDMA
+instead, so no consumer needs to know whether an I/O was P2P, and
+wrote the core patches; v4 onward is built on them.  Patches 1 and 5
+are his and keep his authorship.
+
+  1  block: add BLK_STS_P2PDMA (stable, v6.17)
+  2  md: ensure REQ_NOMERGE is set on P2PDMA bios
+  3  md/raid1: serialize non-write-behind writes on CollisionCheck
+     rdevs (pre-existing bug patch 4 would widen; stable)
+  4  md/raid1: no write-behind for P2PDMA bios
+  5  md/raid1,raid10: factor out raid1_write_error() helper
+  6  md/raid1,raid10: keep REQ_NOMERGE on narrow_write_error()
+     retry clones
+  7  md/raid1,raid10: skip futile retries on P2PDMA mapping
+     failures
+  8  md/raid1,raid10: set IO_BLOCKED in case of BLK_STS_P2PDMA
+  9  nvme-rdma: use ib_dma_map_sgtable_attrs() (stable, v7.1;
+     dependency of patch 10)
+ 10  nvme-rdma: return BLK_STS_P2PDMA (stable, v7.1; needs patches
+     1 and 9)
+ 11  nvme-rdma: ratelimit the map-failure error message (cleanup)
+ 12  nvme-rdma: factor out the scatterlist DMA mapping helper
+     (cleanup)
+
+Routing: patch 1 block, 2-8 md, 9-12 nvme; 7, 8 and 10 use the new
+status.  Patch 1 alone stops the divergence and the dm-multipath
+requeue loop; the nvme-rdma loop also needs 9-10; everything else
+refines the fallout, so the series bisects safely.  The md patches
+fix a v7.2-rc1 regression (02666132403a), except 3 (older bug,
+stable) and 5 (refactor).  11 and 12 are cleanup only and can be
+deferred if you would rather not carry them at -rc.
+
+Tested with the QEMU raid1/raid10 error matrix and a ConnectX-4 Lx.
+After patch 1, block-layer error injection accepts status=P2PDMA, so
+the md completion paths can be exercised on any member with no P2P
+hardware.  The patches were developed with AI assistance (see the
+Assisted-by trailers); all code was human-reviewed and tested.
+
+Against v7.2-rc4 (Logan's base).
+
+Changes in v6:
+ - patches 7, 9, 10: picked up Logan's Reviewed-by; on 7 it replaces
+   his now-stale Signed-off-by, as he asked
+ - patch 10: the map-failure ratelimit conversion moves out to its
+   own patch 11 (Logan); the stable note now names both prerequisites
+ - new patch 12: the data and the metadata mapping share a helper
+   (Logan's suggestion on patch 9).  Kept out of 9 so the
+   stable-tagged fix stays minimal
+
+Changes in v5:
+ - patch 7: From: is now Mykola, at Logan's request; patch 8 follows
+   for consistency.  Logan keeps Signed-off-by on both,
+   Co-developed-by on 8
+ - patch 8: raid10 declares bio up front and bi_status sits in a
+   blk_status_t local in both files.
+ - old patch 9 split: 9 is the mechanical sgtable conversion,
+   10 the -EREMOTEIO -> BLK_STS_P2PDMA translation; both stable
+   since 10 needs 9
+
+Changes in v4:
+ - new BLK_STS_P2PDMA (Logan) replaces restoring BLK_STS_TARGET; the
+   R1BIO_P2PDMA/R10BIO_P2PDMA state bits are gone and the md changes
+   shrink to completion-time status tests
+ - blk_dma_map_iter_start() gets the explicit
+   PCI_P2PDMA_MAP_NOT_SUPPORTED case (Logan's patch; v3 kept
+   default: only)
+ - write completions record the whole failed range as bad blocks
+   instead of narrow_write_error()'s per-block retries; v3's coarse
+   retry is gone -- the new status is deterministic, nothing to
+   re-attempt
+
+Link: https://lore.kernel.org/linux-raid/20260718162547.448892-1-mykola@meshstor.io/ [v1]
+Link: https://lore.kernel.org/linux-raid/20260719105327.864949-1-mykola@meshstor.io/ [v2]
+Link: https://lore.kernel.org/linux-raid/20260721174502.111503-1-mykola@meshstor.io/ [v3]
+Link: https://lore.kernel.org/linux-raid/20260722185841.449934-1-mykola@meshstor.io/ [v4]
+Link: https://lore.kernel.org/linux-raid/20260723204206.76930-1-mykola@meshstor.io/ [v5]
+Link: https://lore.kernel.org/linux-raid/9f846c85-f427-433a-b87d-8e9e3a4406e7@deltatee.com/ [Logan's proposal]
+
+Logan Gunthorpe (2):
+  block: add BLK_STS_P2PDMA for unsupported peer-to-peer transfers
+  md/raid1,raid10: factor out raid1_write_error() helper
+
+Mykola Marzhan (10):
+  md: ensure REQ_NOMERGE is set on P2PDMA bios
+  md/raid1: serialize non-write-behind writes on CollisionCheck rdevs
+  md/raid1: don't use write-behind for P2PDMA bios
+  md/raid1,raid10: keep REQ_NOMERGE on narrow_write_error() retry clones
+  md/raid1,raid10: skip futile retries on P2PDMA mapping failures
+  md/raid1,raid10: set IO_BLOCKED in case of BLK_STS_P2PDMA
+  nvme-rdma: use ib_dma_map_sgtable_attrs()
+  nvme-rdma: return BLK_STS_P2PDMA for unsupported P2P transfers
+  nvme-rdma: ratelimit the map-failure error message
+  nvme-rdma: factor out the scatterlist DMA mapping helper
+
+ block/blk-core.c          |  3 +++
+ block/blk-mq-dma.c        |  3 ++-
+ drivers/md/md.c           | 10 ++++++--
+ drivers/md/md.h           | 15 +++++++++++
+ drivers/md/raid1-10.c     | 16 ++++++++++++
+ drivers/md/raid1.c        | 47 ++++++++++++++++++++--------------
+ drivers/md/raid10.c       | 27 ++++++++++----------
+ drivers/nvme/host/rdma.c  | 54 +++++++++++++++++++++++++++------------
+ include/linux/blk_types.h | 10 ++++++++
+ 9 files changed, 134 insertions(+), 51 deletions(-)
 
 
+base-commit: 1590cf0329716306e948a8fc29f1d3ee87d3989f
+-- 
+2.52.0
 
-On 2026-07-23 2:42 p.m., Mykola Marzhan wrote:
-> A P2P transfer the PCIe topology cannot route fails DMA mapping
-> with -EREMOTEIO.  nvme-rdma folds every mapping error into -EIO, a
-> retryable host-path error: multipath requeues the I/O forever, a
-> single path burns its whole retry budget.
-> 
-> Propagate the real error code and return the unroutable case as the
-> non-retryable BLK_STS_P2PDMA.  As in nvme-pci, -ENOMEM now requeues
-> (BLK_STS_RESOURCE) and -EINVAL fails (BLK_STS_IOERR); -EIO stays a
-> retryable host-path error.  While at it, start the request only
-> after mapping succeeds -- nvme-pci's order -- and ratelimit the
-> map-failure message.
-> 
-> Fixes: 23528aa3320a ("nvme: enable PCI P2PDMA support for RDMA transport")
-> Cc: stable@vger.kernel.org # v7.1: requires "nvme-rdma: use ib_dma_map_sgtable_attrs()"
-> Assisted-by: Claude:claude-fable-5
-> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
-
-This is much more understandable now. Thanks. I have one nit below,
-other than that:
-
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-
-> ---
->  drivers/nvme/host/rdma.c | 19 +++++++++----------
->  1 file changed, 9 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
-> index 63830334c73e..2f50509a7a61 100644
-> --- a/drivers/nvme/host/rdma.c
-> +++ b/drivers/nvme/host/rdma.c
-> @@ -1486,10 +1486,8 @@ static int nvme_rdma_dma_map_req(struct ib_device *ibdev, struct request *rq,
->  		.orig_nents	= req->data_sgl.nents,
->  	};
->  	ret = ib_dma_map_sgtable_attrs(ibdev, &sgt, rq_dma_dir(rq), 0);
-> -	if (unlikely(ret)) {
-> -		ret = -EIO;
-> +	if (unlikely(ret))
->  		goto out_free_table;
-> -	}
->  	*count = sgt.nents;
->  
->  	if (blk_integrity_rq(rq)) {
-> @@ -1511,10 +1509,8 @@ static int nvme_rdma_dma_map_req(struct ib_device *ibdev, struct request *rq,
->  			.orig_nents	= req->metadata_sgl->nents,
->  		};
->  		ret = ib_dma_map_sgtable_attrs(ibdev, &sgt, rq_dma_dir(rq), 0);
-> -		if (unlikely(ret)) {
-> -			ret = -EIO;
-> +		if (unlikely(ret))
->  			goto out_free_pi_table;
-> -		}
->  		*pi_count = sgt.nents;
->  	}
->  
-> @@ -2033,8 +2029,6 @@ static blk_status_t nvme_rdma_queue_rq(struct blk_mq_hw_ctx *hctx,
->  	if (ret)
->  		goto unmap_qe;
->  
-> -	nvme_start_request(rq);
-> -
->  	if (IS_ENABLED(CONFIG_BLK_DEV_INTEGRITY) &&
->  	    queue->pi_support &&
->  	    (c->common.opcode == nvme_cmd_write ||
-> @@ -2046,11 +2040,13 @@ static blk_status_t nvme_rdma_queue_rq(struct blk_mq_hw_ctx *hctx,
->  
->  	err = nvme_rdma_map_data(queue, rq, c);
->  	if (unlikely(err < 0)) {
-> -		dev_err(queue->ctrl->ctrl.device,
-> -			     "Failed to map data (%d)\n", err);
-> +		dev_err_ratelimited(queue->ctrl->ctrl.device,
-> +				    "Failed to map data (%d)\n", err);
-
-This rate limit change probably doesn't belong in this patch. It's
-pretty clear in the commit message with the "while at it" message. Worth
-moving to another patch.
-
-Logan
