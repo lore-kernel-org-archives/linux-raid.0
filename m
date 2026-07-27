@@ -1,123 +1,107 @@
-Received: from va-2-29.ptr.blmpb.com (va-2-29.ptr.blmpb.com [209.127.231.29])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F59B3F822A
-	for <linux-raid@vger.kernel.org>; Mon, 27 Jul 2026 11:17:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AC1C329E55;
+	Mon, 27 Jul 2026 15:48:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785151043; cv=none; b=T+tV4MUZHmxBd32yTpy/bT8rgA8Md+Uj974YtxJiLLSCMmayFfRVUvAzTyMaNWPPr4fk05Hm6iDpjb1T2vxgziBMatl+wRXEh3s1bENKWcT2w14+iF/mlkWMtGdYy9AqlDGhxXejAOam9enDVBxVnHxXTnybItgeT9krpMyApkQ=
+	t=1785167320; cv=none; b=jDPYzYdbF99YjbsJ5hHwt9hwiP4dv2q9UypP4JeOIUO3XlI4mcfKzzkuSIQkQXgtayrk7fjtLFAL7rrbmWQW9G1T6jzOTXOYxmwQRwdHyWex0SVBvdhITQRlGFdAaqSBE7AqGlmq2sX2c92WVd21h83taOYQ/vsAM53T2wpHwOI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785151043; c=relaxed/simple;
-	bh=zHoiFjz2G6KVingpO+Q9kQy9nJ/ryQfY23LgWQFjBEg=;
-	h=To:Message-Id:Content-Type:References:From:Subject:In-Reply-To:Cc:
-	 Date:Mime-Version; b=esXxdnth/Dw79FXet7Y91DctWdFPcIQPJ0pC286B7plYVVvI2IOwUADu20AsmYLw5Gp85FD41SHlCx7i28hje8GmWaD7+XZQFgzQPmucB8Z2a6vgxwkYtIAuZiaFYduV46eQR91VZ2zF76Jt66IZNuE8SeLYc2OQ78BVwi2J3eQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=zo6lAKb/; arc=none smtp.client-ip=209.127.231.29
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1785167320; c=relaxed/simple;
+	bh=Y2/Z3LY/RmRJ8nKeH8GBXkQa5Aru9cXcqr6idaq4720=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=MBqHWcVPsK0fc9LnyWiZ3R3ncn4oFirdp+7NPejrP5n9zauUTLDbEomUs0JR7e7VSAhgpBxW7+okXLyyy+Dit9deMVT5PfrBLrl1ZOlH1tzqwvxEeWIiG2wrdo9ttYhTbwUX/7PANk47S0azsSEE1fo1QGRpU3X6gyqtNGtN6OM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=d3Fyd20R; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="zo6lAKb/"
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="d3Fyd20R"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1785151029;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=ZRCNNqNMzowla1IvyjPaOxMj52HlMpdvVj5SS8+QPQE=;
- b=zo6lAKb/Hyj0tgOuwSUsZwxEw83hplLC0VhO5bS0v/8Hw1tdMQP/HhMhOOlSTErCJh3qQK
- ktA1yaMOgGLLAWY63SgfBfIv4n3q8X8AJOvBCfwIW1lG5W55BbgL76AjMBHQIPdeERwfz1
- eUzpfs/ChdoddevRUMqeOgPKNLFNhzzTcMwet/F6J59zQr5lhHIyq/IcSdGA/zbK6+sJIz
- IJe7OUlUtTD8g7DBIy+ZHCKzCVF2IW2vUgTDeQMh27GTslxnLwd85GWzwd8kpnqhibcGXt
- Z+bsQ2lSGMO2dZWbmO/0n1ue7kJArU1jQh3S4FzAwyN0AqFjrm2sGdTHdtSM+A==
-X-Original-From: Chen Cheng <chencheng@fnnas.com>
-To: "Mykola Marzhan" <mykola@meshstor.io>
-Message-Id: <5a09984d-3f82-4fe9-aa42-38ca99cd3a7e@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-X-Lms-Return-Path: <lba+26a673e33+b6be85+vger.kernel.org+chencheng@fnnas.com>
-References: <20260711100352.425177-1-chencheng@fnnas.com> <20260726185640.2222714-1-mykola@meshstor.io> <20260727105434.2516516-1-mykola@meshstor.io>
-From: "Chen Cheng" <chencheng@fnnas.com>
-Subject: Re: [PATCH v7 0/3] md/raid10: fix r10bio width mismatches across reshape
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Mozilla Thunderbird
-Received: from [192.168.8.80] ([183.34.169.20]) by smtp.feishu.cn with ESMTPS; Mon, 27 Jul 2026 19:17:06 +0800
-In-Reply-To: <20260727105434.2516516-1-mykola@meshstor.io>
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"Yu Kuai" <yukuai@fygo.io>, "Song Liu" <song@kernel.org>
-Date: Mon, 27 Jul 2026 19:17:04 +0800
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=2oQhVvdv6KuXOiBD33tawm7L/XSNS3FQAeB02Lg3Rx8=; b=d3Fyd20RPqcZRPF+6seD52jrxs
+	yjAvCdAgZVrU+sB6XDX7ZFpDad4tBDiHMmPolG37tWjhImS68lymNdWNVbq9J4beIpy/cBR/bxo8C
+	Ytna5l7NYKOqJPyk3xHR9EqwZy5AC6F3y/euuHm/mzVeBVGKxrAT5xrDHREnCZOjH5l0iSWmZmyS4
+	synpvjnCQurud74bxxoVd9M+uK3tIW2m4w8sILjk9Jz2CAOU90M7KK5X27UR+N1VadQirb5CcXqHw
+	phpXliLE4QMi4LFi4tZay+vupgomU5LWUKrExwljuf3qPeTABUpKBzlME/M4Z5N3qYxAnGRC0DzwL
+	FZ/T295A==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1woNYz-0000000GHSh-1tsM;
+	Mon, 27 Jul 2026 09:48:22 -0600
+Message-ID: <d3d1eb27-f743-4557-b47e-ec2f8ce0091c@deltatee.com>
+Date: Mon, 27 Jul 2026 09:48:06 -0600
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: Mykola Marzhan <mykola@meshstor.io>, Jens Axboe <axboe@kernel.dk>,
+ Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
+ Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
+ Guoqing Jiang <guoqing.jiang@linux.dev>, Leon Romanovsky <leon@kernel.org>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Kiran Kumar Modukuri <kmodukuri@nvidia.com>,
+ Chaitanya Kulkarni <kch@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Shivaji Kant <shivajikant@google.com>, Pranjal Shrivastava
+ <praan@google.com>, Henrique Carvalho <henrique.carvalho@suse.com>,
+ stable@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+ Thorsten Leemhuis <regressions@leemhuis.info>, Martin Wilck <mwilck@suse.com>
+References: <20260726113229.2154269-1-mykola@meshstor.io>
+ <20260726113229.2154269-12-mykola@meshstor.io>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20260726113229.2154269-12-mykola@meshstor.io>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: mykola@meshstor.io, axboe@kernel.dk, song@kernel.org, yukuai@fygo.io, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org, magiclinan@didiglobal.com, xiao@kernel.org, guoqing.jiang@linux.dev, leon@kernel.org, jgg@ziepe.ca, kmodukuri@nvidia.com, kch@nvidia.com, bhelgaas@google.com, shivajikant@google.com, praan@google.com, henrique.carvalho@suse.com, stable@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org, regressions@leemhuis.info, mwilck@suse.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH v6 11/12] nvme-rdma: ratelimit the map-failure error
+ message
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On 2026/7/27 18:54, Mykola Marzhan wrote:
-> Hi Cheng,
->=20
-> Here are the test results I promised. v7 fixes it.
->=20
-> I used one kernel tree, rebuilt incrementally between the two builds,
-> so the only difference is your three patches. The array is raid10 n2
-> with 4 members. The load is four fio jobs: 4k randwrite, O_DIRECT,
-> iodepth 32. While the load runs, I --add two spares and then
-> --grow --raid-devices=3D6. The kernel is KASAN generic with
-> kasan_multi_shot. Each run is 5 cycles:
->=20
->    kernel      runs  cycles  grows completed  slab-out-of-bounds
->    base           1       5             5/5   128 (in 4 of 5 cycles)
->    base + v7      2   5 + 5           10/10     0
->=20
-> All 128 base reports are in free_r10bio(): 64 reads and 64 writes,
-> each of 8 bytes. There is also a second report site,
-> raid10_make_request(). A warm-up run on the same base hit it too,
-> with 2 slab-out-of-bounds there alongside 568 in free_r10bio(). So
-> both report sites are reachable with this workload.
->=20
-> Every cycle on both kernels logged "md: md0: reshape done." and the
-> same capacity change, so the grow really did run 10/10 on the patched
-> kernel, and fio was alive throughout each cycle.
->=20
-> The bug does not fire in every cycle: per-cycle counts on the base
-> were 0, 40, 8, 56, 24, so the base hit it in 4 of 5 cycles. That rate
-> is what gives the patched 10/10 zero its meaning.
->=20
-> Tested-by: Mykola Marzhan <mykola@meshstor.io>
->=20
 
-Hi Mykola,
 
-I see, really thanks for your test result!
+On 2026-07-26 05:32, Mykola Marzhan wrote:
+> A mapping failure is per-request and, for an unroutable P2P transfer,
+> deterministic: a workload that keeps issuing one turns this into a
+> log line per I/O.  Ratelimit it, as nvme's per-I/O error logging
+> (nvme_log_error()) already is.
+> 
+> Assisted-by: Claude:claude-fable-5
+> Signed-off-by: Mykola Marzhan <mykola@meshstor.io>
 
-> One practical note: v7 does not apply to mainline. Patch 2/3 carries
-> context
->=20
->    static void __make_request(struct mddev *mddev, struct bio *bio, int s=
-ectors)
->=20
-> but e045d6ed33f8 ("md/raid10: fix writes_pending leak on write request
-> failures") changed __make_request() to return bool. Applying
-> 1/3..3/3 with --fuzz=3D0:
->=20
->    8e065a160251 (=3D e045d6ed33f8^)        applies clean
->    e045d6ed33f8                          fails
->    55b77337bdd0                          fails
->    v7.2-rc4                              fails
->    current mainline                      fails
->=20
+Thanks!
 
-Got it, I must misuse a unclean branch.
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 
-> So the numbers above are from 8e065a160251, which is the newest base v7
-> applies to. A rebase would probably help it get picked up =E2=80=94 happy=
- to
-> re-run the same rig on a v8 if you post one.
->=20
+> ---
+>  drivers/nvme/host/rdma.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
+> index c38d949502b7..2f50509a7a61 100644
+> --- a/drivers/nvme/host/rdma.c
+> +++ b/drivers/nvme/host/rdma.c
+> @@ -2040,8 +2040,8 @@ static blk_status_t nvme_rdma_queue_rq(struct blk_mq_hw_ctx *hctx,
+>  
+>  	err = nvme_rdma_map_data(queue, rq, c);
+>  	if (unlikely(err < 0)) {
+> -		dev_err(queue->ctrl->ctrl.device,
+> -			     "Failed to map data (%d)\n", err);
+> +		dev_err_ratelimited(queue->ctrl->ctrl.device,
+> +				    "Failed to map data (%d)\n", err);
+>  		goto err;
+>  	}
+>  
 
-I don't want to waste your time, I would re-run reproducer before I send.
-
-Reproducer Link:=20
-https://github.com/chencheng-fnnas/reproducer/blob/main/repro-raid10-4to5-r=
-eshape-r10bio-oob.sh
-
-Thanks again,
-Cheng.
-
-> Thanks,
-> Mykola
