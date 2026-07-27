@@ -1,113 +1,103 @@
-Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-35.ptr.blmpb.com (va-2-35.ptr.blmpb.com [209.127.231.35])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55DCD22576E;
-	Mon, 27 Jul 2026 02:43:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.119
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A56BD35A3A9
+	for <linux-raid@vger.kernel.org>; Mon, 27 Jul 2026 03:08:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.35
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785120238; cv=none; b=uMDB1l5cJx7Ed2plg5M92L61vuwoIs2PPJ66Gp7X8NdH1xRUnDpCYjG12S7SEq3X1DpEznBN6ihfA77wzK6vT8HtcGY9D6mL6hMlqMcjO0Tlg9O1zrxnNVNLqCepdDqpSIIDD+dhAKIXxx62ccO0C5tInKVNnqU7ZqY2azTw0Pw=
+	t=1785121685; cv=none; b=t8ypDvMZpXsfo7NdGDJpO55ALu7CaA1fF5l0z/cEPbu9e61RGqTYlth6iyLR2A4F83VphQja9CDU1J2Tl3/zFv2hmhn7ZnJsMqMqP1+3YlN2XmanN6iG6qkTZ/5qSuspt7RJSBqKGjKz3XuACdaJEx2NcYLqX1rmW0VffEgzRy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785120238; c=relaxed/simple;
-	bh=FwPD6WK4ZvUUvn6FWSEhS5cnVnWA35y7eRp12AI88Ho=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=hk5qLE27EaSUoKB0XG5w3EQnTPiW68qJAdpiXuRwEUcu6ZMnK0jRbEB3IqEIcwgtymwhQt4e5jgEYlm7Z1vrsJlZaI3fgv07fZhPSBMSbJCf3OE5FCMVdoQkyL/VebrdSk6zJ6vjGzffOYN5UUyxEP5cCGoFsMSOHTfd6LECHjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=wbuf4HYi; arc=none smtp.client-ip=115.124.30.119
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1785121685; c=relaxed/simple;
+	bh=v6TCFX5vQTg5Be2YWkM9MW3GwTDU0y5p0CvsuvWIqC0=;
+	h=Date:In-Reply-To:Content-Type:To:Subject:Message-Id:Mime-Version:
+	 Cc:References:From; b=gaH43QjtS0ItJ2hTASNFl+h2EeiL1WvHrVRPNJN9PHVE5+QfFZI51kVLUPeVCK2jOAh02yY3XuknBcPdYp62g4PumiO+WEnPXVSaHMylbO8W2rWs2Suh07hfb/tP3joeQTnKqhoiyZUSS+tBh3WS1+tEeMmlhJS0qI4o0paMMsI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=GtxTmJFz; arc=none smtp.client-ip=209.127.231.35
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="wbuf4HYi"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1785120231; h=From:To:Subject:Date:Message-Id:MIME-Version;
-	bh=EWkqU6B9O5H5BOWR7YO5skjnotbUeMUuhmDymxX/AWQ=;
-	b=wbuf4HYih+UDbQo52cwlUzQTNrI3LQpSxpk81CwkANONs3FeKIC6JRtZYnaoDnIahFWdtnvbcu5+zfhsb/PZxO0OR8rV+mI9qi9L8QPBGwD253NZsBkIFL8LTZT+ck/EA3Ft2FYP3yEy9ERgG2tJNKJ4L4KNQCkYYD+gJEUI4bg=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R431e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=yunye.zhao@linux.alibaba.com;NM=1;PH=DS;RN=9;SR=0;TI=SMTPD_---0X7oimWp_1785120229;
-Received: from j66c13357.sqa.eu95.tbsite.net(mailfrom:yunye.zhao@linux.alibaba.com fp:SMTPD_---0X7oimWp_1785120229 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Mon, 27 Jul 2026 10:43:50 +0800
-From: Yunye Zhao <yunye.zhao@linux.alibaba.com>
-To: Mykola Marzhan <mykola@meshstor.io>
-Cc: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	Joseph Qi <joseph.qi@linux.alibaba.com>,
-	Paul Menzel <pmenzel@molgen.mpg.de>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] md/raid10: fix still_degraded being inverted in raid10_sync_request()
-Date: Mon, 27 Jul 2026 10:43:47 +0800
-Message-Id: <20260727024347.90544-1-yunye.zhao@linux.alibaba.com>
-X-Mailer: git-send-email 2.19.1.6.gb485710b
-In-Reply-To: <20260726122512.2176105-1-mykola@meshstor.io>
-References: <20260726122512.2176105-1-mykola@meshstor.io>
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="GtxTmJFz"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1785121678;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=2ZeeXXnxFXCOI5JTt/7J/yxSkqIrDzdjS4zB/M/O+Fw=;
+ b=GtxTmJFzQm3/g2tazN62+Q6PZzvnfsf2lOhmBU7wgK3retRrgOp1y/t09SRMiy7YYtCHKh
+ /y3FImf6v3Ec6ZpKMO03ACx8ZgjzP47lignNuQaZmaeiRYvCY7daa0Kdvs+8fNo06PIXuK
+ 17E2WMvQbyRw5He+51myvok3eISyGsIk2vMZZKF6kfhUoo/pb7yHy92aaGaZmAQjiOE6dy
+ d8zbGMGqIuD1CTcSnxbQ/6bEjFNX0IKMt2KaCT2gFLTbmQe+ZL7fR6ifqCystyGnWVLfKB
+ JVVv0Bs5mMMClqySC+vU2gB5jT8D2fTnau+iB/Cb+kS57VdyH/00P5dDDM7dMQ==
+Date: Mon, 27 Jul 2026 11:07:53 +0800
+X-Original-From: Chen Cheng <chencheng@fnnas.com>
+In-Reply-To: <20260726185640.2222714-1-mykola@meshstor.io>
+Received: from [192.168.8.80] ([183.34.169.20]) by smtp.feishu.cn with ESMTPS; Mon, 27 Jul 2026 11:07:55 +0800
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Content-Type: text/plain; charset=UTF-8
+To: "Mykola Marzhan" <mykola@meshstor.io>
+Subject: Re: [PATCH v7 0/3] md/raid10: fix r10bio width mismatches across reshape
+Message-Id: <ef9d9628-430d-48e5-8ee4-c02626c7995a@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	"Yu Kuai" <yukuai@fygo.io>, "Song Liu" <song@kernel.org>
+References: <20260711100352.425177-1-chencheng@fnnas.com> <20260726185640.2222714-1-mykola@meshstor.io>
+From: "Chen Cheng" <chencheng@fnnas.com>
+X-Lms-Return-Path: <lba+26a66cb8c+8f54f8+vger.kernel.org+chencheng@fnnas.com>
 
-Hi,
+=E5=9C=A8 2026/7/27 02:56, Mykola Marzhan =E5=86=99=E9=81=93:
+> Hi Cheng,
+>=20
+> Independent confirmation of the bug this series fixes, in case more
+> evidence helps it land.
+>=20
+> While running a KASAN campaign against the llbitmap reshape v2 series
+> (base 55b77337 =E2=80=94 unrelated to your fix) every raid10 grow under I=
+O hit
+> both faces of the width mismatch:
+>=20
+>    BUG: KASAN: slab-out-of-bounds in free_r10bio+0x97/0x110
+>    Read of size 8 at addr ffff888149044ec8 by task ksoftirqd/2/28
+>     free_r10bio+0x97/0x110
+>     raid10_end_write_request+0x260/0x500
+>     blk_update_request+0x18b/0x6b0
+>    Allocated by task 232:
+>     mempool_alloc_noprof+0x108/0x1d0
+>     raid10_make_request+0x18b/0x1100
+>=20
+>    BUG: KASAN: slab-out-of-bounds in raid10_make_request+0x214/0x1100
+>    Write of size 192 at addr ffff88814da7aa48 by task fio/460
+>     __asan_memset+0x23/0x50
+>     raid10_make_request+0x214/0x1100
+>=20
+> (192 bytes =3D 6 x sizeof(struct r10dev) memset into a 4-disk
+> allocation.)
+>=20
+> 456 reports across 5 grow cycles (n2, 4->6 disks, four fio randwrite
+> jobs) on the plain base kernel. The mempool face matches your 2/3
+> exactly: the 256 preallocated r10bios keep the old width, so any
+> allocation that dips into the reserve after the grow is a guaranteed
+> OOB write, not just a read.
+>=20
+> The storm is dense enough that raid10 grow under IO is not testable
+> under KASAN at all right now =E2=80=94 which is how we ran into it, and w=
+hy
+> we would like to see this land.
+>=20
+> We plan to run v7 through the same rig and will follow up with the
+> result.
+>=20
 
-> I posted the same one-liner on 19 July -- flagging it only so it is not
-> applied twice:
->
->   https://lore.kernel.org/linux-raid/20260719144227.940444-2-mykola@meshstor.io/
->
-> No objection to yours going in, and I will drop mine if it does:
->
-> Reviewed-by: Mykola Marzhan <mykola@meshstor.io>
->
-> Identical hunk and the same Fixes: tag.  Mine picked up Reviewed-by from
-> Yu Kuai and Paul Menzel on that posting.
-> Your changelog is the better of the two: it carries a measured
-> reproducer where mine only reasons through the failure.
+Hi Mykola:
 
-Thanks, and apologies for the duplication -- I missed your earlier
-posting.  Yours was first on the list and already carries tags from
-Kuai and Paul, so I am equally happy if the maintainers take your
-copy instead.  If mine is picked up, I will carry your Reviewed-by
-and a Link: to your posting should a v3 be needed.
+Thanks to let me know that, and welcome to report the result and if you=20
+have any idea, welcome to discuss.
 
-> Your patch 3 and patch 2 of my 19 July series hit the same unit mismatch
-> -- raid10's recovery cursor is in per-device space while its bitmap is
-> indexed by array sectors -- but at different sites, and they do not
-> overlap:
->
->   https://lore.kernel.org/linux-raid/20260719144227.940444-3-mykola@meshstor.io/
->
-> Yours converts the bitmap-reported span into per-device sectors inside
-> raid10_sync_request(); mine stops md_do_sync() handing
-> bitmap_ops->skip_sync_blocks() an offset raid10 cannot interpret.  Both
-> are still needed.  Yu Kuai has asked me to re-check mine against his
-> llbitmap reshape series, so mine is still under discussion.
+thanks,
+Cheng.
 
-Agreed.
-
-Your fix addresses the llbitmap mis-skip: md_do_sync() feeds the
-per-device recovery cursor to skip_sync_blocks(), which llbitmap
-indexes by array sectors, and once it answers for the wrong chunk
-md_do_sync() takes "goto update" without ever entering
-raid10_sync_request() -- so this has to be fixed at the caller, as
-your patch does.
-
-My patch 3 addresses the recovery crawl on a mostly-clean bitmap:
-the classic bitmap does not implement skip_sync_blocks() at all, and
-with your gate in place raid10 recovery no longer consults the
-bitmap from md_do_sync() either way -- the layout-aware bulk skip
-inside raid10_sync_request() then serves as raid10's fast path for
-both bitmap flavours (it sits on start_sync(), which llbitmap also
-implements).
-
-The hunks are disjoint as well -- your series touches the
-skip_sync_blocks() gate in md_do_sync() plus md.h/raid1/raid5, mine
-touches raid10.c and a cond_resched() ~30 lines below your md.c hunk
--- so they apply cleanly in either order.
-
-So both are needed, whichever order they land in.  I will follow
-your discussion with Kuai on the llbitmap reshape series.
-
-Thanks,
-Yunye
+> Thanks,
+> Mykola
