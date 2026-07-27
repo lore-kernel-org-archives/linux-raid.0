@@ -1,152 +1,134 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A5273E6386
-	for <linux-raid@vger.kernel.org>; Mon, 27 Jul 2026 08:39:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFCA33E7167
+	for <linux-raid@vger.kernel.org>; Mon, 27 Jul 2026 10:54:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785141568; cv=none; b=f0z4sODQ2lDT/4bcrHRrOUogySY7OIUwGUF2Wpj5HmFvUldMKU86Y7wauDBDTlVIrws/hz2L5Jlaoyrv60lkplWKaX6DJRI27KBljV4oYAI4UBzO/eiDb8Y6nNdMm1wDhWGLDxBiWs1DMp0oNmfX3nW3K5NFn4ple2micrhEDCY=
+	t=1785149698; cv=none; b=pDmdDL/Xmc+J22oustDzOd1D5LT3Mdt9tDvvBgFJBOZ/dST9jkEcy2fhWItOii/iFWf3g0B/74cgLuN0fzSKt0GfDcGJJYYLTHmCR9+SmIo3yzIv3JZyS8Sxo9lnxTjdN+wAObU/CVScrffIKQObqAGfe+jOZrZakEmtxSau5GM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785141568; c=relaxed/simple;
-	bh=pa1dD51itovqyrvmvI6dQBPvutgG2QtkW1aS6cnv/DI=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=kZiK0/4D/73/Wi/qBCySm2fLaHhlz56+fVr86NjzkzJN+RkmUZNe5dS1Du7hcg5+scz2CIx7pyFTSVOrgNmFsb+pQwyAxfHb7YOwnzHQSDLDpjk7DNkm4KcPjdHyl5SXQg26zLGTK2O/22F2D5fzAIt4haA7VKEkNt40NysfSzU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=Ex7NJFoQ; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=FxccUXKF; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1785149698; c=relaxed/simple;
+	bh=TwvJvF+IFOxdPjMalEtm3bMDlBiCPp/CDsXL3BUntdM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=gOWhSFZYSyC2AXWNpI+uXmq2DJAY9pJ9mXVVu11cB89es/vq5PbRIYw1+QkC6VVyLp2hox6ORZDdPyVQIsM5WbfuyU9r4108YhBXiR++DZ+UKgxv4jt7Ft1Ag2BQFP4LxbaNd6U98ysV0JGIyGnJUY98iO/uhmAfaCBFoXq4wsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=rGmGe9vA; arc=none smtp.client-ip=209.85.221.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meshstor.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Ex7NJFoQ";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="FxccUXKF"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 7B0927D484;
-	Mon, 27 Jul 2026 08:39:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1785141560; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=pa1dD51itovqyrvmvI6dQBPvutgG2QtkW1aS6cnv/DI=;
-	b=Ex7NJFoQwuziDhX4S+p5Bdx0eBoh/WSCjZls0+LlGVmeng59KyQr/4pewU43T/5iyl9jtg
-	n2T6nsmbNvVNuodYWBy19wBUqhBnZFXZYk0BoFJpsFi5n9eI4rZv00ibj6dR+Y9tDqf395
-	HGFzdJ1tybNdxvz1Brv2H27s6bLSm9E=
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1785141556; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=pa1dD51itovqyrvmvI6dQBPvutgG2QtkW1aS6cnv/DI=;
-	b=FxccUXKFZHE1VK4FwmDD0QEwjJdCY9LdHD2S4gL39Syk9rBqQpWroNezucBMHVjOiRpLjq
-	zK3VVmAFTxtaJsZUiXStgytwG7YVGTLIx2CC9lJ6SmdYPvT3fXHhfyPVbQDsrPBPMZoD7c
-	JJa57GCRiilDsZfjqCiicPktGX4mIhw=
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 53C94779B9;
-	Mon, 27 Jul 2026 08:39:16 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id LSdmEzQZZ2rlawAAD6G6ig
-	(envelope-from <mwilck@suse.com>); Mon, 27 Jul 2026 08:39:16 +0000
-Message-ID: <09aae47428ab10f11ae4dab6c168cc24cc810aff.camel@suse.com>
-Subject: Re: [PATCH] md/raid1: create serial pool adding rdev to array with
- serialize_policy=1
-From: Martin Wilck <mwilck@suse.com>
-To: Mykola Marzhan <mykola@meshstor.io>, Yu Kuai <yukuai@kernel.org>, Song
- Liu	 <songliubraving@fb.com>
-Cc: Xiao Ni <xni@redhat.com>, Li Nan <linan122@huawei.com>, 
-	linux-raid@vger.kernel.org
-Date: Mon, 27 Jul 2026 10:39:15 +0200
-In-Reply-To: <20260726121359.2173478-1-mykola@meshstor.io>
-References: <20260723112741.1206836-1-mwilck@suse.com>
-	 <20260726121359.2173478-1-mykola@meshstor.io>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 
+	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="rGmGe9vA"
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-47f904e80eeso2081429f8f.1
+        for <linux-raid@vger.kernel.org>; Mon, 27 Jul 2026 03:54:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=meshstor.io; s=google; t=1785149695; x=1785754495; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=1ddzBsb4381N9y6zb8HnZC8qOhqxLg7V/jEwPzZdJjY=;
+        b=rGmGe9vAfAtoI6wqkoOj/wsfbk1cDlIBB/2yX7WSUUjYWX50pb4ZbrQGHkKJKwnxxe
+         VmHlk0l1MpBL5icE0Bzsan4zAVIcCj00QKNN4dee+sZP4DjXOpxcTS32JXcGCBz/R5d1
+         csP79AVnHdhqzQkVJx5P8OswsRfDLOjLap79BJAqYWHMFsGchbvOYOvGAilBJ4KenK2X
+         CF/MkV+6r5exE3IxtI2wpn0ldi5jgG88LRz51wRC4Xtbe5xRoDUPrDZGcXxK3E6kFvFE
+         RBgljpYLvuCBaHGq2qM4gzDhngzPLZmI+YJ7jic9H/NQ+J7kyEZpOYVNQCmSw+F9cD+G
+         2z3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785149695; x=1785754495;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=1ddzBsb4381N9y6zb8HnZC8qOhqxLg7V/jEwPzZdJjY=;
+        b=rWz9zOeI4FGEK+6TdRihFIwFQYVPicOpiNMTcrHgLnFVLg85AwdLBmOaLQLtnXtuUt
+         o/26+OMMQapDRhxSNsMJA97Q52SotQLNAiVV3prcaGgdajxRumwEcqnTmEf5eMUqVtCB
+         wD2R51mLHpCMieSgImgPR23M9q2DNHvO83TwIlQUrNzS64kBQzMGfBtUPU+nWlRK2fPb
+         fI2CtR0icIVsyiwBq1CVH5LLy10qKVNVMZYujpzm18s7/EgC5JOARd1byRywvoN1og1s
+         pE/EETIExwFnXVPyh2pxLJWTSYdaIKL2SLLw3fGMALATfitAxf+v1GQX1KbrNCoReMkF
+         sZTg==
+X-Gm-Message-State: AOJu0YzpF1WP8CVsWllBY+fnJvfrE9V3Y4wbW+Mn/LGLxJ7pHAngLabM
+	RO7CpC/zApK/m7zz2nR2DLA/yPGS6VjrzDEPbz3rBrCk9uzaeMTt7PEAarEgWyZUTA==
+X-Gm-Gg: AR+sD13pvMzQ5lTuR9XYTYkhHiKQ+4zNkPb12uXHOKEqm1xoC2UhFLv8sg5H2yjHfFt
+	0yU6ImdOfi5Y0DvKB8odzZ3OjjXAUHY2uV7A8Nf4O0yxvKVy7dnWf2C4wfzmYRt8NVXah0oi+dg
+	7tRGu6JghvvCxypLjIrg8C3b5PpjEtus+B1iNJ0JOOKJcBz68Zr7qOVbbmcM6dscHDWOmJ7e1Ot
+	S0LHGIZehQT8t7w8TieCj+KI6ari7POSwbCrnB6XEUvbTcUmOKJeojhR9lwkPAl6nUFjHwAbc6P
+	fTaQegWyUkitepgBaIcot8eChS4BNMyDuyrc0aSq2KD+61fLaigkXuVitLNJnLiG68FLblb+LYE
+	ITlDRp22O5k/oLvDnyg+wiOLJiSA/7Zjx6R4p8qX6fDjqzJr0nI+KY6+6VKfJodNYivPvEzI1gv
+	ayFCb1VwZMK6so2X7l7io5UyUQ8OToirmifgiF/ip5nOqXdCaEBnkPmPq1YVM5ghTezRwGixhaY
+	/9htrsfbLBaIf2b97JUweqHjZvZvjfH/CnGiiLwFOUri1RgIu2O
+X-Received: by 2002:a05:6000:188e:b0:47f:921f:3a37 with SMTP id ffacd0b85a97d-47f9fea4346mr10098687f8f.35.1785149694783;
+        Mon, 27 Jul 2026 03:54:54 -0700 (PDT)
+Received: from meshstor-pc ([185.87.42.56])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85c52fa9sm48930631f8f.20.2026.07.27.03.54.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Jul 2026 03:54:54 -0700 (PDT)
+From: Mykola Marzhan <mykola@meshstor.io>
+To: Chen Cheng <chencheng@fnnas.com>
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yu Kuai <yukuai@fygo.io>,
+	Song Liu <song@kernel.org>
+Subject: Re: [PATCH v7 0/3] md/raid10: fix r10bio width mismatches across reshape
+Date: Mon, 27 Jul 2026 12:54:30 +0200
+Message-ID: <20260727105434.2516516-1-mykola@meshstor.io>
+X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260726185640.2222714-1-mykola@meshstor.io>
+References: <20260711100352.425177-1-chencheng@fnnas.com> <20260726185640.2222714-1-mykola@meshstor.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Spam-Score: -4.30
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.998];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[6];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.com:mid,meshstor.io:email,imap1.dmz-prg2.suse.org:helo]
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Sun, 2026-07-26 at 14:13 +0200, Mykola Marzhan wrote:
-> This reply was drafted with AI assistance.
->=20
-> > But when a new rdev is added to an existing array in
-> > bind_rdev_to_array(),
-> > the condition at mddev_create_serial_pool() causes creation of
-> > rdev->serial
-> > to be skipped. Fix it.
->=20
-> I ran into the same early return from the other direction, so I can
-> confirm the analysis: the new rdev fails rdev_need_serial() (it is
-> not
-> a write-mostly member with write-behind configured), CollisionCheck
-> was never set on it, and mddev_create_serial_pool() returns without
-> allocating rdev->serial. The first write routed to it then crashes in
-> wait_for_serialization(), which is gated on the array-wide flag and
-> assumes the tree exists. serialize_policy is array-wide, so creating
-> the pool for every rdev bound while it is set is the right fix.
->=20
-> Reviewed-by: Mykola Marzhan <mykola@meshstor.io>
->=20
-> One interaction to flag. Patch 3 of my P2PDMA series changes that
-> raid1 gate from MD_SERIALIZE_POLICY to per-rdev CollisionCheck, so
-> that writes which skip write-behind also order against in-flight
-> behind I/O on write-mostly members (the behind path already checks
-> CollisionCheck; the non-behind path does not):
->=20
-> =C2=A0
-> https://lore.kernel.org/linux-raid/20260726113229.2154269-4-mykola@meshst=
-or.io/
->=20
-> For the rdev in your report the two gates disagree: without your fix
-> it has no serial tree, and the CollisionCheck gate would skip
-> serialization instead of crashing, hiding the oops but not the bug.
-> So your patch is needed either way and should go in first; with it,
-> every rdev in a serialize_policy array owns a serial tree, and the
-> CollisionCheck gate covers everything the old one did. Patch 3
-> carries a Link: to your fix.
->=20
-> If you see a hole in that reasoning I would rather hear it now than
-> after either patch lands.
+Hi Cheng,
 
-I fully agree. My patch is just a small bug fix. Your changes go much
-deeper.
+Here are the test results I promised. v7 fixes it.
 
-Regards,
-Martin
+I used one kernel tree, rebuilt incrementally between the two builds,
+so the only difference is your three patches. The array is raid10 n2
+with 4 members. The load is four fio jobs: 4k randwrite, O_DIRECT,
+iodepth 32. While the load runs, I --add two spares and then
+--grow --raid-devices=6. The kernel is KASAN generic with
+kasan_multi_shot. Each run is 5 cycles:
 
---=20
-Dr. Martin Wilck <mwilck@suse.com>
-SUSE Software Solutions Germany GmbH, Frankenstr. 146, 90461 N=C3=BCrnberg,
-Germany
-Gesch=C3=A4ftsf=C3=BChrer: Jochen Jaser, Andrew McDonald (HRB 36809,AG N=C3=
-=BCrnberg)
+  kernel      runs  cycles  grows completed  slab-out-of-bounds
+  base           1       5             5/5   128 (in 4 of 5 cycles)
+  base + v7      2   5 + 5           10/10     0
+
+All 128 base reports are in free_r10bio(): 64 reads and 64 writes,
+each of 8 bytes. There is also a second report site,
+raid10_make_request(). A warm-up run on the same base hit it too,
+with 2 slab-out-of-bounds there alongside 568 in free_r10bio(). So
+both report sites are reachable with this workload.
+
+Every cycle on both kernels logged "md: md0: reshape done." and the
+same capacity change, so the grow really did run 10/10 on the patched
+kernel, and fio was alive throughout each cycle.
+
+The bug does not fire in every cycle: per-cycle counts on the base
+were 0, 40, 8, 56, 24, so the base hit it in 4 of 5 cycles. That rate
+is what gives the patched 10/10 zero its meaning.
+
+Tested-by: Mykola Marzhan <mykola@meshstor.io>
+
+One practical note: v7 does not apply to mainline. Patch 2/3 carries
+context
+
+  static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
+
+but e045d6ed33f8 ("md/raid10: fix writes_pending leak on write request
+failures") changed __make_request() to return bool. Applying
+1/3..3/3 with --fuzz=0:
+
+  8e065a160251 (= e045d6ed33f8^)        applies clean
+  e045d6ed33f8                          fails
+  55b77337bdd0                          fails
+  v7.2-rc4                              fails
+  current mainline                      fails
+
+So the numbers above are from 8e065a160251, which is the newest base v7
+applies to. A rebase would probably help it get picked up — happy to
+re-run the same rig on a v8 if you post one.
+
+Thanks,
+Mykola
