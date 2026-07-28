@@ -1,139 +1,197 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30B4B41BA98
-	for <linux-raid@vger.kernel.org>; Tue, 28 Jul 2026 09:15:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65B1541A791
+	for <linux-raid@vger.kernel.org>; Tue, 28 Jul 2026 09:16:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785230161; cv=none; b=S1bkoeTuCAuaQ3hfyLsKCHlNorybihMeI660uG/bg+5+EGSaKA1Jqen0Aj+6+VajVsFDY8rhg5GhPMYHJc1AA5QmZJ3Fs+mmVd9Kw/3cbVdFz4yJRfjyaflYcubstmJhZHuwTPxmX3dfzmfpoWi4MVeY/AYOPFneoBxANEHnKys=
+	t=1785230167; cv=none; b=AOUEey3E9+CaveHCN24f9A4aYF+dbxBrbH1TEagk3vWJsp5LdGS78UVerwAftgmGurMZz5ArWANp23G10Xf67eh+15WFAZuUwB3qs9+Pl40S3cxEp8yDoFaPT5qh1JaGDD63qyOUfApROl3y53wkaMg7jbkkoxnjnicXznnKyUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785230161; c=relaxed/simple;
-	bh=PhUb0MvXUpldD44/+p+i68rAkX2e/R2kQT2qCkNx3Rs=;
+	s=arc-20240116; t=1785230167; c=relaxed/simple;
+	bh=K7BpJnAqcHQl3ey11gdu7UJx2dlUV4AiCEs9EGJh+5M=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=lQXsuLF1F7DhZdDOaKm64u7aMGRpM3E5pdjLdMLirXCouZxeFhWcERXp88YcGRbg6UFAga3sXK8Fks2nozTwshnhYKmjrNR4ujiZoBPNolmkkTGxEhFHWcs1ITwVRKMouQCWB/eZQs5iK1YpO4MhztlWC51ndOGvZn3Tsjx/FTU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cq4CuVKZ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ETIHzQWL2hp+S4qQvWvKaG/tH/UjeJE8lKhSIBE842d+N8Iz5QzYsErXcWaTeCvSQGTtVG9OpWACqB/2SaoCWg2uwMRsSFm9rr+0efmRzTpVW3L0rJiyffL/fWm11l1kIOjiO0KFnp1MZrwIWOK6thcH0K/M9Ya9Ex7TkhJpcY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I/lub3S5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cq4CuVKZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B27B1F000E9;
-	Tue, 28 Jul 2026 09:15:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I/lub3S5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABDB51F000E9;
+	Tue, 28 Jul 2026 09:16:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785230159;
-	bh=aQP54hm+Pvx4vqQNUjKcmAzrtKlmgEdcDo8HILxNKzs=;
+	s=k20260515; t=1785230165;
+	bh=mPbC8JE3/xpH/oFsamYrOJHjIJtrOa1XxZQBptMYCE8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cq4CuVKZDM/1zPjrvaeJ50Sm9aPidfI1YPaKDPN59AP+K1iT7i8kObX5D3RoIia8p
-	 G+qs/7ijfcT3COTZ8tghpxoi0Jh1+7YnXYL+AR6MqKy3DxX6C9/ptTKo8cysw9r9KA
-	 J1i/gC2vuAafiuiYu3/2PZmdV4DEW7M8jn6gKW+LF1+nVwlBc2/ftj7NDVHeXxw8qf
-	 QwBX0QIfFl9TedO5JmgQeY27T9fav5/czWuLDbd1uyLDlG84Aorjc3fwbQreqkzWzI
-	 AouHw5TNxfDyEGlKH5BQbDB57hHBemYGcmE6CK3P4sy2GfX5f0iagFTInV54IEHqmH
-	 OTbdcjWeDh9sg==
+	b=I/lub3S51QxCilvoIfoR9Aiv+fOC1Av69gce//UtiEBRVE+MaYpvcUjyLIGnxdoIE
+	 6IWW8I9Xlgv0H6bxrwH5QHGNiHGpfGu3j/GQVx8Lnvw3I3c1kxbTORGJ1WelmIqDuH
+	 L4pYkQ6uXrw8IgFogymBsl+uOiHP2AR6HoZiqiSt6M6UcR2RV0Vt++zyX/7zZDFWcp
+	 ldcZqIWkSXNQncsR6YZzIYZPSlLEHVqOL/QlBsgE+TtH2llEY0nrgxyOGcc+tPqjwC
+	 AvD8JCHAguPscALeuZbql8YSR+J7duRF+42UckaaWTQa+ynFXVKsdlCxz6Y4sEOb6G
+	 dgOrKl6R+8mVA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 15/21] md/raid10: reject llbitmap reshape when md
- chunk shrinks
+Subject: Re: [PATCH v3 05/21] md/md-llbitmap: track bitmap sync_size
+ explicitly
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <afa30cd1979fd4ea579c7db9c684a12cdea1a895.1785206690.git.yukuai@fygo.io>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <c7c477a0e0203fd6ce98e49cd0cc1382b1786f4d.1785206690.git.yukuai@fygo.io>
 References: <cover.1785206690.git.yukuai@fygo.io>
- <afa30cd1979fd4ea579c7db9c684a12cdea1a895.1785206690.git.yukuai@fygo.io>
+ <c7c477a0e0203fd6ce98e49cd0cc1382b1786f4d.1785206690.git.yukuai@fygo.io>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 09:15:59 +0000
-Message-Id: <20260728091559.9B27B1F000E9@smtp.kernel.org>
+Date: Tue, 28 Jul 2026 09:16:05 +0000
+Message-Id: <20260728091605.ABDB51F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
 New issues:
-- [High] Missing Validation in Array Assembly Path
+- [Critical] Missing upper and lower bounds validation on the newly tracked=
+ `sync_size` read from the superblock leads to arbitrary out-of-bounds memo=
+ry accesses.
+- [High] Validation of `chunksize` in `llbitmap_read_sb` incorrectly uses `=
+mddev->resync_max_sectors` instead of `sync_size`.
+- [High] Torn read of the 64-bit `sync_size` field leading to superblock co=
+rruption and memory allocation bugs on reboot, along with unprotected bitma=
+p geometry updates.
 
 Pre-existing issues:
-- [High] Logic Error in Resume Path forces reshape start despite check fail=
-ure
+- [High] A teardown race condition in `llbitmap_destroy()` fails to prevent=
+ a workqueue task from re-arming a timer after it has been deleted, causing=
+ a UAF.
 --
 
---- Patch [15]: [PATCH v3 15/21] md/raid10: reject llbitmap reshape when md=
- chunk shrinks ---
-commit 0f54995b397bafdc9d0ce8dd025c97e68e5b1284
+--- Patch [5]: [PATCH v3 05/21] md/md-llbitmap: track bitmap sync_size expl=
+icitly ---
+commit e1b87a51dfe616ddb9c0f12bcc69bdac5d5044d5
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/raid10: reject llbitmap reshape when md chunk shrinks
+md/md-llbitmap: track bitmap sync_size explicitly
+   =20
+Track llbitmap's own sync_size instead of always using
+mddev->resync_max_sectors directly.
 
-llbitmap reshape keeps one live bitmap and cannot safely make an
-existing bitmap bit cover a smaller data range.
+This is the minimal bookkeeping needed before llbitmap can track old
+and new reshape geometry independently.
 
-The llbitmap chunksize itself will not shrink when mddev->chunk_sectors
-stays the same or grows. However, shrinking mddev->chunk_sectors can
-shrink the effective data range covered by each bit for the RAID10
-reshape geometry. Reject that reshape while llbitmap is active.
+> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
+> index f0c20afa354eb..e3500a1a52c07 100644
+> --- a/drivers/md/md-llbitmap.c
+> +++ b/drivers/md/md-llbitmap.c
 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 0a3cfdd3f5df8..1242b8d3bb6bd 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -4284,6 +4284,10 @@ static int raid10_check_reshape(struct mddev *mdde=
-v)
+[ ... ]
+
+> @@ -987,6 +991,9 @@ static int llbitmap_read_sb(struct llbitmap *llbitmap)
+>  		goto out_put_page;
+>  	}
 > =20
->  	if (conf->geo.far_copies !=3D 1 && !conf->geo.far_offset)
->  		return -EINVAL;
-> +	if (mddev->bitmap_id =3D=3D ID_LLBITMAP &&
-> +	    mddev->new_chunk_sectors &&
-> +	    mddev->new_chunk_sectors < mddev->chunk_sectors)
-> +		return -EOPNOTSUPP;
+> +	sync_size =3D le64_to_cpu(sb->sync_size);
 
-[Severity: High]
-This is a pre-existing issue, but does returning an error code here actually
-prevent the reshape from starting?
+[Severity: Critical]
+Is it necessary to validate the upper and lower bounds of the sync_size
+read from the superblock here?
 
-Looking at mddev_start_reshape() in drivers/md/md.c, it seems to treat a
-non-zero return value from check_reshape() as a trigger to execute
-start_reshape():
+If sync_size is manipulated to be near U64_MAX, calculating nr_pages
+might truncate to a small 32-bit integer, while chunks remains huge.
+Could this cause llbitmap_init_state() to perform massive out-of-bounds
+writes into the undersized pctl array?
 
-    if (mddev->reshape_position =3D=3D MaxSector ||
-        mddev->pers->check_reshape =3D=3D NULL ||
-        mddev->pers->check_reshape(mddev)) {
-            clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-            ret =3D mddev->pers->start_reshape(mddev);
+Alternatively, if sync_size is too small, nr_pages is small, but incoming
+IO up to mddev->resync_max_sectors calculates a page_start that exceeds
+the bounds of pctl:
 
-Since raid10_check_reshape() returns -EOPNOTSUPP,
-mddev->pers->check_reshape(mddev) will evaluate to true. Will this bypass
-the rejection and force raid10_start_reshape() to proceed with the invalid
-geometry?
-
-[Severity: High]
-Does this same llbitmap constraint need to be validated during array
-assembly?
-
-If an array with an active llbitmap and a suspended reshape with a shrunk
-chunk size is assembled, md_run() invokes raid10_run(), which assigns the
-new geometry via setup_conf() without validating the llbitmap constraint:
-
-drivers/md/raid10.c:setup_conf() {
+drivers/md/md-llbitmap.c:llbitmap_start_write() {
     ...
-    if (mddev->reshape_position =3D=3D MaxSector) {
-        conf->prev =3D conf->geo;
-        conf->reshape_progress =3D MaxSector;
-    } else {
-        if (setup_geo(&conf->prev, mddev, geo_old) !=3D conf->copies) {
-            err =3D -EINVAL;
-            goto out;
-        }
+    int page_start =3D (start + BITMAP_DATA_OFFSET) >> PAGE_SHIFT;
+    ...
+    while (page_start <=3D page_end) {
+        llbitmap_raise_barrier(llbitmap, page_start);
     ...
 }
 
-Could this allow the array to mount and serve I/O using a geometry where
-the bitmap bits cover a smaller data range than originally intended, causing
-data corruption because the bitmap won't properly track the full range
-written?
+Could this lead to out-of-bounds memory accesses if a maliciously crafted
+bitmap superblock is mounted?
 
+
+[Severity: High]
+Should the chunksize validation further down in llbitmap_read_sb() be
+updated to use sync_size as well?
+
+    if (chunksize < DIV_ROUND_UP_SECTOR_T(mddev->resync_max_sectors,
+                                          mddev->bitmap_info.space << SECTO=
+R_SHIFT)) {
+
+If an array is grown and stopped before the bitmap is resized,
+mddev->resync_max_sectors reflects the new larger size, but the bitmap
+superblock retains the old sync_size and chunksize.
+
+Will checking if the old chunksize can cover the new resync_max_sectors
+cause a false failure and abort bitmap initialization in this scenario?
+
+> +	if (!sync_size)
+> +		sync_size =3D mddev->resync_max_sectors;
+>  	chunksize =3D le32_to_cpu(sb->chunksize);
+>  	if (!is_power_of_2(chunksize)) {
+
+[ ... ]
+
+> @@ -1153,6 +1161,7 @@ static int llbitmap_resize(struct mddev *mddev, sec=
+tor_t blocks, int chunksize)
+>  	llbitmap->chunkshift =3D ffz(~chunksize);
+>  	llbitmap->chunksize =3D chunksize;
+>  	llbitmap->chunks =3D chunks;
+> +	llbitmap->sync_size =3D blocks;
 > =20
->  	if (setup_geo(&geo, mddev, geo_start) !=3D conf->copies)
->  		/* mustn't change number of copies */
+>  	return 0;
+>  }
+
+[Severity: High]
+Are these updates to the 64-bit sync_size and geometry variables
+adequately protected from concurrent access?
+
+Unlike the legacy bitmap which uses mddev->pers->quiesce() to pause IO,
+llbitmap_resize() does not pause IO. This allows active IO paths to read
+a mix of old and new geometry values.
+
+Additionally, llbitmap_update_sb() concurrently reads llbitmap->sync_size
+locklessly:
+
+drivers/md/md-llbitmap.c:llbitmap_update_sb() {
+    ...
+    sb->sync_size =3D cpu_to_le64(llbitmap->sync_size);
+    ...
+}
+
+On 32-bit platforms, might this race result in a torn read of the 64-bit
+value, causing a corrupted value to be written to the disk superblock?
+
+[ ... ]
+
+This is a pre-existing issue, but does the teardown sequence in
+llbitmap_destroy() allow the pending_timer to be re-armed after deletion?
+
+In llbitmap_destroy():
+
+    timer_delete_sync(&llbitmap->pending_timer);
+    flush_workqueue(md_llbitmap_io_wq);
+
+If the daemon work is concurrently running in the workqueue,
+timer_delete_sync() returns immediately because the timer is no longer
+pending.
+
+The workqueue is then flushed, but at the end of the worker function
+md_llbitmap_daemon_fn(), it unconditionally re-arms the timer:
+
+    if (restart)
+        mod_timer(&llbitmap->pending_timer,
+                  jiffies + mddev->bitmap_info.daemon_sleep * HZ);
+
+When llbitmap is subsequently freed, will the re-armed timer dereference
+the freed memory when it fires?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785206690.gi=
-t.yukuai@fygo.io?part=3D15
+t.yukuai@fygo.io?part=3D5
