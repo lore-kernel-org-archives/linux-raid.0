@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6953341C2F2
-	for <linux-raid@vger.kernel.org>; Tue, 28 Jul 2026 09:15:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30B4B41BA98
+	for <linux-raid@vger.kernel.org>; Tue, 28 Jul 2026 09:15:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785230143; cv=none; b=FPOnVa9g63lhdzpVF7Q3htqdlF82PNoFu2UIyI2NBjNpgxAIttKFOuYTHfHtqarpQJSSHlHlGDSX3sTuEYaEtNZUBslK3n/rKeJRywDTLHDnKI/unNq1lrmcezEozPgchfg7BKuXaF8ZJaYrIqvnRk4l/yrYG74JmNFYX7aNasM=
+	t=1785230161; cv=none; b=S1bkoeTuCAuaQ3hfyLsKCHlNorybihMeI660uG/bg+5+EGSaKA1Jqen0Aj+6+VajVsFDY8rhg5GhPMYHJc1AA5QmZJ3Fs+mmVd9Kw/3cbVdFz4yJRfjyaflYcubstmJhZHuwTPxmX3dfzmfpoWi4MVeY/AYOPFneoBxANEHnKys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785230143; c=relaxed/simple;
-	bh=QZd5inFWJZXapz24YygaHzkRU77+fzC7CCRFl/LxrmQ=;
+	s=arc-20240116; t=1785230161; c=relaxed/simple;
+	bh=PhUb0MvXUpldD44/+p+i68rAkX2e/R2kQT2qCkNx3Rs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DX2OMGFJyP8vZiX4D0QwF0fcP7ih3qk1VNrtN/ectrSVMOG/sNppEhOpwBBNqByeee1BHXnwyBVYN/oV1H8CFKlKKt/eiIAOHoNhzgepUkjsgh9R6lvAeDpAyuc1uh6fZ2wUI1UJh4H0NN1lv7YQ0QQd1FsE6ws10Y6gFPzbtjk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ddJLu8GB; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=lQXsuLF1F7DhZdDOaKm64u7aMGRpM3E5pdjLdMLirXCouZxeFhWcERXp88YcGRbg6UFAga3sXK8Fks2nozTwshnhYKmjrNR4ujiZoBPNolmkkTGxEhFHWcs1ITwVRKMouQCWB/eZQs5iK1YpO4MhztlWC51ndOGvZn3Tsjx/FTU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cq4CuVKZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ddJLu8GB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83E7A1F000E9;
-	Tue, 28 Jul 2026 09:15:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cq4CuVKZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B27B1F000E9;
+	Tue, 28 Jul 2026 09:15:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785230142;
-	bh=Yxpa13UshfL9lmDC/m7YDJfN8iTcGIAQujPmk/Z9gkw=;
+	s=k20260515; t=1785230159;
+	bh=aQP54hm+Pvx4vqQNUjKcmAzrtKlmgEdcDo8HILxNKzs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ddJLu8GBPoEWIglTQ6Ns7z3b0+bwqvQ730swRr3PC3qySkhYO5vF03MPx9Wp/8wf1
-	 BaA53WuLDxXv6tjyscLVXAu2P5OWx8OP6nExrV//WsCB2qzRG4tMMACRwsccBOE7TE
-	 Isgo9PFTS8CCSk0TOLSgVvsWUrX6o3orhihQCWtD5fxXzE+NFXWOe3rDCkFTbmu3kW
-	 +OHKw1wMqtrETnd3+5ujh/3iwCxoMmMzoVHPtDNO9IK5cnO0ex+DkQ1r7GpYmhQRzR
-	 t72nE6nQxuoh/2PIZ2iWH28hLRl71NxP5RCz8bH9hYuowA2tP9iN9GnxCgMjnKzNs/
-	 22k4ygqyNUItw==
+	b=cq4CuVKZDM/1zPjrvaeJ50Sm9aPidfI1YPaKDPN59AP+K1iT7i8kObX5D3RoIia8p
+	 G+qs/7ijfcT3COTZ8tghpxoi0Jh1+7YnXYL+AR6MqKy3DxX6C9/ptTKo8cysw9r9KA
+	 J1i/gC2vuAafiuiYu3/2PZmdV4DEW7M8jn6gKW+LF1+nVwlBc2/ftj7NDVHeXxw8qf
+	 QwBX0QIfFl9TedO5JmgQeY27T9fav5/czWuLDbd1uyLDlG84Aorjc3fwbQreqkzWzI
+	 AouHw5TNxfDyEGlKH5BQbDB57hHBemYGcmE6CK3P4sy2GfX5f0iagFTInV54IEHqmH
+	 OTbdcjWeDh9sg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 17/21] md/raid10: split reshape bios before bitmap
- accounting
+Subject: Re: [PATCH v3 15/21] md/raid10: reject llbitmap reshape when md
+ chunk shrinks
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <8abef42ad491fe452b82d672c2fdeb6c64c20c91.1785206690.git.yukuai@fygo.io>
+In-Reply-To: <afa30cd1979fd4ea579c7db9c684a12cdea1a895.1785206690.git.yukuai@fygo.io>
 References: <cover.1785206690.git.yukuai@fygo.io>
- <8abef42ad491fe452b82d672c2fdeb6c64c20c91.1785206690.git.yukuai@fygo.io>
+ <afa30cd1979fd4ea579c7db9c684a12cdea1a895.1785206690.git.yukuai@fygo.io>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 09:15:40 +0000
-Message-Id: <20260728091541.83E7A1F000E9@smtp.kernel.org>
+Date: Tue, 28 Jul 2026 09:15:59 +0000
+Message-Id: <20260728091559.9B27B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -47,81 +47,93 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Missing `md_write_end()` when `mddev_bio_split_at_reshape_offset()=
-` fails on a write bio, leaking `mddev->writes_pending` reference count.
-- [High] Mempool exhaustion deadlock due to double bio allocation from `con=
-f->bio_split` without a rescuer thread.
+
+New issues:
+- [High] Missing Validation in Array Assembly Path
+
+Pre-existing issues:
+- [High] Logic Error in Resume Path forces reshape start despite check fail=
+ure
 --
 
---- Patch [17]: [PATCH v3 17/21] md/raid10: split reshape bios before bitma=
-p accounting ---
-commit f435d38ffb898e662e1e9b6225ad90d266d26363
+--- Patch [15]: [PATCH v3 15/21] md/raid10: reject llbitmap reshape when md=
+ chunk shrinks ---
+commit 0f54995b397bafdc9d0ce8dd025c97e68e5b1284
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/raid10: split reshape bios before bitmap accounting
-   =20
-This patch updates raid10 to use the shared mddev_bio_split_at_reshape_offs=
-et()
-helper. This ensures that RAID10 submits only one-side bios to llbitmap dur=
-ing
-reshape operations.
+md/raid10: reject llbitmap reshape when md chunk shrinks
+
+llbitmap reshape keeps one live bitmap and cannot safely make an
+existing bitmap bit cover a smaller data range.
+
+The llbitmap chunksize itself will not shrink when mddev->chunk_sectors
+stays the same or grows. However, shrinking mddev->chunk_sectors can
+shrink the effective data range covered by each bit for the RAID10
+reshape geometry. Reject that reshape while llbitmap is active.
 
 > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index e50e4adee389f..fd364a2e2fd98 100644
+> index 0a3cfdd3f5df8..1242b8d3bb6bd 100644
 > --- a/drivers/md/raid10.c
 > +++ b/drivers/md/raid10.c
-> @@ -1911,6 +1911,12 @@ static bool raid10_make_request(struct mddev *mdde=
-v, struct bio *bio)
->  		sectors =3D chunk_sects -
->  			(bio->bi_iter.bi_sector &
->  			 (chunk_sects - 1));
-> +
-> +	bio =3D mddev_bio_split_at_reshape_offset(mddev, bio, &sectors,
-> +						&conf->bio_split);
+> @@ -4284,6 +4284,10 @@ static int raid10_check_reshape(struct mddev *mdde=
+v)
+> =20
+>  	if (conf->geo.far_copies !=3D 1 && !conf->geo.far_offset)
+>  		return -EINVAL;
+> +	if (mddev->bitmap_id =3D=3D ID_LLBITMAP &&
+> +	    mddev->new_chunk_sectors &&
+> +	    mddev->new_chunk_sectors < mddev->chunk_sectors)
+> +		return -EOPNOTSUPP;
 
 [Severity: High]
-Could this lead to a mempool exhaustion deadlock if bad blocks are present?
+This is a pre-existing issue, but does returning an error code here actually
+prevent the reshape from starting?
 
-This splits the bio using conf->bio_split, and passes the split bio down
-to __make_request(). If there are bad blocks that restrict the sector count
-further, the lower level routines perform a second split using the exact
-same bio_set:
+Looking at mddev_start_reshape() in drivers/md/md.c, it seems to treat a
+non-zero return value from check_reshape() as a trigger to execute
+start_reshape():
 
-drivers/md/raid10.c:raid10_write_request() {
+    if (mddev->reshape_position =3D=3D MaxSector ||
+        mddev->pers->check_reshape =3D=3D NULL ||
+        mddev->pers->check_reshape(mddev)) {
+            clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+            ret =3D mddev->pers->start_reshape(mddev);
+
+Since raid10_check_reshape() returns -EOPNOTSUPP,
+mddev->pers->check_reshape(mddev) will evaluate to true. Will this bypass
+the rejection and force raid10_start_reshape() to proceed with the invalid
+geometry?
+
+[Severity: High]
+Does this same llbitmap constraint need to be validated during array
+assembly?
+
+If an array with an active llbitmap and a suspended reshape with a shrunk
+chunk size is assembled, md_run() invokes raid10_run(), which assigns the
+new geometry via setup_conf() without validating the llbitmap constraint:
+
+drivers/md/raid10.c:setup_conf() {
     ...
-    bio =3D bio_submit_split_bioset(bio, r10_bio->sectors,
-                                  &conf->bio_split);
+    if (mddev->reshape_position =3D=3D MaxSector) {
+        conf->prev =3D conf->geo;
+        conf->reshape_progress =3D MaxSector;
+    } else {
+        if (setup_geo(&conf->prev, mddev, geo_old) !=3D conf->copies) {
+            err =3D -EINVAL;
+            goto out;
+        }
     ...
 }
 
-Since conf->bio_split lacks a rescuer thread, would two concurrent I/Os
-that both cross a chunk boundary and hit a bad block exhaust the pool and
-stall indefinitely?
+Could this allow the array to mount and serve I/O using a geometry where
+the bitmap bits cover a smaller data range than originally intended, causing
+data corruption because the bitmap won't properly track the full range
+written?
 
-> +	if (!bio)
-> +		return true;
-
-[Severity: High]
-Does this early return leak the mddev->writes_pending reference?
-
-Earlier in raid10_make_request(), we call md_write_start() which increments
-the writes_pending count for write bios:
-
-drivers/md/raid10.c:raid10_make_request() {
-    ...
-    md_write_start(mddev, bio);
-    ...
-}
-
-If the bio is an atomic write that cannot be split,
-mddev_bio_split_at_reshape_offset() returns NULL. When we return true here,
-we bypass the md_write_end() cleanup at the end of the function, which
-might hang the array when it is later suspended or stopped.
-
-> +
->  	if (!__make_request(mddev, bio, sectors))
->  		md_write_end(mddev);
+> =20
+>  	if (setup_geo(&geo, mddev, geo_start) !=3D conf->copies)
+>  		/* mustn't change number of copies */
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785206690.gi=
-t.yukuai@fygo.io?part=3D17
+t.yukuai@fygo.io?part=3D15
