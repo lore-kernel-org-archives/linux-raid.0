@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8853B3AA4EB
-	for <linux-raid@vger.kernel.org>; Tue, 28 Jul 2026 09:06:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D3AE40F8D0
+	for <linux-raid@vger.kernel.org>; Tue, 28 Jul 2026 09:09:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785229585; cv=none; b=EZZYZrdtqaAdgCeVP5XJ7nlvv8c0UlPCpYUV7tX7twgDdQzzCSPa4ueh6GOeLd1xjwmXm0kMWl7yss4JsCwiiTkieZgNqrCjsfgwQVyLQ+VRUvMPE9WbMtRK6hi5qOsWYyqKOYkYk7WzS9RTKIHBvUn93WCEvHHWgQok2wqcixs=
+	t=1785229787; cv=none; b=SM38ovCCyhPCH54xoSb5OXUg8iyaZMb4viIsp/EtrxIByxr4phmgbMIyUiiXe3C35dT4+VV3RTAEsE6M17bwyFVPu5H33P27KjW3Ix/0JdvWjSWf06QTgmRShHM+DgDjcJYskExTNu5jirrXpxlrcIukq0UIhHTgmNf6VwkpPjE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785229585; c=relaxed/simple;
-	bh=99wZc5T9J1ilOsBOLUYsAILicdjOjp3YbV7OUZpViIE=;
+	s=arc-20240116; t=1785229787; c=relaxed/simple;
+	bh=xXKrp5m0DlYbmLkVkisX51/VWxCI8eg4DbsbAeTt2aU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=NL8Q8bvki+0hc+YP4NlBir5U7p155JTOtX17X1/CI47488uxwnb1OdofffkrjH8/b6Kj4ZL78FZi4VKA3FGg5HHtnB7+klfQ8zVEsW07Ks1tTsSmaL+LAg2dMXaoAufi8/J12l1CkP89CpIYHq98hbLeXC9eCrAjwlqkYZPtakk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TB0V7qEi; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=NJe/qjfne55NntLAFBsyHiAcZlU+wtbjx/BWzFN+A5zy64NY4+T8w7L6gOKYMQ/BANQ1NCRh50OxMYGV7qKMmkA9V0x9QCXI0/xGj33dxQkaQmBw1nn78rdyDHlFIu1rA/WoTZvke9TLD9bCoHhoO2CvUX0isc0ZXSserNToPmw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VSfWFHd9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TB0V7qEi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42A1D1F000E9;
-	Tue, 28 Jul 2026 09:06:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VSfWFHd9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A7951F000E9;
+	Tue, 28 Jul 2026 09:09:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785229584;
-	bh=5yvoLmpBNSLxmJzFmwDPm+3VzFi1vLTsk6zJdDMa7bk=;
+	s=k20260515; t=1785229786;
+	bh=TNtVIuyUqEm5tN4wpeMhFTkUNowTwoZA0Es8uq5R1O4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TB0V7qEiavm6Q3bZXXfWYsGnVTLfez3lHAyWYhIxQxeBt1dcCZjRftl4VW6m6+M7L
-	 p5101uI04Vw16l1sAf/yz+gU7lI37fVxAQKL/ZE1lQwDlvA8DAymOlIMwUUyoPbwvD
-	 Q7rmguIWiD34Hc2pcwzUNfHeo3BKZEnIkyuDzT//YaMhz4sMf+Qm6fJn1TA54/CNU6
-	 py51Z0nGSSWuR4ZqP+g9No8MVay//LFdGN7QEGTVXVRN/FmANbDHU7IxfcPPI5lzse
-	 pDRrxj7xfx3oXXQgs9BoYgXdajtgtKUz+kgWTiR15PWG1cznIKqDRMdxkMqSPlixj+
-	 Hcp5Rxryk/n+w==
+	b=VSfWFHd9P1cVmlfIaJLrzBtpFqxmxKdE5eCBuxfK7awjftFfypOQ4CYR/qeDEsEJU
+	 2py15QF6clvIOzO9zrzhcSY+Cq/onpk3d4dM+R3Fl5msnoVNEo74WjosDfRm71+ZrS
+	 5zf86faLpvPI6P3NUwxmIT3FlcmoKSdxkRkC7qLI4zXu4rr0PlVgGw6HYtFwFqutY6
+	 OpQCv6DdrKHkZF84PpVePVAiuIRZSRNQfx2293AGFOuI7WLPsv4Ai1Ebzo6waXatBB
+	 QQva/E9+dwVQ1WzknA/yC5X9HvHqOah5w6ffqpjDoj976B3ixn9dgch26gcVolW9s5
+	 4O6XFYceQt5kQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 13/21] md/md-llbitmap: remap checkpointed bits as
- reshape progresses
+Subject: Re: [PATCH v3 07/21] md/md-llbitmap: grow the page cache in place
+ for reshape
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <64484cf5bfa58462d3c21d0a655901eaa7d9b573.1785206690.git.yukuai@fygo.io>
+In-Reply-To: <7f146fb22b6051aea3b0e79072d4403526ed46f0.1785206690.git.yukuai@fygo.io>
 References: <cover.1785206690.git.yukuai@fygo.io>
- <64484cf5bfa58462d3c21d0a655901eaa7d9b573.1785206690.git.yukuai@fygo.io>
+ <7f146fb22b6051aea3b0e79072d4403526ed46f0.1785206690.git.yukuai@fygo.io>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 09:06:23 +0000
-Message-Id: <20260728090624.42A1D1F000E9@smtp.kernel.org>
+Date: Tue, 28 Jul 2026 09:09:45 +0000
+Message-Id: <20260728090946.0A7951F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -47,196 +47,221 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 6 potential issue(=
 s) to consider:
-- [High] In-place bitmap array merge corrupts states due to forward iterati=
-on overlapping with unread source chunks (equivalent to `memcpy` vs `memmov=
-e` bug).
-- [High] The reshape state merge function drops proactive sync unwritten st=
-ates (`BitNeedSyncUnwritten`, `BitCleanUnwritten`), reverting them to basic=
- states and losing sync status.
-- [High] `llbitmap_reshape_map_range` fails to map `old` device sectors to =
-array sectors when `bitmap_sector_map` is unavailable, corrupting source ch=
-unk calculations.
-- [High] Lockless read-modify-write in `llbitmap_reshape_merge` races with =
-concurrent I/O (`llbitmap_start_write`), causing lost BitDirty flags and si=
-lent data corruption.
-- [Medium] Redundant condition in `llbitmap_rmerge_state` forces all RAID l=
-evels to treat mixed BitClean/BitUnwritten as BitClean, bypassing the `leve=
-l_456` restriction.
-- [Medium] Truncation of 64-bit sector counts to 32-bit unsigned long cause=
-s incomplete reshape mapping on 32-bit kernels.
+
+New issues:
+- [High] Use-After-Free on `llbitmap->pctl` array during bitmap resize.
+- [High] Block IO recursion deadlock due to `GFP_KERNEL` allocation under `=
+reconfig_mutex`.
+- [High] Out-Of-Bounds array access during resize due to stale `chunkshift`.
+
+Pre-existing issues:
+- [High] Divide-by-zero crash in `llbitmap_calculate_chunks` on 32-bit syst=
+ems due to `chunksize` overflow.
+- [High] Use-After-Free timer race during `llbitmap_destroy`.
+- [High] Out-of-Bounds disk write due to missing `BITMAP_DATA_OFFSET` in ca=
+lculation.
 --
 
---- Patch [13]: [PATCH v3 13/21] md/md-llbitmap: remap checkpointed bits as=
- reshape progresses ---
-commit 745e2cefd189066340bdf6deca751ae219d34b84
+--- Patch [7]: [PATCH v3 07/21] md/md-llbitmap: grow the page cache in plac=
+e for reshape ---
+commit 7e002f8cabd473784285f63600d75c1d7d7d30c4
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/md-llbitmap: remap checkpointed bits as reshape progresses
-   =20
-Merge checkpointed old llbitmap state forward as reshape_position
-advances and record the checkpoint remap through reshape_mark().
+md/md-llbitmap: grow the page cache in place for reshape
+
+This patch uses the page-control helpers to grow the llbitmap's cached pages
+in place for resize and later reshape preparation, instead of rebuilding the
+whole cache.
 
 > diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
+> index 4c3fc4b35aff0..1ab9b1689fd80 100644
 > --- a/drivers/md/md-llbitmap.c
 > +++ b/drivers/md/md-llbitmap.c
-
-[ ... ]
-
-> @@ -934,6 +942,33 @@ static int llbitmap_prepare_resize(struct llbitmap *=
-llbitmap,
-
-[ ... ]
-
-> +	if (level_456 && ((dst =3D=3D BitClean && src =3D=3D BitUnwritten) ||
-> +			  (src =3D=3D BitClean && dst =3D=3D BitUnwritten)))
-> +		return BitClean;
-> +	if (dst =3D=3D BitClean || src =3D=3D BitClean)
-> +		return BitClean;
-
-[Severity: Medium]
-Does this unconditional check override the preceding level_456 restriction?
-
-It looks like mixed clean and unwritten states will evaluate to clean on all
-array types, including non-parity arrays like RAID 1 or RAID 10. This
-effectively renders the level_456 restriction above it dead code.
-
-> +	return BitUnwritten;
-> +}
-
-[Severity: High]
-Are we unintentionally dropping proactive sync unwritten states here?
-
-When reshaping an array with states like BitNeedSyncUnwritten,
-BitSyncingUnwritten, or BitCleanUnwritten, they appear to fall through the
-basic checks and downgrade to BitUnwritten. This silently loses sync status
-for proactive parity builds on RAID 4/5/6.
-
-[ ... ]
-
-> @@ -1839,6 +1874,120 @@ static int llbitmap_reshape_can_start(struct mdde=
-v *mddev)
-
-[ ... ]
-
-> +struct llbitmap_reshape_range {
-> +	sector_t offset;
-> +	unsigned long sectors;
-
-[Severity: Medium]
-Will this truncate the 64-bit sector count to 32 bits on 32-bit architectur=
-es?
-
-If the reshape process skips a large fully clean region of more than 2TB, it
-seems this sector count might silently overflow since sectors is declared as
-unsigned long.
-
-> +	sector_t start;
-> +	sector_t end;
-> +};
-
-[ ... ]
-
-> +static void llbitmap_reshape_map_range(struct llbitmap *llbitmap,
-> +				       sector_t lo, sector_t hi,
-> +				       bool previous,
-> +				       struct llbitmap_reshape_range *range)
+> @@ -416,6 +416,19 @@ static char state_machine[BitStateCount][BitmapActio=
+nCount] =3D {
+>  };
+> =20
+>  static void __llbitmap_flush(struct mddev *mddev);
+> +static void llbitmap_flush(struct mddev *mddev);
+> +static void llbitmap_update_sb(void *data);
+> +
+> +static void llbitmap_calculate_chunks(struct mddev *mddev, sector_t bloc=
+ks,
+> +				      unsigned long *chunksize,
+> +				      unsigned long *chunks)
 > +{
-> +	range->offset =3D lo;
-> +	range->sectors =3D hi - lo;
-> +	llbitmap_map_layout(llbitmap, &range->offset, &range->sectors, previous=
-);
+> +	*chunks =3D DIV_ROUND_UP_SECTOR_T(blocks, *chunksize);
+> +	while (*chunks > mddev->bitmap_info.space << SECTOR_SHIFT) {
 
 [Severity: High]
-Does this fail to convert logical array sectors to bitmap device sectors for
-the old layout when bitmap_sector_map is NULL?
+This is a pre-existing issue, but does this calculation allow the on-disk
+footprint to exceed the reserved space limit?
 
-For example, during a RAID5 reshape where bitmap_sector is implemented but
-not bitmap_sector_map, llbitmap_map_layout skips mapping the old layout but
-correctly maps the new one.
+The check ensures *chunks does not exceed mddev->bitmap_info.space, but
+the on-disk layout includes an additional 1024 bytes (BITMAP_DATA_OFFSET)
+for the superblock before the raw bitmap state data.
 
-> +	range->start =3D range->offset;
-> +	range->end =3D range->offset + range->sectors;
-> +}
-> +
-> +static bool llbitmap_reshape_src_range(const struct llbitmap_reshape_ran=
-ge *old,
-> +				       const struct llbitmap_reshape_range *new,
-> +				       const struct llbitmap_reshape_range *dst,
-> +				       struct llbitmap_reshape_range *src)
-> +{
-> +	if (!old->sectors)
-> +		return false;
-> +
-> +	src->start =3D old->offset +
-> +		mul_u64_u64_div_u64(dst->start - new->offset,
-> +				    old->sectors, new->sectors);
+When llbitmap_write_page() writes the tail chunks to disk, could it write
+1024 bytes past the reserved bitmap region and corrupt adjacent data?
 
 [Severity: High]
-Could this math incorrectly mix old array sectors with new device sectors?
+This is a pre-existing issue, but does this loop risk a divide by zero on
+32-bit systems?
 
-If the mapping failed in the step above, combining these mismatched units
-could lead to corrupted source chunk calculations.
+If *chunksize is 32 bits, and the array is extremely large with very small
+reserved space, *chunksize could shift until it overflows to 0.
 
-> +	src->end =3D old->offset +
+Would the subsequent call to DIV_ROUND_UP_SECTOR_T(blocks, 0) cause a crash
+when the sysfs size is written?
 
-[ ... ]
-
-> +static void llbitmap_reshape_merge(struct llbitmap *llbitmap,
-> +				   const struct llbitmap_reshape_range *old,
-> +				   const struct llbitmap_reshape_range *new)
-> +{
-> +	unsigned long dst_start;
-> +	unsigned long dst_end;
-> +	unsigned long dst;
-> +
-> +	if (!new->sectors)
-> +		return;
-> +
-> +	dst_start =3D div64_u64(new->offset, llbitmap->reshape_chunksize);
-> +	dst_end =3D div64_u64(new->end - 1, llbitmap->reshape_chunksize);
-> +
-> +	for (dst =3D dst_start; dst <=3D dst_end; dst++) {
-
-[Severity: High]
-Could this forward iteration cause in-place state corruption during the mer=
-ge?
-
-If the old to new layout mapping causes source chunks to be located at high=
-er
-indices than destination chunks, writing to dst could overwrite the state t=
-hat
-a subsequent iteration needs to read as src. This propagates the corrupted
-state forward.
-
-> +		struct llbitmap_reshape_range dst_range;
-> +		struct llbitmap_reshape_range src;
-> +		enum llbitmap_state state;
-> +
-> +		llbitmap_reshape_dst_range(llbitmap, dst, new, &dst_range);
-> +		state =3D llbitmap_reshape_init_dst(llbitmap, dst, new);
-> +		if (llbitmap_reshape_src_range(old, new, &dst_range, &src))
-> +			state =3D llbitmap_rmerge_src(llbitmap, state, &src);
-> +		else
-> +			state =3D llbitmap_rmerge_state(llbitmap, state, BitUnwritten);
-> +		llbitmap_write(llbitmap, state, dst);
-
-[Severity: High]
-Does this lockless read-modify-write race with concurrent I/O updates to the
-same chunk?
-
-Because reshape checkpoint boundaries might not be chunk-aligned, these
-boundary chunks can cover sectors outside the suspended reshape window. A
-concurrent llbitmap_start_write to those unsuspended sectors performs a
-lockless read-modify-write on the chunk state.=20
-
-If llbitmap_reshape_merge performs a lockless write on the exact same chunk
-index concurrently, one could overwrite the other, losing BitDirty flags and
-risking silent data corruption.
-
+> +		*chunksize =3D *chunksize << 1;
+> +		*chunks =3D DIV_ROUND_UP_SECTOR_T(blocks, *chunksize);
 > +	}
 > +}
+
+[ ... ]
+
+> @@ -655,6 +668,48 @@ static unsigned int llbitmap_reserved_pages(struct l=
+lbitmap *llbitmap)
+>  			    PAGE_SIZE);
+>  }
+> =20
+> +static int llbitmap_expand_pages(struct llbitmap *llbitmap,
+> +				 unsigned long chunks)
+> +{
+> +	struct llbitmap_page_ctl **pctl;
+> +	unsigned int old_nr_pages =3D llbitmap->nr_pages;
+> +	unsigned int nr_pages =3D llbitmap_used_pages(llbitmap, chunks);
+> +	unsigned int i;
+> +	int ret;
 > +
+> +	if (nr_pages <=3D old_nr_pages)
+> +		return 0;
+> +
+> +	pctl =3D kcalloc(nr_pages, sizeof(*pctl), GFP_KERNEL);
+
+[Severity: High]
+Can this allocation trigger a block IO recursion deadlock?
+
+This is reached via array_size_store() which acquires mddev_lock()
+(taking reconfig_mutex) without setting memalloc_noio_save() context.
+
+Under memory pressure, GFP_KERNEL can enter direct reclaim and issue I/O
+writeback to the MD array. If the array superblock needs updating,
+md_write_start() waits on mddev->sb_wait for MD_SB_CHANGE_PENDING to clear.
+
+Since the management thread must clear this flag but blocks trying to acqui=
+re
+reconfig_mutex held by this resizing thread, does this result in a deadlock?
+
+> +	if (!pctl)
+> +		return -ENOMEM;
+> +
+> +	if (llbitmap->pctl)
+> +		memcpy(pctl, llbitmap->pctl,
+> +		       array_size(old_nr_pages, sizeof(*pctl)));
+> +
+> +	for (i =3D old_nr_pages; i < nr_pages; i++) {
+> +		pctl[i] =3D llbitmap_alloc_page_ctl(llbitmap, i);
+> +		if (IS_ERR(pctl[i]))
+> +			goto err_alloc_ptr;
+> +	}
+> +
+> +	kfree(llbitmap->pctl);
+> +	llbitmap->pctl =3D pctl;
+
+[Severity: High]
+Could this cause a use-after-free if concurrent IO is happening?
+
+The MD array does not suspend IO for sysfs-triggered resize operations.
+The concurrent IO path accesses this array in llbitmap_start_write():
+
+llbitmap_start_write()
+    llbitmap_raise_barrier(llbitmap, page_start);
+
+This happens without holding mddev->bitmap_info.mutex and without RCU
+protection. If the IO path dereferences the array just after this kfree()
+completes, will it trigger a panic?
+
+> +	llbitmap->nr_pages =3D nr_pages;
+> +	return 0;
+> +
+
+[ ... ]
+
+> @@ -1171,24 +1254,53 @@ static int llbitmap_create(struct mddev *mddev)
+>  static int llbitmap_resize(struct mddev *mddev, sector_t blocks, int chu=
+nksize)
+>  {
+
+[ ... ]
+
+> +	if (reshape) {
+> +		llbitmap->chunks =3D max(old_chunks, chunks);
+> +	} else {
+
+[Severity: High]
+Does this cause an out-of-bounds array access during a reshape?
+
+During reshape, this path updates llbitmap->chunks to a potentially larger
+capacity but does not update llbitmap->chunkshift.
+
+The active IO path continues to map array offsets to bitmap chunk indices
+using the smaller old chunkshift:
+
+llbitmap_start_write()
+    start =3D offset >> llbitmap->chunkshift;
+    ...
+    page_start =3D (start + BITMAP_DATA_OFFSET) >> PAGE_SHIFT;
+
+Because the old chunkshift maps to a larger number of total chunks than the
+new chunks capacity (which was reduced by doubling bitmap_chunksize), could
+an IO towards the end of the new array compute a page_start index that
+exceeds the capacity of the newly reallocated llbitmap->pctl array?
+
+> +		if (blocks < old_blocks && chunks < old_chunks)
+> +			llbitmap_mark_range(llbitmap, chunks, old_chunks - 1,
+> +					    BitUnwritten);
+> +		mddev->bitmap_info.chunksize =3D bitmap_chunksize;
+> +		llbitmap->chunks =3D chunks;
+> +		llbitmap->sync_size =3D blocks;
+> +		llbitmap_update_sb(llbitmap);
+> +	}
+> +	__llbitmap_flush(mddev);
+> +	mutex_unlock(&mddev->bitmap_info.mutex);
+>  	return 0;
+
+[Severity: High]
+This is a pre-existing issue, but is there a use-after-free race between
+llbitmap_destroy() and the daemon work queue?
+
+llbitmap_destroy() deletes the timer and then flushes the workqueue:
+
+llbitmap_destroy()
+    timer_delete_sync(&llbitmap->pending_timer);
+    flush_workqueue(md_llbitmap_io_wq);
+
+If md_llbitmap_daemon_fn() is actively executing in the workqueue while
+teardown happens, the timer is not pending, so timer_delete_sync() returns
+immediately.
+
+The running daemon work then evaluates restart =3D true and re-arms the tim=
+er:
+
+md_llbitmap_daemon_fn()
+    if (restart)
+        mod_timer(&llbitmap->pending_timer, ...);
+
+Could flush_workqueue() complete, allowing llbitmap_destroy() to free the
+llbitmap structure, while the re-armed timer later fires and accesses the
+freed memory?
+
+> +
+> +out:
+> +	mutex_unlock(&mddev->bitmap_info.mutex);
+> +	return ret;
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785206690.gi=
-t.yukuai@fygo.io?part=3D13
+t.yukuai@fygo.io?part=3D7
