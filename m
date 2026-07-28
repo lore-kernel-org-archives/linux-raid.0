@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5DDE418A37;
-	Tue, 28 Jul 2026 08:49:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 587963E0C67;
+	Tue, 28 Jul 2026 08:49:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785228589; cv=none; b=Aui3EZjzDGFEZAYjJOJ5kVLh+JtPjLTtnWxNGFLrCGx0r29nYk7EJEq3jg1SzmH4TaLb4S8uUG5M13wReL9/bWkHi3ANw0yDc9kTj3iDfNan0M3yD4asdp6cGEz5xdrCn1s9AvP8pXIrT6k4iEpmtI9tt4JRATV5drnLmTXam1U=
+	t=1785228594; cv=none; b=NsI8V3toHYisbGH+z3HtSFUs9eUr87KwTyOXHrD9HFV3eK1U1hJj5TXB16BwXGqxPGVMmz7XqP5jhqLKX7K8jn7hE1LhYPL1tfMXOPOwuHbKrw1Kjp6uEN+1Ogklt07k7bZI+vO5dhnz6znQM1VAXvE7WfdfyrY2Sb6uSZrA15s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785228589; c=relaxed/simple;
-	bh=duBhFsYzXeSG9/zoc9k9CpZaCQZLZU3Cc7uUPpEqc7c=;
+	s=arc-20240116; t=1785228594; c=relaxed/simple;
+	bh=4WXJ7A85J2XVuqFAw7qrHw7WdCExoedrSVahRn4FKG0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=owqpi9Njl2PN1slA0HoCOI3/v37hroeo4DwI2GYwqBk4d+S8luXFaVj/RSXzJa4ecxInXAo0K96oitpBqJBFj4n+O1+VIkwlZqG84cngGlWum5tfo3ZEo+tghXHDBZthwwYg2JAsKCUjgtEUXZZDPZ6KniQObodVZ+InhBt7yZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hT3PP4jQ; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=VI07zP505JS3nobFstWVCF4fJu6MHAeMMX53n0PUbOFuCatOht/2DtKsQeQ7mEn7NHMLAOrxtulMMLw7mYH+M7Hfy3B6D4DOBe3sKFVMiB5XgzqsaFndAyWYOHpAOvU3/BAVC+i7z9YAKisSY5udDMXgVTBn42DyzXGj9CvmFp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Moi+Hybz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hT3PP4jQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7211F1F00A3D;
-	Tue, 28 Jul 2026 08:49:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Moi+Hybz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5DAA1F000E9;
+	Tue, 28 Jul 2026 08:49:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785228588;
-	bh=GK7Ky+/FO+gaUoFDpRMV2NIlz8ZZP3rIDk7tW8Fqhek=;
+	s=k20260515; t=1785228592;
+	bh=VKGscNHx4sfyVarw7rBFoxGPx9jfEpX/oWEpTwqcabk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=hT3PP4jQbs9oi6OrYguvyzTEpd1n00pIL8OLpcyB+QscEMU1ekQcgc0zWlT//x9oc
-	 cRENHDVQW+JmVbXdSskrtL4N3wUawZxpF0jmSPHYdtEwKellNaMvcE7SWcxg2Ar/fA
-	 JU+A0e7+/ItCn6rUKPGnQo/bEBbVN89Ykxy/TR5DAz8RkSE49YBYkEcomLdIYQM5Ye
-	 HSS9sFFARxRDh2nX7CrIj5tGxrhzSvYXTAUrQq+gYjSowRc8e5/EubJvsto5hZ1liT
-	 wxRY1r3oYCjGT0HmO+TGXSNQGThSuQrVBLaa5CEvBH44YrZKUO85T2cjK0J7LDuEc2
-	 IQgdkfujl/Ugw==
+	b=Moi+Hybzhqm/N1uScubDjWEwxJ7gq6Cq88NgtHgQRQTVeUpa8dJ7VxJTJCvfRcVuc
+	 gtiDaLeBNQAjHJFphtOYXrNDc0y+HR742ROeVqkDEEyAtI1O9hkVcdQ6O16w5bWqSn
+	 tf5fMUHY447EvuKHXAr9Oe/do07d5tk5S0lj1Wwpo/xdPSJ3x2sqYGPH8xB7Ba5F+b
+	 Z6+zlctITQAVIXImOCPBgt9BX7KNJwam+J8stMKD9bpVbX3bVrUsp1PRP604lZCiZz
+	 0ZQ2u1zyPlluZ/gFyIG9gBezp0FB1oj6evRANXHeMnRbwoA61TgbdKttOUfUAQco4T
+	 /iEdK1GD8yHmw==
 From: Yu Kuai <yukuai@kernel.org>
 To: Song Liu <song@kernel.org>
 Cc: Li Nan <magiclinan@didiglobal.com>,
@@ -35,9 +35,9 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	yukuai@fygo.io,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 04/21] md: add helper to split bios at reshape offset
-Date: Tue, 28 Jul 2026 16:49:04 +0800
-Message-ID: <94dbcd6afed02f9838d2b9aabea69d041e83aa8b.1785206690.git.yukuai@fygo.io>
+Subject: [PATCH v3 05/21] md/md-llbitmap: track bitmap sync_size explicitly
+Date: Tue, 28 Jul 2026 16:49:05 +0800
+Message-ID: <c7c477a0e0203fd6ce98e49cd0cc1382b1786f4d.1785206690.git.yukuai@fygo.io>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <cover.1785206690.git.yukuai@fygo.io>
 References: <cover.1785206690.git.yukuai@fygo.io>
@@ -51,81 +51,93 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai@fygo.io>
 
-Add mddev_bio_split_at_reshape_offset() so personalities can share
-reshape-offset bio splitting instead of open-coding the same helper in
-multiple places.
+Track llbitmap's own sync_size instead of always using
+mddev->resync_max_sectors directly.
 
+This is the minimal bookkeeping needed before llbitmap can track old
+and new reshape geometry independently.
+
+Reviewed-by: Su Yue <glass.su@suse.com>
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 ---
- drivers/md/md.c | 39 +++++++++++++++++++++++++++++++++++++++
- drivers/md/md.h |  4 ++++
- 2 files changed, 43 insertions(+)
+ drivers/md/md-llbitmap.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0b59c676f7c0..c18a7f3c27e6 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9361,6 +9361,45 @@ void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
+diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
+index f0c20afa354e..e3500a1a52c0 100644
+--- a/drivers/md/md-llbitmap.c
++++ b/drivers/md/md-llbitmap.c
+@@ -287,6 +287,8 @@ struct llbitmap {
+ 	unsigned long chunksize;
+ 	/* total number of chunks */
+ 	unsigned long chunks;
++	/* total number of sectors tracked by current bitmap geometry */
++	sector_t sync_size;
+ 	unsigned long last_end_sync;
+ 	/*
+ 	 * time in seconds that dirty bits will be cleared if the page is not
+@@ -918,6 +920,7 @@ static int llbitmap_init(struct llbitmap *llbitmap)
+ 	llbitmap->chunkshift = ffz(~chunksize);
+ 	llbitmap->chunksize = chunksize;
+ 	llbitmap->chunks = chunks;
++	llbitmap->sync_size = blocks;
+ 	mddev->bitmap_info.daemon_sleep = DEFAULT_DAEMON_SLEEP;
+ 
+ 	ret = llbitmap_cache_pages(llbitmap);
+@@ -938,6 +941,7 @@ static int llbitmap_read_sb(struct llbitmap *llbitmap)
+ 	unsigned long daemon_sleep;
+ 	unsigned long chunksize;
+ 	unsigned long events;
++	sector_t sync_size;
+ 	struct page *sb_page;
+ 	bitmap_super_t *sb;
+ 	int ret = -EINVAL;
+@@ -987,6 +991,9 @@ static int llbitmap_read_sb(struct llbitmap *llbitmap)
+ 		goto out_put_page;
+ 	}
+ 
++	sync_size = le64_to_cpu(sb->sync_size);
++	if (!sync_size)
++		sync_size = mddev->resync_max_sectors;
+ 	chunksize = le32_to_cpu(sb->chunksize);
+ 	if (!is_power_of_2(chunksize)) {
+ 		pr_err("md/llbitmap: %s: chunksize not a power of 2",
+@@ -1022,8 +1029,9 @@ static int llbitmap_read_sb(struct llbitmap *llbitmap)
+ 
+ 	llbitmap->barrier_idle = DEFAULT_BARRIER_IDLE;
+ 	llbitmap->chunksize = chunksize;
+-	llbitmap->chunks = DIV_ROUND_UP_SECTOR_T(mddev->resync_max_sectors, chunksize);
++	llbitmap->chunks = DIV_ROUND_UP_SECTOR_T(sync_size, chunksize);
+ 	llbitmap->chunkshift = ffz(~chunksize);
++	llbitmap->sync_size = sync_size;
+ 	ret = llbitmap_cache_pages(llbitmap);
+ 
+ out_put_page:
+@@ -1153,6 +1161,7 @@ static int llbitmap_resize(struct mddev *mddev, sector_t blocks, int chunksize)
+ 	llbitmap->chunkshift = ffz(~chunksize);
+ 	llbitmap->chunksize = chunksize;
+ 	llbitmap->chunks = chunks;
++	llbitmap->sync_size = blocks;
+ 
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(md_submit_discard_bio);
+@@ -1526,7 +1535,7 @@ static void llbitmap_update_sb(void *data)
+ 	sb->events = cpu_to_le64(mddev->events);
+ 	sb->state = cpu_to_le32(llbitmap->flags);
+ 	sb->chunksize = cpu_to_le32(llbitmap->chunksize);
+-	sb->sync_size = cpu_to_le64(mddev->resync_max_sectors);
++	sb->sync_size = cpu_to_le64(llbitmap->sync_size);
+ 	sb->events_cleared = cpu_to_le64(llbitmap->events_cleared);
+ 	sb->sectors_reserved = cpu_to_le32(mddev->bitmap_info.space);
+ 	sb->daemon_sleep = cpu_to_le32(mddev->bitmap_info.daemon_sleep);
+@@ -1544,6 +1553,7 @@ static int llbitmap_get_stats(void *data, struct md_bitmap_stats *stats)
+ 	stats->missing_pages = 0;
+ 	stats->pages = llbitmap->nr_pages;
+ 	stats->file_pages = llbitmap->nr_pages;
++	stats->sync_size = llbitmap->sync_size;
  
-+struct bio *mddev_bio_split_at_reshape_offset(struct mddev *mddev,
-+					      struct bio *bio,
-+					      unsigned int *max_sectors,
-+					      struct bio_set *bs)
-+{
-+	sector_t boundary;
-+	sector_t start;
-+	sector_t end;
-+	unsigned int split_sectors;
-+
-+	split_sectors = bio_sectors(bio);
-+	if (max_sectors && *max_sectors && *max_sectors < split_sectors)
-+		split_sectors = *max_sectors;
-+
-+	if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
-+		goto split;
-+
-+	boundary = mddev->reshape_position;
-+	start = bio->bi_iter.bi_sector;
-+	end = bio_end_sector(bio);
-+	if (start >= boundary || end <= boundary)
-+		goto split;
-+
-+	if (boundary - start < split_sectors)
-+		split_sectors = boundary - start;
-+
-+split:
-+	if (max_sectors)
-+		*max_sectors = split_sectors;
-+	if (split_sectors < bio_sectors(bio)) {
-+		bio = bio_submit_split_bioset(bio, split_sectors, bs);
-+		if (bio)
-+			bio->bi_opf |= REQ_NOMERGE;
-+	}
-+
-+	return bio;
-+}
-+EXPORT_SYMBOL_GPL(mddev_bio_split_at_reshape_offset);
-+
- static void md_bitmap_prepare_range(struct mddev *mddev, sector_t *offset,
- 				    unsigned long *sectors)
- {
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 110cf0f8b107..ebfc6da83161 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -925,6 +925,10 @@ extern void md_error(struct mddev *mddev, struct md_rdev *rdev);
- extern void md_finish_reshape(struct mddev *mddev);
- void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
- 			struct bio *bio, sector_t start, sector_t size);
-+struct bio *mddev_bio_split_at_reshape_offset(struct mddev *mddev,
-+					      struct bio *bio,
-+					      unsigned int *max_sectors,
-+					      struct bio_set *bs);
- void md_account_bio(struct mddev *mddev, struct bio **bio);
- 
- extern bool __must_check md_flush_request(struct mddev *mddev, struct bio *bio);
+ 	stats->behind_writes = atomic_read(&llbitmap->behind_writes);
+ 	stats->behind_wait = wq_has_sleeper(&llbitmap->behind_wait);
 -- 
 2.51.0
 
