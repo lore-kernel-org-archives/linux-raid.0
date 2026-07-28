@@ -1,148 +1,119 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30B6E41B36C
-	for <linux-raid@vger.kernel.org>; Tue, 28 Jul 2026 09:12:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A92CF41D4EF
+	for <linux-raid@vger.kernel.org>; Tue, 28 Jul 2026 09:13:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785229959; cv=none; b=IGGkeTQfVHbRAfyxxsoQpPQPXv8mOFJ6q2yk8AQ8psz5Y4m72jFoUE8oZ1epIkavRAN9XLhmlX42pxYSI95yNGX1ii1Gw3VoAkkkySdyookrzLkrh1EQyhFHQro/nWzpbPXcwjT2cDKY16rFtJHduA98gxqd4yDFm9pf1FGrgsI=
+	t=1785229995; cv=none; b=trTlgOHNoGvaMymlH2M+2qAr0DM+DeGCT4Nf6pz3GGRtI/+47VdFRyakQVDgB2N+HaDrb2ZdvNtH76gQwvnYi9fRzOgEoQalt2Nmi3TOgQ+ngZAuKuxGqIusYKqX3DdV3A2BQ96tc5+EW/1PashqxRaI3J+WMd+7O88Q8X4KrPw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785229959; c=relaxed/simple;
-	bh=bHm9x1Tl9lcxU9sxYmfI7vnldXNwdVYRQ3AIFBt4Dw4=;
+	s=arc-20240116; t=1785229995; c=relaxed/simple;
+	bh=Umc8pHSlG+dzOf2mIUnjCYZMi+PVWJuTaH62okDrftc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Sn90191N7lxe6wMqTxg8MDoNUDr6Hsc36q96Xic73Sl0y9Kflw/zQmltmWohiDUCKUyZiP99JN3P2yRc1Q3zCpAeC+BD6DKUh+mCwk13OspM3vy5IqDlnoAlnuHRg+s8jibJ2EmyEk+7jSZqXfLJUHVdWx6lMUxPgzxmHzf2Pqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fzd+Fv15; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Dk3a3pSY5aPu9zXSGZqd/BXRzzk65ih1JmeiLlVw42lzecTO7yBjv0QxEY0b8ZV59Pzg0hY19RTLe8u0jLCEfsf84afSSifcYJ6ZtphT85OYaST3HTQSbeO65NQgl/vZ9BwZGw3jaNl6Q3J8McyaOCxQq9kvYw876V/qySotLAk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ei7SKIwj; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fzd+Fv15"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82C0D1F00A3A;
-	Tue, 28 Jul 2026 09:12:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ei7SKIwj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 162021F000E9;
+	Tue, 28 Jul 2026 09:13:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785229957;
-	bh=fIwxmW/tAIuIrw864fdueF++Koo1fc3RFFQYQj//mdQ=;
+	s=k20260515; t=1785229994;
+	bh=b7z1ZNnyOQjzqCo0r71GArAYy02WEzF0S5y+4qc5wk8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Fzd+Fv15Zq7J+55v/IcWVUQWc7ARgjtGYQI37e9HTwnAByQFI1SVQhNoaHVg3j3fK
-	 fZcH8UQBn8DHF41IWyUAirR5o6p39iYGLM8vAR54STf31TOCqq0G0iIie2LDpIFDwM
-	 tiF40Izitw+NWPSHhox/RKdUqUtYvuyyvUUZFyeK5hKoAyCG2Kms9OqPxaR0LAMsGK
-	 nf0UmGSEdsqTiSpD3MpDoLHjiWg+JKk8J5GhdkazvsQrN7+jVVDIHsDxhCWVUTe5Hh
-	 GVWSMtjEzfNfk0sXFyI5DjV8c6AneiDVtKSvB/rFglng/TJmdgMUlV2lehPBRwKCwA
-	 CFd68dIZFPq/A==
+	b=ei7SKIwjfFqs48gpfs4VtyMVT9bpJBDqiYyO+a+yyQF4nSs11+23DhTy4kKo3AF/T
+	 mjafnrMr2wlRayu4UVzjO7QQrsVnvsQrV68OoFVjkh27VlNvWncl0zEkdPk0gxNqMB
+	 CHt2pbCYYsnSzZ+YraROsfveWXEdALJ7CSoY479V9pphGvejdAIwNfCHPQW2N+jW10
+	 2b1fopq3VMaQNJl8gH0+5o+6cNZa5+i+92s7Se1lAC59K83JyMPzMGBAl9HmK/Ykyp
+	 sNgmQEwDioux1y/WoSCMwg9sRGopj1riLgnZCWeUOPUOzI1+tr8UtEHsvVowLVdh3P
+	 kuD/5V3UmVdnA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 10/21] md/md-llbitmap: refuse reshape while llbitmap
- still needs sync
+Subject: Re: [PATCH v3 14/21] md/md-llbitmap: clamp state-machine walks to
+ tracked bits
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <0acf74e3881021e14f5a254480f06642ad911d3a.1785206690.git.yukuai@fygo.io>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <0510090c2be122814404150096768b180d0301e9.1785206690.git.yukuai@fygo.io>
 References: <cover.1785206690.git.yukuai@fygo.io>
- <0acf74e3881021e14f5a254480f06642ad911d3a.1785206690.git.yukuai@fygo.io>
+ <0510090c2be122814404150096768b180d0301e9.1785206690.git.yukuai@fygo.io>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 09:12:37 +0000
-Message-Id: <20260728091237.82C0D1F00A3A@smtp.kernel.org>
+Date: Tue, 28 Jul 2026 09:13:13 +0000
+Message-Id: <20260728091314.162021F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The newly introduced reshape rejection callback is never invoked b=
-y the core MD subsystem, rendering the fix ineffective.
-- [Medium] The `llbitmap_reshape_can_start` function caches the bitmap poin=
-ter outside of the mutex lock, creating a Time-Of-Check to Time-Of-Use vuln=
-erability that can lead to a Use-After-Free.
-- [Medium] The reshape check ignores `BitNeedSyncUnwritten` and `BitSyncing=
-Unwritten`, allowing reshape to start during proactive sync.
+
+Pre-existing issues:
+- [Critical] `llbitmap_cond_end_sync` prematurely clears the sync state for=
+ partially synced chunks, leading to skipped sectors and data corruption.
 --
 
---- Patch [10]: [PATCH v3 10/21] md/md-llbitmap: refuse reshape while llbit=
-map still needs sync ---
-commit b7405e7962d5eb002f38e66bc1e8cec9737a66ea
+--- Patch [14]: [PATCH v3 14/21] md/md-llbitmap: clamp state-machine walks =
+to tracked bits ---
+commit d30fecfeaabb2957753288e01ac48b29a04d716a
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/md-llbitmap: refuse reshape while llbitmap still needs sync
+md/md-llbitmap: clamp state-machine walks to tracked bits
 
-This commit rejects reshape operations when the llbitmap still contains
-NeedSync or Syncing bits. It aims to prevent reshape from starting until
-the current llbitmap state has been reconciled.
+This commit clamps the state-machine range to llbitmap->chunks to
+prevent it from walking past the tracked bitmap when handling boundary
+conditions.
 
 > diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index 55ab2a8a11e5f..f5df82adef640 100644
+> index 794ac0eaf4379..bb83d15247d23 100644
 > --- a/drivers/md/md-llbitmap.c
 > +++ b/drivers/md/md-llbitmap.c
+> @@ -1011,7 +1011,10 @@ static enum llbitmap_state llbitmap_state_machine(=
+struct llbitmap *llbitmap,
+>  		llbitmap_init_state(llbitmap);
+>  		return BitNone;
+>  	}
+> -
+> +	if (start >=3D llbitmap->chunks)
+> +		return BitNone;
+> +	if (end >=3D llbitmap->chunks)
+> +		end =3D llbitmap->chunks - 1;
 
-[ ... ]
+[Severity: Critical]
+This is a pre-existing issue, but does llbitmap_cond_end_sync() prematurely
+clear the sync state for partially synced chunks?
 
-> @@ -1689,6 +1689,29 @@ static void llbitmap_dirty_bits(struct mddev *mdde=
-v, unsigned long s,
->  	llbitmap_state_machine(mddev->bitmap, s, e, BitmapActionStartwrite);
->  }
-> =20
-> +static int llbitmap_reshape_can_start(struct mddev *mddev)
-> +{
-> +	struct llbitmap *llbitmap =3D mddev->bitmap;
-> +	unsigned long chunk;
-> +	int ret =3D 0;
-> +
-> +	if (!llbitmap)
-> +		return 0;
-> +
-> +	mutex_lock(&mddev->bitmap_info.mutex);
+During array resync or initial build, the current resync position (sector)
+typically advances by stripe size or resync sectors, which is smaller than
+the bitmap chunk size. This means sector almost always falls in the middle =
+of
+a chunk.
 
-[Severity: Medium]
-Is there a race condition between reading the bitmap pointer and taking the
-mutex?
+When llbitmap_cond_end_sync() calls:
 
-If llbitmap_destroy() executes concurrently, acquires the mutex, sets
-mddev->bitmap to NULL, and frees the bitmap while we are checking the point=
-er
-outside the lock, could we end up dereferencing a freed pointer inside the =
-loop
-once the lock is acquired here?
+drivers/md/md-llbitmap.c:llbitmap_cond_end_sync() {
+    ...
+	llbitmap_state_machine(llbitmap, 0, sector >> llbitmap->chunkshift,
+			       BitmapActionEndsync);
+    ...
+}
 
-> +	for (chunk =3D 0; chunk < llbitmap->chunks; chunk++) {
-> +		enum llbitmap_state state =3D llbitmap_read(llbitmap, chunk);
-> +
-> +		if (state =3D=3D BitNeedSync || state =3D=3D BitSyncing) {
+it calculates the inclusive end bound for Endsync but fails to ensure only
+fully completed chunks are processed, applying BitmapActionEndsync to the
+partially completed chunk that sector resides in.
 
-[Severity: Medium]
-Does this condition miss the unwritten sync states?
+Because the state machine transitions partially-synced chunks to BitDirty or
+BitCleanUnwritten, the next call to md_bitmap_start_sync() in the same chunk
+will evaluate to BitNone and return false.
 
-If BitNeedSyncUnwritten or BitSyncingUnwritten are omitted here, could resh=
-ape
-be allowed to start during proactive parity synchronization on unwritten
-regions, potentially leading to data corruption?
+Will this cause the sync thread to skip the remaining sectors of that chunk
+without resyncing them, leaving stale parity or unsynced mirrors on the dis=
+k?
 
-> +			ret =3D -EBUSY;
-> +			break;
-> +		}
-> +	}
-> +	mutex_unlock(&mddev->bitmap_info.mutex);
-> +
-> +	return ret;
-> +}
-> +
-
-[ ... ]
-
-> @@ -2011,6 +2034,7 @@ static struct bitmap_operations llbitmap_ops =3D {
->  	.dirty_bits		=3D llbitmap_dirty_bits,
->  	.prepare_range		=3D llbitmap_prepare_range,
->  	.reshape_finish		=3D llbitmap_reshape_finish,
-> +	.reshape_can_start	=3D llbitmap_reshape_can_start,
-
-[Severity: High]
-Is the reshape_can_start callback invoked anywhere in the core MD subsystem?
-
-It doesn't appear that any callers for reshape_can_start are added in this
-patch or exist in the current subsystem code. Without a caller, is this
-reshape rejection logic effectively dead code?
-
->  	.write_all		=3D llbitmap_write_all,
-> =20
->  	.groups			=3D md_llbitmap_groups,
+>  	while (start <=3D end) {
+>  		enum llbitmap_state c =3D llbitmap_read(llbitmap, start);
+>
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785206690.gi=
-t.yukuai@fygo.io?part=3D10
+t.yukuai@fygo.io?part=3D14
