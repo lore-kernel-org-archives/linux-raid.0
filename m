@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2E97377016;
-	Tue, 28 Jul 2026 08:50:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1DE441B8C3;
+	Tue, 28 Jul 2026 08:50:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785228614; cv=none; b=VknELUv4To8dDicPAVxmN6/vucLeGcuAuxHKGxOheMrBrA91Oza8LgSJ01w2/YETUHdGjD9YFQlPQYiDMCPGxn6AYHbm3dKXLe5pMGhPkaiGPzXjjapPeXZvqJeBHSshH6ME2LJR/ge5uLWmOTs5+4rADn2/Z94oQ0GtVuxI6hw=
+	t=1785228617; cv=none; b=nEXUOX2X3Tfb4gi1ZKhId48bqkxuk9dfD3sUb+CPNSwQ9TlWdqRJqlIygEQrgc16K6QixmzRkYNnt4Bp3djDvBtbwmFXXfeyb5T9CCD0qB0BnYByJmKuA3ehXcBTfHfi7JkZl2rUeQ832s/TmsNSuumhwMc7dTBuMNT8g3dli6M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785228614; c=relaxed/simple;
-	bh=filB/C3ZzbSop+rYl+4GCdH59K5Kp+kH4tuyQvKBpWo=;
+	s=arc-20240116; t=1785228617; c=relaxed/simple;
+	bh=OfBgbdgGO/SbtbQ+rrthB5x0Ye+Tkm6o0ovBdiGHQo4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aJz7Rn/7JB5UkOXU+x+onuHQ7sHPN/ViJeD3VMmXym0HShGZCvotYl+qijENM/GpwUXExwKJopdMl0BN5SjdWWlnCRYPq6IzfNEBzWqhAhPzGAlKHQDHtXrnj8I5MFiAtuoWdhEOsukYKf2QeBErHCLNFIwxSERs8aHz3JmRvtw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ULrrqxpy; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=CCVOYL7IC6jXc2VrtoBolCtuJaBejJihbdnS0XPz9uepG4H5nmIOMxhgrExdjljmAyDbSh9KTbS7UsGvlMAY8xVzgsx1n/iwN033R/YdO3InvEdZlhs/+Ywzapp+0R2TX8tLtaD4KqdfjJlRQCYL0ogvO6PUS2MbpX5i/rm8ZaY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IV0jfX4z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ULrrqxpy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 184C71F00A3D;
-	Tue, 28 Jul 2026 08:50:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IV0jfX4z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0A9F1F000E9;
+	Tue, 28 Jul 2026 08:50:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785228612;
-	bh=W+NCiShdC2NNq6UxdarZzTmFcxaR2trlYvajIoxgCzo=;
+	s=k20260515; t=1785228616;
+	bh=WpthyC6REHYh1KxU8/PwVt2GMOiTs/0acPWHIjBoJsg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=ULrrqxpya4IAElTe7RzHYloNziraDpJAC157NwaLDboPzzt0Ps63cgPUIhi6/ko/J
-	 Qg126hRZkSUHGyDB53kRnA2pk0J4YBjjS7fzG8Y6sxT1+XTlPWwa/V//bhVXEvskfB
-	 Y08jO5gEb/qNYIzBXuFBfpo3KPDXj7Yz9n7Wl4iBpH4uLvy8om7d9I6XhBqDQckDM4
-	 jgM1JmEhXrLGXDeRgOyNP2PhT5qaVaaRxPxLwWT/RjW8abVUdDlnKPUu9vKfqbv6Jo
-	 GFXsXFdHzF0SGJYECs3tgz9p9emTrLElmGId239Xom1Es7VsnFslIMAT1UmSYmJmiT
-	 zb3s3o6smO1qw==
+	b=IV0jfX4zla3+Xz/SMX0mXLzBD1YvmPmtLImoxC53xCusqzPt+VNmKhRjP/duWxyXu
+	 sAIaLKVcDncm8tNidhLhsM0mLU3Unpzji59p9t8T5/VM5gje3IqFdPpwVRqxon8nwQ
+	 5CNqjNvI89sdIoz5sZddjoLNxBvi0F22Rzo9g/XK1vHGyzLltMP/GoSUtLFOw2InFC
+	 11wAUVuKtPDNMFCi14SuQGHgFu+lIppvkfbndV0DNF+ra7jdd0v425G/d8qyl3WcZx
+	 565acBAsdhDFV3BIPGB115HmWESaIFLud1IsXwawHtfBnAAjdLfwItLG/CtAuVv976
+	 FZlhGjKhO7MoQ==
 From: Yu Kuai <yukuai@kernel.org>
 To: Song Liu <song@kernel.org>
 Cc: Li Nan <magiclinan@didiglobal.com>,
@@ -35,9 +35,9 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	yukuai@fygo.io,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 09/21] md/md-llbitmap: finish reshape geometry
-Date: Tue, 28 Jul 2026 16:49:09 +0800
-Message-ID: <ed61e406f8b6b60193c647ab83dd8fb5df0391d0.1785206690.git.yukuai@fygo.io>
+Subject: [PATCH v3 10/21] md/md-llbitmap: refuse reshape while llbitmap still needs sync
+Date: Tue, 28 Jul 2026 16:49:10 +0800
+Message-ID: <0acf74e3881021e14f5a254480f06642ad911d3a.1785206690.git.yukuai@fygo.io>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <cover.1785206690.git.yukuai@fygo.io>
 References: <cover.1785206690.git.yukuai@fygo.io>
@@ -51,93 +51,55 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai@fygo.io>
 
-Commit the staged llbitmap geometry when reshape finishes.
+Reject reshape when llbitmap still contains NeedSync or Syncing bits.
 
-When assembling a stopped reshape, md_run() creates the bitmap before
-publishing mddev->pers. llbitmap_read_sb() can therefore only initialize
-the reshape fields from the old on-disk sync size. Refresh the staged
-reshape geometry again from llbitmap_load(), after mddev->pers is
-available, and expand the in-memory page controls before replaying bitmap
-state.
+This keeps reshape from starting until the current llbitmap state has
+been reconciled.
 
-Reproduce on the old kernel by creating a RAID10 llbitmap with four
-active disks and two spares, growing it to six disks, then stopping and
-assembling while reshape is still running. The llbitmap chunk count was
-32704 before grow, 49056 during reshape, then rolled back to 32704 after
-reassemble.
-
-The fixed kernel kept the target geometry across the same stop/reassemble
-flow: 65440 chunks before grow, 98160 during reshape, and 98160 after
-reassemble.
-
-Reported-by: Mykola Marzhan <mykola@meshstor.io>
-Link: https://lore.kernel.org/all/20260726185916.2223460-1-mykola@meshstor.io/
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 ---
- drivers/md/md-llbitmap.c | 34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+ drivers/md/md-llbitmap.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
 diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-index cdced2126e97..55ab2a8a11e5 100644
+index 55ab2a8a11e5..f5df82adef64 100644
 --- a/drivers/md/md-llbitmap.c
 +++ b/drivers/md/md-llbitmap.c
-@@ -1349,11 +1349,20 @@ static int llbitmap_load(struct mddev *mddev)
- {
- 	enum llbitmap_action action = BitmapActionReload;
- 	struct llbitmap *llbitmap = mddev->bitmap;
-+	int ret;
- 
- 	if (test_and_clear_bit(BITMAP_STALE, &llbitmap->flags))
- 		action = BitmapActionStale;
- 
-+	mutex_lock(&mddev->bitmap_info.mutex);
-+	llbitmap_refresh_reshape(llbitmap);
-+	ret = llbitmap_expand_pages(llbitmap, llbitmap->chunks);
-+	if (ret) {
-+		mutex_unlock(&mddev->bitmap_info.mutex);
-+		return ret;
-+	}
- 	llbitmap_state_machine(llbitmap, 0, llbitmap->chunks - 1, action);
-+	mutex_unlock(&mddev->bitmap_info.mutex);
- 	return 0;
- }
- 
-@@ -1680,6 +1689,30 @@ static void llbitmap_dirty_bits(struct mddev *mddev, unsigned long s,
+@@ -1689,6 +1689,29 @@ static void llbitmap_dirty_bits(struct mddev *mddev, unsigned long s,
  	llbitmap_state_machine(mddev->bitmap, s, e, BitmapActionStartwrite);
  }
  
-+static void llbitmap_reshape_finish(struct mddev *mddev)
++static int llbitmap_reshape_can_start(struct mddev *mddev)
 +{
 +	struct llbitmap *llbitmap = mddev->bitmap;
++	unsigned long chunk;
++	int ret = 0;
 +
-+	if (mddev->pers->quiesce)
-+		mddev->pers->quiesce(mddev, 1);
++	if (!llbitmap)
++		return 0;
 +
 +	mutex_lock(&mddev->bitmap_info.mutex);
-+	llbitmap_flush(mddev);
++	for (chunk = 0; chunk < llbitmap->chunks; chunk++) {
++		enum llbitmap_state state = llbitmap_read(llbitmap, chunk);
 +
-+	llbitmap->chunksize = llbitmap->reshape_chunksize;
-+	llbitmap->chunkshift = ffz(~llbitmap->chunksize);
-+	llbitmap->chunks = llbitmap->reshape_chunks;
-+	llbitmap->sync_size = llbitmap->reshape_sync_size;
-+	llbitmap_refresh_reshape(llbitmap);
-+	mddev->bitmap_info.chunksize = llbitmap->chunksize;
-+	llbitmap_update_sb(llbitmap);
-+	__llbitmap_flush(mddev);
++		if (state == BitNeedSync || state == BitSyncing) {
++			ret = -EBUSY;
++			break;
++		}
++	}
 +	mutex_unlock(&mddev->bitmap_info.mutex);
 +
-+	if (mddev->pers->quiesce)
-+		mddev->pers->quiesce(mddev, 0);
++	return ret;
 +}
 +
- static void llbitmap_write_sb(struct llbitmap *llbitmap)
+ static void llbitmap_reshape_finish(struct mddev *mddev)
  {
- 	int nr_blocks = DIV_ROUND_UP(BITMAP_DATA_OFFSET, llbitmap->io_size);
-@@ -1977,6 +2010,7 @@ static struct bitmap_operations llbitmap_ops = {
- 	.get_stats		= llbitmap_get_stats,
+ 	struct llbitmap *llbitmap = mddev->bitmap;
+@@ -2011,6 +2034,7 @@ static struct bitmap_operations llbitmap_ops = {
  	.dirty_bits		= llbitmap_dirty_bits,
  	.prepare_range		= llbitmap_prepare_range,
-+	.reshape_finish		= llbitmap_reshape_finish,
+ 	.reshape_finish		= llbitmap_reshape_finish,
++	.reshape_can_start	= llbitmap_reshape_can_start,
  	.write_all		= llbitmap_write_all,
  
  	.groups			= md_llbitmap_groups,
