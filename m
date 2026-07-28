@@ -1,97 +1,194 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F81041D129
-	for <linux-raid@vger.kernel.org>; Tue, 28 Jul 2026 09:22:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ABAC30274D
+	for <linux-raid@vger.kernel.org>; Tue, 28 Jul 2026 09:23:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785230557; cv=none; b=i/o1b/RrznZloFa9TIJQ2PH2nR+PZ6tj4+8qREe48XmkglEc+sBzqguTfSm2Y6mKFOUDQzhd0lRHSUI5zb/Vn09Cz7LTxG+t79ASIS/UpVd2G/i3s+zXZKKnzMpYC49jY069RJ42Uw5mmUFkXlQwz6JYAjnnKcsQpFJQyGfAT1E=
+	t=1785230606; cv=none; b=oUr8A6Zs6OEochJ/E6NwycH4lHXK7pqlUNah0WdWA0kfw5Ivk2ZosIV3C1FyWaM7cJYsRc7P5Czc/phly0wL32aAWsn3cfoMKw9M5p0zfBxQJxP8mwY6Qf37DKDAj4FehLynXjmJWzqqsUY8U/n400QvpDj0eDwm+88Z2HnCGU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785230557; c=relaxed/simple;
-	bh=4eRjHee3mskMoTtrWiFChurPF+LoRsyaiQNjqztEhys=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IIpgrQU/7IN+xbjXMMk6gaSWYVrtWUkJTHElnjYmOpxlk75kNXc8eUVPwlUTpm4JWaHbdiKUqNv6JMMOP/2CjE0HixIRIodlhThjDuhaDwBRu1+9DJZjjs11chgRLoauDfr2PTabg3/XErftj/0B76r6Ik5L/Lk9nGMIwYJ+LcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gKu8FDgp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785230606; c=relaxed/simple;
+	bh=7cTvreYa1kqPURd9PoHuzU3jw+QC7MFAqHtzrvBZd+M=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=m9CfPxg4XNq1a3hzobClVMU436SNYZ8nLr48XzICkkSjn14Sz3uVrQ4Yc7AkYEGFgyCvT1FJwB7uV+8Rf+6ZgKNcA2HWJR9tzZRCcE190gs/sHynoMygYtHMeaefb2w0M/UyKW03EZhzI7yvZu9zlCITQ+mxkcuQZEkpzvB+dOg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dfqE4gT4; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gKu8FDgp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A1361F00A3A;
-	Tue, 28 Jul 2026 09:22:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785230556;
-	bh=Ra61iM0d09X8IE3XCjaJrkwlvuTfoBtufCGNiutm9dY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gKu8FDgp+hMbChh8ZaBZloT2usremgN8JthKlWMpJbm/LxBbOz0CSCG6GNgFyb4Uk
-	 hBtA9RON3cyEwl7Z0EQgxNtn1UTZ8J+yyJeN7T/YtSm6bk++/LMVkEeGJOfSLf11Rd
-	 bp1dQaYXjWc3MQyfBMD34yVEltzq4/ARH+3QJgz255oPYOM3teNR9XogsXfXDBJYcz
-	 6hDHIBN5mYlKOX17D3WEGXpW+N8BzC3gpvEI7bT58ltRRUGEOD0P9ydL42pHv3XTHN
-	 AdC/THlxLTweLDd7nUeRakMLCciSIZOe0wn/0vaj0v4ThjRuYvHBL5dox8xbuGAukn
-	 XLFU0/ewPF3UQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 16/21] md/raid10: wire llbitmap reshape lifecycle
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yu Kuai" <yukuai@kernel.org>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <a5d81ab33dd45f4f98cbb8cec9ad530258d1a144.1785206690.git.yukuai@fygo.io>
-References: <cover.1785206690.git.yukuai@fygo.io>
- <a5d81ab33dd45f4f98cbb8cec9ad530258d1a144.1785206690.git.yukuai@fygo.io>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 09:22:35 +0000
-Message-Id: <20260728092236.4A1361F00A3A@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dfqE4gT4"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4954afac04bso41627495e9.0
+        for <linux-raid@vger.kernel.org>; Tue, 28 Jul 2026 02:23:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785230603; x=1785835403; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=+5wzvt8StBpeLA5peqV/1tOOI9hQR8xx+Ocy8vLCtJg=;
+        b=dfqE4gT4W+NGRui4rt0MTOvM3rL/h5GIkaFEaf7M7aL7KyK1xcAkvpaFJWQ1cnyV76
+         AOP7C97htCwLBDdqiq4O3Bn0qHc/iAzVbYu8LF62H7ymfZB7kJrsouXtouuyy8AqueOe
+         07jP22+DszImofCGaQ8joniZKBMvMixelpkwCqqAMptvhd+uSAI5ze3ta1XAUQZo24Bi
+         qS6N2sT59S/3N16dJRNRWvZ0iMRcwX/A2Li7zkPxm29vEtxqOMPXWPJZ6gnrZW5S11gg
+         oui9BgCimjqXypPs5oe5bSWZW8SV+2JUInx6bQw0tfco/9dL3NpzL1gQmC4CjdjDH0TB
+         A85w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785230603; x=1785835403;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=+5wzvt8StBpeLA5peqV/1tOOI9hQR8xx+Ocy8vLCtJg=;
+        b=Os5k1B1RniVTJU/j6aEKLitdvZJfUZlkT6ttnzCAIKU6lZwnDKYuZT+ErNQ0a0ljjZ
+         +rh/8npxkRR2+4X82KOQ0NOdOu3EhaWyt7GSpM3I19PCX0kgx+xY0c08q0UahVf/eINU
+         y0MBHF8ZMvmoYb5mLz8IOoxNxSmGOUCdIggz5crPgihmK266wGqVxwDj63XcBUVjTGb6
+         RA53bZbDmFLc4nkQw7fvkKNncf9pMjXVRu341u1h3TN8M7LwBSA8a1OPZaUtWgQL3LOt
+         auxvRolV42CeGteaHllLEve3oYbRHIi9Y68uQVwUH3YSq94FYKnpmRaqcQkb5/hgHdNi
+         B+BA==
+X-Forwarded-Encrypted: i=1; AHgh+RoedZ2z3SmN6ycJPBme2kcwPxldnbUQ0tHedl5B2JoTVwuJ3+Pk3XcglKcZ/xbJZQ2NYYr7qi3Da3Mg@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzq/4sVvQr/ufTGvUvIHbUJ163AvKHmmxRtrCX7nyoFIqz9pYCW
+	gCOaQDh6wdd7xeInPBNmGxKciLVaajpPsCPB1jDwNxW9if8YcjUtmFRe
+X-Gm-Gg: AR+sD12vPDjymu1RLYemNNbZvLXChhuPp9GcWm01mRpvnJpdeseLZdiS/C6RedZchi2
+	YQTO4dycbBu0DRf7NDLII0AYva7B7Il1G5AqqxC4SrHscYwOC5tklnuG7xEtlG5Kh01bKEy65/N
+	wOVQusLbNAyPtPjVJPy8L+LpdIYFPv5uDmpCsNFfv1jCXmN2uJR/afdFuKgDk4z5kELucLa1LaT
+	+dKQ/0uripfkgbbmQE3gL9LhR0YCd1UyDUiOgl97yOtfCvJthG5T0hTUd1zFiKM1oMgqXi1jwOv
+	tKyImqMqgZcMzVqpArvQMhI2NWVPekZQTcn2qfPQqq8h4Hr+69wkhYGjefzOlkgrBWtI8M2O6Wc
+	O976ggCX+y1RHog67VAqGR5sGb9zcU/FdY5t+0yjXQ1IsPYRGrcRvK1pMoI2reKwUMD4ia2JYxj
+	+fNW0CZzlB4pOHgA/SzvdauqA1kpFc02Tz99Vrh2mxRnl0xsU0pg==
+X-Received: by 2002:a05:600c:630d:b0:495:4572:21af with SMTP id 5b1f17b1804b1-496c65458e1mr19199285e9.9.1785230603192;
+        Tue, 28 Jul 2026 02:23:23 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85b9a60asm60761545f8f.3.2026.07.28.02.23.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Jul 2026 02:23:22 -0700 (PDT)
+Date: Tue, 28 Jul 2026 10:23:21 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Borislav Petkov <bp@alien8.de>
+Cc: Eric Biggers <ebiggers@kernel.org>, x86@kernel.org,
+ linux-um@lists.infradead.org, linux-raid@vger.kernel.org,
+ linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph
+ Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v2 1/8] x86/fpu: Check for missing AVX and AVX-512
+ xstate bits
+Message-ID: <20260728102321.78f4c947@pumpkin>
+In-Reply-To: <20260728052727.GCamg9v5WxNieTMUwE@fat_crate.local>
+References: <20260728021603.79870-1-ebiggers@kernel.org>
+	<20260728021603.79870-2-ebiggers@kernel.org>
+	<20260728052727.GCamg9v5WxNieTMUwE@fat_crate.local>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] The `raid10_finish_reshape()` function hardcodes a check for `ID_LL=
-BITMAP` before calling the polymorphic `reshape_finish` callback, bypassing=
- the abstraction provided by `bitmap_ops`.
---
+On Mon, 27 Jul 2026 22:27:27 -0700
+Borislav Petkov <bp@alien8.de> wrote:
 
---- Patch [16]: [PATCH v3 16/21] md/raid10: wire llbitmap reshape lifecycle=
- ---
-commit 2d6aab72980238a6e16cc2a451989159951188f3
-Author: Yu Kuai <yukuai@fygo.io>
+> On Mon, Jul 27, 2026 at 07:15:56PM -0700, Eric Biggers wrote:
+> > If the CPU declares AVX or AVX-512 support, verify that the
+> > corresponding xstate bits are also set.  If not, warn and clear them.
+> > 
+> > This eliminates the perceived need for AVX and AVX-512 optimized code in  
+> 
+> s/This eliminates/Eliminate/
+> 
+> > the kernel to call cpu_has_xfeatures().  That has never been universally
+> > done, which strongly suggests that it has never really been needed in
+> > practice, but this should remove any remaining doubt.
+> > 
+> > Signed-off-by: Eric Biggers <ebiggers@kernel.org>
+> > ---
+> >  arch/x86/kernel/fpu/xstate.c | 21 +++++++++++++++++++++
+> >  1 file changed, 21 insertions(+)
+> > 
+> > diff --git a/arch/x86/kernel/fpu/xstate.c b/arch/x86/kernel/fpu/xstate.c
+> > index a7b6524a9dea2..904ff933c0d88 100644
+> > --- a/arch/x86/kernel/fpu/xstate.c
+> > +++ b/arch/x86/kernel/fpu/xstate.c
+> > @@ -799,6 +799,23 @@ static u64 __init guest_default_mask(void)
+> >  	return ~(u64)XFEATURE_MASK_USER_DYNAMIC;
+> >  }
+> >  
+> > +/* Clear any X86_FEATURE_* used by the kernel whose xfeatures are missing. */
+> > +static void __init clear_cpu_caps_with_missing_xfeatures(u64 xfeatures)  
+> 
+> That function name is a bit too long. How about:
+> 
+> clear_cpu_caps_xft()
 
-md/raid10: wire llbitmap reshape lifecycle
+That is too terse.
+Since none of the uses are overlong lines it really doesn't matter.
 
-This commit wires up the llbitmap reshape lifecycle in the RAID10 subsystem.
-It prepares the bitmap before growing, checkpoints it before advancing the
-reshape position, and finishes the update when reshape completes.
+> 
+> or so.
+> 
+> > +{
+> > +	u64 mask;
+> > +
+> > +	mask = XFEATURE_MASK_FPSSE | XFEATURE_MASK_YMM;
+> > +	if (boot_cpu_has(X86_FEATURE_AVX) && (xfeatures & mask) != mask) {
+> > +		pr_err("x86/fpu: Disabling AVX support due to missing xstate features\n");
+> > +		setup_clear_cpu_cap(X86_FEATURE_AVX);
+> > +	}
+> > +	mask = XFEATURE_MASK_FPSSE | XFEATURE_MASK_YMM | XFEATURE_MASK_AVX512;
+> > +	if (boot_cpu_has(X86_FEATURE_AVX512F) && (xfeatures & mask) != mask) {
+> > +		pr_err("x86/fpu: Disabling AVX-512 support due to missing xstate features\n");
+> > +		setup_clear_cpu_cap(X86_FEATURE_AVX512F);
+> > +	}
+> > +}
+> > +
+> >  /*
+> >   * Enable and initialize the xsave feature.
+> >   * Called once per system bootup.
+> > @@ -812,12 +829,14 @@ void __init fpu__init_system_xstate(unsigned int legacy_size)
+> >  
+> >  	if (!boot_cpu_has(X86_FEATURE_FPU)) {
+> >  		pr_info("x86/fpu: No FPU detected\n");
+> > +		clear_cpu_caps_with_missing_xfeatures(0);
+> >  		return;
+> >  	}
+> >  
+> >  	if (!boot_cpu_has(X86_FEATURE_XSAVE)) {
+> >  		pr_info("x86/fpu: x87 FPU will use %s\n",
+> >  			boot_cpu_has(X86_FEATURE_FXSR) ? "FXSAVE" : "FSAVE");
+> > +		clear_cpu_caps_with_missing_xfeatures(0);  
+> 
+> Also, I'm not really clear on the usage here: if the CPU doesn't have FPU or
+> XSAVE, we pass in xfeature 0 which is XFEATURE_FP in both cases. And then we
+> clear AVX and AVX-512.
+> 
+> The 0 is basically forcing the checks in the function to match, i.e., it looks
+> to me like we're defining a new interface but then we're misusing it so that
+> those basic CPU flags are cleared.
+> 
+> What are we even protecting against here?
+> 
+> AVX and AVX-512 code needs to check whether it has FPU and XSAVE support?
+> 
+> I.e., we're protecting against some weird guests?
 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 1242b8d3bb6bd..e50e4adee389f 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-[ ... ]
-> @@ -5039,10 +5062,15 @@ static void end_reshape_request(struct r10bio *r1=
-0_bio)
->  static void raid10_finish_reshape(struct mddev *mddev)
->  {
->  	struct r10conf *conf =3D mddev->private;
-> +	bool llbitmap =3D mddev->bitmap_id =3D=3D ID_LLBITMAP &&
-> +		md_bitmap_enabled(mddev, false);
-> =20
->  	if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
->  		return;
-> =20
-> +	if (llbitmap && mddev->bitmap_ops->reshape_finish)
-> +		mddev->bitmap_ops->reshape_finish(mddev);
-> +
+More likely userspace running an old kernel on a new cpu.
+While unlikely to be a problem with AVX and AVX-512, it did happen when they
+were first added and might happen when the next feature is added.
 
-[Severity: Low]
-This isn't a bug, but does this code unnecessarily hardcode a check for
-ID_LLBITMAP? It looks like this restricts the reshape_finish callback to
-llbitmap, bypassing the abstraction provided by the generic bitmap_ops
-interface.
+> 
+> I wanna say, we should not protect but let them crash'n'burn in big big flames
+> which can be seen from a mile away.
 
->  	if (mddev->delta_disks > 0) {
->  		if (mddev->resync_offset > mddev->resync_max_sectors) {
->  			mddev->resync_offset =3D mddev->resync_max_sectors;
+I don't want to see the bug reports.
+The flames aren't big, what happens is that the registers don't get preserved
+across a process switch - so code tends to work a lot of the time.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785206690.gi=
-t.yukuai@fygo.io?part=3D16
+For userspace the XCR bits are the important ones.
+
+	David
+
+> 
+> Or do you have a sensible use case in mind which we really wanna protect
+> against and this all actually makes sense?
+> 
+> Thx.
+> 
+
