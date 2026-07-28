@@ -1,97 +1,123 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F9A942466D;
-	Tue, 28 Jul 2026 22:35:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B3DD41930F;
+	Tue, 28 Jul 2026 23:00:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785278127; cv=none; b=XAdYt47Ow6prDZstfoCJT7QUG7ZOaW45FrejgfDDQSD5lTBD5vD0bW6fAqauhsmpAxaFvo0BPxdKVuiCNdMuOHFlhnfjGSFJ3nUqeFY6UVvOOXRJnWN3sKdsdazAwm7rWx6Yc/VV6QZOkACDEu6H1xvwai45DUszUR9/4UnXTRw=
+	t=1785279602; cv=none; b=Attr2rNkz3iVA2Wo2UAfZ1YTtFYAfKvZsNalvJrNw1XrrryV/tbPQYEZLXnrgZNz5j1zrPYkAh1A7xx+B1Ludz5Gx91hFLrnvnZs3fVCtdY/R2tGfZ8qTuxN1eEsiL3lLun2I5BggF/Rbwq6ALKtDQL1rrKPdl//WOeS1UxejRs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785278127; c=relaxed/simple;
-	bh=bmuNQQmlrOGn31gH/n1Z1fIlUGYITNk7g1MEGeRcVZc=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=NtlpDzYWj69CwNeJR1nJxK+s09vBve7HVB7mQz3r5twPg5ECTo107Lcrg9HxtyyVvsv85xtvGJEVyhLwOIoxgErldQ1X7sRer+U8I/pW0MTjZ+tGU1Lr53nw66qlOBV1nyZqMmI7HZlU4ojNf6ezeiLUS5jFOZxgCORhQCPPHoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Whqt1K+/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785279602; c=relaxed/simple;
+	bh=F8LNacOxsK8jojVVvtQafaQpJEmF3gwV6dRIylESJIE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VvTlesTAvvpDZ2L3dXiulqnyV2CfmuF2nf6qX6JbvGoJ+LJNwZ1VtOQcucGopZtnAUKUd1uO6EoQ8/B1I+Inau6qhG/0x04sN2kdzR+n7wBdTwnxBc8zFbO2SrjKZ0e5HWcSTZ/OBJMu57XMm4jsHol9hGy/FRVy7fpn//nScl8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=J68eP7Ll; arc=none smtp.client-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Whqt1K+/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A9451F00A3A;
-	Tue, 28 Jul 2026 22:35:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785278125;
-	bh=2dECJoqDvj4NsK+08JPKeYoArhUSVLNfBOHa/8BAcXA=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=Whqt1K+/CUV9Mh3XC8eca+9SCZtLe5sElQd/5GbDmVQ2zsVeg0iTsWidtKNnQqTm9
-	 46+mFHOEJz9FrrejwzX9WRD8JHEpHjyihMxqomzDT9E5h5NO0TyfFTP2P7fAJyrjYr
-	 QuZRtXFwYggWUie3bmocmDlk5UFcWRMM5uGu1OFWTgHLutyctbDC3Nh5Rhc544TAwo
-	 CGtTryd+B+4TJpt+S0haGPy0MKEmm6t0yCKkcBylRKdZ1jsIx09eR9iBtMp81FOxIe
-	 ytuTvAdtUFW3VxHThpyr2OrdS9TddcxTIq0LTLmZ6YW7Sa0Fj85Fknu40rnKYipvBB
-	 UJB3luW1/DNrQ==
-From: Thomas Gleixner <tglx@kernel.org>
-To: Eric Biggers <ebiggers@kernel.org>, x86@kernel.org
-Cc: linux-um@lists.infradead.org, linux-raid@vger.kernel.org,
- linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph
- Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, Eric
- Biggers <ebiggers@kernel.org>
-Subject: Re: [PATCH v2 1/8] x86/fpu: Check for missing AVX and AVX-512
- xstate bits
-In-Reply-To: <20260728021603.79870-2-ebiggers@kernel.org>
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="J68eP7Ll"
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id A370540E00E6;
+	Tue, 28 Jul 2026 22:59:58 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id lKnZIAl4nQYC; Tue, 28 Jul 2026 22:59:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1785279588; bh=GA8Cjue73khWU1u690hjOwBxhnZ4D3q3cW0aqZVFhvs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=J68eP7LlHrG6v5oSBozwc5EacTGjgi+lie1fEA9jsCVMEvaGTO6qy3kJaaVzAfWhB
+	 0kp5n9quFUa2Kf1oOc6N/cQg5kMkfdwjzw6N9OpF36LqGrkkBWvxG6pG4UP641pGvB
+	 zI7o8RdtzIrgOxnh4E06yg36Ik3zq/b51E3Wm0oQ4vfOKC13vi1jQM2QxV56ljHrCx
+	 Dx+2cJr/k+TtabKWgZYf/s7PDOtbUjNk+A3rqPo8St6bE6SzPLIgg1RtJqQ1szXjKu
+	 zUY7wHcD2TiI5ItcoWhRH81X0fgxCc6rKGvJ9gFYDMFgSSpJuC7W6hSQFOzvuLN6Op
+	 nsqbr0AcT/lH+hXFYyzGI/jEZEUtRtAZDX3b84NF2wOAD6kDhvgKS9AItI3YnT4og7
+	 QhTRnUoU+RfSKB9+835QuaP0Raj/+H7966Oo2yDibM/vJe45qviGg1RcWinT4JkriL
+	 5M2a/8p0bGEPOlQC7C6Mkl6FnbKK/dqbpQmlbExkc8IajrYKfDpEFULNG2rAzRkfnu
+	 y5hXJTy/vxDSFM/9WTHB+t/sDoCSrS2dzhEm5IFtW3rKXZ8BU4k8Dk9oVT3f0B0YH2
+	 kHfZ04igC5y9tscEtVLRpeilRrBlIjRwsHQbpoqpgVNpp9RHWNpzH21/J0pBS3UddZ
+	 7E0kg8Pzs2yO9H0kVQIfLKzs=
+Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::43])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 079B140E00C3;
+	Tue, 28 Jul 2026 22:59:39 +0000 (UTC)
+Date: Tue, 28 Jul 2026 15:59:36 -0700
+From: Borislav Petkov <bp@alien8.de>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: x86@kernel.org, linux-um@lists.infradead.org,
+	linux-raid@vger.kernel.org, linux-crypto@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v2 1/8] x86/fpu: Check for missing AVX and AVX-512 xstate
+ bits
+Message-ID: <20260728225936.GBamk0WK38PByPFkxz@fat_crate.local>
 References: <20260728021603.79870-1-ebiggers@kernel.org>
  <20260728021603.79870-2-ebiggers@kernel.org>
-Date: Wed, 29 Jul 2026 00:35:22 +0200
-Message-ID: <87fr12hhed.ffs@fw13>
+ <20260728052727.GCamg9v5WxNieTMUwE@fat_crate.local>
+ <20260728054532.GA99797@sol>
+ <20260728182007.GBamjy17zynlWm2gQT@fat_crate.local>
+ <20260728183447.GB3355536@google.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260728183447.GB3355536@google.com>
 
-On Mon, Jul 27 2026 at 19:15, Eric Biggers wrote:
-> If the CPU declares AVX or AVX-512 support, verify that the
-> corresponding xstate bits are also set.  If not, warn and clear them.
+On Tue, Jul 28, 2026 at 06:34:47PM +0000, Eric Biggers wrote:
+> The argument is the bitmask of xfeatures that are present.  0 is an
+> empty bitmask, i.e. no xfeatures are present.
 
-That's clearly a firmware bug which has to be treated as all other
-inconsistencies of that sort.
+Ok, so what does that mean when you see it in the code:
 
-> This eliminates the perceived need for AVX and AVX-512 optimized code in
-> the kernel to call cpu_has_xfeatures().  That has never been universally
-> done, which strongly suggests that it has never really been needed in
-> practice, but this should remove any remaining doubt.
+	clear_cpu_caps_with_missing_xfeatures(0)
 
-Indeed it is inconsistent all over the place. While looking at the
-follow up patches I wondered how many of these remaining nested
-conditions are redundant. Most of them should be covered by the
-dependency checks. If they are not, then we should add them.
+clear the CPU caps with missing xfeatures bitmask 0?
 
-> Signed-off-by: Eric Biggers <ebiggers@kernel.org>
-> ---
->  arch/x86/kernel/fpu/xstate.c | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
->
-> diff --git a/arch/x86/kernel/fpu/xstate.c b/arch/x86/kernel/fpu/xstate.c
-> index a7b6524a9dea2..904ff933c0d88 100644
-> --- a/arch/x86/kernel/fpu/xstate.c
-> +++ b/arch/x86/kernel/fpu/xstate.c
-> @@ -799,6 +799,23 @@ static u64 __init guest_default_mask(void)
->  	return ~(u64)XFEATURE_MASK_USER_DYNAMIC;
->  }
->  
-> +/* Clear any X86_FEATURE_* used by the kernel whose xfeatures are missing. */
-> +static void __init clear_cpu_caps_with_missing_xfeatures(u64 xfeatures)
-> +{
-> +	u64 mask;
-> +
-> +	mask = XFEATURE_MASK_FPSSE | XFEATURE_MASK_YMM;
-> +	if (boot_cpu_has(X86_FEATURE_AVX) && (xfeatures & mask) != mask) {
-> +		pr_err("x86/fpu: Disabling AVX support due to missing xstate features\n");
+> I can rename it to xfeatures_present and/or document the argument
+> explicitly in the function comment, if that would help.
 
-Please make these
+I guess. I like the documentation aspect.
 
-       pr_err(FW_BUG "...")
+> I'm not sure what this question is asking, but UML indeed doesn't
+> implement cpu_has_xfeatures().  Currently most of the AVX optimized code
+> isn't enabled on UML, which avoids this limitation.  The RAID code is
+> different though, as it's enabled on UML.
 
-As that's what it is.
+You brought up the UML example upthread. I'm trying to figure out why we care
+about the UML case. I'm also assuming that case will be fixed with whatever we
+end up doing here.
 
-Thanks,
+> First, the code being added *is* to fpu__init_system_xstate().  Do you
+> think it needs to be moved later in the function, and if so why?
 
-        tglx
+Lemme try again:
+
+there where we sanity check the xfeatures mask, at that same place we can
+sanity check the X86_FEATURE flags we have set in our internal representation
+of CPUID flags. At exactly the same place. And we warn and clear the ones are
+wrong.
+
+> Second, clearing xfeatures is the opposite of what's needed.
+
+I meant clearing X86_FEATURE flags. Basically what you started doing.
+
+All I'm proposing is having the *whole* X86_FEATURE clearing concentrated in
+a single function so that it is called once per CPU and then we're done.
+
+That's it.
+
+Thx.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+https://people.kernel.org/tglx/notes-about-netiquette
