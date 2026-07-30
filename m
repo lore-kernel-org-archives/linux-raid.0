@@ -1,204 +1,135 @@
-Received: from va-2-60.ptr.blmpb.com (va-2-60.ptr.blmpb.com [209.127.231.60])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3B63CC9EA
-	for <linux-raid@vger.kernel.org>; Thu, 30 Jul 2026 21:20:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.60
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17DA546EF70;
+	Thu, 30 Jul 2026 23:07:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785446452; cv=none; b=tcGpF2tmD1euH+e41nUFuIUjDsx+pvFdao4QpgffFgs6ZFxLMvhyCcoiMl7QhK8vnW1+XiKCM3i9Xwe+SMcy/JQgnTzT7+XoT1fw/of+oU1mhL90wJopy1Anm59qLAc2AbRjSGat1Ayt8vxG/pb9dDHdP8MhbwdEnOg6eQ7OkB4=
+	t=1785452831; cv=none; b=Fn/xhOSF6H7xGMJuL4u92W3uikDcNgvYC8kx0NvoDkb/zc32S5zvUn4FDQfO00n85RiQ+E7u9y+IIPd5Uk+lc6yuoLmk1AFQrgjK6caIbahj2KdpDkKFPGgfTgoJxZLXfzFjwoWQu8OMPX13KnE2X5ThNWJ8JAyDCsx8bt9Qvq0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785446452; c=relaxed/simple;
-	bh=wmUbHv8sink2+kwEE1Sgxy9M19irKMdTfp88f89iM70=;
-	h=References:In-Reply-To:To:Subject:Date:Content-Type:Cc:From:
-	 Mime-Version:Message-Id; b=Wh8x4Q9NEqtzCzAyo2E9DANWXBajVcPXMvo9KSsuPbtjgXzxH31l+zjcpZGrAN+6u5r0mnJGKjrJCs6e4eeXb0JlJDauBrYqzOEU2CSdX3ynBvCVPYI9Bb6FcoxAYe8noqVJVAC/45hssBJ4PadMu/VuzT/B70mQxNHVSlKSoY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=cmLgYCZe; arc=none smtp.client-ip=209.127.231.60
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1785452831; c=relaxed/simple;
+	bh=lii0/MkvlYV7KkFZR0UW4jxFR3SCjeMXdrGcuGrQ4ws=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BmwcAbXiH87jG/fZmD5lJofg55vrHNH9fQoo00rB0io+ela1TcU7foNh465JXq4qJWagFZQbqKMPl9pnuHUbDVlW866KScRcjgcvmg5MmgqfYxmn24FHYmpz5/5cqlrLH8v+/yJr8R8GoMREl0OoMtG5uvidXi0KKq1rUHSlRT8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=My/0Ue3s; arc=none smtp.client-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="cmLgYCZe"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785446445;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=LekFqNF5ITVYuu0NHbiKimn14kqZbTTuQ1vgAFXEn/c=;
- b=cmLgYCZeqpSEFMhXLhyV04zfoZLMrPHs2vFjTs95peuTh/KhcE6EtkWCKZSN1XBxCDFUO+
- 3XZ+m5iQnSsVHHLAUJc0+Wf6P05aeYgcsEesJYCDv0u+wbCqmbPwFepRYc2byfsz6zeOgk
- KXUq/t5juHSvlVPzZDuH92+TUV0bnOdI313S0WaOZGXjWqfxRfDoZN5Gbl794tGagFknY9
- bEVIzpiOEm0VNYYZ9sR4ECwgp8FhDUJ20Lev2E8s+obJ0TbPCRthTngR+foYa8itYMA7PP
- 1wyNUp+RfdWXjCGTIIbbMc8njx4RoqjNCqWxiKFPPul+BkkqtY9rEqcpVsSlLw==
-References: <20260710132346.7295-1-nishidafmly@gmail.com> <20260710132346.7295-7-nishidafmly@gmail.com>
-In-Reply-To: <20260710132346.7295-7-nishidafmly@gmail.com>
-To: "Hiroshi Nishida" <nishidafmly@gmail.com>, "Song Liu" <song@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH 6/6] md/raid5: derive the default group_thread_cnt from the hardware
-Date: Fri, 31 Jul 2026 05:20:41 +0800
-Content-Type: text/plain; charset=UTF-8
-X-Lms-Return-Path: <lba+26a6bc02d+e15fad+vger.kernel.org+yukuai@fygo.io>
-Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: "yu kuai" <yukuai@fygo.io>
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="My/0Ue3s"
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 4060B40E014C;
+	Thu, 30 Jul 2026 23:07:04 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id EXY0n7lmqV1E; Thu, 30 Jul 2026 23:06:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1785452812; bh=YodGI8Uo9Mf0qUG367VMmipBlJYI9zYdoawBldpOADg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=My/0Ue3slwON/tIdXcj0IVDWf1LhcoJ1NhUAA2l4wGki5k2IlkM4VrXZhdUtvBVcY
+	 Sqy0il+XL+MEtdWN4Cpk8pRmJpIt1xVoBrYNhzAwIheCEHBWon7EwRFCNsB0yFLZd9
+	 09ptmod7IHp+LN5YRoMnMdyFMv3nP4pL1akGgDdQLOmrp+W+FeWAxE2eHEJpgx4pLY
+	 L0WWIn+9f2860RI2d6Lu3dgSgJRwf6l5/vJbe7e3vDINt78Mv7ZU0VQcq/UgqsUjLm
+	 KAMPUEg4kZpWVRh7CqllZ5rFN2dTnWgx8wV21BV++kAw6odQIdpf8hVvAd2ph0ukme
+	 FYDgNYWVzL28E3Ryeao8llMrC3EZgW9acDxlwXSZl/dC5HQZzs1Hfr2g4kngFzx7+/
+	 dgSvBb5d5KOrFg3cgTC8qPAvX7gLgFgNIRxARPpLKKNnih9NL0b5t1SjXwP4+PcTAZ
+	 orvDv6m5ea1+bRcaRGq2KgtCKzbGGBX8iTQHhuVlYORC+9LfxWexcOtH6KzSN7EVza
+	 hkKE852vZLgX0UvZ5aotmSBwexMw85ghgH1R1DX48gjZNaxrkVOwionhvlDrkrBvwu
+	 nIxhNFPnZ4o4b1DZjMvyMLFnxzjwy7hPE/ait0Mbm3eNWvMsU8HqGxsWt/t8uMbcTq
+	 SJDU+ALaiLl8otfaX3a1HB6o=
+Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::1b])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 21DB540E00C4;
+	Thu, 30 Jul 2026 23:06:40 +0000 (UTC)
+Date: Thu, 30 Jul 2026 16:06:37 -0700
+From: Borislav Petkov <bp@alien8.de>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: x86@kernel.org, linux-um@lists.infradead.org,
+	linux-raid@vger.kernel.org, linux-crypto@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Richard Weinberger <richard@nod.at>,
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2 2/8] um: Check for missing AVX and AVX-512 xstate bits
+Message-ID: <20260730230637.GKamvY_aj0Uxn8Dshs@fat_crate.local>
+References: <20260728021603.79870-1-ebiggers@kernel.org>
+ <20260728021603.79870-3-ebiggers@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Thu, 30 Jul 2026 21:20:44 +0000
-X-Original-From: yu kuai <yukuai@fygo.io>
-Reply-To: yukuai@fygo.io
-Message-Id: <c482f95e-870e-4f6a-b9c2-4fdaf6cf713a@fygo.io>
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Mozilla Thunderbird
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260728021603.79870-3-ebiggers@kernel.org>
 
-Hi,
-
-=E5=9C=A8 2026/7/10 21:23, Hiroshi Nishida =E5=86=99=E9=81=93:
-> setup_conf() starts every array with worker_cnt_per_group =3D 0, i.e. a
-> single raid5d thread and no worker groups.  On a many-core host backing a
-> fast, wide array that single thread is the bottleneck; the multi-threadin=
-g
-> that group_thread_cnt enables has to be turned on by hand, per array,
-> after every assembly.
->
-> Pick a starting value from the CPU count instead.  When the new
-> group_thread_cnt_default module parameter is left at -1 (the default),
-> raid5_default_group_thread_cnt() uses half the online CPU count spread
-> across the NUMA nodes, capped at 256:
->
-> 	gtc =3D num_online_cpus() / (2 * nr_nodes)
->
-> The count is per NUMA node, matching alloc_thread_groups(), so dividing b=
-y
-> the node count keeps the total near half the CPUs regardless of socket
-> count.  It is only a ceiling: raid5_wakeup_stripe_thread() wakes workers
-> in proportion to the queued stripe count, so a lightly loaded array uses
-> far fewer than the maximum.  A lone worker is not worth its overhead over
-> raid5d, so a result of 1 collapses back to 0, which keeps boxes with two
-> or fewer CPUs single-threaded.
->
-> Measured on a 16-disk raid6 array of NVMe SSDs (a 32-vCPU host: 16 cores,
-> two NUMA nodes; steady state, interleaved runs): the derived count of 8
-> raises throughput 2.1-3.2x over the single-threaded default -- 4K random
-> write from ~39k to ~100k IOPS (2.6x), mixed database/OLTP/high-concurrenc=
-y
-> 2.1-2.5x, partial stripe write 3.2x.  There is no regression on smaller
-> machines: a 4-CPU box gets 2 workers and is faster or equal on every
-> workload, and a box with two or fewer CPUs gets 0 and is byte-for-byte
-> unchanged.
->
-> group_thread_cnt_default overrides the heuristic (0 forces the historical
-> single-threaded behaviour; a positive value pins a count, capped at 256),
-> and the existing per-array group_thread_cnt sysfs attribute continues to
-> override it at runtime and still accepts up to its own 8192 limit.
->
-> Signed-off-by: Hiroshi Nishida <nishidafmly@gmail.com>
+On Mon, Jul 27, 2026 at 07:15:57PM -0700, Eric Biggers wrote:
+> If the CPU declares AVX or AVX-512 support, verify that all the
+> corresponding bits are set in the XCR0 register.  If any are missing,
+> warn and don't set the corresponding X86_FEATURE_* flags.
+> 
+> This eliminates the perceived need for UML-supporting AVX and AVX-512
+> optimized code in the kernel (that is, lib/raid/ currently) to start
+> checking the XCR0 bits in addition to X86_FEATURE_AVX*.
+> 
+> This aligns UML with the vast majority of userspace programs, which
+> check the XCR0 bits before considering AVX and AVX-512 to be supported,
+> as per the procedure documented in Intel's CPU manual.
+> 
+> Signed-off-by: Eric Biggers <ebiggers@kernel.org>
 > ---
->   drivers/md/raid5.c | 45 ++++++++++++++++++++++++++++++++++++++++++---
->   1 file changed, 42 insertions(+), 3 deletions(-)
+>  arch/um/kernel/um_arch.c | 78 +++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 77 insertions(+), 1 deletion(-)
 
-There is no test and I'll not accept this patch. And again, please consider
-a user space tool or a downstream patch for your production.
+./scripts/get_maintainer.pl -f arch/um/kernel/um_arch.c
+Richard Weinberger <richard@nod.at> (maintainer:USER-MODE LINUX (UML))
+Anton Ivanov <anton.ivanov@cambridgegreys.com> (maintainer:USER-MODE LINUX (UML))
+Johannes Berg <johannes@sipsolutions.net> (maintainer:USER-MODE LINUX (UML),commit_signer:8/10=80%,authored:1/10=10%,removed_lines:2/40=5%)
+...
 
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 8e1c2eba4241..6e91eb0ad575 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -88,6 +88,11 @@ module_param(stripe_cache_size_default, uint, 0644);
->   MODULE_PARM_DESC(stripe_cache_size_default,
->   		 "Initial stripe_cache_size for newly created arrays.  0 (the default=
-) auto-sizes it from system memory: the historical 256 on small hosts, scal=
-ing up with RAM to a capped maximum on larger ones.  A non-zero value sets =
-a fixed initial size.  Existing arrays are unaffected");
->  =20
-> +static int group_thread_cnt_default =3D -1;
-> +module_param(group_thread_cnt_default, int, 0644);
-> +MODULE_PARM_DESC(group_thread_cnt_default,
-> +		 "Initial group_thread_cnt (raid5 worker threads per NUMA node) for ne=
-wly created arrays.  A negative value (the default, -1) auto-sizes it from =
-the CPU count; 0 forces the single-threaded raid5d; a positive value sets a=
- fixed count (capped at 256).  The per-array group_thread_cnt sysfs attribu=
-te overrides this and allows larger values");
-> +
->   static bool devices_handle_discard_safely =3D false;
->   module_param(devices_handle_discard_safely, bool, 0644);
->   MODULE_PARM_DESC(devices_handle_discard_safely,
-> @@ -7584,6 +7589,31 @@ static unsigned long raid5_cache_count(struct shri=
-nker *shrink,
->   #define RAID5_CACHE_DEFAULT_RAM_SHIFT	9	/* above it: ~1/512 of the extr=
-a RAM */
->   #define RAID5_CACHE_DEFAULT_MAX		4096
->  =20
-> +/*
-> + * Default group_thread_cnt (worker_cnt_per_group) for a new array when =
-the
-> + * group_thread_cnt_default module parameter is left at -1.  The histori=
-cal
-> + * default is 0 -- a single raid5d thread -- which cannot keep a fast, w=
-ide
-> + * array busy on a many-core host.  Derive a starting point from the CPU
-> + * count: half the online CPUs divided across the NUMA nodes (this is a
-> + * per-node count -- see alloc_thread_groups() -- so the total lands nea=
-r
-> + * half the online CPUs regardless of socket count), capped at
-> + * RAID5_AUTO_GROUP_THREAD_MAX.  This is only a ceiling:
-> + * raid5_wakeup_stripe_thread() wakes workers in proportion to the queue=
-d
-> + * stripe count, so a lightly loaded array uses far fewer.  A lone worke=
-r is
-> + * not worth its overhead, so 1 collapses back to 0.  The group_thread_c=
-nt
-> + * sysfs attribute overrides this per array.
-> + */
-> +#define RAID5_AUTO_GROUP_THREAD_MAX	256
-> +
-> +static int raid5_default_group_thread_cnt(void)
+Please use that script. CCed now.
+
+> diff --git a/arch/um/kernel/um_arch.c b/arch/um/kernel/um_arch.c
+> index 2141f5f1f5a20..aafbaef2ae82f 100644
+> --- a/arch/um/kernel/um_arch.c
+> +++ b/arch/um/kernel/um_arch.c
+> @@ -264,12 +264,88 @@ unsigned long brk_start;
+>  
+>  #define MIN_VMALLOC (32 * 1024 * 1024)
+>  
+> +static u64 __init read_xcr0(void)
 > +{
-> +	unsigned int gtc =3D num_online_cpus() / (2 * num_possible_nodes());
+> +	u32 a, b, c, d;
 > +
-> +	if (gtc > RAID5_AUTO_GROUP_THREAD_MAX)
-> +		gtc =3D RAID5_AUTO_GROUP_THREAD_MAX;
-> +	return gtc =3D=3D 1 ? 0 : gtc;
-> +}
-> +
->   static struct r5conf *setup_conf(struct mddev *mddev)
->   {
->   	struct r5conf *conf;
-> @@ -7594,6 +7624,7 @@ static struct r5conf *setup_conf(struct mddev *mdde=
-v)
->   	int i;
->   	int group_cnt;
->   	struct r5worker_group *new_group;
-> +	int def_threads;
->   	int ret =3D -ENOMEM;
->  =20
->   	if (mddev->new_level !=3D 5
-> @@ -7677,10 +7708,18 @@ static struct r5conf *setup_conf(struct mddev *md=
-dev)
->   		goto abort;
->   	for (i =3D 0; i < PENDING_IO_MAX; i++)
->   		list_add(&conf->pending_data[i].sibling, &conf->free_list);
-> -	/* Don't enable multi-threading by default*/
-> -	if (!alloc_thread_groups(conf, 0, &group_cnt, &new_group)) {
-> +	/*
-> +	 * Multi-threading defaults to a hardware-derived worker count (see
-> +	 * raid5_default_group_thread_cnt()); group_thread_cnt_default override=
-s
-> +	 * the choice, and the group_thread_cnt sysfs attribute overrides it pe=
-r
-> +	 * array.
-> +	 */
-> +	def_threads =3D group_thread_cnt_default < 0 ?
-> +		raid5_default_group_thread_cnt() :
-> +		min(group_thread_cnt_default, RAID5_AUTO_GROUP_THREAD_MAX);
-> +	if (!alloc_thread_groups(conf, def_threads, &group_cnt, &new_group)) {
->   		conf->group_cnt =3D group_cnt;
-> -		conf->worker_cnt_per_group =3D 0;
-> +		conf->worker_cnt_per_group =3D def_threads;
->   		conf->worker_groups =3D new_group;
->   	} else
->   		goto abort;
+> +	asm volatile("cpuid"
+> +		     : "=a"(a), "=b"(b), "=c"(c), "=d"(d)
+> +		     : "a"(0), "c"(0));
+> +	if (a >= 1) { /* max_leaf >= 1 */
+> +		asm volatile("cpuid"
+> +			     : "=a"(a), "=b"(b), "=c"(c), "=d"(d)
+> +			     : "a"(1), "c"(0));
+> +		if (c & (1 << 27)) { /* XSAVE enabled by OS */
+> +			asm volatile("xgetbv" : "=d"(d), "=a"(a) : "c"(0));
+> +			return ((u64)d << 32) | a;
+> +		}
+> +	}
 
---=20
-Thanks,
-Kuai
+I don't know - I probably would pull in some helpers for cpuid and xgetbv
+instead of doing this ad-hoc. UML maintainers' call.
+
+> +	return 0;
+> +}
+
+Thx.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+https://people.kernel.org/tglx/notes-about-netiquette
