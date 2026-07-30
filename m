@@ -1,181 +1,203 @@
-Received: from va-2-17.ptr.blmpb.com (va-2-17.ptr.blmpb.com [209.127.231.17])
+Received: from va-2-60.ptr.blmpb.com (va-2-60.ptr.blmpb.com [209.127.231.60])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED5D73CBE8F
-	for <linux-raid@vger.kernel.org>; Thu, 30 Jul 2026 21:17:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3B63CC9EA
+	for <linux-raid@vger.kernel.org>; Thu, 30 Jul 2026 21:20:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.60
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785446262; cv=none; b=Npcuu1y2j8+0bzMUvdHcr2rJZW9KO1C3aOgl29G9fbVQkdSn2Sw4XRWt0YIPCh/j1XG8aGt1goKzO16NoC7wQpcdsPqeH+7qdYpVfGpYILgLlmnJd4cbq5+8pO1gpbVYY3e+VEJ6jgizyLm7XVDv+UgUv8uoLDcEElKGz+nvroU=
+	t=1785446452; cv=none; b=tcGpF2tmD1euH+e41nUFuIUjDsx+pvFdao4QpgffFgs6ZFxLMvhyCcoiMl7QhK8vnW1+XiKCM3i9Xwe+SMcy/JQgnTzT7+XoT1fw/of+oU1mhL90wJopy1Anm59qLAc2AbRjSGat1Ayt8vxG/pb9dDHdP8MhbwdEnOg6eQ7OkB4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785446262; c=relaxed/simple;
-	bh=r4IY0t1jCOMm7MPBcBC9WYUIzSD4j/ghllO5arRGEHo=;
-	h=Date:To:Message-Id:Content-Type:Mime-Version:In-Reply-To:Cc:From:
-	 Subject:References; b=KfNQBOtYSXztc5BQvDvUJFCGyTqlogUSTVcU4pghksZqK+qZ7m299ASCKF8LF/DiA2TX4FfFNurs0dPKYX/hAiqhjXmjQAqewRFraTZR5padTbE0mZ/xTH9VtbPvypyrFnwef/MSqHmbgW9BJjZq4ecYilF9VezJLcs5ChT5SzI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=dWptmauc; arc=none smtp.client-ip=209.127.231.17
+	s=arc-20240116; t=1785446452; c=relaxed/simple;
+	bh=wmUbHv8sink2+kwEE1Sgxy9M19irKMdTfp88f89iM70=;
+	h=References:In-Reply-To:To:Subject:Date:Content-Type:Cc:From:
+	 Mime-Version:Message-Id; b=Wh8x4Q9NEqtzCzAyo2E9DANWXBajVcPXMvo9KSsuPbtjgXzxH31l+zjcpZGrAN+6u5r0mnJGKjrJCs6e4eeXb0JlJDauBrYqzOEU2CSdX3ynBvCVPYI9Bb6FcoxAYe8noqVJVAC/45hssBJ4PadMu/VuzT/B70mQxNHVSlKSoY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=cmLgYCZe; arc=none smtp.client-ip=209.127.231.60
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="dWptmauc"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="cmLgYCZe"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785446250;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785446445;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=56qAAKPwB6z/FTriGN9uX8ul2jI6j7Vbc3qHN5hdNrA=;
- b=dWptmauc5gWWDFoLXyd6mIvQEP3vcgdxkM51iTLZ92VY1xX0mZghnrhbrWTShyX+S7HvW6
- iGJ7rRGbqcmwO9R08WociYa88LoEv+nYGkCkU3lIud7gkzllx/GlLl6WNAe5adBYlOpnBV
- f1OTVRWoVTJmlu+IwBrQ8ZYNVeaouBXHBHUGj3UwiSHSbx9ayAaSGoiOtVFNr+a7/Nntup
- xsZkV7oIFT2UlVM2OGUHL/iVkgQQJh5462mY2bmiG/t7eU5LQxjKwRUIIy6mPhm2VnmEEA
- /gOmwL/4j+6TjAw/Vs7XMwRvUiS8Ydnnxz9hVcZnHWDXdFcIGcqpQ1XKFoXRWw==
-Reply-To: yukuai@fygo.io
-Date: Fri, 31 Jul 2026 05:17:25 +0800
+ bh=LekFqNF5ITVYuu0NHbiKimn14kqZbTTuQ1vgAFXEn/c=;
+ b=cmLgYCZeqpSEFMhXLhyV04zfoZLMrPHs2vFjTs95peuTh/KhcE6EtkWCKZSN1XBxCDFUO+
+ 3XZ+m5iQnSsVHHLAUJc0+Wf6P05aeYgcsEesJYCDv0u+wbCqmbPwFepRYc2byfsz6zeOgk
+ KXUq/t5juHSvlVPzZDuH92+TUV0bnOdI313S0WaOZGXjWqfxRfDoZN5Gbl794tGagFknY9
+ bEVIzpiOEm0VNYYZ9sR4ECwgp8FhDUJ20Lev2E8s+obJ0TbPCRthTngR+foYa8itYMA7PP
+ 1wyNUp+RfdWXjCGTIIbbMc8njx4RoqjNCqWxiKFPPul+BkkqtY9rEqcpVsSlLw==
+References: <20260710132346.7295-1-nishidafmly@gmail.com> <20260710132346.7295-7-nishidafmly@gmail.com>
+In-Reply-To: <20260710132346.7295-7-nishidafmly@gmail.com>
 To: "Hiroshi Nishida" <nishidafmly@gmail.com>, "Song Liu" <song@kernel.org>, 
 	"yu kuai" <yukuai@fygo.io>
-Message-Id: <158faaad-0542-4187-8158-eab5b9876d29@fygo.io>
+Subject: Re: [PATCH 6/6] md/raid5: derive the default group_thread_cnt from the hardware
+Date: Fri, 31 Jul 2026 05:20:41 +0800
 Content-Type: text/plain; charset=UTF-8
-User-Agent: Mozilla Thunderbird
-X-Lms-Return-Path: <lba+26a6bbf6a+ed8ac4+vger.kernel.org+yukuai@fygo.io>
+X-Lms-Return-Path: <lba+26a6bc02d+e15fad+vger.kernel.org+yukuai@fygo.io>
+Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: "yu kuai" <yukuai@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-In-Reply-To: <20260710132346.7295-6-nishidafmly@gmail.com>
+Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Thu, 30 Jul 2026 21:20:44 +0000
 X-Original-From: yu kuai <yukuai@fygo.io>
-Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH 5/6] md/raid5: scale the default stripe cache size with system memory
-Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Thu, 30 Jul 2026 21:17:29 +0000
-References: <20260710132346.7295-1-nishidafmly@gmail.com> <20260710132346.7295-6-nishidafmly@gmail.com>
+Reply-To: yukuai@fygo.io
+Message-Id: <c482f95e-870e-4f6a-b9c2-4fdaf6cf713a@fygo.io>
 Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
 
 Hi,
 
 =E5=9C=A8 2026/7/10 21:23, Hiroshi Nishida =E5=86=99=E9=81=93:
-> setup_conf() starts every array with min_nr_stripes =3D NR_STRIPES (256),
-> about 12MB of stripe cache on a 12-disk array.  That fixed default was
-> chosen for small systems and is never revisited: a server with hundreds
-> of GB of RAM backing a wide array still creates its arrays with the same
-> 256 stripes, and only benefits from more after an administrator writes
-> stripe_cache_size by hand.
+> setup_conf() starts every array with worker_cnt_per_group =3D 0, i.e. a
+> single raid5d thread and no worker groups.  On a many-core host backing a
+> fast, wide array that single thread is the bottleneck; the multi-threadin=
+g
+> that group_thread_cnt enables has to be turned on by hand, per array,
+> after every assembly.
 >
-> Auto-size the initial count from memory when the new
-> stripe_cache_size_default module parameter is 0 (the default): keep the
-> historical NR_STRIPES up to RAID5_CACHE_DEFAULT_BASE_GB (8GB) of RAM, the=
-n
-> grow the count using about 1/512 of the RAM above that baseline, capped a=
-t
-> RAID5_CACHE_DEFAULT_MAX (4096).  A system with 8GB or less is therefore
-> unchanged -- same count, same footprint -- while larger ones scale up
-> smoothly (no jump at the baseline) to a bounded maximum.  A non-zero
-> stripe_cache_size_default sets a fixed initial size for administrators wh=
-o
-> want one; existing arrays are unaffected, and a reshape still forces at
-> least its window's worth of stripes.
-
-I will not accept changing the default value for now, unless it's tested an=
-d
-validated across various architectures and environments.
-
-BTW, if you want to do this, I'll suggest you write a user space tool.
-
+> Pick a starting value from the CPU count instead.  When the new
+> group_thread_cnt_default module parameter is left at -1 (the default),
+> raid5_default_group_thread_cnt() uses half the online CPU count spread
+> across the NUMA nodes, capped at 256:
+>
+> 	gtc =3D num_online_cpus() / (2 * nr_nodes)
+>
+> The count is per NUMA node, matching alloc_thread_groups(), so dividing b=
+y
+> the node count keeps the total near half the CPUs regardless of socket
+> count.  It is only a ceiling: raid5_wakeup_stripe_thread() wakes workers
+> in proportion to the queued stripe count, so a lightly loaded array uses
+> far fewer than the maximum.  A lone worker is not worth its overhead over
+> raid5d, so a result of 1 collapses back to 0, which keeps boxes with two
+> or fewer CPUs single-threaded.
+>
+> Measured on a 16-disk raid6 array of NVMe SSDs (a 32-vCPU host: 16 cores,
+> two NUMA nodes; steady state, interleaved runs): the derived count of 8
+> raises throughput 2.1-3.2x over the single-threaded default -- 4K random
+> write from ~39k to ~100k IOPS (2.6x), mixed database/OLTP/high-concurrenc=
+y
+> 2.1-2.5x, partial stripe write 3.2x.  There is no regression on smaller
+> machines: a 4-CPU box gets 2 workers and is faster or equal on every
+> workload, and a box with two or fewer CPUs gets 0 and is byte-for-byte
+> unchanged.
+>
+> group_thread_cnt_default overrides the heuristic (0 forces the historical
+> single-threaded behaviour; a positive value pins a count, capped at 256),
+> and the existing per-array group_thread_cnt sysfs attribute continues to
+> override it at runtime and still accepts up to its own 8192 limit.
 >
 > Signed-off-by: Hiroshi Nishida <nishidafmly@gmail.com>
 > ---
->   drivers/md/raid5.c | 44 +++++++++++++++++++++++++++++++++++++++++---
->   1 file changed, 41 insertions(+), 3 deletions(-)
+>   drivers/md/raid5.c | 45 ++++++++++++++++++++++++++++++++++++++++++---
+>   1 file changed, 42 insertions(+), 3 deletions(-)
+
+There is no test and I'll not accept this patch. And again, please consider
+a user space tool or a downstream patch for your production.
+
 >
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 5f0825c5effe..8e1c2eba4241 100644
+> index 8e1c2eba4241..6e91eb0ad575 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
-> @@ -83,6 +83,11 @@ module_param(max_stripe_batch, uint, 0644);
->   MODULE_PARM_DESC(max_stripe_batch,
->   		 "Number of stripes a worker thread handles per device_lock acquisiti=
-on, 1-32 (default 8).  Larger values amortise the lock over more stripes on=
- busy multi-threaded arrays at some latency cost.  Read when an array is cr=
-eated");
+> @@ -88,6 +88,11 @@ module_param(stripe_cache_size_default, uint, 0644);
+>   MODULE_PARM_DESC(stripe_cache_size_default,
+>   		 "Initial stripe_cache_size for newly created arrays.  0 (the default=
+) auto-sizes it from system memory: the historical 256 on small hosts, scal=
+ing up with RAM to a capped maximum on larger ones.  A non-zero value sets =
+a fixed initial size.  Existing arrays are unaffected");
 >  =20
-> +static unsigned int stripe_cache_size_default;
-> +module_param(stripe_cache_size_default, uint, 0644);
-> +MODULE_PARM_DESC(stripe_cache_size_default,
-> +		 "Initial stripe_cache_size for newly created arrays.  0 (the default)=
- auto-sizes it from system memory: the historical 256 on small hosts, scali=
-ng up with RAM to a capped maximum on larger ones.  A non-zero value sets a=
- fixed initial size.  Existing arrays are unaffected");
+> +static int group_thread_cnt_default =3D -1;
+> +module_param(group_thread_cnt_default, int, 0644);
+> +MODULE_PARM_DESC(group_thread_cnt_default,
+> +		 "Initial group_thread_cnt (raid5 worker threads per NUMA node) for ne=
+wly created arrays.  A negative value (the default, -1) auto-sizes it from =
+the CPU count; 0 forces the single-threaded raid5d; a positive value sets a=
+ fixed count (capped at 256).  The per-array group_thread_cnt sysfs attribu=
+te overrides this and allows larger values");
 > +
 >   static bool devices_handle_discard_safely =3D false;
 >   module_param(devices_handle_discard_safely, bool, 0644);
 >   MODULE_PARM_DESC(devices_handle_discard_safely,
-> @@ -7568,6 +7573,17 @@ static unsigned long raid5_cache_count(struct shri=
+> @@ -7584,6 +7589,31 @@ static unsigned long raid5_cache_count(struct shri=
 nker *shrink,
->   	return max_stripes - min_stripes;
->   }
+>   #define RAID5_CACHE_DEFAULT_RAM_SHIFT	9	/* above it: ~1/512 of the extr=
+a RAM */
+>   #define RAID5_CACHE_DEFAULT_MAX		4096
 >  =20
 > +/*
-> + * Auto-sizing of the initial stripe cache (stripe_cache_size_default =
-=3D=3D 0):
-> + * stay at the historical NR_STRIPES up to RAID5_CACHE_DEFAULT_BASE_GB o=
-f RAM,
-> + * then grow the count using about 1/512 of the RAM above that base, cap=
-ped at
-> + * RAID5_CACHE_DEFAULT_MAX.  So a system at or below the base is unchang=
-ed and
-> + * keeps the historical footprint, while larger ones scale.
+> + * Default group_thread_cnt (worker_cnt_per_group) for a new array when =
+the
+> + * group_thread_cnt_default module parameter is left at -1.  The histori=
+cal
+> + * default is 0 -- a single raid5d thread -- which cannot keep a fast, w=
+ide
+> + * array busy on a many-core host.  Derive a starting point from the CPU
+> + * count: half the online CPUs divided across the NUMA nodes (this is a
+> + * per-node count -- see alloc_thread_groups() -- so the total lands nea=
+r
+> + * half the online CPUs regardless of socket count), capped at
+> + * RAID5_AUTO_GROUP_THREAD_MAX.  This is only a ceiling:
+> + * raid5_wakeup_stripe_thread() wakes workers in proportion to the queue=
+d
+> + * stripe count, so a lightly loaded array uses far fewer.  A lone worke=
+r is
+> + * not worth its overhead, so 1 collapses back to 0.  The group_thread_c=
+nt
+> + * sysfs attribute overrides this per array.
 > + */
-> +#define RAID5_CACHE_DEFAULT_BASE_GB	8	/* unchanged at or below this much=
- RAM */
-> +#define RAID5_CACHE_DEFAULT_RAM_SHIFT	9	/* above it: ~1/512 of the extra=
- RAM */
-> +#define RAID5_CACHE_DEFAULT_MAX		4096
+> +#define RAID5_AUTO_GROUP_THREAD_MAX	256
+> +
+> +static int raid5_default_group_thread_cnt(void)
+> +{
+> +	unsigned int gtc =3D num_online_cpus() / (2 * num_possible_nodes());
+> +
+> +	if (gtc > RAID5_AUTO_GROUP_THREAD_MAX)
+> +		gtc =3D RAID5_AUTO_GROUP_THREAD_MAX;
+> +	return gtc =3D=3D 1 ? 0 : gtc;
+> +}
 > +
 >   static struct r5conf *setup_conf(struct mddev *mddev)
 >   {
 >   	struct r5conf *conf;
-> @@ -7801,15 +7817,37 @@ static struct r5conf *setup_conf(struct mddev *md=
-dev)
->   		conf->prev_algo =3D conf->algorithm;
->   	}
+> @@ -7594,6 +7624,7 @@ static struct r5conf *setup_conf(struct mddev *mdde=
+v)
+>   	int i;
+>   	int group_cnt;
+>   	struct r5worker_group *new_group;
+> +	int def_threads;
+>   	int ret =3D -ENOMEM;
 >  =20
-> -	conf->min_nr_stripes =3D NR_STRIPES;
+>   	if (mddev->new_level !=3D 5
+> @@ -7677,10 +7708,18 @@ static struct r5conf *setup_conf(struct mddev *md=
+dev)
+>   		goto abort;
+>   	for (i =3D 0; i < PENDING_IO_MAX; i++)
+>   		list_add(&conf->pending_data[i].sibling, &conf->free_list);
+> -	/* Don't enable multi-threading by default*/
+> -	if (!alloc_thread_groups(conf, 0, &group_cnt, &new_group)) {
 > +	/*
-> +	 * Choose the initial stripe cache size.  stripe_cache_size_default
-> +	 * selects it: 0 (the default) auto-sizes from memory -- the historical
-> +	 * NR_STRIPES up to RAID5_CACHE_DEFAULT_BASE_GB of RAM, then scaling up
-> +	 * to at most RAID5_CACHE_DEFAULT_MAX -- and a non-zero value sets it
-> +	 * directly.  A reshape still forces at least enough stripes for its
-> +	 * window, below.
+> +	 * Multi-threading defaults to a hardware-derived worker count (see
+> +	 * raid5_default_group_thread_cnt()); group_thread_cnt_default override=
+s
+> +	 * the choice, and the group_thread_cnt sysfs attribute overrides it pe=
+r
+> +	 * array.
 > +	 */
-> +	if (stripe_cache_size_default) {
-> +		conf->min_nr_stripes =3D clamp_t(unsigned long,
-> +					stripe_cache_size_default, 16, INT_MAX);
-> +	} else {
-> +		unsigned long per_stripe =3D sizeof(struct stripe_head) +
-> +			max_disks * (sizeof(struct bio) + PAGE_SIZE);
-> +		unsigned long ram =3D totalram_pages() << PAGE_SHIFT;
-> +		unsigned long base =3D (unsigned long)RAID5_CACHE_DEFAULT_BASE_GB << 3=
-0;
-> +		unsigned long extra =3D ram > base ?
-> +			((ram - base) >> RAID5_CACHE_DEFAULT_RAM_SHIFT) / per_stripe : 0;
-> +
-> +		conf->min_nr_stripes =3D clamp_t(unsigned long, NR_STRIPES + extra,
-> +					       NR_STRIPES, RAID5_CACHE_DEFAULT_MAX);
-> +	}
->   	if (mddev->reshape_position !=3D MaxSector) {
->   		int stripes =3D max_t(int,
->   			((mddev->chunk_sectors << 9) / RAID5_STRIPE_SIZE(conf)) * 4,
->   			((mddev->new_chunk_sectors << 9) / RAID5_STRIPE_SIZE(conf)) * 4);
-> -		conf->min_nr_stripes =3D max(NR_STRIPES, stripes);
-> -		if (conf->min_nr_stripes !=3D NR_STRIPES)
-> +		if (stripes > conf->min_nr_stripes) {
-> +			conf->min_nr_stripes =3D stripes;
->   			pr_info("md/raid:%s: force stripe size %d for reshape\n",
->   				mdname(mddev), conf->min_nr_stripes);
-> +		}
->   	}
->   	memory =3D conf->min_nr_stripes * (sizeof(struct stripe_head) +
->   		 max_disks * ((sizeof(struct bio) + PAGE_SIZE))) / 1024;
+> +	def_threads =3D group_thread_cnt_default < 0 ?
+> +		raid5_default_group_thread_cnt() :
+> +		min(group_thread_cnt_default, RAID5_AUTO_GROUP_THREAD_MAX);
+> +	if (!alloc_thread_groups(conf, def_threads, &group_cnt, &new_group)) {
+>   		conf->group_cnt =3D group_cnt;
+> -		conf->worker_cnt_per_group =3D 0;
+> +		conf->worker_cnt_per_group =3D def_threads;
+>   		conf->worker_groups =3D new_group;
+>   	} else
+>   		goto abort;
 
 --=20
 Thanks,
