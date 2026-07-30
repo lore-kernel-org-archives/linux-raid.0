@@ -1,89 +1,96 @@
-Received: from va-2-48.ptr.blmpb.com (va-2-48.ptr.blmpb.com [209.127.231.48])
+Received: from va-2-59.ptr.blmpb.com (va-2-59.ptr.blmpb.com [209.127.231.59])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CE503B8111
-	for <linux-raid@vger.kernel.org>; Thu, 30 Jul 2026 08:28:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DF963B7769
+	for <linux-raid@vger.kernel.org>; Thu, 30 Jul 2026 08:59:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.59
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785400088; cv=none; b=KRwN+a2/myiHC9wPmKaK8ek1PN7WK0YOXFBeoR70qIeNFuE+EnF4y0Up7mFfpNLUYJ1aYaVtA1g+QqkCC5trpXCVKEnMb+7FPl1D/SjDiXw/SHm7k5bm306biKO8JPDfD6H9sdL1b+sWEyCIC5K5IbJgus8lMbS3uJfGoDZsdCc=
+	t=1785401981; cv=none; b=Khuk80ovAFdvoJoKmkDhsgZJCGmlgiFYqXDH+W3FEYnwN0KhRVqSg/GWtlwnusujeBQolA2jBT/Qe6eW3YYWlWe3kTcrGduxTPnJ/eUw8H+s4W9YfatMDVJN1GxESToZyloytex5Knak2iXRKa+06LJjwVUmw0/BqXho2Q7bCL8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785400088; c=relaxed/simple;
-	bh=J8hboDhTwnBp9kHdy3SFl8nA+6yeqsHSCVF+IpT2dMQ=;
-	h=Cc:Subject:Date:Message-Id:Content-Type:In-Reply-To:To:From:
-	 Mime-Version:References; b=Ep8L2WSJImUqwK6Xl5+qVokT8Dt/GJPIadwXddG6hIqL1itPpPhlCfYfDKdJrEqa9IOY+XWHwd9kyfPKqiRpCfhOc7sX1tT/LXXWFIHsdMftMqAi3soWM48lVWaL4dntwX7e948JYHSApIKX6Ahv2MenQgdRBaJYzumO3DLkTK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=CTs0kQ2c; arc=none smtp.client-ip=209.127.231.48
+	s=arc-20240116; t=1785401981; c=relaxed/simple;
+	bh=x6Nb4WYf7C1EM6ANSQsnJs8WPhwF7Va3Sg64k5rYpF4=;
+	h=Cc:Date:Mime-Version:Content-Type:To:In-Reply-To:References:From:
+	 Subject:Message-Id; b=IYUe+EjvsC9Ta/pWr7dZIyKKYfOsrxa1bmRZW1FFVoX/GcMnii32z2rYvNGZPnwiGrOyIJU9kuwzieTtYEhHkuMA1926HkVH5AQhNS9l7f0mFX+BDDUqsdC9KcbSoA6DEQeTiB4ogqA712Bg3kdlvudmdYeR00u1No25BVxIM7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=OAGtYC5y; arc=none smtp.client-ip=209.127.231.59
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="CTs0kQ2c"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="OAGtYC5y"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785400067;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785401965;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=Tx6MaENeJkI6WOcc38XFx8oqCUhlOi0iUNqQKX8wtPQ=;
- b=CTs0kQ2cjMLfVnzAKJGxUJ9P0Q5kLqi5jIT35tA4iitH2jRMj48g9iEK5bsLZxGJLgw4P2
- 64B7xOOb20YbLaCwvqmtNc/DKr8Gy2Fcy991hAT3qL8CwhJDfU5ZKV6pC4KkFZ0HxcG4+u
- btASxTAyDPe3KbT33Bd+Atnc2H+eV8oM+cAaRIZSaG+jIZWmhKuVeFsEGHxZ2YiLFENU1U
- 11qgz6nEL2ukK/7zH3KcZNFgKi86tAiLOslKxD0LYXmdWwKgJzrfhN8L7y2VYCkgsiM9Hr
- f+amNjc7hHE9mJME0tS24quEsYFHhQru84h5wrOm03sxuJCecRV+CYnmrvbUuw==
-Cc: <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] md/raid1: protect sequential read hints for read balance
-Date: Thu, 30 Jul 2026 16:27:43 +0800
-Message-Id: <0d46c447-4a2e-4b28-a33e-24253656bfa5@fygo.io>
-Content-Type: text/plain; charset=UTF-8
-User-Agent: Mozilla Thunderbird
-In-Reply-To: <20260623075940.2476255-1-chencheng@fnnas.com>
-To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>, 
-	<yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Thu, 30 Jul 2026 08:27:46 +0000
+ bh=JVvPd2kmNTSKthwF6Xn9Ai6yfPD4UsR63PKVG9DZ9z8=;
+ b=OAGtYC5yyOJldalTvOwmLWXCZS+2Au8+5xvwt2tOrReyw5EEFKqoO/nhXEM7ZuI+DeqXqK
+ MdbYCc5MWYXMBfyN0NZOL2/1oLkGRY1BaG118wNdlolXTX5tT1H1a/svNdBGT8SPYxcCLv
+ wLLAeKU/6Yj7icVI9HUyUr5xSEwtsfluQ6kpQE9AUpJu2X75e0wHTw+8hKbXxj2yrC63Fn
+ xnLJVMSh3QQrtabhS4B4hr+701Y+A3Bqhk0s42aQCgYUpqW8Opvyk84dmydN60z0IRR/wy
+ D+C/ssXR0QZVA9GNJ0KeqOp1T8+DQQGzs2K3WzYGvACEnEws6M1wEf+sCwxHig==
 Content-Transfer-Encoding: quoted-printable
 X-Original-From: yu kuai <yukuai@fygo.io>
+X-Lms-Return-Path: <lba+26a6b126d+3f5c26+vger.kernel.org+yukuai@fygo.io>
 Reply-To: yukuai@fygo.io
-X-Lms-Return-Path: <lba+26a6b0b03+0c8ea4+vger.kernel.org+yukuai@fygo.io>
+Cc: <linux-kernel@vger.kernel.org>
+Date: Thu, 30 Jul 2026 16:59:20 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-References: <20260623075940.2476255-1-chencheng@fnnas.com>
+Content-Type: text/plain; charset=UTF-8
+To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+User-Agent: Mozilla Thunderbird
+In-Reply-To: <20260624024042.2561803-1-chencheng@fnnas.com>
+References: <20260624024042.2561803-1-chencheng@fnnas.com>
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH] md/raid5: fix lockless max_nr_stripes reads
+Message-Id: <079ff51d-fb2b-4064-b560-33ce2b9ededb@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Thu, 30 Jul 2026 08:59:24 +0000
 
-=E5=9C=A8 2026/6/23 15:59, Chen Cheng =E5=86=99=E9=81=93:
+=E5=9C=A8 2026/6/24 10:40, Chen Cheng =E5=86=99=E9=81=93:
 
 > From: Chen Cheng<chencheng@fnnas.com>
 >
-> The patch just suppress KCSAN noise. No functional change.
+> max_nr_stripes is updated under cache_size_mutex in the stripe cache
+> grow/shrink paths, while is_inactive_blocked() and
+> raid5_end_read_request() read it without that lock.
 >
-> KCSAN reports a race, point to update_read_sectors() update next_seq_sect=
- vs.
-> read next_seq_sect.
+> Use READ_ONCE() for those reads in lockless path to match the WRITE_ONCE(=
+)
+> updates and avoid KCSAN data race reports.
 >
-> Protect next_seq_sect and seq_start with READ_ONCE/WRITE_ONCE, otherwise,
-> read balance see stale sequential-read hints.
+> A similar issue was previously fixed in commit-id:
+> 	dfd2bf436709b2bccb78c2dda550dde93700efa7.
+>
+> Fixes: 0009fad033370 ("raid5 improve too many read errors msg by adding l=
+imits")
+> Fixes: 3514da58be9c4 ("md/raid5: Make is_inactive_blocked() helper")
 >
 > KCSAN report:
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->   BUG: KCSAN: data-race in raid1_read_request / raid1_read_request
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 >
->   write to 0xffff8e3a2d6736d0 of 8 bytes by task 593784 on cpu 10:
->    raid1_read_request+0xe5a/0x19f0
->    raid1_make_request+0xdf/0x1990
->    md_handle_request+0x4a2/0xa40
->    [...]
+> BUG: KCSAN: data-race in grow_one_stripe / is_inactive_blocked
 >
->   read to 0xffff8e3a2d6736d0 of 8 bytes by task 593776 on cpu 11:
->    raid1_read_request+0xe3f/0x19f0
->    raid1_make_request+0xdf/0x1990
->    md_handle_request+0x4a2/0xa40
->    [...]
+> write (marked) to 0xffff8f01f0b5a268 of 4 bytes by task 12616 on cpu 9:
+>   grow_one_stripe+0x2d8/0x320
+>   raid5d+0xb57/0xba0
+>   md_thread+0x15a/0x2d0
+>   [..........]
 >
->   value changed: 0x0000000000356368 -> 0x0000000000356370
+> read to 0xffff8f01f0b5a268 of 4 bytes by task 12670 on cpu 11:
+>   is_inactive_blocked+0x97/0xc0
+>   raid5_get_active_stripe+0x2fd/0xa70
+>   raid5_make_request+0x4aa/0x2940
+>   [..........]
+>
+> value changed: 0x000003b9 -> 0x000003ba
 >
 > Signed-off-by: Chen Cheng<chencheng@fnnas.com>
 > ---
->   drivers/md/raid1.c | 18 ++++++++++--------
->   1 file changed, 10 insertions(+), 8 deletions(-)
+>   drivers/md/raid5.c | 8 ++++----
+>   1 file changed, 4 insertions(+), 4 deletions(-)
 Applied to md-7.3
 
 --=20
