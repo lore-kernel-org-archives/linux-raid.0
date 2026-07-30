@@ -1,129 +1,123 @@
-Received: from va-2-56.ptr.blmpb.com (va-2-56.ptr.blmpb.com [209.127.231.56])
+Received: from va-2-47.ptr.blmpb.com (va-2-47.ptr.blmpb.com [209.127.231.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6245C42847B
-	for <linux-raid@vger.kernel.org>; Thu, 30 Jul 2026 12:20:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E994F3CAE69
+	for <linux-raid@vger.kernel.org>; Thu, 30 Jul 2026 12:41:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785414045; cv=none; b=H5mt1pRdKU0SkRDXzry/BqCkDNskHsWLAVfcUf00psCoKnskL9nPToRn16eUt8Wl9+aTv8/I5PJFzOZr+z2+MN0ugpw5spcwLOJJ3ofuNAIVB9OKiCCCEraGcFLtwkUAJW0bQ4Lk0JmyR/w9AKE4wUHXHugyROGwNEIhjR9JMrI=
+	t=1785415302; cv=none; b=hjtGsbXBstXXTdBbuE2wx5XfTVgk2wCAuvKxG+lB2kKOZu1fVZL7T391cw3Wlmbyit59rfWbYhU/78OPb2uR4iCsVHekvefsnsW7CxB6T56h+ZfHjJ9FChCfhA4I8N9+hYVCBuzDYyYl4iaBgbFvesXVaNjX9cyCxjEkHtrD83Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785414045; c=relaxed/simple;
-	bh=CczHqBSWvCR48VjEoucBf7cxlmwHOk7gS3EL/hrwV4s=;
-	h=Content-Type:References:Cc:Date:In-Reply-To:To:Message-Id:
-	 Mime-Version:From:Subject; b=p+HPiMppfhDlcYsqGImFeyQKrerKIKk/8UhI2gQOvhklnDJWBrvcHcxDc55JdF7r2nx3+heZ0kKtHvkfBeOrB9texEvPK2XiOSDgpvLF+TXx/o2hQhOigAHIJvLi+pXgWaG5FbXzoidbtJzYDiYzHLQkwNhEeYtu7cYj1lTMAmU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=bPIIl1nS; arc=none smtp.client-ip=209.127.231.56
+	s=arc-20240116; t=1785415302; c=relaxed/simple;
+	bh=7FKAud3RJkS0WUSbn56LdaDVHDmQ9sqTrG8i3zJGSx0=;
+	h=Date:References:Message-Id:In-Reply-To:Subject:Content-Type:To:
+	 From:Mime-Version; b=VQk5Atup2WRJikNnd+C0/oKGMstaLqwHIz4IbPb9LfRshQ1445V/IcaHnlef0AyIhiG6SCzRsLHbHWjbKs3tLhwxolOaVtmxxg74YIs26BTb0hAueW3NoqM0swxKRj0ZnQUhhyaxnCmnuMzxzckmUDRfiKP9lErcaI/w1gu3Lt8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=Wtn4Jc1o; arc=none smtp.client-ip=209.127.231.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="bPIIl1nS"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="Wtn4Jc1o"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785414034;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785415287;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=jVFhC04+PYaAOg019N78blM/0FBci74mePMC6XgpXGk=;
- b=bPIIl1nSNrTmuwEXZ5qIoZVFhAwFCaW+I/1pWtTJJSdhcEPbXp3J37nD0vQlWhf6LjLLXE
- YuOOPuTmGqctkaHujOuUrICME1zR25tLSldTBr7c0wLimnuH9ApVE8q6QnbhoJdffp2uJq
- KEOnzUSkEVWg5Zi7jAHqiSwKJw2h4xpmr8loeGB1DCL9PUurzXQxZN0Iz1gz8d7qXuZRev
- BlDaW8UefcwqDhJMDIE1QpB0aiWxt/GWv0dkDEMyu3wmrEza42OpTKWWojt9+Slx2wTpxU
- 78ZvJ2sJvNPe35peQjoYar7FBTKfR6P8MgxIzDjPsSns3y8X7w/SO6MQSKjfuA==
-Reply-To: yukuai@fygo.io
+ bh=0D/sfNQQZ3XP8CzRqls+X0+1/mjRctG/tGZ5+xQohlg=;
+ b=Wtn4Jc1oplkhlEKsZUbr/WvxksPbNUAvNg86uOsnPMnE0ryyFzGNhrZtaHc1KOnQli343g
+ 2SM+aTF8hBuXX7qyi2wAtsxpgQh0WFY329/kuuo7L3mo0Aio/Wg1BHQgxVcDdtVRh0d1bc
+ a/i0plR0BPapYFlIn1Unv3Zc1X75RCP13j9hWX+dB5KNTTnU7R35kou2rH8K+fv2WnbQQT
+ 6h3zDrRvBex+chVOjdj4JFiJfuG3lq9RiE3Od8Jg8vPUCFE9XS5Zin775UguEMJPmH8pK9
+ sL4tKkbe8zJ1kIMfd5oQrYLl0aHpUhx6/lIADiGKvf/GOgf5SjloHpp9P4p9SA==
+Date: Thu, 30 Jul 2026 20:41:22 +0800
 Content-Transfer-Encoding: quoted-printable
-X-Lms-Return-Path: <lba+26a6b4191+160127+vger.kernel.org+yukuai@fygo.io>
+References: <20260628142737.1051059-1-abd.masalkhi@gmail.com> <07b0887a-e546-4d2f-b261-1fe7adb1d6e0@fygo.io> <86d67b99-0bb5-4132-b412-9bb68ee4ca8c@kernel.dk>
+Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Thu, 30 Jul 2026 12:41:26 +0000
+Reply-To: yukuai@fygo.io
+Message-Id: <4969f54a-7d45-41a7-b397-346b748ed9ee@fygo.io>
+In-Reply-To: <86d67b99-0bb5-4132-b412-9bb68ee4ca8c@kernel.dk>
+X-Original-From: yu kuai <yukuai@fygo.io>
+Subject: Re: [PATCH] md: remove REQ_NOWAIT support
 Content-Type: text/plain; charset=UTF-8
-References: <20260708112003.474537-1-abd.masalkhi@gmail.com>
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"sashiko-bot" <sashiko-bot@kernel.org>
-Date: Thu, 30 Jul 2026 20:20:28 +0800
-In-Reply-To: <20260708112003.474537-1-abd.masalkhi@gmail.com>
-To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, <song@kernel.org>, 
+To: "Jens Axboe" <axboe@kernel.dk>, 
+	"Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, <song@kernel.org>, 
 	<magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<abd.masalkhi@gatech.edu>, "yu kuai" <yukuai@fygo.io>
-Message-Id: <1d70cf5b-7519-4c95-b23a-0bdbe792268f@fygo.io>
+	<vverma@digitalocean.com>, <linux-raid@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, "yu kuai" <yukuai@fygo.io>
+From: "yu kuai" <yukuai@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Original-From: yu kuai <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH v2] md: recheck spare changes before starting sync
 User-Agent: Mozilla Thunderbird
-Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Thu, 30 Jul 2026 12:20:32 +0000
+X-Lms-Return-Path: <lba+26a6b4676+bf17d8+vger.kernel.org+yukuai@fygo.io>
 
-=E5=9C=A8 2026/7/8 19:20, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
+Hi,
 
-> remove_spares() and remove_and_add_spares() modify the array's rdev
-> configuration. These operations are only safe after the array has been
-> suspended.
->
-> md_start_sync() checks whether spare configuration changes are needed
-> before taking reconfig_mutex. However, the rdev state can change before
-> the mutex is acquired, so the initial check can become stale. In that
-> case, md_choose_sync_action() may remove or replace rdevs while normal
-> I/O is still accessing them.
->
-> The race can occur as follows:
->
-> raid10d          Worker                      Normal IO
-> ____________     _______________________     ______________________
->
->                                               raid10_write_request()
->                                               wait_blocked_dev()
-> set Blocked
-> set Faulty
->                                               Skip Faulty rdev
->                                               rrdev->nr_pending++
->                                               .repl_bio =3D bio
->                   removeable_rdev =3D false     .
->                   array not suspended         .
-> lock mddev                                   goto err_handle
->                   lock mddev (wait)
->                   .
-> update sb        .
-> clear Blocked    .
->                   .
-> unlock mddev     .
->                   lock mddev (acquires)
->                   remove_spares()
->                   removeable_rdev =3D true
->
->                   raid10_remove_disk()
->                   rdev =3D replacement
->                   replacement =3D NULL
->                                               rdev_dec_pending(NULL)
->                   unlock mddev                (NULL)->nr_pending--
->
-> In this case, rdev_dec_pending() is called with a NULL pointer,
-> resulting in a NULL pointer dereference when attempting to decrement
-> nr_pending.
->
-> Fix this by suspending the array when spare configuration changes are
-> needed, including for non-read-write arrays, and checking again after
-> taking reconfig_mutex. If the array was not already suspended and a
-> change is now needed, release the mutex, suspend the array, and
-> reacquire the mutex before continuing.
->
-> Fixes: bc08041b32ab ("md: suspend array in md_start_sync() if array need =
-reconfiguration")
-> Reported-by: sashiko-bot<sashiko-bot@kernel.org>
-> Closes:https://sashiko.dev/#/patchset/20260628142420.1051027-1-abd.masalk=
-hi@gmail.com?part=3D3
-> Signed-off-by: Abd-Alrhman Masalkhi<abd.masalkhi@gmail.com>
-> ---
-> Changes in v2:
->   - Recheck whether spare configuration changes are needed after taking
->     reconfig_mutex, and suspend the array before continuing if necessary.
->   - Account for read only arrays, where reshape_position may not be
->     MaxSector even though md_start_sync() can still modify the spare
->     configuration.
->   - Link to v1:https://lore.kernel.org/linux-raid/20260630075640.1081634-=
-1-abd.masalkhi@gmail.com/
-> ---
->   drivers/md/md.c | 14 +++++++++++++-
->   1 file changed, 13 insertions(+), 1 deletion(-)
-Applied to md-7.3
+=E5=9C=A8 2026/7/30 19:07, Jens Axboe =E5=86=99=E9=81=93:
+> On 7/30/26 4:50 AM, yu kuai wrote:
+>> Hi,
+>>
+>> ? 2026/6/28 22:27, Abd-Alrhman Masalkhi ??:
+>>> REQ_NOWAIT support in md is fundamentally incomplete. While reads can
+>>> avoid some blocking paths, write requests can still encounter cases
+>>> where one mirror succeeds while another returns -EAGAIN. At that point
+>>> md cannot distinguish queue pressure from a real device failure, so it
+>>> can neither record a bad block nor safely retry the write without
+>>> REQ_NOWAIT, leaving mirrors with divergent data.
+>>>
+>>> Rather than continue advertising REQ_NOWAIT support that cannot be
+>>> implemented correctly, remove it from md and its raid personalities.
+>>> This simplifies the waiting paths and avoids exposing incorrect
+>>> non-blocking semantics.
+>>>
+>>> Fixes: bf2c411bb1cf ("md: raid456 add nowait support")
+>>> Fixes: c9aa889b035f ("md: raid10 add nowait support")
+>>> Fixes: 5aa705039c4f ("md: raid1 add nowait support")
+>>> Fixes: f51d46d0e7cb ("md: add support for REQ_NOWAIT")
+>>> Suggested-by: Yu Kuai<yukuai@fygo.io>
+>>> Signed-off-by: Abd-Alrhman Masalkhi<abd.masalkhi@gmail.com>
+>>> ---
+>>>    drivers/md/md-bitmap.c   |  9 +---
+>>>    drivers/md/md-bitmap.h   |  2 +-
+>>>    drivers/md/md-llbitmap.c | 10 +----
+>>>    drivers/md/md.c          | 15 ++-----
+>>>    drivers/md/raid1-10.c    |  8 ++--
+>>>    drivers/md/raid1.c       | 91 +++++++++-----------------------------=
+--
+>>>    drivers/md/raid10.c      | 80 +++++++++--------------------------
+>>>    drivers/md/raid5.c       | 13 ------
+>>>    8 files changed, 51 insertions(+), 177 deletions(-)
+>> Applied to md-7.3 with a few changes, please check:
+>>
+>> md: remove REQ_NOWAIT support from raid1/10/456 -
+>> kernel/git/mdraid/linux.git - song's fork of linux.git <https://git.kern=
+el.org/pub/scm/linux/kernel/git/mdraid/linux.git/commit/?h=3Dmd-7.3&id=3D3f=
+e5b7c9fb72ccc29bfd0f955b124892af7e3674>
+>>
+>> - rebase raid1/raid10 with latest code;
+>> - keep nowait for raid0/linear;
+>> - keep nowait for md_handle_request, as raid0/linear will need it;
+> What's the plan for making REQ_NOWAIT _actually_ work with md? Just
+> yanking it wholesale is a massive performance problem, and it will
+> regress workloads. Has any time been spent on making this more solid?
 
+For raid1/10/56, if anyone is still using nowait they should stop, because =
+there is
+risk of data lost or wrong data being read.
+
+And yes, I tried, but I can't figure out a solid solution for the case that=
+, if nowait
+IO issue to one disk succeed while another disk failed. We can't either iss=
+ue again without
+nowait from mdraid because it's against nowait principle, or record badbloc=
+ks (which is
+currently what mdraid did) because data can be lost. Hence, the array will =
+have to do additional
+data synchronization in this case, while nowait issue failure is not a slow=
+ path that performance
+overhead can be ignored.
+
+>
 --=20
 Thanks,
 Kuai
