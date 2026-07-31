@@ -1,98 +1,72 @@
-Received: from va-2-59.ptr.blmpb.com (va-2-59.ptr.blmpb.com [209.127.231.59])
+Received: from va-2-18.ptr.blmpb.com (va-2-18.ptr.blmpb.com [209.127.231.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE21433ADBA
-	for <linux-raid@vger.kernel.org>; Fri, 31 Jul 2026 05:17:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.59
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC4C7342515
+	for <linux-raid@vger.kernel.org>; Fri, 31 Jul 2026 05:18:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785475065; cv=none; b=u9gyTQCykJbm9N+dOKzUg9zPSBVUvJ0CLd5oZTwmztGpKxrEyPbvH4f5AeX95mq7i9eaVl+AAPYey7tL5tDGtbvhtWA0EnS7TvPexUR6hZxDxZRFCtC8DAinafEEKxiBc6hV3a7PUEzTBzdSaQdcmLEsGl+5cFrZoacfhXBHlm4=
+	t=1785475107; cv=none; b=LCouwzu5KGcIX3ITYrooXLn5PW0zW1Ze4opLrNAGpdkCDyvsqHvMcekkt0Lw8DwTKZEUY4ZViz2ntqVLd2PWfefJthDnyaV/pV5kSMAICffdAVE2zDDSniW0DAfS3rrqrHxRa28lqnpvOiiSJsZR/EcCSWyTVDW5DClousyo1x0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785475065; c=relaxed/simple;
-	bh=B5xwd5vUits8UxtPLBkmFGlH6dLtLt+NkWXu6gt4v7I=;
-	h=Date:Message-Id:Content-Type:In-Reply-To:To:Cc:Mime-Version:
-	 Subject:References:From; b=G+vWYhra+wEEN292EI2ztL7o0doEymTUIoncSrKoOCXvF5NxR1GVdTWGQKE1VEiewQqeBv/TQS2ar4fP4GabcqaFIdvOwqLioBzAgpBLlGdasdiRm9tZOM6Vl/P+41MHoTiNWLm2jJpbfT4PfcEZY892SPCoh17oPHovIprK03c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=UKfOVu5x; arc=none smtp.client-ip=209.127.231.59
+	s=arc-20240116; t=1785475107; c=relaxed/simple;
+	bh=QoL3hCfDA/YMdXcLQEIjLzdML/jMPfNmZKX8GoLCKGQ=;
+	h=From:Content-Type:In-Reply-To:To:Date:Message-Id:Mime-Version:Cc:
+	 Subject:References; b=r2gIdLuBm0olp5a0451kEnTXEOgU2p9M4LG0JlvrE3pX4uLRG/ymNsz+QpGPVq8LfpTsSyfvFLp9nsyZJ+UKgA41G+g8ElkrHXz/thj1JM4U7udb/AB8SBf+kPKzqtRm8wez7RmXLmwHw6I2XOEq7ugJQ3BYhZv61WjWswlLsr8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=RnfLewom; arc=none smtp.client-ip=209.127.231.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="UKfOVu5x"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="RnfLewom"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785475051;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785475089;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=Ryo0md/wQS/OdYrZ2bBr+Ti0pzM3gk9wRU62+yCcmIc=;
- b=UKfOVu5x9QK/1TekpAHZamAJowKCK4Ujp2H4MDHIQ6wc+0D0JCUS4umTK+vUp1paHq6aYF
- 5vRdZXJrpxRxgx3r8/tFJZWhfNIMUOzdahU5RnHjQxgIzNiTjnl0JzcHCCO5ufLroRdJkx
- YSN0jpmmTgO3EH4jMKYB6LVZswWMl6pXXzxRUjDEyXmZSaAayj2PPsHrk3VK/kH/iHY6wt
- Wd9CCbKXxI/fJiheBh2o8r6rYcwZDK7rVn9FpI8kNMSfnXeEhj1ISBMYoTo63aBZtkCgZ2
- BdI5HBX/a9eIcG6yiNVyZmk0aCdc3PXRAQwro5pA50fnaBUitPvxAc2eVp6wNg==
-Date: Fri, 31 Jul 2026 13:17:25 +0800
-Message-Id: <af85e490-8332-423c-a333-06eb532dd672@fygo.io>
+ bh=1gySXOeuiUNYTBd8Cs/vwcOoG/opGCLm1YSC4gEPkYk=;
+ b=RnfLewomVyCIy0qs0A2v+I5S/s7D5EzHRHt/Rz9P08YDcRL2YFEV8zast54Es0SPezKsK9
+ M7Qsj4VCOB9s0Jt9cq2euuUohdX/s3CCcvd582YOwTR0v8WFpLzwQUEGrrFEfbSm/xsuRP
+ xhLAdyaKp+s0yQd7Nr+Wjd4AX3W7NyFQHYyJHmNpdojKWG2wJOVaxHG1s+vPJcUvpZqnxV
+ B1+o8+BVDNhkf50hCc0N4clm0pJrUOIl+faUw1ukA9hfvNdmFm8/zRfZxBT0GSVnH3s+RG
+ 7I+j+Jw4cTGwctz7IpiTQ9F+Apmvt4Wbak6pF4t1XqwCHyuE1bcm+o4c0HYN3Q==
+From: "yu kuai" <yukuai@fygo.io>
 Content-Type: text/plain; charset=UTF-8
-In-Reply-To: <20260711161326.962336-1-zhanggenjian@126.com>
-To: "Genjian" <zhanggenjian@126.com>, <song@kernel.org>, 
-	<magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"Genjian Zhang" <zhanggenjian@kylinos.cn>
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20260718034236.4119093-1-chencheng@fnnas.com>
+User-Agent: Mozilla Thunderbird
+X-Lms-Return-Path: <lba+26a6c3011+670f8d+vger.kernel.org+yukuai@fygo.io>
 Reply-To: yukuai@fygo.io
+To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+Date: Fri, 31 Jul 2026 13:18:05 +0800
+Message-Id: <0558f53e-270f-44b1-a952-a6135b480f00@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 X-Original-From: yu kuai <yukuai@fygo.io>
-Subject: Re: [PATCH] md/raid5: complete discard bios while reshape is active
-User-Agent: Mozilla Thunderbird
-X-Lms-Return-Path: <lba+26a6c2fea+9d2221+vger.kernel.org+yukuai@fygo.io>
-References: <20260711161326.962336-1-zhanggenjian@126.com>
-Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Fri, 31 Jul 2026 05:17:29 +0000
-From: "yu kuai" <yukuai@fygo.io>
+Cc: <chencheng@fygo.io>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] md/bitmap: resume array on backlog_store() error path
+Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Fri, 31 Jul 2026 05:18:08 +0000
+References: <20260718034236.4119093-1-chencheng@fnnas.com>
 
-=E5=9C=A8 2026/7/12 0:13, Genjian =E5=86=99=E9=81=93:
+=E5=9C=A8 2026/7/18 11:42, Chen Cheng =E5=86=99=E9=81=93:
 
-> From: Genjian Zhang <zhanggenjian@kylinos.cn>
+> From: Chen Cheng<chencheng@fnnas.com>
 >
-> make_discard_request() returns without completing the bio when reshape
-> is in progress. Discard callers block in submit_bio_wait()
-> waiting for a completion that never arrives.  The caller hangs in
-> uninterruptible sleep, and this does not resolve when reshape finishes.
+> backlog_store() suspends the array before checking whether a write-mostly
+> device exists. If no such device exists, the error path only unlocks
+> reconfig_mutex and leaves the array suspended, blocking subsequent I/O.
 >
-> Complete the bio with BLK_STS_AGAIN so userspace can retry after reshape,
-> consistent with the existing policy of not processing discard during
-> reshape.
+> Use mddev_unlock_and_resume() to release both states.
 >
-> Tested on a loop-backed RAID5 array during mdadm --grow: without this
-> patch, blkdiscard hangs in bio_await() and remains in uninterruptible
-> sleep after md reports "reshape done"; with this patch it returns
-> -EAGAIN instead.
+> Fixes: 58226942ad3d ("md: use new apis to suspend array before mddev_crea=
+te/destroy_serial_pool")
 >
-> Signed-off-by: Genjian Zhang <zhanggenjian@kylinos.cn>
+> Signed-off-by: Chen Cheng<chencheng@fnnas.com>
 > ---
->   drivers/md/raid5.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index ffb5fcde54a9..4c3b42b2af85 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -5722,9 +5722,11 @@ static void make_discard_request(struct mddev *mdd=
-ev, struct bio *bi)
->   	if (WARN_ON_ONCE(bi->bi_opf & REQ_NOWAIT))
->   		return;
->  =20
-> -	if (mddev->reshape_position !=3D MaxSector)
-> +	if (mddev->reshape_position !=3D MaxSector) {
->   		/* Skip discard while reshape is happening */
-> +		bio_endio_status(bi, BLK_STS_AGAIN);
->   		return;
-> +	}
-Rebase and applied to md-7.3
->  =20
->   	if (!raid5_discard_limits(mddev, bi))
->   		return;
+>   drivers/md/md-bitmap.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+Applied to md-7.3
 
 --=20
 Thanks,
