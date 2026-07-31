@@ -1,110 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-58.ptr.blmpb.com (va-2-58.ptr.blmpb.com [209.127.231.58])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 447612BE630;
-	Thu, 30 Jul 2026 23:47:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77B20258EFF
+	for <linux-raid@vger.kernel.org>; Fri, 31 Jul 2026 00:35:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.58
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785455265; cv=none; b=Il1qSiKHP7bNNLbunPBMkWeIbrg1S/s4fficnCExDA58n0WZK+U0DDUHzdN3k8BRIT+X6g6IQs9OQ2Wko6dJ787yqxFFGL3V8jd9+Jb7no2Ivem+oWFhHrsqB4wrYEUEWU4CryfHXiVaPkZUhSVNThniZXZAa3P5WcDSp2XYtiY=
+	t=1785458158; cv=none; b=eEKc+qMAvUJYpDHgTO1VkxSlgCLlGClEU9LDzylgKkp1pY+usG21rlpFrbzuyMZStqMqagMFM09OmQDYwTLyl5wQK15mdhw796hNOKLo+33VVTgnRwMfnLb90Bo8xTaB06xey/3qA7bOSHZW6PZOEccHSyIsLOrgSbLyD2AnNg0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785455265; c=relaxed/simple;
-	bh=gihVaoDGpHN2F7D82bkgGqPlZ5S7QS7QLifAONKyodo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=d9iz0i0Fg4XqkLfyrnkUVAzb4lc3vzQa0tXlpX4/hW0j6kpHKPKxJ1upIPbkatbCsYjCY7p4ef7C6f+fnHIB3/ODKmJyDK32+Q56b73TcAUb1DsCv3HIk4m+UjAYxKOi3ZEIGFgjvJRaLaRCk0YFEdehAgFN03XI3cBWjT21ZzY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j5x42nHU; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785458158; c=relaxed/simple;
+	bh=IvQHO0zxrD1oRHxpyKnG9V+Ty5tK2qINhYyB5AXcpZE=;
+	h=Date:References:To:Message-Id:In-Reply-To:Content-Type:Cc:From:
+	 Subject:Mime-Version; b=EWCsIzaCpNHdxqDbuJpujQvIYn+l0S9VYTb7R8MDEO41J/EC6nOY+N2IeUGYEDvWqU+54uAoiOTnqRUE7IQUWhITGvyJJp7OANCHx/0g52I862ahae+a6Pp+3XatcxjANKef208H+gTQeX6pezaIaK+/ZtqREv7pyCV2HMG5nyg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=IU2A41V6; arc=none smtp.client-ip=209.127.231.58
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j5x42nHU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9642F1F000E9;
-	Thu, 30 Jul 2026 23:47:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785455263;
-	bh=xrsrA5hdxEbnY/PY6miFkgtDkZsZTMS1qxp1CY3BX8g=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=j5x42nHUUyiMogr8sLB2u9ZNYiotqMJ+M3F/nZEy8Xq2PuolTkw3FqmAvzLkIxJVd
-	 lHg3hw9tOoNVWCNgLSCz6FLZaAwail6I4WikbcqJFnxZ4zi8alu6gUJCfh/U2AK92b
-	 7GPnlHQM6AAciDE048HukSJnVKuV6DkRPmSHezpSEPV+OYeVfY6tel24cuf7y563+6
-	 3ZO9ANYnDMJGCqYzy9T3dNq8AiMco2GwKmwDYcakuMUzZq5KMwk0neRO5nRipzyq7+
-	 v6pFZunylM1y7cJWZtm9oGLVj+tyAjOSnldR5gcaLMEi0reFh+v7VYRyi4j+jW8BGW
-	 9WxnWPId8u6dQ==
-Date: Thu, 30 Jul 2026 23:47:42 +0000
-From: Eric Biggers <ebiggers@kernel.org>
-To: Borislav Petkov <bp@alien8.de>
-Cc: x86@kernel.org, linux-um@lists.infradead.org,
-	linux-raid@vger.kernel.org, linux-crypto@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v2 4/8] lib/crypto: x86: Stop using cpu_has_xfeatures()
-Message-ID: <20260730234742.GB2459987@google.com>
-References: <20260728021603.79870-1-ebiggers@kernel.org>
- <20260728021603.79870-5-ebiggers@kernel.org>
- <20260730231944.GLamvcEBNkNIXjQt26@fat_crate.local>
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="IU2A41V6"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785458147;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=qWwwrs460SZmSdE4nd94jK4w5WoqeNyfvIflzlgT+d4=;
+ b=IU2A41V6W/L+n/NzuiZPhU76htvxN4DbOxH7y0koCi3YS36JtveTVghhQDv9jJwEUAzKjC
+ k04AFNX7fkDGPp2zOZ2pUqkgW9YUY922yRV3nlbkokoL3vJKfbPi9wuFXGUoFdjgjoq7ki
+ i8zDLxQOaW20EB/tzzJR17tiy9C0gpoJhh+GLE23IpHRNtd5JBFiwWlc3lhiD+eWSDBI+P
+ DPRpkv8QeyHOfCfTThuWukLvhtJA8KXiPYkBEDW+U9UhBlZqYsR8OA9kokHX2yk7dHkkDk
+ LilHboGiEfJA327WtxO6cF11xZK1rB61hhBa1yLMDlzf2D242s1ImLMcinP4Rg==
+Date: Fri, 31 Jul 2026 08:35:42 +0800
+X-Original-From: yu kuai <yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Fri, 31 Jul 2026 00:35:46 +0000
+References: <20260710101521.1714-1-abd.masalkhi@gmail.com>
+To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, <song@kernel.org>, 
+	<magiclinan@didiglobal.com>, <xiao@kernel.org>, <axboe@kernel.dk>, 
+	<vverma@digitalocean.com>, <john.g.garry@oracle.com>, 
+	<martin.petersen@oracle.com>, <linux-kernel@vger.kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <41ecd70b-14af-4747-b24f-7cf9b9aa3e75@fygo.io>
+User-Agent: Mozilla Thunderbird
+In-Reply-To: <20260710101521.1714-1-abd.masalkhi@gmail.com>
+X-Lms-Return-Path: <lba+26a6bede3+f25b48+vger.kernel.org+yukuai@fygo.io>
+Content-Type: text/plain; charset=UTF-8
+Reply-To: yukuai@fygo.io
+Cc: <linux-raid@vger.kernel.org>
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH v4 0/7] md/raid10: fixes, atomic write handling, and error-path cleanup
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260730231944.GLamvcEBNkNIXjQt26@fat_crate.local>
+Mime-Version: 1.0
 
-On Thu, Jul 30, 2026 at 04:19:44PM -0700, Borislav Petkov wrote:
-> On Mon, Jul 27, 2026 at 07:15:59PM -0700, Eric Biggers wrote:
-> > Checking both boot_cpu_has() and cpu_has_xfeatures() has never really
-> > been needed in practice, and it's never been universally done (e.g.,
-> > lib/raid/ omits cpu_has_xfeatures()).  Nevertheless, both x86 and UML
-> > now explicitly clear the AVX and AVX-512 flags if their xfeatures are
-> > missing, which should remove any remaining doubts.
-> > 
-> > Thus, remove all the calls to cpu_has_xfeatures().
-> > 
-> > Signed-off-by: Eric Biggers <ebiggers@kernel.org>
-> > ---
-> >  lib/crypto/x86/blake2s.h  | 4 +---
-> >  lib/crypto/x86/chacha.h   | 3 +--
-> >  lib/crypto/x86/nh.h       | 4 +---
-> >  lib/crypto/x86/poly1305.h | 7 ++-----
-> >  lib/crypto/x86/sha1.h     | 4 +---
-> >  lib/crypto/x86/sha256.h   | 4 +---
-> >  lib/crypto/x86/sha512.h   | 3 +--
-> >  lib/crypto/x86/sm3.h      | 3 +--
-> >  8 files changed, 9 insertions(+), 23 deletions(-)
-> > 
-> > diff --git a/lib/crypto/x86/blake2s.h b/lib/crypto/x86/blake2s.h
-> > index f8eed6cb042e4..0f7c51f055c8f 100644
-> > --- a/lib/crypto/x86/blake2s.h
-> > +++ b/lib/crypto/x86/blake2s.h
-> > @@ -55,8 +55,6 @@ static void blake2s_mod_init_arch(void)
-> >  	if (boot_cpu_has(X86_FEATURE_AVX) &&
-> >  	    boot_cpu_has(X86_FEATURE_AVX2) &&
-> >  	    boot_cpu_has(X86_FEATURE_AVX512F) &&
-> > -	    boot_cpu_has(X86_FEATURE_AVX512VL) &&
-> > -	    cpu_has_xfeatures(XFEATURE_MASK_SSE | XFEATURE_MASK_YMM |
-> > -			      XFEATURE_MASK_AVX512, NULL))
-> > +	    boot_cpu_has(X86_FEATURE_AVX512VL))
-> >  		static_branch_enable(&blake2s_use_avx512);
-> >  }
-> 
-> You could add a patch at the end or I can do it which does
-> 
-> 	s/boot_cpu_has/cpu_feature_enabled/
-> 
-> as latter is the interface we use now everywhere.
-> 
-> But yeah, it should be a separate patch.
+Hi,
 
-cpu_feature_enabled() turns into an alternative (code patching), which
-doesn't make much sense in any of the places you're asking for it to be
-used, as they just check the features once at module init time to toggle
-static keys.
+=E5=9C=A8 2026/7/10 18:15, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
+> Hi,
+>
+> This v4 of series contains a mix of bug fixes and cleanups for RAID10,
+> along with a related atomic write fix for RAID1.
+>
+> Changes in v4:
+>   - Improve the commit message of patch 2.
+>   - Add Reviewed-by tag from John Garry to patch 2.
+>   - Link to v3: https://lore.kernel.org/linux-raid/20260708101341.473750-=
+1-abd.masalkhi@gmail.com/
+>
+> Changes in v3:
+>   - Set chunk_sectors to BARRIER_UNIT_SECTOR_SIZE instead of setting
+>     atomic_write_hw_unit_max.
+>   - Avoid enabling write-behind when the atomic write exceeds the
+>     write-behind limit.
+>   - Link to v2: https://lore.kernel.org/linux-raid/20260628142420.1051027=
+-1-abd.masalkhi@gmail.com/
+>
+> Changes in v2:
+>   - Expand the commit message to explain why the
+>     allow_barrier()/wait_barrier() pair is no longer needed.
+>   - Drop the early atomic write split check from raid1_write_request().
+>   - Advertise the atomic write size limit via queue limits.
+>   - Disable write-behind instead of failing atomic writes when the
+>     BIO_MAX_VECS limit is encountered.
+>   - Drop the early atomic write split check from raid10_write_request()
+>     and rely on queue limits instead.
+>   - Fix a compilation error (bi -> bio).
+>   - Link to v1: https://lore.kernel.org/linux-raid/20260623072456.333437-=
+1-abd.masalkhi@gmail.com/
+>
+> Thanks,
+> Abd-alrhman,
+>
+> Abd-Alrhman Masalkhi (7):
+>    md/raid10: fix r10bio leak in raid10_write_request() error paths
+>    md/raid1: restrict atomic write limits and handle runtime constraints
+>    md/raid10: consistently fail atomic writes that require splitting
+>    md/raid10: remove unnecessary barrier around bio_submit_split_bioset()
+>    md/raid10: replace wait loop with wait_event_idle()
+>    md/raid10: simplify write request error handling
+>    md/raid10: simplify read request error handling
 
-I suppose that the static keys that are conditional on only one CPU
-feature can be replaced with cpu_feature_enabled(), which should be
-equally efficient.  However, many of the keys are conditional on two or
-more features.
+Applied patch 2,3,4 to md-7.3
 
-After that, there would be a mix of both versions.  So sure, it could
-make sense to use cpu_feature_enabled() everywhere anyway, even when not
-helpful.  I'm not sure it's clearly better than the status quo, though.
+Both patch 1 and patch 5 is not needed after your nowait patch.
 
-- Eric
+>
+>   drivers/md/raid1.c  |  25 ++++------
+>   drivers/md/raid10.c | 118 +++++++++++++++++++++-----------------------
+>   2 files changed, 65 insertions(+), 78 deletions(-)
+>
+--=20
+Thanks,
+Kuai
