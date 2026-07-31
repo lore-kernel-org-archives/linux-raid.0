@@ -1,180 +1,107 @@
-Received: from va-2-46.ptr.blmpb.com (va-2-46.ptr.blmpb.com [209.127.231.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E9D52857F0
-	for <linux-raid@vger.kernel.org>; Fri, 31 Jul 2026 00:41:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F6B833F8C5;
+	Fri, 31 Jul 2026 04:26:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785458466; cv=none; b=B2Gq1h0nMemF6NQTEOvLQUcYwRefq0yvFOtjLjoNZW4vB7kEWbLaFRVU0y0OavpvFmKP9v5SPQ2ByLjrBNqyhhqB4oI4rFdRshwc5aMkeYEQ+qE5IeOSclXSGqcaQ+mB6DtoyYU3Z/uTDuNA1Gvf+MXbT54X+swWlZYZf8Cy/Sg=
+	t=1785471991; cv=none; b=NrCVv0l4nAtxbjvkEkDmEe/6wx0buy0OBmkL1cTUtNVrPirRzrp6j6FMhjge/THTQI0JovM/4Sq3VmBds4hIGaHSOAp3PCsd1YD36Vx3XnyUe6UpyBk5BNsG/UM1UpJOEaMzT5HSiWc13/6Dxuukkhvbf0hYgQrozSPNs4DWeWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785458466; c=relaxed/simple;
-	bh=IJcCuB+kPI+85uX7HDxfhLf4MiBlNxjNar4yMdXFCEw=;
-	h=Subject:Date:Mime-Version:In-Reply-To:Cc:References:To:From:
-	 Message-Id:Content-Type; b=azNDR4cO7xKY0FqRhccBLN0/GzX1V0+fHaLauLFv08DmvM+MiCEr540wxsYyS+639uqOEcr3BQKB7T/JNlDe9MKj6cESEGSiYC8YTBr0tX79uzTRAAFkbTuT2Gm4nFuWMF4xD5WZUQhCM4GmTU8r/2lYGjmgI9SaEh+z9ZoPFNE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=ew4sC/yQ; arc=none smtp.client-ip=209.127.231.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1785471991; c=relaxed/simple;
+	bh=LWl8xlltwzBnVeK4CEYmmnSvACJxmm/ci41vxADGKRw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gDJGjlamD98QOOgo1ScNZ2y084vOHW+u+JdJeAF8hJ9QGuIoPr4c0Do51KEhJ0+TwWoDVlGBu1Bj2wjo47fxPTBJDGS5nGvRpseZCj3/HkV6QJ5SzI/CwTfgCjYYdIPGGnMgc4v5RS7kdIls5R9Pxe84zB64Ch4XOi4ZhEueT7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=YdHAlaXk; arc=none smtp.client-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="ew4sC/yQ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1785458450;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=woCNJXchD5lcjUAfm3SjoY2VX6y+TtTwfCtdAOi/Yq8=;
- b=ew4sC/yQ84+Xh+Ree/fG1URptATSav4N+qiUUhW9nktW5JEcRvdYcI+MVBJhmeujeXyPVD
- 63MOFnvVUwQ4wxYMZObb3TFUBp4abk/QRjuGEiXuq/OWh6wVTv/55mJ1s5UHRF+KbV9ooW
- orVMTwWVIO/Su7RKxlt47CGlET9F6ZHk9sgEL08ULPSuIQj4+da3x5ykg+Fpwkg7PJgU0I
- bVsP+lG3zMd6KyeARmGEE/0swglRrLgBC80cO05ESUT6TdCeTzT0zoa+rlTjpIC1j+MSwO
- Y2k9+vWo1vVPDtORq/pwp5io7uzx4J9AUC/yZyjg40wOzKB3jwPq7HNdEFfRKg==
-Received: from [192.168.1.104] ([39.182.0.181]) by smtp.larksuite.com with ESMTPS; Fri, 31 Jul 2026 00:40:49 +0000
-Subject: Re: [PATCH v6 0/3] md/raid10: fix r10bio width mismatches across reshape
-Date: Fri, 31 Jul 2026 08:40:46 +0800
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="YdHAlaXk"
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 4C4DA40E0140;
+	Fri, 31 Jul 2026 04:26:26 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id 5cb-p_dWtpMB; Fri, 31 Jul 2026 04:26:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1785471976; bh=hCLoVsnUPhjp19VpF9y6ZtQmmiA8lZG/ujd0igS9H+w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=YdHAlaXkCQVaaMMlwD7b8axkKFYAhg+v5bSykHNwltIobbg6PcfIKpkuQIp2OFLCb
+	 VVHyijh9l29mqNyB6IxxZb16T+UdsGePK85JElKnIz36b5JIL6fJjEhhTNWTYHDEG4
+	 6HQkXcdmGvRNtn81ETBxZ+qBN5wGR/y6yN08Tah4NifOeG6qDWZXcjOeenaZcGwldr
+	 JWvzJBwpSB9n5iWL9zgPto8uDo/EiJzRpUFudwUy4lp1wU1iZWaj7WoDOJ5KbmQ3kd
+	 9kr2VLBdtqGDlle2co6m36ZdkL8iJxjiw/uYN9UclRstRS8gSfvOKOo3e52NYADEwM
+	 tixI6veVVNMnpNyTROTf6ZDlNDO8/y6B38MUFKluV0KLt5G4jfJn7854TdOmiZ5SCC
+	 QDy4N7kxxzQBgvY3bGfMZVLfKp/NG4DE6XWrtAPK9kJNqHAbzNLyJnawtjzBCGIEX9
+	 s7j8DlaRHZmleuM3Gaclph6Apvu+abTitcfplCwF8AtQp52F5F+Qk9S6oW/zSETkJ9
+	 bjcw68/GfKGQINwv3w5REjW2vErdXqwto5j1mHGhqQIU5E3Bkt1YxbCuXYNsVC5Qf7
+	 uFcLmMoRH3k8ciwxP8ksG/C+5P+0kr0cGDdKSLotMVI6mlALWdS2Gct+B8jkgX1wux
+	 iUnFL+1SGcn4ITEWYEpTnqzk=
+Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::1b])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id C45E240E00B8;
+	Fri, 31 Jul 2026 04:26:07 +0000 (UTC)
+Date: Thu, 30 Jul 2026 21:26:03 -0700
+From: Borislav Petkov <bp@alien8.de>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: x86@kernel.org, linux-um@lists.infradead.org,
+	linux-raid@vger.kernel.org, linux-crypto@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v2 4/8] lib/crypto: x86: Stop using cpu_has_xfeatures()
+Message-ID: <20260731042603.GOamwj2xjDHtpFfL9u@fat_crate.local>
+References: <20260728021603.79870-1-ebiggers@kernel.org>
+ <20260728021603.79870-5-ebiggers@kernel.org>
+ <20260730231944.GLamvcEBNkNIXjQt26@fat_crate.local>
+ <20260730234742.GB2459987@google.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-In-Reply-To: <20260711100352.425177-1-chencheng@fnnas.com>
-Reply-To: yukuai@fygo.io
-Cc: <linux-kernel@vger.kernel.org>, "Mykola Marzhan" <mykola@meshstor.io>
-References: <20260711100352.425177-1-chencheng@fnnas.com>
-X-Original-From: yu kuai <yukuai@fygo.io>
-X-Lms-Return-Path: <lba+26a6bef12+b425e3+vger.kernel.org+yukuai@fygo.io>
-To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Message-Id: <9199e9d4-4023-46dc-8eda-431ce3307c88@fygo.io>
-Content-Type: text/plain; charset=UTF-8
-User-Agent: Mozilla Thunderbird
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260730234742.GB2459987@google.com>
 
-Hi,
+On Thu, Jul 30, 2026 at 11:47:42PM +0000, Eric Biggers wrote:
+> cpu_feature_enabled() turns into an alternative (code patching), which
+> doesn't make much sense in any of the places you're asking for it to be
+> used,
 
-=E5=9C=A8 2026/7/11 18:03, Chen Cheng =E5=86=99=E9=81=93:
-> From: Chen Cheng <chencheng@fnnas.com>
->
-> Hi,
->
-> This series fixes slab out-of-bounds accesses in raid10 when reshape chan=
-ges
-> the number of raid disks while regular I/O is still reusing r10bio object=
-s
-> allocated under the previous geometry.
->
-> The bug is reproducible with a simple 4-disk to 5-disk reshape under writ=
-e
-> load, for example:
->
->    mdadm -C /dev/md777 -l10 -n4 /dev/sda /dev/sdb /dev/sdc /dev/sdd
->    mkfs.ext4 /dev/md777
->    mount /dev/md777 /mnt/test
->    fsstress -d /mnt/test -n 24000 -p 8 -l 24 &
->    mdadm /dev/md777 --add /dev/sde
->    mdadm --grow /dev/md777 --raid-devices=3D5 \
->      --backup-file=3D/tmp/md-reshape-backup
->
->
-> KASAN report:
->
->    BUG: KASAN: slab-out-of-bounds in free_r10bio+0x1c4/0x260 [raid10]
->    Read of size 8 at addr ffff00008c2dfac8 by task ksoftirqd/0/15
->    free_r10bio
->    raid_end_bio_io
->    one_write_done
->    raid10_end_write_request
->
->
-> This series addresses the problem in three steps:
->
->    1. ensure the sync_action=3Dreshape caller suspends and locks before s=
-tart_reshape
->
->    2. resize r10bio_pool when reshape grows raid_disks
->
->    3. reorder the r10bio free flow before bio_endio in the regular and di=
-scard
->       completion paths
->
-> Changes in v7:
->     - patch #1, refactor out suspend from retry block
->     - patch #3, raid_end_bio_io() refactor to:
->          free(r10_bio) -> free(master_bio) -> allow_barrier
->
-> Changes in v6:
->     - suspend the array in action_store() after flush_work()
->     - free r10bio before ending the discard master bio
->
-> Changes in v5 (suggested by Yu Kuai):
->     - simplify patch 2
->     - switch patch 3 from bounding reused r10bio devs[] walks by used_nr_=
-devs
->       to reordering the free/endio flow
->
-> Changes in v4:
->     - make the sync_action=3Dreshape path invoke mddev_suspend_and_lock()=
- before
->       calling start_reshape()
->     - leave the md-cluster and dm-raid paths unchanged; they still reach
->       start_reshape() with the mddev locked but without suspend
->
-> Changes in v3:
->     - replace freeze_array()/unfreeze_array() in raid10_start_reshape() w=
-ith
->       mddev_suspend_and_lock_nointr()/mddev_unlock_and_resume(); freeze_a=
-rray()
->       can return while retry-list items still hold pool objects, while
->       mddev_suspend() provides the correct upper-layer quiesce interface
->
-> Changes in v2:
->    - add this cover letter
->    - convert r10bio_pool to a fixed-size kmalloc mempool
->    - rebuild r10bio_pool inside the freeze window before switching live r=
-eshape
->      geometry
->    - switch raid10_quiesce() to freeze_array()/unfreeze_array()
->
->
-> Testing:
->    - reproduced the original KASAN slab-out-of-bounds on 4-disk -> 5-disk
->      raid10 reshape with fsstress
->    - verified that this series fixes that reproducer
->    - exercised the 5-disk -> 4-disk reshape direction as well
->
-> Thanks,
-> Chen Cheng
->
->
->
-> Chen Cheng (3):
->    md: suspend array when sync_action=3Dreshape
->    md/raid10: resize r10bio_pool for reshape
->    md/raid10: free r10bio before ending master_bio in raid_end_bio_io()
->      and raid_end_discard_bio()
->
->   drivers/md/md.c     | 17 +++++++++----
->   drivers/md/raid10.c | 61 ++++++++++++++++++++++++++++++++-------------
->   drivers/md/raid10.h |  2 +-
->   3 files changed, 56 insertions(+), 24 deletions(-)
+It is the interface to use for checking X86_FEATURE flags. The fact that it
+alternative-patches doesn't really matter.
 
-Applied to md-7.3 with a few changes, please check the latest md-7.3 branch=
-:
+> I suppose that the static keys that are conditional on only one CPU
+> feature can be replaced with cpu_feature_enabled(), which should be
+> equally efficient.  However, many of the keys are conditional on two or
+> more features.
 
-   - Patch 2: removed the redundant if (new_pool) before mempool_destroy(ne=
-w_pool) to fix the
-     strict checkpatch warning.
+Yes, they all can be converted to cpu_feature_enabled(). Just forget the
+efficiency angle and think of this as us unifying the interfaces to a single
+one instead of the zoo we have right now.
 
-   - Patch 3: rewrote raid_end_bio_io() minimally so the existing R10BIO_* =
-bit-test lines stay in
-     place and checkpatch no longer flags CamelCase additions. This also pr=
-eserves setting
-     R10BIO_Returned in r10_bio->state before freeing.
+> After that, there would be a mix of both versions.  So sure, it could
+> make sense to use cpu_feature_enabled() everywhere anyway,
 
-   - Patch 3 commit message: corrected the listed final order to free_r10bi=
-o() -> bio_endio() ->
-     allow_barrier().
+Yap, that's the goal.
 
->
---=20
-Thanks,
-Kuai
+> I'm not sure it's clearly better than the status quo, though.
+
+Yes, it is. See above.
+
+Once everything is converted, there will be a single cpu_feature_enabled() and
+all users will not care whether to use boot_cpu_has(), this_cpu_has(),
+cpu_has(c, ...), static_cpu_has() and so on.
+
+Thx.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+https://people.kernel.org/tglx/notes-about-netiquette
