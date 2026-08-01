@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B29C3ABD98
-	for <linux-raid@vger.kernel.org>; Sat,  1 Aug 2026 17:59:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A56623009D6
+	for <linux-raid@vger.kernel.org>; Sat,  1 Aug 2026 17:59:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785607198; cv=none; b=Ke2poHs3GsUDrWeH0ks1ijJWJE3mniCgns+Syl3teKrlmyvsJMH3OttjiR7xK/BxrZcBIZ6VjPGdwE29b/Oob/4DafFlyARJmkZ7wyBE+Hgj9/FgoUkpui+W0yv0t8MJsdx6Oz0WaRdNw8ZgNt5QhuM9a0WRYHzToimtAeYF9yg=
+	t=1785607198; cv=none; b=EQ9AxjRzc1h1/dIeZa4gwJf9ZtdX0o59iHkBN7OvGfIRJpQLp1toHNHh+5Ot2IFSFnXvAEu5lfpkM0GfHpxexbhHtDZriflalVTLtedNR5SXYQph2ObZ2WlTDoXcqN/JW1SRAKvvV8liZ23w067jh6jBNN4SYhhEfJSmDl4edAI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785607198; c=relaxed/simple;
-	bh=O36a43gQXjm51t53qWjy5V2muu7DLBnc0l9OsFsGhKQ=;
+	bh=w65ezLNJES0eKHw01uJUF+EF+CBAYzwLncZ5m05zdNw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ikyuxphVoEOlelKO4H+h7VgtE3RNC+ppFNd5eQ8NwRx1ivkuikrrRvQEuZqoV3Jhj9O++p3Tx+ybE76QYSZ+QweT1EgpycHJ2Sd3iwQg2Kq00gCJM39by+/uG59nDID3ThGJbqHKyCbiiNIAq4IJi6sKTRipzMUzB1D/gEE3ua8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O6UHP1DI; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=LczR4Eb6Diig80a5U12eS2vZrs44QGroYc7Y+W9J3msfKhbY2Ok2CWcxuMA3s7R1Q48V87gH8dz8uRJnBT3Oo9dCTD4L2yd4nZvEXs0aqh3cXRwGWeIkeLW4Ef+0c6XxSZ14Ia4DyE1dUI38RaepQ3cZBCnCHbQFdllGZe7VWSw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WM86AE6g; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O6UHP1DI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CCED1F00AC4;
-	Sat,  1 Aug 2026 17:59:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WM86AE6g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 354321F00ACA;
+	Sat,  1 Aug 2026 17:59:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785607196;
-	bh=8htm6k2LSBsjWcsV/4XG/9QpSUhZ/ogM03aF33++VGw=;
+	s=k20260515; t=1785607197;
+	bh=FocEs9Gj3ojCqc0cu+Hs2JH2sk5PPlHtw/rAhHD9f7g=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=O6UHP1DIprWnfZFsBWDVtzvhNZmaNg0ylsYFypO7KcYSETGv3LMDkE8guK17L/zVD
-	 zfdSxj/St0IJIHVeLDJiRI5n0UceWYQTlXVz6dk5fLjrJyXjak3oGFTQNMZU3Bp1HM
-	 muwxyyEoBdvQGQ6xLnZDeVSOamB5mgmPRElF9Z+UanVApfc+gXJLSZ8XzgS4vQxBTp
-	 otcIzHMjJvLqZfcZczVQLo5HxbSb4iORqy7rUKerllpig0vDkoSnEKMFffdEohigQz
-	 YSllUSFNQNbZzTrXDylGjj6Pz5UottyAChr57PBWhqyybRIyuwBKnlp/lAvCsWOXRR
-	 qGJVvcrD0LB2A==
+	b=WM86AE6gtVOhwWWLA4c5zhIEa9R96JL0Kp0d7HtNWHSdcer5t3G1Mo4bAfU/W+i9K
+	 DikjdmMpTAxeoOHFi73APj6mdmuMsqQiFej+sk/z3xCGKwvSKlt5QwypmgJ1B8MLlY
+	 1Ry1rlprmck55kFozV1nxH6ukNdkq4oc7ORQbEf1iASYWMFAgnOGyVtaVOu7itsjNt
+	 aIcBvt5ICWPsIDJqXUyv0m3qLtEdbb5ChDBsQ7i+DKhQ1eXKNERwU+AhoW/yq2abSh
+	 QwJiJB6v0uhm6jh/cNvUjHiyk2l9lqASx5EOxlvgPGYFEdyTebGeAib1vUdxfxTG1j
+	 KOKXoDl3tpqbg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 13/25] md/md-llbitmap: finish reshape geometry
+Subject: Re: [PATCH v4 21/25] md/raid10: split reshape bios before bitmap
+ accounting
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260801172519.2982121-14-yukuai@kernel.org>
+In-Reply-To: <20260801172519.2982121-22-yukuai@kernel.org>
 References: <20260801172519.2982121-1-yukuai@kernel.org>
- <20260801172519.2982121-14-yukuai@kernel.org>
+ <20260801172519.2982121-22-yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Date: Sat, 01 Aug 2026 17:59:56 +0000
-Message-Id: <20260801175956.7CCED1F00AC4@smtp.kernel.org>
+Message-Id: <20260801175957.354321F00ACA@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -46,113 +47,90 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-New issues:
-- [High] The `llbitmap_reshape_finish` callback is dead code and misses API=
- integration, which would cause a sleep-in-atomic panic if properly integra=
-ted.
-
-Pre-existing issues:
-- [Critical] The pending timer can be re-armed during array teardown after =
-`timer_delete_sync()`, leading to a Use-After-Free when the timer fires on =
-the freed `llbitmap`.
+- [High] Nested double allocation from the same `conf->bio_split` mempool c=
+an cause a self-deadlock when a bio crosses a chunk or reshape boundary and=
+ encounters a bad block.
+- [Low] Passing 'int *' to 'unsigned int *' triggers a compiler error with =
+-Werror=3Dincompatible-pointer-types.
 --
 
---- Patch [13]: [PATCH v4 13/25] md/md-llbitmap: finish reshape geometry ---
-commit 726da375aa50cd87c4a667a63fcb2d5924d50556
+--- Patch [21]: [PATCH v4 21/25] md/raid10: split reshape bios before bitma=
+p accounting ---
+commit ac17607a8057c3c9040bf0443e50aa65062e0d48
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/md-llbitmap: finish reshape geometry
+md/raid10: split reshape bios before bitmap accounting
 
-Commit the staged llbitmap geometry when reshape finishes. When assembling a
-stopped reshape, md_run() creates the bitmap before publishing mddev->pers.
-Refresh the staged reshape geometry again from llbitmap_load().
+This commit updates raid10 to submit only one-side bios to llbitmap
+during reshape. It accomplishes this by using the shared helper
+mddev_bio_split_at_reshape_offset() to split bios at reshape boundaries.
 
-Link: https://lore.kernel.org/all/20260726185916.2223460-1-mykola@meshstor.=
-io/
-
-> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index 37d1312e3eab9..f41f9ba2063b5 100644
-> --- a/drivers/md/md-llbitmap.c
-> +++ b/drivers/md/md-llbitmap.c
-
-[ ... ]
-
-> @@ -1694,6 +1703,30 @@ static void llbitmap_dirty_bits(struct mddev *mdde=
-v, unsigned long s,
->  	llbitmap_state_machine(mddev->bitmap, s, e, BitmapActionStartwrite);
->  }
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index e50e4adee389f..61900ace190fd 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1886,6 +1886,7 @@ static bool raid10_make_request(struct mddev *mddev=
+, struct bio *bio)
+>  {
+>  	struct r10conf *conf =3D mddev->private;
+>  	sector_t chunk_mask =3D (conf->geo.chunk_mask & conf->prev.chunk_mask);
+> +	const int rw =3D bio_data_dir(bio);
+>  	int chunk_sects =3D chunk_mask + 1;
+>  	int sectors =3D bio_sectors(bio);
 > =20
-> +static void llbitmap_reshape_finish(struct mddev *mddev)
-> +{
-> +	struct llbitmap *llbitmap =3D mddev->bitmap;
+[ ... ]
+> @@ -1911,6 +1912,15 @@ static bool raid10_make_request(struct mddev *mdde=
+v, struct bio *bio)
+>  		sectors =3D chunk_sects -
+>  			(bio->bi_iter.bi_sector &
+>  			 (chunk_sects - 1));
 > +
-> +	if (mddev->pers->quiesce)
-> +		mddev->pers->quiesce(mddev, 1);
-> +
-> +	mutex_lock(&mddev->bitmap_info.mutex);
+> +	bio =3D mddev_bio_split_at_reshape_offset(mddev, bio, &sectors,
+> +						&conf->bio_split);
+
+[Severity: Low]
+Will this cause a build failure with -Werror=3Dincompatible-pointer-types?
+
+The sectors variable is declared as an int, but
+mddev_bio_split_at_reshape_offset() expects an unsigned int pointer for
+its third argument.
 
 [Severity: High]
-Is this callback actually invoked anywhere by the MD core?
+Could this introduce a mempool self-deadlock when encountering a bad block?
 
-Looking at the MD core code, it seems md_finish_reshape() doesn't call
-bitmap_ops->reshape_finish(). This means the staged geometry remains
-uncommitted.
+If the bio crosses a chunk or reshape boundary, it allocates a split bio fr=
+om
+conf->bio_split here. This newly allocated bio is then passed down the stac=
+k:
 
-Additionally, if it were to be called from md_finish_reshape(), wouldn't
-this cause a sleep-in-atomic panic? The callers of md_finish_reshape() hold
-a spinlock, but this function acquires a mutex and performs a sleeping wait
-via mddev->pers->quiesce().
+raid10_make_request() -> __make_request() -> raid10_write_request()
 
-> +	llbitmap_flush(mddev);
+If a partial bad block is encountered in raid10_write_request():
+
+drivers/md/raid10.c:raid10_write_request() {
+    ...
+    if (r10_bio->sectors < bio_sectors(bio)) {
+        ...
+        bio =3D bio_submit_split_bioset(bio, r10_bio->sectors, &conf->bio_s=
+plit);
+    ...
+}
+
+It attempts to split the bio a second time using the exact same
+conf->bio_split mempool. Because the original bio is already holding an
+element from conf->bio_split, nested allocations from the same pool by
+concurrent threads can exhaust it and cause the I/O threads to hang.
+
+> +	if (!bio) {
+> +		if (rw =3D=3D WRITE)
+> +			md_write_end(mddev);
+> +		return true;
+> +	}
 > +
-> +	llbitmap->chunksize =3D llbitmap->reshape_chunksize;
-> +	llbitmap->chunkshift =3D ffz(~llbitmap->chunksize);
-> +	llbitmap->chunks =3D llbitmap->reshape_chunks;
-> +	llbitmap->sync_size =3D llbitmap->reshape_sync_size;
-> +	llbitmap_refresh_reshape(llbitmap);
-> +	mddev->bitmap_info.chunksize =3D llbitmap->chunksize;
-> +	llbitmap_update_sb(llbitmap);
-> +	__llbitmap_flush(mddev);
-> +	mutex_unlock(&mddev->bitmap_info.mutex);
-> +
-> +	if (mddev->pers->quiesce)
-> +		mddev->pers->quiesce(mddev, 0);
-> +}
-> +
-
-[ ... ]
-
-> @@ -1991,6 +2024,7 @@ static struct bitmap_operations llbitmap_ops =3D {
->  	.get_stats		=3D llbitmap_get_stats,
->  	.dirty_bits		=3D llbitmap_dirty_bits,
->  	.prepare_range		=3D llbitmap_prepare_range,
-> +	.reshape_finish		=3D llbitmap_reshape_finish,
->  	.write_all		=3D llbitmap_write_all,
-> =20
->  	.groups			=3D md_llbitmap_groups,
-
-[Severity: Critical]
-This is a pre-existing issue, but is there a use-after-free risk during
-array teardown in llbitmap_destroy()?
-
-Looking at llbitmap_destroy(), the pending timer is deleted before flushing
-the workqueue:
-
-    timer_delete_sync(&llbitmap->pending_timer);
-    flush_workqueue(md_llbitmap_io_wq);
-
-If the array is being destroyed on an error path where BITMAP_WRITE_ERROR is
-set, __md_stop_writes() skips calling mddev->bitmap_ops->flush(mddev), so
-the LLPageFlush bit is never set.
-
-When the workqueue executes md_llbitmap_daemon_fn(), it can encounter
-unexpired dirty pages without the flush bit, set restart =3D true, and call
-mod_timer().
-
-Could this re-arm the timer right before the llbitmap is freed, allowing
-the timer to fire on the freed object?
+>  	if (!__make_request(mddev, bio, sectors))
+>  		md_write_end(mddev);
+>
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260801172519.2982=
-121-1-yukuai@kernel.org?part=3D13
+121-1-yukuai@kernel.org?part=3D21
