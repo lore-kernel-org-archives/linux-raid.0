@@ -1,206 +1,157 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13886212F89
-	for <linux-raid@vger.kernel.org>; Sat,  1 Aug 2026 18:12:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5C523BED69
+	for <linux-raid@vger.kernel.org>; Sat,  1 Aug 2026 18:12:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785607937; cv=none; b=igJmFnJQh8TvBX4TVWNpdMdeTshPoc5KQCFjnaxNcA2PMm2gM8bW8msuV5RW/78QPrgBV8aEeLheovOCGyrfBxdJ93bYthA1hKvrW0WxQOcHDFtInzD61TFVKEUUWp8A4WwwOoeb4bTioiFe6EBZ763SVj9KqVp/9C91f0ptjlg=
+	t=1785607958; cv=none; b=ffbgsTVcwApea/iGlKPBMXUN0Ert1Fauk97oYG7RTYEp8WmJ6/VP6+5vFHr5+gtq560t9p+D5wtAzcxQUoONMI3kLLrh5xQQpasapbBYHpnJsmpQajsC9+41/NiMPbyAsBqG0SpzXGCGrwiO7dC1NIr00lRqERdZpTJ8lEIFbxA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785607937; c=relaxed/simple;
-	bh=Q6NF76qsHS9WUV2UyvkhYW7XjW0dcj4iwr9kx4NCsJ4=;
+	s=arc-20240116; t=1785607958; c=relaxed/simple;
+	bh=zFT8mHeRF+RSDfNwY/NGz5wm43n5vxrrcr5m4YuzAuM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QdPT9RZZee5bFbiAPDXhybUQJAtsn0LoHYibRuveNCTV76hHvkDaWirzVyGvyg6+uPAYVsQhp5k+ZpY6yvcJ1seWi/Dp76P1ODaco6rzwmxW0EH3rv6o7sgxXw3SyUhHS7TP74bV2hTlfT9eTbNkDz9gRGcxlXk7IM9FsEW6t+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fnIvFcMR; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=qRF4i7Am/KHOMHmBBdUAUnpfpVQKyJIfW+fELircs87o77l1n0HkA11/icnhW7cZmFWO+OZ0/oLyaEEMGQmxjmxbUXFNS+d5MssTJmKRDUamDg60bpv9n5Jiz7iZjfgjEMtlHZS7kMBg66NPh4dTW4uKqZ1X0FqQsPQH/S1Dv2A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KZubIf81; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fnIvFcMR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D67E1F00ACA;
-	Sat,  1 Aug 2026 18:12:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KZubIf81"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45A611F00AC4;
+	Sat,  1 Aug 2026 18:12:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785607935;
-	bh=y13NHEhT/Cmg3OqPd0pRRBgcJ2SmtL7E+YPDDtmx2Zo=;
+	s=k20260515; t=1785607956;
+	bh=hJsKF+/MOUvkZeU9ckRP2RXHECidcj1nNWXcQfTa+6w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fnIvFcMRDeeq0+r2pNPOZPzONETLgLPVh5dLrqKLTcCtk5Rdl0WeQusPTR3VLsRnj
-	 RUG22UVhMphf9xk7nLJf4ll/Pxrvx5HgkSRe9I9NnNf+s9STqz2qhexrFrbRTGa6ae
-	 I5wT76VXLJ2ghDJZOT0DzasXFPgs19dQvscI9QFeTAzR74LgR+PVeQiT+X/kQfSTAR
-	 R3cLVHZQF+h14LpvG3ru0+0Mrk1z4w29f57RDUmxckjU6t/nwU9uFIPxKZeEqxV7eI
-	 bon8HQwdXr8d4Vy2sG0bOudGNDGREPxD10H5OWFL5fAbe3t4MCiF9Xm4c70EMP+lQO
-	 vuOFewo7UpBWw==
+	b=KZubIf81couyaTZ7/0o8Qvz7vPIM1iXtWgNM8I8dEVzGSBiu38cKTRcfTZT1hw4Nv
+	 Rle/09iAtaeNlwGTtNLYufY9Wnwmwwftj8aNE8ZV0J9VdyTn/3SBWHcCzrRhUCCoAe
+	 K78zKj6Zs+Z2j6Jwls1pW4dp+p5AEpiyQmHun+FUULoUbZfeGdx8jME6U7AwX2kiof
+	 J0LbQ363F8N03GO5aIMMX4sAYHpAM/opmJBkLdqY0LjQ44EwrjFt7trOiN5syMFMAE
+	 CEysKk8Mm1lHIizDcUkfEkw+CKJUCaaoCPqJdAVFEdMqOAofY+sVx4VoagkvWczBXc
+	 GRsWUbrao4ZSQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 17/25] md/md-llbitmap: remap checkpointed bits as
- reshape progresses
+Subject: Re: [PATCH v4 24/25] md/raid5: wire llbitmap reshape lifecycle
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260801172519.2982121-18-yukuai@kernel.org>
+In-Reply-To: <20260801172519.2982121-25-yukuai@kernel.org>
 References: <20260801172519.2982121-1-yukuai@kernel.org>
- <20260801172519.2982121-18-yukuai@kernel.org>
+ <20260801172519.2982121-25-yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 01 Aug 2026 18:12:14 +0000
-Message-Id: <20260801181215.7D67E1F00ACA@smtp.kernel.org>
+Date: Sat, 01 Aug 2026 18:12:35 +0000
+Message-Id: <20260801181236.45A611F00AC4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
 New issues:
-- [High] Data race and potential bitmap state corruption due to missing `re=
-shape_lock` acquisitions.
-- [High] Incomplete feature implementation causing unreachable reshape chec=
-kpointing (dead code).
-- [High] `llbitmap_rmerge_state` incorrectly drops 'Unwritten' sync state e=
-xtensions, causing array inconsistency.
+- [High] raid5_start_reshape fails to invoke the reshape_can_start bitmap o=
+peration before starting the reshape process.
+- [High] raid5_finish_reshape unconditionally sets mddev->resync_offset =3D=
+ 0 when llbitmap is enabled, forcing an immediate full array parity rebuild.
 
 Pre-existing issues:
-- [Critical] Pre-existing Use-After-Free in llbitmap teardown due to daemon=
-_work re-arming pending_timer.
+- [High] The llbitmap daemon work and pending timer can mutually re-arm eac=
+h other during llbitmap_destroy(), leading to a Use-After-Free.
 --
 
---- Patch [17]: [PATCH v4 17/25] md/md-llbitmap: remap checkpointed bits as=
- reshape progresses ---
-commit 51b23c29cf446cf378d49a002b1a356940be2ccd
+--- Patch [24]: [PATCH v4 24/25] md/raid5: wire llbitmap reshape lifecycle =
+---
+commit 5324dd2fc19c643561ddccf4575506b5ce251538
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/md-llbitmap: remap checkpointed bits as reshape progresses
+md/raid5: wire llbitmap reshape lifecycle
 
-This patch introduces logic to remap checkpointed old llbitmap state forward
-as reshape_position advances. It records the checkpoint remap through
-reshape_mark() and adds a reshape_lock to serialize reshape checkpoint
-remapping against normal I/O bitmap updates.
+Prepare llbitmap before RAID5 reshape starts, checkpoint the bitmap before
+advancing reshape_position, and finish the llbitmap geometry update when
+reshape completes.
 
-> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> --- a/drivers/md/md-llbitmap.c
-> +++ b/drivers/md/md-llbitmap.c
-
-[ ... ]
-
-> @@ -930,6 +943,33 @@ static int llbitmap_prepare_resize(struct llbitmap *=
-llbitmap,
->  	return 0;
->  }
-> =20
-> +static enum llbitmap_state
-> +llbitmap_rmerge_state(struct llbitmap *llbitmap,
-> +		      enum llbitmap_state dst,
-> +		      enum llbitmap_state src)
-> +{
-> +	bool level_456 =3D raid_is_456(llbitmap->mddev);
-> +
-> +	if (dst =3D=3D BitNeedSync || dst =3D=3D BitSyncing ||
-> +	    src =3D=3D BitNeedSync || src =3D=3D BitSyncing)
-> +		return BitNeedSync;
-> +
-> +	if (dst =3D=3D BitDirty || src =3D=3D BitDirty)
-> +		return BitDirty;
-> +
-> +	/*
-> +	 * Reshape generates valid target parity/data for both already-written
-> +	 * and not-yet-written regions in the checkpointed range, so a mix of
-> +	 * clean and unwritten still results in a clean destination bit.
-> +	 */
-> +	if (level_456 && ((dst =3D=3D BitClean && src =3D=3D BitUnwritten) ||
-> +			  (src =3D=3D BitClean && dst =3D=3D BitUnwritten)))
-> +		return BitClean;
-> +	if (dst =3D=3D BitClean || src =3D=3D BitClean)
-> +		return BitClean;
-> +	return BitUnwritten;
-> +}
-
-[Severity: High]
-Does this switch logic drop the proactive sync extensions like
-BitNeedSyncUnwritten, BitSyncingUnwritten, and BitCleanUnwritten?
-
-If either dst or src holds one of these states, it fails the explicit equal=
-ity
-checks and falls through to the default BitUnwritten. Could this cause the
-array to lose its proactive sync requirement or pre-built parity state duri=
-ng a
-reshape checkpoint merge?
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 5697570120da9..896aa522f446c 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
 
 [ ... ]
 
-> @@ -1294,6 +1334,7 @@ static void md_llbitmap_daemon_fn(struct work_struc=
-t *work)
-> =20
->  	if (llbitmap->mddev->degraded)
->  		return;
-> +
->  retry:
->  	start =3D 0;
->  	end =3D min(llbitmap->chunks, PAGE_SIZE - BITMAP_DATA_OFFSET) - 1;
-
-[Severity: Critical]
-This is a pre-existing issue, but does the teardown path have a use-after-f=
-ree
-involving pending_timer?
-
-In llbitmap_destroy(), timer_delete_sync() is called followed by
-flush_workqueue(md_llbitmap_io_wq). If md_llbitmap_daemon_fn() is running,
-flush_workqueue() will wait for it. However, md_llbitmap_daemon_fn() blindly
-re-arms the timer at the end if there are unexpired dirty pages:
-
-md_llbitmap_daemon_fn() {
-    ...
-    if (restart)
-        mod_timer(&llbitmap->pending_timer, ...);
-}
-
-Could this cause the timer to fire after the llbitmap struct is freed, since
-it re-arms after the teardown path has already deleted it?
-
-[ ... ]
-
-> @@ -1520,7 +1562,9 @@ static void llbitmap_start_write(struct mddev *mdde=
-v, sector_t offset,
->  		page_start++;
+> @@ -8579,6 +8593,12 @@ static int raid5_start_reshape(struct mddev *mddev)
+>  			mdname(mddev));
+>  		return -EINVAL;
 >  	}
-> =20
-> +	read_lock(&llbitmap->reshape_lock);
->  	llbitmap_state_machine(llbitmap, start, end, BitmapActionStartwrite);
-> +	read_unlock(&llbitmap->reshape_lock);
->  }
+> +	if (md_bitmap_enabled(mddev, false) &&
+> +	    mddev->bitmap_id =3D=3D ID_LLBITMAP) {
+> +		i =3D mddev->bitmap_ops->resize(mddev, mddev->dev_sectors, 0);
 
 [Severity: High]
-Does this lock need to be acquired in other paths that call
-llbitmap_state_machine() as well?
+Does this code need to call the reshape_can_start() bitmap operation before
+proceeding with the resize?
 
-The reshape_lock is taken here to serialize against llbitmap_reshape_mark(),
-but paths like md_llbitmap_daemon_fn() and llbitmap_start_sync() appear to
-modify the state bytes without acquiring reshape_lock.
+If a reshape begins while the llbitmap is actively tracking out-of-sync
+chunks (BitNeedSync or BitSyncing), couldn't the reshape incorrectly map the
+sync state to the new geometry?=20
 
-Since llbitmap_reshape_mark() bypasses page suspension, could this allow
-concurrent execution with the daemon or sync threads, leading to
-read-modify-write data races on the bitmap state bytes?
+This might lead to a loss of sync tracking and potential data regressions.
+
+> +		if (i)
+> +			return i;
+> +	}
+> =20
+>  	atomic_set(&conf->reshape_stripes, 0);
 
 [ ... ]
 
-> @@ -1873,6 +2049,33 @@ static void llbitmap_reshape_finish(struct mddev *=
-mddev)
->  		mddev->pers->quiesce(mddev, 0);
->  }
+> @@ -8693,8 +8722,16 @@ static void raid5_finish_reshape(struct mddev *mdd=
+ev)
+>  {
+>  	struct r5conf *conf =3D mddev->private;
+>  	struct md_rdev *rdev;
+> +	bool llbitmap =3D mddev->bitmap_id =3D=3D ID_LLBITMAP &&
+> +		md_bitmap_enabled(mddev, false);
 > =20
-> +static void llbitmap_reshape_mark(struct mddev *mddev, sector_t old_pos,
-> +				  sector_t new_pos)
-> +{
+>  	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+> +		if (llbitmap && mddev->bitmap_ops->reshape_finish)
+> +			mddev->bitmap_ops->reshape_finish(mddev);
+> +		if (llbitmap) {
+> +			mddev->resync_offset =3D 0;
 
 [Severity: High]
-Is llbitmap_reshape_mark() ever invoked by the md subsystem during a reshape
-operation?
+Does setting mddev->resync_offset to 0 here force an immediate full array
+parity rebuild?
 
-A search through the tree doesn't show any callers invoking
-mddev->bitmap_ops->reshape_mark(). If this callback is never executed, won't
-the reshape checkpoint remapping fail to run and leave the bitmap in a stale
-state?
+By unconditionally resetting the resync offset, the MD core might be
+instructed that the entire array is out-of-sync upon reshape completion.
 
-> +	struct llbitmap *llbitmap =3D mddev->bitmap;
-> +	sector_t lo;
-> +	sector_t hi;
+This would force a full resync of all sectors, despite the reshape correctly
+remapping in-sync sectors, and cause performance regressions.
+
+> +			mddev->resync_max_sectors =3D mddev->dev_sectors;
+> +		}
+> =20
+>  		if (mddev->delta_disks <=3D 0) {
+
+
+As a related note regarding llbitmap teardown:
+
+[Severity: High]
+This isn't a bug introduced by this patch, but can the llbitmap daemon work
+and pending timer mutually re-arm each other during llbitmap_destroy(),
+leading to a use-after-free regression?
+
+Looking at drivers/md/md-llbitmap.c:llbitmap_destroy():
+
+    timer_delete_sync(&llbitmap->pending_timer);
+    flush_workqueue(md_llbitmap_io_wq);
+
+If the daemon_work is queued, the flush executes md_llbitmap_daemon_fn().
+
+If there are unexpired dirty pages inside the work function, it will
+unconditionally re-arm the timer via mod_timer().
+
+Since there is no cancel_work_sync() or subsequent timer deletion, could the
+newly armed timer fire after kfree(llbitmap) completes?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260801172519.2982=
-121-1-yukuai@kernel.org?part=3D17
+121-1-yukuai@kernel.org?part=3D24
