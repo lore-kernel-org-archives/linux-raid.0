@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C444E33F595
-	for <linux-raid@vger.kernel.org>; Sat,  1 Aug 2026 17:47:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE54D1DA0E1
+	for <linux-raid@vger.kernel.org>; Sat,  1 Aug 2026 17:50:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785606477; cv=none; b=GODBPeTv7HlguGM/Hv2+ACnGHZ4X0XlanhfXatTr4CaQkzixSS8tQmests5V6wk1Y8ZQRABMY1xl16cEwMwvSuMqJ7K3NSnA/WPJ7ip4KPqeNHw+CZVfMStr/on3Zbux3fYZJtcFNI/wCx1mVKSVSaRbIeDLZ3ugOpLe4Buuzfg=
+	t=1785606628; cv=none; b=fXSo/q9MTgzdu0BXGmo4WUzmoNSVpvSSqAQfTuWJx7lf9G6vAY/fCeahkAETawlytS/xYkt3LNF9B79dZ/t1jf1xiptM0F2dTdH03f/RvDfUfsDf+zLc1do6J86gvqFY7MzxHughyYbj1UOLuIZZuHJaBsYxuxxzSNElP8FtCsE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785606477; c=relaxed/simple;
-	bh=Eazli2WxaH2UReweuRQONzwM1vkwrXI08ms6K8KYk1c=;
+	s=arc-20240116; t=1785606628; c=relaxed/simple;
+	bh=aeknkpDUU+UM6KmIcYBDL4czmpzorN7TTKQ0L+QgBmk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qUgOEnsJfKm/TGuvs3f1Bt0yBYCzzLOVGltvrWenVCiDMxnGASk7TI6t0L38p1oetMtvGMHvfb6+LTVXJ5uSfKrzflwXoavRMFPHFvKxtY2Fp8JO4dEJXS3EvNz+XZB8B0GqNBcsgWGfXh2KjsV3+WFFgsKz8iNTMFyBUg7N+s0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jkEm7Jd4; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=koQ9jz6Mit+ux+e3wBM4FYdHLOLT2a2/sUKe3KqezQEtL1KrNSg6o4haI4G1TB13mKz0Yp9HhuK3IsBz1fiiFHpAV5T8jaG/kgZJZp3RRxtqn603M4gtx7AqyTncNqZKxElNT2sRgQ68lUbJRNsOgpEYl+HPqWAEpmHNY6sTLxo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fjAh63ny; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jkEm7Jd4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74F5C1F00ACA;
-	Sat,  1 Aug 2026 17:47:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fjAh63ny"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8027D1F00AC4;
+	Sat,  1 Aug 2026 17:50:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785606476;
-	bh=0f13L6dJ/n+YPUSXL5T5lePKNxTdOJgZNzEPhmIIkh8=;
+	s=k20260515; t=1785606627;
+	bh=KNa89/wuL2PxhurNhh0yonUxFt+5zCI/EIle/urLnC0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jkEm7Jd4LeLl5Ey7oPwR5LbL2e+X45C+H5/J9UoJydT2G7cwtvzR2GCuWcAal4Gft
-	 UlKcznlEho/BRCGtzQnP/m4CSsKSrFFdCS3Wwmj2X6Af2n7dljTa0cX5ENknhxaFSx
-	 iMAgcu73kBLHl4aGb3MiDppfua0b0ed0DJQAY7p14bYAuZSWcKWUhhjCrUMyGv2h7y
-	 GWRi1xxt8eBiAdIKgUKdFGVgZnsNJHQ+QRJB+LfehEJrDgtv1/sfM+dRmCLwDYZoy5
-	 z0+dVSvqTIdK0pW88ASdHdBYVwfpKtFe0eYfx5FJ5uwCDuYKJX/TExRuCcaef0KGZ9
-	 N4lEgLaz6O69g==
+	b=fjAh63nyBZKr7fEEfj/lT06SXsT3WYviHotwPflOLJTf7QYTzZpARj8C/vuYzbS+X
+	 b3ZocAO/IUskIIhsogQUKP5b5XVw+RGYgSLk5xAWb2zv/mC1PTtbUuft26iMbHoSn8
+	 TuHeaVViUafS+jgWSOAP86/PO0Fx6Ac2+yyP4ztIeqFow2xA8+TrOT40umqTKY1qtL
+	 YAsxYOucRwoaBILspwfMg3jB1d4rx7JRiUyd/m7uJUKmbVsfk+lxPP4JsGsxIu/Z8c
+	 JbXyi5A2cui0mDg+H3Hjf/pIIgRMpn1jdjwJiGqbnqcIiRTa8AteXra9u3WJlSmLKj
+	 DHE+iM9AR+d8g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 10/25] md/md-llbitmap: allocate page controls
- independently
+Subject: Re: [PATCH v4 14/25] md/md-llbitmap: refuse reshape while llbitmap
+ still needs sync
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260801172519.2982121-11-yukuai@kernel.org>
+In-Reply-To: <20260801172519.2982121-15-yukuai@kernel.org>
 References: <20260801172519.2982121-1-yukuai@kernel.org>
- <20260801172519.2982121-11-yukuai@kernel.org>
+ <20260801172519.2982121-15-yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 01 Aug 2026 17:47:56 +0000
-Message-Id: <20260801174756.74F5C1F00ACA@smtp.kernel.org>
+Date: Sat, 01 Aug 2026 17:50:26 +0000
+Message-Id: <20260801175027.8027D1F00AC4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -49,81 +49,72 @@ Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 New issues:
-- [Critical] Unflushed zeroed pages create a memory-disk inconsistency, lea=
-ding to silent parity corruption on crash/reboot after an array resize.
+- [Medium] The newly added `llbitmap_reshape_can_start` callback is never e=
+xecuted because there are no callers for `mddev->bitmap_ops->reshape_can_st=
+art` anywhere in the md codebase.
 
 Pre-existing issues:
-- [High] Incomplete fix for out-of-bounds array access on `pctl` during max=
-imum in-place array growth.
+- [High] Use-After-Free in the `llbitmap_create` error path where `mddev->b=
+itmap` points to freed memory without holding the lock.
 --
 
---- Patch [10]: [PATCH v4 10/25] md/md-llbitmap: allocate page controls ind=
-ependently ---
-commit 325d92bcc68f880073f4c6b96714394c0bafe835
+--- Patch [14]: [PATCH v4 14/25] md/md-llbitmap: refuse reshape while llbit=
+map still needs sync ---
+commit a811c308c426ffe3f23803b0888eecbb420a8f6d
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/md-llbitmap: allocate page controls independently
+md/md-llbitmap: refuse reshape while llbitmap still needs sync
 
-This patch allocates one llbitmap page-control object at a time and frees
-each object through the same model. It also updates llbitmap_read_page() to
-return a zeroed page without reading from disk when the page index is beyond
-the current bitmap size.
+Reject reshape when llbitmap still contains NeedSync or Syncing bits. This
+keeps reshape from starting until the current llbitmap state has been
+reconciled.
 
 > diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index 3417da288e994..d12b3dba6ae15 100644
+> index f41f9ba2063b5..3b121b372cd8d 100644
 > --- a/drivers/md/md-llbitmap.c
 > +++ b/drivers/md/md-llbitmap.c
 [ ... ]
-> @@ -526,6 +532,8 @@ static struct page *llbitmap_read_page(struct llbitma=
-p *llbitmap, int idx)
->  	page =3D alloc_page(GFP_NOIO | __GFP_ZERO);
->  	if (!page)
->  		return ERR_PTR(-ENOMEM);
-> +	if (idx >=3D llbitmap_used_pages(llbitmap, llbitmap->chunks))
-> +		return page;
+> @@ -2025,6 +2048,7 @@ static struct bitmap_operations llbitmap_ops =3D {
+>  	.dirty_bits		=3D llbitmap_dirty_bits,
+>  	.prepare_range		=3D llbitmap_prepare_range,
+>  	.reshape_finish		=3D llbitmap_reshape_finish,
+> +	.reshape_can_start	=3D llbitmap_reshape_can_start,
+>  	.write_all		=3D llbitmap_write_all,
 
-[Severity: Critical]
-Does this new bypass create a memory-disk inconsistency?
+[Severity: Medium]
+Is this callback executed by the md core?
 
-By returning a zeroed page in memory without reading or flushing to disk, t=
-he
-physical disk is left containing uninitialized garbage. If the array is
-reshaped and expands into this pre-allocated region, a crash before the new
-region is fully written could expose the disk garbage to the state machine =
-on
-the subsequent boot. If the garbage matches states like BitClean, resync
-might be incorrectly skipped for the new region.
-
-> =20
->  	rdev_for_each(rdev, mddev) {
-[ ... ]
-> +static unsigned int llbitmap_reserved_pages(struct llbitmap *llbitmap)
-> +{
-> +	return DIV_ROUND_UP(llbitmap->mddev->bitmap_info.space << SECTOR_SHIFT,
-> +			    PAGE_SIZE);
-> +}
+Looking at the md codebase, there do not appear to be any callers for
+mddev->bitmap_ops->reshape_can_start. Does this mean the validation logic
+is bypassed and reshapes could still start prematurely?
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does this calculation
-under-allocate the array by one page for the maximum allowed chunk size?
+This is a pre-existing issue, but can a concurrent reader access freed memo=
+ry
+during bitmap creation?
 
-This calculation omits BITMAP_DATA_OFFSET. Because llbitmap_resize() allows
-chunks to grow up to space << SECTOR_SHIFT, the maximum used_pages (which
-correctly includes the offset) can exceed reserved_pages by 1.
+In llbitmap_create(), if an error occurs, the mutex is dropped before
+mddev->bitmap is set to NULL:
 
-When pos approaches the maximum allowed chunks in llbitmap_write():
+    mutex_unlock(&mddev->bitmap_info.mutex);
+    if (ret) {
+        kfree(llbitmap);
+        mddev->bitmap =3D NULL;
+    }
 
-    pos +=3D BITMAP_DATA_OFFSET;
-    idx =3D pos >> PAGE_SHIFT;
+A concurrent /proc/mdstat reader could acquire the mutex after it is dropped
+but before mddev->bitmap is cleared, allowing it to dereference the freed
+llbitmap pointer:
 
-the offset causes idx to exceed the pre-allocated bounds of the pctl array,
-which could lead to out-of-bounds memory corruption.
-
-> +
-> +static int llbitmap_alloc_pages(struct llbitmap *llbitmap)
-> +{
-[ ... ]
+drivers/md/md.c:md_seq_show() {
+    ...
+    /* prevent bitmap to be freed after checking */
+    mutex_lock(&mddev->bitmap_info.mutex);
+    ...
+        md_bitmap_status(seq, mddev);
+    ...
+}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260801172519.2982=
-121-1-yukuai@kernel.org?part=3D10
+121-1-yukuai@kernel.org?part=3D14
