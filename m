@@ -1,136 +1,234 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A56623009D6
-	for <linux-raid@vger.kernel.org>; Sat,  1 Aug 2026 17:59:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12F6919DF62
+	for <linux-raid@vger.kernel.org>; Sat,  1 Aug 2026 18:03:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785607198; cv=none; b=EQ9AxjRzc1h1/dIeZa4gwJf9ZtdX0o59iHkBN7OvGfIRJpQLp1toHNHh+5Ot2IFSFnXvAEu5lfpkM0GfHpxexbhHtDZriflalVTLtedNR5SXYQph2ObZ2WlTDoXcqN/JW1SRAKvvV8liZ23w067jh6jBNN4SYhhEfJSmDl4edAI=
+	t=1785607421; cv=none; b=djoMTIgwn/LJjfwOBCQBO4iIb1cCRiYsRELc9a6/Y+XiYugcUqX65tu6KXe38mUmTd6gp0cmibkqfCcl3ZWoK0MWJ6gFP7RIB1bWyHNwJH+AYMQ2FZT+b1Mdc/HIISIvMKixgUI4nPC70QEPqG06owyA9u3ZvaLAlN5GZaa1ghs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785607198; c=relaxed/simple;
-	bh=w65ezLNJES0eKHw01uJUF+EF+CBAYzwLncZ5m05zdNw=;
+	s=arc-20240116; t=1785607421; c=relaxed/simple;
+	bh=nqMrDsL4fYUg65l5/7mzwCsAd6Nlc+KNfb2xvn+37ZE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=LczR4Eb6Diig80a5U12eS2vZrs44QGroYc7Y+W9J3msfKhbY2Ok2CWcxuMA3s7R1Q48V87gH8dz8uRJnBT3Oo9dCTD4L2yd4nZvEXs0aqh3cXRwGWeIkeLW4Ef+0c6XxSZ14Ia4DyE1dUI38RaepQ3cZBCnCHbQFdllGZe7VWSw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WM86AE6g; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=WJVUEvCoaDg6ReRrVo8Ofc26CEl+JST9Sg6lFRvqIbO2X0WFl+y+PA3F/IWdS4fLaLrAuPQJDt+m+sFcTOW0g+6K2VUbcwDAnezpPEzaPvuQRcq72z0YtA2s6IY9WmHzQvPKa/WaTzkbjDJS6+HiV36eSI0QaYnvqelc6Ge6AfI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mgQh27xv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WM86AE6g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 354321F00ACA;
-	Sat,  1 Aug 2026 17:59:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mgQh27xv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF6551F00AC4;
+	Sat,  1 Aug 2026 18:03:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785607197;
-	bh=FocEs9Gj3ojCqc0cu+Hs2JH2sk5PPlHtw/rAhHD9f7g=;
+	s=k20260515; t=1785607419;
+	bh=DhDEuO5fMFLrdIr0d6I6Ebtii7/Wufik4yAIlVRjXUQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WM86AE6gtVOhwWWLA4c5zhIEa9R96JL0Kp0d7HtNWHSdcer5t3G1Mo4bAfU/W+i9K
-	 DikjdmMpTAxeoOHFi73APj6mdmuMsqQiFej+sk/z3xCGKwvSKlt5QwypmgJ1B8MLlY
-	 1Ry1rlprmck55kFozV1nxH6ukNdkq4oc7ORQbEf1iASYWMFAgnOGyVtaVOu7itsjNt
-	 aIcBvt5ICWPsIDJqXUyv0m3qLtEdbb5ChDBsQ7i+DKhQ1eXKNERwU+AhoW/yq2abSh
-	 QwJiJB6v0uhm6jh/cNvUjHiyk2l9lqASx5EOxlvgPGYFEdyTebGeAib1vUdxfxTG1j
-	 KOKXoDl3tpqbg==
+	b=mgQh27xv5hgONtwU4cNbvphlGr8LM8kDTNcQx76d8qjAkiGLORyg4Q5oiuBZkauvC
+	 k34VQSAOL3Xx0YhQ5gZv+UjplVpb4DdURpsWpd5oYXqYP3FunrRCixLo+iG5Jy/Vg8
+	 2zuWI/L8uw6N/o9xjm4PCVzmAAuRKVVjrc2hSjzwOZ/ZHuYsZSRuJYgmGJaUjTn5dm
+	 DJmDO83s6WU4Df2C3Vez2G31kgQEQiyYAQyqhb34ylLVZb04JsVWwnHMiWmPgFM1qJ
+	 cyOcvnUmV2EEOKcI77/8dfn1be98kmlz/sU0p/H/ewAs6vrBNiDm5fs0ZjJN0ydYfG
+	 BJ/57n3OteY8A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 21/25] md/raid10: split reshape bios before bitmap
- accounting
+Subject: Re: [PATCH v4 11/25] md/md-llbitmap: grow the page cache in place
+ for reshape
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260801172519.2982121-22-yukuai@kernel.org>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260801172519.2982121-12-yukuai@kernel.org>
 References: <20260801172519.2982121-1-yukuai@kernel.org>
- <20260801172519.2982121-22-yukuai@kernel.org>
+ <20260801172519.2982121-12-yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 01 Aug 2026 17:59:56 +0000
-Message-Id: <20260801175957.354321F00ACA@smtp.kernel.org>
+Date: Sat, 01 Aug 2026 18:03:39 +0000
+Message-Id: <20260801180339.AF6551F00AC4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-- [High] Nested double allocation from the same `conf->bio_split` mempool c=
-an cause a self-deadlock when a bio crosses a chunk or reshape boundary and=
- encounters a bad block.
-- [Low] Passing 'int *' to 'unsigned int *' triggers a compiler error with =
--Werror=3Dincompatible-pointer-types.
+
+New issues:
+- [High] Deadlock during memory allocation under quiesced MD array state
+- [High] Incomplete reshape logic fails to update chunksize, causing out-of=
+-bounds array access
+- [High] Non-atomic replacement of `llbitmap->pctl` exposes concurrent lock=
+less readers to use-after-free
+
+Pre-existing issues:
+- [Critical] Bitmap sizing logic omits superblock offset, causing out-of-bo=
+unds on-disk write
 --
 
---- Patch [21]: [PATCH v4 21/25] md/raid10: split reshape bios before bitma=
-p accounting ---
-commit ac17607a8057c3c9040bf0443e50aa65062e0d48
+--- Patch [11]: [PATCH v4 11/25] md/md-llbitmap: grow the page cache in pla=
+ce for reshape ---
+commit 4834d913bd6249e72f12baf6160c3e9e149b6525
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/raid10: split reshape bios before bitmap accounting
+md/md-llbitmap: grow the page cache in place for reshape
 
-This commit updates raid10 to submit only one-side bios to llbitmap
-during reshape. It accomplishes this by using the shared helper
-mddev_bio_split_at_reshape_offset() to split bios at reshape boundaries.
+Use the page-control helpers to grow llbitmap's cached pages in place
+for resize and later reshape preparation, instead of rebuilding the
+whole cache.
 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index e50e4adee389f..61900ace190fd 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1886,6 +1886,7 @@ static bool raid10_make_request(struct mddev *mddev=
-, struct bio *bio)
->  {
->  	struct r10conf *conf =3D mddev->private;
->  	sector_t chunk_mask =3D (conf->geo.chunk_mask & conf->prev.chunk_mask);
-> +	const int rw =3D bio_data_dir(bio);
->  	int chunk_sects =3D chunk_mask + 1;
->  	int sectors =3D bio_sectors(bio);
-> =20
+> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
+> index d12b3dba6ae15..cf522fae78f8a 100644
+> --- a/drivers/md/md-llbitmap.c
+> +++ b/drivers/md/md-llbitmap.c
 [ ... ]
-> @@ -1911,6 +1912,15 @@ static bool raid10_make_request(struct mddev *mdde=
-v, struct bio *bio)
->  		sectors =3D chunk_sects -
->  			(bio->bi_iter.bi_sector &
->  			 (chunk_sects - 1));
+> @@ -416,6 +416,19 @@ static char state_machine[BitStateCount][BitmapActio=
+nCount] =3D {
+>  };
+> =20
+>  static void __llbitmap_flush(struct mddev *mddev);
+> +static void llbitmap_flush(struct mddev *mddev);
+> +static void llbitmap_update_sb(void *data);
 > +
-> +	bio =3D mddev_bio_split_at_reshape_offset(mddev, bio, &sectors,
-> +						&conf->bio_split);
+> +static void llbitmap_calculate_chunks(struct mddev *mddev, sector_t bloc=
+ks,
+> +				      unsigned long *chunksize,
+> +				      unsigned long *chunks)
+> +{
+> +	*chunks =3D DIV_ROUND_UP_SECTOR_T(blocks, *chunksize);
+> +	while (*chunks > mddev->bitmap_info.space << SECTOR_SHIFT) {
 
-[Severity: Low]
-Will this cause a build failure with -Werror=3Dincompatible-pointer-types?
+[Severity: Critical]
+This isn't a bug introduced by this patch, but does this space validation
+check omit the BITMAP_DATA_OFFSET?
 
-The sectors variable is declared as an int, but
-mddev_bio_split_at_reshape_offset() expects an unsigned int pointer for
-its third argument.
+Since the bitmap format includes a superblock at the start, it consumes
+BITMAP_DATA_OFFSET bytes (typically 1024). If a geometry requires payload
+bytes closely fitting the reserved space, the total footprint could exceed
+the reserved sectors.
+
+During a flush, could the bitmap write its pages to disk past the end of
+the reserved space, potentially overwriting adjacent metadata or user data?
+
+> +		*chunksize =3D *chunksize << 1;
+> +		*chunks =3D DIV_ROUND_UP_SECTOR_T(blocks, *chunksize);
+> +	}
+> +}
+[ ... ]
+> @@ -655,6 +668,48 @@ static unsigned int llbitmap_reserved_pages(struct l=
+lbitmap *llbitmap)
+>  			    PAGE_SIZE);
+>  }
+> =20
+> +static int llbitmap_expand_pages(struct llbitmap *llbitmap,
+> +				 unsigned long chunks)
+> +{
+> +	struct llbitmap_page_ctl **pctl;
+> +	unsigned int old_nr_pages =3D llbitmap->nr_pages;
+> +	unsigned int nr_pages =3D llbitmap_used_pages(llbitmap, chunks);
+> +	unsigned int i;
+> +	int ret;
+> +
+> +	if (nr_pages <=3D old_nr_pages)
+> +		return 0;
+> +
+> +	pctl =3D kcalloc(nr_pages, sizeof(*pctl), GFP_KERNEL);
 
 [Severity: High]
-Could this introduce a mempool self-deadlock when encountering a bad block?
+Can this allocation cause a deadlock under memory pressure?
 
-If the bio crosses a chunk or reshape boundary, it allocates a split bio fr=
-om
-conf->bio_split here. This newly allocated bio is then passed down the stac=
-k:
+The GFP_KERNEL flag permits direct memory reclaim. If the VM attempts to
+write dirty filesystem pages back to the block device to free memory, the
+writeback could be directed at the MD array.
 
-raid10_make_request() -> __make_request() -> raid10_write_request()
+Since llbitmap_resize() suspends the array using
+mddev->pers->quiesce(mddev, 1) before calling this function:
 
-If a partial bad block is encountered in raid10_write_request():
-
-drivers/md/raid10.c:raid10_write_request() {
+drivers/md/md-llbitmap.c:llbitmap_resize() {
     ...
-    if (r10_bio->sectors < bio_sectors(bio)) {
-        ...
-        bio =3D bio_submit_split_bioset(bio, r10_bio->sectors, &conf->bio_s=
-plit);
+    if (mddev->pers->quiesce) {
+        mddev->pers->quiesce(mddev, 1);
+    ...
+    ret =3D llbitmap_prepare_resize(...)
+}
+
+Will the I/O block indefinitely waiting for the array to unquiesce,
+deadlocking the thread that is holding the quiesce state?
+
+> +	if (!pctl)
+> +		return -ENOMEM;
+> +
+> +	if (llbitmap->pctl)
+> +		memcpy(pctl, llbitmap->pctl,
+> +		       array_size(old_nr_pages, sizeof(*pctl)));
+> +
+> +	for (i =3D old_nr_pages; i < nr_pages; i++) {
+> +		pctl[i] =3D llbitmap_alloc_page_ctl(llbitmap, i);
+> +		if (IS_ERR(pctl[i]))
+> +			goto err_alloc_ptr;
+> +	}
+> +
+> +	kfree(llbitmap->pctl);
+> +	llbitmap->pctl =3D pctl;
+
+[Severity: High]
+Does freeing the old pointer array non-atomically without RCU protection
+expose concurrent lockless readers to a use-after-free?
+
+Although the array is quiesced here, background tasks such as
+llbitmap_unplug_fn() (queued by blk_finish_plug() for tasks that submitted
+I/O before the quiesce) might still execute concurrently.
+
+If a lockless reader is iterating over llbitmap->nr_pages and reading from
+llbitmap->pctl[i], could it be preempted while holding the old pointer and
+dereference freed memory when this code executes?
+
+> +	llbitmap->nr_pages =3D nr_pages;
+> +	return 0;
+[ ... ]
+> @@ -1171,24 +1254,62 @@ static int llbitmap_create(struct mddev *mddev)
+>  static int llbitmap_resize(struct mddev *mddev, sector_t blocks, int chu=
+nksize)
+>  {
+[ ... ]
+> +	mutex_lock(&mddev->bitmap_info.mutex);
+> +	cache_chunks =3D reshape ? max(old_chunks, chunks) : chunks;
+> +	ret =3D llbitmap_prepare_resize(llbitmap, old_chunks, chunks, cache_chu=
+nks);
+> +	if (ret)
+> +		goto out;
+> +
+> +	if (reshape) {
+> +		llbitmap->chunks =3D max(old_chunks, chunks);
+> +	} else {
+
+[Severity: High]
+Is the reshape logic missing updates to the chunksize and chunkshift
+variables?
+
+When reshaping an array to a larger size, the required bitmap chunksize
+may increase. While llbitmap->chunks is updated here, llbitmap->chunksize
+and llbitmap->chunkshift appear to be left unchanged.
+
+When new I/O arrives, llbitmap_start_write() would calculate the chunk
+index using the old, smaller chunkshift.
+
+Could this produce a required chunk index that exceeds the newly allocated
+llbitmap->chunks limit, leading to an out-of-bounds access when writing the
+state in llbitmap_write():
+
+drivers/md/md-llbitmap.c:llbitmap_write() {
+    ...
+    idx =3D pos >> PAGE_SHIFT;
+    bit =3D offset_in_page(pos);
+    llbitmap->pctl[idx]->state[bit] =3D state;
     ...
 }
 
-It attempts to split the bio a second time using the exact same
-conf->bio_split mempool. Because the original bio is already holding an
-element from conf->bio_split, nested allocations from the same pool by
-concurrent threads can exhaust it and cause the I/O threads to hang.
-
-> +	if (!bio) {
-> +		if (rw =3D=3D WRITE)
-> +			md_write_end(mddev);
-> +		return true;
+> +		if (blocks < old_blocks && chunks < old_chunks)
+> +			llbitmap_mark_range(llbitmap, chunks, old_chunks - 1,
+> +					    BitUnwritten);
+> +		mddev->bitmap_info.chunksize =3D bitmap_chunksize;
+> +		llbitmap->chunks =3D chunks;
+> +		llbitmap->sync_size =3D blocks;
+> +		llbitmap_update_sb(llbitmap);
 > +	}
-> +
->  	if (!__make_request(mddev, bio, sectors))
->  		md_write_end(mddev);
->
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260801172519.2982=
-121-1-yukuai@kernel.org?part=3D21
+121-1-yukuai@kernel.org?part=3D11
