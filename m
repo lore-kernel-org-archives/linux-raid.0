@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA30B3A255F;
-	Sat,  1 Aug 2026 17:27:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4510C3BBA03;
+	Sat,  1 Aug 2026 17:27:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785605275; cv=none; b=GnMB//PxjapNTMiB4W3OS1tg6yzMLgvtz/SvakZiFVoO4d9CzhbpLsOHpiZUDcYTJx6n/7Nu5jHU7CYaO+7DGiGv5epifqhNuRuKa2LOB+TyqHdGlT0bTlSbFQwNwt50VXfB+6PXje54TmxwfR3L/KC9oFAC22zZTILSLwOYtC4=
+	t=1785605279; cv=none; b=VVsrsUCX3GabpwQvXcejlkFATL751JqYcct6wujm7lbSulHTLKCmNPZkFoJev8OguTew/3NGAr6YjK/WtUCZZ/O4bqbf1tIDEaTsSbqk6Na1rP8Cb/DDHCuAw3dauN+MNRMEq782EVZYwFdeUHinpdH1lNRI98FCW6smGuZQSUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785605275; c=relaxed/simple;
-	bh=dSMPFFrNnIpq6Ajl4K/SxZMVhYsiE7k2iux6vOEEFOc=;
+	s=arc-20240116; t=1785605279; c=relaxed/simple;
+	bh=SnoXFkre/tus+jLL0QefuZLY51AVPhhnVMSXBVffu30=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qiERDvR7zO2XwEbb65IoMXFHwK0NN6HY5nqna/+VzAb5clsd1ttsdbeeLQ7bjde0wCWa7woWQ681KrwHf3UbryzmFp/7/kVhdDjUrjXJVGFVHAK/ErArxxVjxRvfjfEvpT8pJb2ApVkUZRm5CBRjb2km4ls45lG/Ed0u+qtg4nE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SIx69zj2; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=htiAehEKKe0c7L8XGtYmlgq/aA3y16ClGoMlvCojaM39ddiKuqBJiOLuXpXgTSTEXgiA/QmAn9MK96PxvaIFDE+sWEDFaxeSP+Xey2CoZJ7UXO4mEhQgfr6HH/FnWFN2yAFsDotVWjGRaaY0BWw2sHNyGtGEURyG5rEi7BNnM4g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nbej/YFw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SIx69zj2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4A311F00ACA;
-	Sat,  1 Aug 2026 17:27:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nbej/YFw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22ADF1F00AC4;
+	Sat,  1 Aug 2026 17:27:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785605274;
-	bh=YErTVhEdLrDTATmI4QmDta7aPerA8rMa18xOkzkcMJ0=;
+	s=k20260515; t=1785605278;
+	bh=YLcxogMF0Z5kTX0xm+jXmH5SCSYzBlu+Y6zSYOVRMfg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=SIx69zj21yySRy0ndb2r45b/pBgL83pJ1PPnM68I3rssL3gzobteqhOnVX46W/Do6
-	 AHpm5d2utrc22E3usf9mRxb5YVFTcH3b30MY5WVfp1F4AaFggFfJDwF7dMOuGdVbHO
-	 DIz7M/72Q8kF8UiZAGYVVrtqKx2tW/F7qYrApf4OAIaDWltxY6mFy7PPX1xNF4IG7p
-	 FvtPVPrdnGmPxPjkMmSzFbY9LEDxqE0Y2yN7wGPIwiPEttnP4h9kD4TUhE0oweWYA2
-	 l+3JhrusnEi67es/2Et3ON6q7Vff6MpJtUYCVNHo5SntxHAOLQiahsycNZ7cr2Mhvx
-	 stI8u1c8xW9vA==
+	b=Nbej/YFwz3r8huA2CqlQSo7+dXx3Tr7l/d8tHHYoZq2lJNJTBW6qXUYtLfwxEsQL7
+	 MH1TvhWppCKKA9vsgB9VOPYmBzKn/exzVPbM2n148hZRQ6IYOX45ZG8BUjWJ2k184F
+	 tuFFPC/TKeRDceWnUnRtL6tT7zqcOvNXcUILBuCGFph0W7eihTZldc18S7a1b5LfSY
+	 +u0gMGAqW7xlFFr7zBM61hKQu6ALbzgaV3lTwHfobMHEwZOwMj826XK2LfEZhk6Upf
+	 0YtN4svrL/vjbeDEWbVcJCAyHgy78wPyT1TJzsTrcTfTwk25/dEZPhr2G+g+8Y2Mg5
+	 C3gNn1ucJzIeA==
 From: Yu Kuai <yukuai@kernel.org>
 To: Song Liu <song@kernel.org>
 Cc: Li Nan <magiclinan@didiglobal.com>,
@@ -34,9 +34,9 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	Su Yue <glass.su@suse.com>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v4 24/25] md/raid5: wire llbitmap reshape lifecycle
-Date: Sun,  2 Aug 2026 01:25:18 +0800
-Message-ID: <20260801172519.2982121-25-yukuai@kernel.org>
+Subject: [PATCH v4 25/25] md/raid5: split reshape bios before bitmap accounting
+Date: Sun,  2 Aug 2026 01:25:19 +0800
+Message-ID: <20260801172519.2982121-26-yukuai@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260801172519.2982121-1-yukuai@kernel.org>
 References: <20260801172519.2982121-1-yukuai@kernel.org>
@@ -50,97 +50,76 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai@fygo.io>
 
-Prepare llbitmap before RAID5 reshape starts, checkpoint the bitmap
-before advancing reshape_position, and finish the llbitmap geometry
-update when reshape completes.
+RAID5 maps array sectors through different geometries before and after the
+reshape position. During llbitmap reshape, md core cannot account one bio
+against both geometries as a single bitmap range, because the old and new
+bitmap mappings can cover different chunks.
+
+Split bios that cross reshape_position before md_account_bio(), so the
+bitmap only sees ranges that belong to one side of the reshape boundary.
+
+mddev_bio_split_at_reshape_offset() uses bio_submit_split_bioset(), which
+submits the remainder immediately and returns the front split bio. If that
+front bio later has to wait for reshape, md_handle_request() must not retry
+the original bio pointer, because after the split that pointer is the
+already-submitted remainder. Track whether the split happened, clear the
+temporary BLK_STS_RESOURCE status after the internal clone completion, and
+resubmit the front bio directly after the reshape wait. Keep the old
+return-false retry path for unsplit bios, where md_handle_request() still
+owns the same bio.
 
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 ---
- drivers/md/raid5.c | 37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ drivers/md/raid5.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 5697570120da..896aa522f446 100644
+index 896aa522f446..9b47d9a277f9 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -6433,6 +6433,13 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
- 			   || test_bit(MD_RECOVERY_INTR, &mddev->recovery));
- 		if (atomic_read(&conf->reshape_stripes) != 0)
- 			return 0;
-+		if (md_bitmap_enabled(mddev, false) &&
-+		    mddev->bitmap_ops->reshape_mark &&
-+		    conf->reshape_safe != conf->reshape_progress) {
-+			mddev->bitmap_ops->reshape_mark(mddev, conf->reshape_safe,
-+						       conf->reshape_progress);
-+			mddev->bitmap_ops->unplug(mddev, true);
-+		}
- 		mddev->reshape_position = conf->reshape_progress;
- 		mddev->curr_resync_completed = sector_nr;
- 		if (!mddev->reshape_backwards)
-@@ -6542,6 +6549,13 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
- 			   || test_bit(MD_RECOVERY_INTR, &mddev->recovery));
- 		if (atomic_read(&conf->reshape_stripes) != 0)
- 			goto ret;
-+		if (md_bitmap_enabled(mddev, false) &&
-+		    mddev->bitmap_ops->reshape_mark &&
-+		    conf->reshape_safe != conf->reshape_progress) {
-+			mddev->bitmap_ops->reshape_mark(mddev, conf->reshape_safe,
-+						       conf->reshape_progress);
-+			mddev->bitmap_ops->unplug(mddev, true);
-+		}
- 		mddev->reshape_position = conf->reshape_progress;
- 		mddev->curr_resync_completed = sector_nr;
- 		if (!mddev->reshape_backwards)
-@@ -8579,6 +8593,12 @@ static int raid5_start_reshape(struct mddev *mddev)
- 			mdname(mddev));
- 		return -EINVAL;
- 	}
-+	if (md_bitmap_enabled(mddev, false) &&
-+	    mddev->bitmap_id == ID_LLBITMAP) {
-+		i = mddev->bitmap_ops->resize(mddev, mddev->dev_sectors, 0);
-+		if (i)
-+			return i;
-+	}
- 
- 	atomic_set(&conf->reshape_stripes, 0);
- 	spin_lock_irq(&conf->device_lock);
-@@ -8663,10 +8683,19 @@ static int raid5_start_reshape(struct mddev *mddev)
-  */
- static void end_reshape(struct r5conf *conf)
- {
-+	struct mddev *mddev = conf->mddev;
- 
- 	if (!test_bit(MD_RECOVERY_INTR, &conf->mddev->recovery)) {
- 		struct md_rdev *rdev;
- 
-+		if (md_bitmap_enabled(mddev, false) &&
-+		    mddev->bitmap_ops->reshape_mark &&
-+		    conf->reshape_safe != conf->reshape_progress) {
-+			mddev->bitmap_ops->reshape_mark(mddev, conf->reshape_safe,
-+						       conf->reshape_progress);
-+			mddev->bitmap_ops->unplug(mddev, true);
-+		}
-+
- 		spin_lock_irq(&conf->device_lock);
- 		conf->previous_raid_disks = conf->raid_disks;
- 		md_finish_reshape(conf->mddev);
-@@ -8693,8 +8722,16 @@ static void raid5_finish_reshape(struct mddev *mddev)
- {
+@@ -6148,9 +6148,11 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
  	struct r5conf *conf = mddev->private;
- 	struct md_rdev *rdev;
-+	bool llbitmap = mddev->bitmap_id == ID_LLBITMAP &&
-+		md_bitmap_enabled(mddev, false);
+ 	const int rw = bio_data_dir(bi);
+ 	struct stripe_request_ctx *ctx;
++	struct bio *front_bio;
+ 	sector_t logical_sector;
+ 	enum stripe_result res;
+ 	int s, stripe_cnt;
++	bool split = false;
+ 	bool on_wq;
  
- 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
-+		if (llbitmap && mddev->bitmap_ops->reshape_finish)
-+			mddev->bitmap_ops->reshape_finish(mddev);
-+		if (llbitmap) {
-+			mddev->resync_offset = 0;
-+			mddev->resync_max_sectors = mddev->dev_sectors;
+ 	if (unlikely(bi->bi_opf & REQ_PREFLUSH)) {
+@@ -6184,6 +6186,18 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 		return true;
+ 	}
+ 
++	front_bio = bi;
++	bi = mddev_bio_split_at_reshape_offset(mddev, bi, NULL,
++					       &conf->bio_split);
++	if (!bi) {
++		if (rw == WRITE)
++			md_write_end(mddev);
++		return true;
++	}
++	if (bi != front_bio)
++		split = true;
++	front_bio = bi;
++
+ 	logical_sector = bi->bi_iter.bi_sector & ~((sector_t)RAID5_STRIPE_SECTORS(conf)-1);
+ 	bi->bi_next = NULL;
+ 
+@@ -6284,6 +6298,11 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 		bio_endio(bi);
+ 
+ 		wait_for_completion(&done);
++		front_bio->bi_status = BLK_STS_OK;
++		if (split) {
++			submit_bio_noacct(front_bio);
++			return true;
 +		}
+ 		return false;
+ 	}
  
- 		if (mddev->delta_disks <= 0) {
- 			int d;
 -- 
 2.51.0
 
