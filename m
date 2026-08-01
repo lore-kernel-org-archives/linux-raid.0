@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B2011A5B9D
-	for <linux-raid@vger.kernel.org>; Sat,  1 Aug 2026 17:43:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B51148987E
+	for <linux-raid@vger.kernel.org>; Sat,  1 Aug 2026 17:44:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785606223; cv=none; b=F/zfieP0B46khKmiDU2lQl1DJlDNI177vOyekLA9tJJfCQjdplp+GzrPGC4oMCgD+EG2qj5XhndpgeODmEetiocWiv4H3dG6+Ji3vQREZ8LiZx0ngThdJxbms5cOW3nBx1uGnEumjuvf16ufOdpvnmcFgz+D7pP5AuAeN1WuXAg=
+	t=1785606254; cv=none; b=DlBy8OZ9tQsYZIPigpgqaJnwUCHAnRjPM7Qr3c3Mw/KtLO1zkl4gni+VS/r9ATcgldfKpDldQhLJOweTWyd05wIlBCL7jFf9F8iyPSFYmgFdXo749BKTkrzbfpsGZTyAOV/hGUYHlQM4CFtJd+5bRRh7DjD3e261itpHILsn3Gg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785606223; c=relaxed/simple;
-	bh=ECjtca+jzIPPrqrHp+3/ppKG7+cqQV2HPZdLtQp3bdY=;
+	s=arc-20240116; t=1785606254; c=relaxed/simple;
+	bh=+UHU/64Ig7iCTrDxYAkXH8+XOoA/VS18dj8JN2riIu8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=XH1UphLzJznFIh3OuzSx5CDVj/kZlg0PdWVUMByR6EKzLwiL2uMV85bJWOJhUAtr5sNBytWDGTVwgI/xfpudxURCW8mE2eg8HMsW+RukxueQWToXNU14grPdJd6yyl+zmMO7DKAX8pykRp7PUy1hYk8VlWHdxOySCvtQR66UNow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H/2Dw3Hl; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=GxI24t5xpO1eAQc+6cyW1YLKTs8HyfsAy1GJnyINBUeqecI6UzjAYHagsiWyzv9Fd2uVxUaZoxDk2XjZaHXdnVs/auF7tPIQv1vrCX3WOgPRDCUfUZs6F/iMYHSs5YB+3FFl8tuxW/PiNgGqH8A2vpmdOJ+EsNmb+0W32RWz9ps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aaHCuwZ7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H/2Dw3Hl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 028771F00AC4;
-	Sat,  1 Aug 2026 17:43:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aaHCuwZ7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE1FC1F00AC4;
+	Sat,  1 Aug 2026 17:44:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785606222;
-	bh=Wg7ZmvXWZJMvOOKxSxm5l9GwZ093xPpYwTU0Jwl+Q8M=;
+	s=k20260515; t=1785606253;
+	bh=IooC2qko3RgYxk+ntcEEU8MntcIdZRFeHM3SfXsIXbE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=H/2Dw3HlMM0Xoh5ItATpvhM2mTUKDSZo2qPiwSRw+JNvIN773KFLppVSIc8lb4V5I
-	 MURhUq6TGK/fprvUhllYK5uGui7E5MSB2pEiz6TgsEtbrVgFY41zxOWjXtwkPGo7Og
-	 oviJ521wtX4+5F+IGVUmUugbKCvmH4G4GJxQOpc6kykuofMNjlzi7co78lmMb4bMBB
-	 tEBnhjvgcVxD5yXFcyqSRA+pQqZUKI+b7fuq8Wq+p+SJU1Ai5AxQbDbG8E0BcLyfE9
-	 dFprPJcbvi3WFi0J5lzNSuBz4FHJZoLqlqVA5xGgAD8WcQHyXVvpGYlhQ1RNOP/feb
-	 3cfWxqgySXU6Q==
+	b=aaHCuwZ7YW8x3mKdAV4rAY4NdMrb2xZTzZPTNUYF1FNwpGJQ07OquQHBXvizytzXi
+	 C9JHscrEyMtMiDnEw2am3KYbxXoe+da51fKOxSNZCLPMlAjgBGILtsjXumNDDD3+Ux
+	 8H+ql5YYHp9BIMaHHDeGBtH/y2X+bTrpLIK5JMaMkK17kHNk7F/6b08sUq+O1p8EQ3
+	 o1kA8vqUktwhtxpIb5z5gI1rkrUBVHBASCDTr7UQFucrixV0JVdyKuu5yiK0f/0HGz
+	 yM+CTNUu45TRZ00gBq7ZhqeACXdSw+ouBHAPg/Lru4KNKhWc2lurIZ8yqYpvHGt12m
+	 NftsHFU9rKz8Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 01/25] md/md-llbitmap: clear flush state after daemon
- flush
+Subject: Re: [PATCH v4 09/25] md/md-llbitmap: track bitmap sync_size
+ explicitly
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260801172519.2982121-2-yukuai@kernel.org>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260801172519.2982121-10-yukuai@kernel.org>
 References: <20260801172519.2982121-1-yukuai@kernel.org>
- <20260801172519.2982121-2-yukuai@kernel.org>
+ <20260801172519.2982121-10-yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 01 Aug 2026 17:43:41 +0000
-Message-Id: <20260801174342.028771F00AC4@smtp.kernel.org>
+Date: Sat, 01 Aug 2026 17:44:12 +0000
+Message-Id: <20260801174412.DE1FC1F00AC4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -47,80 +47,102 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Consuming LLPageFlush in the daemon introduces a race condition th=
-at re-arms the timer during array shutdown, leading to a Use-After-Free of =
-the llbitmap struct.
+- [High] Missing bounds check on `sync_size` causes out-of-bounds memory ac=
+cesses and disk overwrites.
 --
 
---- Patch [1]: [PATCH v4 01/25] md/md-llbitmap: clear flush state after dae=
-mon flush ---
-commit abba2aa11371c8630f75f9bd27a43851e99339eb
+--- Patch [9]: [PATCH v4 09/25] md/md-llbitmap: track bitmap sync_size expl=
+icitly ---
+commit b06a020ec2776bd2bc0418543c90f7ea1a1e754b
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/md-llbitmap: clear flush state after daemon flush
+md/md-llbitmap: track bitmap sync_size explicitly
 
-This commit clears the LLPageFlush bit in md_llbitmap_daemon_fn() rather
-than leaving it set. This prevents previously flushed pages from bypassing
-the barrier_idle expiry check on subsequent daemon runs, making new writes
-wait for the full idle window.
+Track llbitmap's own sync_size instead of always using
+mddev->resync_max_sectors directly. This is the minimal bookkeeping needed
+before llbitmap can track old and new reshape geometry independently.
 
 > diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index 5a4e2abaa7577..131582724e7e9 100644
+> index 1fa2adf0ada1c..3417da288e994 100644
 > --- a/drivers/md/md-llbitmap.c
 > +++ b/drivers/md/md-llbitmap.c
-> @@ -1066,14 +1066,14 @@ static void md_llbitmap_daemon_fn(struct work_str=
-uct *work)
+
+[ ... ]
+
+> @@ -987,6 +991,9 @@ static int llbitmap_read_sb(struct llbitmap *llbitmap)
+>  		goto out_put_page;
+>  	}
 > =20
->  	for (idx =3D 0; idx < llbitmap->nr_pages; idx++) {
->  		struct llbitmap_page_ctl *pctl =3D llbitmap->pctl[idx];
-> +		bool flush =3D test_and_clear_bit(LLPageFlush, &pctl->flags);
-> =20
->  		if (idx > 0) {
->  			start =3D end + 1;
->  			end =3D min(end + PAGE_SIZE, llbitmap->chunks - 1);
->  		}
-> =20
-> -		if (!test_bit(LLPageFlush, &pctl->flags) &&
-> -		    time_before(jiffies, pctl->expire)) {
-> +		if (!flush && time_before(jiffies, pctl->expire)) {
+> +	sync_size =3D le64_to_cpu(sb->sync_size);
+> +	if (!sync_size)
+> +		sync_size =3D mddev->resync_max_sectors;
 
 [Severity: High]
-Could clearing the flush bit here introduce a race condition during array
-shutdown that leads to a use-after-free of the llbitmap struct?
+Does this code bypass capacity validation if the superblock is corrupted or
+tampered?
 
-If llbitmap/daemon_sleep is configured to a small value, stopping the array
-invokes llbitmap_flush(), which sets LLPageFlush and queues the daemon:
+If an array is assembled with a bitmap superblock where sb->sync_size is
+artificially large or small, this untrusted sync_size is read here.
 
-llbitmap_flush()
+However, it appears the bounds check later in llbitmap_read_sb() still
+validates against mddev->resync_max_sectors instead of the new sync_size:
+
+	if (chunksize < DIV_ROUND_UP_SECTOR_T(mddev->resync_max_sectors,
+					      mddev->bitmap_info.space << SECTOR_SHIFT)) {
+
+Could this allow maliciously large or small chunk requirements to bypass
+capacity validation?
+
+>  	chunksize =3D le32_to_cpu(sb->chunksize);
+>  	if (!is_power_of_2(chunksize)) {
+>  		pr_err("md/llbitmap: %s: chunksize not a power of 2",
+
+[ ... ]
+
+> @@ -1022,8 +1029,9 @@ static int llbitmap_read_sb(struct llbitmap *llbitm=
+ap)
+> =20
+>  	llbitmap->barrier_idle =3D DEFAULT_BARRIER_IDLE;
+>  	llbitmap->chunksize =3D chunksize;
+> -	llbitmap->chunks =3D DIV_ROUND_UP_SECTOR_T(mddev->resync_max_sectors, c=
+hunksize);
+> +	llbitmap->chunks =3D DIV_ROUND_UP_SECTOR_T(sync_size, chunksize);
+
+[Severity: High]
+Is it safe to compute llbitmap->chunks using the unvalidated sync_size here?
+
+Since the validation check above still uses mddev->resync_max_sectors, an
+artificially large sync_size will cause llbitmap->chunks to exceed the
+allocated metadata space. This breaks the capacity validation invariant.
+
+Could this cause __llbitmap_flush() and llbitmap_write_page() to write bitm=
+ap
+data out-of-bounds on the underlying disk, overwriting adjacent partitions?
+
+Additionally, if sync_size is artificially small, the llbitmap->pctl array
+allocation (nr_pages) will be undersized. When IO arrives at valid offsets
+bounded by the block layer capacity, fast paths like llbitmap_start_write()
+could calculate a page_start index that exceeds nr_pages:
+
+drivers/md/md-llbitmap.c:llbitmap_start_write() {
     ...
-    queue_work(md_llbitmap_io_wq, &llbitmap->daemon_work);
-    flush_work(&llbitmap->daemon_work);
+	int page_start =3D (start + BITMAP_DATA_OFFSET) >> PAGE_SHIFT;
+	int page_end =3D (end + BITMAP_DATA_OFFSET) >> PAGE_SHIFT;
 
-If the daemon is concurrently running, it can consume the newly set
-LLPageFlush bits via test_and_clear_bit(). The explicitly queued daemon run
-would then see flush =3D=3D false, evaluate the unexpired pages, set restar=
-t =3D
-true, and re-arm the timer.
-
-If disk flushing takes longer than the sleep interval, the timer can fire
-and queue the work again.
-
-Later, llbitmap_destroy() calls:
-
-llbitmap_destroy()
+	while (page_start <=3D page_end) {
+		llbitmap_raise_barrier(llbitmap, page_start);
+		page_start++;
+	}
     ...
-    timer_delete_sync(&llbitmap->pending_timer);
-    flush_workqueue(md_llbitmap_io_wq);
+}
 
-Because the timer already fired, timer_delete_sync() does nothing. Then
-flush_workqueue() executes the queued daemon work, which incorrectly re-arms
-the timer after the deletion point. The struct is then freed, and the timer
-subsequently fires on freed memory.
+Could this lead to an out-of-bounds memory access on the pctl array when
+calling llbitmap_raise_barrier()?
 
->  			restart =3D true;
->  			continue;
->  		}
+>  	llbitmap->chunkshift =3D ffz(~chunksize);
+> +	llbitmap->sync_size =3D sync_size;
+>  	ret =3D llbitmap_cache_pages(llbitmap);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260801172519.2982=
-121-1-yukuai@kernel.org?part=3D1
+121-1-yukuai@kernel.org?part=3D9
