@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB32E3B3898;
-	Sat,  1 Aug 2026 17:27:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B7803ACA65;
+	Sat,  1 Aug 2026 17:27:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785605258; cv=none; b=bJCDThJI0LBKqRV6uBmcfALcLVZ0PdfyM91Zpnm9aenib7wOrBa9uiRgcBVJRQd7J2WTv5U1CWJczs6vIiILkq7M3r0m+lVaJ+YAXu54HVf3Yyndl2sGZAcOT0TvwDwl2wUnLJIdR7HdOkd+nWMNKZokcTXmgc8R7NXoWEusvuA=
+	t=1785605264; cv=none; b=Mrc/VstvpE9r1ohSTKZsjvqXN61IwkzEs7JGzcMQAsTFwldCXI49ScwSBxxEiMKt4KNW6angczmOeLA1TGgIKgpfKTgvV3cNTmmGivULhj+vs2lq8SNyFixGukp88ln4H/3V1dJhp5Lwd30pJtLnCUKVUUk5ZgeYU14KsYI3fwM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785605258; c=relaxed/simple;
-	bh=DFz9j/LUqMTB/KJD4y+MuD1SvAJ4inz3anY4ukvjgEc=;
+	s=arc-20240116; t=1785605264; c=relaxed/simple;
+	bh=UOdCJnz3XTTPYDn0pGXqNCXAj3POqv6rmXOZ1gRctXw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=eEhLO9oyIPkij/0/VKN0RUUA31W0bpbSlepDbHFqsPeZlJ+nKNHmMWQwb4jxuYH8xyxt/87NkerzvJuppses1t2GIvdk5+Way/BakGpseHkxEL4gUqhbpBF2OqP3Gzmnj1D/Xfk1cLILm2TW8SAx4bbBGFhG8SjWJs1puAnbCYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H8BYrer9; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=Kug3Sdayyn/ul6mRHh1yDc392P3UpOFeadEp07EYj/IByDcdvBo+RnSPiAc2kJeQU7ciKB3ACnm+h6e35elSHA5ez5Y1zYvk8KhXw7L/2ocxjwSPe9pP1bRMMd34ycp6YmQJdBJTdT2hGLnyvpuqtzvVhOvYrkNe493X+Fp5IS4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sxay5rh9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H8BYrer9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97C1D1F00AC4;
-	Sat,  1 Aug 2026 17:27:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sxay5rh9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9B661F00ACA;
+	Sat,  1 Aug 2026 17:27:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785605257;
-	bh=A7JHketKneKBfUVY/rm7ha78+U5Bqu5XSZlfyCTdK3g=;
+	s=k20260515; t=1785605262;
+	bh=kZcgrDKhiEDQJB/H5CCjU6tq0doXsg+SETN1gxdb3Nk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=H8BYrer9WfQt3gPEv2tnHMXjkhqhcfXA3xo3L/HIENKUOAQpKq1QarZIe260IdFrU
-	 6sAuUTqjVOrdXpKE80iTI2vDzfKck+IAZBlEJ5xXyjvyb/71bsZrW19g8TUcRIZCTm
-	 DD4odz9TsXqhm1e88Rwe6ERdjJVMUg+68gzY9DvJr47GktCFvNak1MuKTf5K3QhLIZ
-	 uQqN9T4hgJA3bTcPbnOlHApWx8ipc5LVLCckpDsNSKuR/sBKrswwNRkJ1xNxBxuG5I
-	 afvjjfptSk+OVKaR128KoG8Vq2wtOUxI7PE31kw+kKBP0sl1BKfYXZtP3g0qtqz8LO
-	 oUpHm1TCeE7qQ==
+	b=Sxay5rh9JKkvQYTYRwQ1E8V3HE+bgiZiMIEgdJ42gTjOJ6H/lkQozmhTxd9974chz
+	 /L60CIljZXOLDyfHe4Kl0ReZKk4LiQOfmoZh5Kfy+3TnlUgilq2eGHU2aURlufe7Yd
+	 OOpGuwp5Qcud+bbNWrAUfCLu0YHn93wo9SE3IGJiVDM0bJo6f5a9eEeCX0Bx43G74Q
+	 gd92OivwFjc8ITfCDgzSAwVAS8L1qBt+Xlm7Wk7dKmpSLweTsXSbuh6eYDycvrb0TG
+	 kBdwp220u5oH2029w5z7rEWbS2f1444aAt2MX52ZQYPKZPcH53lJPzxAATceIgF4L6
+	 xbWGKc0xPuZrA==
 From: Yu Kuai <yukuai@kernel.org>
 To: Song Liu <song@kernel.org>
 Cc: Li Nan <magiclinan@didiglobal.com>,
@@ -34,9 +34,9 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	Su Yue <glass.su@suse.com>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v4 21/25] md/raid10: split reshape bios before bitmap accounting
-Date: Sun,  2 Aug 2026 01:25:15 +0800
-Message-ID: <20260801172519.2982121-22-yukuai@kernel.org>
+Subject: [PATCH v4 22/25] md/raid5: add exact old and new llbitmap mapping helpers
+Date: Sun,  2 Aug 2026 01:25:16 +0800
+Message-ID: <20260801172519.2982121-23-yukuai@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260801172519.2982121-1-yukuai@kernel.org>
 References: <20260801172519.2982121-1-yukuai@kernel.org>
@@ -50,42 +50,155 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai@fygo.io>
 
-Use the shared mddev_bio_split_at_reshape_offset() helper so RAID10
-submits only one-side bios to llbitmap during reshape.
+Teach RAID5 to export exact old and new llbitmap mappings and the
+corresponding sync and array sizes for reshape-aware bitmap users.
 
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 ---
- drivers/md/raid10.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/md/raid5.c | 72 +++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 52 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index e50e4adee389..61900ace190f 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1886,6 +1886,7 @@ static bool raid10_make_request(struct mddev *mddev, struct bio *bio)
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 8b3483674398..af7775278af6 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5942,28 +5942,46 @@ static enum reshape_loc get_reshape_loc(struct mddev *mddev,
+ 	return LOC_BEHIND_RESHAPE;
+ }
+ 
+-static void raid5_bitmap_sector(struct mddev *mddev, sector_t *offset,
+-				unsigned long *sectors)
++static void raid5_bitmap_sector_map(struct mddev *mddev, sector_t *offset,
++				    unsigned long *sectors,
++				    bool previous)
  {
- 	struct r10conf *conf = mddev->private;
- 	sector_t chunk_mask = (conf->geo.chunk_mask & conf->prev.chunk_mask);
-+	const int rw = bio_data_dir(bio);
- 	int chunk_sects = chunk_mask + 1;
- 	int sectors = bio_sectors(bio);
+ 	struct r5conf *conf = mddev->private;
+ 	sector_t start = *offset;
+ 	sector_t end = start + *sectors;
+-	sector_t prev_start = start;
+-	sector_t prev_end = end;
+ 	int sectors_per_chunk;
+-	enum reshape_loc loc;
+ 	int dd_idx;
  
-@@ -1911,6 +1912,15 @@ static bool raid10_make_request(struct mddev *mddev, struct bio *bio)
- 		sectors = chunk_sects -
- 			(bio->bi_iter.bi_sector &
- 			 (chunk_sects - 1));
-+
-+	bio = mddev_bio_split_at_reshape_offset(mddev, bio, &sectors,
-+						&conf->bio_split);
-+	if (!bio) {
-+		if (rw == WRITE)
-+			md_write_end(mddev);
-+		return true;
-+	}
-+
- 	if (!__make_request(mddev, bio, sectors))
- 		md_write_end(mddev);
+-	sectors_per_chunk = conf->chunk_sectors *
+-		(conf->raid_disks - conf->max_degraded);
++	if (previous)
++		sectors_per_chunk = conf->prev_chunk_sectors *
++			(conf->previous_raid_disks - conf->max_degraded);
++	else
++		sectors_per_chunk = conf->chunk_sectors *
++			(conf->raid_disks - conf->max_degraded);
+ 	sector_div(start, sectors_per_chunk);
+ 	start *= sectors_per_chunk;
+ 	if (sector_div(end, sectors_per_chunk))
+ 		end++;
+ 	end *= sectors_per_chunk;
  
+-	start = raid5_compute_sector(conf, start, 0, &dd_idx, NULL);
+-	end = raid5_compute_sector(conf, end, 0, &dd_idx, NULL);
++	start = raid5_compute_sector(conf, start, previous, &dd_idx, NULL);
++	end = raid5_compute_sector(conf, end, previous, &dd_idx, NULL);
++	*offset = start;
++	*sectors = end - start;
++}
++
++static void raid5_bitmap_sector(struct mddev *mddev, sector_t *offset,
++				unsigned long *sectors)
++{
++	struct r5conf *conf = mddev->private;
++	sector_t start = *offset;
++	sector_t end = start + *sectors;
++	sector_t prev_start = start;
++	unsigned long prev_sectors = end - start;
++	enum reshape_loc loc;
++
++	raid5_bitmap_sector_map(mddev, &start, sectors, false);
++	end = start + *sectors;
+ 
+ 	/*
+ 	 * For LOC_INSIDE_RESHAPE, this IO will wait for reshape to make
+@@ -5972,19 +5990,10 @@ static void raid5_bitmap_sector(struct mddev *mddev, sector_t *offset,
+ 	loc = get_reshape_loc(mddev, conf, prev_start);
+ 	if (likely(loc != LOC_AHEAD_OF_RESHAPE)) {
+ 		*offset = start;
+-		*sectors = end - start;
+ 		return;
+ 	}
+ 
+-	sectors_per_chunk = conf->prev_chunk_sectors *
+-		(conf->previous_raid_disks - conf->max_degraded);
+-	sector_div(prev_start, sectors_per_chunk);
+-	prev_start *= sectors_per_chunk;
+-	sector_div(prev_end, sectors_per_chunk);
+-	prev_end *= sectors_per_chunk;
+-
+-	prev_start = raid5_compute_sector(conf, prev_start, 1, &dd_idx, NULL);
+-	prev_end = raid5_compute_sector(conf, prev_end, 1, &dd_idx, NULL);
++	raid5_bitmap_sector_map(mddev, &prev_start, &prev_sectors, true);
+ 
+ 	/*
+ 	 * for LOC_AHEAD_OF_RESHAPE, reshape can make progress before this IO
+@@ -5992,7 +6001,7 @@ static void raid5_bitmap_sector(struct mddev *mddev, sector_t *offset,
+ 	 * we set bits for both.
+ 	 */
+ 	*offset = min(start, prev_start);
+-	*sectors = max(end, prev_end) - *offset;
++	*sectors = max(end, prev_start + prev_sectors) - *offset;
+ }
+ 
+ static enum stripe_result make_stripe_request(struct mddev *mddev,
+@@ -9059,6 +9068,20 @@ static void raid5_prepare_suspend(struct mddev *mddev)
+ 	wake_up(&conf->wait_for_reshape);
+ }
+ 
++static sector_t raid5_bitmap_sync_size(struct mddev *mddev, bool previous)
++{
++	return mddev->dev_sectors;
++}
++
++static sector_t raid5_bitmap_array_sectors(struct mddev *mddev, bool previous)
++{
++	struct r5conf *conf = mddev->private;
++
++	if (previous)
++		return raid5_size(mddev, 0, 0);
++	return raid5_size(mddev, mddev->dev_sectors, conf->raid_disks);
++}
++
+ static struct md_personality raid6_personality =
+ {
+ 	.head = {
+@@ -9088,6 +9111,9 @@ static struct md_personality raid6_personality =
+ 	.change_consistency_policy = raid5_change_consistency_policy,
+ 	.prepare_suspend = raid5_prepare_suspend,
+ 	.bitmap_sector	= raid5_bitmap_sector,
++	.bitmap_sector_map = raid5_bitmap_sector_map,
++	.bitmap_sync_size = raid5_bitmap_sync_size,
++	.bitmap_array_sectors = raid5_bitmap_array_sectors,
+ };
+ static struct md_personality raid5_personality =
+ {
+@@ -9118,6 +9144,9 @@ static struct md_personality raid5_personality =
+ 	.change_consistency_policy = raid5_change_consistency_policy,
+ 	.prepare_suspend = raid5_prepare_suspend,
+ 	.bitmap_sector	= raid5_bitmap_sector,
++	.bitmap_sector_map = raid5_bitmap_sector_map,
++	.bitmap_sync_size = raid5_bitmap_sync_size,
++	.bitmap_array_sectors = raid5_bitmap_array_sectors,
+ };
+ 
+ static struct md_personality raid4_personality =
+@@ -9149,6 +9178,9 @@ static struct md_personality raid4_personality =
+ 	.change_consistency_policy = raid5_change_consistency_policy,
+ 	.prepare_suspend = raid5_prepare_suspend,
+ 	.bitmap_sector	= raid5_bitmap_sector,
++	.bitmap_sector_map = raid5_bitmap_sector_map,
++	.bitmap_sync_size = raid5_bitmap_sync_size,
++	.bitmap_array_sectors = raid5_bitmap_array_sectors,
+ };
+ 
+ static int __init raid5_init(void)
 -- 
 2.51.0
 
