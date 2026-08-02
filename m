@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B60F62C3268;
-	Sun,  2 Aug 2026 19:51:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56E1B32ED4E;
+	Sun,  2 Aug 2026 19:51:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785700273; cv=none; b=OIUDZGF6hmHKtQka7HkYnQ90YDmnmIbkuHUFK9xuy4ZESvJH1dH2jEzl+R2sYOcn44FeFSCFIY2D/J+oDOc/78CTPpxOyeCBsDhJceRl7qGvGpwG/2elX8aICP+2zyM0c91dmzbc4B1jvGTdEH//fQyG8EL8j5usSz5PQp27rM8=
+	t=1785700276; cv=none; b=R5trnle5MoejFvw5ACDrW1j1e/Yn1bvt5dDKkKT9WyQxyAz4BBuOnG2VSAyLrisV4JH0fI4gfzB+aCciDhcmlSpggVK2eXO2eFOCZQUp2IeDDfjB8tGhdE6eYH55lB1zLTL46oxHBUPmSPQEFWTsOt+nHzq3mE/EUYRIBgHa2ws=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785700273; c=relaxed/simple;
-	bh=EG1hSCNgt7Vx9kszVsAxRC0ryiRK4TR1WqZWlcEEexY=;
+	s=arc-20240116; t=1785700276; c=relaxed/simple;
+	bh=zHjud01RmE5/01zjpU7ubwPhSXmrMv6FIQHfJg4x2QA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iQPM3yd0XWFz+TFjMogPAlM+4x6/FkDMeJo+mTASyFp2gzqF0A2EquBAalBOyusvI9sYtYQlW2h23DLBrMWELW4aqbgc/6z4V2AbctouJutOrWehAKXEbazdyIBPsdCgraQQwhc1h5mtsIlRd7lvDvsLOtmycCWEJipk3DEanFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wcbr6A2s; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=BOC2ASqQ2YQPKNNaB22jCKXHHa+r77mN3wMklJqqDiGDCd4LHxJIezrZch3Xh6XxuuaiTr/GxGwgDWAbjUR8drZULom2tA2Ncph/Ialr9Iz3PoCrdJzn/+DYOwtTc3JyEXVUe9WbCAWYk3iMfuhLfc0rUdau2/QdGsVWt0la4gA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bj1dDfZZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wcbr6A2s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 652441F000E9;
-	Sun,  2 Aug 2026 19:51:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bj1dDfZZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA9FF1F00A3A;
+	Sun,  2 Aug 2026 19:51:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785700272;
-	bh=p+dw3vVAIj4YAPqd7MgSRpBgA99rCskitLXGzXREk6s=;
+	s=k20260515; t=1785700275;
+	bh=0Y2NONpX13C3hOlDmvNXngKpBN72tSpW1BA7NqTzK00=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Wcbr6A2sse/VYuF0Kd5yi1m2/3qPhYmSLaE4lzO9Ik5g6SLhlbJcIzEVfr/wbVVQY
-	 h+bubM4YEGkYrmDp/spuA2ynG2JwH4ID5CdJ/iROpe8RHYHh4558XjKSWGLYexMC+Z
-	 0oQTEvz7AR0cuGKucAQ1l7LaiUN6A1F9/28vRo68N2fy8npfK3WNh2EtAot0Da2fpk
-	 4Ne49Ifo4akk1xfFd2/uToArE9pL+rKCd4JpcoMmmuTRq1NqtnpdCMbDutVrpEfk0L
-	 fPdUhQhIndD6C0xLb31kYj5LFtIWMmLTJZahN0jr0jKOYFPhFHrA7U5BHaLdGe6nrM
-	 sggNGR7RG9sbA==
+	b=bj1dDfZZ20ZRxkFebDQXa9DKphUFt2/gnAuXoijZgoYMfqAiGkYptqjgfWeQl3B0Z
+	 47uZ8EsaZHSMYvIqpwrmYsUPuVFpJsWd+MCU7kSDWUKYTegI0Zi5SOQ/K3hJMJqRvs
+	 EdJMe2KknlxbtMnn3k7ZBFg4vFINvNUM0owdXUNzIZQmsj8GhZ0ejLDH2o7rBYQR72
+	 fmP+D2vfIM6DCvJ/IYhvnVgDs4Vq0bSlcB9Fsih45a0RXtvICtr1e93FQCEEX3Vtbs
+	 5EvAGrovf3meJyj7fqC1BUFvOj5cbyq8f1BGjPSYSUUFTzF/XRDzre5giLkGyFxbj1
+	 pK5rUFo+ZMiOw==
 From: Yu Kuai <yukuai@kernel.org>
 To: Song Liu <song@kernel.org>,
 	Li Nan <magiclinan@didiglobal.com>,
@@ -35,9 +35,9 @@ Cc: Yu Kuai <yukuai@fygo.io>,
 	linux-kernel@vger.kernel.org,
 	Mykola Marzhan <mykola@meshstor.io>,
 	Su Yue <glass.su@suse.com>
-Subject: [PATCH v5 07/29] md: avoid stale clone I/O accounting timestamps
-Date: Mon,  3 Aug 2026 03:50:16 +0800
-Message-ID: <20260802195038.164272-8-yukuai@kernel.org>
+Subject: [PATCH v5 08/29] md/md-llbitmap: prevent create failure bitmap UAF
+Date: Mon,  3 Aug 2026 03:50:17 +0800
+Message-ID: <20260802195038.164272-9-yukuai@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260802195038.164272-1-yukuai@kernel.org>
 References: <20260802195038.164272-1-yukuai@kernel.org>
@@ -51,37 +51,43 @@ Content-Transfer-Encoding: 8bit
 
 From: Yu Kuai <yukuai@fygo.io>
 
-md_clone_bio() always allocates the clone from mddev->io_clone_set, even
-when queue I/O stats are disabled. In that case it does not call
-bio_start_io_acct(), but it also left md_io_clone->start_time untouched.
+llbitmap_create() publishes mddev->bitmap before reading the bitmap
+superblock. This is needed because llbitmap_read_sb() can initialize a
+new bitmap and flush it through helpers that use mddev->bitmap.
 
-The clone private data comes from a mempool and can contain data from a
-previous user. md_end_clone_io() checks start_time to decide whether it
-needs to call bio_end_io_acct(), so a stale non-zero value can make the
-completion path end accounting that was never started for this bio.
+If llbitmap_read_sb() fails, the old cleanup dropped bitmap_info.mutex
+and freed llbitmap before clearing mddev->bitmap. Readers such as
+/proc/mdstat rely on bitmap_info.mutex to keep the bitmap pointer stable
+while collecting bitmap stats, so they could observe the stale pointer
+after the failed create path released the mutex.
 
-Set start_time to 0 in the no-stats branch. This keeps the end path tied
-to whether bio_start_io_acct() actually ran.
+Clear mddev->bitmap while still holding bitmap_info.mutex, then free the
+failed llbitmap after dropping the mutex. This makes mutex-protected
+readers see either a live bitmap or no bitmap.
 
-Fixes: c687297b8845 ("md: also clone new io if io accounting is disabled")
+Fixes: 5ab829f1971d ("md/md-llbitmap: introduce new lockless bitmap")
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 ---
- drivers/md/md.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/md/md-llbitmap.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b61040315aef..58fb5453a819 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9448,6 +9448,8 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
- 	md_io_clone->mddev = mddev;
- 	if (blk_queue_io_stat(bdev->bd_disk->queue))
- 		md_io_clone->start_time = bio_start_io_acct(*bio);
-+	else
-+		md_io_clone->start_time = 0;
+diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
+index 948bf64c5ad2..af80a630bd21 100644
+--- a/drivers/md/md-llbitmap.c
++++ b/drivers/md/md-llbitmap.c
+@@ -1126,10 +1126,11 @@ static int llbitmap_create(struct mddev *mddev)
+ 	mutex_lock(&mddev->bitmap_info.mutex);
+ 	mddev->bitmap = llbitmap;
+ 	ret = llbitmap_read_sb(llbitmap);
++	if (ret)
++		mddev->bitmap = NULL;
+ 	mutex_unlock(&mddev->bitmap_info.mutex);
+ 	if (ret) {
+ 		kfree(llbitmap);
+-		mddev->bitmap = NULL;
+ 	}
  
- 	if (bio_data_dir(*bio) == WRITE && md_bitmap_enabled(mddev, false)) {
- 		md_io_clone->offset = (*bio)->bi_iter.bi_sector;
+ 	return ret;
 -- 
 2.51.0
 
