@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD7C6244667
-	for <linux-raid@vger.kernel.org>; Sun,  2 Aug 2026 20:47:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4F9922CBD9
+	for <linux-raid@vger.kernel.org>; Sun,  2 Aug 2026 20:49:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785703622; cv=none; b=lOLr/Wf2YkWI8UXM0eGnE/NkNEw0FvQvX11aHn+MCVoOGh+TyyFuTiJNM2b9Zio160gMaxoaGC64mT+367mC1XIMkz80CdC5k7Tr+Vw4d9m769GlBThM19LrNeZWqvwVLp0twji9eypjR05w1dSv0kM5eXrOQ8kGViW8E37qM00=
+	t=1785703748; cv=none; b=JP2XNHI6zqjI42+6WFvJbECALDJfmHmX9LReelgalYv6agC77VIIC3h7KkS91EuFXfQhQkwOrZ2KvbcwMwkrYmQQEH3K9+u2aBTmEp4bnmZM30Ei+atbNLtbFMoNkQUfnbYGZLWVs0B/4yMnOragtd2r3J5e7E1E44zn2FuGb80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785703622; c=relaxed/simple;
-	bh=59JxrfdM/hgUr/3TxSzq+h+ztd1Y7jToqK0n+CYIe8w=;
+	s=arc-20240116; t=1785703748; c=relaxed/simple;
+	bh=K5Lce37E95w8UomaSi22a9FoCxNVsVoXWtd3U/Sqocs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=u22XU+0NQMHm7PtSc4Nk6cgSAC9hgdphmK1eaY0cC40qmsv7VieNpekKzPxeYS7bbde3bEziNo5EerhH1dKInpUNu86vdPlvwaNzO+BA5+NaI391HMxATKDm94j7y9gQt/jJItICcfDPpxwjT7enYOZtd8XZ0yxN2YGwy9dmQdQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IxISQ7U6; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=OXS+u4Dw+ho992k4J8GDTTrUKjgQ0Troo497nYRsCidDdOI4ZhcJ+R2rd5BGPc8CM7ph6SgDLpHzq+qbXBzBRHy1DgyDbf8CRJ9bi8ms/WacanwbPgabJ4Mj8KnW5H/uu6X1zKhK6yOpYKQI1DZcCnk7HXL682A7jeZ/GNUfTXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GH4cUpIy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IxISQ7U6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFF851F000E9;
-	Sun,  2 Aug 2026 20:46:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GH4cUpIy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C11C1F00A3A;
+	Sun,  2 Aug 2026 20:49:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785703620;
-	bh=rN7cEwlZk/Of2Kq067rFOaesoShspjNUst9l7w832gY=;
+	s=k20260515; t=1785703746;
+	bh=2rGpKbOE9yymAKgpaUU5kwoDV0WjG+kLnkjb73Ph2s0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IxISQ7U6OV2InWopgYgUj7ew99/xwfXqvJjQHsJxPTPsNp07NmsUiwke4fM4ve+iN
-	 PBimnJb5VqABvYZ3jV8hXJ1oEralMFZrzxger2Bsznvv5aDuEc34VsS4XSV5P9vhRH
-	 ovkC6QiMti6GCQimv/STljVzfxiUcVox/aHdENkYjT2uyfbjNk5E8uFJ2sG6sLKHoz
-	 9JRoc3TX36PgXqljfQEPjFT2PtX1/MPOdaeNa1biln0EO8SKvPRma7y9VH0QBllgTc
-	 yNm6LwSbbbbFFZNfLFtczKVyPx9xZrOCo74R2Qq4uQergTKnH0u4PQn0Xit2tGUQU0
-	 +NBSV94HXm4zA==
+	b=GH4cUpIyIsixrq5RcU2OKqHA0BT0aKFbFjAaod0FfotpKdHWjPplrBM6JvJnmouug
+	 pqkARJ/B+znhBjVp5QfGuxTOKTof9I1YLsMQeGuRBXwy7GVneMnAJEPnSHuff7lfgn
+	 tBbNVFdNWHoMYlDfwzaRVMt5hzPAx0hknh1HF+fgb3cwZer1cPWJpxxcEo95IkOLnP
+	 n0IUENIeLh4/arbwjwt4VvD/g302Bkv+hOXQGYjIbPtSKN2IcZnV6MzHfTZknagtvp
+	 4sKSTLgvDvpOpjHdn9IsAPkf0OBEIdAySxlZboH3hvx2vIr6YLLiIunziAoiLosu4P
+	 sUsyM1pnW/23w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 28/29] md/raid5: wire llbitmap reshape lifecycle
+Subject: Re: [PATCH v5 24/29] md/raid10: wire llbitmap reshape lifecycle
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260802195038.164272-29-yukuai@kernel.org>
+In-Reply-To: <20260802195038.164272-25-yukuai@kernel.org>
 References: <20260802195038.164272-1-yukuai@kernel.org>
- <20260802195038.164272-29-yukuai@kernel.org>
+ <20260802195038.164272-25-yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 02 Aug 2026 20:46:59 +0000
-Message-Id: <20260802204659.CFF851F000E9@smtp.kernel.org>
+Date: Sun, 02 Aug 2026 20:49:05 +0000
+Message-Id: <20260802204906.2C11C1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -46,82 +46,59 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Torn metadata update between llbitmap data and the array superbloc=
-k during RAID5 reshape, leading to data corruption upon crash recovery.
+- [Low] Hardcoded check for `ID_LLBITMAP` in `raid10_finish_reshape()` viol=
+ates the `bitmap_ops` vtable abstraction.
 --
 
---- Patch [28]: [PATCH v5 28/29] md/raid5: wire llbitmap reshape lifecycle =
----
-commit 3a12d425cf5a2752c68bb352670db1a3775e5849
+--- Patch [24]: [PATCH v5 24/29] md/raid10: wire llbitmap reshape lifecycle=
+ ---
+commit 2a0099dd424ef7b25245673edf0ef62577007cc4
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/raid5: wire llbitmap reshape lifecycle
+md/raid10: wire llbitmap reshape lifecycle
 
-Prepare llbitmap before RAID5 reshape starts, checkpoint the bitmap
-before advancing reshape_position, and finish the llbitmap geometry
-update when reshape completes.
+This commit wires up the llbitmap reshape lifecycle in the RAID10 subsystem.
+It prepares the bitmap before the array starts growing, checkpoints it
+during the reshape process, and finalizes the geometry update upon completi=
+on.
 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 67d56c92c8a44..5176de5b59568 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -6497,6 +6497,13 @@ static sector_t reshape_request(struct mddev *mdde=
-v, sector_t sector_nr, int *sk
->  			   || test_bit(MD_RECOVERY_INTR, &mddev->recovery));
->  		if (atomic_read(&conf->reshape_stripes) !=3D 0)
->  			return 0;
-> +		if (md_bitmap_enabled(mddev, false) &&
-> +		    mddev->bitmap_ops->reshape_mark &&
-> +		    conf->reshape_safe !=3D conf->reshape_progress) {
-> +			mddev->bitmap_ops->reshape_mark(mddev, conf->reshape_safe,
-> +						       conf->reshape_progress);
-> +			mddev->bitmap_ops->unplug(mddev, true);
-> +		}
-
-[Severity: High]
-Can this sequence cause a torn metadata update between the llbitmap data
-and the array superblock during a reshape?
-
-If a crash occurs in the window immediately after the bitmap pages are
-synchronously flushed to disk here, but before the array superblock write
-completes (via wait_event(mddev->sb_wait, mddev->sb_flags =3D=3D 0) shortly
-after), the system might reboot with an inconsistent bitmap state.
-
-Since llbitmap relies entirely on the array's mddev->reshape_position
-and doesn't track its own, could dirty bits be misread as clean due to
-layout misalignment, potentially leading to degraded arrays skipping necess=
-ary
-resyncs and causing data corruption upon recovery?
-
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 1c3393467667b..bac9edd28c974 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
 [ ... ]
-
-> @@ -8732,10 +8752,19 @@ static int raid5_start_reshape(struct mddev *mdde=
-v)
->   */
->  static void end_reshape(struct r5conf *conf)
+> @@ -5011,10 +5034,15 @@ static void end_reshape_request(struct r10bio *r1=
+0_bio)
+>  static void raid10_finish_reshape(struct mddev *mddev)
 >  {
-> +	struct mddev *mddev =3D conf->mddev;
+>  	struct r10conf *conf =3D mddev->private;
+> +	bool llbitmap =3D mddev->bitmap_id =3D=3D ID_LLBITMAP &&
+> +		md_bitmap_enabled(mddev, false);
 > =20
->  	if (!test_bit(MD_RECOVERY_INTR, &conf->mddev->recovery)) {
->  		struct md_rdev *rdev;
+>  	if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+>  		return;
 > =20
-> +		if (md_bitmap_enabled(mddev, false) &&
-> +		    mddev->bitmap_ops->reshape_mark &&
-> +		    conf->reshape_safe !=3D conf->reshape_progress) {
-> +			mddev->bitmap_ops->reshape_mark(mddev, conf->reshape_safe,
-> +						       conf->reshape_progress);
-> +			mddev->bitmap_ops->unplug(mddev, true);
-> +		}
+> +	if (llbitmap && mddev->bitmap_ops->reshape_finish)
+> +		mddev->bitmap_ops->reshape_finish(mddev);
 > +
 
-[Severity: High]
-Does this have the same torn metadata update risk as above?
+[Severity: Low]
+Does this explicit check for ID_LLBITMAP defeat the purpose of the bitmap_o=
+ps
+vtable abstraction?
 
-This flushes the reshaped bitmap layout to disk synchronously before the
-array metadata is finalized by md_finish_reshape() shortly after. A crash
-here seems like it would leave the bitmap and superblock out of sync in the
-same way.
+Earlier in the file during raid10_start_reshape() and end_reshape(), the co=
+de
+relies entirely on checking if the virtual function pointers like
+reshape_can_start or reshape_mark are set. By hardcoding a check for
+mddev->bitmap_id =3D=3D ID_LLBITMAP here, it leaks internal knowledge of wh=
+ich
+specific bitmap type supports reshape_finish.
+
+Would it be better to just rely on mddev->bitmap_ops->reshape_finish being
+non-NULL, so that any future bitmap type implementing this hook won't be
+silently bypassed?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260802195038.1642=
-72-1-yukuai@kernel.org?part=3D28
+72-1-yukuai@kernel.org?part=3D24
