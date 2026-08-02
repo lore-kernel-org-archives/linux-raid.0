@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A476522CBD9
-	for <linux-raid@vger.kernel.org>; Sun,  2 Aug 2026 20:46:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD7C6244667
+	for <linux-raid@vger.kernel.org>; Sun,  2 Aug 2026 20:47:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785703605; cv=none; b=hqmg4nZVDidufFHPT6wRjMUkAhn8T1tQy9MQpE1Zt2OODEf/lcLOcuzXAxCgfWsKO2xj9wwmTzd+ehmgEuXZHJquAYCCVQuJ+n+HWEMiVdJrxq3qxTHbePvndHJ5k9xRq9x3TXmRVN0ns8f2r2HInnzuQPMihBMEh3/Q2GhRGiE=
+	t=1785703622; cv=none; b=lOLr/Wf2YkWI8UXM0eGnE/NkNEw0FvQvX11aHn+MCVoOGh+TyyFuTiJNM2b9Zio160gMaxoaGC64mT+367mC1XIMkz80CdC5k7Tr+Vw4d9m769GlBThM19LrNeZWqvwVLp0twji9eypjR05w1dSv0kM5eXrOQ8kGViW8E37qM00=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785703605; c=relaxed/simple;
-	bh=3PvPE9ByeR40I35Fm9L411Exs+mgXvT8QAnbSqTrmcM=;
+	s=arc-20240116; t=1785703622; c=relaxed/simple;
+	bh=59JxrfdM/hgUr/3TxSzq+h+ztd1Y7jToqK0n+CYIe8w=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=RfUp6I3IrYNUb6cPPBlMPpKk3PsIDGRVgK722XF4YidPlpdz4UqRMoJ3yL+lGrPgawyLtKO0KPbY+MMzebb/WiCCRSYI1lU+lgui/Ixf3pkEsIVP+xKCHEntt41v6rl7ZvVX0KG+D6LVNueDu4ftX6VuBpcNLz19XS84YZ2Oe5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VO3ZcS/K; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=u22XU+0NQMHm7PtSc4Nk6cgSAC9hgdphmK1eaY0cC40qmsv7VieNpekKzPxeYS7bbde3bEziNo5EerhH1dKInpUNu86vdPlvwaNzO+BA5+NaI391HMxATKDm94j7y9gQt/jJItICcfDPpxwjT7enYOZtd8XZ0yxN2YGwy9dmQdQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IxISQ7U6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VO3ZcS/K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32C4D1F000E9;
-	Sun,  2 Aug 2026 20:46:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IxISQ7U6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFF851F000E9;
+	Sun,  2 Aug 2026 20:46:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785703604;
-	bh=oYy6SRJSsM1NseBL7vTfTAZgkyDEHPa6dBNHifZsn6A=;
+	s=k20260515; t=1785703620;
+	bh=rN7cEwlZk/Of2Kq067rFOaesoShspjNUst9l7w832gY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VO3ZcS/K2e22HqSR4uso+u5c7aIcGu0Bw1Fg1lUizFhnk2xENBm8pRMaQ8onQqyLT
-	 clYmxQG/JGF4U/7na4Q/x2ijp20iEaJds6oZk9iFe2tbS2+K8Zgc7Rlym8kWqPz5sG
-	 wtSSxZE0uJdFvQH4E+/IOFkJkYVA1Aeq1hVXoT3Pu7gAbdWyWIYk3c8XKzAvmwSFiT
-	 ia36nckWAIH9G73wAUfI5/As9XBEwqYx3t4fniuWRie7Q8Cw4/K+cpzaCTbanKQ6M0
-	 7m+pRgSHRkFCjkPDwoyPKphxJmZ+y36Q8D7fDOJJh0MbDXOnXacQ6yaOGHNZ4BdGcx
-	 ru/z6KSRpusLQ==
+	b=IxISQ7U6OV2InWopgYgUj7ew99/xwfXqvJjQHsJxPTPsNp07NmsUiwke4fM4ve+iN
+	 PBimnJb5VqABvYZ3jV8hXJ1oEralMFZrzxger2Bsznvv5aDuEc34VsS4XSV5P9vhRH
+	 ovkC6QiMti6GCQimv/STljVzfxiUcVox/aHdENkYjT2uyfbjNk5E8uFJ2sG6sLKHoz
+	 9JRoc3TX36PgXqljfQEPjFT2PtX1/MPOdaeNa1biln0EO8SKvPRma7y9VH0QBllgTc
+	 yNm6LwSbbbbFFZNfLFtczKVyPx9xZrOCo74R2Qq4uQergTKnH0u4PQn0Xit2tGUQU0
+	 +NBSV94HXm4zA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 25/29] md/raid10: split reshape bios before bitmap
- accounting
+Subject: Re: [PATCH v5 28/29] md/raid5: wire llbitmap reshape lifecycle
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260802195038.164272-26-yukuai@kernel.org>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20260802195038.164272-29-yukuai@kernel.org>
 References: <20260802195038.164272-1-yukuai@kernel.org>
- <20260802195038.164272-26-yukuai@kernel.org>
+ <20260802195038.164272-29-yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 02 Aug 2026 20:46:43 +0000
-Message-Id: <20260802204644.32C4D1F000E9@smtp.kernel.org>
+Date: Sun, 02 Aug 2026 20:46:59 +0000
+Message-Id: <20260802204659.CFF851F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -47,69 +46,82 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Double-splitting a bio using the same mempool-backed bioset causes=
- a deadlock under concurrent load.
+- [High] Torn metadata update between llbitmap data and the array superbloc=
+k during RAID5 reshape, leading to data corruption upon crash recovery.
 --
 
---- Patch [25]: [PATCH v5 25/29] md/raid10: split reshape bios before bitma=
-p accounting ---
-commit 6f3a3e2c85f7d5d7d630d6c3cb813006807edbdc
+--- Patch [28]: [PATCH v5 28/29] md/raid5: wire llbitmap reshape lifecycle =
+---
+commit 3a12d425cf5a2752c68bb352670db1a3775e5849
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/raid10: split reshape bios before bitmap accounting
+md/raid5: wire llbitmap reshape lifecycle
 
-Use the shared mddev_bio_split_at_reshape_offset() helper so RAID10
-submits only one-side bios to llbitmap during reshape.
+Prepare llbitmap before RAID5 reshape starts, checkpoint the bitmap
+before advancing reshape_position, and finish the llbitmap geometry
+update when reshape completes.
 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1873,6 +1874,15 @@ static bool raid10_make_request(struct mddev *mdde=
-v, struct bio *bio)
->  		sectors =3D chunk_sects -
->  			(bio->bi_iter.bi_sector &
->  			 (chunk_sects - 1));
-> +
-> +	bio =3D mddev_bio_split_at_reshape_offset(mddev, bio, &sectors,
-> +						&conf->bio_split);
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 67d56c92c8a44..5176de5b59568 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -6497,6 +6497,13 @@ static sector_t reshape_request(struct mddev *mdde=
+v, sector_t sector_nr, int *sk
+>  			   || test_bit(MD_RECOVERY_INTR, &mddev->recovery));
+>  		if (atomic_read(&conf->reshape_stripes) !=3D 0)
+>  			return 0;
+> +		if (md_bitmap_enabled(mddev, false) &&
+> +		    mddev->bitmap_ops->reshape_mark &&
+> +		    conf->reshape_safe !=3D conf->reshape_progress) {
+> +			mddev->bitmap_ops->reshape_mark(mddev, conf->reshape_safe,
+> +						       conf->reshape_progress);
+> +			mddev->bitmap_ops->unplug(mddev, true);
+> +		}
 
 [Severity: High]
-Does this introduce a mempool deadlock if we need to split the bio again la=
-ter?
+Can this sequence cause a torn metadata update between the llbitmap data
+and the array superblock during a reshape?
 
-If this initial split succeeds, the thread holds a bio from the conf->bio_s=
-plit
-mempool. Later, the thread proceeds to __make_request() and then to
-raid10_write_request().
+If a crash occurs in the window immediately after the bitmap pages are
+synchronously flushed to disk here, but before the array superblock write
+completes (via wait_event(mddev->sb_wait, mddev->sb_flags =3D=3D 0) shortly
+after), the system might reboot with an inconsistent bitmap state.
 
-If the target disks have bad blocks, max_sectors is further reduced, causin=
-g a
-second split attempt from the exact same mempool:
+Since llbitmap relies entirely on the array's mddev->reshape_position
+and doesn't track its own, could dirty bits be misread as clean due to
+layout misalignment, potentially leading to degraded arrays skipping necess=
+ary
+resyncs and causing data corruption upon recovery?
 
-raid10_write_request() {
-    ...
-    if (max_sectors < r10_bio->sectors) {
-        ...
-        bio =3D bio_submit_split_bioset(bio, r10_bio->sectors,
-                                      &conf->bio_split);
-    ...
-}
+[ ... ]
 
-Since the conf->bio_split bioset is initialized with BIO_POOL_SIZE (2), if =
-two
-concurrent I/O requests cross chunk boundaries and hit bad blocks
-simultaneously, could both threads allocate one bio each, and then both
-permanently block in mempool_alloc() waiting for a second bio?
-
-> +	if (!bio) {
-> +		if (rw =3D=3D WRITE)
-> +			md_write_end(mddev);
-> +		return true;
-> +	}
+> @@ -8732,10 +8752,19 @@ static int raid5_start_reshape(struct mddev *mdde=
+v)
+>   */
+>  static void end_reshape(struct r5conf *conf)
+>  {
+> +	struct mddev *mddev =3D conf->mddev;
+> =20
+>  	if (!test_bit(MD_RECOVERY_INTR, &conf->mddev->recovery)) {
+>  		struct md_rdev *rdev;
+> =20
+> +		if (md_bitmap_enabled(mddev, false) &&
+> +		    mddev->bitmap_ops->reshape_mark &&
+> +		    conf->reshape_safe !=3D conf->reshape_progress) {
+> +			mddev->bitmap_ops->reshape_mark(mddev, conf->reshape_safe,
+> +						       conf->reshape_progress);
+> +			mddev->bitmap_ops->unplug(mddev, true);
+> +		}
 > +
->  	if (!__make_request(mddev, bio, sectors))
->  		md_write_end(mddev);
+
+[Severity: High]
+Does this have the same torn metadata update risk as above?
+
+This flushes the reshaped bitmap layout to disk synchronously before the
+array metadata is finalized by md_finish_reshape() shortly after. A crash
+here seems like it would leave the bitmap and superblock out of sync in the
+same way.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260802195038.1642=
-72-1-yukuai@kernel.org?part=3D25
+72-1-yukuai@kernel.org?part=3D28
