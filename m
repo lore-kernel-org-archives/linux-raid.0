@@ -1,146 +1,191 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E8312FFF8D
-	for <linux-raid@vger.kernel.org>; Sun,  2 Aug 2026 20:39:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE77925B0AE
+	for <linux-raid@vger.kernel.org>; Sun,  2 Aug 2026 20:40:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785703157; cv=none; b=PMVAQ7GiMquDKSkvIChOkH270x0H1z2M3YNDgLhjyckKc0kwWDN3ZfD55qZx+XSfZc8GdiFeOUcqsZC8Lj3nftD4UG/PG2UlW8tQ4NR7Jg1Gz0JUQ1Rq8dOWNBCHb+pMnuzyBk4QwZE+OThJLF3fg4Z7RU0BGnJ57u7DR65sG5M=
+	t=1785703203; cv=none; b=c9yzxhcmtxEuhLj1HLxza52n3TFSkqWk0zJlIk7WzlySgE6HVsll/PgkYrH3CsORQ53ImAedC+zX6k4ucjzyMobnDdvHa779cg2zEe/k03Li87ViBrCCxK/3oHeb5Y5KxrvXcXK/i0UJAGOrDiDdo650Nz7+dYiBzBttYxG3qcU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785703157; c=relaxed/simple;
-	bh=mORhiXEsxA2ITNTNtuG8o1E0D9HeleyQN9L8xWw9sd0=;
+	s=arc-20240116; t=1785703203; c=relaxed/simple;
+	bh=sBOGYHrUxTY/c2EvOICgXu2sUDBBLRY5YsU5p+Q8zOE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=GMU5ipAiDOa1hhpiZKqvUvztq9aS+LmnkYGToTDSpEeVlVQLmBxfJgGJmbhCUa0xJ+MVquyUfG5UGfjsj/LHHnuNXlceMrmj9Uvq65h6W0ygqFk5j0XNwK4GK6+JiEsU93EjgeVIgkh5T73VIxFufIY5SrgELpV9SXH/TglzWBY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y0Lg1Ncr; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=jQamFrKahTAkJ1rhAID9lVmCJ9Fb6cSR9McRf+2GuorVPsLqIbmt7a/LbiC4Kck2psWe9iDcDfTKZEUj+nsHu1DuHdp2uWUoZapTUjaCfjIbWsiS3fChgB/ETIgmPjNTPFZWpbuQuJh7vGrP2wxpjCrZzuRFydeTcm7LmXZbXjM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RI0UhRZM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y0Lg1Ncr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3BA61F000E9;
-	Sun,  2 Aug 2026 20:39:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RI0UhRZM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69D191F00A3A;
+	Sun,  2 Aug 2026 20:40:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785703156;
-	bh=/ERoqYQj6uVRMOX7IgVBz7BBoyBRz95AWhHWIzHxuOU=;
+	s=k20260515; t=1785703202;
+	bh=nkgAPA9k6Ojj6dy2/TMm74VJXxcNmRcMFto/OlqMFnY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Y0Lg1Ncrdnrq3oAXewaxCS9+0fURsnM+UWT6Yv30DyIto+87OuLDtBpG5n3IxF3Nb
-	 krSf9HUPCa0QEvVcETb4kmJJlDjfJuFfCjG/jwOxJQIFgJFnEy4DPzPXkOOBy6nI6q
-	 hKS5V3J9Fm2+ZNEOO3G4TNOyF6WUAZUQyPgbbrGBKQYANBV+kbhhIvyTT0nKcnyhcw
-	 IasLXYwyWQvoM//nRSi4Vc5Ih+ITNQ/YjcLUzOFJevgAiMiCH9ZMXgoTfK7vi53vdY
-	 hhp8u3Yv05ev9Y6GckaV3kXOpPwhy4Rou8TvixhU783DyT6eeo2Jnhf3tlurdI99E4
-	 KeUvOr6a4Y+nA==
+	b=RI0UhRZM50QEM0S4NTr+ykaNPVgivFKB+5PKs8bbiydjSjAsKHvLjpQVDTtg5n4uX
+	 umhD/ypAsUxSiDzJErYYqRJBeqesOgVP5a6uvTI8YMZ5X2fLVLHXAUtyfxOUWqz707
+	 UPcl5UGgDBZj7s92BUzGFPdREi1KNKYBIG9lzlinRdlLQRvc/ZRxyak3oasr4l0y4L
+	 zN7VfodyGOSmm1vRBQKRFTP7NqBy+ljcOayuGXVPYS+3A/9WbEDDM84bNsZgNDvLE6
+	 GX8oRgnk3qXQCsmHRGM2m4pF+YX8uQ+OleQj2DjLNn0RyE+WrdD+cnkgorFeVUGI3U
+	 t4CdpAHFPOVLg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 08/29] md/md-llbitmap: prevent create failure bitmap
- UAF
+Subject: Re: [PATCH v5 06/29] md: wait for behind writes before destroying
+ bitmap
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260802195038.164272-9-yukuai@kernel.org>
+In-Reply-To: <20260802195038.164272-7-yukuai@kernel.org>
 References: <20260802195038.164272-1-yukuai@kernel.org>
- <20260802195038.164272-9-yukuai@kernel.org>
+ <20260802195038.164272-7-yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 02 Aug 2026 20:39:14 +0000
-Message-Id: <20260802203915.D3BA61F000E9@smtp.kernel.org>
+Date: Sun, 02 Aug 2026 20:40:01 +0000
+Message-Id: <20260802204002.69D191F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Early publication of `mddev->bitmap` in `llbitmap_create()` races =
-with lockless deferred IO (unplug callbacks), leading to UAF or NULL pointe=
+- [High] Dynamic removal of llbitmap via sysfs or ioctl does not wait for b=
+ehind writes, leading to a NULL pointer dereference.
+- [High] Teardown asymmetry in llbitmap_destroy allows the pending_timer to=
+ be re-armed after deletion, leading to a Use-After-Free of llbitmap.
+- [High] Lockless TOCTOU race on `mddev->bitmap_ops` leading to NULL pointe=
 r dereference.
-- [Medium] Improper cleanup sequence in `llbitmap_read_sb()`: `__free_page(=
-)` is called before `kunmap_local()`.
 --
 
---- Patch [8]: [PATCH v5 08/29] md/md-llbitmap: prevent create failure bitm=
-ap UAF ---
-commit f0da60fcfbc2742e91e414951699e4a59d581559
+--- Patch [6]: [PATCH v5 06/29] md: wait for behind writes before destroyin=
+g bitmap ---
+commit 908390619225b153696b5648f3002688751593a6
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/md-llbitmap: prevent create failure bitmap UAF
+md: wait for behind writes before destroying bitmap
 
-llbitmap_create() publishes mddev->bitmap before reading the bitmap
-superblock. If llbitmap_read_sb() fails, the old cleanup dropped
-bitmap_info.mutex and freed llbitmap before clearing mddev->bitmap. This
-commit clears mddev->bitmap while still holding the mutex.
+__md_stop() previously destroyed the bitmap before calling mddev_detach(),
+skipping the wait for behind writes. This commit reorders them to call
+mddev_detach() first, ensuring behind writes are waited on while the
+bitmap is still alive.
 
-> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index 948bf64c5ad24..af80a630bd21a 100644
-> --- a/drivers/md/md-llbitmap.c
-> +++ b/drivers/md/md-llbitmap.c
-> @@ -1126,10 +1126,11 @@ static int llbitmap_create(struct mddev *mddev)
->  	mutex_lock(&mddev->bitmap_info.mutex);
->  	mddev->bitmap =3D llbitmap;
->  	ret =3D llbitmap_read_sb(llbitmap);
-
-[Severity: Medium]
-This is a pre-existing issue, but is the cleanup sequence in
-llbitmap_read_sb() correct when returning an error?
-
-When llbitmap_read_sb() encounters an error, it jumps to out_put_page
-and calls __free_page() before kunmap_local():
-
-drivers/md/md-llbitmap.c:llbitmap_read_sb() {
-    ...
-out_put_page:
-    __free_page(sb_page);
-    kunmap_local(sb);
-    return ret;
-}
-
-Does calling __free_page() before kunmap_local() violate the kmap_local API
-contract and potentially cause memory debugging warnings?
-
-> +	if (ret)
-> +		mddev->bitmap =3D NULL;
->  	mutex_unlock(&mddev->bitmap_info.mutex);
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 51b620edbef75..b61040315aef6 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -7085,8 +7085,8 @@ static void __md_stop(struct mddev *mddev)
+>  {
+>  	struct md_personality *pers =3D mddev->pers;
+> =20
+> -	md_bitmap_destroy(mddev);
+>  	mddev_detach(mddev);
+> +	md_bitmap_destroy(mddev);
 
 [Severity: High]
-This is a pre-existing issue, but does publishing and clearing mddev->bitmap
-here still leave a race with lockless deferred IO?
+This is a pre-existing issue, but does dynamic removal of the bitmap via
+sysfs fail to wait for behind writes?
 
-If mddev->bitmap is set to NULL on failure, but mddev->bitmap_ops is still
-active, a concurrent unplug callback executing locklessly might trigger a
-NULL pointer dereference.
+When a user writes to bitmap/location to clear the bitmap dynamically,
+location_store() calls mddev_suspend_and_lock() to suspend the array.
+mddev_suspend() waits for active_io to drop to 0. For RAID1 behind writes,
+active_io is dropped by md_end_clone_io() when non-writemostly devices
+complete their writes:
 
-For example, if a user task unplugs and calls raid1_prepare_flush_writes(),
-it can execute mddev->bitmap_ops->unplug() locklessly. llbitmap_unplug()
-unconditionally reads mddev->bitmap and passes it to llbitmap_dirty():
-
-drivers/md/md-llbitmap.c:llbitmap_unplug() {
-    struct llbitmap *llbitmap =3D mddev->bitmap;
-    if (!llbitmap_dirty(llbitmap))
-        return;
-    ...
+drivers/md/md.c:md_handle_request() {
+...
+	percpu_ref_put(&mddev->active_io);
+...
 }
 
-Can llbitmap_unplug() crash if it observes the NULL bitmap?
+This means behind writes to writemostly devices can still be in flight.
+location_store() then proceeds to free the bitmap:
 
-Also, if llbitmap_unplug() runs during llbitmap_cache_pages(), can it
-observe llbitmap->nr_pages being set before the llbitmap->pctl[i]
-pointers are initialized, leading to a NULL dereference in
-llbitmap_dirty() when it accesses llbitmap->pctl[i]->flags?
-
-drivers/md/md-llbitmap.c:llbitmap_cache_pages() {
-    ...
-    llbitmap->nr_pages =3D nr_pages;
-    for (i =3D 0; i < nr_pages; i++, pctl =3D (void *)pctl + size) {
-        struct page *page =3D llbitmap_read_page(llbitmap, i);
-        llbitmap->pctl[i] =3D pctl;
-        ...
+drivers/md/md-bitmap.c:location_store() {
+...
+	md_bitmap_destroy_nosysfs(mddev);
+...
 }
 
->  	if (ret) {
->  		kfree(llbitmap);
-> -		mddev->bitmap =3D NULL;
->  	}
-> =20
->  	return ret;
+When behind writes finally complete, could close_write() dereference the
+now NULL bitmap_ops pointer?
+
+drivers/md/raid1.c:close_write() {
+...
+	mddev->bitmap_ops->end_behind_write(mddev);
+...
+}
+
+[Severity: High]
+This is a pre-existing issue, but can the llbitmap pending_timer be re-armed
+after it is deleted during destruction?
+
+llbitmap_destroy() deletes the timer and flushes the workqueue:
+
+drivers/md/md-llbitmap.c:llbitmap_destroy() {
+...
+	timer_delete_sync(&llbitmap->pending_timer);
+	flush_workqueue(md_llbitmap_io_wq);
+...
+}
+
+If the timer expires right before deletion, the handler queues
+md_llbitmap_daemon_fn() to the workqueue. If unexpired dirty pages exist,
+the daemon function evaluates time_before(jiffies, pctl->expire). Since
+llbitmap_resume() sets pctl->expire to LONG_MAX, this evaluates to true,
+setting restart to true. The timer is then unconditionally re-armed:
+
+drivers/md/md-llbitmap.c:md_llbitmap_daemon_fn() {
+...
+	if (restart)
+		mod_timer(&llbitmap->pending_timer, ...);
+...
+}
+
+The flush_workqueue() call in llbitmap_destroy() will wait for this work
+to finish, but it does not prevent the timer from being re-armed. Could
+this leave the timer armed with a freed llbitmap pointer, causing a
+use-after-free when it fires?
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is there a TOCTOU race on
+mddev->bitmap_ops between the teardown path and concurrent readers?
+
+In the background thread, md_check_recovery() checks md_bitmap_enabled(),
+which locklessly verifies mddev->bitmap_ops is not NULL:
+
+drivers/md/md.c:md_check_recovery() {
+...
+	if (md_bitmap_enabled(mddev, false) && mddev->bitmap_ops->daemon_work)
+		mddev->bitmap_ops->daemon_work(mddev);
+...
+}
+
+Concurrently, a write to bitmap/location via sysfs triggers location_store(=
+),
+which acquires reconfig_mutex (but not mddev->lock or bitmap_info.mutex)
+and calls md_bitmap_destroy_nosysfs(), unconditionally setting the ops
+pointer to NULL:
+
+drivers/md/md.c:md_bitmap_destroy_nosysfs() {
+...
+	mddev->bitmap_ops =3D NULL;
+...
+}
+
+Could md_check_recovery() proceed to dereference the now NULL pointer? A
+similar race appears to exist with md_seq_show() reading /proc/mdstat,
+which holds locks not respected by the sysfs teardown path:
+
+drivers/md/md.c:md_seq_show() {
+...
+	md_bitmap_status(seq, mddev);
+...
+}
+
+>  	spin_lock(&mddev->lock);
+>  	mddev->pers =3D NULL;
+>  	spin_unlock(&mddev->lock);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260802195038.1642=
-72-1-yukuai@kernel.org?part=3D8
+72-1-yukuai@kernel.org?part=3D6
