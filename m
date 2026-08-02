@@ -1,127 +1,119 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EDCD33C518;
-	Sun,  2 Aug 2026 19:52:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06C4125B093
+	for <linux-raid@vger.kernel.org>; Sun,  2 Aug 2026 20:19:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785700355; cv=none; b=GYODV9BB8Re3DT4A8GbLTxRX4OxjAvS3AdRtOsMIgp7nFF7UFfJlH5ppx9u5WwD+vuu5fKle3aS7MSd0dQQfwJ1SHCdpW61fyAv9Z6O3ujIMoyz7trOSuXxf1H3ywugk3i0nQ4fsQwItOUSI0ng6o02OYbbEmV2MUFlGbKlYvgc=
+	t=1785701946; cv=none; b=LVGDzb7Dojy+soOoS+t52qed2+vrrahjQWN9ofaxH8XQIar8a4xLhlJdXfj0aiBbvLD3GmutkkoSukbfyn5WEEFcDmViJVvaQMVQ1KwaRZWsYi6GKFBT5fPhnSsDInn/m4+w/GHvsCQpXu8Bfzpb0DKkqjfLRPo0JyPwWwR2c6o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785700355; c=relaxed/simple;
-	bh=FAjN71/gjsFz604tkKGo3e60EXOL2SxkEFrQ2DSw0WE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rzd1KIxzRRYeO/2xwOKYW2Ikwiis+MOL1edx1+jPME5Z5bb9lVXdbAEa3ypYVBk/7Lcg/xBanJnkJPiBRUJq4PF+HBsBeeSaq1CqaquZhgurk30TWrjZSCAVgnDGpmT7rx0Yo7nwYRXar5lhpArv2HiS7qkFNbBoP1acjTtN5r8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SUXqtyMn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785701946; c=relaxed/simple;
+	bh=+QR+WJNGbPheLXN+mvDD6ewHpcMT0F5R2KKT9US4AvE=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=seUk4TkvwhNQDi4vg7h7xsnc+UsaRNbR4g5pLqJQqjTujP0+fauq3UQydLxoWpUSkR6hC8Csg942zuNmdC7HRJxOJypgTJCYHQmozT6bSEo63pZbJ5oADdBTsjwvqjm0hsy1b3GYc0GqmHX9r+H9V6XFdAvifEwkkxtMOCBE1QI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EQI5tOuN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SUXqtyMn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 533761F000E9;
-	Sun,  2 Aug 2026 19:52:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EQI5tOuN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53BD81F000E9;
+	Sun,  2 Aug 2026 20:19:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785700353;
-	bh=U5AZPitFOQ2suw5rmOmr7esnHtQb3NLo8m9K2W7ESK8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=SUXqtyMnGfB5khENlJ1M798OecfyG8cM0fF/Qz0+d//EtvZGMA61Lavi/LzP7nOYr
-	 VbTg82DUmqQN2PF0l6ggvQ7Jt/O94P7y5rpCpmipfvAFopNxtxI28w8n/fqKbyJiUE
-	 0TKI/YL//sFrcJdPd7W7YFwATDPzrnm9L8mbCcJp57SUxUUnTRs/9c/iqMnzDzEzGw
-	 b+HK7uWLqKQ02mZSm7ofRzk/Uit5IVZM12V7YLszGuzNnC7OFHMUbvmR+mOOh+XvRv
-	 X60Fyi9VYsrsY4KeW9RPPFAHeIKKQreTK12BNXX9YKOaqglFZDWa0ALFYL2Ux8YPSi
-	 2Qwv43/243fCQ==
-From: Yu Kuai <yukuai@kernel.org>
-To: Song Liu <song@kernel.org>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>
-Cc: Yu Kuai <yukuai@fygo.io>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Mykola Marzhan <mykola@meshstor.io>,
-	Su Yue <glass.su@suse.com>
-Subject: [PATCH v5 29/29] md/raid5: split reshape bios before bitmap accounting
-Date: Mon,  3 Aug 2026 03:50:38 +0800
-Message-ID: <20260802195038.164272-30-yukuai@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260802195038.164272-1-yukuai@kernel.org>
+	s=k20260515; t=1785701944;
+	bh=pLpk7DewT5xvGBYwNvc6xgRuUc3ZeNd3WDO8tCbUxD4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=EQI5tOuNdaxVihFctbEt8S0BVXsFhf874AbnU7gCD3yd2LH2oJzhek6MtCEh7RuZ0
+	 rsmVG2WGs/eBbDgez1Dug+PKKC4SmNoP9XrxN6YtA2jJUkHFlq9NitB9NgF0Z1M887
+	 sJapDHwUgzpdBy34qIIx0r/23GJ0Mk+oUnCDUaveOpFwxWgHAbORsTE2ggDfvrSvcr
+	 4xOyq8fWziwhR5zl5Xp2OjOWim5tT2Z89j0MHl3VcHN+FhBsQPEud01xGbSxYHQgf7
+	 DwDZzg+TD48F0dM6ZWdqBXt4J46EkCA2/m/s9f6RPymR6a8GerSlgkeMqPfTqdhS+j
+	 M4eaXG12lriLw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 09/29] md/md-llbitmap: stop daemon timer rearm on
+ destroy
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yu Kuai" <yukuai@kernel.org>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20260802195038.164272-10-yukuai@kernel.org>
 References: <20260802195038.164272-1-yukuai@kernel.org>
+ <20260802195038.164272-10-yukuai@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 02 Aug 2026 20:19:03 +0000
+Message-Id: <20260802201904.53BD81F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-From: Yu Kuai <yukuai@fygo.io>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-RAID5 maps array sectors through different geometries before and after the
-reshape position. During llbitmap reshape, md core cannot account one bio
-against both geometries as a single bitmap range, because the old and new
-bitmap mappings can cover different chunks.
+Pre-existing issues:
+- [High] Time-of-check to time-of-use (TOCTOU) race in the teardown path al=
+lows the timer to be re-armed after deletion, causing a use-after-free.
+--
 
-Split bios that cross reshape_position before md_account_bio(), so the
-bitmap only sees ranges that belong to one side of the reshape boundary.
+--- Patch [9]: [PATCH v5 09/29] md/md-llbitmap: stop daemon timer rearm on =
+destroy ---
+commit ea383c856bd9022c7e57c7a025fcf8fb539acf1e
+Author: Yu Kuai <yukuai@fygo.io>
 
-mddev_bio_split_at_reshape_offset() uses bio_submit_split_bioset(), which
-submits the remainder immediately and returns the front split bio. If that
-front bio later has to wait for reshape, md_handle_request() must not retry
-the original bio pointer, because after the split that pointer is the
-already-submitted remainder. Track whether the split happened, clear the
-temporary BLK_STS_RESOURCE status after the internal clone completion, and
-resubmit the front bio directly after the reshape wait. Keep the old
-return-false retry path for unsplit bios, where md_handle_request() still
-owns the same bio.
+md/md-llbitmap: stop daemon timer rearm on destroy
 
-Tested-by: Mykola Marzhan <mykola@meshstor.io>
-Signed-off-by: Yu Kuai <yukuai@fygo.io>
----
- drivers/md/raid5.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+This commit attempts to fix a race where the daemon timer is re-armed
+during array teardown. It adds a BITMAP_SHUTDOWN flag, sets it before
+deleting the timer and canceling the daemon work, and checks the flag
+before queuing or rearming the work.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 5176de5b5956..b91545ce090d 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6221,9 +6221,11 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	struct r5conf *conf = mddev->private;
- 	const int rw = bio_data_dir(bi);
- 	struct stripe_request_ctx *ctx;
-+	struct bio *front_bio;
- 	sector_t logical_sector;
- 	enum stripe_result res;
- 	int s, stripe_cnt;
-+	bool split = false;
- 	bool on_wq;
- 
- 	if (unlikely(bi->bi_opf & REQ_PREFLUSH)) {
-@@ -6257,6 +6259,18 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 		return true;
- 	}
- 
-+	front_bio = bi;
-+	bi = mddev_bio_split_at_reshape_offset(mddev, bi, NULL,
-+					       &conf->bio_split);
-+	if (!bi) {
-+		if (rw == WRITE)
-+			md_write_end(mddev);
-+		return true;
-+	}
-+	if (bi != front_bio)
-+		split = true;
-+	front_bio = bi;
-+
- 	logical_sector = bi->bi_iter.bi_sector & ~((sector_t)RAID5_STRIPE_SECTORS(conf)-1);
- 	bi->bi_next = NULL;
- 
-@@ -6348,6 +6362,11 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 		bio_endio(bi);
- 
- 		wait_for_completion(&done);
-+		front_bio->bi_status = BLK_STS_OK;
-+		if (split) {
-+			submit_bio_noacct(front_bio);
-+			return true;
-+		}
- 		return false;
- 	}
- 
--- 
-2.51.0
+> diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
+> --- a/drivers/md/md-llbitmap.c
+> +++ b/drivers/md/md-llbitmap.c
 
+[ ... ]
+
+> @@ -1096,7 +1103,7 @@ static void md_llbitmap_daemon_fn(struct work_struc=
+t *work)
+>  		goto retry;
+> =20
+>  	/* If some page is dirty but not expired, setup timer again */
+> -	if (restart)
+> +	if (restart && !test_bit(BITMAP_SHUTDOWN, &llbitmap->flags))
+>  		mod_timer(&llbitmap->pending_timer,
+>  			  jiffies + llbitmap->mddev->bitmap_info.daemon_sleep * HZ);
+>  }
+
+[ ... ]
+
+> @@ -1179,7 +1186,9 @@ static void llbitmap_destroy(struct mddev *mddev)
+> =20
+>  	mutex_lock(&mddev->bitmap_info.mutex);
+> =20
+> +	set_bit(BITMAP_SHUTDOWN, &llbitmap->flags);
+>  	timer_delete_sync(&llbitmap->pending_timer);
+> +	cancel_work_sync(&llbitmap->daemon_work);
+>  	flush_workqueue(md_llbitmap_io_wq);
+>  	flush_workqueue(md_llbitmap_unplug_wq);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does this teardown sequence
+still leave a race condition that can result in a use-after-free?
+
+Since the BITMAP_SHUTDOWN check and mod_timer() in md_llbitmap_daemon_fn()
+are not atomic, a worker can evaluate BITMAP_SHUTDOWN as false but get
+preempted before arming the timer.
+
+Concurrently, llbitmap_destroy() sets BITMAP_SHUTDOWN, calls
+timer_delete_sync() (which returns immediately if the timer isn't pending),
+and blocks in cancel_work_sync().
+
+When the preempted worker resumes, it executes mod_timer(), re-arming the
+timer. Once the worker finishes, cancel_work_sync() unblocks and
+llbitmap_destroy() frees llbitmap, leaving the timer armed and able to
+access freed memory when it fires.
+
+Would replacing timer_delete_sync() with timer_shutdown_sync() safely
+prevent any subsequent mod_timer() calls from succeeding?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260802195038.1642=
+72-1-yukuai@kernel.org?part=3D9
