@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C515775801
-	for <linux-raid@vger.kernel.org>; Sun,  2 Aug 2026 20:45:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A476522CBD9
+	for <linux-raid@vger.kernel.org>; Sun,  2 Aug 2026 20:46:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785703523; cv=none; b=Y2HmYWXlRL91O8GyWB8qiqjwktUT8ZVMG3s5d7KW8IQcFjmyTPbmTaPO18+KDHlnKn0qZOlxtta7MZgKgE0qwvbqBIblpyngyTxINvIo6kWg2tbvPQWbYzSzBJHsqX89RPU8OAB9ybztD76p6uT5i4nxheu+vXL/lj8Ikph1Mu4=
+	t=1785703605; cv=none; b=hqmg4nZVDidufFHPT6wRjMUkAhn8T1tQy9MQpE1Zt2OODEf/lcLOcuzXAxCgfWsKO2xj9wwmTzd+ehmgEuXZHJquAYCCVQuJ+n+HWEMiVdJrxq3qxTHbePvndHJ5k9xRq9x3TXmRVN0ns8f2r2HInnzuQPMihBMEh3/Q2GhRGiE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785703523; c=relaxed/simple;
-	bh=f1U2+wi2mQ/+2faB+puQ91BvYvj8LYlE7pLEdqQIzKQ=;
+	s=arc-20240116; t=1785703605; c=relaxed/simple;
+	bh=3PvPE9ByeR40I35Fm9L411Exs+mgXvT8QAnbSqTrmcM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=R9sQtgcyJ3nyqZ0sAM0VFC6mSviwe/QHinvpYU0Ijl+pP20SGn+kZzUwljBYiof9KcB+Y8csNyyPkb2tnEL+oKjuCTaM9moDhTVRKpnQruKpiQmZuxKR15I8L9Cw4YkKGQmUuP72GnPdJhA1nl+mylOYkxrgR2ECr7sIzYErXeI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OP7O5E02; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=RfUp6I3IrYNUb6cPPBlMPpKk3PsIDGRVgK722XF4YidPlpdz4UqRMoJ3yL+lGrPgawyLtKO0KPbY+MMzebb/WiCCRSYI1lU+lgui/Ixf3pkEsIVP+xKCHEntt41v6rl7ZvVX0KG+D6LVNueDu4ftX6VuBpcNLz19XS84YZ2Oe5M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VO3ZcS/K; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OP7O5E02"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BE7C1F00A3A;
-	Sun,  2 Aug 2026 20:45:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VO3ZcS/K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32C4D1F000E9;
+	Sun,  2 Aug 2026 20:46:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785703518;
-	bh=M73ZGDFus4nBdVzdzXHatMnYZg4B1U2OsrhDRkmc2Rc=;
+	s=k20260515; t=1785703604;
+	bh=oYy6SRJSsM1NseBL7vTfTAZgkyDEHPa6dBNHifZsn6A=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OP7O5E0232mXtV4y53I8V50X1sGjaKhAjo+1vmwUvLC3poynE541Y6vRL40dLzqwL
-	 moncazETJJQgdbocRsKY3KDpP/Qiqy4ebrHf0G6ZmJJBaEv+kCXeVRqNtLSz5Tvpm1
-	 cNyVca/gjK/TlMlxPdfUu9UMIO+XPHfNOfk7Z+O15Pnh2frDby3JVTdqNbJN4COEnt
-	 kYF34BVK13Or6INAi+MZrRrfTSy6S10vYyY6+Ilb6VvNlNMUf53x4l7A+80ono+0jo
-	 yNxw4HJYiGfX+YityQns7zzYyFZFQz1cwo8AFb1ZINZIj2GoxlfSZqwCGeN4nRU5/A
-	 7KZA7WzWJE9dA==
+	b=VO3ZcS/K2e22HqSR4uso+u5c7aIcGu0Bw1Fg1lUizFhnk2xENBm8pRMaQ8onQqyLT
+	 clYmxQG/JGF4U/7na4Q/x2ijp20iEaJds6oZk9iFe2tbS2+K8Zgc7Rlym8kWqPz5sG
+	 wtSSxZE0uJdFvQH4E+/IOFkJkYVA1Aeq1hVXoT3Pu7gAbdWyWIYk3c8XKzAvmwSFiT
+	 ia36nckWAIH9G73wAUfI5/As9XBEwqYx3t4fniuWRie7Q8Cw4/K+cpzaCTbanKQ6M0
+	 7m+pRgSHRkFCjkPDwoyPKphxJmZ+y36Q8D7fDOJJh0MbDXOnXacQ6yaOGHNZ4BdGcx
+	 ru/z6KSRpusLQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 07/29] md: avoid stale clone I/O accounting
- timestamps
+Subject: Re: [PATCH v5 25/29] md/raid10: split reshape bios before bitmap
+ accounting
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
 Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260802195038.164272-8-yukuai@kernel.org>
+In-Reply-To: <20260802195038.164272-26-yukuai@kernel.org>
 References: <20260802195038.164272-1-yukuai@kernel.org>
- <20260802195038.164272-8-yukuai@kernel.org>
+ <20260802195038.164272-26-yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 02 Aug 2026 20:45:17 +0000
-Message-Id: <20260802204518.5BE7C1F00A3A@smtp.kernel.org>
+Date: Sun, 02 Aug 2026 20:46:43 +0000
+Message-Id: <20260802204644.32C4D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -47,58 +47,69 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Permanent in-flight I/O counter leak when jiffies wraps to 0.
+- [High] Double-splitting a bio using the same mempool-backed bioset causes=
+ a deadlock under concurrent load.
 --
 
---- Patch [7]: [PATCH v5 07/29] md: avoid stale clone I/O accounting timest=
-amps ---
-commit 3831c24d41ef696f06d6f215b39197db739a0831
+--- Patch [25]: [PATCH v5 25/29] md/raid10: split reshape bios before bitma=
+p accounting ---
+commit 6f3a3e2c85f7d5d7d630d6c3cb813006807edbdc
 Author: Yu Kuai <yukuai@fygo.io>
 
-md: avoid stale clone I/O accounting timestamps
-   =20
-This commit avoids stale clone I/O accounting timestamps by explicitly
-setting start_time to 0 when queue I/O stats are disabled. This prevents
-the completion path in md_end_clone_io() from using a stale non-zero value=
-=20
-from a pooled bio and performing accounting that was never started.
-   =20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9448,6 +9448,8 @@ static void md_clone_bio(struct mddev *mddev, struc=
-t bio **bio)
->  	md_io_clone->mddev =3D mddev;
->  	if (blk_queue_io_stat(bdev->bd_disk->queue))
->  		md_io_clone->start_time =3D bio_start_io_acct(*bio);
-> +	else
-> +		md_io_clone->start_time =3D 0;
+md/raid10: split reshape bios before bitmap accounting
+
+Use the shared mddev_bio_split_at_reshape_offset() helper so RAID10
+submits only one-side bios to llbitmap during reshape.
+
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1873,6 +1874,15 @@ static bool raid10_make_request(struct mddev *mdde=
+v, struct bio *bio)
+>  		sectors =3D chunk_sects -
+>  			(bio->bi_iter.bi_sector &
+>  			 (chunk_sects - 1));
+> +
+> +	bio =3D mddev_bio_split_at_reshape_offset(mddev, bio, &sectors,
+> +						&conf->bio_split);
 
 [Severity: High]
-This is a pre-existing issue, but does using 0 as a sentinel value here
-create a permanent in-flight I/O counter leak when jiffies wraps to 0?
+Does this introduce a mempool deadlock if we need to split the bio again la=
+ter?
 
-In bio_start_io_acct(), the returned value is the current jiffies. On 32-bit
-systems, jiffies is initialized to -300*HZ and naturally wraps to 0 exactly
-five minutes after boot. If a bio is cloned exactly at the tick where
-jiffies is 0, start_time will be recorded as 0 even though accounting
-was started.
+If this initial split succeeds, the thread holds a bio from the conf->bio_s=
+plit
+mempool. Later, the thread proceeds to __make_request() and then to
+raid10_write_request().
 
-When completion occurs in md_end_clone_io(), the check sees 0:
+If the target disks have bad blocks, max_sectors is further reduced, causin=
+g a
+second split attempt from the exact same mempool:
 
-    if (md_io_clone->start_time)
-        bio_end_io_acct(orig_bio, md_io_clone->start_time);
+raid10_write_request() {
+    ...
+    if (max_sectors < r10_bio->sectors) {
+        ...
+        bio =3D bio_submit_split_bioset(bio, r10_bio->sectors,
+                                      &conf->bio_split);
+    ...
+}
 
-This evaluates to false, bypassing the end accounting and leaving the
-in-flight counter permanently incremented. This can cause operations that
-wait for a queue freeze, such as suspend or device removal, to hang
-indefinitely.
+Since the conf->bio_split bioset is initialized with BIO_POOL_SIZE (2), if =
+two
+concurrent I/O requests cross chunk boundaries and hit bad blocks
+simultaneously, could both threads allocate one bio each, and then both
+permanently block in mempool_alloc() waiting for a second bio?
 
-Would it be safer to use a separate boolean flag to track if accounting was
-started, rather than overloading start_time?
+> +	if (!bio) {
+> +		if (rw =3D=3D WRITE)
+> +			md_write_end(mddev);
+> +		return true;
+> +	}
+> +
+>  	if (!__make_request(mddev, bio, sectors))
+>  		md_write_end(mddev);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260802195038.1642=
-72-1-yukuai@kernel.org?part=3D7
+72-1-yukuai@kernel.org?part=3D25
