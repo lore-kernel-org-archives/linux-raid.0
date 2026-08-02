@@ -1,161 +1,194 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A515314B6E
-	for <linux-raid@vger.kernel.org>; Sun,  2 Aug 2026 20:31:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B66AE2F7F15
+	for <linux-raid@vger.kernel.org>; Sun,  2 Aug 2026 20:31:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785702663; cv=none; b=g8IiTnuzktle6A4jJEXNi1f6NARDLHTqUFBt9EmW+RoUyEAGNkTYyglWGWZ5Tf7iTDdgC0L7Rlc5TuvvpYDg4/ll/Y6kxmp7et08b5IrA2JiRCN2wXUK1tAbFTh+UZ6egOtH3F+nR8iEC4Yet/6I0tHq8D26+XiONjC5lwauvg4=
+	t=1785702679; cv=none; b=vGKt/My0bm91QK4ThYRsPfzaL0nNPO9Blj+MFEx89xW1OvpbF08vczIqBlnpfyOneSNmg6hRkSVh15oBwykoi+byp63SQu4OT26/yDl5sRvrLL3JLoE6VdtwOXfkazsOF+TdTLTHZXor7FlcokGWMcQKjXq72OYf/heqf7jC4iY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785702663; c=relaxed/simple;
-	bh=EOpXd84JTRnqT/FDjNQrS59yx9vsKKu6hDwi98cpIUg=;
+	s=arc-20240116; t=1785702679; c=relaxed/simple;
+	bh=XyP6LefNB27CJHBVxXlTLKSh+evo/bXmNtgzukvO3NE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VunD5Y561Y2ElFdhd0ZN/bJln0CphKcLcgOJIJojlmtBngy3hXmKNyfYLZ19tlVBSBi5t4hWcN4BDTTerTxVymabhwmk14qXUEU6TVHphztQbWTxfFrxPNNCnEY48+Q2FQCpLPBf0onVIlgoGq+cvajoXtBPCVvqAuqxq+dGjxc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KtP5AGyA; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=SGVPtwmbMgeyFu6j+84A34Hwnh6W12IWRSjOPkiUSZ1rOydV9iz0QHfqcqcVQUOCywO3BJ3bS1P0TKPFdNcPg7mhwxmcrxsmRUNp5tBAezTYjeshqnPeBtkqPIY0AwmDVwVDSfAyut/REo0XTVyIAaMclbYD1pFPjfK6pKB3wOk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QAQodG8l; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KtP5AGyA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92D5A1F000E9;
-	Sun,  2 Aug 2026 20:31:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QAQodG8l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00A181F000E9;
+	Sun,  2 Aug 2026 20:31:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785702661;
-	bh=BQDFmLFw2kVWQqZFislkPAPtbsUSp88mmgM2OhEFcKo=;
+	s=k20260515; t=1785702678;
+	bh=nOErcBpPHX1JLpVzP79HRpz9XBaWmqkneOmXyXR9Abk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KtP5AGyAs7fJQLV5JDKgw2Cv+0MnzjtYhTbP5LS0F3lwZwDZNPS9UX85aTdZRPwCe
-	 0aWebNV1zOaPd7X5CC/OVt6pUpUL1yo73WAiXpBOCx+3Vm21vz3TCdDr7pgvTBNOBW
-	 cEMFK4zDj6RVN2gRa8mMVfJ68NFQzAcHCzTb6XdshOxEXz2UV2U6fhn97f5mfuegUe
-	 X6OIKNjY2YT0jmGL7vTwxoHjAW2TTfIwLmwfQAcCdZDwYX7Rgrlew2LkDkVXU12Y9a
-	 Adj1xRgjm+gsiH92wfO0p5TRnrZpo/KvqoYmDpQlz0/8JB3dcSSgxc5rBglx7X2Jg1
-	 A8/cdy9o5FbAA==
+	b=QAQodG8lGc4P1FQYq3ntaZR7F7Ck46OgNGf0SZBlNumUcoobmk3s8HNRQfrxiAkfz
+	 XcVC4LxIHDh2p9bzEGR49NepDXnwnvxxU5FgjP7Pl84Y/UwkdydNfWlNDAaLCeoIvV
+	 Zqmm+poqho5hOCD0ouf4yW0P45PH8WStLG7ueFo+heUFxFcMhvCt55sAQ9x3smsi6x
+	 /j+bFuSwsLrGSTArWhhqmeeGDozi89/tIh5CGf2UuVkMoEbCQ2UZPtfvrCwI236fNs
+	 O3GGglyrnhpiG4gjVd7T8jLJiGkfhVdGY1+Ywt/4Hh2NWdwOXVbWa9/CnNwngfEs22
+	 zLcPE4gghPxng==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 20/29] md/md-llbitmap: don't skip reshape ranges from
- bitmap state
+Subject: Re: [PATCH v5 19/29] md/md-llbitmap: add reshape range mapping
+ helpers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yu Kuai" <yukuai@kernel.org>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260802195038.164272-21-yukuai@kernel.org>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260802195038.164272-20-yukuai@kernel.org>
 References: <20260802195038.164272-1-yukuai@kernel.org>
- <20260802195038.164272-21-yukuai@kernel.org>
+ <20260802195038.164272-20-yukuai@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 02 Aug 2026 20:31:01 +0000
-Message-Id: <20260802203101.92D5A1F000E9@smtp.kernel.org>
+Date: Sun, 02 Aug 2026 20:31:17 +0000
+Message-Id: <20260802203118.00A181F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [Critical] This problem wasn't introduced by this patch, but a lockless r=
-ace condition in `llbitmap_set_page_dirty` causes dirty bitmap blocks to be=
- lost in memory and never flushed to disk.
-- [High] This problem wasn't introduced by this patch, but integer truncati=
-on of `blocks` can cause an infinite loop in the `md_do_sync` thread.
+- [Critical] Missing implementation of `bitmap_array_sectors` and `bitmap_s=
+ector_map` in RAID personalities breaks range mapping and drops valid array=
+ writes.
+- [Critical] Omitted post-mapping clamp allows out-of-bounds offsets to tri=
+gger out-of-bounds array accesses in `llbitmap_start_write`.
+- [Critical] Decoupled reshape geometry logic causes `start_sync` to decode=
+ modified bits incorrectly during array recovery.
+- [High] Skipping reshape boundary splitting when `MD_RECOVERY_RESHAPE` is =
+clear corrupts straddling bios.
 --
 
---- Patch [20]: [PATCH v5 20/29] md/md-llbitmap: don't skip reshape ranges =
-from bitmap state ---
-commit c6db76f6bc970107f68d37fc602584cc2c0e0a1b
+--- Patch [19]: [PATCH v5 19/29] md/md-llbitmap: add reshape range mapping =
+helpers ---
+commit 633da220a726aec9691f97e3c1481f36882f4315
 Author: Yu Kuai <yukuai@fygo.io>
 
-md/md-llbitmap: don't skip reshape ranges from bitmap state
+md/md-llbitmap: add reshape range mapping helpers
 
-This commit modifies md-llbitmap to stop using stale bitmap state for
-skipping reshape ranges. It ensures that reshape progress is tracked purely
-by array metadata. This prevents data loss after a restart before checkpoin=
-ts
-are persisted to disk.
+Teach llbitmap to choose old versus new geometry during reshape and to
+encode exact bitmap ranges for the active geometry. This is the mapping
+groundwork for checkpoint remapping.
 
-Tested-by: Mykola Marzhan <mykola@meshstor.io>
+Link: https://lore.kernel.org/all/20260726185916.2223460-1-mykola@meshstor.=
+io/
 
 > diff --git a/drivers/md/md-llbitmap.c b/drivers/md/md-llbitmap.c
-> index fa16a4224c45a..a20e55fdf82b0 100644
+> index f8a1b0f79be6a..fa16a4224c45a 100644
 > --- a/drivers/md/md-llbitmap.c
 > +++ b/drivers/md/md-llbitmap.c
-> @@ -1707,6 +1707,14 @@ static sector_t llbitmap_skip_sync_blocks(struct m=
-ddev *mddev, sector_t offset)
 
-[Severity: High]
-This isn't a bug introduced by this patch, but can integer truncation of
-blocks cause an infinite loop in the md_do_sync() thread?
+[ ... ]
 
-In llbitmap_skip_sync_blocks(), blocks is declared as an int:
-
-    int blocks =3D llbitmap->chunksize - (offset & (llbitmap->chunksize - 1=
-));
-
-If the array size and bitmap space require chunksize to exceed INT_MAX (e.g=
-.,
-a >8TB array with a small bitmap space), chunksize will be >=3D 2^31. Can t=
-he
-subtraction yield a value >=3D 2^31, which truncates into a negative 32-bit=
- int
-(e.g., -1024)?
-
-When this negative int is returned as a 64-bit sector_t, does it sign-extend
-to a massive positive value? If md_do_sync() adds this value to the current
-sync sector index, could it cause the index to overflow and decrease, loopi=
-ng
-endlessly back and forth?
-
->  		return 0;
->  	c =3D llbitmap_read(llbitmap, p);
-> =20
-> +	/*
-> +	 * Reshape progress is tracked by array metadata rather than llbitmap.
-> +	 * Skipping reshape ranges from stale bitmap state can lose data after a
-> +	 * restart before the corresponding bits are checkpointed to disk.
-> +	 */
-> +	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
-> +		return 0;
+> +static sector_t llbitmap_logical_size(struct llbitmap *llbitmap, bool pr=
+evious)
+> +{
+> +	struct mddev *mddev =3D llbitmap->mddev;
 > +
->  	/* always skip unwritten blocks */
->  	if (c =3D=3D BitUnwritten)
->  		return blocks;
+> +	if (!mddev->private || !mddev->pers ||
+> +	    !mddev->pers->bitmap_array_sectors)
+> +		return llbitmap_personality_sync_size(llbitmap, previous);
+> +	return mddev->pers->bitmap_array_sectors(mddev, previous);
+> +}
 
 [Severity: Critical]
-This is a pre-existing issue, but a lockless race condition in
-llbitmap_set_page_dirty() can cause dirty bitmap blocks to be lost in memory
-and never flushed to disk.
+Since bitmap_array_sectors is absent from all RAID personalities in this
+patch series, won't this always fall back to
+llbitmap_personality_sync_size()?
 
-Can this sequence actually occur? If llbitmap_set_page_dirty() is called
-concurrently with the llbitmap_unplug_fn() flusher thread, the writer sets
-the LLPageDirty flag before setting the specific block bit:
+If a write is issued to a RAID5 array at a logical offset greater than
+dev_sectors, it appears this will incorrectly use the physical component
+size (dev_sectors) as the limit for the logical array offset, causing
+llbitmap_map_layout() to drop valid array writes.
 
-drivers/md/md-llbitmap.c:llbitmap_set_page_dirty() {
-    ...
-    if (!test_bit(LLPageDirty, &pctl->flags))
-        set_bit(LLPageDirty, &pctl->flags);
-   =20
-    // race window here
-   =20
-    set_bit(block, pctl->dirty);
-    ...
-}
+[ ... ]
 
-If the flusher thread clears LLPageDirty and checks pctl->dirty between the=
-se
-two operations:
+> +static void llbitmap_map_layout(struct llbitmap *llbitmap, sector_t *off=
+set,
+> +				unsigned long *sectors, bool previous)
+> +{
 
-drivers/md/md-llbitmap.c:llbitmap_unplug_fn() {
-    ...
-    if (!test_bit(LLPageDirty, &llbitmap->pctl[i]->flags) ||
-        !test_and_clear_bit(LLPageDirty, &llbitmap->pctl[i]->flags))
-        continue;
-    ...
-}
+[ ... ]
 
-Will it miss the dirty block? The writer then sets the block bit, but
-because LLPageDirty is now 0, the flusher will ignore this page indefinitely
-until another block happens to be dirtied.
+> +	if (llbitmap->mddev->pers->bitmap_sector_map)
+> +		llbitmap->mddev->pers->bitmap_sector_map(llbitmap->mddev, offset,
+> +							 sectors, previous);
+> +	else if (!previous && llbitmap->mddev->pers->bitmap_sector)
+> +		llbitmap->mddev->pers->bitmap_sector(llbitmap->mddev, offset,
+> +							 sectors);
+> +}
 
-If a dirty block is not flushed to the disk bitmap, will the array fail to
-resync that block after a crash or unclean shutdown, leaving stale data on
-one of the drives?
+[Severity: Critical]
+The commit message states we need to keep the existing sync-size clamp after
+mapping, but does this code actually enforce that post-mapping clamp?
+
+Without a clamp against llbitmap_personality_sync_size() here at the end
+of the function, could an out-of-bounds logical offset bypass filtering?
+If that happens, llbitmap_start_write() could calculate an out-of-bounds
+page_start index and trigger memory corruption inside
+llbitmap_raise_barrier() before the state machine drops it.
+
+[ ... ]
+
+> +static void llbitmap_encode_range(struct llbitmap *llbitmap, sector_t *o=
+ffset,
+> +				  unsigned long *sectors, bool previous)
+> +{
+> +	unsigned long chunksize =3D previous ? llbitmap->chunksize :
+> +				      llbitmap->reshape_chunksize;
+
+[ ... ]
+
+> +	start =3D div64_u64(*offset, chunksize);
+> +	end =3D div64_u64(*offset + *sectors - 1, chunksize);
+> +	*offset =3D (sector_t)start << llbitmap->chunkshift;
+> +	*sectors =3D (end - start + 1) << llbitmap->chunkshift;
+> +}
+
+[Severity: Critical]
+Does this decoupling of reshape geometry logic cause issues for the sync pa=
+th
+during recovery?
+
+Here, writers calculate the chunk index using the new geometry
+(reshape_chunksize) but scale it using the old chunkshift. Later, during
+array recovery, llbitmap_start_sync() unconditionally shifts the physical
+component offset by the old chunkshift:
+
+unsigned long p =3D offset >> llbitmap->chunkshift;
+
+Will this mismatch cause llbitmap_start_sync() to decode the wrong bit
+index and skip recovering modified active data?
+
+[ ... ]
+
+> +static bool llbitmap_map_previous(struct llbitmap *llbitmap, sector_t of=
+fset,
+> +				  unsigned long sectors)
+> +{
+> +	struct mddev *mddev =3D llbitmap->mddev;
+> +	sector_t boundary =3D READ_ONCE(mddev->reshape_position);
+> +
+> +	if (boundary =3D=3D MaxSector)
+> +		return false;
+> +
+> +	WARN_ON_ONCE(sectors && offset < boundary && offset + sectors > boundar=
+y);
+> +
+> +	return mddev->reshape_backwards ? offset < boundary : offset >=3D bound=
+ary;
+> +}
+
+[Severity: High]
+Can a straddling bio trigger this WARN_ON_ONCE and corrupt the bitmap if a
+reshape is paused?
+
+If a user pauses a reshape or the array enters a degraded state,
+MD_RECOVERY_RESHAPE might be cleared. If mddev_bio_split_at_reshape_offset()
+checks this flag and skips splitting the bio, a fully unsplit straddling
+bio could reach here. This would force the entire bio to be evaluated
+against a single geometry based purely on its starting sector, destroying
+bitmap integrity for the straddling tail.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260802195038.1642=
-72-1-yukuai@kernel.org?part=3D20
+72-1-yukuai@kernel.org?part=3D19
