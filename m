@@ -1,99 +1,103 @@
-Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB65E30F92E
-	for <linux-raid@vger.kernel.org>; Mon,  3 Aug 2026 12:11:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A971A2F7445
+	for <linux-raid@vger.kernel.org>; Mon,  3 Aug 2026 18:03:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785759104; cv=none; b=FBEB8jgto+WjyV/yzlpKlwRhgGaVv+oqBg/giDnP4WnGXkKXAOYKLqp1Mc2YbNYq5Z3VfkyiAjYWHsUvj29hblwhfUrIu269vjJEwgTNyDmVnEkfYTOb5v+LitvR7CumdDdsQvPi3Wd6EXHRlulIrTdWB46dYIJLVvwCIT9ksc4=
+	t=1785780215; cv=none; b=KIgQMHvPYj59s1NUdm1zBI2NiMRGmXUH+C8M4DuyjVkQQLtc8XafuyO9l43zmt3hDiW7vvzDBtpdQ7vRMHrpFgE+Qi6IYFXHKeS0BHMd1wEJrhtLewBWVkFO5wWVatJc8OxLO8J1A3ZDqZIAor9UIUTePkkkWNSp3jwVNqsmrt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785759104; c=relaxed/simple;
-	bh=rbo8PIaMhk65atYrBq/cClo396+fP+QkDtrqh8xKnJo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=f5EHBv2BrD3Kvrc033sYJK+kRNtgBVqzBsS2arhmDVodRbzYoXkDrbkTyTAUtVTxUC1ElaTa3yGxvq1w5n3vCdbj2JYRLFMz3KYnlY53OLhnmrY9QjkFUL2zmxjkyQ6CFHFwTJDgCKQTIzkqzb9mIO4qVpzE3gILQSF5jnrUu6w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io; spf=pass smtp.mailfrom=meshstor.io; dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b=W5gBJSBQ; arc=none smtp.client-ip=209.85.208.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meshstor.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meshstor.io
+	s=arc-20240116; t=1785780215; c=relaxed/simple;
+	bh=MxP+oVxI8ZTB0TkJZ1AUSfNCa6QEi/6sbJv2k4tpguA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WSzKGllqxvFuujlqRe0mY4IpS6u5o1YjlBVb2CbmkJHt+Xwen1+RESI3CsPOzf0r3GFkyttcmK7NdlB7sdMQ+P4AKWC9+sT7Sr4TkF5iqNswMIwyGmQYAjuqoXwNKX2XKSke66ldC2UCFMJVgEnkQysiXuwY84Q3812EhO/PeCs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eQWeNNQ3; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meshstor.io header.i=@meshstor.io header.b="W5gBJSBQ"
-Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-6984169c126so5596452a12.1
-        for <linux-raid@vger.kernel.org>; Mon, 03 Aug 2026 05:11:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=meshstor.io; s=google; t=1785759101; x=1786363901; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=rbo8PIaMhk65atYrBq/cClo396+fP+QkDtrqh8xKnJo=;
-        b=W5gBJSBQZtgKFcZ9SOazbseMgvx+9pxF97RMP2ZpAVO5/6AwO9gcGLkhB+yuMc1n36
-         t/gT61k5FKRIoPAvN4+6YirVih9vUrJ3z/VxsxNYfZLYauaaat52l8KZr7/ActGARVKb
-         vJcigAZCkqENOXfjL83JQH7AIl/jDXS6WddDQI3c+8BJF2FkGTd4kwHAF+69Zg1aFfjE
-         LuHRY+QfNPvDS8QakTzOgj9HyhP1bQK/qqg9x0BGAvN9OJ+NqLZaJT7a0foOARbDUYia
-         PUqXwqoFL767aKaX+D73pk0C5Y3lQnHytu0+2U9Umy6B+W7e+vUEWwWFxaRUll2hNzu3
-         /YUw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785759101; x=1786363901;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=rbo8PIaMhk65atYrBq/cClo396+fP+QkDtrqh8xKnJo=;
-        b=Y/BtUB4vJ1KLeyDQ5pD5hp1t4rRRm1HpKwWyNJvI6b+/KNZybxR00i5cawy4glMwEW
-         mp5uXdnfcwYLZ6vaamLjWHMmp8QPcRtk3C3c6VrRZFI3hxKqEfpEtWa0ISsIiqtQH0yg
-         p49Ffi3FM2IBFh1+2lCai8xvLZnlWk/GgTNoHa6oWrvp/3HzjKyD6vIMoRVWEYXk699z
-         +W7gjNBJ+FDg0QBgIfn8cNZuZ2JJyBmtrX1P38JuQuLRxTdWDqXNirCy1Jp9kHfhSNAp
-         eJpRW8sxfQ8u20BOgWVERz1GjaHNfL4RNtTRB6UeQUEAhDCezCyHsJL63BlegYWuZi61
-         Qxuw==
-X-Forwarded-Encrypted: i=1; AHgh+Rq7ULLK1q+cXzDda3zUGfdmemRNoCcBgH6TQPCVSp9uFSxzQSwSO6gL0QvJaiiKGpyjcTTDlWkE8AES@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz9NwR3et4N7ML8UfgodJdBWuCZtx/jfo+U7n9x461fUYrO9DH5
-	xGXPW7KpQvLxr2vWdE0w0CUhDVyYgLJe1OJ2eJzTtt0WrUhU+G00spd4e08vRXBHyg==
-X-Gm-Gg: AR+sD12mFFc0WRcyuUkQTdovXE7NsWEeNmuSCrHnQdE41ymdB8m3UPgMwr7xsf2uZM1
-	z3HCx32I8gJp38wkk/svHNVdDhhMkFwgCsny+bdYAYIbuvqjTr8qCRSIuq1ZjPhLh3pf3Q2CJSq
-	NmnqBAuS8Mhk3E8ae2q5Gu9yWX+EpQTrEbTXbAhkqm07bm3Jk8QH9HKgodoXpLjSvphAw+ZhReo
-	d9Jgmx4TIkRLTXp8rUGI9GXxEI5z1wSxdSPA6HMHNhr32rK/iISTQlSp7xvpMB5pKWi13j7G9AR
-	f6OthaW54lJojYa+Yr4hln44obsR8c/ellL71YeBrAL8VjVS7dXV35uukgBN3g8j2pnrzNiLQ+H
-	KLIdFaMbaxDMe5r/lRdVn6csFuXLWGgVPPN9S7C6PKtZSs7fhX2ey1Lg4EeOjPNRsOdCItbXGOw
-	HJjCAJ3i7QDzVA6ctTUU0uTm3xC+d0vdL6jsr0lWYG0SCY0sd7Lw9GT8MZuRNrMo1w8gl/5i1YP
-	aJUicA/5z8aJfKYmiexIG90cEKXPBFLZO+DyCBVMtB0f51w/Er6cNenD6JVBXLYyZjfXnD3HB8g
-	eO7ZhmmFNfQkubNyVJwzR2EGN2fqdstLaE8=
-X-Received: by 2002:a05:6402:4591:b0:6a0:a492:1f46 with SMTP id 4fb4d7f45d1cf-6a0a7c61027mr7449501a12.8.1785759100461;
-        Mon, 03 Aug 2026 05:11:40 -0700 (PDT)
-Received: from meshstor-pc ([185.87.42.56])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6a09c5b1a66sm5843022a12.10.2026.08.03.05.11.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2026 05:11:39 -0700 (PDT)
-From: Mykola Marzhan <mykola@meshstor.io>
-To: Yu Kuai <yukuai@kernel.org>
-Cc: Song Liu <song@kernel.org>,
-	Li Nan <magiclinan@didiglobal.com>,
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eQWeNNQ3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1785780212;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=vwgVusZlIs22b8ngCzwgwKqLRYChdloVGnle5SB99vw=;
+	b=eQWeNNQ3PsdXqQImZOJtiT8ZTVU1JIAC8v2atB+Vgf8UyE2SOD6t+37X2BIMXJMzRvEgr4
+	2AdKJEl40t1D566+XhCUiRfKPoBXo9gWc+76bXAtcueSxM6+c3Sfohql1r7JNVRt/CLqBq
+	oOx51CT309OBxcDH/p+sLVWCbhVbmDQ=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-70-wvZrNCt2Ns6N87ODmRLRRg-1; Mon,
+ 03 Aug 2026 14:03:29 -0400
+X-MC-Unique: wvZrNCt2Ns6N87ODmRLRRg-1
+X-Mimecast-MFC-AGG-ID: wvZrNCt2Ns6N87ODmRLRRg_1785780208
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DC6B1195608E;
+	Mon,  3 Aug 2026 18:03:27 +0000 (UTC)
+Received: from vdo-builder-bjohnston.permabit.com (unknown [10.0.101.86])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 839431956087;
+	Mon,  3 Aug 2026 18:03:27 +0000 (UTC)
+Received: by vdo-builder-bjohnston.permabit.com (Postfix, from userid 1142)
+	id 2FBCF2354D; Mon, 03 Aug 2026 14:03:27 -0400 (EDT)
+From: Bruce Johnston <bjohnsto@redhat.com>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>,
 	Xiao Ni <xiao@kernel.org>,
-	Su Yue <glass.su@suse.com>,
 	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 00/29] md: improve lockless bitmap reshape support
-Date: Mon,  3 Aug 2026 14:11:34 +0200
-Message-ID: <20260803121135.268225-1-mykola@meshstor.io>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260802195038.164272-1-yukuai@kernel.org>
-References: <20260802195038.164272-1-yukuai@kernel.org>
+	Bruce Johnston <bjohnsto@redhat.com>
+Subject: [PATCH] md/raid1: don't set array_frozen in raid1_takeover()
+Date: Mon,  3 Aug 2026 14:02:39 -0400
+Message-ID: <20260803180240.1177104-1-bjohnsto@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Hi Kuai,
+raid1_takeover() sets conf->array_frozen = 1 on the newly-allocated
+r1conf and nothing ever clears it, so every I/O to the array stalls
+permanently once _wait_barrier() sees it stuck at 1.
 
-I ran v5 through the same rig, on the md-7.3 base.
-Since patches 6-9 are new I aimed tests at them: array stops under
-sustained write load, including raid1 with write-behind (patch 6),
-a forced llbitmap create failure (patch 8), and a check that
-BITMAP_SHUTDOWN never reaches the on-disk superblock (patch 9).
-All clean, so for patches 6-9 as well:
+This used to be harmless: level_store() called mddev_resume() right
+after pers->run(), which called raid1_quiesce(mddev, 0) and cleared
+array_frozen back to 0 regardless of what raid1_takeover() set. Commit
+b39f35ebe86d ("md: don't quiesce in mddev_suspend()") removed that
+quiesce(mddev, 0) call, so the pre-set now sticks.
 
-Tested-by: Mykola Marzhan <mykola@meshstor.io>
+setup_conf() already zero-initializes the new r1conf via kzalloc, so
+just don't set array_frozen here.
 
-Thanks,
-Mykola
+Same class of bug as commit 892da88d1cd9 ("md/raid10: fix a
+'conf->barrier' leakage in raid10_takeover()"), also triggered by
+b39f35ebe86d.
+
+Fixes: b39f35ebe86d ("md: don't quiesce in mddev_suspend()")
+Link: https://issues.redhat.com/browse/RHEL-191802
+Signed-off-by: Bruce Johnston <bjohnsto@redhat.com>
+---
+ drivers/md/raid1.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index afe2ca96a..2a247ed5f 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -3485,8 +3485,6 @@ static void *raid1_takeover(struct mddev *mddev)
+ 		mddev->new_chunk_sectors = 0;
+ 		conf = setup_conf(mddev);
+ 		if (!IS_ERR(conf)) {
+-			/* Array must appear to be quiesced */
+-			conf->array_frozen = 1;
+ 			mddev_clear_unsupported_flags(mddev,
+ 				UNSUPPORTED_MDDEV_FLAGS);
+ 		}
+-- 
+2.54.0
+
