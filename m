@@ -1,46 +1,75 @@
-Received: from out30-99.freemail.mail.aliyun.com (out30-99.freemail.mail.aliyun.com [115.124.30.99])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3136D33F582;
-	Tue,  4 Aug 2026 03:55:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F387733A9E1;
+	Tue,  4 Aug 2026 06:53:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785815729; cv=none; b=PG7rtQSa9gUghOP/MYzRt7uL0NULJ5rm0vT4b7YmDkDEyhfJFRwtpdljjh36ORBVa/r5gfpbdDNiTYWOXzwFP35wEfOmCtawqCxgWDSqvg7sG2V8y83OoJkB5RX81K8cslyRh6m+R/Y6ZgeKuGHrnhREAKY7g8cvpuhAuK/V6QE=
+	t=1785826416; cv=none; b=A1FIRkpVCkd5zJscITx1RhmUgp5jKIdxeRBGsndOcx9EJ7M6oG5qBawtHp1xpJ/krYHyxAEdSEG5xbuhSviE6we2vfP6FDPRrwiAaSP03qgLmezK7xiDqC8mIb7EHWMdXpJnZ1sv7hbHP4dSV+m+Tah9vQkl717TqoAAcX+2t7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785815729; c=relaxed/simple;
-	bh=SlIaYLmz1hkcZHe+X9iLtf/YhoPEAmYJzoZGqegLXWM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=VWC2bqINXaXFVcDn1xfuK5U1NiJB1Mse1Lp+fKdbiUEw7wONc25B6RplC+kau6Q6ybWaunXyArmeMwUVuaXn4lcFj/y7mmJFqbzJzRGsDVO4WJmgHhqEgAgsASfD8JuORBbD8Vi6o9shN6k42F+zRt0lrVJhyJqgCBDVt60jny8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=mjTv+Jwm; arc=none smtp.client-ip=115.124.30.99
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1785826416; c=relaxed/simple;
+	bh=fao//z/eP3KEIwqi5tYZ4oMAvgE0jCpV9ZpBd4OEW9Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ncynyAznDuM3SOqnTIaFMGQZ4swApRV/T0sXLUni7Q3NJOPJKQ2oKOLlUWIzDiui/nU2ERVbChepJWGeXarGMxTOSx790RljMOTHb5t75OV6QSsPpN70COkLJfe+lhVuEx/oks32aSWWOEtJPIJgRTLwQMd5Xppqn8MoC8nXtCk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HRAkGd6g; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="mjTv+Jwm"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1785815717; h=From:To:Subject:Date:Message-Id:MIME-Version;
-	bh=4iBGQHRMT31JLxpnMUn+1Gzw2DYAUemAjfouiqEsnkY=;
-	b=mjTv+JwmE62VQCtw5pHF9gCUXBEi/hK27LCYtzW8Piq4n8JHnZy0BUjHPI4Ut2XAVcrurGmsWQSY73MgnsTGdf7LTOSkICPXIDfhWT6nJ0B1qi3y0WarcllNxw3VPpR804Gd475oFt6E90qUx4XhINN5M8yecHXQ9i6yQDqqQ+Q=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R511e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045098064;MF=yunye.zhao@linux.alibaba.com;NM=1;PH=DS;RN=9;SR=0;TI=SMTPD_---0X8MVHk2_1785815716;
-Received: from j66c13357.sqa.eu95.tbsite.net(mailfrom:yunye.zhao@linux.alibaba.com fp:SMTPD_---0X8MVHk2_1785815716 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 04 Aug 2026 11:55:17 +0800
-From: Yunye Zhao <yunye.zhao@linux.alibaba.com>
-To: yukuai@fygo.io
-Cc: joseph.qi@linux.alibaba.com,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HRAkGd6g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C0041F000E9;
+	Tue,  4 Aug 2026 06:53:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785826414;
+	bh=VWVPrEk+52tzx0Rhhgtr7Ya1aHTvGOt+4XML3uQJj9A=;
+	h=From:To:Cc:Subject:Date;
+	b=HRAkGd6gzVJgwfR6icTxqTgd1Rlu43ZNA5zZFtStBCAOynam6IMY9HCWb9GK8vJWd
+	 uOdM+BvVgAgthosRUlVXAmHZPNwX3NKNZBL3gS4U9xL637R7mwZYDt4Z55SpWovOZ/
+	 aR3E2g6qz5VEiUcs7c698FjI2cLGpjEq14wU4uydMzKLmKDwBvHJ6wdAVX4CMOxXBB
+	 U9dcFBSrF01hZ9WglHLjp4m/kxWsAB2JgjMnlvXZvMCPnFPhta0yRXUXHcMkgebBuL
+	 Jj2n24YgBPUHFVYa5tBY6fd0rNG1mkYCLFcAj0lup18MrF9wbomZHXXi0Q6D0Fk6VQ
+	 Uadqdq7RKMMug==
+From: Yu Kuai <yukuai@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Yu Kuai <yukuai@fygo.io>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Coly Li <colyli@fygo.io>,
+	Kent Overstreet <kent.overstreet@linux.dev>,
+	Alasdair Kergon <agk@redhat.com>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	Benjamin Marzinski <bmarzins@redhat.com>,
+	Song Liu <song@kernel.org>,
+	Dan Williams <djbw@kernel.org>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
+	Andreas Gruenbacher <agruenba@redhat.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Jan Kara <jack@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Chris Li <chrisl@kernel.org>,
+	Kairui Song <kasong@tencent.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Nilay Shroff <nilay@linux.ibm.com>,
+	Tao Cui <cui.tao@linux.dev>,
+	cgroups@vger.kernel.org,
+	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-bcache@vger.kernel.org,
+	dm-devel@lists.linux.dev,
 	linux-raid@vger.kernel.org,
-	magiclinan@didiglobal.com,
-	song@kernel.org,
-	xiao@kernel.org,
-	yunye.zhao@linux.alibaba.com,
-	sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 3/3] md/raid10: skip clean regions in bulk during recovery
-Date: Tue,  4 Aug 2026 11:55:16 +0800
-Message-Id: <20260804035516.98652-1-yunye.zhao@linux.alibaba.com>
-X-Mailer: git-send-email 2.19.1.6.gb485710b
-In-Reply-To: <0650db8f-14d2-4f80-949f-82553fd8485b@fygo.io>
-References: <0650db8f-14d2-4f80-949f-82553fd8485b@fygo.io>
+	nvdimm@lists.linux.dev,
+	virtualization@lists.linux.dev,
+	gfs2@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: [RFC PATCH v1 0/3] blk-cgroup: store blkcg in bio before blkcg_mutex conversion
+Date: Tue,  4 Aug 2026 14:53:10 +0800
+Message-ID: <20260804065313.2092022-1-yukuai@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -49,45 +78,63 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi Kuai,
+From: Yu Kuai <yukuai@fygo.io>
 
-On Thu, 31 Jul 2026 at 17:46, Yu Kuai wrote:
-> I'm confused, recovery means replace a new disk ... the whole new disk
-> have to rebuild ... there is nothing to skip
->
-> So are you talking about the case that the array is already broken?
+This RFC is a preparatory series for the blkcg_mutex conversion proposed in
+the blkcg_mutex RFC v2 series [1].  That series moves queue-local blkg
+topology synchronization from q->queue_lock to q->blkcg_mutex.  A direct
+conversion is awkward while bios store queue-local blkg references, because
+bio allocation, bio_set_dev(), remap and clone paths can run in contexts
+where creating a missing blkg must not sleep or is unnecessary.
 
-The recovery target here is a *re-added existing member*, not a fresh
-spare.
+This set makes the bio association queue-independent by storing the blkcg
+in the bio instead of a blkg.  A blkg is looked up from the bio's blkcg and
+current bdev only when blkcg policy or accounting code needs it.  The first
+successful policy lookup pins the blkg with a bio-owned reference tracked by
+BIO_BLKG_REF; the reference is dropped when the bio cgroup association is
+cleared or when bio_set_dev() changes the lookup key.
 
-Right, for a fresh spare: saved_raid_disk != slot sets conf->fullsync=1,
-this skip is bypassed, and the whole disk rebuilds. This patch does not
-touch that.
+Patch 1 adds accessors for the current bio cgroup state and factors out the
+release path.  Patch 2 switches the stored bio association from blkg to blkcg,
+adds lookup/create helpers for policy users, and converts the blkcg policies
+and cloned-bio users.  Patch 3 moves async bio punt state from blkg to blkcg
+so punted bios do not instantiate a queue-local blkg when no policy needs one.
 
-The case I fix is a member transiently removed and re-added:
+This is v1 of this preparatory set; there is no previous version.
 
-  - a member drops out; its mirror partner stays online, so the array is
-    still redundant and readable (not broken);
-  - nothing is written while it is gone, so the write-intent bitmap
-    stays clean;
-  - the same disk is re-added: valid superblock, saved_raid_disk == old
-    slot, so conf->fullsync stays 0 and md does a bitmap-based recovery
-    (MD_RECOVERY_RECOVER; /proc/mdstat shows "recovery").
+Related series:
+  [1] RFC v2 blk-cgroup: protect blkgs with blkcg_mutex
+      https://lore.kernel.org/r/20260724123037.3004560-1-yukuai@kernel.org
 
-The bitmap is fully clean, every chunk returns must_sync == false,
-biolist stays NULL, and we hit the existing "*skipped=1; return
-max_sync;" path. Only its step size is wrong.
+Yu Kuai (3):
+  blk-cgroup: add helpers for bio cgroup state
+  blk-cgroup: store blkcg in bio instead of blkg
+  blk-cgroup: move async bio punt state to blkcg
 
-Reproducer (near=2, 4 disks, nothing written while degraded, each pair
-keeps a live copy):
+ Documentation/admin-guide/cgroup-v2.rst |   2 +-
+ block/bfq-cgroup.c                      |  14 +-
+ block/bfq-iosched.c                     |  18 +-
+ block/bio.c                             |  22 +--
+ block/blk-cgroup-fc-appid.c             |  10 +-
+ block/blk-cgroup.c                      | 251 +++++++++++++++---------
+ block/blk-cgroup.h                      |  40 +++-
+ block/blk-crypto-fallback.c             |   2 +-
+ block/blk-iocost.c                      |  12 +-
+ block/blk-iolatency.c                   |  11 +-
+ block/blk-ioprio.c                      |   2 +-
+ block/blk-throttle.c                    |   2 +-
+ block/blk-throttle.h                    |   2 +-
+ drivers/md/bcache/request.c             |   2 +-
+ drivers/md/dm.c                         |   2 +-
+ drivers/md/md.c                         |   2 +-
+ drivers/nvdimm/nd_virtio.c              |   2 +-
+ fs/gfs2/lops.c                          |   3 +-
+ include/linux/bio.h                     |  20 +-
+ include/linux/blk_types.h               |   9 +-
+ include/linux/writeback.h               |   2 +-
+ mm/page_io.c                            |  10 +-
+ 22 files changed, 268 insertions(+), 172 deletions(-)
 
-  mdadm --create /dev/md0 -l10 -n4 -p n2 --bitmap=internal \
-        --bitmap-chunk=512M --assume-clean --run <4 x 8T>
-  mdadm /dev/md0 --fail /dev/loop1 --remove /dev/loop1
-  mdadm /dev/md0 --fail /dev/loop3 --remove /dev/loop3
-  # no writes here
-  mdadm /dev/md0 --re-add /dev/loop1
-  mdadm /dev/md0 --re-add /dev/loop3
-
-Thanks,
-Yunye
+base-commit: f2690679ecf3a3151688ebef766dd2512ff95854
+-- 
+2.51.0
