@@ -1,108 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out30-99.freemail.mail.aliyun.com (out30-99.freemail.mail.aliyun.com [115.124.30.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1E9121883E
-	for <linux-raid@vger.kernel.org>; Mon,  3 Aug 2026 18:20:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3136D33F582;
+	Tue,  4 Aug 2026 03:55:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785781220; cv=none; b=FrHc30SlVQKLx6P5erbNYGOcLSm5cjoehnHJu2Y+ul27xeKi8IzAKqMQLkzqo6lorkc462QBKIQF2tJaQwrQ8/QryXhIzOmGQPDdBLFbzX2goC1J3AqT5vjTGgrm82W+ktFC04ebsOV/kpH5WCaCb1+Xz1N8v2O3G3SaZQ7Fx6I=
+	t=1785815729; cv=none; b=PG7rtQSa9gUghOP/MYzRt7uL0NULJ5rm0vT4b7YmDkDEyhfJFRwtpdljjh36ORBVa/r5gfpbdDNiTYWOXzwFP35wEfOmCtawqCxgWDSqvg7sG2V8y83OoJkB5RX81K8cslyRh6m+R/Y6ZgeKuGHrnhREAKY7g8cvpuhAuK/V6QE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785781220; c=relaxed/simple;
-	bh=SJURj1NIuxA6qJltj4t0DyW50R2GgD3X01LsCK6k/Nc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=kVYCaKbMTE5X1/sRFjzIHqw2vgJbnVK8SNsSCa/qBbQI97uvg2fT5ANjY7Gmk17tVQCqtP6RF/2R5YUX2Y8+b5ZX7JGRGdBBGFDOmkUHmbR4kxHFQ7o8Yb5mwnAZIgk0aEmBQGWxwQqukGr+5LlzsjJcYbxv0Ufs7QXTUv98ddw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KLQ5lXrM; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785815729; c=relaxed/simple;
+	bh=SlIaYLmz1hkcZHe+X9iLtf/YhoPEAmYJzoZGqegLXWM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=VWC2bqINXaXFVcDn1xfuK5U1NiJB1Mse1Lp+fKdbiUEw7wONc25B6RplC+kau6Q6ybWaunXyArmeMwUVuaXn4lcFj/y7mmJFqbzJzRGsDVO4WJmgHhqEgAgsASfD8JuORBbD8Vi6o9shN6k42F+zRt0lrVJhyJqgCBDVt60jny8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=mjTv+Jwm; arc=none smtp.client-ip=115.124.30.99
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KLQ5lXrM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D41F1F000E9;
-	Mon,  3 Aug 2026 18:20:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785781219;
-	bh=KYOdifxQbPM/HBsQlaADf3apXxf661saBdYzy+mSLoY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KLQ5lXrMx1ouaMiQNQZ4pUaxiESB8OC+GIeZjVDynnlT1dfE4vUuho/20NtJUoIZf
-	 ZVmpNMrVbLplmcVnv3gzrTUnzydR1/lVz2+vWLrgkVsKjYO6S5nyDEYsLQnpYeC45X
-	 966j/+xR4WhH+Zz7gS8Fwizq7gYtC3mQwH66nJESLYJSAYO5cx5Pe2wn8ADj5asqG/
-	 oHudHgrhGA37VN7fOhdypXV/As/Q+ymm4ZvSZg6K4wQ15J8O0k65VcTPRD5gpbAqh9
-	 /rBxRmEn5TXnnMU5c7CqDcBiZr1aO+ys0pnsspmtHq7UJxDt15qZuon4bQaIcUW/HU
-	 a6QVSPF8DlHwA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] md/raid1: don't set array_frozen in raid1_takeover()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Bruce Johnston" <bjohnsto@redhat.com>
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260803180240.1177104-1-bjohnsto@redhat.com>
-References: <20260803180240.1177104-1-bjohnsto@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 03 Aug 2026 18:20:18 +0000
-Message-Id: <20260803182019.4D41F1F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="mjTv+Jwm"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1785815717; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=4iBGQHRMT31JLxpnMUn+1Gzw2DYAUemAjfouiqEsnkY=;
+	b=mjTv+JwmE62VQCtw5pHF9gCUXBEi/hK27LCYtzW8Piq4n8JHnZy0BUjHPI4Ut2XAVcrurGmsWQSY73MgnsTGdf7LTOSkICPXIDfhWT6nJ0B1qi3y0WarcllNxw3VPpR804Gd475oFt6E90qUx4XhINN5M8yecHXQ9i6yQDqqQ+Q=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R511e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045098064;MF=yunye.zhao@linux.alibaba.com;NM=1;PH=DS;RN=9;SR=0;TI=SMTPD_---0X8MVHk2_1785815716;
+Received: from j66c13357.sqa.eu95.tbsite.net(mailfrom:yunye.zhao@linux.alibaba.com fp:SMTPD_---0X8MVHk2_1785815716 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Tue, 04 Aug 2026 11:55:17 +0800
+From: Yunye Zhao <yunye.zhao@linux.alibaba.com>
+To: yukuai@fygo.io
+Cc: joseph.qi@linux.alibaba.com,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	magiclinan@didiglobal.com,
+	song@kernel.org,
+	xiao@kernel.org,
+	yunye.zhao@linux.alibaba.com,
+	sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 3/3] md/raid10: skip clean regions in bulk during recovery
+Date: Tue,  4 Aug 2026 11:55:16 +0800
+Message-Id: <20260804035516.98652-1-yunye.zhao@linux.alibaba.com>
+X-Mailer: git-send-email 2.19.1.6.gb485710b
+In-Reply-To: <0650db8f-14d2-4f80-949f-82553fd8485b@fygo.io>
+References: <0650db8f-14d2-4f80-949f-82553fd8485b@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+Hi Kuai,
 
-Pre-existing issues:
-- [High] level_store() completely ignores the return value of pers->run(mdd=
-ev), leading to a memory leak and leaving the md array in a broken state if=
- the personality initialization fails.
---
+On Thu, 31 Jul 2026 at 17:46, Yu Kuai wrote:
+> I'm confused, recovery means replace a new disk ... the whole new disk
+> have to rebuild ... there is nothing to skip
+>
+> So are you talking about the case that the array is already broken?
 
---- Patch [1]: [PATCH] md/raid1: don't set array_frozen in raid1_takeover()=
- ---
-commit 6300b6117ffff45fb0af7f09f8050ab659c74d0c
-Author: Bruce Johnston <bjohnsto@redhat.com>
+The recovery target here is a *re-added existing member*, not a fresh
+spare.
 
-md/raid1: don't set array_frozen in raid1_takeover()
+Right, for a fresh spare: saved_raid_disk != slot sets conf->fullsync=1,
+this skip is bypassed, and the whole disk rebuilds. This patch does not
+touch that.
 
-raid1_takeover() sets conf->array_frozen =3D 1 on the newly-allocated
-r1conf but since commit b39f35ebe86d removed the quiesce call, it
-is never cleared and stalls I/O permanently. This commit fixes the
-issue by removing the array_frozen assignment in setup_conf().
+The case I fix is a member transiently removed and re-added:
 
-Link: https://issues.redhat.com/browse/RHEL-191802
+  - a member drops out; its mirror partner stays online, so the array is
+    still redundant and readable (not broken);
+  - nothing is written while it is gone, so the write-intent bitmap
+    stays clean;
+  - the same disk is re-added: valid superblock, saved_raid_disk == old
+    slot, so conf->fullsync stays 0 and md does a bitmap-based recovery
+    (MD_RECOVERY_RECOVER; /proc/mdstat shows "recovery").
 
-> This used to be harmless: level_store() called mddev_resume() right
-> after pers->run(), which called raid1_quiesce(mddev, 0) and cleared
+The bitmap is fully clean, every chunk returns must_sync == false,
+biolist stays NULL, and we hit the existing "*skipped=1; return
+max_sync;" path. Only its step size is wrong.
 
-[Severity: High]
-This is a pre-existing issue, but looking at level_store(), the code
-ignores the return value of pers->run(mddev):
+Reproducer (near=2, 4 disks, nothing written while degraded, each pair
+keeps a live copy):
 
-drivers/md/md.c:level_store() {
-        ...
-        pers->run(mddev);
-        set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
-        ...
-}
+  mdadm --create /dev/md0 -l10 -n4 -p n2 --bitmap=internal \
+        --bitmap-chunk=512M --assume-clean --run <4 x 8T>
+  mdadm /dev/md0 --fail /dev/loop1 --remove /dev/loop1
+  mdadm /dev/md0 --fail /dev/loop3 --remove /dev/loop3
+  # no writes here
+  mdadm /dev/md0 --re-add /dev/loop1
+  mdadm /dev/md0 --re-add /dev/loop3
 
-If pers->run() fails (for example, if raid1_run() fails during
-raid1_set_limits() and expects the caller to free mddev->private),
-does this leak the personality-specific configuration structure
-(like r1conf and its mempools)?
-
-Since the return value is ignored, could this also leave the array in a
-broken state where subsequent I/O causes a crash because the active
-personality is not fully initialized?
-
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index afe2ca96ad8c2..2a247ed5fff11 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -3485,8 +3485,6 @@ static void *raid1_takeover(struct mddev *mddev)
->  		mddev->new_chunk_sectors =3D 0;
->  		conf =3D setup_conf(mddev);
->  		if (!IS_ERR(conf)) {
-> -			/* Array must appear to be quiesced */
-> -			conf->array_frozen =3D 1;
->  			mddev_clear_unsupported_flags(mddev,
->  				UNSUPPORTED_MDDEV_FLAGS);
->  		}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260803180240.1177=
-104-1-bjohnsto@redhat.com?part=3D1
+Thanks,
+Yunye
