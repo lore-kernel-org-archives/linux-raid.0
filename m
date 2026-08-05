@@ -1,199 +1,136 @@
-Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC83241686B
-	for <linux-raid@vger.kernel.org>; Tue,  4 Aug 2026 18:44:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.47
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785869074; cv=pass; b=bD6GlFDd+bjoZLWCOxoSX+eOTs0dcc9gUvbQBUfnedDgKVZjJf1UAlQADsa0YHTrSSnfWaUwlq+yoskW2dzzgtXHCoSVLCqShVpgBMlv9mSQXtR2TPyacqQBXam+0DQyHTaR9ov+5ZTWABRfz2ZaNMb0Hc1WlhJ5eoScjUA/q90=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785869074; c=relaxed/simple;
-	bh=Bu2cU4ibqae3k58776JwLs54knMu3t9+XEkSXXc1FRg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Pi5kqGzgl1qWdpXRjPppcvb2ayyeMUdd7FN8Q4x2RxnCxUS3JIxN0SIphqhkG2gG1vYs20KMk0ZPnBKfTTAJsZZRUMgNaAk4FVp+wbTmimTrnI0Re6CHyXt9uWT4A5AMvAwmHXpIpAiW8/uyR2DazcYJMfvP42s9hp1l/sTr0J4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b=KgvWrk85; arc=pass smtp.client-ip=209.85.218.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8425124A06D;
+	Wed,  5 Aug 2026 00:58:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785891535; cv=none; b=itCesOX2Wkyy28zeDe7Ro3CRafO+q8NQ/rqn0nYmrG6t1o0zfYAx35ezYtPQNCgyR9aN+KFEqImGYNMw/cR8Mmwr67S0HVYvmYixjBNsLdfCfM5PBXGHcly4GuvRJ1CPmxKMAaTF81WhxQNwXVN8tq6SQVriSVFT0dBGsB5piRY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785891535; c=relaxed/simple;
+	bh=QXq+No4NCvplH5iP+cVU/DLqFEsEiO2ABlKqbYf8N0U=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=aZmDUvaf2RIJrcjqOzQ4L/3fZ1SbAmELuLJ4GruHExnaWzAdYRFRes+BGSvJyXWFgE5Mp/rHAxuhnVHdlbYo4igMpR8qolHP4gBySUDUYq1xCM22Jd2dHjN/Y+lR4NFzJ6exMwSlHvBgZjTrpOl/wvbfbObHMZaE5y5PNTQZxxo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=UKD+o0Q9; arc=none smtp.client-ip=91.218.175.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="KgvWrk85"
-Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-c1676497000so2963866b.3
-        for <linux-raid@vger.kernel.org>; Tue, 04 Aug 2026 11:44:30 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1785869069; cv=none;
-        d=google.com; s=arc-20260327;
-        b=ErOzzvMn9gpK426IFrhS1cs7tZdJJyd+YLzsuzfkJPCAuzCaR3Jiwl04W0bATZhYXw
-         jI4FprwMeurGrAP9gYeMFNlxte3bZR107Vvbf5JN90badvCMG1Wz9UMa54G91I3bphiP
-         vLScPJgyBD6aeXeHfWsYuXCcRoiMHva4CucfP82gQcp9yE3FtICt7n1N2V7u5F6XndhQ
-         rhl3vQE+rznwI4pNKxqU0dhQmn3g8IRH77+jZDG1FvUpXFWc6qL8ZM9WwRUP00MdrK1k
-         AzePXzSOKxqh+LFR8g2bGJe3EJDQbT5wgziTmlccsw+8HfxcCz41JNVKKStHKruZ550o
-         HJ1A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=yOcdgk1wdFj1Z6mmAZGKU5LAITNpPVAwHwOExpuoED4=;
-        fh=gaW+xh+QhDfhe4HylTXcfTps3CVnuZvbtjlQ6hc3OGU=;
-        b=MXZMAF4UNXJ+gqGfaXGLbDiUzxFy/0YAVIa4xX0C+iUgWPX8yEmgBDJQb4ElbyF5G8
-         61g5ChUG4DaGS1kcR0d+qL3XVBd7EXWahkvSo2VKB+oAvA7gpGBLcmZJaXNdCNeOT3C/
-         KaBq6EUO7cHrTFCHKNljZkFcRSi1iwbYwOWNOw4tfkVjSqlf8njmUr7HmuN8t2XrMiwz
-         s9GUlKet0mNBPB6UtLa9O+iDm3nAdH+ohYuZJZ41WLVVI25LyECkBHKePCwp3U1AnhsY
-         nBz7WwxyM8UxW9B0C5901bS5qGSrclr5AHJ5VXILYMK+v+AsmPmynfHMT9sXfKc4lXJv
-         uqeA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google; t=1785869069; x=1786473869; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=yOcdgk1wdFj1Z6mmAZGKU5LAITNpPVAwHwOExpuoED4=;
-        b=KgvWrk85YybY1o0tEf8LvwpHtCVxH8vFYltrTEgLMSO5DZW4wFlQabQ+tsPbMZpQ6M
-         rI+caujZicw5y7fXFVTnDnVBaXYOzCyqSu0YL6bnHAHr/R/SDcvv9XtunKzm7dXuTODM
-         JUNtYu9AM0jrOoYvvfTQyqqPMjwG4bKDcyPMfLCGHaP4dBqk/SkxqlzJsPN4d/tJJXg1
-         5N5vmfPf+uZtZztJPSehaIDSXiHtPxRKp+dvlvba4YugMlCvXEnPfKWDpKcNBzNavm36
-         cnaxHPiZZvMO2YSY2cQRO7z4YSe/Nm7sdJPDBQACyMma1MSwxYJDaeXY07prE9eFdshW
-         TK2w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785869069; x=1786473869;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yOcdgk1wdFj1Z6mmAZGKU5LAITNpPVAwHwOExpuoED4=;
-        b=AQ0M6TbZICQ4quBm5e3oy67/ALKOvdgIz96SlT36KeSeCJEbUwj9SBg2toEVGpSCrG
-         KUmF6JEntrO8D+WrTjnJdOdFjUwtHOEhEpnE7JypcJ5+gisKaiujQs+b0+LsRLVvsDpH
-         NPaSdUrvQnxiNOm/hDBfiICk8HlCYldRFE8iyartHQoUBlmCOWE3F5RtY0trt1ercXkT
-         01vdpykmORuSBabXZOyOOMpffkFoY2iNi+AWqIs4zehdKFWjA9lQ/srN60zGcRrxoScs
-         NqoNtzTDxNCEIY/Q+S7wwYgBH+IXoH0ZlhUeFIPdDX2UbekQQlIwQKoorvJZijuDj/E8
-         jpOw==
-X-Forwarded-Encrypted: i=1; AHgh+RquaCo4DlX5RwkbZNC2HYHUOpXloC8rnRsPrLtqJ7ycpIYhuKuY6Uf+sqo8gxWE+eZ9mlVY64BuQIwb@vger.kernel.org
-X-Gm-Message-State: AOJu0YyoZ2n5JwDKOn8BTTNJ5Nr2WZoUSTa5Ii5YPH6Uyaynn2NGwOV7
-	d9NPUDWkZUPdNMBryQQq6tmuFyi5QWvWRYJN0sZW+//QhjZSU6KE+o3NY3OwgdROuvqs+uPiZCq
-	5XjLCD+vVl3qzeGXuVbayE3p3ejDlpexy85kr4J/Fbw==
-X-Gm-Gg: AR+sD10YfcSN5V3ThTQiudWOS8V9FmvkaOprWwConhlcKvXt76362VZIKhYHGz+k7wD
-	7tnBzcTXTx10nLauMi2mlplz0tb3o3GgGUDTEs3vHid1htxe10TIv8C2hTo2kEKIOUMwabIVVf2
-	mNYLZA43JrI5jx+3+5/NOjRDQK0JQMSp+Pm/XNEjYKAA1M36gVJYo4lfI4t3tuRBdqvgEygFhxT
-	WYwDcd/Cn1Y8lyalwUcu0C23yGxFAspJ6xrwthOuI+sk3RrVtVwO/dF97A/f798clVfyvDYQEjP
-	laXvOj4/qh6b3NeU0HxhlFlanYeWuELel5bXv/LnRbMGDeLALY6X6+5Lkwaxh+MDjWtUt+KZPPr
-	/p1BrG2lYPTbm
-X-Received: by 2002:a17:907:c386:b0:c20:38e2:b355 with SMTP id
- a640c23a62f3a-c2039f6e614mr14509566b.4.1785869068883; Tue, 04 Aug 2026
- 11:44:28 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="UKD+o0Q9"
+Message-ID: <a340d525-5713-4cf4-b88c-77773ae349d7@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785891530;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kXCZx29YWK0KuSZTNZlcIo3NjcMPu1Ep/GSGxvMq9+g=;
+	b=UKD+o0Q9O0GP/b1+xVPt8DW6AJyHnKdGgtR0kNlepREPLrvPQUsgmz6uhTn2BgsnwwgsW7
+	6FERSa+9CQu0aEvQy/RHASDL9rD1MgLiRdBkudQn0F5tsVVNDL9YEXbEVMFS961KB/SsYE
+	mzNcNjONJWNh0bFcrOTll82xxRN0PX0=
+Date: Wed, 5 Aug 2026 08:58:09 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260717051233.383373-1-jinpu.wang@ionos.com> <20260717052537.611431F000E9@smtp.kernel.org>
-In-Reply-To: <20260717052537.611431F000E9@smtp.kernel.org>
-From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date: Tue, 4 Aug 2026 20:44:17 +0200
-X-Gm-Features: AUfX_myONWp2_qNE5Gm8c2FQvZV2SEBhEWxgv1arpWXFMYsv0UFPyK3w759S4lo
-Message-ID: <CAMGffE=gipMNJkTLoSBj26mGWsTmp2aiFKM3yRe12BdjwWftBw@mail.gmail.com>
-Subject: Re: [PATCHv2] md: clear MD_CLOSING when array_state_store() bails on
- interrupted lock
-To: sashiko-reviews@lists.linux.dev
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Cc: cui.tao@linux.dev, Yu Kuai <yukuai@kernel.org>,
+ Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>,
+ Josef Bacik <josef@toxicpanda.com>, Coly Li <colyli@fygo.io>,
+ Kent Overstreet <kent.overstreet@linux.dev>, Alasdair Kergon
+ <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ Benjamin Marzinski <bmarzins@redhat.com>, Song Liu <song@kernel.org>,
+ Dan Williams <djbw@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>,
+ Dave Jiang <dave.jiang@intel.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
+ Andreas Gruenbacher <agruenba@redhat.com>,
+ Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+ Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
+ Kairui Song <kasong@tencent.com>, Nilay Shroff <nilay@linux.ibm.com>,
+ cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
+ virtualization@lists.linux.dev, gfs2@lists.linux.dev,
+ linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [RFC PATCH v1 2/3] blk-cgroup: store blkcg in bio instead of blkg
+To: yukuai@fygo.io, Christoph Hellwig <hch@lst.de>
+References: <20260804065313.2092022-1-yukuai@kernel.org>
+ <20260804065313.2092022-3-yukuai@kernel.org>
+ <a677f581-344b-4d99-846d-a00801e26033@linux.dev>
+ <20260804133208.GB8078@lst.de> <0fc5dd22-7a8d-43f0-8555-d2ca966efff6@fygo.io>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <0fc5dd22-7a8d-43f0-8555-d2ca966efff6@fygo.io>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-Hi Team,
 
-Regarding the pre-existing issue reported by the bot, it is not
-related to this fix and cannot be triggered in normal cases, so I will
-skip it for now.
+Hi Kuai,Christoph,
+在 2026/8/4 23:30, yu kuai 写道:
+> Hi,
+> 
+> 在 2026/8/4 21:32, Christoph Hellwig 写道:
+>> On Tue, Aug 04, 2026 at 05:19:24PM +0800, Tao Cui wrote:
+>>> While reading 2/3, one spot in bio_pinned_blkg() made me wonder, so I
+>>> gave it a try — and the WARN_ON_ONCE triggers every time for me.
+>>>
+>>> I may well be missing something, but my worry is that the bio's ref on
+>>> the blkg keeps the object alive, not its entry in the radix tree.
+>>> blkg_destroy() runs throtl_pd_offline (which only schedules an async
+>>> flush) before radix_tree_delete(), so the queued bio ends up dispatched
+>>> (blk_throtl_dispatch_work_fn -> blk_cgroup_bio_start ->
+>>> bio_pinned_blkg) after the blkg is already gone from the tree, and
+>>> blkg_lookup() returns NULL.
+>>>
+>>> I applied the series and wrote a small reproducer:
+>>>
+>>>    - null_blk, cgroup v2, a child cgroup with io.max rbps=4096;
+>>>    - a read issued in the child cgroup gets throttled and queued, pinning
+>>>      the blkg;
+>>>    - migrate the reader out and rmdir the cgroup; the queued bio is then
+>>>      flushed after the blkg has left the tree.
+>> Can you add this to blktests?
+>>
 
-Linux RAID folks, do you have a chance to check this patch? It fixes a
-problem we hit by chance.
+yes, I'll turn the reproducer into a blktests case and send
+it out. 
+
+>>> Maybe keeping the pinned blkg pointer in the bio would sidestep this, so
+>>> the lookup can't miss?
+> 
+> The problem here is that blkg_destroy can be called while blkg is still pinned
+> by blkg_get, in this case remove the cgroup directly remove the blkg from radix
+> tree, that's why blkg_lookup can't find this blkg anymore, and the extra blkg ref
+> is leaked :(
+> 
+>> That would grow the bio, which we try hard to avoid.  I think the way to
+>> avoid this is to have active/passive refcounts on the blkg, where an
+>> active one keeps it in the radix tree, but a 0 passive one would prevent
+>> the caller from getting a new reference to it.  The users who rely on the
+>> pin for the I/O completion path would then just keep the active reference
+>> and use a pure lookup without getting a new passive reference in the
+>> completion path.  This would remove the need for BIO_BLKG_REF which
+>> feels a bit kludgy and eats up precious bio flag space.
+> 
+> The problem here is that remove a cgroup can also remove the blkg from radix tree,
+> even through it still has active refcounts. I think this can be fixed by checking
+> the cgroup online_pin first, if it's zero, we can search the blkg from the
+> request_queue blkg list, where blkg will not be removed until blkg_free_workfn().
+> What's better, if we can convert the blkg list to hash table with key as blk-cgroup,
+> it will be much better as we can lookup from this table instead of blkcg radix tree.
+> 
+
+Both of your approaches go further than my store-the-pointer idea;
+looking forward to the next version.
 
 Thanks,
-Jinpu
+Tao
 
-On Fri, Jul 17, 2026 at 7:25=E2=80=AFAM <sashiko-bot@kernel.org> wrote:
->
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
-e(s) to consider:
->
-> Pre-existing issues:
-> - [High] Calling `restart_array()` with the `mddev->lock` spinlock held c=
-an sleep because it clears the disk read-only flag, which triggers a `GFP_K=
-ERNEL` memory allocation for a uevent.
-> --
->
-> --- Patch [1]: [PATCHv2] md: clear MD_CLOSING when array_state_store() ba=
-ils on interrupted lock ---
-> commit 3ae9b81fbeee45b412994652c2c3b3ac1b35d177
-> Author: Jack Wang <jinpu.wang@cloud.ionos.com>
->
-> md: clear MD_CLOSING when array_state_store() bails on interrupted lock
->
-> This commit ensures that MD_CLOSING is correctly cleared if
-> mutex_lock_interruptible() fails while writing to array_state. It introdu=
-ces
-> a common exit label and a boolean flag to track whether the flag was actu=
-ally
-> set by the current thread.
->
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index d1465bcd86c81..7b7a4d9259079 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> [ ... ]
-> > @@ -4696,7 +4698,7 @@ array_state_store(struct mddev *mddev, const char=
- *buf, size_t len)
-> >       }
-> >       err =3D mddev_lock(mddev);
-> >       if (err)
-> > -             return err;
-> > +             goto out_clear_closing;
->
-> [Severity: High]
-> This is a pre-existing issue, but just above this code in array_state_sto=
-re(),
-> there is a fast path that can sleep while holding a spinlock.
->
-> If a privileged user sets the md device to read-only using
-> blockdev --setro /dev/md0 and then writes 'active' to
-> /sys/block/md0/md/array_state, the code acquires the mddev->lock spinlock
-> and calls restart_array():
->
-> drivers/md/md.c:array_state_store() {
->     ...
->     spin_lock(&mddev->lock);
->     if (st =3D=3D active) {
->         restart_array(mddev);
->     ...
-> }
->
-> restart_array() unconditionally calls set_disk_ro() to ensure the disk is
-> read-write:
->
-> drivers/md/md.c:restart_array() {
->     ...
->     set_disk_ro(disk, 0);
->     ...
-> }
->
-> Because the disk was set to read-only, set_disk_ro() clears the flag and
-> triggers a uevent:
->
-> block/genhd.c:set_disk_ro() {
->     ...
->     set_disk_ro_uevent(disk, read_only);
->     ...
-> }
->
-> This calls into kobject_uevent_env(), which performs an unconditional
-> GFP_KERNEL allocation:
->
-> lib/kobject_uevent.c:kobject_uevent_env() {
->     ...
->     devpath =3D kobject_get_path(kobj, GFP_KERNEL);
->     ...
-> }
->
-> Can this sequence cause a sleep-in-atomic bug and potentially lead to a
-> deadlock or panic?
->
-> --
-> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717051233.38=
-3373-1-jinpu.wang@ionos.com?part=3D1
+>>
+
