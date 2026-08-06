@@ -1,136 +1,244 @@
-Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8425124A06D;
-	Wed,  5 Aug 2026 00:58:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B21A3431E49
+	for <linux-raid@vger.kernel.org>; Thu,  6 Aug 2026 09:22:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785891535; cv=none; b=itCesOX2Wkyy28zeDe7Ro3CRafO+q8NQ/rqn0nYmrG6t1o0zfYAx35ezYtPQNCgyR9aN+KFEqImGYNMw/cR8Mmwr67S0HVYvmYixjBNsLdfCfM5PBXGHcly4GuvRJ1CPmxKMAaTF81WhxQNwXVN8tq6SQVriSVFT0dBGsB5piRY=
+	t=1786008144; cv=none; b=IntnYfQXuqOImXjkXoXsUNDmi8BgO63CbnR0rEmtuI4FNYd/GXo03NiqNbebpUFXgH045jxS5KGUicFkHlyhmXsM4Rvmc0hGQb1bNTMjUfJIScoM3U6w6z8q276W71649Z6aRO4qTT1LppEfN3NcdITTCXF/A09hxp9l8uk89mY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785891535; c=relaxed/simple;
-	bh=QXq+No4NCvplH5iP+cVU/DLqFEsEiO2ABlKqbYf8N0U=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=aZmDUvaf2RIJrcjqOzQ4L/3fZ1SbAmELuLJ4GruHExnaWzAdYRFRes+BGSvJyXWFgE5Mp/rHAxuhnVHdlbYo4igMpR8qolHP4gBySUDUYq1xCM22Jd2dHjN/Y+lR4NFzJ6exMwSlHvBgZjTrpOl/wvbfbObHMZaE5y5PNTQZxxo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=UKD+o0Q9; arc=none smtp.client-ip=91.218.175.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1786008144; c=relaxed/simple;
+	bh=eAkOXZtlwNYjPhDGjyZtRke2iyDCQ2QqdzoXZFHQk1s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=peYCzunsIpHhDshU1aF5XVT+lomJrzEhIgdwsnO/Eor2xAAPFseNaM3dlZNUiRYHirpt4JsD9Olr9tbXxw7qo9cbiKqYkqljlTY3XPIaetOVOiueUsa8qSXWueQpVj5N9q4n1Shv6XyJI/MjGUQw/GH6Jnz54qFDWB1MEfO9QGM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=XrnD5ycW; arc=none smtp.client-ip=209.85.221.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="UKD+o0Q9"
-Message-ID: <a340d525-5713-4cf4-b88c-77773ae349d7@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785891530;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kXCZx29YWK0KuSZTNZlcIo3NjcMPu1Ep/GSGxvMq9+g=;
-	b=UKD+o0Q9O0GP/b1+xVPt8DW6AJyHnKdGgtR0kNlepREPLrvPQUsgmz6uhTn2BgsnwwgsW7
-	6FERSa+9CQu0aEvQy/RHASDL9rD1MgLiRdBkudQn0F5tsVVNDL9YEXbEVMFS961KB/SsYE
-	mzNcNjONJWNh0bFcrOTll82xxRN0PX0=
-Date: Wed, 5 Aug 2026 08:58:09 +0800
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="XrnD5ycW"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-47f703a9e5dso975610f8f.0
+        for <linux-raid@vger.kernel.org>; Thu, 06 Aug 2026 02:22:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1786008140; x=1786612940; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Pcnhqt0EtUylxXGbjqsf+1Pc4DS5YZiCgI0VutNek2Q=;
+        b=XrnD5ycWprfq6ZXTgx/sPzXa5ZnxABDwcpmPqfn9GG88R1oeKt24y55hESrkuenR00
+         nCKpfv3AkKfF4BEvNi1Np0lFOrYCUwYWexMxsBnhPOx2mxRlL7ydg2m/kBT+aiUV3Zd3
+         VESkJ5GGNCSExJTW9D+DzbWi1fVcVr4NwLIFru+84F1HhDvhmChS2J0YqoM0vX1T/1cK
+         iAluYuFr7ppe3xH4njcLfGLfuvucdrfjmvVOh34RYec6puIycELs/LS1OFCHdSinjMYe
+         umcNKcyjctdczgVSItKFxhC6REpSN1RTegig96f/He4KlWghfvQV4c9yOrOSyHOvsfie
+         Z3iQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786008140; x=1786612940;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Pcnhqt0EtUylxXGbjqsf+1Pc4DS5YZiCgI0VutNek2Q=;
+        b=HkrsKra9IIDbNGQ0Q5dtsHhLbua0nD8xAwzr4GmI1Ykl/Nx0RiTQNGZZm8wwbrpivn
+         vBYynGqHH87DvKSpnosZ6bKvfJbFuD1LkGh3eBuO/iXGe+m6EhtmQg3Kk2+K+GfIjmAj
+         TCmxZ4ZCamLVgANaPscY4PgiYnOIDwgPxhTJa4z+6SaRsEsrrV7R6ALU2kHTgrA+NbNL
+         3VSLhyMARfvGJbyZlQRGQsLSRQlYQrOEsnXZDM0BPCBYeu+DeZMIm9rC45dwmaX/5plx
+         75eAN+oXGiCPDwOxGvNeIAdZXoXUZu398QE4jL6tbL12MOQ+F/s40bVd0MFPbKWa5zD9
+         XlAQ==
+X-Forwarded-Encrypted: i=1; AHgh+Rpqgi3hWTUBJu+dFO3VZae7QbsRFFXN32WuoWuDUN/1X3V2xb3HAU+1QT1JxhHrBN0gI7vI2wEcmLJ7@vger.kernel.org
+X-Gm-Message-State: AOJu0YwUzxcmem53bQiuOxVZSgAH5g9LnRyAVjBnMbc+BuFS4d8VpfSr
+	masb+rgcmssu/Thl+oir85xdBmdoHP95p91TJ14rxM5F+SC+QuKOeb9t8TL4PUDOoaI=
+X-Gm-Gg: AR+sD13jScPyjB0A9+011kjw6Ob36nzXSiuFSy54qV1mi3wfqWRuX9jj7NnAn+wiFmM
+	OH5U8F3VlSWhR+9TGKxSMXA44bxfr8Eqdo67Ch34W55fsdJsvwtTgOBkY/8IXWCTUPQWz4EZ5hA
+	5qsMZBEMflyL5kKc/lClcCaeYBOROVWZ/NsIVXlK/o1oTHTsFObjPqQ2mhKvRzlqffwmoeGyD5e
+	AFvTzWxK0EwNcHzpUvzREKFd+WhNL9EZ7dfp4O7ZUWHayuJEmMgVCdk+nWGB8IVC3ELDFGzcjT8
+	HrapqOcE3fkyOXfirAylwQyzBxgUTccbGaDMMn5nYYlvCZlARxlulrDGndCMm0zek80lCoLG3DV
+	AaUEHiTcewu/+hrWYX6Qpe4BhrnBTUhCu5tUzbkwfsgxPP2n1CircJ8hUXMAIaBeq72B7R6rxy2
+	uvQQXJRRCFzuS6X0hwXLRTcFo6VvB0ng995YC47fc9TZDh7oOpcol0mDOexO+N7xku
+X-Received: by 2002:a5d:624a:0:b0:47f:9750:26cc with SMTP id ffacd0b85a97d-47fec630b5cmr16574414f8f.23.1786008139632;
+        Thu, 06 Aug 2026 02:22:19 -0700 (PDT)
+Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47ff7b31975sm4112794f8f.33.2026.08.06.02.22.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Aug 2026 02:22:18 -0700 (PDT)
+Date: Thu, 6 Aug 2026 11:22:16 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Yu Kuai <yukuai@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Yu Kuai <yukuai@fygo.io>, 
+	Josef Bacik <josef@toxicpanda.com>, Coly Li <colyli@fygo.io>, 
+	Kent Overstreet <kent.overstreet@linux.dev>, Alasdair Kergon <agk@redhat.com>, 
+	Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, 
+	Benjamin Marzinski <bmarzins@redhat.com>, Song Liu <song@kernel.org>, Dan Williams <djbw@kernel.org>, 
+	Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, 
+	Alison Schofield <alison.schofield@intel.com>, Pankaj Gupta <pankaj.gupta.linux@gmail.com>, 
+	Andreas Gruenbacher <agruenba@redhat.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, 
+	Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
+	Christoph Hellwig <hch@lst.de>, Nilay Shroff <nilay@linux.ibm.com>, Tao Cui <cui.tao@linux.dev>, 
+	cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev, 
+	linux-raid@vger.kernel.org, nvdimm@lists.linux.dev, virtualization@lists.linux.dev, 
+	gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [RFC PATCH v1 2/3] blk-cgroup: store blkcg in bio instead of blkg
+Message-ID: <anRPSKHWo59GPIA0@localhost.localdomain>
+References: <20260804065313.2092022-1-yukuai@kernel.org>
+ <20260804065313.2092022-3-yukuai@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Cc: cui.tao@linux.dev, Yu Kuai <yukuai@kernel.org>,
- Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>,
- Josef Bacik <josef@toxicpanda.com>, Coly Li <colyli@fygo.io>,
- Kent Overstreet <kent.overstreet@linux.dev>, Alasdair Kergon
- <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>,
- Benjamin Marzinski <bmarzins@redhat.com>, Song Liu <song@kernel.org>,
- Dan Williams <djbw@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>,
- Dave Jiang <dave.jiang@intel.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
- Andreas Gruenbacher <agruenba@redhat.com>,
- Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
- Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
- Kairui Song <kasong@tencent.com>, Nilay Shroff <nilay@linux.ibm.com>,
- cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
- linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
- virtualization@lists.linux.dev, gfs2@lists.linux.dev,
- linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="ltojthlavrpt3nkl"
+Content-Disposition: inline
+In-Reply-To: <20260804065313.2092022-3-yukuai@kernel.org>
+
+
+--ltojthlavrpt3nkl
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 Subject: Re: [RFC PATCH v1 2/3] blk-cgroup: store blkcg in bio instead of blkg
-To: yukuai@fygo.io, Christoph Hellwig <hch@lst.de>
-References: <20260804065313.2092022-1-yukuai@kernel.org>
- <20260804065313.2092022-3-yukuai@kernel.org>
- <a677f581-344b-4d99-846d-a00801e26033@linux.dev>
- <20260804133208.GB8078@lst.de> <0fc5dd22-7a8d-43f0-8555-d2ca966efff6@fygo.io>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <0fc5dd22-7a8d-43f0-8555-d2ca966efff6@fygo.io>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+MIME-Version: 1.0
+
+Hi Kuai.
+
+On Tue, Aug 04, 2026 at 02:53:12PM +0800, Yu Kuai <yukuai@kernel.org> wrote:
+> From: Yu Kuai <yukuai@fygo.io>
+>=20
+> A bio currently stores a queue-local blkg reference.  This forces bio
+> association and remap paths to look up or create a blkg even when the bio
+> will never enter a blkcg policy.
+>=20
+> Store the blkcg css association in the bio instead, and derive the blkg
+> from the bio's blkcg and current bdev when a policy needs it.  The first
+> successful policy lookup pins the blkg, records the pin with BIO_BLKG_REF,
+> and drops it from bio_clear_blkcg() or when bio_set_dev() changes the
+> lookup key.
+>=20
+> Keep lookup-only users from creating missing blkgs by using
+> bio_blkg_lookup(), and rename the bio cgroup association helpers to match
+> the stored blkcg state.
+
+I assume this should be OK due to limited lifetime of bios -- this would
+not lead no possibly indefinite accumulation of offlined blkcgs,
+correct?
+
+> -void bio_associate_blkg_from_css(struct bio *bio,
+> +void bio_associate_blkcg_from_css(struct bio *bio,
+>  				 struct cgroup_subsys_state *css)
+>  {
+> -	if (bio_blkg(bio))
+> -		blkg_put(bio_blkg(bio));
+> +	struct blkcg *blkcg;
+> =20
+> -	if (css && css->parent) {
+> -		bio->bi_blkg =3D blkg_tryget_closest(bio, css);
+> -	} else {
+> -		blkg_get(bdev_get_queue(bio->bi_bdev)->root_blkg);
+> -		bio->bi_blkg =3D bdev_get_queue(bio->bi_bdev)->root_blkg;
+> -	}
+> +	if (!css || !css->parent)
+> +		css =3D &blkcg_root.css;
+> +
+> +	blkcg =3D css_to_blkcg(css);
+> +	if (bio_blkcg(bio) =3D=3D blkcg)
+> +		return;
+> +
+> +	css_get(css);	<---
+> +	bio_clear_blkcg(bio);
+> +	bio->bi_blkcg =3D blkcg;
+>  }
+> -EXPORT_SYMBOL_GPL(bio_associate_blkg_from_css);
+> +EXPORT_SYMBOL_GPL(bio_associate_blkcg_from_css);
+
+[skip to next comment below now]
+
+And here yet another (any) reference to same css is taken 2nd time.
+
+[skip after next comment below :)]
 
 
-Hi Kuai,Christoph,
-在 2026/8/4 23:30, yu kuai 写道:
-> Hi,
-> 
-> 在 2026/8/4 21:32, Christoph Hellwig 写道:
->> On Tue, Aug 04, 2026 at 05:19:24PM +0800, Tao Cui wrote:
->>> While reading 2/3, one spot in bio_pinned_blkg() made me wonder, so I
->>> gave it a try — and the WARN_ON_ONCE triggers every time for me.
->>>
->>> I may well be missing something, but my worry is that the bio's ref on
->>> the blkg keeps the object alive, not its entry in the radix tree.
->>> blkg_destroy() runs throtl_pd_offline (which only schedules an async
->>> flush) before radix_tree_delete(), so the queued bio ends up dispatched
->>> (blk_throtl_dispatch_work_fn -> blk_cgroup_bio_start ->
->>> bio_pinned_blkg) after the blkg is already gone from the tree, and
->>> blkg_lookup() returns NULL.
->>>
->>> I applied the series and wrote a small reproducer:
->>>
->>>    - null_blk, cgroup v2, a child cgroup with io.max rbps=4096;
->>>    - a read issued in the child cgroup gets throttled and queued, pinning
->>>      the blkg;
->>>    - migrate the reader out and rmdir the cgroup; the queued bio is then
->>>      flushed after the blkg has left the tree.
->> Can you add this to blktests?
->>
+> =20
+>  /**
+> - * bio_associate_blkg - associate a bio with a blkg
+> + * bio_associate_blkcg - associate a bio with a blkcg
+>   * @bio: target bio
+>   *
+> - * Associate @bio with the blkg found from the bio's css and request_que=
+ue.
+> - * If one is not found, bio_lookup_blkg() creates the blkg.  If a blkg is
+> - * already associated, the css is reused and association redone as the
+> - * request_queue may have changed.
+> + * Associate @bio with the blkcg found from the bio's css.  If a blkcg is
+> + * already associated, keep it as blkcg association is not queue-local.
+>   */
+> -void bio_associate_blkg(struct bio *bio)
 
-yes, I'll turn the reproducer into a blktests case and send
-it out. 
 
->>> Maybe keeping the pinned blkg pointer in the bio would sidestep this, so
->>> the lookup can't miss?
-> 
-> The problem here is that blkg_destroy can be called while blkg is still pinned
-> by blkg_get, in this case remove the cgroup directly remove the blkg from radix
-> tree, that's why blkg_lookup can't find this blkg anymore, and the extra blkg ref
-> is leaked :(
-> 
->> That would grow the bio, which we try hard to avoid.  I think the way to
->> avoid this is to have active/passive refcounts on the blkg, where an
->> active one keeps it in the radix tree, but a 0 passive one would prevent
->> the caller from getting a new reference to it.  The users who rely on the
->> pin for the I/O completion path would then just keep the active reference
->> and use a pure lookup without getting a new passive reference in the
->> completion path.  This would remove the need for BIO_BLKG_REF which
->> feels a bit kludgy and eats up precious bio flag space.
-> 
-> The problem here is that remove a cgroup can also remove the blkg from radix tree,
-> even through it still has active refcounts. I think this can be fixed by checking
-> the cgroup online_pin first, if it's zero, we can search the blkg from the
-> request_queue blkg list, where blkg will not be removed until blkg_free_workfn().
-> What's better, if we can convert the blkg list to hash table with key as blk-cgroup,
-> it will be much better as we can lookup from this table instead of blkcg radix tree.
-> 
+> +void bio_associate_blkcg(struct bio *bio)
+>  {
+>  	struct cgroup_subsys_state *css;
+> =20
+>  	if (blk_op_is_passthrough(bio->bi_opf))
+>  		return;
+> =20
+> -	if (bio_blkg(bio)) {
+> -		css =3D bio_blkcg_css(bio);
+> -		bio_associate_blkg_from_css(bio, css);
+> -	} else {
+> -		rcu_read_lock();
+> -		css =3D blkcg_css();
+> -		if (!css_tryget_online(css))
+> -			css =3D NULL;
+> -		rcu_read_unlock();
+> +	if (bio_blkcg(bio))
+> +		return;
+> =20
+> -		bio_associate_blkg_from_css(bio, css);
+> -		if (css)
+> -			css_put(css);
+> -	}
+> +	rcu_read_lock();
+> +	css =3D blkcg_css();
+> +	if (!css_tryget_online(css))	<---
+> +		css =3D NULL;
+> +	rcu_read_unlock();
+> +
+> +	bio_associate_blkcg_from_css(bio, css);
+> +	if (css)
+> +		css_put(css);
+>  }
+> -EXPORT_SYMBOL_GPL(bio_associate_blkg);
+> +EXPORT_SYMBOL_GPL(bio_associate_blkcg);
 
-Both of your approaches go further than my store-the-pointer idea;
-looking forward to the next version.
+next:
+Here you take (online) reference to the blkcg->css.
 
-Thanks,
-Tao
+[return back to previous comment]
 
->>
 
+after:
+Ideally, no tasks should be in offlined (blk)cgs, so the `current` would
+not resolve to blkcg_css() returning an offlined blkcgs. OTOH, it's
+generally good not to do _new_ associations to an offlined blkcg.
+Which is why I think this logic would better fit to
+bio_associate_blkcg_from_css()
+
+
+0.02=E2=82=AC,
+Michal
+
+
+--ltojthlavrpt3nkl
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCanRSRBsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+Ahf+gEA5FtU8iXyQA9tlhJdWJEf
+nyf1IBDUt4tisH7UDE8KiSEBAP5BK6FXkSftml/wn918ol1iwizfBzFhephd2gZc
+e3UL
+=GgwG
+-----END PGP SIGNATURE-----
+
+--ltojthlavrpt3nkl--
