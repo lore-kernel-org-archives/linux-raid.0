@@ -1,244 +1,92 @@
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+Received: from va-2-46.ptr.blmpb.com (va-2-46.ptr.blmpb.com [209.127.231.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B21A3431E49
-	for <linux-raid@vger.kernel.org>; Thu,  6 Aug 2026 09:22:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAEB441A900
+	for <linux-raid@vger.kernel.org>; Fri,  7 Aug 2026 08:11:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786008144; cv=none; b=IntnYfQXuqOImXjkXoXsUNDmi8BgO63CbnR0rEmtuI4FNYd/GXo03NiqNbebpUFXgH045jxS5KGUicFkHlyhmXsM4Rvmc0hGQb1bNTMjUfJIScoM3U6w6z8q276W71649Z6aRO4qTT1LppEfN3NcdITTCXF/A09hxp9l8uk89mY=
+	t=1786090295; cv=none; b=e+C3mfTgHGN8trmNHKulqEITRwIkUDrY4UiJka9V+fs1+x/UgVT0WXMO0fYmq/4MOgYHAKRABivvUh4zscHyJk6TTFmTqIipzhLY7OKCJiNpf4gNF3b+y+rOqWSGHG8UQVIOKm24JG/KfwlV59AEMSOXwCjb6RU81FZtwU3ZLwQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786008144; c=relaxed/simple;
-	bh=eAkOXZtlwNYjPhDGjyZtRke2iyDCQ2QqdzoXZFHQk1s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=peYCzunsIpHhDshU1aF5XVT+lomJrzEhIgdwsnO/Eor2xAAPFseNaM3dlZNUiRYHirpt4JsD9Olr9tbXxw7qo9cbiKqYkqljlTY3XPIaetOVOiueUsa8qSXWueQpVj5N9q4n1Shv6XyJI/MjGUQw/GH6Jnz54qFDWB1MEfO9QGM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=XrnD5ycW; arc=none smtp.client-ip=209.85.221.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1786090295; c=relaxed/simple;
+	bh=jhOko8JSig7CPmIa1KopY81EIdmnnrV8LaIrQULTbso=;
+	h=Mime-Version:Content-Type:To:From:Message-Id:References:Cc:
+	 Subject:Date:In-Reply-To; b=M7xPQTxIvShyFdb2XmqOqdP8uQsKySA7WX2i/qoOsU0VtbZ0JNQcHtoTUE2LfNAvcf3FGTQjpJ4gDE6rO55TuD4Rev01PVOu5+2U5RSYZbe7kQFNUQhz8u7wTxvePKlV1BUzuBqt4+uz0TDblPWp4W40YZvpREIT9Usv+ryrrzQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=E2YMuyV6; arc=none smtp.client-ip=209.127.231.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="XrnD5ycW"
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-47f703a9e5dso975610f8f.0
-        for <linux-raid@vger.kernel.org>; Thu, 06 Aug 2026 02:22:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1786008140; x=1786612940; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Pcnhqt0EtUylxXGbjqsf+1Pc4DS5YZiCgI0VutNek2Q=;
-        b=XrnD5ycWprfq6ZXTgx/sPzXa5ZnxABDwcpmPqfn9GG88R1oeKt24y55hESrkuenR00
-         nCKpfv3AkKfF4BEvNi1Np0lFOrYCUwYWexMxsBnhPOx2mxRlL7ydg2m/kBT+aiUV3Zd3
-         VESkJ5GGNCSExJTW9D+DzbWi1fVcVr4NwLIFru+84F1HhDvhmChS2J0YqoM0vX1T/1cK
-         iAluYuFr7ppe3xH4njcLfGLfuvucdrfjmvVOh34RYec6puIycELs/LS1OFCHdSinjMYe
-         umcNKcyjctdczgVSItKFxhC6REpSN1RTegig96f/He4KlWghfvQV4c9yOrOSyHOvsfie
-         Z3iQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786008140; x=1786612940;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Pcnhqt0EtUylxXGbjqsf+1Pc4DS5YZiCgI0VutNek2Q=;
-        b=HkrsKra9IIDbNGQ0Q5dtsHhLbua0nD8xAwzr4GmI1Ykl/Nx0RiTQNGZZm8wwbrpivn
-         vBYynGqHH87DvKSpnosZ6bKvfJbFuD1LkGh3eBuO/iXGe+m6EhtmQg3Kk2+K+GfIjmAj
-         TCmxZ4ZCamLVgANaPscY4PgiYnOIDwgPxhTJa4z+6SaRsEsrrV7R6ALU2kHTgrA+NbNL
-         3VSLhyMARfvGJbyZlQRGQsLSRQlYQrOEsnXZDM0BPCBYeu+DeZMIm9rC45dwmaX/5plx
-         75eAN+oXGiCPDwOxGvNeIAdZXoXUZu398QE4jL6tbL12MOQ+F/s40bVd0MFPbKWa5zD9
-         XlAQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rpqgi3hWTUBJu+dFO3VZae7QbsRFFXN32WuoWuDUN/1X3V2xb3HAU+1QT1JxhHrBN0gI7vI2wEcmLJ7@vger.kernel.org
-X-Gm-Message-State: AOJu0YwUzxcmem53bQiuOxVZSgAH5g9LnRyAVjBnMbc+BuFS4d8VpfSr
-	masb+rgcmssu/Thl+oir85xdBmdoHP95p91TJ14rxM5F+SC+QuKOeb9t8TL4PUDOoaI=
-X-Gm-Gg: AR+sD13jScPyjB0A9+011kjw6Ob36nzXSiuFSy54qV1mi3wfqWRuX9jj7NnAn+wiFmM
-	OH5U8F3VlSWhR+9TGKxSMXA44bxfr8Eqdo67Ch34W55fsdJsvwtTgOBkY/8IXWCTUPQWz4EZ5hA
-	5qsMZBEMflyL5kKc/lClcCaeYBOROVWZ/NsIVXlK/o1oTHTsFObjPqQ2mhKvRzlqffwmoeGyD5e
-	AFvTzWxK0EwNcHzpUvzREKFd+WhNL9EZ7dfp4O7ZUWHayuJEmMgVCdk+nWGB8IVC3ELDFGzcjT8
-	HrapqOcE3fkyOXfirAylwQyzBxgUTccbGaDMMn5nYYlvCZlARxlulrDGndCMm0zek80lCoLG3DV
-	AaUEHiTcewu/+hrWYX6Qpe4BhrnBTUhCu5tUzbkwfsgxPP2n1CircJ8hUXMAIaBeq72B7R6rxy2
-	uvQQXJRRCFzuS6X0hwXLRTcFo6VvB0ng995YC47fc9TZDh7oOpcol0mDOexO+N7xku
-X-Received: by 2002:a5d:624a:0:b0:47f:9750:26cc with SMTP id ffacd0b85a97d-47fec630b5cmr16574414f8f.23.1786008139632;
-        Thu, 06 Aug 2026 02:22:19 -0700 (PDT)
-Received: from localhost.localdomain ([2001:af0:8000:1409:193:86:92:181])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47ff7b31975sm4112794f8f.33.2026.08.06.02.22.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Aug 2026 02:22:18 -0700 (PDT)
-Date: Thu, 6 Aug 2026 11:22:16 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Yu Kuai <yukuai@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Yu Kuai <yukuai@fygo.io>, 
-	Josef Bacik <josef@toxicpanda.com>, Coly Li <colyli@fygo.io>, 
-	Kent Overstreet <kent.overstreet@linux.dev>, Alasdair Kergon <agk@redhat.com>, 
-	Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, 
-	Benjamin Marzinski <bmarzins@redhat.com>, Song Liu <song@kernel.org>, Dan Williams <djbw@kernel.org>, 
-	Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, 
-	Alison Schofield <alison.schofield@intel.com>, Pankaj Gupta <pankaj.gupta.linux@gmail.com>, 
-	Andreas Gruenbacher <agruenba@redhat.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, 
-	Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
-	Christoph Hellwig <hch@lst.de>, Nilay Shroff <nilay@linux.ibm.com>, Tao Cui <cui.tao@linux.dev>, 
-	cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev, 
-	linux-raid@vger.kernel.org, nvdimm@lists.linux.dev, virtualization@lists.linux.dev, 
-	gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v1 2/3] blk-cgroup: store blkcg in bio instead of blkg
-Message-ID: <anRPSKHWo59GPIA0@localhost.localdomain>
-References: <20260804065313.2092022-1-yukuai@kernel.org>
- <20260804065313.2092022-3-yukuai@kernel.org>
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="E2YMuyV6"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1786090270;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=j1D7b7JykFrXuMJHVkJ1gEFJoniiVsq6YBtAicxtCfA=;
+ b=E2YMuyV6ih/rCBw+nqah71YxABkXFsIvsl4UDz0kVZ0pAiTj++dqj//IVyj6cFQtjnkvIj
+ QkoVeHlqLQMMYouz3+RkryFdzYCVyl/JvvzI7ZULkvgR+ARzsxeT5xFXvMyczpUeqskuIU
+ Fl3qY699b6DNmr+1Arn28HwWAo/VECpuIlH9qBSqHbt62V/vNrykSFrBI7IE86ABfgVUA8
+ yaKkuR2inPIteQeurCGc/WIWPwTj6b8rqnsRd1NYAyD7yoHjqw/YC2PIiqy2XXCiWcezxh
+ +FtzmJ+frzga426ktI0pHEo1S7qSctgeuULIZR3L7BZoUu/4xxKfT3eec3vyMg==
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="ltojthlavrpt3nkl"
-Content-Disposition: inline
-In-Reply-To: <20260804065313.2092022-3-yukuai@kernel.org>
-
-
---ltojthlavrpt3nkl
-Content-Type: text/plain; protected-headers=v1; charset=utf-8
-Content-Disposition: inline
+Mime-Version: 1.0
+X-Lms-Return-Path: <lba+26a75931e+9e5af5+vger.kernel.org+yukuai@fygo.io>
+Content-Type: text/plain; charset=UTF-8
+Received: from [192.168.1.104] ([39.182.0.170]) by smtp.larksuite.com with ESMTPS; Fri, 07 Aug 2026 08:11:08 +0000
+To: "Yunye Zhao" <yunye.zhao@linux.alibaba.com>, 
+	"Song Liu" <song@kernel.org>, "yu kuai" <yukuai@fygo.io>
+From: "yu kuai" <yukuai@fygo.io>
+Message-Id: <9eef1f2c-0042-412b-b37d-60a24861ba8e@fygo.io>
+X-Original-From: yu kuai <yukuai@fygo.io>
+User-Agent: Mozilla Thunderbird
+References: <20260717062743.128189-1-yunye.zhao@linux.alibaba.com> <20260723135535.101995-1-yunye.zhao@linux.alibaba.com> <20260723135535.101995-2-yunye.zhao@linux.alibaba.com>
+Reply-To: yukuai@fygo.io
+Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	"Joseph Qi" <joseph.qi@linux.alibaba.com>, <linux-raid@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 1/3] md/raid10: fix still_degraded being inverted in raid10_sync_request()
+Date: Fri, 7 Aug 2026 16:11:05 +0800
 Content-Transfer-Encoding: quoted-printable
-Subject: Re: [RFC PATCH v1 2/3] blk-cgroup: store blkcg in bio instead of blkg
-MIME-Version: 1.0
+In-Reply-To: <20260723135535.101995-2-yunye.zhao@linux.alibaba.com>
 
-Hi Kuai.
+=E5=9C=A8 2026/7/23 21:55, Yunye Zhao =E5=86=99=E9=81=93:
 
-On Tue, Aug 04, 2026 at 02:53:12PM +0800, Yu Kuai <yukuai@kernel.org> wrote:
-> From: Yu Kuai <yukuai@fygo.io>
->=20
-> A bio currently stores a queue-local blkg reference.  This forces bio
-> association and remap paths to look up or create a blkg even when the bio
-> will never enter a blkcg policy.
->=20
-> Store the blkcg css association in the bio instead, and derive the blkg
-> from the bio's blkcg and current bdev when a policy needs it.  The first
-> successful policy lookup pins the blkg, records the pin with BIO_BLKG_REF,
-> and drops it from bio_clear_blkcg() or when bio_set_dev() changes the
-> lookup key.
->=20
-> Keep lookup-only users from creating missing blkgs by using
-> bio_blkg_lookup(), and rename the bio cgroup association helpers to match
-> the stored blkcg state.
+> Commit fe6a19d40ceb ("md/md-bitmap: merge md_bitmap_start_sync() into
+> bitmap_operations") converted still_degraded from int to bool, but
+> inverted the assignment in the loop that checks whether the array will
+> still be degraded after the current device is recovered:
+> "still_degraded =3D 1" became "still_degraded =3D false".
+>
+> As a result, recovering a device while another mirror is still missing
+> calls md_bitmap_start_sync() with degraded =3D=3D false, which clears bit=
+map
+> bits that the still-missing device needs.  When that device is re-added,
+> its bitmap-based recovery finds the bits already cleared and skips every
+> region written while the array was degraded, so it is marked In_sync
+> while holding stale data: silent corruption.
+>
+> Reproducer (raid10 near=3D2, 4 disks, internal bitmap):
+>   - fail and remove one disk of each mirror pair
+>   - write to the degraded array
+>   - re-add both disks and let recovery finish
+>   - "check" reports mismatch_cnt=3D262272 after 256 MiB of degraded
+>     writes and file contents differ; the second disk's "recovery"
+>     completes in milliseconds because everything is skipped
+>
+> The same conversion in raid1 got it right (still_degraded =3D true).
+> Restore the correct value.
+>
+> Fixes: fe6a19d40ceb ("md/md-bitmap: merge md_bitmap_start_sync() into bit=
+map_operations")
+> Cc:stable@vger.kernel.org
+> Signed-off-by: Yunye Zhao<yunye.zhao@linux.alibaba.com>
+> ---
+>   drivers/md/raid10.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+Applied to md-7.3
 
-I assume this should be OK due to limited lifetime of bios -- this would
-not lead no possibly indefinite accumulation of offlined blkcgs,
-correct?
-
-> -void bio_associate_blkg_from_css(struct bio *bio,
-> +void bio_associate_blkcg_from_css(struct bio *bio,
->  				 struct cgroup_subsys_state *css)
->  {
-> -	if (bio_blkg(bio))
-> -		blkg_put(bio_blkg(bio));
-> +	struct blkcg *blkcg;
-> =20
-> -	if (css && css->parent) {
-> -		bio->bi_blkg =3D blkg_tryget_closest(bio, css);
-> -	} else {
-> -		blkg_get(bdev_get_queue(bio->bi_bdev)->root_blkg);
-> -		bio->bi_blkg =3D bdev_get_queue(bio->bi_bdev)->root_blkg;
-> -	}
-> +	if (!css || !css->parent)
-> +		css =3D &blkcg_root.css;
-> +
-> +	blkcg =3D css_to_blkcg(css);
-> +	if (bio_blkcg(bio) =3D=3D blkcg)
-> +		return;
-> +
-> +	css_get(css);	<---
-> +	bio_clear_blkcg(bio);
-> +	bio->bi_blkcg =3D blkcg;
->  }
-> -EXPORT_SYMBOL_GPL(bio_associate_blkg_from_css);
-> +EXPORT_SYMBOL_GPL(bio_associate_blkcg_from_css);
-
-[skip to next comment below now]
-
-And here yet another (any) reference to same css is taken 2nd time.
-
-[skip after next comment below :)]
-
-
-> =20
->  /**
-> - * bio_associate_blkg - associate a bio with a blkg
-> + * bio_associate_blkcg - associate a bio with a blkcg
->   * @bio: target bio
->   *
-> - * Associate @bio with the blkg found from the bio's css and request_que=
-ue.
-> - * If one is not found, bio_lookup_blkg() creates the blkg.  If a blkg is
-> - * already associated, the css is reused and association redone as the
-> - * request_queue may have changed.
-> + * Associate @bio with the blkcg found from the bio's css.  If a blkcg is
-> + * already associated, keep it as blkcg association is not queue-local.
->   */
-> -void bio_associate_blkg(struct bio *bio)
-
-
-> +void bio_associate_blkcg(struct bio *bio)
->  {
->  	struct cgroup_subsys_state *css;
-> =20
->  	if (blk_op_is_passthrough(bio->bi_opf))
->  		return;
-> =20
-> -	if (bio_blkg(bio)) {
-> -		css =3D bio_blkcg_css(bio);
-> -		bio_associate_blkg_from_css(bio, css);
-> -	} else {
-> -		rcu_read_lock();
-> -		css =3D blkcg_css();
-> -		if (!css_tryget_online(css))
-> -			css =3D NULL;
-> -		rcu_read_unlock();
-> +	if (bio_blkcg(bio))
-> +		return;
-> =20
-> -		bio_associate_blkg_from_css(bio, css);
-> -		if (css)
-> -			css_put(css);
-> -	}
-> +	rcu_read_lock();
-> +	css =3D blkcg_css();
-> +	if (!css_tryget_online(css))	<---
-> +		css =3D NULL;
-> +	rcu_read_unlock();
-> +
-> +	bio_associate_blkcg_from_css(bio, css);
-> +	if (css)
-> +		css_put(css);
->  }
-> -EXPORT_SYMBOL_GPL(bio_associate_blkg);
-> +EXPORT_SYMBOL_GPL(bio_associate_blkcg);
-
-next:
-Here you take (online) reference to the blkcg->css.
-
-[return back to previous comment]
-
-
-after:
-Ideally, no tasks should be in offlined (blk)cgs, so the `current` would
-not resolve to blkcg_css() returning an offlined blkcgs. OTOH, it's
-generally good not to do _new_ associations to an offlined blkcg.
-Which is why I think this logic would better fit to
-bio_associate_blkcg_from_css()
-
-
-0.02=E2=82=AC,
-Michal
-
-
---ltojthlavrpt3nkl
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCanRSRBsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+Ahf+gEA5FtU8iXyQA9tlhJdWJEf
-nyf1IBDUt4tisH7UDE8KiSEBAP5BK6FXkSftml/wn918ol1iwizfBzFhephd2gZc
-e3UL
-=GgwG
------END PGP SIGNATURE-----
-
---ltojthlavrpt3nkl--
+--=20
+Thanks,
+Kuai
