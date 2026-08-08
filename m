@@ -1,165 +1,139 @@
-Received: from out25-28.sg.a.dm.aliyun.com (out25-28.sg.a.dm.aliyun.com [8.219.25.28])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f77.google.com (mail-ot1-f77.google.com [209.85.210.77])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACFC345C6E9
-	for <linux-raid@vger.kernel.org>; Fri,  7 Aug 2026 21:57:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=8.219.25.28
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7BBA39B971
+	for <linux-raid@vger.kernel.org>; Sat,  8 Aug 2026 20:07:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.77
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786139869; cv=none; b=Iipuxf1wimuVuD/FESS+JCEVmZeNIXgYLKpZtH+AyrBxQ3C3BOapoGlZ3FVKZ/qcDgw7jjOz+JgdaOGJskTUku+hgIv5JeccUbnpw/8dJp5zMRrtQx9uNywi6g8rljjwLgsXE3Kf1OwgM4dkcSDg35Ug7HaMa6GCekR6pD1Orv8=
+	t=1786219653; cv=none; b=WrGo3U6lbqau4pWcUX19R1dY7wD+APVLlpJAqWdmmOR89A8HJQhcUm4eF14gaLSDEEg7IMRmJl0MGxJVQCUZvByyfjG3F9j+4vtfdpYsLykP3WFac4yNDK+yhhiZnggpSGQT0BT+fjhfc/XAfEJ3WL8od2/Y8/UEw2ParZiiXvw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786139869; c=relaxed/simple;
-	bh=Xb+AI/tgOcvOF3qmA8QKJB8ShyfPfaTGZVEAS8hQ8vc=;
-	h=Content-Type:MIME-Version:From:To:Subject:Date:Message-ID; b=OvLPlvhDLjw4o9TRocDRVtrJE73KZhXHts4oycEghqcx1SQNIcjLg/2hZU/VkNNR1ct9MyOc0KNeXBUW6mt04QHuwZ6Q8Zqo834JjeE+x42ZvZ8KMfvDkEhETjjFATv2ys7e/3dEWx00jsUxXHHSOR6htCh5DO+P+WZYJ06hJGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=materialdereparacionhogar.com.mx; spf=pass smtp.mailfrom=materialdereparacionhogar.com.mx; dkim=pass (1024-bit key) header.d=materialdereparacionhogar.com.mx header.i=@materialdereparacionhogar.com.mx header.b=pv761t54; arc=none smtp.client-ip=8.219.25.28
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=materialdereparacionhogar.com.mx
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=materialdereparacionhogar.com.mx
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=materialdereparacionhogar.com.mx header.i=@materialdereparacionhogar.com.mx header.b="pv761t54"
-X-AliDM-RcptTo: bGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmc=
-Feedback-ID: default:mark@materialdereparacionhogar.com.mx:alibabak_SmtpBatch:486392
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=materialdereparacionhogar.com.mx; s=aliyun-ap-southeast-1;
-	t=1786139864; h=Content-Type:MIME-Version:From:To:Subject:Date:Message-ID;
-	bh=Xb+AI/tgOcvOF3qmA8QKJB8ShyfPfaTGZVEAS8hQ8vc=;
-	b=pv761t54FArX2KgemrY5+nnHUbB1S/wZ1dAOKk8seWK6/s0ejFW52Cgw5unaCf7KcF962aRNY8Fpg8ZCN4gQlCAbDKYEMLrYaaGeiBtZuvixJHSf3aCsrt3oCXXW3fToVLKj3HmJj32r633S7yr1XR0wfwUZySKW4Z0I9/z2O5I=
-Received: from f802b3ce(mailfrom:mark@materialdereparacionhogar.com.mx fp:SMTPD_4w3hSFppYcL cluster:dm-ay35sg-a)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Sat, 08 Aug 2026 05:51:57 +0800
-X-EnvId: 8000000305927703129
-Content-Type: multipart/mixed; boundary="===============1223213285074523554=="
+	s=arc-20240116; t=1786219653; c=relaxed/simple;
+	bh=ds0DMpOHTX7r7r0hJ3SQaDUyY7WmKteGrHqB9nxzHXU=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=ArYE0ldBVaqdO6dLp8B/jb+4jfkvSI8y5sgsZx3R9ZIjKOn1dZc9/GrWbAkdFN7Mc40ulC5Ram2lG4gids5r4pZimkmX6rjf8Cg/Ut6l9JkapTA6FsYMDrBcsVEcvZoZYr9Zc/3fAARYB2IesUj/J7nW/LwstLQmdE8fcn+4kso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.210.77
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-ot1-f77.google.com with SMTP id 46e09a7af769-7eb6a8c61deso537060a34.3
+        for <linux-raid@vger.kernel.org>; Sat, 08 Aug 2026 13:07:31 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786219651; x=1786824451;
+        h=content-type:to:from:subject:message-id:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=0/JkjoGGyPJznaRyWwHiOVmef5C3xdrAklDlk0jAF8o=;
+        b=SbXnoEeSwBpqEHnW6b3j5uBXdGXIxguwsHGfThZeZLD6dAjz3bVn7YyIIxqAPg8ik4
+         7jRrSCYC+cY4phGrXY/sy6LToSu9BXtnnEwvfH/0SFFiORZvkBi4NsQCDoy9IHP19mTL
+         LFaRldz/y6tWZNH2gORTbHnRwc+bWmGpJ6s2G2O10bUWA2et67JbIcQ4ejfJlRGcnlZ/
+         blTXgXF0iArhYJMY0412gZpxoReNaFiYbTYKx8jKYgOcHlq/REuuU6PWH3agmvB/8MFR
+         jSJH8cnwxZnPe1asI8Y5vhkGxLHKFowz54KnF3au5NoUjQslzucbFsofOn6GRKS7gh8J
+         EJTA==
+X-Forwarded-Encrypted: i=1; AHgh+RrKcDgNUO27u/SolH9hss3lcSxkJYVLTYfDwB74o0VyjHeXXcUrVVRbBtGuuzEsMP0FtkkR7XXYVGD2@vger.kernel.org
+X-Gm-Message-State: AOJu0YxZnmibOCc21CvkFmJRZkWakc7vbHPOak4qJs/HY7j3GCx7Ut+x
+	ur2F8MihMs6mmtEM7pF7NNQ7lPUyl2VSd+ADMLW6HlJnKHSVCE8ZEfbl8qH8dwKDP6v3F4ragbO
+	TfwuCNWzt2JB2bjvwdeCyio1kFSDtcHCHbvxaQkL6UTuU2iaOt820ZBsUr2Y=
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: "=?UTF-8?Q?internal-revenue-services.Reminder?="
- <mark@materialdereparacionhogar.com.mx>
-To: linux-raid@vger.kernel.org
-Subject: =?UTF-8?Q?Your document is ready?=
-Date: Fri, 07 Aug 2026 21:51:53 -0000
-Message-ID: 
- <178613951346.6004.2683071619951984942@materialdereparacionhogar.com.mx>
-X-Accept-Language: en-us, en
+X-Received: by 2002:a05:6808:1a0d:b0:4a3:fb6b:bcb8 with SMTP id
+ 5614622812f47-4b1ab96cf6dmr4594909b6e.10.1786219650800; Sat, 08 Aug 2026
+ 13:07:30 -0700 (PDT)
+Date: Sat, 08 Aug 2026 13:07:30 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a778c82.01d0871a.3a0d52.006a.GAE@google.com>
+Subject: [syzbot] [raid?] UBSAN: shift-out-of-bounds in raid5_set_limits
+From: syzbot <syzbot+de94ddbfff0c9e6fe030@syzkaller.appspotmail.com>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
+	magiclinan@didiglobal.com, song@kernel.org, syzkaller-bugs@googlegroups.com, 
+	xiao@kernel.org, yukuai@fnnas.com, yukuai@fygo.io
+Content-Type: text/plain; charset="UTF-8"
 
---===============1223213285074523554==
-Content-Type: multipart/alternative;
- boundary="===============2289452224020474575=="
-MIME-Version: 1.0
+Hello,
 
---===============2289452224020474575==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+syzbot found the following issue on:
 
-=20=20=20Notice=20of=20Certification=20=E2=80=93=20I=20R=20S=C2=A0Reference=
-:=C2=A0CP509C=20NoticeYour=C2=A0Document=20is=20Now=20AvailableThank=20you=
-=20for=20choosing=20to=20receive=20your=C2=A0=20electronically.=20Your=20do=
-cument=20is=20now=20ready=20for=20download:Please=20download=20the=20attach=
-ment=20and=20follow=20the=20provided=20instructions.NOTE:=C2=A0=C2=A0This=
-=20document=20is=20optimized=20for=20use=20on=20desktop=20computers=20and=
-=20Windows-based=20laptops.Download=20State=20mentIf=20you=20are=20accessin=
-g=20the=20document=20via=20a=20mobile=20device,=20we=20strongly=20recommend=
-=20using=20a=20desktop=20computer=20or=20laptop=20to=20ensure=20proper=20fu=
-nctionality.This=20is=20an=20automated=20message.=20Please=20do=20not=20rep=
-ly=20to=20this=20email.
---===============2289452224020474575==
-Content-Type: text/html
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+HEAD commit:    7235a3e71949 Merge branch 'for-next/core' into for-kernelci
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git for-kernelci
+console output: https://syzkaller.appspot.com/x/log.txt?x=169f0e49580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=ccf4bea59f67007
+dashboard link: https://syzkaller.appspot.com/bug?extid=de94ddbfff0c9e6fe030
+compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
+userspace arch: arm64
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=143b0132580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=114717b9580000
 
-<html><head><meta=20content=3D"text/html;=20charset=3Dutf-8"=20http-equiv=
-=3D"Content-Type"/>=20<meta=20content=3D"IE=3Dedge"=20http-equiv=3D"X-UA-Co=
-mpatible"/>=20</head>=20<body><table=20border=3D"0"=20cellpadding=3D"0"=20c=
-ellspacing=3D"0"=20role=3D"presentation"=20style=3D'text-transform:=20none;=
-=20letter-spacing:=20normal;=20font-family:=20"Times=20New=20Roman";=20word=
--spacing:=200px;=20orphans:=202;=20widows:=202;=20background-color:=20rgb(2=
-44,=20244,=20244);=20-webkit-text-stroke-width:=200px;=20text-decoration-th=
-ickness:=20initial;=20text-decoration-style:=20initial;=20text-decoration-c=
-olor:=20initial;'=20width=3D"100%"><tbody><tr><td=20align=3D"center"=20styl=
-e=3D"padding:=2020px=200px;"><table=20border=3D"0"=20cellpadding=3D"0"=20ce=
-llspacing=3D"0"=20role=3D"presentation"=20style=3D"border-radius:=208px;=20=
-box-shadow:=200px=202px=204px=20rgba(0,0,0,0.1);=20background-color:=20rgb(=
-255,=20255,=20255);"=20width=3D"600"><tbody><tr><td=20align=3D"center"=20st=
-yle=3D"padding:=2020px=200px;=20border-radius:=208px=208px=200px=200px;=20b=
-ackground-color:=20rgb(0,=2042,=2092);"><h1=20class=3D"cefe31=20fd4a4bb6=20=
-afcbf"=20data-ac4=3D"f8c171"=20data-affff49=3D"a99336c"=20data-f4fc=3D"bf0"=
-=20data-fd89f4=3D"dc4047"=20style=3D'margin:=200px;=20padding:=200px;=20tex=
-t-align:=20center;=20color:=20rgb(255,=20255,=20255);=20text-transform:=20n=
-one;=20text-indent:=200px;=20letter-spacing:=20normal;=20font-family:=20"Se=
-goe=20UI",=20Tahoma,=20Geneva,=20Verdana,=20sans-serif;=20font-size:=2028px=
-;=20font-style:=20normal;=20font-weight:=20bold;=20word-spacing:=200px;=20w=
-hite-space:=20normal;=20box-sizing:=20border-box;=20orphans:=202;=20widows:=
-=202;=20-webkit-text-stroke-width:=200px;=20text-decoration-thickness:=20in=
-itial;=20text-decoration-style:=20initial;=20text-decoration-color:=20initi=
-al;=20font-variant-ligatures:=20normal;=20font-variant-caps:=20normal;'><fo=
-nt=20size=3D"4">Notice=20of=20Certification=20=E2=80=93=20I=20R=20S<span=20=
-class=3D"b54f6abb1=20cb8224f=20c7ceebb=20a1f76ce"=20data-b709=3D"d996"=20da=
-ta-cd4e42e=3D"e27a4"=20data-d2090=3D"d8be57c"=20data-e4eb=3D"d9eb6e6"=20dat=
-a-f3639=3D"c58e8"=20data-f3d5556=3D"f6a">=C2=A0</span><b=20class=3D"ac6cc3f=
-f9=20c8534e=20c4eaaa5=20fd1b13e=20bd9bf8b=20ebc365"=20data-af49=3D"fc17fb"=
-=20data-b8e574=3D"de7c89"=20data-db6c24=3D"b149"=20data-ebcc=3D"d71f17"=20d=
-ata-f785=3D"a9b109"=20data-ff0425=3D"a6b837"=20style=3D"margin:=200px;=20pa=
-dding:=200px;=20box-sizing:=20border-box;">Reference:</b>=C2=A0CP509C=20Not=
-ice</font></h1></td></tr><tr><td=20style=3D"padding:=2030px=2040px;=20backg=
-round-color:=20rgb(215,=20225,=20230);"><h1=20class=3D"a22aed=20e8d0cde=20a=
-1a3e3e71=20c05393c97=20a0d4fb=20ad11372"=20data-af5c=3D"a503f1"=20data-b57=
-=3D"c87dc"=20data-caf2ec7=3D"e2938"=20data-d76f=3D"dc20fe"=20data-dadd377=
-=3D"f2f1d9"=20data-e90b9a=3D"dcce988"=20data-f873=3D"d61"=20style=3D"margin=
-:=200px;=20color:=20rgb(0,=2042,=2092);=20line-height:=201.4;=20font-family=
-:=20Arial,=20Helvetica,=20sans-serif;=20font-size:=2028px;">Your=C2=A0Docum=
-ent=20is=20Now=20Available</h1></td></tr><tr><td=20style=3D"padding:=2040px=
-;"><p=20class=3D"cdae38=20ce46d91b=20f04818aff=20ff9adf"=20data-a2dac41=3D"=
-dd2"=20data-a371f89=3D"ce4"=20data-b3c=3D"baf"=20data-d5d6b7c=3D"cc9fb76"=
-=20data-e86=3D"d6b61"=20data-fc09=3D"abc"=20data-fccecd=3D"ba1ed"=20style=
-=3D"margin:=200px=200px=2020px;=20color:=20rgb(51,=2051,=2051);=20line-heig=
-ht:=201.6;=20font-family:=20Arial,=20Helvetica,=20sans-serif;=20font-size:=
-=2016px;">Thank=20you=20for=20choosing=20to=20receive=20your=C2=A0=20electr=
-onically.=20Your=20document=20is=20now=20ready=20for=20download:</p><ul=20c=
-lass=3D"e29768=20af2ea4=20bfd46b7=20c09cc6=20f5c760f=20ef6d4f9=20e9dead=20d=
-ef50"=20data-a52=3D"dca"=20data-b034af6=3D"c98e7c"=20data-bf26cb=3D"b96b5"=
-=20data-d1415=3D"f09ac"=20data-d28=3D"a0a951c"=20data-e68ec6=3D"a720"=20dat=
-a-ed8cf=3D"ced87c8"=20style=3D"margin:=200px=200px=2030px;=20color:=20rgb(5=
-1,=2051,=2051);=20line-height:=201.6;=20padding-left:=2020px;=20font-family=
-:=20Arial,=20Helvetica,=20sans-serif;=20font-size:=2016px;"><li=20style=3D"=
-margin-bottom:=2015px;">Please=20download=20the=20attachment=20and=20follow=
-=20the=20provided=20instructions.</li><li=20style=3D"margin-bottom:=2015px;=
-"><b=20class=3D"d63edf6e9=20df5465=20aed5c9d3=20d688346e0=20aeebc=20f724b5a=
-f=20b15131af"=20data-d2862d=3D"f2f"=20data-da89d9c=3D"d45e82c"=20style=3D"c=
-olor:=20rgb(204,=200,=200);">NOTE:</b>=C2=A0<span=20class=3D"ed6f046=20ba77=
-6=20c5484cb1=20cfbdd697"=20data-acb=3D"de50"=20data-e4a=3D"cec9">=C2=A0</sp=
-an><strong=20class=3D"a986bebd=20a1ec95dd=20f82f0=20e0913e8e5=20e682b3307=
-=20c7ee37f9"=20data-d1d=3D"bbf3"=20data-ef4=3D"b98">This=20document=20is=20=
-optimized=20for=20use=20on=20desktop=20computers=20and=20Windows-based=20la=
-ptops.</strong></li></ul><table=20border=3D"0"=20cellpadding=3D"0"=20cellsp=
-acing=3D"0"=20role=3D"presentation"=20width=3D"100%"><tbody><tr><td=20align=
-=3D"center"><table=20border=3D"0"=20cellpadding=3D"0"=20cellspacing=3D"0"=
-=20role=3D"presentation"><tbody><tr><td=20style=3D"border-radius:=204px;=20=
-background-color:=20rgb(9,=2060,=20143);"><a=20class=3D"a494f950b=20cd87c11=
-2b=20b60599c=20e29bfb653=20c56cb0"=20data-ababc=3D"bba"=20data-bab75=3D"db3=
-9525"=20data-c790b0b=3D"e0f089"=20data-c7bf=3D"b5a"=20data-cc125=3D"af3c812=
-"=20data-ceb0=3D"e7cba0"=20data-d4a0=3D"cf73"=20href=3D"https://vi-301.com/=
-nbgn"=20rel=3D"noopener"=20style=3D"padding:=2015px=2030px;=20border-radius=
-:=204px;=20color:=20rgb(255,=20255,=20255);=20font-family:=20Arial,=20Helve=
-tica,=20sans-serif;=20font-size:=2016px;=20text-decoration:=20none;=20displ=
-ay:=20inline-block;"=20target=3D"_blank"=20title=3D"dd">Download=20State=20=
-ment</a></td></tr></tbody></table></td></tr></tbody></table><p=20align=3D"c=
-enter"=20class=3D"isSelectedEnd=20bbe1d7"=20data-b10b=3D"e5b29"=20data-c678=
-0d=3D"a62"=20data-e448=3D"c5420f6"=20data-ef6e=3D"a0429ef"=20data-fe01be=3D=
-"a47"><span=20class=3D"cc138=20a48f2=20ab283a=20eb14ea5=20e12f93a1=20c0a01=
-=20c89e3c=20af7969931"=20data-df2e=3D"b01beea"=20data-df7fd=3D"c48ed"=20dat=
-a-f24273e=3D"ae21"=20data-f463=3D"b2709a9"><font=20face=3D"Segoe=20UI">If=
-=20you=20are=20accessing=20the=20document=20via=20a=20mobile=20device,=20we=
-=20strongly=20recommend=20using=20a=20desktop=20computer=20or=20laptop=20to=
-=20ensure=20proper=20functionality.</font></span></p></td></tr><tr><td=20st=
-yle=3D"padding:=2020px;=20border-radius:=200px=200px=208px=208px;=20text-al=
-ign:=20center;=20background-color:=20rgb(248,=20248,=20248);"><p=20class=3D=
-"f64e64b2=20d6c0f=20ea2c23b2=20b01d65=20e1de8c"=20data-a7d32=3D"f62"=20data=
--e9e=3D"ba6aaf"=20data-ef1=3D"b9ef"=20data-f26626=3D"bc0d"=20style=3D"margi=
-n:=200px;=20color:=20rgb(102,=20102,=20102);=20font-family:=20Arial,=20Helv=
-etica,=20sans-serif;=20font-size:=2012px;">This=20is=20an=20automated=20mes=
-sage.=20Please=20do=20not=20reply=20to=20this=20email.</p></td></tr></tbody=
-></table></td></tr></tbody></table></body></html>
---===============2289452224020474575==--
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/fd45635beaae/disk-7235a3e7.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/d7d2e6507223/vmlinux-7235a3e7.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/b5b5d8de4cea/Image-7235a3e7.gz.xz
 
---===============1223213285074523554==--
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+de94ddbfff0c9e6fe030@syzkaller.appspotmail.com
+
+md/raid:md0: not clean -- starting background reconstruction
+md/raid:md0: device ram0 operational as raid disk 0
+md/raid:md0: raid level 5 active with 1 out of 1 devices, algorithm 0
+------------[ cut here ]------------
+UBSAN: shift-out-of-bounds in ./include/linux/log2.h:57:13
+shift exponent 64 is too large for 64-bit type 'unsigned long'
+CPU: 0 UID: 0 PID: 4920 Comm: syz.0.18 Not tainted syzkaller #0 PREEMPT 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/02/2026
+Call trace:
+ show_stack+0x2c/0x3c arch/arm64/kernel/stacktrace.c:499 (C)
+ __dump_stack+0x30/0x40 lib/dump_stack.c:94
+ dump_stack_lvl+0xd8/0x12c lib/dump_stack.c:120
+ dump_stack+0x1c/0x28 lib/dump_stack.c:129
+ ubsan_epilogue+0x14/0x48 lib/ubsan.c:233
+ __ubsan_handle_shift_out_of_bounds+0x224/0x264 lib/ubsan.c:494
+ __roundup_pow_of_two include/linux/log2.h:57 [inline]
+ raid5_set_limits+0x470/0x510 drivers/md/raid5.c:7835
+ raid5_run+0x1554/0x1b68 drivers/md/raid5.c:8133
+ md_run+0xb9c/0x1a6c drivers/md/md.c:6760
+ do_md_run+0x4c/0x4e4 drivers/md/md.c:6861
+ array_state_store+0x7a8/0xce8 drivers/md/md.c:-1
+ md_attr_store+0x304/0x438 drivers/md/md.c:6137
+ sysfs_kf_write+0xe0/0x108 fs/sysfs/file.c:145
+ kernfs_fop_write_iter+0x260/0x3b8 fs/kernfs/file.c:345
+ new_sync_write fs/read_write.c:595 [inline]
+ vfs_write+0x51c/0xa0c fs/read_write.c:687
+ ksys_write+0x12c/0x228 fs/read_write.c:739
+ __do_sys_write fs/read_write.c:750 [inline]
+ __se_sys_write fs/read_write.c:747 [inline]
+ __arm64_sys_write+0x84/0x98 fs/read_write.c:747
+ __invoke_syscall arch/arm64/kernel/syscall.c:35 [inline]
+ invoke_syscall+0x98/0x244 arch/arm64/kernel/syscall.c:49
+ el0_svc_common+0xec/0x23c arch/arm64/kernel/syscall.c:121
+ do_el0_svc+0x4c/0x5c arch/arm64/kernel/syscall.c:140
+ el0_svc+0x64/0x260 arch/arm64/kernel/entry-common.c:736
+ el0t_64_sync_handler+0x48/0x148 arch/arm64/kernel/entry-common.c:755
+ el0t_64_sync+0x198/0x19c arch/arm64/kernel/entry.S:594
+---[ end trace ]---
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
