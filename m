@@ -1,49 +1,41 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC1112E6CCD;
-	Sun,  9 Aug 2026 07:56:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B40723E5A0B;
+	Mon, 10 Aug 2026 14:01:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786262177; cv=none; b=KsGJuH4SzDp5bUh/dVI5tiQPkIpuvMAUIm+DoOqUy6UuC+6La3z6vST60E6DTq1PkC25cIfF2zXOBWqwRgLB/CkjAbGAI4cCwbQUGOocbW1RVXYCeELK6Rjo3X/eZhLJSN/Amwoh1nkRhy+HQBMmIr0HR+YqM3QTMemyaz0GSdI=
+	t=1786370480; cv=none; b=PVGMOdDU7Z/CZPZhdUakAk2FIolYyg5eGSfZUQPv6uNU9y8ZNPf8wnQnURbkeTZlYsjQ4bf44Ux7Nm1GnlyAup2VhKx1UJEAE88PvvubR2xstSusEYdfaefWAHIbjOAcM7oMqofmp4RhEn0/0XDPu1wfwAfLuOsi+LbVI9rj0zI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786262177; c=relaxed/simple;
-	bh=hapr0W5lmg27Xiq/8fWJj6mKLQFem1ZUekmbRKfwmWg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=H9+hfebPA67k5cpYg+ckQpgBSwMy+K20G9tRCNBlHTX97C4+dyGQwN1oW2YlVX48wrFMEvI93go4iEQE/DU2ot8yFq1+emB+PDkQD/zAgqPMrVwAXSbQVlR/SFvm+XW8aeHVyn+pRJY2BXH0CfTsq/1V4dzigCJehqYh3VgVNG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hyl37Ckc; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hyl37Ckc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 296401F000E9;
-	Sun,  9 Aug 2026 07:56:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786262175;
-	bh=TfI/tm/EmNvVDnQiGfcJ05LgMydETpsB65ylHbiSeXE=;
-	h=From:To:Cc:Subject:Date;
-	b=hyl37CkcA1Vfcdz7omwWdLX4axLAUiItg9LvxUYvZWaf124ZRcT9ztAOFkN5X/zz7
-	 /rnXIM1IRl9YZqQSVmP1UJ9TMt63vNp5R/kqiVe5e+ebEHT/t2vgk/j3UY7ey8dEKy
-	 2rwrj2Sl2uKhqQhTRoW/GSYfl5BFFBDeXOYnBGj4kfv7mzoFxbFfWwF4S2SY9+rvFD
-	 oefJn8i1kJWkgG4xFotfrnO+yfEYm1imlTULRgsPhh8LRSnzYA5L4b0BdfN38Y32/3
-	 4zauDmK3HsI8C/8ZISCXRXwXYMAiPgL7RYC5KfLX3lrZ1NqAljLSKKAqc6KHbIOve/
-	 1dKCFZ2eBKQYA==
-From: Yu Kuai <yukuai@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Yu Kuai <yukuai@fygo.io>,
-	linux-raid@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>,
-	Bruce Johnston <bjohnsto@redhat.com>,
-	Chen Cheng <chencheng@fnnas.com>,
-	Coly Li <colyli@fygo.io>,
-	Genjian Zhang <zhanggenjian@kylinos.cn>,
-	Hiroshi Nishida <nishidafmly@gmail.com>,
-	Martin Wilck <mwilck@suse.com>,
-	Sajal Gupta <sajal2005gupta@gmail.com>,
-	Wale Zhang <wale.zhang.ftd@gmail.com>,
-	Yunye Zhao <yunye.zhao@linux.alibaba.com>
-Subject: [GIT PULL] md-7.3-20260809
-Date: Sun,  9 Aug 2026 15:55:55 +0800
-Message-ID: <20260809075555.3215963-1-yukuai@kernel.org>
-X-Mailer: git-send-email 2.51.0
+	s=arc-20240116; t=1786370480; c=relaxed/simple;
+	bh=6TsZSJgfIJI4bPmxqedoBMRx/bqKtcbposWoKAS6b3s=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=c41+VrBUepwduSzFKC1qjes0B8Q0rc+fmC0l7cs39GOXMske4/M829maEyRGauFFe4Vp4uz9AHnoiZLYVsGu3eUeShigkFB/Rjuyhw1aHVfp6A5xmouqdm7gIDLf8USTaNqF7+eN+rLqmVA1d/SrtTAS12RYcplacFhWp50u7cg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4hJbxv16PFzKHMjn;
+	Mon, 10 Aug 2026 22:00:51 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.252])
+	by mail.maildlp.com (Postfix) with ESMTP id A32664056D;
+	Mon, 10 Aug 2026 22:01:05 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.85.155])
+	by APP3 (Coremail) with UTF8SMTPSA id _Ch0CgCnlkWg2XlqHlhCBw--.44643S4;
+	Mon, 10 Aug 2026 22:01:05 +0800 (CST)
+From: Zizhi Wo <wozizhi@huaweicloud.com>
+To: song@kernel.org,
+	yukuai@fygo.io,
+	magiclinan@didiglobal.com,
+	xiao@kernel.org,
+	linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	yangerkun@huawei.com,
+	chengzhihao1@huawei.com,
+	wozizhi@huawei.com
+Subject: [PATCH] md/raid10: fix missing wakeup in wait_barrier_nolock
+Date: Mon, 10 Aug 2026 21:55:21 +0800
+Message-ID: <20260810135521.3470422-1-wozizhi@huaweicloud.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -51,173 +43,110 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_Ch0CgCnlkWg2XlqHlhCBw--.44643S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxZry8uF1xWw4kGr18Wr4fGrg_yoW5Ww1Up3
+	9Iqryvyr4Uuw15tw4DXa109ryrXw4kKay2krZ2934UZFnxtFWSyrW7Gryjgr1qvr93Aa4r
+	XFZ8CFW3Aa4jyFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI
+	7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxV
+	Cjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY
+	6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6x
+	AIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
+	1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUF1v3UUUUU
+X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
 
-Hi Jens,
+From: Zizhi Wo <wozizhi@huawei.com>
 
-Please consider pulling the following changes into your for-7.3/block
-branch.
+[Bug]
+Recently, our fuzz testing triggered a hungtask issue in RAID10:
 
-Special Note:
-- Remove incomplete REQ_NOWAIT support from RAID1, RAID10, and
-  RAID4/5/6. These personalities can block internally, so a write can
-  reach one member before another returns -EAGAIN. MD cannot distinguish
-  queue pressure from a device failure or safely retry the partially
-  completed write, which can leave mirrors with divergent data. Keeping
-  REQ_NOWAIT advertised for these personalities is therefore unsafe.
+INFO: task md0_raid10:1273 blocked for more than 120 seconds.
+      Not tainted 7.2.0-rc6+ #94
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:md0_raid10      state:D stack:0     pid:1273  tgid:1273  ppid:2
+Call Trace:
+ <TASK>
+ __schedule+0xdf9/0x5c90
+ ? _raw_spin_unlock_irqrestore+0xe/0x40
+ schedule+0x74/0x1f0
+ raid10d.cold+0x7db/0x1992
+ md_thread+0x1ce/0x3e0
+ kthread+0x327/0x410
+ ......
 
-  Returning -EAGAIN after one member rejects the bio still exposes any
-  writes already submitted to other members. Retrying the whole write
-  without REQ_NOWAIT would violate the caller's non-blocking request and
-  cannot undo member writes that already completed. Treating -EAGAIN as
-  a device failure would incorrectly fault healthy devices under
-  transient queue pressure. Prechecking every member queue is also not
-  sufficient because it cannot reserve capacity, so a later submission
-  can still block or fail.
+[Cause]
+The root cause of the issue is as follows:
+[read process1]			[read process2]			[raid10d]
+raid10_make_request
+...
+ // nr_pending == 1
+ atomic_inc(&conf->nr_pending)
+...
+raid10_end_read_request
+ reschedule_retry
+  md_wakeup_thread(mddev->thread)
+				raid10_read_request
+				 regular_request_wait
+				  wait_barrier
+				   wait_barrier_nolock
+				    seq = read_seqbegin(&conf->resync_lock)
+				    // nr_pending == 2
+				    atomic_inc(&conf->nr_pending)
+								raid10d
+								 handle_read_error
+								  freeze_array
+								   write_seqlock_irq(&conf->resync_lock)
+								   conf->array_freeze_pending++
+								   WRITE_ONCE(conf->barrier, conf->barrier + 1)
+								   conf->nr_waiting++
+								   // nr_pending == 2, nr_queued == 0
+								   wait_event_barrier_cmd
+								    write_sequnlock_irq(&(conf)->resync_lock)
+								    schedule	// hungtask!!
+				    read_seqretry(&conf->resync_lock, seq)
+				    // not wakeup because conf->nr_pending == 1
+				    atomic_dec_and_test(&conf->nr_pending)
+				   /* Hungtask will also occur here: since the barrier is non-zero,
+				    * this I/O can never complete, so it can't call allow_barrier()
+				    * to wake up the pending freeze_array(). */
+				   wait_event_barrier(conf, stop_waiting_barrier(conf))
 
-  A coordinated all-member submission and retry model would require a
-  larger redesign. Until that exists, not advertising REQ_NOWAIT for
-  these personalities is the only safe behavior.
-  (Abd-Alrhman Masalkhi)
+wait_barrier_nolock() speculatively increments nr_pending and, on a seqlock
+retry, rolls it back with atomic_dec_and_test(). The wake fires only when
+nr_pending reaches 0. This causes the freeze_array() in the aforementioned
+raid10d flow to never be woken up.
 
-This pull request contains:
+[Fix]
+Referring to allow_barrier(), this issue can be fixed by adding a wake-up
+condition for "conf->array_freeze_pending" in wait_barrier_nolock().
 
-Bug Fixes:
-- Protect RAID5 bitmap batching, stripe-cache limits, and reshape
-  recovery state; avoid failed-device reshape deadlocks, discard hangs,
-  and PPL use-after-free. (Chen Cheng, Genjian Zhang, Sajal Gupta)
-- Recheck spare changes under array suspension before sync to avoid
-  racing device removal. (Abd-Alrhman Masalkhi)
-- Fix RAID1 atomic-write constraints, serialized-device setup, and
-  takeover I/O freezes. (Abd-Alrhman Masalkhi, Martin Wilck,
-  Bruce Johnston)
-- Fix RAID10 atomic-write failure handling and reshape pool/bio lifetime
-  bugs. (Abd-Alrhman Masalkhi, Chen Cheng)
-- Fix bitmap error recovery, flush/sync accounting, reclaim safety,
-  teardown, timer, use-after-free, and empty-range bugs, plus stale
-  clone I/O accounting. (Chen Cheng, Yu Kuai)
-- Reject zero-sector RAID5 reshape chunks and correctly round bitmap
-  ranges for non-power-of-two stripe widths. (Yu Kuai)
-- Prevent PF_MEMALLOC_NOIO state from leaking across tasks. (Chen Cheng)
-- Validate bad-block-log shift bounds and skip discard on unsupported
-  member devices. (Coly Li, Wale Zhang)
-- Prevent RAID10 recovery corruption and large-array resync soft
-  lockups. (Yunye Zhao)
-
-Improvements:
-- Add lockless bitmap reshape support for RAID5 and RAID10, including
-  exact old/new mapping, cache growth, geometry lifecycle, checkpoint
-  remapping, and bio splitting. (Yu Kuai)
-
-Cleanups:
-- Make RAID1 sequential-read hint accesses explicit to suppress false
-  KCSAN reports. (Chen Cheng)
-- Remove redundant RAID10 barrier handling and align badblock range
-  types. (Abd-Alrhman Masalkhi, Hiroshi Nishida)
-
-Thanks,
-Kuai
-
+Fixes: b9b083f9044a ("md/raid10: convert resync_lock to use seqlock")
+Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
+Signed-off-by: Zizhi Wo <wozizhi@huaweicloud.com>
 ---
+ drivers/md/raid10.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-The following changes since commit f5098b6bae761e346ebcd9da7f95622c04733cff:
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 0a3cfdd3f5df..fad634a444f8 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -996,7 +996,8 @@ static bool wait_barrier_nolock(struct r10conf *conf)
+ 	if (!read_seqretry(&conf->resync_lock, seq))
+ 		return true;
+ 
+-	if (atomic_dec_and_test(&conf->nr_pending))
++	if (atomic_dec_and_test(&conf->nr_pending) ||
++	    conf->array_freeze_pending)
+ 		wake_up_barrier(conf);
+ 
+ 	return false;
+-- 
+2.52.0
 
-  Linux 7.2-rc5 (2026-07-26 14:45:48 -0700)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/linux/kernel/git/mdraid/linux.git tags/md-7.3-20260809
-
-for you to fetch changes up to dc386aa0ac0a3ec06c9a3ea9b064b073fb72a916:
-
-  md/raid1: don't set array_frozen in raid1_takeover() (2026-08-07 16:49:22 +0800)
-
-----------------------------------------------------------------
-Abd-Alrhman Masalkhi (5):
-      md: remove REQ_NOWAIT support from raid1/10/456
-      md: recheck spare changes before starting sync
-      md/raid1: restrict atomic write limits and handle runtime constraints
-      md/raid10: consistently fail atomic writes that require splitting
-      md/raid10: remove unnecessary barrier around bio_submit_split_bioset()
-
-Bruce Johnston (1):
-      md/raid1: don't set array_frozen in raid1_takeover()
-
-Chen Cheng (10):
-      md/raid5: protect bitmap batch counters aka seq_flush/seq_write consistency
-      md/raid1: protect sequential read hints for read balance
-      md/raid5: fix lockless max_nr_stripes reads
-      md/raid5: fix reshape deadlock while failed devices more than max degraded
-      md/raid5: protect lockless recovery_offset accesses during reshape
-      md: suspend array when sync_action=reshape
-      md/raid10: resize r10bio_pool for reshape
-      md/raid10: free r10bio before ending master_bio in raid_end_bio_io() and raid_end_discard_bio()
-      md/bitmap: resume array on backlog_store() error path
-      md: scope memalloc_noio to allocation critical sections
-
-Coly Li (1):
-      md: do overflow check for sb->bblog_shift in super_1_load()
-
-Genjian Zhang (1):
-      md/raid5: complete discard bios while reshape is active
-
-Hiroshi Nishida (1):
-      md: widen badblock sectors param from int to sector_t
-
-Martin Wilck (1):
-      md/raid1: create serial pool adding rdev to array with serialize_policy=1
-
-Sajal Gupta (1):
-      md/raid5-ppl: fix use-after-free in ppl_do_flush()
-
-Wale Zhang (1):
-      md: skip discard on unsupported member devices
-
-Yu Kuai (29):
-      md/md-llbitmap: clear flush state after daemon flush
-      md/md-llbitmap: use GFP_NOIO for cache allocations
-      md/md-llbitmap: only end fully synced chunks
-      md/raid5: reject zero-sector reshape chunks
-      md/raid5: round bitmap stripes with sector division
-      md: wait for behind writes before destroying bitmap
-      md: avoid stale clone I/O accounting timestamps
-      md/md-llbitmap: prevent create failure bitmap UAF
-      md/md-llbitmap: stop daemon timer rearm on destroy
-      md: skip bitmap accounting for empty write ranges
-      md: add helper to split bios at reshape offset
-      md: add exact bitmap mapping and reshape hooks
-      md/md-llbitmap: track bitmap sync_size explicitly
-      md/md-llbitmap: allocate page controls independently
-      md/md-llbitmap: grow the page cache in place for reshape
-      md/md-llbitmap: track target reshape geometry fields
-      md/md-llbitmap: finish reshape geometry
-      md/md-llbitmap: refuse reshape while llbitmap still needs sync
-      md/md-llbitmap: add reshape range mapping helpers
-      md/md-llbitmap: don't skip reshape ranges from bitmap state
-      md/md-llbitmap: remap checkpointed bits as reshape progresses
-      md/md-llbitmap: clamp state-machine walks to tracked bits
-      md/raid10: reject llbitmap reshape when md chunk shrinks
-      md/raid10: wire llbitmap reshape lifecycle
-      md/raid10: split reshape bios before bitmap accounting
-      md/raid5: add exact old and new llbitmap mapping helpers
-      md/raid5: reject llbitmap reshape when md chunk shrinks
-      md/raid5: wire llbitmap reshape lifecycle
-      md/raid5: split reshape bios before bitmap accounting
-
-Yunye Zhao (2):
-      md/raid10: fix still_degraded being inverted in raid10_sync_request()
-      md: add cond_resched() to md_do_sync()'s skip path
-
- drivers/md/md-bitmap.c   |  22 +-
- drivers/md/md-bitmap.h   |  12 +-
- drivers/md/md-linear.c   |   1 +
- drivers/md/md-llbitmap.c | 752 ++++++++++++++++++++++++++++++++++++++++++-----
- drivers/md/md.c          | 178 ++++++++---
- drivers/md/md.h          |  15 +-
- drivers/md/raid0.c       |   1 +
- drivers/md/raid1-10.c    |   8 +-
- drivers/md/raid1.c       | 139 +++------
- drivers/md/raid10.c      | 227 +++++++-------
- drivers/md/raid10.h      |   2 +-
- drivers/md/raid5-ppl.c   |   4 +-
- drivers/md/raid5.c       | 318 +++++++++++++++-----
- 13 files changed, 1278 insertions(+), 401 deletions(-)
