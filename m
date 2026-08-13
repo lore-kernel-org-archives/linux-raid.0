@@ -1,58 +1,87 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D56D31E847;
-	Thu, 13 Aug 2026 22:25:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D5D0329E55;
+	Thu, 13 Aug 2026 23:03:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786659961; cv=none; b=ucPAfkonnc+GyJ/XGI9eMUMi2khK+nc9HppLjbJoGXHu0PJBX95dgrbkgJv0kSt3WHS8GbOC46ojBc50lbtSLVw6OyXOoTd/506Tsdq8CEUxIwZbAWyaPbqvtwWRS+qN5L5nxwZV0aF7c7ZW1L6YIkofaubE77uMiP1jb+Ll6Nc=
+	t=1786662200; cv=none; b=VoeaEATh7xWFxARogAFOEtIg/IbOciC1IaMQ2sNWxPDgFxAtCQySgjS/On7gQJx+XloPkgZjMkEMrd3uRkP3CNObJLbpjSbzLbZlR7E9tIJayIA1zDsdnwy9R61VUyJrwVKzRhy9q2MV1eyDBWcBuclxJsP77KERUMop4fvHx58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786659961; c=relaxed/simple;
-	bh=k2qTDMYiT7M+1W/CgWNyFNxyYgj3wn0UyXyCdqHKUFM=;
+	s=arc-20240116; t=1786662200; c=relaxed/simple;
+	bh=syMWGcz+ujfjAPeME/DLpnRtK21TSryRpQr2l5yVB/U=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Y8Blu1KiKVNocqFf37qWf8zrvO9YS3f+Q9XO9Un7Aaezn1X/RkGpuJCRdlcdtL3jWsQc7tuCTd1+R6JANS2RbuIBS6P/7HmSUrsf1tkVxALqNcKAoy1j2cZ8ArGU9H1V9XQF/8Yf9aWORBeXujGTItmBKrXDUs/iVEfOk3MFQ6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i31mWbmS; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=im4UF4c8MIFKgr6RGbfDxnrDv+dRH0+8Msgd+ZGZKlFduSF5sGSb1xRLy296q0h3au3Ag7JzivtWo3FlpvgseM4b6JRjlHcb5wDZx+O098Vra/OleB11GVKGsTmlBZTYuq5lN35+JXYpMASfgj9868bMpV/x/dRbx7/bS93x/ms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ba4QfRiK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i31mWbmS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C9C61F000E9;
-	Thu, 13 Aug 2026 22:25:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ba4QfRiK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A87491F000E9;
+	Thu, 13 Aug 2026 23:03:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786659959;
-	bh=k2qTDMYiT7M+1W/CgWNyFNxyYgj3wn0UyXyCdqHKUFM=;
+	s=k20260515; t=1786662199;
+	bh=bVtGflV63UhwOhybQadQ9fVabzrwDdQSHBSTFq57zFY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=i31mWbmScRnrnaA4/dEuYqwKDvU0+XhiQb9na/5iu6WtpreuO13MYFmeVCRrdqlSC
-	 gfupHX8b5Mn2FlZMOLySnVufPh0Bguhhm/z3/JpcbdSpL/9GxXGwGffnb22n/pAVwQ
-	 Ywee2SpxjGjnCPBqJiDkfIKENl8J6+TAlz6Fe8EiLqWqKSIYcwJPyMe4qElIdCC1JY
-	 wAE+ozklWt647Hcf/PXGC1WDt89UjHAt1uHPeVspS05XUfCeqmrSrp9AXFQVc2qxet
-	 1U8gU8wtnztQMuTuVTDUMNzBUv3y470BEMHGLlc7iG4tYG/JZ4fF/F9+1xj8zerIDe
-	 wb0cXCG8qYEwA==
+	b=ba4QfRiKp2IwE/G80O1GIPCrJg049MnivMt66il2UzmQSP+pR6rHwmZkJ1KFfcs+Z
+	 nwkDl7+DxCNBhHr4gTcx+FVNnXXaHqxGw/kMZHgm0fkboEj/eCt9R6bgAr81ZzeX5v
+	 NiB8Mtw8DjVeicW7VsokQ6FTBgz3nVr0gKS9hgT7iPtLx+1iC+ZtJqiJmqiz4vZAcq
+	 Yjt1elHrvL+ugKmyaw+lwmC1qGnFJMv1yAGt+3pKwHMmka45924hxnOTm4jY11O99U
+	 fZqjP/FyJvJ+DKlNZa9wB6H1BjuBlrPENK5bJILMwLRNuKrQO+4RnwDw/n1ZEcbXAl
+	 XUAxwY3ZLbw8A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 05/26] xor: small cleanups
+Subject: Re: [PATCH 05/28] xor: move to lib/raid/
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christoph Hellwig" <hch@lst.de>
-Cc: "Christian Borntraeger" <borntraeger@linux.ibm.vom>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
- Gordeev" <agordeev@linux.ibm.com>, yukuai@fygo.io, dsterba@suse.cz, "Heiko
- Carstens" <hca@linux.ibm.com>, linux-s390@vger.kernel.org, linux-raid@vger.kernel.org
-In-Reply-To: <20260324062211.3216301-6-hch@lst.de>
-References: <20260324062211.3216301-6-hch@lst.de>
+Cc: "Alexander Gordeev" <agordeev@linux.ibm.com>, linux-s390@vger.kernel.org, linux-raid@vger.kernel.org, "Heiko
+ Carstens" <hca@linux.ibm.com>, dsterba@suse.cz, yukuai@fygo.io, "Vasily
+ Gorbik" <gor@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.vom>
+In-Reply-To: <20260327061704.3707577-6-hch@lst.de>
+References: <20260327061704.3707577-6-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 22:25:55 +0000
-Message-Id: <20260813222556.0C9C61F000E9@smtp.kernel.org>
+Date: Thu, 13 Aug 2026 23:03:13 +0000
+Message-Id: <20260813230318.A87491F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-> Update the to of file comment to be correct and non-redundant, and drop
-> the unused BH_TRACE define.
->=20
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] The MAINTAINERS file was not updated to reflect the new location of=
+ the RAID XOR core code.
+--
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+--- Patch [5]: [PATCH 05/28] xor: move to lib/raid/ ---
+commit 521ed07e83a1bf1233d2291dd851539fa8fc5883
+Author: Christoph Hellwig <hch@lst.de>
+
+xor: move to lib/raid/
+
+Move the RAID XOR code to lib/raid/ as it has nothing to do with the
+crypto API.
+
+[ ... ]
+
+> diff --git a/crypto/xor.c b/lib/raid/xor/xor-core.c
+> similarity index 100%
+> rename from crypto/xor.c
+> rename to lib/raid/xor/xor-core.c
+
+[Severity: Low]
+Should the MAINTAINERS file be updated to include the new directory?
+
+Looking at the SOFTWARE RAID (Multiple Disks) SUPPORT section in MAINTAINER=
+S,
+it currently includes:
+
+F:	include/uapi/linux/raid/
+F:	lib/raid6/
+
+The new lib/raid/xor/ directory is not covered by any maintainer entry. This
+omission will cause scripts/get_maintainer.pl to fail to route future patch=
+es
+touching these files to the appropriate subsystem maintainers.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260324062211.3216=
-301-1-hch@lst.de?part=3D5
-
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260327061704.3707=
+577-1-hch@lst.de?part=3D5
