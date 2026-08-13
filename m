@@ -1,108 +1,120 @@
-Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B755F374187;
-	Wed, 12 Aug 2026 20:05:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43EEA20D4F0;
+	Thu, 13 Aug 2026 02:20:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786565118; cv=none; b=hrnYanXShcFPl/KmFhNgGpoVTv9RSLdVCoB1/loL9MJoIQJcZexz9X6deC6LAaT8ilXfoZD3bHORFYf1u+QRo+m/Q/xN0+HEsLkYFb7BdgDSJrygR8aqDqzAZQx99ttWDtXfaPxMg+ZNc/xndHWJNyMaKdpiBwg3e+qvVedNqns=
+	t=1786587620; cv=none; b=GADUT16+/FZVWoFdRL/8xFvBkaGUojmjP0Hcf44ZwWNQXkSrA52/YmBfI5IGPmYCJveMU6b6TcFyzReD2Q1LKR/9ICDZWjte/AKyYuPi7M5Ub2RryFdtBRLWZgXAp1MdEIiHNNl3fYtF4xK1dHR1njfknWl1hzWP8/Kx+o9ckJQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786565118; c=relaxed/simple;
-	bh=4vhTRc1/dX1D34Vcc2xvEiUy1eUBo/ZiHS7drQU0aoA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZvKBSPsYwmbdwloHij4q0cdMYWvFqCRMKsIyA03RPH5D1OiIsiWuX8f87Snv7NBHlHnF4pElptTcWdzlOfND21L5GdGbVRkl6Zs53YuZ4RH5K0IlXHl48ZrNBA2ZqHTv5Q+dRtjzFbQnIme9+ZSFAW3ArFzN2lYlIxlJVXoWFnw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=fk9bQ2GF; arc=none smtp.client-ip=65.109.113.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
+	s=arc-20240116; t=1786587620; c=relaxed/simple;
+	bh=r9CDPVWhGzXnqQIiiv36dnrD8MgIOT+o5NgDlc0hVyU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Od6/EXve+Qv6OPAaMnD+7BtZoBs2f/L5M2wltJpCDj29Mh3m0d9dsdUJZTGLxzbqH6ZErfOGqfgtM1KbCFNLbNZV9j/q9w7Ge4nMO8LS2GlO5Mj24Dp+RUYU6Ha6sHEs8F2WYYbEHJ/9SKa2gU0RcxfLbq7SNaxZ0twefJXBNRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ejmlk6Sv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="fk9bQ2GF"
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 7926B40E019E;
-	Wed, 12 Aug 2026 20:05:13 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
-Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
-	header.d=alien8.de
-Received: from mail.alien8.de ([127.0.0.1])
-	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id 9NTlaYtYKV85; Wed, 12 Aug 2026 20:05:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
-	t=1786565103; bh=6dBQkg+AiyaWmAjZedH4XYQHET6jIziOv8yV3K7UfrU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fk9bQ2GFg0WBzx1knvI7zfntSMNhLYqZLQEOY6NMnq4GdSpAhHnEjaoqhLr+XzkeL
-	 tSkRf8BTrFumNd5LJwzwyONszFhqBVt/yvTPQVT6jRSFgWfH/6jG3t2XGasNX/4uW/
-	 bvG+ufYtZe8UK4YLGXxnGOYMws1Q/vqFBXP7fIoHCvHjkA1ohrKeFgZ98uOnSeE+cN
-	 djrO0d7cDTyLpWZ96j2wOg2crbfXpDasUrJ77KstV6OtvrJ1uJP891HMcIpHROiV7F
-	 G8dy1tLNskNHyE7xtkfb1YCcuOG/iUPZ3zheo8ICTsHrI+/TwpO4GGcR5QNz6TL1wW
-	 Qv9q9HP9tBgiQxk6ABjIzJXevfgrb0H11ItKIY8ltUgFvaUhfhrvrG+FyNKw9GlHea
-	 b0kjcMfw5az+bwmHa5OET2dxiZCXYJXW4MTDpB5dPem2RHyRoOrmCEja86Rsdz9w2w
-	 A3mUrD756oreZCqVd+nDTePWhAfZ7ZvEWSmRItUUmuqaQOmRkh24m6zvShmo860G12
-	 T4V/V6ayvwjxj4l07TZCjl++DcJmQ6Hxqn2i22MYisa/53ICRAWmI5YxX2e617+ZSa
-	 GNPvh+SdOi0cEa/UExeMlQ3DpdebFQFfngOXaww3BdIcd70w/jFxrxh5Nibl8wGIPr
-	 EmSOCXEAD7Kk/j5eydk2G2kI=
-Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::1b])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id D7F2F40E019C;
-	Wed, 12 Aug 2026 20:04:54 +0000 (UTC)
-Date: Wed, 12 Aug 2026 13:04:51 -0700
-From: Borislav Petkov <bp@alien8.de>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: x86@kernel.org, linux-um@lists.infradead.org,
-	linux-raid@vger.kernel.org, linux-crypto@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v2 1/8] x86/fpu: Check for missing AVX and AVX-512 xstate
- bits
-Message-ID: <20260812200451.GCanzR41yxY2n_62fs@fat_crate.local>
-References: <20260728021603.79870-2-ebiggers@kernel.org>
- <20260728052727.GCamg9v5WxNieTMUwE@fat_crate.local>
- <20260728054532.GA99797@sol>
- <20260728182007.GBamjy17zynlWm2gQT@fat_crate.local>
- <20260728183447.GB3355536@google.com>
- <20260728225936.GBamk0WK38PByPFkxz@fat_crate.local>
- <20260728233430.GA3277@quark>
- <20260728234726.GCamk_jnl3LtfGbxoC@fat_crate.local>
- <20260812174826.GAanyx6vUWv5GLX2AZ@fat_crate.local>
- <20260812194011.GA3734410@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ejmlk6Sv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C0B81F000E9;
+	Thu, 13 Aug 2026 02:20:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786587618;
+	bh=/zNmD9B/x2+gqm/TQnDXsoFe7SLMMlZBmFWol8zSk7o=;
+	h=From:To:Cc:Subject:Date;
+	b=ejmlk6Sv3jcbV5bE+4pHEkNBfN9RU954ynU40fQc0I1vrwz3rz4GfmUVYsi/d2skM
+	 FjOfiSbcBvd2V7PfIuudRruKDpobVFrZMH4omgOCUguaiMgbPHlFAvGAPGhcCQblhV
+	 oI9g/xOtB/Kh2ue0/nxqHvP3pHDTRP4QOledcVy526zmUEDASzeawMGRjC4rt8L2Iz
+	 YEvhdItLR2UB/2DqxQY639BOly62lAUfJlgnNxjr9MP+rwZkQmOZJTBnMqjjYn3IHL
+	 c8bF/Wf58YSXpqSLgRv5VWfjwJJF4CAMihf99Mk5OuQXbVwho1J87BWpzDLBXUkwPZ
+	 pW77YIDeL3OAw==
+From: Eric Biggers <ebiggers@kernel.org>
+To: x86@kernel.org
+Cc: linux-um@lists.infradead.org,
+	linux-raid@vger.kernel.org,
+	linux-crypto@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Eric Biggers <ebiggers@kernel.org>
+Subject: [PATCH v3 0/8] x86: Remove cpu_has_xfeatures() and add AVX-512 xor_gen()
+Date: Wed, 12 Aug 2026 19:14:58 -0700
+Message-ID: <20260813021506.55129-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260812194011.GA3734410@google.com>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Aug 12, 2026 at 07:40:11PM +0000, Eric Biggers wrote:
-> Interesting, so the !boot_cpu_has(X86_FEATURE_FPU) check is dead code
-> since ab05214025ee ("x86/fpu: Remove MATH_EMULATION and related glue
-> code").  Sure, there's no need to add anything to there then, though we
-> should do a separate patch that removes it.
+This series consolidates and cleans up how the kernel handles CPU
+feature flags for AVX and AVX-512 when the underlying OS or hypervisor
+(if any) doesn't enable the required xstate features in XCR0.
 
-Sure.
+Specifically, it makes the checks for xstate features be done in a
+single place at boot time for both UML and native x86, instead of
+everywhere kernel code wants to check for AVX or AVX-512 support.
 
-> Sure, that works.  I'm not sure it's actually easier to understand than
-> what I proposed; it's kind of contradictory to call
-> "setup_clear_cpu_cap(X86_FEATURE_XSAVE)" when we just verified it is
-> clear.  But the comment mentioning that it's actually for clearing
-> dependent flags helps.  If you prefer this way, let's do this.
+Patch 8 then adds an AVX-512 optimized implementation of xor_gen() for
+RAID, which had been blocked on confusion around cpu_has_xfeatures() and
+its lack of implementation on UML.
 
-Yes please, that's why I added the comment. And we have this machinery in
-do_clear_cpu_cap() so let's use it.
+Changed in v3:
+  - Updated the implementation of fpu__init_system_xstate() as suggested
+    by Borislav
+  - Added Acked-by tags
+  - Used "xor:" commit subject
 
-> It's functionally equivalent, but yes we can write it this way if you
-> prefer.  Is it okay if I fold your diff (minus the pr_info()) into this
-> patch?  (I'll also add FW_BUG to the error messages as Thomas
-> requested.)
+Changed in v2:
 
-Yap, that's perfectly fine.
+  - Made x86 clear the AVX* bits if FPU or XSAVE features are missing.
+  - Updated comment in x86 arch_xor_init().
+  - Updated commit message for the UML commit to clarify that checking
+    XCR0 is standard practice in userspace
 
-Thanks.
+Eric Biggers (8):
+  x86/fpu: Check for missing AVX and AVX-512 xstate bits
+  um: Check for missing AVX and AVX-512 xstate bits
+  crypto: x86 - Stop using cpu_has_xfeatures()
+  lib/crypto: x86: Stop using cpu_has_xfeatures()
+  lib/crc: x86: Stop using cpu_has_xfeatures()
+  x86/fpu: Remove cpu_has_xfeatures()
+  xor: Remove redundant X86_FEATURE_OSXSAVE check
+  xor: Add AVX-512 optimized xor_gen()
 
+ arch/um/kernel/um_arch.c                   |  78 ++++++++++++-
+ arch/x86/crypto/aegis128-aesni-glue.c      |   3 +-
+ arch/x86/crypto/aesni-intel_glue.c         |   7 +-
+ arch/x86/crypto/aria_aesni_avx2_glue.c     |  11 +-
+ arch/x86/crypto/aria_aesni_avx_glue.c      |  11 +-
+ arch/x86/crypto/aria_gfni_avx512_glue.c    |  11 +-
+ arch/x86/crypto/camellia_aesni_avx2_glue.c |  11 +-
+ arch/x86/crypto/camellia_aesni_avx_glue.c  |  11 +-
+ arch/x86/crypto/cast5_avx_glue.c           |   7 +-
+ arch/x86/crypto/cast6_avx_glue.c           |   7 +-
+ arch/x86/crypto/serpent_avx2_glue.c        |   9 +-
+ arch/x86/crypto/serpent_avx_glue.c         |   7 +-
+ arch/x86/crypto/sm4_aesni_avx2_glue.c      |  11 +-
+ arch/x86/crypto/sm4_aesni_avx_glue.c       |  11 +-
+ arch/x86/crypto/twofish_avx_glue.c         |   6 +-
+ arch/x86/include/asm/fpu/api.h             |   9 --
+ arch/x86/kernel/fpu/xstate.c               |  69 +++++-------
+ lib/crc/x86/crc-pclmul-template.h          |   6 +-
+ lib/crypto/x86/blake2s.h                   |   4 +-
+ lib/crypto/x86/chacha.h                    |   3 +-
+ lib/crypto/x86/nh.h                        |   4 +-
+ lib/crypto/x86/poly1305.h                  |   7 +-
+ lib/crypto/x86/sha1.h                      |   4 +-
+ lib/crypto/x86/sha256.h                    |   4 +-
+ lib/crypto/x86/sha512.h                    |   3 +-
+ lib/crypto/x86/sm3.h                       |   3 +-
+ lib/raid/xor/Makefile                      |   2 +-
+ lib/raid/xor/x86/xor-avx512.c              | 121 +++++++++++++++++++++
+ lib/raid/xor/x86/xor_arch.h                |  31 ++++--
+ 29 files changed, 275 insertions(+), 196 deletions(-)
+ create mode 100644 lib/raid/xor/x86/xor-avx512.c
+
+
+base-commit: db2ddb87143519e20a95aa36c60b36107b736a58
 -- 
-Regards/Gruss,
-    Boris.
+2.55.0
 
-https://people.kernel.org/tglx/notes-about-netiquette
