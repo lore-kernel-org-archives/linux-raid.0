@@ -1,93 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6308184
-	for <linux-raid@vger.kernel.org>; Thu, 13 Aug 2026 02:39:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D56D31E847;
+	Thu, 13 Aug 2026 22:25:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786588791; cv=none; b=WU3Np84TskHl3KevBzsf9vzQzKvFgy0Voo5TAWf2+S6UyGqaifreg9XdjdSLLieoy45nXLwus2IS1UZ9yq26+hgDAOSlmKZmyPUmyxa+ddgllpT06LzXIkPUD+wrHbtUbDaQO5G4w+Og9Wkhhu0YkGqbdBFU6z2fMju4cw6rEN4=
+	t=1786659961; cv=none; b=ucPAfkonnc+GyJ/XGI9eMUMi2khK+nc9HppLjbJoGXHu0PJBX95dgrbkgJv0kSt3WHS8GbOC46ojBc50lbtSLVw6OyXOoTd/506Tsdq8CEUxIwZbAWyaPbqvtwWRS+qN5L5nxwZV0aF7c7ZW1L6YIkofaubE77uMiP1jb+Ll6Nc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786588791; c=relaxed/simple;
-	bh=y9gWj/1axNj+moIDqty//A5KHcgCsK3Y/kRJC8+1lDw=;
+	s=arc-20240116; t=1786659961; c=relaxed/simple;
+	bh=k2qTDMYiT7M+1W/CgWNyFNxyYgj3wn0UyXyCdqHKUFM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FL7cVs2ls7AmMg35xkWhzYcB/vmsfR8rkaZVeBrgoQGTIZBv1BpMKkNJ1Ht0COtxsuu+4JdzqsAIcfcyoNGviwdvaWGHVA5Rs/hqqFmAeOg4jOiNVQNpSqcmMkjp4E13o8GmoyuO/dWzQyEtvLn0esO3dLSXIGFDFwBSv5iynOU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PqbN+4/8; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Y8Blu1KiKVNocqFf37qWf8zrvO9YS3f+Q9XO9Un7Aaezn1X/RkGpuJCRdlcdtL3jWsQc7tuCTd1+R6JANS2RbuIBS6P/7HmSUrsf1tkVxALqNcKAoy1j2cZ8ArGU9H1V9XQF/8Yf9aWORBeXujGTItmBKrXDUs/iVEfOk3MFQ6g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i31mWbmS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PqbN+4/8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A1311F000E9;
-	Thu, 13 Aug 2026 02:39:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i31mWbmS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C9C61F000E9;
+	Thu, 13 Aug 2026 22:25:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786588790;
-	bh=F7iix624OzM9s9Eq5DbOBam72mRXCzwEaIEj07un5Nw=;
+	s=k20260515; t=1786659959;
+	bh=k2qTDMYiT7M+1W/CgWNyFNxyYgj3wn0UyXyCdqHKUFM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PqbN+4/81iAB+OfJIs2aso8kG4AKka7Cr3sBn6TwkNdtY9Q++IEvHyvtVa408aVDm
-	 TXsulTkA1qCy9A51wh3JmE5/cuyCF4KAm2ZMvTlud7MIiF9tj9AXHliYs9JBcbAvtp
-	 TqfDqkxkMN7d4ZaKVm+zZnSmqr+XXO95KXsYJoWxH5NFAhkCEuc8MjLY1jv3m+epCh
-	 081H0cbZe7tGkXoWo9XV/mUaSgCS10b0ZSXZdlYkubaMIb+z4tdpd0lIDo1zMGLdxS
-	 oo1j8T6C6RsZWUwZxeiJiWbpj0co571mtnHYXxMxVZVllI0vv400VVbx8ZeaUs4E0x
-	 Nz/y7cnr+fUWA==
+	b=i31mWbmScRnrnaA4/dEuYqwKDvU0+XhiQb9na/5iu6WtpreuO13MYFmeVCRrdqlSC
+	 gfupHX8b5Mn2FlZMOLySnVufPh0Bguhhm/z3/JpcbdSpL/9GxXGwGffnb22n/pAVwQ
+	 Ywee2SpxjGjnCPBqJiDkfIKENl8J6+TAlz6Fe8EiLqWqKSIYcwJPyMe4qElIdCC1JY
+	 wAE+ozklWt647Hcf/PXGC1WDt89UjHAt1uHPeVspS05XUfCeqmrSrp9AXFQVc2qxet
+	 1U8gU8wtnztQMuTuVTDUMNzBUv3y470BEMHGLlc7iG4tYG/JZ4fF/F9+1xj8zerIDe
+	 wb0cXCG8qYEwA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 8/8] xor: Add AVX-512 optimized xor_gen()
+Subject: Re: [PATCH 05/26] xor: small cleanups
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Eric Biggers" <ebiggers@kernel.org>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260813021506.55129-9-ebiggers@kernel.org>
-References: <20260813021506.55129-1-ebiggers@kernel.org>
- <20260813021506.55129-9-ebiggers@kernel.org>
+To: "Christoph Hellwig" <hch@lst.de>
+Cc: "Christian Borntraeger" <borntraeger@linux.ibm.vom>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
+ Gordeev" <agordeev@linux.ibm.com>, yukuai@fygo.io, dsterba@suse.cz, "Heiko
+ Carstens" <hca@linux.ibm.com>, linux-s390@vger.kernel.org, linux-raid@vger.kernel.org
+In-Reply-To: <20260324062211.3216301-6-hch@lst.de>
+References: <20260324062211.3216301-6-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 02:39:49 +0000
-Message-Id: <20260813023950.4A1311F000E9@smtp.kernel.org>
+Date: Thu, 13 Aug 2026 22:25:55 +0000
+Message-Id: <20260813222556.0C9C61F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] Missing `vzeroupper` instruction after using AVX-512 (ZMM) regis=
-ters, leading to severe AVX-to-SSE transition penalties in kernel threads.
---
+> Update the to of file comment to be correct and non-redundant, and drop
+> the unused BH_TRACE define.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
---- Patch [8]: [PATCH v3 8/8] xor: Add AVX-512 optimized xor_gen() ---
-commit 0074b2adffd00d86b2a03e4d30495b21794ecb20
-Author: Eric Biggers <ebiggers@kernel.org>
-
-xor: Add AVX-512 optimized xor_gen()
-
-This commit introduces an AVX-512 optimized implementation of xor_gen()
-using 512-bit ZMM registers and the vpternlogq instruction. It is enabled
-on x86_64 CPUs with AVX512F that do not have the PREFER_YMM feature set.
-
-> diff --git a/lib/raid/xor/x86/xor-avx512.c b/lib/raid/xor/x86/xor-avx512.c
-> new file mode 100644
-> index 0000000000000..17f57900d8274
-> --- /dev/null
-> +++ b/lib/raid/xor/x86/xor-avx512.c
-[ ... ]
-> +static void xor_gen_avx512(void *dest, void **srcs, unsigned int src_cnt,
-> +			   unsigned int bytes)
-> +{
-> +	kernel_fpu_begin();
-> +	xor_gen_avx512_inner(dest, srcs, src_cnt, bytes);
-
-[Severity: Medium]
-Does this code need a vzeroupper instruction before releasing the FPU to av=
-oid
-AVX-to-SSE transition penalties? If a kernel thread modifies the ZMM regist=
-ers
-here and subsequently executes legacy SSE instructions (for example, in kcr=
-yptd)
-without an intervening user-space context switch to clear the state, the CPU
-could incur a severe transition penalty on affected architectures.
-
-While this problem already existed in the xor-avx.c implementation using YMM
-registers, the newly introduced xor-avx512.c appears to repeat the defect.
-
-> +	kernel_fpu_end();
-> +}
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260813021506.5512=
-9-1-ebiggers@kernel.org?part=3D8
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260324062211.3216=
+301-1-hch@lst.de?part=3D5
+
