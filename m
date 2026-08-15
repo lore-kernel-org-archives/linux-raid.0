@@ -1,127 +1,118 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D3E139A7F0;
-	Sat, 15 Aug 2026 20:58:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7DC929DB6E
+	for <linux-raid@vger.kernel.org>; Sat, 15 Aug 2026 21:06:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786827538; cv=none; b=gEi8te8BB9iI35CO9Kov/GBlr+l+ZaQ+b+R+RJD7RWlKEBZwY0B5EIi4tvSbBY+rwNwd0WnWKk5G5ChUDiQkzWDfkJCkjYNXdes4gdU7zQKWCBALs0AFPJox01K40UGf+vEC8c6BvTqdJpnFcmcU64G3FWgb15teKyQYraTXqho=
+	t=1786827982; cv=none; b=PJH3BgYrcAxq5FrD8DHZB6eYZnHLfR30JcZ0kR3Sb1TcVs4e2YWpm6/XyK/kOXi8DoZ5NPdg88gBG20qoYtUTuNhqTZYs4OBh/yOBn9dD3jbEkrpou6szeufolp2NR6kYS8wy5YQ1JUyEg8zzG6nd8DdpgJeiRufrL5Q9lz1+vk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786827538; c=relaxed/simple;
-	bh=daENMNWzFwnv/SLyg/LYZ2VdNdrGuELhVjAey20m5cE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AhYvViVphIBMvxqJAQQOMWXRJpfRavIMn8k7XL6KxVT2OKj0Q9F2GwOohNVOELtStn2vdBLJjlbHc7gTz2OV7xaN4wWosfItpzR2LK2eDwoAROPPs/xrtV7yresue21dLF/Vjx85afr0lOyVDU92UdRUHZskb2wEYt4GR8Pncxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DsWFY2RN; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786827982; c=relaxed/simple;
+	bh=A4rL68+V3g7jZ4xm8dlxQIVJXnqbGHOoMpThStQzz34=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=AdFx6AiHgtVdvNLlAfonG1WlQdc5JXZD1z86t6vLKVYTyP2ujWMJayey45AVc6Xl1Zd2YIYRugrZRkxMWi21suSMePce4iOpr0byCMLGHyXqHpg7p58Vit8zBgm66k/omwbPHVAH9a5F5eaNYSv96hR7XqczOLs3BzAG/W668SY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PgAqDVi7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DsWFY2RN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A920B1F00A3E;
-	Sat, 15 Aug 2026 20:58:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PgAqDVi7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08B211F000E9;
+	Sat, 15 Aug 2026 21:06:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786827537;
-	bh=Mli7QknwTOhcn8hn340G0Jnmp+/Q9en83EQ+szYFyZc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=DsWFY2RNQPLVepwFnlzgBVrVP6iOxX4bgYlYgNC4hZXEDd5qZBdOZtC59jFoWev+H
-	 3ihoSLKj7XFAYqyhreN/kWK98aYnf4mQ447IpXPGRkWY8L8kOjIPKUFqw1No9DXAed
-	 j5UfPNq3UIm3mW5uH/slW9dglQbjHq5VUVAxy3m7iBczhc6zjt5pLMQUpMaB46Rvvx
-	 Q/0qT4WEhNStFGF4Ib3xE9rG0RvtxftGIHJ7cGh6+w83hlgVy8j4/t6GwEV0LR9NpF
-	 /azdfhfpeHwSN0CMjWRcevqrBkZ2zeOj5yucqQpAVuBZjcvXT5mtLDiTo7QlXz4Suj
-	 wcmabiP2TYjKQ==
-From: Eric Biggers <ebiggers@kernel.org>
-To: x86@kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	linux-crypto@vger.kernel.org,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Taehee Yoo <ap420073@gmail.com>,
-	netfilter-devel@vger.kernel.org,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Florian Westphal <fw@strlen.de>,
-	Phil Sutter <phil@nwl.cc>,
-	Eric Biggers <ebiggers@kernel.org>,
-	stable@vger.kernel.org,
-	Stefano Brivio <sbrivio@redhat.com>
-Subject: [PATCH 6/6] netfilter: nft_set_pipapo_avx2: add missing vzeroupper
-Date: Sat, 15 Aug 2026 13:57:50 -0700
-Message-ID: <20260815205750.169336-7-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260815205750.169336-1-ebiggers@kernel.org>
+	s=k20260515; t=1786827981;
+	bh=iW68YSafU5JvdjrVoWIIAkv0JYtr6iGGLWu5iHZZBpU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=PgAqDVi7+wXFhJraGb9j86/8UO/fHBwvE1dVhxhRPz5Il1CNX/SMpM2vBeCI9oNVt
+	 rDkYmYyctB7YrZTEM7znf66gq0xJps/nKI95RJWe1rs0/pvo5G4vqrd/IGx36JZpNH
+	 oZvWs4guaAABHRVb+neECjuD16LR9q2a1e1eXYP2cp/5X8Lal/TGizCJ/4VJTFwHCg
+	 Ayu4l93IuKxjPWzw6Z8jIUnsadXWYS17UjNZiXBURIGPtwAwkC50tTU/87mwasiRm/
+	 8hsVnU5CmKDLMUaV+d2Ki6Rre0vyMn//RPEXrepZjsme+X/7UXZY04O+3J9Shl+66Q
+	 08wlrKebaiQWw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 3/6] raid6: add missing vzeroupper to AVX-512 code
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Eric Biggers" <ebiggers@kernel.org>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20260815205750.169336-4-ebiggers@kernel.org>
 References: <20260815205750.169336-1-ebiggers@kernel.org>
+ <20260815205750.169336-4-ebiggers@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 15 Aug 2026 21:06:20 +0000
+Message-Id: <20260815210621.08B211F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Since pipapo_get_avx2() uses YMM registers, execute vzeroupper before
-returning from it.  This is needed to avoid degrading the performance of
-any later SSE code that may happen to be executed.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Fixes: 7400b063969b ("nft_set_pipapo: Introduce AVX2-based lookup implementation")
+Pre-existing issues:
+- [High] Undefined behavior in inline assembly due to writing to input oper=
+ands.
+--
+
+--- Patch [3]: [PATCH 3/6] raid6: add missing vzeroupper to AVX-512 code ---
+commit c5b5d02d83bf2abe1380d3036a95bcf38db79ff8
+Author: Eric Biggers <ebiggers@kernel.org>
+
+raid6: add missing vzeroupper to AVX-512 code
+
+Since the AVX-512 optimized RAID6 code uses ZMM registers, execute
+vzeroupper before returning from it. This is needed to avoid degrading
+the performance of any later SSE code that may happen to be executed.
+
+Fixes: e0a491c12968 ("lib/raid6: Add AVX512 optimized gen_syndrome function=
+s")
+Fixes: 13c520b2993c ("lib/raid6: Add AVX512 optimized recovery functions")
 Cc: stable@vger.kernel.org
-Cc: Florian Westphal <fw@strlen.de>
-Cc: Stefano Brivio <sbrivio@redhat.com>
-Signed-off-by: Eric Biggers <ebiggers@kernel.org>
----
- net/netfilter/nft_set_pipapo_avx2.c | 17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/net/netfilter/nft_set_pipapo_avx2.c b/net/netfilter/nft_set_pipapo_avx2.c
-index b3f105520a85..21f5be68c703 100644
---- a/net/netfilter/nft_set_pipapo_avx2.c
-+++ b/net/netfilter/nft_set_pipapo_avx2.c
-@@ -1134,6 +1134,7 @@ struct nft_pipapo_elem *pipapo_get_avx2(const struct nft_pipapo_match *m,
- 	struct nft_pipapo_scratch *scratch;
- 	const struct nft_pipapo_field *f;
- 	unsigned long *res, *fill, *map;
-+	struct nft_pipapo_elem *e;
- 	bool map_index;
- 	int ret = 0;
- 	int i;
-@@ -1207,14 +1208,11 @@ struct nft_pipapo_elem *pipapo_get_avx2(const struct nft_pipapo_match *m,
- next_match:
- 		if (ret < 0) {
- 			scratch->map_index = map_index;
--			kernel_fpu_end();
--			__local_unlock_nested_bh(&scratch->bh_lock);
--			return NULL;
-+			e = NULL;
-+			goto out;
- 		}
- 
- 		if (last) {
--			struct nft_pipapo_elem *e;
--
- 			e = f->mt[ret].e;
- 			if (unlikely(__nft_set_elem_expired(&e->ext, tstamp) ||
- 				     !nft_set_elem_active(&e->ext, genmask))) {
-@@ -1224,9 +1222,7 @@ struct nft_pipapo_elem *pipapo_get_avx2(const struct nft_pipapo_match *m,
- 			}
- 
- 			scratch->map_index = map_index;
--			kernel_fpu_end();
--			__local_unlock_nested_bh(&scratch->bh_lock);
--			return e;
-+			goto out;
- 		}
- 
- 		map_index = !map_index;
-@@ -1234,9 +1230,12 @@ struct nft_pipapo_elem *pipapo_get_avx2(const struct nft_pipapo_match *m,
- 		data += NFT_PIPAPO_GROUPS_PADDED_SIZE(f);
- 	}
- 
-+	e = NULL;
-+out:
-+	asm volatile("vzeroupper");
- 	kernel_fpu_end();
- 	__local_unlock_nested_bh(&scratch->bh_lock);
--	return NULL;
-+	return e;
- }
- 
- /**
--- 
-2.55.0
+> diff --git a/lib/raid/raid6/x86/recov_avx512.c b/lib/raid/raid6/x86/recov=
+_avx512.c
+> index ec72d5a30c01e..299a3f044d616 100644
+> --- a/lib/raid/raid6/x86/recov_avx512.c
+> +++ b/lib/raid/raid6/x86/recov_avx512.c
+> @@ -211,6 +211,7 @@ static void raid6_2data_recov_avx512(int disks, size_=
+t bytes, int faila,
 
+[Severity: High]
+This is a pre-existing issue, but while reviewing this code, I noticed that
+earlier in this function and in raid6_datap_recov_avx512(), the inline
+assembly writes to memory operands that are listed only in the input
+constraints list.
+
+For example, in raid6_2data_recov_avx512():
+
+		asm volatile("vmovdqa64 %%zmm1, %0\n\t"
+			     "vmovdqa64 %%zmm13,%1\n\t"
+			     "vpxorq %%zmm1, %%zmm0, %%zmm0\n\t"
+			     "vpxorq %%zmm13, %%zmm8, %%zmm8"
+			     :
+			     : "m" (dq[0]), "m" (dq[64]));
+
+And in raid6_datap_recov_avx512():
+
+		asm volatile("vmovdqa64 %%zmm1, %0\n\t"
+			     "vmovdqa64 %%zmm14, %1\n\t"
+			     "vmovdqa64 %%zmm2, %2\n\t"
+			     "vmovdqa64 %%zmm12,%3"
+			     :
+			     : "m" (dq[0]), "m" (dq[64]), "m" (p[0]),
+			       "m" (p[64]));
+
+Could this cause data corruption or miscompilation?
+
+GCC documentation forbids writing to input operands. If GCC assumes input
+operands are unmodified, might it optimize away the writes, cache stale
+values, or reorder accesses during RAID6 recovery?
+
+>  #endif
+>  	}
+> =20
+> +	asm volatile("vzeroupper");
+>  	kernel_fpu_end();
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260815205750.1693=
+36-1-ebiggers@kernel.org?part=3D3
