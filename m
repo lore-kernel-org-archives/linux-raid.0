@@ -1,83 +1,83 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31F6B3FF889
-	for <linux-raid@vger.kernel.org>; Mon, 17 Aug 2026 11:17:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADBA03F787E
+	for <linux-raid@vger.kernel.org>; Mon, 17 Aug 2026 11:17:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786965467; cv=none; b=NNCGv8WkALTtxsHlvZZXxQQrecuDKXKEiDKFEtKygKznAe+h1GDgZY8DyQIp4EXxd7FqF85VxrajcCGGlHsa/2yWqPChZR2cCJmG+xGkrovNTrLhgJX0WAQlqCITt7xl/ZWaNc8OcW/wG2pN7R+vjk7Xb5PrtGERBhhV4SjgnQo=
+	t=1786965477; cv=none; b=pKoUx7mnSlQs+WM84F0VRsLD/R0UXpTbxKnqhserS8q+TEWUMLWjOwuUZhbyccUv2t2Zq3zUVIE/uEkT8DvoqG7P5ohu1w3LNYwBTfcIZ9gHbbgwLewjwZaqjHKVeHQ5v0x18D0vZ/pd7I77g67brwZOvEAtU2iIOozFvLbDtmg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786965467; c=relaxed/simple;
-	bh=nmIJqKYUorjBeUTJ55+kjKbsShLkxxa8SVIxElN7dTc=;
+	s=arc-20240116; t=1786965477; c=relaxed/simple;
+	bh=AayGtOQDKtX9pm0ZEeABQelkCQowJyXQKLwBThQ68+k=;
 	h=From:To:Cc:Subject:Message-ID:In-Reply-To:References:MIME-Version:
-	 Content-Type:Date; b=u4Xb5RsPIjU0Ge1GmHtFcCcWo8XjNxXBUSTeY/nndYpvamw6eqV+SnoqBR0NSqhQC2o3ZAcox4ufnPUVR6zxRVdzwZaQ8fF7ogXY4ykYWLpFClRKdawwNe5DjS+5mcX5zvYf0Ahxp5S5ll2yH2LZll7/2jPVtJN1xir071ZNv80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UheXgto0; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=N4JVShq7; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Date; b=Po0izK2Aulun2xc8SpNRRbKqWL2hHDvuBbmVlEZnKahOgF96AMI+EQER8T0nLY3ulZJ12SJ9TIADgE47dDBq2wRvfKpX6666WV/soqJfpDrotWjO2FghqAu5A4hNxORhQ8Ya0xvms9ZrbsBf/wiLz1R1XNVMiU41W1s3hTy0kkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OEVDAfQM; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=lkyPCwBk; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UheXgto0";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="N4JVShq7"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OEVDAfQM";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="lkyPCwBk"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1786965464;
+	s=mimecast20190719; t=1786965474;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=jlLmM3V4bNqNAIwd0E7E4syK/sSR82TVvTikdxpHb34=;
-	b=UheXgto0hpL3yCYPxDDFfae9wzMhNL1u6df7yW9lpS9GfIf2uS6VN844CE33SjbmXzXuZf
-	CtawJT76cXlMFWYp2MSHBGqHf9w8dbWB3A5LFhXVuCG/j1WuNQezVdinBmMcFGWG3u/b8u
-	VZjM6EiOt143Ols3/4AdUFVpCPAj7AY=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=iHaC1wb6A4UB6rpudHDIMeHC+iY8LxyInz0ILy0oT4A=;
+	b=OEVDAfQMqJTokoDqjTmiexpv/gzfADgayW2jOCLi+ai0LIp7x5LGe+hMxkN2VG3fGIUMpP
+	CHgGnP4l+xhrPCbIhIn0TZovo9ZkJpctoYZ7mQEv3QF//cf0h1WcGN96SCPQYLpVTuJILb
+	5DkuVQvbqwsow6bhJgcnmWPdKCEP20k=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-231-7dBnwAsHOIGUSV19Wy56UQ-1; Mon, 17 Aug 2026 07:17:42 -0400
-X-MC-Unique: 7dBnwAsHOIGUSV19Wy56UQ-1
-X-Mimecast-MFC-AGG-ID: 7dBnwAsHOIGUSV19Wy56UQ_1786965462
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-47fd4ee0ac0so2663769f8f.2
-        for <linux-raid@vger.kernel.org>; Mon, 17 Aug 2026 04:17:42 -0700 (PDT)
+ us-mta-542-1z2_J0SOMiymcHVjEp0msg-1; Mon, 17 Aug 2026 07:17:53 -0400
+X-MC-Unique: 1z2_J0SOMiymcHVjEp0msg-1
+X-Mimecast-MFC-AGG-ID: 1z2_J0SOMiymcHVjEp0msg_1786965472
+Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-499574e98a1so20992775e9.3
+        for <linux-raid@vger.kernel.org>; Mon, 17 Aug 2026 04:17:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1786965461; x=1787570261; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1786965472; x=1787570272; darn=vger.kernel.org;
         h=date:content-transfer-encoding:content-type:mime-version
          :organization:references:in-reply-to:message-id:subject:cc:to:from
          :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=jlLmM3V4bNqNAIwd0E7E4syK/sSR82TVvTikdxpHb34=;
-        b=N4JVShq7MhCNlo68qwtt2kPCCgiQhhJY09ARkrDZ8MHxpQKR8Xm6dL5hgkCx+a6kte
-         S+1rsqpNHsUEhXz/h8y/nqKv/Ga9p5SDgRNwQ2oyQahq30G66+ylQ3dW4V/nqRzjiA7B
-         WdnmCNwEh9EBkoERhPifTYHXKBvYMgUNOpRCRlld3Sh8C8rMaqqqnPLfJvjdYTJvjcSZ
-         bMPc3Jp1lqRtM2je1Zu3IElqeRcAL+wsQJdjUnzt45znkDaMZwYTfrMxOlyLy0MSIsLH
-         PR4B1nNkShuRqDjwQUG1pcF7xUttkex8z5tUNjWKaqPQxbZEd96SpLdXsGZAaOLKO9Sb
-         Qvlg==
+        bh=iHaC1wb6A4UB6rpudHDIMeHC+iY8LxyInz0ILy0oT4A=;
+        b=lkyPCwBkdwlGI2lgzvhc/68VXSGfuRoT+rAsu/EvJrlViIyzARZfwK5RbYqJMEpo+4
+         mbDWBl1QIKmAZbBPWNQFXUfUDgqRhEDk8EnrVAAYUOyZcNHGdIYEbwP0MeCPhpv3lx1e
+         4X0hScitwRLMDK2yRl4Stq7IQBidSEquaLoRGA9PohdgzCS6eNa/ZEt5ChZ0+C/oFDDS
+         OI+LmUWIsL4K1BeuXDs1eswBuUmMut3st4s7JuuOuHum29HMSxFUZ1kjgTVyDhUyI0UG
+         9BEAgWPfbVl2hH8Mt+qKLsaso21VJ9KbjsaS/5pxO7lRvXu3wFugMiXL3+CHfXhcVeir
+         iLbg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786965461; x=1787570261;
+        d=1e100.net; s=20251104; t=1786965472; x=1787570272;
         h=date:content-transfer-encoding:content-type:mime-version
          :organization:references:in-reply-to:message-id:subject:cc:to:from
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to:content-type;
-        bh=jlLmM3V4bNqNAIwd0E7E4syK/sSR82TVvTikdxpHb34=;
-        b=eL03VFlG/0n2SftSdnL/v4wrT4Ziz9Yajcjc+xz5oO0faUQGVJuyjCF2+fo4v5LRjF
-         PBRwjaRXU9MwMuh5EnJ3dN6emm4aBqhvjeOojp/rWgHV34JjxJ7YbGjljIH4LvGd5WFt
-         pyAT2xhQNn68kKLO4Gg7fGLOwAWR/STJUb5vPz2JIyZbrpfiezE2KO5CwlRYwlRGjTK8
-         6FY21/btCeRh9NIhDdsNYpWjglM6Umo8vxYAX9uvIGwRT8rzwQOeW7fcaFliZfXR94ID
-         nAHOb3kDlaq9yeemhmcEkDZiZvGQEsR+obgcB7wQcL2CNWCkzcApZiFNIh7/GCvSX1Ad
-         6pwA==
-X-Forwarded-Encrypted: i=1; AHgh+RobammKTAz5FyvJVWn0VGemwbtWtL78fhD0jZ1APIHUKFUSgp3AqWbm+kAlX4c0zIt9MUIZc2dp0ANU@vger.kernel.org
-X-Gm-Message-State: AOJu0YwxkDTYGKVCvKbGDtlS7UBCPxWmWuMV9/I5gXKEcN4JS8XgZSwB
-	2HOHVw/aIm3ttC3XxJV5JPNBlT2tlJ1ZO6d8RaPuA+O0ohMJwQBXYdfoYHMmnwt1xEuPlIGgw+d
-	sgSKDZAUlqha69RoJYDJmdszuf9GGhPjTv0iSIRQ8SHp+tx5FzbzK14arcjbpm+Q=
-X-Gm-Gg: AR+sD11Kila4h7VTRN9a2e7Ag5kWygDMakyqqYXJUEqYSquAFKVuvGFI8GGn8KCVLL5
-	4Q7eZUKTzG/SZM24gunoA7p0gd3G30G5jMEYwNPKeubgTKjj8VnhNsaxBltd/73pwABNqjT8z1N
-	dKcKaG4Szxii5DEc7TrGSwCz1webytJL4ZriXrCs1Q9G6WZC946C+izG9ynWsukRRNcQdujWQUk
-	w988N1vTriAKAP3Avj3isDEnhr/kAUwV4RhlYOK9b67ijVJSIXSHqoZcuSmIFlurzslGQf1FA+f
-	14vsvnguxDgzyXj+XYifP0JdVXkrQGsGtF43gta3JgonQl/Yer6UwXSUpYZHxTx0OBAu2xIP4Cr
-	Q1g9hdcHCCQizeZx/rm4OTkbLeoFj
-X-Received: by 2002:a05:6000:18a6:b0:47f:5ec2:d54 with SMTP id ffacd0b85a97d-481607351d6mr41088964f8f.5.1786965461448;
-        Mon, 17 Aug 2026 04:17:41 -0700 (PDT)
-X-Received: by 2002:a05:6000:18a6:b0:47f:5ec2:d54 with SMTP id ffacd0b85a97d-481607351d6mr41088827f8f.5.1786965460933;
-        Mon, 17 Aug 2026 04:17:40 -0700 (PDT)
+        bh=iHaC1wb6A4UB6rpudHDIMeHC+iY8LxyInz0ILy0oT4A=;
+        b=G4muTNEM5KmGcLlOcSpAXyePDS211tkRG+85UdnSyfCMWPQKi7YGyL0kmLgeJna3lm
+         MIA0WDG1kccMVGde3JKpbAo196FisuXPaEhV2Hs83qhivuo5mn2Dat1h7Ba13BHfDAuA
+         OgDdwdDvIHSAb/b6oQjwzdAcrxpuuvsGvAW+TuCgRREec9fye7RhD7WSyY//eF9D9zGS
+         Pv5uu/a2Tlv9bQUCft/WB/eSKNEZnwdG1fq582Ik/yrDmIgb68fhMHvH/mhFecO2u+ih
+         kCH/HHc6Q/GAB5so5TFxM+iaoJKF0BWgc46EyvPvH4rUNUTwlKI6G1vX2qj/wrvwXgOK
+         NZLw==
+X-Forwarded-Encrypted: i=1; AHgh+RrVZczFUMbiJQxZ7IiMBJ5OyoAFHd9vtVTAvbofcBaYWwNQ/fnrtf5CycApor8LR+hNwBmST1UX4zWM@vger.kernel.org
+X-Gm-Message-State: AOJu0YwnC7EL4f96LUcH/u2I2WWDclRpbMoDRVyvvYzh12Yw8MdOKViT
+	qVRvNvZX6+JfWL6gvZEOdPvCMZ4VVlcP185yuUN4BhCYRHD/kloqOOr9j0FbBdyrZoL8xSJ8JH6
+	DiPGqDufh1/GGzs/HamdT+VEwi1Q7N4ZbPl0goU03RX6FhX0Tc/6laZNrwOvs45E=
+X-Gm-Gg: AR+sD130IAwAZZZdXavSxF3yyrO5cU1wQekw/JdidbE9cRTSPgUMZmJrozUjbMHm7hY
+	qzkf/j++2n1OraIKio3KKKupvJ8uDdynQ9o4HjQz7CK5FFPbFoqFUDfHT2LGyBVF8H9UWhZ40Yn
+	rgWpTRBaxk8FcQ00njsjz/yua4sLIuBd88z+Dv+mCCNFxPVK2lbVlFnXPY9F+ORV6gnJZ1DQ5Ui
+	Gw4a9Mrm/M5SdoY0ovI0qAgPoyfM09ayBtT/0Db2+RpnDlso5heH27YHIvmjpfrvhWVavizRKdw
+	g7UzvLAkuvO5PxC25yl/HQ+Jr1lkT3kI/ot0k0WXWEqEWcA0EA6OrIaSm1hfhIaM0GzOcrN/VB2
+	hdq7ZQ/WA3v2kl9YFPO9FvdIOIio7
+X-Received: by 2002:a05:600c:2185:b0:496:bffb:fb7b with SMTP id 5b1f17b1804b1-4998797cc60mr279142015e9.10.1786965472208;
+        Mon, 17 Aug 2026 04:17:52 -0700 (PDT)
+X-Received: by 2002:a05:600c:2185:b0:496:bffb:fb7b with SMTP id 5b1f17b1804b1-4998797cc60mr279141055e9.10.1786965471771;
+        Mon, 17 Aug 2026 04:17:51 -0700 (PDT)
 Received: from maya.myfinge.rs (ifcgrfdd.trafficplex.cloud. [176.103.220.4])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-482a5a31572sm3207747f8f.5.2026.08.17.04.17.40
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4999d0876b8sm44870005e9.8.2026.08.17.04.17.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Aug 2026 04:17:40 -0700 (PDT)
+        Mon, 17 Aug 2026 04:17:51 -0700 (PDT)
 From: Stefano Brivio <sbrivio@redhat.com>
 To: Eric Biggers <ebiggers@kernel.org>
 Cc: x86@kernel.org, linux-kernel@vger.kernel.org,
@@ -88,12 +88,10 @@ Cc: x86@kernel.org, linux-kernel@vger.kernel.org,
  Sutter <phil@nwl.cc>, stable@vger.kernel.org
 Subject: Re: [PATCH 6/6] netfilter: nft_set_pipapo_avx2: add missing
  vzeroupper
-Message-ID: <20260817131738.51554efe@elisabeth>
-In-Reply-To: <20260816171518.GA2013@sol>
+Message-ID: <20260817131749.6e1408bb@elisabeth>
+In-Reply-To: <20260815205750.169336-7-ebiggers@kernel.org>
 References: <20260815205750.169336-1-ebiggers@kernel.org>
 	<20260815205750.169336-7-ebiggers@kernel.org>
-	<20260816123839.3670e5c3@elisabeth>
-	<20260816171518.GA2013@sol>
 Organization: Red Hat
 X-Mailer: Claws Mail 4.2.0 (GTK 3.24.49; x86_64-pc-linux-gnu)
 Precedence: bulk
@@ -104,69 +102,22 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Date: Mon, 17 Aug 2026 13:17:39 +0200 (CEST)
+Date: Mon, 17 Aug 2026 13:17:50 +0200 (CEST)
 
-On Sun, 16 Aug 2026 10:15:18 -0700
+On Sat, 15 Aug 2026 13:57:50 -0700
 Eric Biggers <ebiggers@kernel.org> wrote:
 
-> On Sun, Aug 16, 2026 at 12:38:41PM +0200, Stefano Brivio wrote:
-> > Eric, thanks for taking care of this.
-> > 
-> > The patch looks good to me, I just have two questions:
-> > 
-> > On Sat, 15 Aug 2026 13:57:50 -0700
-> > Eric Biggers <ebiggers@kernel.org> wrote:
-> >   
-> > > Since pipapo_get_avx2() uses YMM registers, execute vzeroupper before
-> > > returning from it.  This is needed to avoid degrading the performance of
-> > > any later SSE code that may happen to be executed.  
-> > 
-> > Out of curiosity: was this prompted by some observed latency spike in
-> > execution of SSE code, or it's just meant to satisfy the recommendation
-> > from AMD and Intel to use it while transitioning from AVX to SSE modes?  
+> Since pipapo_get_avx2() uses YMM registers, execute vzeroupper before
+> returning from it.  This is needed to avoid degrading the performance of
+> any later SSE code that may happen to be executed.
 > 
-> This one was found by code review.  But the latency spike has been
-> observed in other cases with missing vzeroupper, so it's definitely a
-> real effect at least on some CPUs.
+> Fixes: 7400b063969b ("nft_set_pipapo: Introduce AVX2-based lookup implementation")
+> Cc: stable@vger.kernel.org
+> Cc: Florian Westphal <fw@strlen.de>
+> Cc: Stefano Brivio <sbrivio@redhat.com>
+> Signed-off-by: Eric Biggers <ebiggers@kernel.org>
 
-Ah, interesting, I've been wondering about that.
-
-> > > Fixes: 7400b063969b ("nft_set_pipapo: Introduce AVX2-based lookup implementation")
-> > > Cc: stable@vger.kernel.org  
-> > 
-> > Is this really stable material? Skipping vzeroupper might have a
-> > performance impact, but it's not an issue for correctness.
-> > 
-> > The main reason why I'm asking is that, while vzeroupper might look
-> > harmless and obviously safe, it actually caused CVE-2023-20593
-> > ("ZenBleed") on AMD Zen 2.
-> > 
-> > I expect systems receiving stable kernel updates to also run the
-> > patched microcode by now, so I'm not overly concerned in any case.  
-> 
-> It's awkward to mark something as a fix, then not actually want it to be
-> fixed everywhere.  The stable maintainers know this, and they often
-> apply fixes anyway regardless of 'Cc stable'.
-
-Right, I guess you have point there.
-
-> And if vzeroupper is really not safe due to ZenBleed, then why is it
-> used everywhere else in the kernel?  This is just one of the few
-> exceptions that doesn't have it.  If it's not safe then they should all
-> be alternatives that patch them out to no-ops on affected CPUs.
-> 
-> But since that was never implemented, and userspace almost always uses
-> vzeroupper too, it seems the only real solution is the microcode.  I
-> don't think it makes sense to have a middle ground where almost all of
-> userspace uses vzeroupper, ~97% of the kernel uses vzeroupper, and a
-> random 3% of the kernel doesn't use it.
-
-Don't get me wrong, I wasn't advocating against "fixing" this for
-specific paths, rather just pointing out that something seemingly
-harmless such as vzeroupper can have nasty side effects.
-
-I used ZenBleed as a mere example, not as a current reason to do or not
-do anything specific.
+Reviewed-by: Stefano Brivio <sbrivio@redhat.com>
 
 -- 
 Stefano
