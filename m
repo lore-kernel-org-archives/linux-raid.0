@@ -1,124 +1,110 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADBA03F787E
-	for <linux-raid@vger.kernel.org>; Mon, 17 Aug 2026 11:17:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90EFF4399C4;
+	Mon, 17 Aug 2026 17:18:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786965477; cv=none; b=pKoUx7mnSlQs+WM84F0VRsLD/R0UXpTbxKnqhserS8q+TEWUMLWjOwuUZhbyccUv2t2Zq3zUVIE/uEkT8DvoqG7P5ohu1w3LNYwBTfcIZ9gHbbgwLewjwZaqjHKVeHQ5v0x18D0vZ/pd7I77g67brwZOvEAtU2iIOozFvLbDtmg=
+	t=1786987115; cv=none; b=XB0NuF2TiHdua1n2geRrLCAzuf/noOHicM0+iJTnIdRVrsPMHbKIPZeHDUUG6Lj0Df1hAqJsnF/SwaDy7BFi1A7zZQDR8qGYHPHrM+aw2CrsJg5FIgFxUP1DrMEtch9CCzuMZdp7kvMsEiBjwNm5SW15HEDgKfgKkZzmtMgfPI0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786965477; c=relaxed/simple;
-	bh=AayGtOQDKtX9pm0ZEeABQelkCQowJyXQKLwBThQ68+k=;
-	h=From:To:Cc:Subject:Message-ID:In-Reply-To:References:MIME-Version:
-	 Content-Type:Date; b=Po0izK2Aulun2xc8SpNRRbKqWL2hHDvuBbmVlEZnKahOgF96AMI+EQER8T0nLY3ulZJ12SJ9TIADgE47dDBq2wRvfKpX6666WV/soqJfpDrotWjO2FghqAu5A4hNxORhQ8Ya0xvms9ZrbsBf/wiLz1R1XNVMiU41W1s3hTy0kkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OEVDAfQM; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=lkyPCwBk; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1786987115; c=relaxed/simple;
+	bh=75z5q3lZ1shKUcnVwuxR1BTMrHkKbEQ/GFVG+kHgnwU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=q4CMqLbHGFjH8oT6LGZwuvEhVVpNIq/u7DpCKpcmizG00uMjn7d8LtaEQTOHkcpFxutoO81hsjGQXxzZEE1+5HQZi4fzJuNRk81KddnGga1azWsmHu9iILZpPfVY9jR8KRPga74awIdFwl+ja8nekSZa/TyKu6JuyD8VUJQIhwM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IYGrnuNp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OEVDAfQM";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="lkyPCwBk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1786965474;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iHaC1wb6A4UB6rpudHDIMeHC+iY8LxyInz0ILy0oT4A=;
-	b=OEVDAfQMqJTokoDqjTmiexpv/gzfADgayW2jOCLi+ai0LIp7x5LGe+hMxkN2VG3fGIUMpP
-	CHgGnP4l+xhrPCbIhIn0TZovo9ZkJpctoYZ7mQEv3QF//cf0h1WcGN96SCPQYLpVTuJILb
-	5DkuVQvbqwsow6bhJgcnmWPdKCEP20k=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-542-1z2_J0SOMiymcHVjEp0msg-1; Mon, 17 Aug 2026 07:17:53 -0400
-X-MC-Unique: 1z2_J0SOMiymcHVjEp0msg-1
-X-Mimecast-MFC-AGG-ID: 1z2_J0SOMiymcHVjEp0msg_1786965472
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-499574e98a1so20992775e9.3
-        for <linux-raid@vger.kernel.org>; Mon, 17 Aug 2026 04:17:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1786965472; x=1787570272; darn=vger.kernel.org;
-        h=date:content-transfer-encoding:content-type:mime-version
-         :organization:references:in-reply-to:message-id:subject:cc:to:from
-         :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=iHaC1wb6A4UB6rpudHDIMeHC+iY8LxyInz0ILy0oT4A=;
-        b=lkyPCwBkdwlGI2lgzvhc/68VXSGfuRoT+rAsu/EvJrlViIyzARZfwK5RbYqJMEpo+4
-         mbDWBl1QIKmAZbBPWNQFXUfUDgqRhEDk8EnrVAAYUOyZcNHGdIYEbwP0MeCPhpv3lx1e
-         4X0hScitwRLMDK2yRl4Stq7IQBidSEquaLoRGA9PohdgzCS6eNa/ZEt5ChZ0+C/oFDDS
-         OI+LmUWIsL4K1BeuXDs1eswBuUmMut3st4s7JuuOuHum29HMSxFUZ1kjgTVyDhUyI0UG
-         9BEAgWPfbVl2hH8Mt+qKLsaso21VJ9KbjsaS/5pxO7lRvXu3wFugMiXL3+CHfXhcVeir
-         iLbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786965472; x=1787570272;
-        h=date:content-transfer-encoding:content-type:mime-version
-         :organization:references:in-reply-to:message-id:subject:cc:to:from
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=iHaC1wb6A4UB6rpudHDIMeHC+iY8LxyInz0ILy0oT4A=;
-        b=G4muTNEM5KmGcLlOcSpAXyePDS211tkRG+85UdnSyfCMWPQKi7YGyL0kmLgeJna3lm
-         MIA0WDG1kccMVGde3JKpbAo196FisuXPaEhV2Hs83qhivuo5mn2Dat1h7Ba13BHfDAuA
-         OgDdwdDvIHSAb/b6oQjwzdAcrxpuuvsGvAW+TuCgRREec9fye7RhD7WSyY//eF9D9zGS
-         Pv5uu/a2Tlv9bQUCft/WB/eSKNEZnwdG1fq582Ik/yrDmIgb68fhMHvH/mhFecO2u+ih
-         kCH/HHc6Q/GAB5so5TFxM+iaoJKF0BWgc46EyvPvH4rUNUTwlKI6G1vX2qj/wrvwXgOK
-         NZLw==
-X-Forwarded-Encrypted: i=1; AHgh+RrVZczFUMbiJQxZ7IiMBJ5OyoAFHd9vtVTAvbofcBaYWwNQ/fnrtf5CycApor8LR+hNwBmST1UX4zWM@vger.kernel.org
-X-Gm-Message-State: AOJu0YwnC7EL4f96LUcH/u2I2WWDclRpbMoDRVyvvYzh12Yw8MdOKViT
-	qVRvNvZX6+JfWL6gvZEOdPvCMZ4VVlcP185yuUN4BhCYRHD/kloqOOr9j0FbBdyrZoL8xSJ8JH6
-	DiPGqDufh1/GGzs/HamdT+VEwi1Q7N4ZbPl0goU03RX6FhX0Tc/6laZNrwOvs45E=
-X-Gm-Gg: AR+sD130IAwAZZZdXavSxF3yyrO5cU1wQekw/JdidbE9cRTSPgUMZmJrozUjbMHm7hY
-	qzkf/j++2n1OraIKio3KKKupvJ8uDdynQ9o4HjQz7CK5FFPbFoqFUDfHT2LGyBVF8H9UWhZ40Yn
-	rgWpTRBaxk8FcQ00njsjz/yua4sLIuBd88z+Dv+mCCNFxPVK2lbVlFnXPY9F+ORV6gnJZ1DQ5Ui
-	Gw4a9Mrm/M5SdoY0ovI0qAgPoyfM09ayBtT/0Db2+RpnDlso5heH27YHIvmjpfrvhWVavizRKdw
-	g7UzvLAkuvO5PxC25yl/HQ+Jr1lkT3kI/ot0k0WXWEqEWcA0EA6OrIaSm1hfhIaM0GzOcrN/VB2
-	hdq7ZQ/WA3v2kl9YFPO9FvdIOIio7
-X-Received: by 2002:a05:600c:2185:b0:496:bffb:fb7b with SMTP id 5b1f17b1804b1-4998797cc60mr279142015e9.10.1786965472208;
-        Mon, 17 Aug 2026 04:17:52 -0700 (PDT)
-X-Received: by 2002:a05:600c:2185:b0:496:bffb:fb7b with SMTP id 5b1f17b1804b1-4998797cc60mr279141055e9.10.1786965471771;
-        Mon, 17 Aug 2026 04:17:51 -0700 (PDT)
-Received: from maya.myfinge.rs (ifcgrfdd.trafficplex.cloud. [176.103.220.4])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4999d0876b8sm44870005e9.8.2026.08.17.04.17.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Aug 2026 04:17:51 -0700 (PDT)
-From: Stefano Brivio <sbrivio@redhat.com>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: x86@kernel.org, linux-kernel@vger.kernel.org,
- linux-raid@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
- linux-crypto@vger.kernel.org, Herbert Xu <herbert@gondor.apana.org.au>,
- Taehee Yoo <ap420073@gmail.com>, netfilter-devel@vger.kernel.org, Pablo
- Neira Ayuso <pablo@netfilter.org>, Florian Westphal <fw@strlen.de>, Phil
- Sutter <phil@nwl.cc>, stable@vger.kernel.org
-Subject: Re: [PATCH 6/6] netfilter: nft_set_pipapo_avx2: add missing
- vzeroupper
-Message-ID: <20260817131749.6e1408bb@elisabeth>
-In-Reply-To: <20260815205750.169336-7-ebiggers@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IYGrnuNp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFB381F00A3A;
+	Mon, 17 Aug 2026 17:18:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786987114;
+	bh=cqEALtTdwDfe70tQT8Qbqwqn8D+Vx33cN/J1LRfH9Oo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=IYGrnuNpsE4ty78aLZFp2z93MlBewFcwHHKAm1h9dihA+Noq6KfkuxM78CyLq6Pte
+	 HUq8tN2lHzGLJX4fM0ZhNI9eHA2lfm1Cu8P37JqjcXkLxAFVl/P3GQMkltWLr8x24m
+	 wF7KOAdqrLLGvZ57JOeERubHe1if6tCduzKw7DLEFaSzG68flAI38AHTBZz+eW9Moq
+	 gKGEJ+8wAYf1P1aKgCkTqK3ALmDHIQRC6Wl1EwAIlChDbuqbHKyQL0/IibeYhPPNhv
+	 /mqdIrt2CaSNALRThFiGDQH5nLPkPtmHVcdEeEBzYPlSwqtm9Ki6wiwSqSrFP5fN+n
+	 0WekyPaT5Duyg==
+Date: Mon, 17 Aug 2026 10:18:34 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: David Laight <david.laight.linux@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+	linux-crypto@vger.kernel.org,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Taehee Yoo <ap420073@gmail.com>, netfilter-devel@vger.kernel.org,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	Florian Westphal <fw@strlen.de>, Phil Sutter <phil@nwl.cc>
+Subject: Re: [PATCH 0/6] x86: add missing vzeroupper instructions
+Message-ID: <20260817171834.GA8327@quark>
 References: <20260815205750.169336-1-ebiggers@kernel.org>
-	<20260815205750.169336-7-ebiggers@kernel.org>
-Organization: Red Hat
-X-Mailer: Claws Mail 4.2.0 (GTK 3.24.49; x86_64-pc-linux-gnu)
+ <20260816161450.05fd24f2@pumpkin>
+ <20260816173159.GB2013@sol>
+ <aoLRJ7igR5GTMfuO@infradead.org>
+ <20260817115523.7c6c646a@pumpkin>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Date: Mon, 17 Aug 2026 13:17:50 +0200 (CEST)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260817115523.7c6c646a@pumpkin>
 
-On Sat, 15 Aug 2026 13:57:50 -0700
-Eric Biggers <ebiggers@kernel.org> wrote:
-
-> Since pipapo_get_avx2() uses YMM registers, execute vzeroupper before
-> returning from it.  This is needed to avoid degrading the performance of
-> any later SSE code that may happen to be executed.
+On Mon, Aug 17, 2026 at 11:55:23AM +0100, David Laight wrote:
+> On Mon, 17 Aug 2026 02:15:19 -0700
+> Christoph Hellwig <hch@infradead.org> wrote:
 > 
-> Fixes: 7400b063969b ("nft_set_pipapo: Introduce AVX2-based lookup implementation")
-> Cc: stable@vger.kernel.org
-> Cc: Florian Westphal <fw@strlen.de>
-> Cc: Stefano Brivio <sbrivio@redhat.com>
-> Signed-off-by: Eric Biggers <ebiggers@kernel.org>
+> > On Sun, Aug 16, 2026 at 10:31:59AM -0700, Eric Biggers wrote:
+> > > As for kernel_fpu_begin(), no, it doesn't do vzeroupper.
+> > > 
+> > > I do think that some years down the line, we'll drop the use of SSE in
+> > > the kernel entirely.  At that point, vzeroupper in kernel_fpu_end()
+> > > would make sense.  
+> > 
+> > Or add kernel_avx_{begin,end} wrappers that include the vzeroupper
+> > in kernel_avx_end.  That would be a lot easier to use than the manual
+> > vzeroupper in every modern user of in-kernel AVX.
+> > 
+> 
+> You might want one in the start as well.
+> I have a theory that the avx512 logic was added as a completely separate block.
+> This meant it could be included in cpu for testing but disabled in any
+> released to customers.
+> (Or maybe the it is the original avx logic that used latches not in the
+> normal register file.)
+> A side effect is that different latches are used for the low bits of the
+> registers - so when you change to/from avx512 the register contents have to
+> be transferred between the blocks - adding latency.
+> So if the wrong registers are live for the code you are going to execute
+> the data has to be transferred across.
+> 
+> There are also other effects as well.
+> I found this link: https://travisdowns.github.io/blog/2020/01/17/avxfreq1.html
+> It is a few years old now (2020) but probably still relevant.
+> A quick summary is that the first 256 or 512 bit instruction starts a 9us
+> window where the cpu runs at 1/4 speed, for 512 bit that is followed by 11us
+> where nothing happens at all. 
 
-Reviewed-by: Stefano Brivio <sbrivio@redhat.com>
+The linked article is about Skylake, which is an older Intel CPU that
+has a bad AVX-512 implementation with overly-eager downclocking.  Later
+Intel CPUs improved the implementation.  And of course, AMD just
+implemented it properly from the start without the downclocking issues.
+Information about AMD Zen 5's AVX-512 implementation can be found here:
+https://www.numberworld.org/blogs/2024_8_7_zen5_avx512_teardown/
 
--- 
-Stefano
+Most of the AVX-512 optimized code in the kernel already requires
+!X86_FEATURE_PREFER_YMM, excluding Skylake as well as Ice Lake.
 
+That being said, if I recall correctly, even with Intel's improved
+implementation on Sapphire Rapids and Emerald Rapids, Intel does still
+have some start-up latency for accessing ZMM registers.  AMD doesn't.  I
+don't believe vzeroupper helps, unfortunately.
+
+I've considered setting X86_FEATURE_PREFER_YMM on all Intel CPUs, but
+then even workloads that would benefit from ZMM registers wouldn't use
+them.  And I suspect the Intel folks wouldn't agree with that either.
+
+- Eric
