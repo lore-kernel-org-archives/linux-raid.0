@@ -1,105 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4C7D5477E;
-	Sun, 16 Aug 2026 17:34:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 822123112B2;
+	Mon, 17 Aug 2026 03:39:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786901645; cv=none; b=iwQzboP+MGkgvkbrl21/+huLpLKkt0YhlY7ghzjDq085/pwCUbED63/OrVWGMY4b+iQx52WmB+S6c6dTVkuqf3aYO7Aaty8i3Yq+ckaA2WHBgKFbz2jNVrEe1kViGzgH5SGok8jGuDt9dKw/ZEPlDeYLY4wi0kJLzrjaR/2cfrk=
+	t=1786937993; cv=none; b=mfZAgKtjQNjywE0MmPsaVOc8ThLnfjUGgrjtKyOOcnuV8sGWir736ipgQNTUAdaInjCxWtEbSV8pyvm0GJKQIhz+9NdpPswKI0YqNQp7SWzeOQCz/5EPeTG2nmcQudrWitCeFy+kJBrq3PUmbFw9J/lll/+CTwsF5uKInr9qAYk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786901645; c=relaxed/simple;
-	bh=nVwzp/1L+BnIf9Gr6BigDwQRJ+GnUmF33kxQazyRf10=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=D/gw58c5LqfAw8HcWLrwqLBoR5VVMBUXvXwFI1FMPD84jdNEd4FvdypwsuH5uLzsDt4eZH4V0qKGRWySWShxhWEBaX4j7mb08gHupNQ6cMeYE1x73miZ98Lvr5dNl1yUnMj23EZ1MqpJvGFkPy806NrjY3+XjSsxMCHe84B6/Cc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Unj90kM1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786937993; c=relaxed/simple;
+	bh=Yf18fPn/EFoNmAu1Ovv86K/pAYUmLkYZFlGm1b3I3ho=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=hRUVeWb0oL2vFhPvB8WE4/ZnafwwpIqp6qqHXj6HbB4kCHorVeQQjxcmSYF44LMi+gT5tlGseK6dMkd64k2vRX1biQkRtkWngbkhs4f/hc/yrsNLPoUFXhwwYQZkMDDoBNsAMWQU92F4/O9UJ9LgywQzMIAglRvXM/mICSLOCwk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=qf6j7aV9; arc=none smtp.client-ip=113.46.200.217
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Unj90kM1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 010991F000E9;
-	Sun, 16 Aug 2026 17:34:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786901643;
-	bh=kjlqu9up5uQZpRU8C7p51dp1WnvNc0D2KpPx1Z5uwok=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Unj90kM1bXxY+ZxSteM7PT9J3GmvbJGlpU/LCGVThdEi2VwuNDHgPNdCnyApef5l1
-	 hwTAaI1WUcp0zy1PIUmq7S3HGgF/7ktKeQ3BriWQjHvQzOsX5GeqOnfp8L3Ddvmbka
-	 W8w8teP55s2pGU+soxBEIDvuB/XAp72xdwVhESR9B9z5843w3VrEytkaPjrJWe54w4
-	 qVHWRP/P35pQj0b6j/C+2T/jCQgprFl7NagSAhyhS5Adtd3dmCgx5Bvt8DwFRYyMmF
-	 p0rybvHTizJsG59c6kif3xc06mwvohw0J+WRZHwiYyiSg8d6FupCxdYE5Epbh2X4fb
-	 jxbFLMpjnbtsQ==
-Date: Sun, 16 Aug 2026 10:31:59 -0700
-From: Eric Biggers <ebiggers@kernel.org>
-To: David Laight <david.laight.linux@gmail.com>
-Cc: x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
-	linux-crypto@vger.kernel.org,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Taehee Yoo <ap420073@gmail.com>, netfilter-devel@vger.kernel.org,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Florian Westphal <fw@strlen.de>, Phil Sutter <phil@nwl.cc>
-Subject: Re: [PATCH 0/6] x86: add missing vzeroupper instructions
-Message-ID: <20260816173159.GB2013@sol>
-References: <20260815205750.169336-1-ebiggers@kernel.org>
- <20260816161450.05fd24f2@pumpkin>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="qf6j7aV9"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=sFQix3HaAxxhtqyNdoSbUtgSIFhJraZV6JC9JomQCdQ=;
+	b=qf6j7aV9SC9qaWkpe+gHaIke5UULdn129HnMkp+GZLADgy8Kl6SMeQToWgqa7vxEQtWn76UPW
+	/jy3ZAzLVQIZdEyu0SfXlRtS36IZ2O88ngnwB3h7qQkKUlBtLcfqRaTKdSjexHY2m0J86rY4/uA
+	rQX/I7079jGqIcNZB+VlML8=
+Received: from mail.maildlp.com (unknown [172.19.162.140])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4hNdc95Tn3zcbMk;
+	Mon, 17 Aug 2026 11:29:29 +0800 (CST)
+Received: from kwepemf100017.china.huawei.com (unknown [7.202.181.16])
+	by mail.maildlp.com (Postfix) with ESMTPS id A8E84202E6;
+	Mon, 17 Aug 2026 11:39:45 +0800 (CST)
+Received: from localhost.localdomain (10.50.85.155) by
+ kwepemf100017.china.huawei.com (7.202.181.16) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Mon, 17 Aug 2026 11:39:45 +0800
+From: Zizhi Wo <wozizhi@huawei.com>
+To: <song@kernel.org>, <yukuai@fygo.io>, <magiclinan@didiglobal.com>,
+	<xiao@kernel.org>, <linux-raid@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>,
+	<chengzhihao1@huawei.com>, <wozizhi@huawei.com>
+Subject: [PATCH V2 1/2] md/raid10: annotate lockless access to array_freeze_pending
+Date: Mon, 17 Aug 2026 11:33:39 +0800
+Message-ID: <20260817033340.418119-2-wozizhi@huawei.com>
+X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260817033340.418119-1-wozizhi@huawei.com>
+References: <20260817033340.418119-1-wozizhi@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260816161450.05fd24f2@pumpkin>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
+ kwepemf100017.china.huawei.com (7.202.181.16)
 
-On Sun, Aug 16, 2026 at 04:14:50PM +0100, David Laight wrote:
-> On Sat, 15 Aug 2026 13:57:44 -0700
-> Eric Biggers <ebiggers@kernel.org> wrote:
-> 
-> > Assembly code using YMM or ZMM registers is supposed to end with the
-> > vzeroupper instruction in order to avoid degrading the performance of
-> > any later SSE code.  Since this only affects performance and not
-> > correctness, it is sometimes overlooked.  Most kernel code does it
-> > correctly, but a few cases were missed.  This series fixes them.
-> > 
-> > It should be easiest to take the full series through the x86 tree.
-> 
-> Would it be better to an an unconditional vzeroupper in kernel_fpu_end()?
-> It could go in kernel_fpu_start() but that might have a bigger effect
-> on latency.
-> (I assume there is one in kernel_fpu_start() if it actually saves
-> the user registers?)
-> 
-> Looking the latency/uops seems reasonably on everything 'recent' except
-> zen-1 and knights-landing.
-> Although the microcode patch for zen-2 might make that a lot worse.
-> 
-> 	David  
+conf->array_freeze_pending is updated under conf->resync_lock in
+freeze_array(), but read locklessly in allow_barrier(). Annotate these
+accesses with READ_ONCE()/WRITE_ONCE() to document the intentional lockless
+access and to prevent load/store tearing or fusing by the compiler. No
+functional change.
 
-I would like to do that, but there are some issues:
+Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
+---
+ drivers/md/raid10.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-- In some cases, within a single kernel-mode FPU section the kernel
-  executes AVX instructions, then SSE instructions afterwards.
-  It typically occurs when large input lengths are optimized specially
-  with AVX and then shorter lengths fall back to SSE code.
-  chacha_dosimd() in lib/crypto/x86/chacha.h is an example of this.
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 0a3cfdd3f5df..dc40110a6736 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1031,11 +1031,11 @@ static bool wait_barrier(struct r10conf *conf, bool nowait)
+ }
+ 
+ static void allow_barrier(struct r10conf *conf)
+ {
+ 	if ((atomic_dec_and_test(&conf->nr_pending)) ||
+-			(conf->array_freeze_pending))
++	    READ_ONCE(conf->array_freeze_pending))
+ 		wake_up_barrier(conf);
+ }
+ 
+ static void freeze_array(struct r10conf *conf, int extra)
+ {
+@@ -1050,16 +1050,16 @@ static void freeze_array(struct r10conf *conf, int extra)
+ 	 * Thus the number queued (nr_queued) plus this request (extra)
+ 	 * must match the number of pending IOs (nr_pending) before
+ 	 * we continue.
+ 	 */
+ 	write_seqlock_irq(&conf->resync_lock);
+-	conf->array_freeze_pending++;
++	WRITE_ONCE(conf->array_freeze_pending, conf->array_freeze_pending + 1);
+ 	WRITE_ONCE(conf->barrier, conf->barrier + 1);
+ 	conf->nr_waiting++;
+ 	wait_event_barrier_cmd(conf, atomic_read(&conf->nr_pending) ==
+ 			conf->nr_queued + extra, flush_pending_writes(conf));
+-	conf->array_freeze_pending--;
++	WRITE_ONCE(conf->array_freeze_pending, conf->array_freeze_pending - 1);
+ 	write_sequnlock_irq(&conf->resync_lock);
+ }
+ 
+ static void unfreeze_array(struct r10conf *conf)
+ {
+-- 
+2.52.0
 
-  In these cases the internal vzeroupper is definitely needed.
-
-- Unnecessary overhead if only SSE instructions are used, which is still
-  frequent since we don't provide both SSE and AVX versions of the same
-  code when the AVX doesn't provide a notable performance benefit.
-  lib/crypto/x86/sha256-ni-asm.S is an example of this.
-
-- Further divergence from the userspace ABI, which can be annoying when
-  importing assembly code to or from userspace projects, or developing
-  or testing the assembly files in userspace.
-
-As for kernel_fpu_begin(), no, it doesn't do vzeroupper.
-
-I do think that some years down the line, we'll drop the use of SSE in
-the kernel entirely.  At that point, vzeroupper in kernel_fpu_end()
-would make sense.
-
-But until then, I think we should stick with the existing, standard
-convention of having the vzeroupper at the end of the assembly routines.
-
-- Eric
