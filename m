@@ -1,189 +1,578 @@
-Received: from va-2-30.ptr.blmpb.com (va-2-30.ptr.blmpb.com [209.127.231.30])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9C1D386561
-	for <linux-raid@vger.kernel.org>; Tue, 18 Aug 2026 07:07:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A73CE2F7F05;
+	Tue, 18 Aug 2026 07:07:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787036859; cv=none; b=Q6UUF+T0ZA8rmBLtLLbSdCnTG+g+trIvZFY0gZZwZnX3x+zZ8OSxtxd67NcTQw3g7mUmhOrUmXoQZm3aNXPb9zHNh4pSGh0d8Ku+f3regnu/mUy+tZuuY7YyTLHXEMwVcGy9ymESwdut6pu32uiwtFibSW3KBkulNhsVVtJoFmA=
+	t=1787036863; cv=none; b=OLWkU6UOrVAQD4c437+6MBW6mt5mfP4CsqgmyG360Yo3al5cugpYVTrQZqzV4yGaptQF9sPY/wuElkpLHoH4wvgGaMuwUBccd7WLtYJz/xxm9GAQ66UhYKk4/m8VfFyE535dKO6iZqmB7Zs20+D4u1IpMXiMo1Wx3xqoOxT4j6g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787036859; c=relaxed/simple;
-	bh=H9TJEGBnS2ZQozieVZAAkazrp0X0uS816ZTO/8oVRAU=;
-	h=Date:Mime-Version:From:In-Reply-To:To:Subject:Message-Id:
-	 References:Content-Type:Cc; b=pz7CeAUimiUXPLjcg2f+KDWxlcV4YJ6ZEzQ/n3F0dV3iLtl3OZTv8tgQUkS2SMkjRb9xoJmEHVfpKYLKPNYU7kS7X8bL5Mz7Uax5G6woue+kvlxWC19XjE+lg9LOMh104Z9WkCDQHeLctBbWVJltzb72pR1+kTE3Fm/JN6vlncA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=weHVofHY; arc=none smtp.client-ip=209.127.231.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1787036863; c=relaxed/simple;
+	bh=xj5pz0sWq/vgshc0QBD2OaCJW3dVEfkCGMfQhPIilSM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=uDMJypcwH4xcU/VAVvHnKlJkIoMTbSNGAo/9ePEH66vHeObUDmKE+0VBzuE6MsPgKY99+xb5o14KHCBXN/kFCu7IQqMngZCs/cLAwK3MS4TvW6PA1X+AqIfsQdUJYuR1ZHGhHwYl09MBK6QEEUplfyoN26uFDPXv9W6MlM0bh9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YvfXglB8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="weHVofHY"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1787036831;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=2iU1ricYfNDrpH6ArL1TkZe8uhXQBTjWWpyRZXWnbi8=;
- b=weHVofHYrOm3+gOKll17Z8r4KolXGm3YeF+Km3a5V6c0xceNTdnsy8g/mOOhN5nEebYHFh
- sirnJF6bODtABGtD39y4S5FwxpdxAvWKE5ACyc8WYOnqun98jHIryjUjSa3oTatl+ClDDV
- n9ypTIEDAL8pCy5ZdFwjEMp7DtX9b5ddPE6Wnva2UFnPzOv0KzeqGbvIiIB/6U5WRLn7EL
- Oc/l+fNpq898fQFn2woKxkgCFEu02kQyDvFqG0veCQ/T5iyklrv6zC0ccEOPXlQ6XZanbr
- wnD8cQXuRBptLxONlC0fPpp5grNliq9gNjtUPev4vtfn9zcxE3YGZJ9jFUNhiw==
-Date: Tue, 18 Aug 2026 15:06:46 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YvfXglB8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01FD41F00A3A;
+	Tue, 18 Aug 2026 07:07:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787036861;
+	bh=9aV3Nyw+uuXYnDQ19BsvV3cneH7udoWaV/e/vJiD9II=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=YvfXglB8Hz6MxfcsuYQoc8iQqqPlA0AC5U8Kmt2FiOzWVfTmddXI51YIpG5VFwemG
+	 c+wt8dLkgCUAC+cXPXEEo/i11NZtqrFkng3fnoldSxNwKwsjisWjQ0qjOOArrNzpEf
+	 zwq8RlA8fL9/pdosHFQysdyf0VkGXeQkoVvpNVcM3hP1+qKgj1e3QjHdbPo2LrwJ2G
+	 ziJfdIhrXHzKUKBzopimSdMXsmStRoHTiSmzaMk4Foxg/mcUwmffyhynmdda4FwZGX
+	 1L8mqtct3z9HtGMntsK/FgUOXTtSl5eBryJbfgZXWMbKt2sIztaet/Ze5LsE338JfY
+	 74ORQ0tJ2/7LA==
+From: Yu Kuai <yukuai@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>,
+	Tejun Heo <tj@kernel.org>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Yu Kuai <yukuai@fygo.io>,
+	Christoph Hellwig <hch@lst.de>,
+	Tao Cui <cui.tao@linux.dev>,
+	Jan Kara <jack@suse.cz>,
+	Ming Lei <ming.lei@redhat.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Coly Li <colyli@fygo.io>,
+	Kent Overstreet <kent.overstreet@linux.dev>,
+	Alasdair Kergon <agk@redhat.com>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	Benjamin Marzinski <bmarzins@redhat.com>,
+	Song Liu <song@kernel.org>,
+	Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
+	Dan Williams <djbw@kernel.org>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Ira Weiny <iweiny@kernel.org>,
+	Andreas Gruenbacher <agruenba@redhat.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Chris Li <chrisl@kernel.org>,
+	Kairui Song <kasong@tencent.com>,
+	Kemeng Shi <shikemeng@huaweicloud.com>,
+	Nhat Pham <nphamcs@gmail.com>,
+	Baoquan He <baoquan.he@linux.dev>,
+	Barry Song <baohua@kernel.org>,
+	Youngjun Park <youngjun.park@lge.com>,
+	cgroups@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-bcache@vger.kernel.org,
+	dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org,
+	nvdimm@lists.linux.dev,
+	virtualization@lists.linux.dev,
+	gfs2@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: [RFC PATCH v3 1/3] blk-cgroup: use a request_queue rhashtable for blkg lookup
+Date: Tue, 18 Aug 2026 15:06:39 +0800
+Message-ID: <20260818070641.756747-2-yukuai@kernel.org>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260818070641.756747-1-yukuai@kernel.org>
+References: <20260818070641.756747-1-yukuai@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.55.0
-X-Original-From: chencheng@fnnas.com
-Received: from fedora ([183.34.162.43]) by smtp.feishu.cn with ESMTPS; Tue, 18 Aug 2026 15:07:09 +0800
-From: "Chen Cheng" <chencheng@fnnas.com>
-In-Reply-To: <20260818070646.1029149-1-chencheng@fnnas.com>
-X-Lms-Return-Path: <lba+26a84049e+5cbb75+vger.kernel.org+chencheng@fnnas.com>
-To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <xiaon@kernel.org>
-Subject: [RFC PATCH 5/5] md/raid1: clarify choose_best_rdev comments
-Message-Id: <20260818070646.1029149-6-chencheng@fnnas.com>
-Content-Transfer-Encoding: 7bit
-References: <20260818070646.1029149-1-chencheng@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
-Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-From: Chen Cheng <chencheng@fnnas.com>
+From: Yu Kuai <yukuai@fygo.io>
 
-Write the rot/nonrot read policy in short comments next to the code.
+blkg lookup currently uses a per-blkcg radix tree keyed by request queue
+ID, plus a lookup hint for the common case. This spreads the queue-local
+blkcg association index across every blkcg and requires radix-tree
+preloading before creating a blkg while holding q->queue_lock.
 
-No functional change.
+Replace the radix tree and lookup hint with a request_queue-owned
+rhashtable keyed by the blkcg CSS ID. Cache the ID in each blkg; the blkg
+holds a CSS reference until after it leaves the hash, so the ID cannot be
+reused while it is hash-visible. The integer key also reduces hashing and
+comparison work relative to a pointer-sized key on 64-bit systems.
 
-Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+Keep entries until blkg_release() and provide blkg_lookup_any() for callers
+which need to find dying entries. blkg_lookup() filters offline entries so
+existing lookup semantics remain unchanged.
+
+Keep q->blkg_list for ordered policy and scheduler walks. All current
+walkers are cgroupfs or sysfs slow paths, so they can move to rhashtable
+iteration once the q->queue_lock to q->blkcg_mutex conversion lands.
+Initialize and destroy the hash with request_queue, and remove the
+radix-tree preload paths which are no longer needed.
+
+blkg_release() removes the hash entry only when the blkg was successfully
+inserted into q->blkg_list; the list_empty case covers allocation or
+creation failure before insertion.
+
+Signed-off-by: Yu Kuai <yukuai@fygo.io>
 ---
- drivers/md/raid1.c | 48 +++++++++++++++++++++++++++++++++-------------
- 1 file changed, 35 insertions(+), 13 deletions(-)
+ block/blk-cgroup.c     | 64 +++++++++++++++++++-----------------------
+ block/blk-cgroup.h     | 49 +++++++++++++++++++++++---------
+ block/blk-core.c       |  9 ++++--
+ include/linux/blkdev.h |  2 ++
+ 4 files changed, 74 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index f476d4dea4be..897eef3a022d 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -788,15 +788,17 @@ struct read_balance_ctl {
- 	int readable_disks;
- 	bool min_pending_nonrot;
- 	bool sequential_nonrot;
- };
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 2b5c29434e42..753a8022a283 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -64,10 +64,17 @@ bool blkcg_debug_stats = false;
  
-+/* Offset from rr start. Replacement uses the same slot as primary. */
- static int raid1_rr_pos(int disk, int start, int n)
+ static DEFINE_RAW_SPINLOCK(blkg_stat_lock);
+ 
+ #define BLKG_DESTROY_BATCH_SIZE  64
+ 
++const struct rhashtable_params blkg_hash_params = {
++	.key_len		= sizeof_field(struct blkcg_gq, blkcg_id),
++	.key_offset		= offsetof(struct blkcg_gq, blkcg_id),
++	.head_offset		= offsetof(struct blkcg_gq, q_hash_node),
++	.automatic_shrinking	= true,
++};
++
+ /*
+  * Lockless lists for tracking IO stats update
+  *
+  * New IO stats are stored in the percpu iostat_cpu within blkcg_gq (blkg).
+  * There are multiple blkg's (one for each block device) attached to each
+@@ -192,10 +199,20 @@ static void blkg_release(struct percpu_ref *ref)
  {
- 	return ((disk % n) - start + n) % n;
- }
+ 	struct blkcg_gq *blkg = container_of(ref, struct blkcg_gq, refcnt);
+ 	struct blkcg *blkcg = blkg->blkcg;
+ 	int cpu;
  
-+/* True if some readable member is nonrot. */
- static bool raid1_has_readable_nonrot(struct r1conf *conf,
- 				      struct r1bio *r1_bio)
- {
- 	int disk;
++	/*
++	 * A blkg that was never inserted into q->blkg_list has no hash
++	 * entry.  This happens when allocation or creation fails before
++	 * rhashtable_insert_fast() succeeds.
++	 */
++	if (!list_empty(&blkg->q_node))
++		WARN_ON_ONCE(rhashtable_remove_fast(&blkg->q->blkg_hash,
++						    &blkg->q_hash_node,
++						    blkg_hash_params));
++
+ 	/*
+ 	 * Flush all the non-empty percpu lockless lists before releasing
+ 	 * us, given these stat belongs to us.
+ 	 *
+ 	 * blkg_stat_lock is for serializing blkg stat update
+@@ -325,10 +342,11 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
+ 		goto out_put_queue;
  
-@@ -811,10 +813,11 @@ static bool raid1_has_readable_nonrot(struct r1conf *conf,
- 			return true;
+ 	blkg->q = disk->queue;
+ 	INIT_LIST_HEAD(&blkg->q_node);
+ 	blkg->blkcg = blkcg;
++	blkg->blkcg_id = blkcg->css.id;
+ 	blkg->iostat.blkg = blkg;
+ #ifdef CONFIG_BLK_CGROUP_PUNT_BIO
+ 	spin_lock_init(&blkg->async_bio_lock);
+ 	bio_list_init(&blkg->async_bios);
+ 	INIT_WORK(&blkg->async_bio_work, blkg_async_bio_workfn);
+@@ -421,11 +439,12 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
+ 			pol->pd_init_fn(blkg->pd[i]);
  	}
- 	return false;
- }
  
-+/* Lower pending wins. Same pending: prefer nonrot, then rr order. */
- static bool is_better_disk(unsigned int pending, int disk, bool nonrot,
- 			   const struct read_balance_ctl *ctl,
- 			   int rr_start, int n)
- {
- 	if (ctl->min_pending_disk < 0)
-@@ -828,10 +831,24 @@ static bool is_better_disk(unsigned int pending, int disk, bool nonrot,
- 	return nonrot && ctl->min_pending_nonrot &&
- 	       raid1_rr_pos(disk, rr_start, n) <
- 	       raid1_rr_pos(ctl->min_pending_disk, rr_start, n);
- }
+ 	/* insert */
+ 	spin_lock(&blkcg->lock);
+-	ret = radix_tree_insert(&blkcg->blkg_tree, disk->queue->id, blkg);
++	ret = rhashtable_insert_fast(&disk->queue->blkg_hash,
++				     &blkg->q_hash_node, blkg_hash_params);
+ 	if (likely(!ret)) {
+ 		hlist_add_head_rcu(&blkg->blkcg_node, &blkcg->blkg_list);
+ 		list_add(&blkg->q_node, &disk->queue->blkg_list);
  
-+/*
-+ * Choose a readable disk for this read.
-+ *
-+ * Prefer nonrot. Use rot only if no nonrot disk is readable.
-+ *
-+ * Sequential idle: keep this disk. Mixed array: do not keep a
-+ * rot disk (after a write every disk looks sequential).
-+ * Sequential busy: try an idle disk of the same class. If none
-+ * is idle, keep the sequential disk.
-+ *
-+ * Else fewest pending I/Os among disks we may pick. Same
-+ * pending: nonrot, then round-robin. Rot-only with no idle
-+ * disk: closest head.
-+ */
- static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
- {
- 	int disk;
- 	int rr_start = 0;
- 	bool has_nonrot = raid1_has_readable_nonrot(conf, r1_bio);
-@@ -867,26 +884,32 @@ static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
+ 		for (i = 0; i < BLKCG_MAX_POLS; i++) {
+@@ -474,13 +493,10 @@ static struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+ 	struct blkcg_gq *blkg;
  
- 		pending = atomic_read(&rdev->nr_pending);
- 		dist = abs(r1_bio->sector -
- 			   READ_ONCE(conf->mirrors[disk].head_position));
- 		nonrot = test_bit(Nonrot, &rdev->flags);
-+		/*
-+		 * If a nonrot disk is readable, pick only nonrot.
-+		 * Else we must use rot.
-+		 */
- 		can_pick = nonrot || !has_nonrot;
+ 	rcu_read_lock();
+ 	blkg = blkg_lookup(blkcg, q);
+ 	if (blkg) {
+-		if (blkcg != &blkcg_root &&
+-		    blkg != rcu_dereference(blkcg->blkg_hint))
+-			rcu_assign_pointer(blkcg->blkg_hint, blkg);
+ 		rcu_read_unlock();
+ 		return blkg;
+ 	}
+ 	rcu_read_unlock();
  
--		/* Don't change to another disk for sequential reads */
-+		/*
-+		 * Idle sequential disk: return it now, unless
-+		 * should_choose_next() wants another disk.
-+		 * Mixed array: do not return a rot disk.
-+		 */
- 		if (is_sequential(conf, disk, r1_bio)) {
- 			if (!should_choose_next(conf, disk) && !pending &&
- 			    can_pick)
- 				return disk;
- 
--			/*
--			 * Add 'pending' to avoid choosing this disk if
--			 * there is other idle disk.
--			 */
-+			/* Make an idle disk win over this busy one. */
- 			pending++;
- 			/*
--			 * If there is no other idle disk, this disk
--			 * will be chosen.
-+			 * Remember the first sequential disk.
-+			 * A nonrot disk may replace a rot disk.
-+			 * A later nonrot disk may not replace an earlier one.
- 			 */
- 			if (ctl.sequential_disk < 0 ||
- 			    (nonrot && !ctl.sequential_nonrot)) {
- 				ctl.sequential_disk = disk;
- 				ctl.sequential_nonrot = nonrot;
-@@ -906,22 +929,21 @@ static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
- 			ctl.closest_dist_disk = disk;
+@@ -544,21 +560,12 @@ static void blkg_destroy(struct blkcg_gq *blkg)
  		}
  	}
  
+ 	blkg->online = false;
+ 
+-	radix_tree_delete(&blkcg->blkg_tree, blkg->q->id);
+ 	hlist_del_init_rcu(&blkg->blkcg_node);
+ 
+-	/*
+-	 * Both setting lookup hint to and clearing it from @blkg are done
+-	 * under queue_lock.  If it's not pointing to @blkg now, it never
+-	 * will.  Hint assignment itself can race safely.
+-	 */
+-	if (rcu_access_pointer(blkcg->blkg_hint) == blkg)
+-		rcu_assign_pointer(blkcg->blkg_hint, NULL);
+-
  	/*
--	 * sequential IO size exceeds optimal iosize, however, there is no other
--	 * idle disk, so choose the sequential disk.
-+	 * Keep the sequential disk if no idle peer should take it.
-+	 * If a nonrot disk is readable: keep only a nonrot sequential disk.
-+	 * If not: an idle rot disk may take it.
+ 	 * Put the reference taken at the time of creation so that when all
+ 	 * queues are gone, group can be destroyed.
  	 */
- 	if (ctl.sequential_disk != -1 && ctl.min_pending != 0 &&
- 	    (ctl.sequential_nonrot || !has_nonrot))
- 		return ctl.sequential_disk;
+ 	percpu_ref_kill(&blkg->refcnt);
+@@ -880,47 +887,37 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 		if (unlikely(!new_blkg)) {
+ 			ret = -ENOMEM;
+ 			goto fail_exit;
+ 		}
+ 
+-		if (radix_tree_preload(GFP_KERNEL)) {
+-			blkg_free(new_blkg);
+-			ret = -ENOMEM;
+-			goto fail_exit;
+-		}
+-
+ 		spin_lock_irq(&q->queue_lock);
+ 
+ 		if (!blkcg_policy_enabled(q, pol)) {
+ 			blkg_free(new_blkg);
+ 			ret = -EOPNOTSUPP;
+-			goto fail_preloaded;
++			goto fail_unlock;
+ 		}
+ 
+ 		blkg = blkg_lookup(pos, q);
+ 		if (blkg) {
+ 			blkg_free(new_blkg);
+ 		} else {
+ 			blkg = blkg_create(pos, disk, new_blkg);
+ 			if (IS_ERR(blkg)) {
+ 				ret = PTR_ERR(blkg);
+-				goto fail_preloaded;
++				goto fail_unlock;
+ 			}
+ 		}
+ 
+-		radix_tree_preload_end();
+-
+ 		if (pos == blkcg)
+ 			goto success;
+ 	}
+ success:
+ 	mutex_unlock(&q->blkcg_mutex);
+ 	ctx->blkg = blkg;
+ 	return 0;
+ 
+-fail_preloaded:
+-	radix_tree_preload_end();
+ fail_unlock:
+ 	spin_unlock_irq(&q->queue_lock);
+ fail_exit:
+ 	mutex_unlock(&q->blkcg_mutex);
+ 	/*
+@@ -1418,11 +1415,10 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
+ 		cpd->plid = i;
+ 	}
+ 
+ 	spin_lock_init(&blkcg->lock);
+ 	refcount_set(&blkcg->online_pin, 1);
+-	INIT_RADIX_TREE(&blkcg->blkg_tree, GFP_NOWAIT);
+ 	INIT_HLIST_HEAD(&blkcg->blkg_list);
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	INIT_LIST_HEAD(&blkcg->cgwb_list);
+ #endif
+ 	list_add_tail(&blkcg->all_blkcgs_node, &all_blkcgs);
+@@ -1455,21 +1451,26 @@ static int blkcg_css_online(struct cgroup_subsys_state *css)
+ 	if (parent)
+ 		blkcg_pin_online(&parent->css);
+ 	return 0;
+ }
+ 
+-void blkg_init_queue(struct request_queue *q)
++int blkg_init_queue(struct request_queue *q)
+ {
+ 	INIT_LIST_HEAD(&q->blkg_list);
+ 	mutex_init(&q->blkcg_mutex);
++	return rhashtable_init(&q->blkg_hash, &blkg_hash_params);
++}
++
++void blkg_exit_queue(struct request_queue *q)
++{
++	rhashtable_destroy(&q->blkg_hash);
+ }
+ 
+ int blkcg_init_disk(struct gendisk *disk)
+ {
+ 	struct request_queue *q = disk->queue;
+ 	struct blkcg_gq *new_blkg, *blkg;
+-	bool preloaded;
  
  	/*
--	 * If all disks are rotational, choose the closest disk. If any disk is
--	 * non-rotational, choose the disk with less pending request even the
--	 * disk is rotational, which might/might not be optimal for raids with
--	 * mixed ratation/non-rotational disks depending on workload.
-+	 * No readable nonrot disk: closest disk, unless some disk is idle.
-+	 * Some readable nonrot disk: that nonrot disk with fewest pending I/Os.
+ 	 * If the queue is shared across disk rebind (e.g., SCSI), the
+ 	 * previous disk's blkcg state is cleaned up asynchronously via
+ 	 * disk_release() -> blkcg_exit_disk(). Wait for that cleanup to
+@@ -1483,30 +1484,23 @@ int blkcg_init_disk(struct gendisk *disk)
+ 
+ 	new_blkg = blkg_alloc(&blkcg_root, disk, GFP_KERNEL);
+ 	if (!new_blkg)
+ 		return -ENOMEM;
+ 
+-	preloaded = !radix_tree_preload(GFP_KERNEL);
+-
+ 	/* Make sure the root blkg exists. */
+ 	/* spin_lock_irq can serve as RCU read-side critical section. */
+ 	spin_lock_irq(&q->queue_lock);
+ 	blkg = blkg_create(&blkcg_root, disk, new_blkg);
+ 	if (IS_ERR(blkg))
+ 		goto err_unlock;
+ 	q->root_blkg = blkg;
+ 	spin_unlock_irq(&q->queue_lock);
+ 
+-	if (preloaded)
+-		radix_tree_preload_end();
+-
+ 	return 0;
+ 
+ err_unlock:
+ 	spin_unlock_irq(&q->queue_lock);
+-	if (preloaded)
+-		radix_tree_preload_end();
+ 	return PTR_ERR(blkg);
+ }
+ 
+ void blkcg_exit_disk(struct gendisk *disk)
+ {
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index e67c69839129..7278a8817a49 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -17,10 +17,12 @@
+ #include <linux/blk-cgroup.h>
+ #include <linux/cgroup.h>
+ #include <linux/kthread.h>
+ #include <linux/blk-mq.h>
+ #include <linux/llist.h>
++#include <linux/rhashtable.h>
++#include <linux/rcupdate.h>
+ #include "blk.h"
+ 
+ struct blkcg_gq;
+ struct blkg_policy_data;
+ 
+@@ -54,13 +56,15 @@ struct blkg_iostat_set {
+ 
+ /* association between a blk cgroup and a request queue */
+ struct blkcg_gq {
+ 	/* Pointer to the associated request_queue */
+ 	struct request_queue		*q;
++	struct rhash_head		q_hash_node;
+ 	struct list_head		q_node;
+ 	struct hlist_node		blkcg_node;
+ 	struct blkcg			*blkcg;
++	int				blkcg_id;
+ 
+ 	/* all non-root blkcg_gq's are guaranteed to have access to parent */
+ 	struct blkcg_gq			*parent;
+ 
+ 	/* reference count */
+@@ -96,12 +100,10 @@ struct blkcg {
+ 	spinlock_t			lock;
+ 	refcount_t			online_pin;
+ 	/* If there is block congestion on this cgroup. */
+ 	atomic_t			congestion_count;
+ 
+-	struct radix_tree_root		blkg_tree;
+-	struct blkcg_gq	__rcu		*blkg_hint;
+ 	struct hlist_head		blkg_list;
+ 
+ 	struct blkcg_policy_data	*cpd[BLKCG_MAX_POLS];
+ 
+ 	struct list_head		all_blkcgs_node;
+@@ -190,12 +192,14 @@ struct blkcg_policy {
+ 	blkcg_pol_stat_pd_fn		*pd_stat_fn;
+ };
+ 
+ extern struct blkcg blkcg_root;
+ extern bool blkcg_debug_stats;
++extern const struct rhashtable_params blkg_hash_params;
+ 
+-void blkg_init_queue(struct request_queue *q);
++int blkg_init_queue(struct request_queue *q);
++void blkg_exit_queue(struct request_queue *q);
+ int blkcg_init_disk(struct gendisk *disk);
+ void blkcg_exit_disk(struct gendisk *disk);
+ 
+ /* Blkio controller policy registration */
+ int blkcg_policy_register(struct blkcg_policy *pol);
+@@ -247,15 +251,37 @@ static inline bool bio_issue_as_root_blkg(struct bio *bio)
+ {
+ 	return (bio->bi_opf & (REQ_META | REQ_SWAP)) != 0;
+ }
+ 
+ /**
+- * blkg_lookup - lookup blkg for the specified blkcg - q pair
++ * blkg_lookup_any - lookup any blkg for the specified blkcg - q pair
+  * @blkcg: blkcg of interest
+  * @q: request_queue of interest
+  *
+- * Lookup blkg for the @blkcg - @q pair.
++ * Lookup a blkg for the @blkcg - @q pair, whether it is online or dying.
++ *
++ * Must be called in a RCU critical section.
++ *
++ * This does not acquire a reference.  The caller must already hold one, or
++ * have the blkg pinned by I/O.
++ */
++static inline struct blkcg_gq *blkg_lookup_any(struct blkcg *blkcg,
++					       struct request_queue *q)
++{
++	RCU_LOCKDEP_WARN(!rcu_read_lock_held(),
++			 "blkg_lookup_any() requires an RCU read lock");
++
++	return rhashtable_lookup(&q->blkg_hash, &blkcg->css.id,
++				 blkg_hash_params);
++}
++
++/**
++ * blkg_lookup - lookup an online blkg for the specified blkcg - q pair
++ * @blkcg: blkcg of interest
++ * @q: request_queue of interest
++ *
++ * Lookup an online blkg for the @blkcg - @q pair.
+  *
+  * Must be called in a RCU critical section.
+  */
+ static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg,
+ 					   struct request_queue *q)
+@@ -263,17 +289,12 @@ static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg,
+ 	struct blkcg_gq *blkg;
+ 
+ 	if (blkcg == &blkcg_root)
+ 		return q->root_blkg;
+ 
+-	blkg = rcu_dereference_check(blkcg->blkg_hint,
+-			lockdep_is_held(&q->queue_lock));
+-	if (blkg && blkg->q == q)
+-		return blkg;
+-
+-	blkg = radix_tree_lookup(&blkcg->blkg_tree, q->id);
+-	if (blkg && blkg->q != q)
++	blkg = blkg_lookup_any(blkcg, q);
++	if (blkg && !READ_ONCE(blkg->online))
+ 		blkg = NULL;
+ 	return blkg;
+ }
+ 
+ /**
+@@ -496,12 +517,14 @@ struct blkcg_policy {
+ };
+ 
+ struct blkcg {
+ };
+ 
++static inline struct blkcg_gq *blkg_lookup_any(struct blkcg *blkcg, void *key) { return NULL; }
+ static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg, void *key) { return NULL; }
+-static inline void blkg_init_queue(struct request_queue *q) { }
++static inline int blkg_init_queue(struct request_queue *q) { return 0; }
++static inline void blkg_exit_queue(struct request_queue *q) { }
+ static inline int blkcg_init_disk(struct gendisk *disk) { return 0; }
+ static inline void blkcg_exit_disk(struct gendisk *disk) { }
+ static inline int blkcg_policy_register(struct blkcg_policy *pol) { return 0; }
+ static inline void blkcg_policy_unregister(struct blkcg_policy *pol) { }
+ static inline int blkcg_activate_policy(struct gendisk *disk,
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 196bccf27f58..e396a316b8bf 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -301,10 +301,11 @@ static void blk_free_queue(struct request_queue *q)
+ {
+ 	blk_free_queue_stats(q->stats);
+ 	if (queue_is_mq(q))
+ 		blk_mq_release(q);
+ 
++	blkg_exit_queue(q);
+ 	ida_free(&blk_queue_ida, q->id);
+ 	lockdep_unregister_key(&q->io_lock_cls_key);
+ 	lockdep_unregister_key(&q->q_lock_cls_key);
+ 	call_rcu(&q->rcu_head, blk_free_queue_rcu);
+ }
+@@ -479,21 +480,23 @@ struct request_queue *blk_alloc_queue(struct queue_limits *lim, int node_id)
+ 	spin_lock_init(&q->queue_lock);
+ 
+ 	init_waitqueue_head(&q->mq_freeze_wq);
+ 	mutex_init(&q->mq_freeze_lock);
+ 
+-	blkg_init_queue(q);
++	error = blkg_init_queue(q);
++	if (error)
++		goto fail_stats;
+ 
+ 	/*
+ 	 * Init percpu_ref in atomic mode so that it's faster to shutdown.
+ 	 * See blk_register_queue() for details.
  	 */
- 	if (ctl.min_pending_disk != -1 &&
- 	    (has_nonrot || ctl.min_pending == 0))
- 		return ctl.min_pending_disk;
- 	else
+ 	error = percpu_ref_init(&q->q_usage_counter,
+ 				blk_queue_usage_counter_release,
+ 				PERCPU_REF_INIT_ATOMIC, GFP_KERNEL);
+ 	if (error)
+-		goto fail_stats;
++		goto fail_blkg;
+ 	lockdep_register_key(&q->io_lock_cls_key);
+ 	lockdep_register_key(&q->q_lock_cls_key);
+ 	lockdep_init_map(&q->io_lockdep_map, "&q->q_usage_counter(io)",
+ 			 &q->io_lock_cls_key, 0);
+ 	lockdep_init_map(&q->q_lockdep_map, "&q->q_usage_counter(queue)",
+@@ -508,10 +511,12 @@ struct request_queue *blk_alloc_queue(struct queue_limits *lim, int node_id)
+ 	q->nr_requests = BLKDEV_DEFAULT_RQ;
+ 	q->async_depth = BLKDEV_DEFAULT_RQ;
+ 
+ 	return q;
+ 
++fail_blkg:
++	blkg_exit_queue(q);
+ fail_stats:
+ 	blk_free_queue_stats(q->stats);
+ fail_id:
+ 	ida_free(&blk_queue_ida, q->id);
+ fail_q:
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 20cb8ed7d987..f3b0e39d3f6b 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -25,10 +25,11 @@
+ #include <linux/sbitmap.h>
+ #include <linux/uuid.h>
+ #include <linux/xarray.h>
+ #include <linux/file.h>
+ #include <linux/lockdep.h>
++#include <linux/rhashtable-types.h>
+ 
+ struct module;
+ struct request_queue;
+ struct elevator_queue;
+ struct blk_trace;
+@@ -579,10 +580,11 @@ struct request_queue {
+ 
+ 	struct list_head	icq_list;
+ #ifdef CONFIG_BLK_CGROUP
+ 	DECLARE_BITMAP		(blkcg_pols, BLKCG_MAX_POLS);
+ 	struct blkcg_gq		*root_blkg;
++	struct rhashtable	blkg_hash;
+ 	struct list_head	blkg_list;
+ 	struct mutex		blkcg_mutex;
+ #endif
+ 
+ 	int			node;
 -- 
-2.55.0
+2.51.0
+
