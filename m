@@ -1,110 +1,217 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-38.ptr.blmpb.com (va-2-38.ptr.blmpb.com [209.127.231.38])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90EFF4399C4;
-	Mon, 17 Aug 2026 17:18:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C6B64B048C
+	for <linux-raid@vger.kernel.org>; Tue, 18 Aug 2026 07:07:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.38
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786987115; cv=none; b=XB0NuF2TiHdua1n2geRrLCAzuf/noOHicM0+iJTnIdRVrsPMHbKIPZeHDUUG6Lj0Df1hAqJsnF/SwaDy7BFi1A7zZQDR8qGYHPHrM+aw2CrsJg5FIgFxUP1DrMEtch9CCzuMZdp7kvMsEiBjwNm5SW15HEDgKfgKkZzmtMgfPI0=
+	t=1787036832; cv=none; b=GtyrfT38PhngZBA43DGX2dn2sOx4+86a3org1zWlPncByFNT7tZcoOa3s2m1rkFMpTktduJzyoyuRjLQjkhZbBJoR5BdF51s0PPqs0w81g+QEuGAf3C/wmFTl7k9n905LB0EG/YM+O3sE/vd9kjwucJUqY4Kkrxr9Ub98Nv1jKs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786987115; c=relaxed/simple;
-	bh=75z5q3lZ1shKUcnVwuxR1BTMrHkKbEQ/GFVG+kHgnwU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q4CMqLbHGFjH8oT6LGZwuvEhVVpNIq/u7DpCKpcmizG00uMjn7d8LtaEQTOHkcpFxutoO81hsjGQXxzZEE1+5HQZi4fzJuNRk81KddnGga1azWsmHu9iILZpPfVY9jR8KRPga74awIdFwl+ja8nekSZa/TyKu6JuyD8VUJQIhwM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IYGrnuNp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787036832; c=relaxed/simple;
+	bh=u4kQwNTlDL8++Cn5rG+WarjmGr/E4g2luoFJylHo45w=;
+	h=Content-Type:Date:References:Cc:Subject:Mime-Version:To:From:
+	 Message-Id:In-Reply-To; b=AI94/TmqMCc9vbimxigei1AIYoctlbt9ckTL9hABZxQkpITJhBv/aZXmzcKtc+1MxoHF7WNyIf3/XTsW5GzeoTE7MYxDa59CXn5IuClxT/vETkoZyolFKXrl+TrsBCyrK0TkcCYNB7RfvdBloeFgGigmLwLE/jkkaH+bXZ5G/N0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=RtBOietZ; arc=none smtp.client-ip=209.127.231.38
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IYGrnuNp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFB381F00A3A;
-	Mon, 17 Aug 2026 17:18:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786987114;
-	bh=cqEALtTdwDfe70tQT8Qbqwqn8D+Vx33cN/J1LRfH9Oo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=IYGrnuNpsE4ty78aLZFp2z93MlBewFcwHHKAm1h9dihA+Noq6KfkuxM78CyLq6Pte
-	 HUq8tN2lHzGLJX4fM0ZhNI9eHA2lfm1Cu8P37JqjcXkLxAFVl/P3GQMkltWLr8x24m
-	 wF7KOAdqrLLGvZ57JOeERubHe1if6tCduzKw7DLEFaSzG68flAI38AHTBZz+eW9Moq
-	 gKGEJ+8wAYf1P1aKgCkTqK3ALmDHIQRC6Wl1EwAIlChDbuqbHKyQL0/IibeYhPPNhv
-	 /mqdIrt2CaSNALRThFiGDQH5nLPkPtmHVcdEeEBzYPlSwqtm9Ki6wiwSqSrFP5fN+n
-	 0WekyPaT5Duyg==
-Date: Mon, 17 Aug 2026 10:18:34 -0700
-From: Eric Biggers <ebiggers@kernel.org>
-To: David Laight <david.laight.linux@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-crypto@vger.kernel.org,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Taehee Yoo <ap420073@gmail.com>, netfilter-devel@vger.kernel.org,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Florian Westphal <fw@strlen.de>, Phil Sutter <phil@nwl.cc>
-Subject: Re: [PATCH 0/6] x86: add missing vzeroupper instructions
-Message-ID: <20260817171834.GA8327@quark>
-References: <20260815205750.169336-1-ebiggers@kernel.org>
- <20260816161450.05fd24f2@pumpkin>
- <20260816173159.GB2013@sol>
- <aoLRJ7igR5GTMfuO@infradead.org>
- <20260817115523.7c6c646a@pumpkin>
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="RtBOietZ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1787036825;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=fUofpriDKKunrRStc3hcyDroS4uuxdeVc337dIz70K8=;
+ b=RtBOietZrhPRO9bwCkaJqgrGwrjpPx4CgkDqaHYJb8l7duYdBoWKfIlxssNbuSB2QMqmfa
+ S5oF+zbubbA1dZZ8ZkZ5ShDPVpcG6mb9atwIwylNhTCWacGL9aaQpZm1gl17x7/t2GF8nh
+ S0ozdlViGaPFMk2HXBl7tSdSY0r9wXOw8wTiMKj9NuuIiUeA0BZofN5yogvJ5wTEszsHcp
+ aiU32K9+GY8LVBXUVv5HvV1kSyidXfaknGwPvLU0aRpzO1C33PihWQfZwpyBY7mScKEolh
+ XM5aRrueiTSeDTH2GZzbl4owQvfGsTntuQuRRHmC5uY7+NzE7FMlv6MZuDfpLA==
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 18 Aug 2026 15:06:43 +0800
+X-Mailer: git-send-email 2.55.0
+X-Original-From: chencheng@fnnas.com
+Received: from fedora ([183.34.162.43]) by smtp.feishu.cn with ESMTPS; Tue, 18 Aug 2026 15:07:02 +0800
+References: <20260818070646.1029149-1-chencheng@fnnas.com>
+Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
+Subject: [RFC PATCH 2/5] md/raid1: do not move nonrot reads onto a rot disk
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260817115523.7c6c646a@pumpkin>
+Mime-Version: 1.0
+To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <xiaon@kernel.org>
+From: "Chen Cheng" <chencheng@fnnas.com>
+X-Lms-Return-Path: <lba+26a840497+d2cb48+vger.kernel.org+chencheng@fnnas.com>
+Message-Id: <20260818070646.1029149-3-chencheng@fnnas.com>
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <20260818070646.1029149-1-chencheng@fnnas.com>
 
-On Mon, Aug 17, 2026 at 11:55:23AM +0100, David Laight wrote:
-> On Mon, 17 Aug 2026 02:15:19 -0700
-> Christoph Hellwig <hch@infradead.org> wrote:
-> 
-> > On Sun, Aug 16, 2026 at 10:31:59AM -0700, Eric Biggers wrote:
-> > > As for kernel_fpu_begin(), no, it doesn't do vzeroupper.
-> > > 
-> > > I do think that some years down the line, we'll drop the use of SSE in
-> > > the kernel entirely.  At that point, vzeroupper in kernel_fpu_end()
-> > > would make sense.  
-> > 
-> > Or add kernel_avx_{begin,end} wrappers that include the vzeroupper
-> > in kernel_avx_end.  That would be a lot easier to use than the manual
-> > vzeroupper in every modern user of in-kernel AVX.
-> > 
-> 
-> You might want one in the start as well.
-> I have a theory that the avx512 logic was added as a completely separate block.
-> This meant it could be included in cpu for testing but disabled in any
-> released to customers.
-> (Or maybe the it is the original avx logic that used latches not in the
-> normal register file.)
-> A side effect is that different latches are used for the low bits of the
-> registers - so when you change to/from avx512 the register contents have to
-> be transferred between the blocks - adding latency.
-> So if the wrong registers are live for the code you are going to execute
-> the data has to be transferred across.
-> 
-> There are also other effects as well.
-> I found this link: https://travisdowns.github.io/blog/2020/01/17/avxfreq1.html
-> It is a few years old now (2020) but probably still relevant.
-> A quick summary is that the first 256 or 512 bit instruction starts a 9us
-> window where the cpu runs at 1/4 speed, for 512 bit that is followed by 11us
-> where nothing happens at all. 
+From: Chen Cheng <chencheng@fnnas.com>
 
-The linked article is about Skylake, which is an older Intel CPU that
-has a bad AVX-512 implementation with overly-eager downclocking.  Later
-Intel CPUs improved the implementation.  And of course, AMD just
-implemented it properly from the start without the downclocking issues.
-Information about AMD Zen 5's AVX-512 implementation can be found here:
-https://www.numberworld.org/blogs/2024_8_7_zen5_avx512_teardown/
+The previous change: if a sequential disk already has pending I/O,
+the next read can go to an idle disk.
 
-Most of the AVX-512 optimized code in the kernel already requires
-!X86_FEATURE_PREFER_YMM, excluding Skylake as well as Ice Lake.
+Current:
+1. A sequential disk can give the next read to an idle peer.
+2. On a mixed array that peer can be a rot disk.
+3. After a write, every disk has the same head_position.
+4. Then every disk looks sequential.
 
-That being said, if I recall correctly, even with Intel's improved
-implementation on Sapphire Rapids and Emerald Rapids, Intel does still
-have some start-up latency for accessing ZMM registers.  AMD doesn't.  I
-don't believe vzeroupper helps, unfortunately.
+Problem:
+1. The first sequential disk in slot order may be a rot disk. Then
+   we return it and never see the nonrot disk. We want the nonrot
+   disk.
+2. When pending is the same, rot and nonrot share one round-robin.
+   A rot disk can win. We want the nonrot disk.
 
-I've considered setting X86_FEATURE_PREFER_YMM on all Intel CPUs, but
-then even workloads that would benefit from ZMM registers wouldn't use
-them.  And I suspect the Intel folks wouldn't agree with that either.
+Improve:
+1. If a nonrot disk is readable, do not stop on a sequential rot
+   disk.
+2. Remember sequential_disk once. A nonrot disk may replace a rot
+   one.
+3. If a nonrot disk is readable, do not keep a rot disk as the
+   sequential fallback.
+4. When pending is the same, prefer nonrot. Rotate only among
+   nonrot disks.
+5. Rot-only sequential reads still stay on the current disk when
+   no peer is idle.
 
-- Eric
+Tested with fio libaio direct=1 (NVMe scheduler none, SATA
+scheduler mq-deadline), after a short write so both
+head_positions match:
+
+- RAID1 of Predator GM9000 + SATA HDD:
+  1M read QD16 jobs=1, nonrot first:
+    2.468 GB/s, 92/8 NVMe/HDD -> 7.112 GB/s, 100/0 NVMe
+  1M read QD16 jobs=1, rot first:
+    0.280 GB/s, 100/0 HDD -> 7.112 GB/s, 100/0 NVMe
+
+- RAID1 of Fanxiang S103Pro + SATA HDD:
+  1M read QD16 jobs=1, nonrot first:
+    0.562 GB/s, 100/0 Fanxiang both sides
+  1M read QD16 jobs=1, rot first:
+    0.278 GB/s, 100/0 HDD -> 0.562 GB/s, 100/0 Fanxiang
+
+Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+---
+ drivers/md/raid1.c | 42 +++++++++++++++++++++++++++++++++---------
+ 1 file changed, 33 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 319b24bcab5b..36520e48826f 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -784,17 +784,36 @@ struct read_balance_ctl {
+ 	int closest_dist_disk;
+ 	unsigned int min_pending;
+ 	int min_pending_disk;
+ 	int sequential_disk;
+ 	int readable_disks;
++	bool min_pending_nonrot;
++	bool sequential_nonrot;
+ };
+ 
+ static int raid1_rr_pos(int disk, int start, int n)
+ {
+ 	return ((disk % n) - start + n) % n;
+ }
+ 
++static bool is_better_disk(unsigned int pending, int disk, bool nonrot,
++			   const struct read_balance_ctl *ctl,
++			   int rr_start, int n)
++{
++	if (ctl->min_pending_disk < 0)
++		return true;
++	if (ctl->min_pending < pending)
++		return false;
++	if (ctl->min_pending > pending)
++		return true;
++	if (nonrot && !ctl->min_pending_nonrot)
++		return true;
++	return nonrot && ctl->min_pending_nonrot &&
++	       raid1_rr_pos(disk, rr_start, n) <
++	       raid1_rr_pos(ctl->min_pending_disk, rr_start, n);
++}
++
+ static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
+ {
+ 	int disk;
+ 	int rr_start = 0;
+ 	bool has_nonrot = READ_ONCE(conf->nonrot_disks);
+@@ -812,10 +831,11 @@ static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
+ 
+ 	for (disk = 0 ; disk < conf->raid_disks * 2 ; disk++) {
+ 		struct md_rdev *rdev;
+ 		sector_t dist;
+ 		unsigned int pending;
++		bool nonrot;
+ 
+ 		if (r1_bio->bios[disk] == IO_BLOCKED)
+ 			continue;
+ 
+ 		rdev = conf->mirrors[disk].rdev;
+@@ -827,14 +847,16 @@ static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
+ 			set_bit(R1BIO_FailFast, &r1_bio->state);
+ 
+ 		pending = atomic_read(&rdev->nr_pending);
+ 		dist = abs(r1_bio->sector -
+ 			   READ_ONCE(conf->mirrors[disk].head_position));
++		nonrot = test_bit(Nonrot, &rdev->flags);
+ 
+ 		/* Don't change to another disk for sequential reads */
+ 		if (is_sequential(conf, disk, r1_bio)) {
+-			if (!should_choose_next(conf, disk) && !pending)
++			if (!should_choose_next(conf, disk) && !pending &&
++			    (nonrot || !has_nonrot))
+ 				return disk;
+ 
+ 			/*
+ 			 * Add 'pending' to avoid choosing this disk if
+ 			 * there is other idle disk.
+@@ -842,21 +864,22 @@ static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
+ 			pending++;
+ 			/*
+ 			 * If there is no other idle disk, this disk
+ 			 * will be chosen.
+ 			 */
+-			ctl.sequential_disk = disk;
++			if (ctl.sequential_disk < 0 ||
++			    (nonrot && !ctl.sequential_nonrot)) {
++				ctl.sequential_disk = disk;
++				ctl.sequential_nonrot = nonrot;
++			}
+ 		}
+ 
+-		if (ctl.min_pending > pending ||
+-		    (has_nonrot && ctl.min_pending == pending &&
+-		     ctl.min_pending_disk >= 0 &&
+-		     raid1_rr_pos(disk, rr_start, conf->raid_disks) <
+-		     raid1_rr_pos(ctl.min_pending_disk, rr_start,
+-				  conf->raid_disks))) {
++		if (is_better_disk(pending, disk, nonrot, &ctl,
++				   rr_start, conf->raid_disks)) {
+ 			ctl.min_pending = pending;
+ 			ctl.min_pending_disk = disk;
++			ctl.min_pending_nonrot = nonrot;
+ 		}
+ 
+ 		if (ctl.closest_dist > dist) {
+ 			ctl.closest_dist = dist;
+ 			ctl.closest_dist_disk = disk;
+@@ -865,11 +888,12 @@ static int choose_best_rdev(struct r1conf *conf, struct r1bio *r1_bio)
+ 
+ 	/*
+ 	 * sequential IO size exceeds optimal iosize, however, there is no other
+ 	 * idle disk, so choose the sequential disk.
+ 	 */
+-	if (ctl.sequential_disk != -1 && ctl.min_pending != 0)
++	if (ctl.sequential_disk != -1 && ctl.min_pending != 0 &&
++	    (ctl.sequential_nonrot || !has_nonrot))
+ 		return ctl.sequential_disk;
+ 
+ 	/*
+ 	 * If all disks are rotational, choose the closest disk. If any disk is
+ 	 * non-rotational, choose the disk with less pending request even the
+-- 
+2.55.0
