@@ -1,37 +1,37 @@
-Received: from mta0.migadu.com (out-252.mta0.migadu.com [91.218.175.252])
+Received: from mta1.migadu.com (out-40.mta1.migadu.com [95.215.58.40])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7B0F3CB91E
-	for <linux-raid@vger.kernel.org>; Thu, 20 Aug 2026 09:58:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.252
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAB6C3D7D8B
+	for <linux-raid@vger.kernel.org>; Thu, 20 Aug 2026 09:59:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.40
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787219919; cv=none; b=JtRjXdhSgXDMdG1i+IHUAmvzaPWAqQ93ku4yDvZkarZM1c3RaL1QYzytEJOvCYLpKYxrqeACNN4xXtDTY0hZwScBAP3p4cuGNwjreS5aIXMOHYJcHA/jFl/ryTNFDhjC+mAnre81YKsKJd2t1FLK9Ftn8T8U5lo/GJ0U8/SJEzk=
+	t=1787219955; cv=none; b=VdU74xM9K1H3nYnOpJ8yFgnHNNDbAyNGRDNKUXrBAVKKP5qmjoBjTrKV1i2NiQnxbaIKcBdlcF7KR/kHVf+PHppru16qcKbD7YC3ZCp6AmU9DiBa+oifBVVT18oGOxSjzkpB+2UJ5e3kqoWP9ra1EYYFNct6j0sIMZRuo6K1BCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787219919; c=relaxed/simple;
-	bh=6+e0IVBhQsqNOnef2seSVjbtBoQ3uLTFSRseSeIlRqA=;
+	s=arc-20240116; t=1787219955; c=relaxed/simple;
+	bh=ibyIE9gKf2iOY1+mVf6oD4UPNPJ9RqEZuDFV5F2gXBk=;
 	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=pfhr2e0TaC4wZ2Quh+Ev9RZsLTMjFc+4MvqbIwZ8YjNmE66gla3tVK72QYxHcL/GtYsTaMg7QKLHcrQA8klWn2Y/iJFjXJKtHQyvxmw6bdtmUHgAjgrUwgwlZ5wUFBTfDEzJJagPLW5s9SUqa/OsMLl+URUZJ5cazkl/dl38F3Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=FdIXlOYN; arc=none smtp.client-ip=91.218.175.252
+	 In-Reply-To:Content-Type; b=tzCIMjr36u06AM97fs1ufEi+VCC/k0W7EJuIzKg04+mJ/LvD9eAwR4ABONEBqZ5SkHD4dwVvhcp+t+YT3A+9hXPjSSVyghnUG3EqXwC/+nV0ycrblSbIP1Sk2GLYFcaBO7iHmCvj8e4MBR/MzBEQTjOaZHB6w/oYfYhn47Rnrc0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=vqfL6IYG; arc=none smtp.client-ip=95.215.58.40
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="FdIXlOYN"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="vqfL6IYG"
 X-Envelope-To: linux-raid@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=6+e0IVBhQsqNOnef2seSVjbtBoQ3uLTFSRseSeIlRqA=;
+DKIM-Signature: a=rsa-sha256; bh=ibyIE9gKf2iOY1+mVf6oD4UPNPJ9RqEZuDFV5F2gXBk=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787219916; v=1; x=1787824716;
- b=FdIXlOYNJW3tKLZOZLidF9aFp5YCR/c7kD6T9z2R+LihnpSwEbI1Bc6QpvEL8PlKdOB/p+XJ
- 7YUuEAXEvm4iIPUVDrmwAfSftpVu5CMG5a8PfEPsn4n4MldOy520m97f0v74LZqsf1FhQdaiwA0
- V5DzhQ0uL7I6Ox28XXzuGA24=
+ t=1787219950; v=1; x=1787824750;
+ b=vqfL6IYG5bmPmIHZ93WmL/Wq/O1RN2hPCoTZ0Zdnyb3zDniktYfWdkZSzBh82ifiQFP19I5v
+ zH8xlDuZPucwGWdi/Qd/VZsLQ2F6NZXLZmRhtyOKSNBIIGssxHrH1yYNCUEH1gBrIoNWJuqGyYU
+ j/ddxJNgNFD1Mo3If6Orz2xg=
 X-Envelope-To: linux-raid@vger.kernel.org
 Received: from [192.168.110.173] (223.70.159.239)
-	by smtp.migadu.com with ESMTPS id 30b66ec55db78dc2;
-	Thu, 20 Aug 2026 09:58:35 +0000
-X-Mizu-Trace-ID: 30b66ec55db78dc2
+	by smtp.migadu.com with ESMTPS id e22ed27fc468e85d;
+	Thu, 20 Aug 2026 09:59:10 +0000
+X-Mizu-Trace-ID: e22ed27fc468e85d
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <9c699958-c5b6-4aff-adf2-7c27a91cf4c2@linux.dev>
-Date: Thu, 20 Aug 2026 17:58:26 +0800
+Message-ID: <7b2733a4-71d2-43bb-b319-1ca8defba17e@linux.dev>
+Date: Thu, 20 Aug 2026 17:58:58 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -63,40 +63,34 @@ Cc: cui.tao@linux.dev, Yu Kuai <yukuai@fygo.io>,
  linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
  virtualization@lists.linux.dev, gfs2@lists.linux.dev,
  linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v3 2/3] blk-cgroup: store blkcg in bio instead of blkg
+Subject: Re: [RFC PATCH v3 3/3] blk-cgroup: move async bio punt state to blkcg
 To: Yu Kuai <yukuai@kernel.org>, Jens Axboe <axboe@kernel.dk>,
  Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
  Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
  <mkoutny@suse.com>
 References: <20260818070641.756747-1-yukuai@kernel.org>
- <20260818070641.756747-3-yukuai@kernel.org>
+ <20260818070641.756747-4-yukuai@kernel.org>
 From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <20260818070641.756747-3-yukuai@kernel.org>
+In-Reply-To: <20260818070641.756747-4-yukuai@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 
 
 在 2026/8/18 15:06, Yu Kuai 写道:
-> A bio currently stores and pins a queue-local blkg. This forces bio
-> association and remap paths to look up or create a blkg even when no
-> blkcg policy will use the bio, and ties the stored state to the current
-> block device.
+> blkcg_punt_bio_submit() currently queues punted bios on blkg->async_bios,
+> so it has to call bio_blkg() to find or create a queue-local blkg.  Bios
+> now carry and pin the blkcg css, so punted bio lifetime no longer needs to
+> be anchored by a blkg.
 > 
-> Store and reference the queue-independent blkcg in the bio instead. Add
-> helpers that lazily look up or create the queue-local blkg when a policy
-> needs it, and pin the result until the bio changes devices or releases
-> its cgroup state.
+> Keeping the punt state in blkg can instantiate a blkg even when no blkcg
+> policy is enabled, just to bounce submission from a shared kthread.  Move
+> async_bio_lock, async_bios and async_bio_work to struct blkcg, and queue
+> punted bios on bio_blkcg() for non-root cgroups.  Root or unassociated bios
+> are submitted directly.
 > 
-> If blkg creation fails while walking down the hierarchy, use the closest
-> available ancestor and update the bio's blkcg association before recording
-> the blkg reference. This keeps later CSS ID hash lookups matched with the
-> pinned blkg.
-> 
-> Keep lookup-only users from creating missing blkgs. A pinned blkg remains
-> in the queue hash until the bio drops its reference, so allow the bio to
-> recover it from the hash after the blkg starts dying. Rename the bio
-> association helpers to describe the blkcg state they now store.
+> This preserves the priority-inversion avoidance while preventing
+> blkcg_punt_bio_submit() from creating blkgs that are not needed by any
+> policy.
 
 Reviewed-by: Tao Cui <cuitao@kylinos.cn>
-
