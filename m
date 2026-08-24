@@ -1,279 +1,129 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-60.ptr.blmpb.com (va-2-60.ptr.blmpb.com [209.127.231.60])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 063F349364C;
-	Sun, 23 Aug 2026 13:32:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D60B405C35
+	for <linux-raid@vger.kernel.org>; Mon, 24 Aug 2026 15:41:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.60
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787491972; cv=none; b=p0Dipesw4HXySHYT1lYTd9d/9mOSGnvdNYGWd3kNOMle5E3m5wPCxyrpB0SA2QScn/FmU6vB0zws/r+jHk9CHfmfI4jty07fhxMaXS13dfRiSr4OSr9cyNsUigoAtleq0QEBG6QqKoxYJpu5BPoGBWfcKf28janDPwh+5UNlxVs=
+	t=1787586114; cv=none; b=hcUwfoudBu278BPUT8SOe1AdnIArHMbyKEMjDsjlIKROg+GjGgEESCQHADKj02dUbs+KkPhfAGhp34UZWJJNs9YOzg5I/wXVk/rPZhHDnyY8JeLyK2rOh1NX90Wwj5Rgk9FJ8EjMAwzGCD+KWAeF/E6pKVka+SKWYg/eGRKP3JE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787491972; c=relaxed/simple;
-	bh=9wsmerHxEK7Jdp01jX7Ti/ajzMQcAfnwHV0vWIRMCn4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lFAk+Zhug5aNcs6llh0jZwUInIToPWS6ZjFfkHJECnEIz+mh81gX8ud6fLLCNBWisAcAxhnWJ2QvPHHJhfFb2dMd2xIVTzwltJOAPAepxFI625JHSnCA0Z+bcV51GXqnM0yzJUGm5FUJURx+13JQZKyHNFPH9m30VLY+SkWIixY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BKuh8fCa; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787586114; c=relaxed/simple;
+	bh=j0TXrlr0yHdK7aAJgUmjiZ9ea37Y9P0GaNcMq6048ps=;
+	h=Subject:From:Mime-Version:References:In-Reply-To:Content-Type:
+	 Date:Message-Id:To; b=ZbJ2smKxppoRdHBzLGK7GAonovaYv3Av5bnGm9RtT0KXGmUsJkJjV4dLNL9ZbPIZRxHdZg8DVgSjMi+tZuWhG4bv0Nz7sIONtwxG1gEMtE0hMzwTMYIjbj3O6WKtvvR3Tw+FK0gSV16D0slsOPVfu9ky3hk7WmSKBBNCmI7DynA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=Nx7Ioros; arc=none smtp.client-ip=209.127.231.60
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BKuh8fCa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C76171F000E9;
-	Sun, 23 Aug 2026 13:32:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787491970;
-	bh=8KYwjYDmJgv3DnzDOpRmS3OQgAUfeEON5RSUmmX7LeU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=BKuh8fCaInrcFBcT9JPPeKYinLYc2/Ia8kito9c/k0yLMh5AhnPIFZ8GENBhUoLAR
-	 nVavT+qzK13I5dM4nIDPuwNy7K/X5Q47M9zNUaap/0IMn4B/NAqh6y87WoDfihWTt4
-	 G4+jZPoNfLVWWvHeKZYmPFyY9mSz1v+4dswZns26zYXfIssVpHrLauPKJh3zDA3j3a
-	 a7zZ6NlpV/raMgv0PGK6tkXI8qCx5Mf4Rukx/POzB8lcSM1xIyhimElgsM+1iwPA/7
-	 P6+idTUXgWpua3+INzz/HMMc6QJzmpdO0g0gUFonMEPJytHLedsGkCDMwvT46VMrn5
-	 O9zVPjthG2MdA==
-From: Yu Kuai <yukuai@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>,
-	Tejun Heo <tj@kernel.org>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Yu Kuai <yukuai@fygo.io>,
-	Christoph Hellwig <hch@lst.de>,
-	Tao Cui <cui.tao@linux.dev>,
-	Jan Kara <jack@suse.cz>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Coly Li <colyli@fygo.io>,
-	Kent Overstreet <kent.overstreet@linux.dev>,
-	Alasdair Kergon <agk@redhat.com>,
-	Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	Benjamin Marzinski <bmarzins@redhat.com>,
-	Song Liu <song@kernel.org>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
-	Dan Williams <djbw@kernel.org>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Ira Weiny <iweiny@kernel.org>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Chris Li <chrisl@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	Kemeng Shi <shikemeng@huaweicloud.com>,
-	Nhat Pham <nphamcs@gmail.com>,
-	Baoquan He <baoquan.he@linux.dev>,
-	Barry Song <baohua@kernel.org>,
-	Youngjun Park <youngjun.park@lge.com>,
-	cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-bcache@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org,
-	nvdimm@lists.linux.dev,
-	virtualization@lists.linux.dev,
-	gfs2@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [PATCH 3/3] blk-cgroup: move async bio punt state to blkcg
-Date: Sun, 23 Aug 2026 21:30:45 +0800
-Message-ID: <20260823133045.970199-4-yukuai@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260823133045.970199-1-yukuai@kernel.org>
-References: <20260823133045.970199-1-yukuai@kernel.org>
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="Nx7Ioros"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1787586090;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=j0TXrlr0yHdK7aAJgUmjiZ9ea37Y9P0GaNcMq6048ps=;
+ b=Nx7Ioros1YLjaxOI/gWzuTI5sZO8Xu0nm4E1avD1X06yLjLwKX0CVJCcZR5quNhL626osS
+ yJVKclwf428yi46IxM9bJiz1iDtpYCbK9MF/vg7Gk7EOvYkVq0wf3u5nYLtz7uriMqTYGp
+ Q3Ip3RT8XqqpBfcDLMVpqs/BGwOkG5L8qv3436THI0JEpkzgdAWM4tCb8yuWhkkrug83A2
+ vnCGBIgy3FRd83q/P2tQamHuKMqgbPSJPuemCDVNFe4JjfN3pwRNZ71Ne5z1p3Pt8Y5L7E
+ Db3j5cIwkI+j5MoSqdGlEfR9jZawOMv6fRRJykD3qvj8f7o1IY7EPZjEzUrn3Q==
+Received: from [192.168.1.104] ([39.182.0.185]) by smtp.larksuite.com with ESMTPS; Mon, 24 Aug 2026 15:41:28 +0000
+X-Original-From: yu kuai <yukuai@fygo.io>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] md/md-bitmap: bitmap pages leaked after recovery
+From: "yu kuai" <yukuai@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+References: <e86f6b88-ea4f-425a-880d-a3622f3f458a@redhat.com>
+X-Lms-Return-Path: <lba+26a8c6629+ea2057+vger.kernel.org+yukuai@fygo.io>
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <e86f6b88-ea4f-425a-880d-a3622f3f458a@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Reply-To: yukuai@fygo.io
+Date: Mon, 24 Aug 2026 23:41:25 +0800
+Message-Id: <b6242e9a-7d41-4989-9481-f922a22375b8@fygo.io>
+To: "Nigel Croxon" <ncroxon@redhat.com>, <song@kernel.org>, 
+	<yukuai@kernel.org>, <linux-raid@vger.kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
 
-From: Yu Kuai <yukuai@fygo.io>
+Hi,
 
-blkcg_punt_bio_submit() currently queues punted bios on blkg->async_bios,
-so it has to call bio_blkg() to find or create a queue-local blkg.  Bios
-now carry and pin the blkcg css, so punted bio lifetime no longer needs to
-be anchored by a blkg.
+=E5=9C=A8 2026/8/8 2:55, Nigel Croxon =E5=86=99=E9=81=93:
+> The bitmap pages leaked after recovery if successful writes occur
+> concurrently during array degradation/recovery.
+>
+> We performed write I/Os to an MD RAID1 array while it was in a degraded
+> state or actively undergoing recovery. Even after the array recovery
+> successfully reached 100%, the disk status returned to normal ([UU]),
+> and all I/Os completely stopped, the number of bitmap pages
+> (bitmap: n/N pages in /proc/mdstat) never dropped back to 0, resulting
+> in a persistent memory leak of bitmap pages.
+>
+> Bitmap pages remain permanently allocated in the kernel memory even after
+> the array has fully returned to a healthy state, leading to a kernel
+> memory leak.
+>
+> When a disk is re-added and recovery starts, MD_RECOVERY_RUNNING is set
+> in mddev->recovery.=C2=A0 The else if condition evaluates to false for no=
+rmal
+> concurrent writes during recovery. NEEDED_MASK is never applied to these
+> blocks.
+>
+> Fixes: 4f0e7d0e03b7
+> md/md-bitmap: remove the last parameter for bimtap_ops->endwrite()
+> This is becauses removing success caused bitmap_endwrite()
+> to treat mddev->degraded as a blanket trigger for NEEDED_MASK.
+>
+> Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
+> ---
+> =C2=A0drivers/md/md-bitmap.c | 9 ++++++++-
+> =C2=A01 file changed, 8 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index 1d4a050dab3a..b8be0d079780 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -1756,7 +1756,14 @@ static void bitmap_end_write(struct mddev=20
+> *mddev, sector_t offset,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0sysfs_notif=
+y_dirent_safe(
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0bitmap->sysfs_can_clear);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> -=C2=A0 =C2=A0 =C2=A0 =C2=A0 } else if (!NEEDED(*bmc)) {
+> +=C2=A0 =C2=A0 =C2=A0 =C2=A0 /*
+> +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* Do not set NEEDED_MASK if recovery i=
+s actively running.
+> +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* Writes completing during recovery/re=
+sync are already=20
+> covered by
+> +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* the recovery thread and setting NEED=
+ED_MASK will cause=20
+> orphaned
+> +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* bitmap flags and memory leaks after =
+recovery finishes.
+> +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0*/
+> +=C2=A0 =C2=A0 =C2=A0 =C2=A0 } else if (!test_bit(MD_RECOVERY_RUNNING,
+> +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 &bitmap->mddev->=
+recovery) && !NEEDED(*bmc)) {
 
-Keeping the punt state in blkg can instantiate a blkg even when no blkcg
-policy is enabled, just to bounce submission from a shared kthread.  Move
-async_bio_lock, async_bios and async_bio_work to struct blkcg, and queue
-punted bios on bio_blkcg() for non-root cgroups.  Root or unassociated bios
-are submitted directly.
+This looks incorrect, MD_RECOVERY_RUNNING doesn't represent recovery is run=
+ning.
 
-This preserves the priority-inversion avoidance while preventing
-blkcg_punt_bio_submit() from creating blkgs that are not needed by any
-policy.
+And I'll prefer to add the success parameter back, and check it before sett=
+ing
+NEEDED_MASK, since this case is missing in the original patch.
 
-Signed-off-by: Yu Kuai <yukuai@fygo.io>
----
- block/blk-cgroup.c | 44 +++++++++++++++++++++-----------------------
- block/blk-cgroup.h | 14 ++++++--------
- 2 files changed, 27 insertions(+), 31 deletions(-)
+BTW, no patch can be applied until the next merge window, I'm waiting for J=
+ens
+to create the block-7.3 branch.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index b23f1e2d568d..1bd91223367c 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -180,14 +180,10 @@ static void blkg_free(struct blkcg_gq *blkg)
- 
- static void __blkg_release(struct rcu_head *rcu)
- {
- 	struct blkcg_gq *blkg = container_of(rcu, struct blkcg_gq, rcu_head);
- 
--#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
--	WARN_ON(!bio_list_empty(&blkg->async_bios));
--#endif
--
- 	blkg_free(blkg);
- }
- 
- /*
-  * A group is RCU protected, but having an rcu lock does not mean that one
-@@ -226,23 +222,22 @@ static void blkg_release(struct percpu_ref *ref)
- }
- 
- #ifdef CONFIG_BLK_CGROUP_PUNT_BIO
- static struct workqueue_struct *blkcg_punt_bio_wq;
- 
--static void blkg_async_bio_workfn(struct work_struct *work)
-+static void blkcg_async_bio_workfn(struct work_struct *work)
- {
--	struct blkcg_gq *blkg = container_of(work, struct blkcg_gq,
--					     async_bio_work);
-+	struct blkcg *blkcg = container_of(work, struct blkcg, async_bio_work);
- 	struct bio_list bios = BIO_EMPTY_LIST;
- 	struct bio *bio;
- 	struct blk_plug plug;
- 	bool need_plug = false;
- 
--	/* as long as there are pending bios, @blkg can't go away */
--	spin_lock(&blkg->async_bio_lock);
--	bio_list_merge_init(&bios, &blkg->async_bios);
--	spin_unlock(&blkg->async_bio_lock);
-+	/* as long as there are pending bios, @blkcg can't go away */
-+	spin_lock(&blkcg->async_bio_lock);
-+	bio_list_merge_init(&bios, &blkcg->async_bios);
-+	spin_unlock(&blkcg->async_bio_lock);
- 
- 	/* start plug only when bio_list contains at least 2 bios */
- 	if (bios.head && bios.head->bi_next) {
- 		need_plug = true;
- 		blk_start_plug(&plug);
-@@ -259,19 +254,19 @@ static void blkg_async_bio_workfn(struct work_struct *work)
-  * cgroup.  Use this helper instead of submit_bio to punt the actual issuing to
-  * a dedicated per-blkcg work item to avoid such priority inversions.
-  */
- void blkcg_punt_bio_submit(struct bio *bio)
- {
--	struct blkcg_gq *blkg = bio_blkg(bio);
-+	struct blkcg *blkcg = bio_blkcg(bio);
- 
--	if (blkg && blkg->parent) {
--		spin_lock(&blkg->async_bio_lock);
--		bio_list_add(&blkg->async_bios, bio);
--		spin_unlock(&blkg->async_bio_lock);
--		queue_work(blkcg_punt_bio_wq, &blkg->async_bio_work);
-+	if (blkcg && cgroup_parent(blkcg->css.cgroup)) {
-+		spin_lock(&blkcg->async_bio_lock);
-+		bio_list_add(&blkcg->async_bios, bio);
-+		spin_unlock(&blkcg->async_bio_lock);
-+		queue_work(blkcg_punt_bio_wq, &blkcg->async_bio_work);
- 	} else {
--		/* Never bounce if there is no non-root blkg to queue on. */
-+		/* Never bounce if there is no non-root blkcg to queue on. */
- 		submit_bio(bio);
- 	}
- }
- EXPORT_SYMBOL_GPL(blkcg_punt_bio_submit);
- 
-@@ -350,15 +345,10 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
- 	blkg->q = disk->queue;
- 	INIT_LIST_HEAD(&blkg->q_node);
- 	blkg->blkcg = blkcg;
- 	blkg->blkcg_id = blkcg->css.id;
- 	blkg->iostat.blkg = blkg;
--#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
--	spin_lock_init(&blkg->async_bio_lock);
--	bio_list_init(&blkg->async_bios);
--	INIT_WORK(&blkg->async_bio_work, blkg_async_bio_workfn);
--#endif
- 
- 	u64_stats_init(&blkg->iostat.sync);
- 	for_each_possible_cpu(cpu) {
- 		u64_stats_init(&per_cpu_ptr(blkg->iostat_cpu, cpu)->sync);
- 		per_cpu_ptr(blkg->iostat_cpu, cpu)->blkg = blkg;
-@@ -1388,10 +1378,13 @@ static void blkcg_css_free(struct cgroup_subsys_state *css)
- 		if (blkcg->cpd[i])
- 			blkcg_policy[i]->cpd_free_fn(blkcg->cpd[i]);
- 
- 	mutex_unlock(&blkcg_pol_mutex);
- 
-+#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-+	WARN_ON(!bio_list_empty(&blkcg->async_bios));
-+#endif
- 	free_percpu(blkcg->lhead);
- 	kfree(blkcg);
- }
- 
- static struct cgroup_subsys_state *
-@@ -1436,10 +1429,15 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 	}
- 
- 	spin_lock_init(&blkcg->lock);
- 	refcount_set(&blkcg->online_pin, 1);
- 	INIT_HLIST_HEAD(&blkcg->blkg_list);
-+#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-+	spin_lock_init(&blkcg->async_bio_lock);
-+	bio_list_init(&blkcg->async_bios);
-+	INIT_WORK(&blkcg->async_bio_work, blkcg_async_bio_workfn);
-+#endif
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	INIT_LIST_HEAD(&blkcg->cgwb_list);
- #endif
- 	list_add_tail(&blkcg->all_blkcgs_node, &all_blkcgs);
- 
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 8d0df8ed5813..1925420154c1 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -75,18 +75,11 @@ struct blkcg_gq {
- 
- 	struct blkg_iostat_set __percpu	*iostat_cpu;
- 	struct blkg_iostat_set		iostat;
- 
- 	struct blkg_policy_data		*pd[BLKCG_MAX_POLS];
--#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
--	spinlock_t			async_bio_lock;
--	struct bio_list			async_bios;
--#endif
--	union {
--		struct work_struct	async_bio_work;
--		struct work_struct	free_work;
--	};
-+	struct work_struct		free_work;
- 
- 	atomic_t			use_delay;
- 	atomic64_t			delay_nsec;
- 	atomic64_t			delay_start;
- 	u64				last_delay;
-@@ -111,10 +104,15 @@ struct blkcg {
- 	/*
- 	 * List of updated percpu blkg_iostat_set's since the last flush.
- 	 */
- 	struct llist_head __percpu	*lhead;
- 
-+#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-+	spinlock_t			async_bio_lock; /* protects async_bios */
-+	struct bio_list			async_bios;
-+	struct work_struct		async_bio_work;
-+#endif
- #ifdef CONFIG_BLK_CGROUP_FC_APPID
- 	char                            fc_app_id[FC_APPID_LEN];
- #endif
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	struct list_head		cgwb_list;
--- 
-2.51.0
-
+> =C2=A0 =C2=A0 =C2=A0*bmc |=3D NEEDED_MASK;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>
+--=20
+Thanks,
+Kuai
