@@ -1,98 +1,135 @@
-Received: from mail-ua1-f44.google.com (mail-ua1-f44.google.com [209.85.222.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3228319AD90
-	for <linux-raid@vger.kernel.org>; Thu, 27 Aug 2026 07:21:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A63A3A2E3F
+	for <linux-raid@vger.kernel.org>; Thu, 27 Aug 2026 07:56:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787815314; cv=none; b=KgsyljOARKy/O/dBa5n3/hfrryIfmenShenCnhNrXaxBXwkxgNHGHiw+2HN+/eHn7O6fpRVHhrC57vLNTAzYvLanZisZevaPr9NmngVn+2tCfUAIayEU20I4/OXn6hFL/vTUb+YFJWUnB7yA57JF2SG2SuuOBflfX7myMfMDgF8=
+	t=1787817413; cv=none; b=rE2+kZq6oHLszdJ3Z1ho9E8bpe2znhkVTkAUEjQdXm2riLASJdNRoOkJ9+2SOWZN0oSFi1tJCLu2pop7BrH6LQ39EoqtKKp5V7QwXyCMxLN5Nb67OubcRQ+i2Z831VRzT1YIABbvuRmWwkKv8NtTniWEngaaDOh5eR6KbykKYXA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787815314; c=relaxed/simple;
-	bh=QN4LLJKILJcpX1pZV2MhOQxGl4YiamTZyX0WyUCUqng=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=mgK/pV0ZwqPsMQmZn4XvJ7BoQXKQIz5YVKVTnzIwo7o+NOqYmsxs/RUv4jQ0AWtvnUAp5yeJD6KRWWHotSgz6leQrpBVO/rAVBRWASgQcTKRVmi5vYSYB2s+s2ANq3osZ9qcQNUp9WED7JyTXmwMD9BsUgXxHdDTHiLiTGyV8qs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.222.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-ua1-f44.google.com with SMTP id a1e0cc1a2514c-97bf910aa70so495306241.2
-        for <linux-raid@vger.kernel.org>; Thu, 27 Aug 2026 00:21:53 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787815312; x=1788420112;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=D8yjs5lhxn9uGJPZAn9jjZ+Jj2fso4i8f+hR78O5TqU=;
-        b=NWrkgRO/OeQ2kIZ1HH8OE8fYc11IcN9TZ0MXLyLjENT6h2JpVPPGa06OHA/mEjzaQE
-         Bll5JMvtGXLm12nzyysqd68RKhHBORpy+7NJl0fP2GU8F6AFQsHq1mIAPc6Sf6joSxvh
-         zJGBVzE+utFTB4q5cHPeCUsPporKcK32M5sy/Y9G6tR9rv6JGFeez6KwhQV+hQpID+Wi
-         goWlGK4Ovw+T1284p/rMH4A0RjiDqqD/AwYqUO2Ed/qPefov6/47cUrQ4wGFhqOyaRRH
-         OXsab/pMExRemsGaMpFHWkZSBtwNnuCiJ+nP4E79QylmEoa1hBjjrFzQY7DwC5ReNjXa
-         frIQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rr264JkKlhYzY5ZoyLPOWzPUvQ6qai7cOvXwd43+wmKIK958B1EnZekPQreZLNDJW3rOEiuxSg9LqwJ@vger.kernel.org
-X-Gm-Message-State: AFuF++nQlw02tjEaQboU8IHo9A+rPOiT0bzCRIzJxNm+9Ff34oNbsR2D
-	5m4liH063Rxae6XJpMvyGuSjzoPc37hB6DVY0aSTWuggDW0Wr4+iZkh8P8VQmH9Q
-X-Gm-Gg: AR+sD102s4eVaDnDl9alNUBgscvfyBCSf8RXO6la/P9MH470IVOdy0pM5YkQLTRSXsI
-	tk5WsSbHxcopBAQbb6Agpgl3CEHz7/NlXrvws/bojDrJ3tZIft8PUA1MLZKYTg2OThdW5xsCP+Y
-	24wnmLtubJqQHL3kB8U7hNNfQFArxkHIrw1Q0t/lyIedOtq+qGxYxvXmL+39eXyOXos1SIZJg4f
-	xMw9a2MCPrfbewISlvmEMNWBYtWP4mguUD9wpgyA0aJtn0wX7zihftz2gs3cFeZ3bSls6zLNFEJ
-	8GyQhBKn6LBEK30AOy/A+ThRPW4wKB9s4v/lYRaszWuZlrBGG9vMd24mr6uRYmAJru454o8KZ3D
-	6AIfFGujbiP0Vt65Sn9kJz0m/PBfHOtXn5ZzxOe6MuRByHD3B1hqJDnFWt0XN+DqfgK4oWd1rgR
-	n3pZmXskkXtWf1BMtFMBxDlXwhg8YGdHeYwRq0FfkC1XA7hDt5m4n69aOEm2+27QrhoQj+LcPs5
-	rbZAw6C0naGIFlHrZtQkHfu+A==
-X-Received: by 2002:a05:6102:441b:b0:77b:2881:580b with SMTP id ada2fe7eead31-782bffdabbcmr4067512137.4.1787815312025;
-        Thu, 27 Aug 2026 00:21:52 -0700 (PDT)
-Received: from mail-ua1-f46.google.com (mail-ua1-f46.google.com. [209.85.222.46])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-78307cc2055sm3817161137.9.2026.08.27.00.21.51
-        for <linux-raid@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 27 Aug 2026 00:21:51 -0700 (PDT)
-Received: by mail-ua1-f46.google.com with SMTP id a1e0cc1a2514c-97ccaa61510so297848241.0
-        for <linux-raid@vger.kernel.org>; Thu, 27 Aug 2026 00:21:51 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+Rr99IiOuBRdCjjB7nxVMhbxAKaYSkz+UWp3XF9kAPd07eiPtrWr+fvS/3yNWxnZQj23hmKflfUR9Z9z@vger.kernel.org
-X-Received: by 2002:a05:6102:5109:b0:777:ab3c:b88c with SMTP id
- ada2fe7eead31-782c0bff4femr3644287137.8.1787815311094; Thu, 27 Aug 2026
- 00:21:51 -0700 (PDT)
+	s=arc-20240116; t=1787817413; c=relaxed/simple;
+	bh=Yd0QBXR5OCWN6B6BOvACRvyr3MRYANfFeaBWbB6EomI=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=OINQJA/Udvhj3flPD8AFHr8OlWG1iqgKDnykfGsbx8FlGkXk43r+BM10Yqiw2vJPgXl/r7E8Ec6+4byWYszodAaxS6Nrneqk1AWFnVW/K+ITzui6FLGX1g1ykDfXBNaBkYD/eHJroqbAvnQyoefOoJ9GY522nTqHh6oLlUXu9Lc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=hxp8UQHY; arc=none smtp.client-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="hxp8UQHY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=i8
+	d2+rXZNC3eZgTKBr+lhMcahtbqu019+ehB0gl8Ix8=; b=hxp8UQHYuw9G2sPzEq
+	lhs2ZG8x/x38AhCYhOIktW/T3o4ydKOdAj8JDbImBQ6NXmTZZLzCQaKRYgoMMMyA
+	ZNVeTBiAK3+K6kW00s+mTZ4nj0+EqkVnxTdCMTGcrD0+RtG07HGGzTrmO7lnzKi7
+	tVhqngqgTHDNC59+NukS4gQmU=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wDnY4im7Y9qjfSOSQ--.19943S4;
+	Thu, 27 Aug 2026 15:56:26 +0800 (CST)
+From: "Li Youhong" <dayou5941@163.com>
+To: song@kernel.org,
+	yukuai@fygo.io
+Cc: magiclinan@didiglobal.com,
+	xiao@kernel.org,
+	linux-raid@vger.kernel.org,
+	Li Youhong <liyouhong@kylinos.cn>
+Subject: [PATCH 2/3] md/raid1-10: add rdev_bb_block_sectors() helper
+Date: Thu, 27 Aug 2026 15:56:19 +0800
+Message-Id: <20260827075620.3599227-3-dayou5941@163.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20260827075620.3599227-1-dayou5941@163.com>
+References: <20260827075620.3599227-1-dayou5941@163.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <64c6e0191bd8ccef0074ffbb09bd0584680d710b.1787584360.git.geert@linux-m68k.org>
- <20260826205058.a6ff019d0584f75c7f50430b@linux-foundation.org>
-In-Reply-To: <20260826205058.a6ff019d0584f75c7f50430b@linux-foundation.org>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Thu, 27 Aug 2026 09:21:39 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdWm5N5tbwy3rhaKJu-n_BDmQwGsjze5LquWPMrhPmUroQ@mail.gmail.com>
-X-Gm-Features: AcwNN1URxO1QJnlEtHmK-oLPYjqqMK6cTFFsDtUxL-F8NHfwrH50duGsc6bxHhU
-Message-ID: <CAMuHMdWm5N5tbwy3rhaKJu-n_BDmQwGsjze5LquWPMrhPmUroQ@mail.gmail.com>
-Subject: Re: [PATCH] raid/kunit: Enable RAID6 PQ and XOR benchmarks if KUNIT_ALL_TESTS=m
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@lst.de>, Eric Biggers <ebiggers@kernel.org>, Ard Biesheuvel <ardb@kernel.org>, 
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDnY4im7Y9qjfSOSQ--.19943S4
+X-Coremail-Antispam: 1Uf129KBjvJXoWxAFW5Wr48CF15Wr4rur4UJwb_yoW5Xr4kpa
+	97WFyfX3yUKFy0qanrA3yUu3WFva43KFW7Cry7u398WFyxJrZrGF4rJrW5WF1jqFnIgF9F
+	qa1UKrWUC3WDKFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jwqXdUUUUU=
+X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC3gok0mqP7apFxgAA3D
 
-Hi Andrew,
+From: Li Youhong <liyouhong@kylinos.cn>
 
-On Thu, 27 Aug 2026 at 05:51, Andrew Morton <akpm@linux-foundation.org> wrote:
-> OK, thanks, but...
->
-> hp2:/usr/src/mm> scripts/get_maintainer.pl -f --no-rolestats lib/raid
-> [not linux-raid@vger.kernel.org]
->
-> Patches enthusiastically accepted ;)
+raid1 and raid10 narrow_write_error() use the same logic to compute the
+badblocks-aligned block size. Factor it into an inline helper in
+raid1-10.c. No functional change.
 
-At your service
-https://lore.kernel.org/7a2e5de234cc0286e3fe9bc11b810433775f2280.1787815121.git.geert+renesas@glider.be
+Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
+---
+ drivers/md/raid1-10.c | 10 ++++++++++
+ drivers/md/raid1.c    |  7 +------
+ drivers/md/raid10.c   |  7 +------
+ 3 files changed, 12 insertions(+), 12 deletions(-)
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
+diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+index 3b0e230692ba..c7ddf136771d 100644
+--- a/drivers/md/raid1-10.c
++++ b/drivers/md/raid1-10.c
+@@ -155,6 +155,16 @@ static inline bool raid1_add_bio_to_plug(struct mddev *mddev, struct bio *bio,
+ 	return true;
+ }
+ 
++/* Block size used when narrowing a write error down to badblocks granularity. */
++static inline int rdev_bb_block_sectors(struct md_rdev *rdev)
++{
++	int lbs = bdev_logical_block_size(rdev->bdev) >> 9;
++
++	if (rdev->badblocks.shift < 0)
++		return lbs;
++	return roundup(1 << rdev->badblocks.shift, lbs);
++}
++
+ /*
+  * current->bio_list will be set under submit_bio() context, in this case bitmap
+  * io will be added to the list and wait for current io submission to finish,
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 9d8441348f14..8a40c69d70a3 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2465,16 +2465,11 @@ static void narrow_write_error(struct r1bio *r1_bio, int i)
+ 	 * We currently own a reference on the rdev.
+ 	 */
+ 
+-	int block_sectors, lbs = bdev_logical_block_size(rdev->bdev) >> 9;
++	int block_sectors = rdev_bb_block_sectors(rdev);
+ 	sector_t sector;
+ 	int sectors;
+ 	int sect_to_write = r1_bio->sectors;
+ 
+-	if (rdev->badblocks.shift < 0)
+-		block_sectors = lbs;
+-	else
+-		block_sectors = roundup(1 << rdev->badblocks.shift, lbs);
+-
+ 	sector = r1_bio->sector;
+ 	sectors = ((sector + block_sectors)
+ 		   & ~(sector_t)(block_sectors - 1))
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index c4218d6483ed..5b1dbb0b7f5a 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2762,16 +2762,11 @@ static void narrow_write_error(struct r10bio *r10_bio, int i)
+ 	 * We currently own a reference to the rdev.
+ 	 */
+ 
+-	int block_sectors, lbs = bdev_logical_block_size(rdev->bdev) >> 9;
++	int block_sectors = rdev_bb_block_sectors(rdev);
+ 	sector_t sector;
+ 	int sectors;
+ 	int sect_to_write = r10_bio->sectors;
+ 
+-	if (rdev->badblocks.shift < 0)
+-		block_sectors = lbs;
+-	else
+-		block_sectors = roundup(1 << rdev->badblocks.shift, lbs);
+-
+ 	sector = r10_bio->sector;
+ 	sectors = ((r10_bio->sector + block_sectors)
+ 		   & ~(sector_t)(block_sectors - 1))
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+2.25.1
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
