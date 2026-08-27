@@ -1,145 +1,119 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AD14362153
-	for <linux-raid@vger.kernel.org>; Thu, 27 Aug 2026 07:02:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2BFB1EFFA1
+	for <linux-raid@vger.kernel.org>; Thu, 27 Aug 2026 07:17:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787814159; cv=none; b=tXWlF+7xSJ4CH/2uvL1KAvjt+6cqbhbwNXo6VKerOS8ttq4iglRbAS7UKQ4gNIlSMCh/ntuK9RbEogqITnM1YcR1HElGMqm19+oEFAXhkR+rqtoLrVf31BYROvZGt8bfdViYgKDXheghpmsVKL3jwIi/MmiopKGgwSELOf93Hgw=
+	t=1787815026; cv=none; b=vAkSpZuSAtF5zWGtI7y412lOC/RNWkYw1VkndIGrYAEfl/BErrSjVrCGx69IOOVhHW/hxERcp5sPIOO8ds0rsv+/+SpbCvwdW7mtcAHO0R9UYVRskWWsuMPdHIech0SLhhjuAUZSQ5huwCVlTmDbKYN7ftF7RyaSwDzWm1JTcvs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787814159; c=relaxed/simple;
-	bh=7ofXFVb3e5OKtgyP11uXGMATOmYKHuxncN4Fm7WY248=;
+	s=arc-20240116; t=1787815026; c=relaxed/simple;
+	bh=4Q6Pbcx6oWtq1r9AOe+Fq5s5rZTVbckAzDw6SxowCR0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Oe/rCNlmghcDWdRZeesOt5YcbN5Kb3fv+l+MtmuScTSgedDy5KbTeRDmXyMEOHqXjRKWz/5/iMRWfv1YuWcnlW720iXOAaCq76ftx01VyvElXqsuCtUUPcr99vzDo7x7mcBzftDE0sKXpEDmdzszpNSjq5WJLjLySgCxMirbdto=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ju6Kyoo1; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=KnV9j07y891LUUcPonLWHSnuQhp61eJY33cB1/vcQbgWYi7m0HOCabk574BDUyxBu1e2Q0YiSCxqDq1ftxA85DEVVnw2kCRMPtzuEW8a7DGNcMBQ5tuhKidhpv/7QpgE9VP0BE1o4DD0Gju+1dVXLSw1y2BY/45mvxr9KU2GVfs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ms/hrcxx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ju6Kyoo1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 960481F000E9;
-	Thu, 27 Aug 2026 07:02:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ms/hrcxx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25B651F000E9;
+	Thu, 27 Aug 2026 07:17:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787814156;
-	bh=oyDV/eAy3FCbUFbC7dVTw2qtXNWgTRtx9vwkKSN4ek8=;
+	s=k20260515; t=1787815024;
+	bh=O32VYOlwwmsABXzT5spu+CquPc1WYtaNV6CscD8Kh4Q=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ju6Kyoo1aIcYS8XhUy86NB7LR1mKQ9rXIOMvTcqRPW8cgI3ooCj4ys+wqw53nVNDk
-	 yCRdykk2f/cSiMplu7gFFp8cDjwjtW2qPvc7daAb69kvtklQopHe/d7YBbzTn0ypwS
-	 OdX8osNXwBvrY1afsGaA1cRboKRjq7gDMDht2UdWCt8qU3/tUNQ8AFqMM1UfKDeon3
-	 iev7ORXezv0SL2c7JnqqKPjHL1GY1crJLY3N0d14hCcfCEOyEPNayBpSrm8BmGoFdH
-	 1WD+57Y4CNFKKX2+U4vQME0uSQJS/Mbz+sFzJcOW8MNcptNTYl7YvCQ23bW/K8huEW
-	 ESYhrXrJ+gWTA==
+	b=ms/hrcxxNNQKnzcBsjoMsHVbYvPfY1FBTbmtLjuhv569uNuhohCwLS2wfMP0KfP3U
+	 N50FrelYMKhGE3V/a276SR0mk/SvcGNqWQ3zAcVsFY+PJ+exSFKsMAS7QIgH4OTNWD
+	 FLDjU049QdyMhq0U9x0HGZuCNTdUswJQhcTiqLg6VUQpN57qio+9XVe52mi0kHCYLO
+	 i6DViAVcMma9R8uOlBMjkAo2DpN1GiGZaXb9YSMQadKrwL0UiJlFDeixQSu2mIYt24
+	 G1yXjKnl2oKUUud2CAYirSSI94Y/ObJu6Lxfby8OVSP55qSHovMbVgUpYcLgj7WU26
+	 CCPs1CGGqEkhw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/3] md/raid5: fix leak and use-after-free in
- resize_stripes error path
+Subject: Re: [PATCH v3 3/3] md/raid5: fix NULL pointer dereference in
+ raid5_free_percpu
 Reply-To: sashiko-reviews@lists.linux.dev
 To: ghuicao@163.com
 Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260827063235.85375-2-ghuicao@163.com>
+In-Reply-To: <20260827063235.85375-3-ghuicao@163.com>
 References: <20260827023803.36602-1-ghuicao@163.com>
  <20260827063235.85375-1-ghuicao@163.com>
- <20260827063235.85375-2-ghuicao@163.com>
+ <20260827063235.85375-3-ghuicao@163.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 27 Aug 2026 07:02:36 +0000
-Message-Id: <20260827070236.960481F000E9@smtp.kernel.org>
+Date: Thu, 27 Aug 2026 07:17:03 +0000
+Message-Id: <20260827071704.25B651F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
-New issues:
-- [Critical] Moving the replacement and freeing of `conf->disks` to after S=
-tep 4 introduces a severe Use-After-Free race with the main IO thread (`rai=
-d5d`).
-
 Pre-existing issues:
-- [High] Incomplete UAF fix: `conf->disks` is still vulnerable to a concurr=
-ent use-after-free by `raid5_error()` and `raid5_calc_degraded()`.
+- [High] Missing workqueue flush before freeing worker structures during ar=
+ray teardown.
 --
 
-commit bd1f3c6216c041887763e5099827c3cd4343c423
+commit 7455143ee1b52af0e50fb9ef4f12b3a32d0dc0c2
 Author: Cao Guanghui <caoguanghui@kylinos.cn>
 
-md/raid5: fix leak and use-after-free in resize_stripes error path
-
-This commit addresses a memory leak when stripe slot allocation fails, and
-attempts to fix a concurrent use-after-free by swapping the conf->disks arr=
-ay
-under mddev->lock. The array replacement is deferred until after new stripe
-slots are successfully allocated.
+    md/raid5: fix NULL pointer dereference in raid5_free_percpu
+   =20
+    If cpuhp_state_add_instance() fails in raid5_alloc_percpu(), conf->node=
+ is
+    never added to the cpuhp instance list and its pprev remains NULL. This
+    patch guards the removal with hlist_unhashed_lockless() so that the cpu=
+hp
+    instance is only removed if it was actually added, preventing a kernel =
+panic.
 
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 4efaef622fc05..e481c48b45093 100644
+> index e481c48b45093..31417c91ab248 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
-
-[ ... ]
-
-> @@ -2685,8 +2683,20 @@ static int resize_stripes(struct r5conf *conf, int=
- newsize)
->  	}
->  	/* critical section pass, GFP_NOIO no longer needed */
+> @@ -7548,7 +7548,8 @@ static void raid5_free_percpu(struct r5conf *conf)
+>  	if (!conf->percpu)
+>  		return;
 > =20
-> -	if (!err)
-> +	if (!err && ndisks) {
-> +		struct disk_info *old_disks =3D conf->disks;
-> +
-> +		spin_lock_irq(&conf->mddev->lock);
-> +		conf->disks =3D ndisks;
-> +		spin_unlock_irq(&conf->mddev->lock);
-> +		kfree(old_disks);
-                ^^^^^^^^^^^^^^^^^
+> -	cpuhp_state_remove_instance(CPUHP_MD_RAID5_PREPARE, &conf->node);
+> +	if (!hlist_unhashed_lockless(&conf->node))
+> +		cpuhp_state_remove_instance(CPUHP_MD_RAID5_PREPARE, &conf->node);
+>  	free_percpu(conf->percpu);
+>  }
 
-[Severity: Critical]
-By deferring the kfree() of old_disks until after Step 4, does this code
-introduce a race with the main IO thread?
+While reviewing the array teardown path modified here, I noticed a separate
+issue in the nearby free_thread_groups() function:
 
-During Step 4 (just above this code), resize_stripes() calls
-raid5_release_stripe(), which returns stripes to service and wakes up the
-raid5d IO thread.
-
-Once awakened, raid5d resumes processing stripes and will locklessly access
-the disks array:
-
-raid5d()
-  handle_stripe()
-    analyse_stripe()
-      rdev =3D conf->disks[i].replacement;
-
-Because raid5d does not acquire mddev->lock, won't it dereference the freed
-old_disks array when this code executes concurrently?
-
+drivers/md/raid5.c:free_thread_groups() {
+    ...
+	if (conf->worker_groups)
+		kfree(conf->worker_groups[0].workers);
+	kfree(conf->worker_groups);
+    ...
+}
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does protecting the pointer
-swap with mddev->lock completely prevent concurrent use-after-free of
-conf->disks?
+This isn't a bug introduced by this patch, but is a pre-existing issue.
 
-The commit message notes that raid5_status() reads conf->disks under
-mddev->lock. However, a concurrent block IO error can trigger raid5_error(),
-which calls raid5_calc_degraded():
+Does this sequence miss a workqueue flush before freeing the worker structu=
+res?
 
-raid5_error()
-  raid5_calc_degraded()
-    struct md_rdev *rdev =3D READ_ONCE(conf->disks[i].rdev);
+During array teardown in md_stop(), raid5_quiesce() waits for active_stripes
+to reach 0. This decrement and the subsequent wake_up(&conf->wait_for_quies=
+cent)
+can occur inside release_inactive_stripe_list(). This is called by
+handle_active_stripes() (executed by raid5_do_work() on the worker thread)
+after temporarily dropping conf->device_lock.
 
-In raid5_error(), this is protected by conf->device_lock, not mddev->lock.
-If raid5_error() executes concurrently with this kfree(), won't it
-dereference the freed old_disks array?
+Once woken, raid5_quiesce() finishes and teardown proceeds to
+free_thread_groups(). This function frees the memory backing worker->work
+without calling flush_workqueue() or cancel_work_sync().
 
->  		conf->pool_size =3D newsize;
-> +	} else if (ndisks) {
-> +		for (i =3D conf->pool_size; i < newsize; i++)
-> +			if (ndisks[i].extra_page)
-> +				put_page(ndisks[i].extra_page);
-> +		kfree(ndisks);
-> +	}
->  	mutex_unlock(&conf->cache_size_mutex);
-> =20
->  	return err;
+Meanwhile, the worker thread in raid5_do_work() could still be executing its
+trailing loop and workqueue core cleanup code. Could this result in a
+use-after-free of the worker structures, leading to memory corruption or a
+kernel panic?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260827063235.8537=
-5-1-ghuicao@163.com?part=3D2
+5-1-ghuicao@163.com?part=3D3
