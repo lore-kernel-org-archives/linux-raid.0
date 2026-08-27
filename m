@@ -1,153 +1,145 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AEE837C93E
-	for <linux-raid@vger.kernel.org>; Thu, 27 Aug 2026 02:54:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F34821CA03
+	for <linux-raid@vger.kernel.org>; Thu, 27 Aug 2026 03:07:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787799241; cv=none; b=rb6jLXqnZ1hMgh9AYyCEf0ax+3Oc/kpC19ZRyYaz9NSOnO2jB4b/O8jPoC0mWKMMr5nGq43PM/zYL3kikLpiiIE3EMeLP7oxsLEcFaECCo+yG4Ez7XhRg465k2TpxQCDn0IifdfRBrt35sdx/5ovuEJMc9MaWuRsOpzDgoIEX30=
+	t=1787800058; cv=none; b=pIfZFMQFmBw+k0h0x2F+C3tTA6ei29qbwSvXc3MBXiGTkgtecpYnHDlM73dyxuY7HrwTwJGhcHnR+dlPjjSBHm0HPL9tpkh67xjfjBAg/G7AwHlkbmQsfjuRIaCfsLn6r8nAwosq/aD9a6TxmMZ4fs9cTBCKkBYybn4zzw2U9do=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787799241; c=relaxed/simple;
-	bh=NfjkJmaoR57E5FCFjrssvvfrzjbeiJ2O7/Fi5THEl7M=;
+	s=arc-20240116; t=1787800058; c=relaxed/simple;
+	bh=e9SsGMXDy4wWZTQv4WizJ4443nJhXQL4mMw5ZIiHa4k=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=PQdscQ6eyTn8u27EpN6Jga3sHM3oYL9qRHV86Udpboc8Mc7y6o2Es9kXrAI9u2B4wuUMVk0V7Q2oVzKTtJn66UNaiU1AmH600IjPBZkT7IhlNnc9KuC+pSuAjokIBX/M4s2YHdbRjtnJagWKlQsYIHCZthkvVXMFnNNA3MWTkMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T1wD+zcU; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=qn9ppnRTuf4Q0kujcjQ9NUzWSHBeaxJmu9us/Chjsie1NbpugPgxIYC0Vez+5CS57/folOjKwXMp1njrZ6Nhm0Ij9NhrfVvdDZmwTeEBviBswKxCXAp7W/Wg4oiB0QNp5dvy8g+ljSlq4kDyyh1ruWoFgD7sSEz+RWqtaYZzLmA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IGot+Zd7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T1wD+zcU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF0E21F00A3D;
-	Thu, 27 Aug 2026 02:53:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IGot+Zd7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF6621F000E9;
+	Thu, 27 Aug 2026 03:07:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787799240;
-	bh=3MAH65blbPZejzpgMZVkHCzvDRsXO8X7E9SsQ6BYOaE=;
+	s=k20260515; t=1787800057;
+	bh=kcSutco9PQYdy/MOL1NGLwnHvsma5AI02zIqSFect5M=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=T1wD+zcU3HkLR/SoJ4C+HSXVp9U33QdIgj5CniQyphZ1FD7N+PoNX22RN3PGZqls9
-	 46PGCe34UAS4FFgE6mNZQYxDwvsK53uPcbgAT6l0TqO7CKEmAzIHjTDlYzGdW22AqI
-	 hWQgTizVbsH13uEasn8MAMvGPlIDTmBLo9VR95wa3Fa3L+S2p3aEJ91NVmarWP/YYX
-	 0XyAj5dBknhkjoOL/Ukwas3pT3tdXzzCvjTgQWmyOuK33q4PpE2sCMVHxOttkgbiBJ
-	 FFxz4CnFAFAbrcVMhupRYNWNvipoGyPdahxEnhXAQN3te4Yl9qBI0NbcCEwNhGOJVv
-	 91cWQ9NYwfCvw==
+	b=IGot+Zd7AHwXp3MbQAKuFMJxPLOW6lDPyBoMYLT8iicSGJxlJ8IeNcpKqOQNg9oFb
+	 QagIzpCwgyrSEdPLPXRm5B/64V4vYOLbVOBkkNvM27yPqOG4e250bkQqwZSXvaH2jp
+	 tl9YgrXqoDUlLDL4h8e4kZdxV9DXz2SOx21OcpRpYY/d2e6EWiyPx/sbY+IbIexT/L
+	 +sBip3nGcY6K7m7K8JQXqSn/cDPR6bHGyzNE/biWmMttFgrQ8CQQ89bPOyzv7F6hBN
+	 6tWQgN2aldURLZt2zV+TiQ7lpS6VyYlKnR2+ihYQHOiq+w1Ncmk7rbyLu1IF9Z98XC
+	 4bxckFF2YY8KQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] md/raid5: set pool_size before extra_page allocation to
- fix leak on error path
+Subject: Re: [PATCH] md-cluster: check pers->resize() return value in
+ update_size()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: ghuicao@163.com
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260827023803.36602-1-ghuicao@163.com>
-References: <20260827023803.36602-1-ghuicao@163.com>
+In-Reply-To: <20260827025229.40138-1-ghuicao@163.com>
+References: <20260827025229.40138-1-ghuicao@163.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 27 Aug 2026 02:53:59 +0000
-Message-Id: <20260827025359.EF0E21F00A3D@smtp.kernel.org>
+Date: Thu, 27 Aug 2026 03:07:36 +0000
+Message-Id: <20260827030736.CF6621F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Memory leak of extra_page and stripe pages during raid5 reshape er=
-ror path.
-- [High] Kernel panic due to NULL pointer dereference in `raid5_free_percpu=
-()` when handling hotplug callback allocation failures.
+- [Critical] Missing superblock update after reverting array size leads to =
+cluster-wide metadata inconsistency.
+- [High] Cluster capacity change failures are incorrectly masked from users=
+pace.
+- [High] DLM lock leaked in EX state if down-conversion fails in `__sendmsg=
+()`.
 --
 
-commit e2a9b5ec799de7e8af41dc93ccf252fa2539b0d8
+commit 716b34ca47de8d73645de2da63206339cac7a868
 Author: Cao Guanghui <caoguanghui@kylinos.cn>
 
-md/raid5: set pool_size before extra_page allocation to fix leak on error p=
-ath
+md-cluster: check pers->resize() return value in update_size()
 
-Sets conf->pool_size right after the conf->disks array is allocated in
-setup_conf(). This ensures that if subsequent initialization fails and
-jumps to the abort label, free_conf() uses the correct pool size to clean
-up the allocated extra_page entries, preventing a memory leak.
+This commit checks the return value of pers->resize() during an array capac=
+ity
+revert and logs an error if it fails, ensuring the failure is visible.
 
-Cc: stable@vger.kernel.org
-
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index b91545ce090de..4efaef622fc05 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -7733,6 +7733,7 @@ static struct r5conf *setup_conf(struct mddev *mdde=
-v)
-> =20
->  	if (!conf->disks)
->  		goto abort;
-> +	conf->pool_size =3D max_disks;
-> =20
->  	for (i =3D 0; i < max_disks; i++) {
->  		conf->disks[i].extra_page =3D alloc_page(GFP_KERNEL);
+> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+> index 24dac6f09da82..0c6da16aecbfa 100644
+> --- a/drivers/md/md-cluster.c
+> +++ b/drivers/md/md-cluster.c
+> @@ -1349,6 +1349,9 @@ static void update_size(struct mddev *mddev, sector=
+_t old_dev_sectors)
+>  	} else {
+>  		/* revert to previous sectors */
+>  		ret =3D mddev->pers->resize(mddev, old_dev_sectors);
+> +		if (ret)
+> +			pr_err("%s:%d: failed to revert array size\n",
+> +			       __func__, __LINE__);
 
 [Severity: High]
-This isn't a bug introduced by this patch, but it exists in the surrounding
-reshape logic. Does this same stale conf->pool_size issue leak memory in
-resize_stripes()?
+This is a pre-existing issue, but since update_size() has a void return typ=
+e,
+cluster capacity change failures like this are not propagated back to the c=
+ore
+MD layer.
 
-If alloc_page(GFP_NOIO) fails in step 4 of resize_stripes(), the function
-returns -ENOMEM but fails to update conf->pool_size because it is gated by
-if (!err).
+In drivers/md/md.c:update_size(), the return state of the cluster size
+update is ignored:
 
-However, conf->disks was already permanently replaced in step 3, and new
-pages were already allocated for the newly added slots:
+	if (mddev_is_clustered(mddev))
+		mddev->cluster_ops->update_size(mddev, old_dev_sectors);
 
-drivers/md/raid5.c:resize_stripes()
-		} else {
-			kfree(conf->disks);
-			conf->disks =3D ndisks;
-		}
+This allows the function to return success (0) even if the cluster resize
+failed and was reverted here. Should we change the signature of update_size=
+()
+so userspace is accurately informed of the failure?
 
-Later in the function:
-				if (!p)
-					err =3D -ENOMEM;
-			}
+[Severity: Critical]
+This is a pre-existing issue, but is there a missing superblock update befo=
+re
+sending the METADATA_UPDATED message?
 
-	if (!err)
-		conf->pool_size =3D newsize;
-	mutex_unlock(&conf->cache_size_mutex);
+If the resize operation fails and the in-memory size is reverted via
+mddev->pers->resize(), the on-disk superblock still retains the new size
+written earlier.
 
-	return err;
+Because md_update_sb() is not called before broadcasting METADATA_UPDATED,
+other nodes reading the on-disk superblock will adopt the new size while the
+initiator runs with the old size. Can this lead to cluster-wide metadata
+inconsistency and data corruption?
 
-Because conf->pool_size is not updated on error, subsequent teardown paths
-like free_conf() and shrink_stripes() will use the old boundary and fail to
-free the memory allocated for the new slots. Could this exhaust kernel
-memory over multiple failed reshape attempts?
+>  		ret =3D __sendmsg(cinfo, &cmsg);
 
 [Severity: High]
-This is a pre-existing issue on the setup_conf() error path, but could
-the abort path trigger a kernel panic due to a null pointer dereference
-in raid5_free_percpu()?
+This is a pre-existing issue, but I have a question about the __sendmsg()
+error handling.
 
-If cpuhp_state_add_instance() fails in raid5_alloc_percpu(), the function
-returns the error without cleaning up conf->percpu:
+Looking at __sendmsg(), if the down-conversion of the lock fails:
 
-drivers/md/raid5.c:raid5_alloc_percpu()
-	err =3D cpuhp_state_add_instance(CPUHP_MD_RAID5_PREPARE, &conf->node);
-	if (!err) {
+	/*down-convert EX to CR on Ack*/
+	error =3D dlm_lock_sync(cinfo->ack_lockres, DLM_LOCK_CR);
+	if (error) {
+		pr_err("md-cluster: failed to convert EX to CR on ACK(%d)\n",
+				error);
+		goto failed_ack;
+	}
 
-When setup_conf() receives the error and jumps to the abort label, free_con=
-f()
-calls raid5_free_percpu(). Because conf->percpu is not null, it incorrectly
-assumes the hotplug node was hashed:
+failed_ack:
+	while ((unlock_error =3D dlm_unlock_sync(cinfo->message_lockres)))
+		pr_err("md-cluster: failed convert to NL on MESSAGE(%d)\n",
+			unlock_error);
+	return error;
 
-drivers/md/raid5.c:raid5_free_percpu()
-	if (!conf->percpu)
-		return;
+The cleanup block handles message_lockres but completely ignores ack_lockre=
+s.
+Does this permanently leak the DLM lock in EX state if the down-conversion
+fails, potentially causing a cluster-wide deadlock?
 
-	cpuhp_state_remove_instance(CPUHP_MD_RAID5_PREPARE, &conf->node);
-
-Since the node was never actually added, hlist_del() in the hotplug state
-removal blindly unlinks the node, dereferencing node->pprev which is null:
-
-kernel/cpu.c:__cpuhp_state_remove_instance()
-remove:
-	hlist_del(node);
-
-Can this crash the kernel during raid array initialization or hotplug events
-if memory allocation fails in the hotplug subsystem?
+>  		if (ret)
+>  			pr_err("%s:%d: failed to send METADATA_UPDATED msg\n",
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260827023803.3660=
-2-1-ghuicao@163.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260827025229.4013=
+8-1-ghuicao@163.com?part=3D1
