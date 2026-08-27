@@ -1,99 +1,118 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F4463B6344;
-	Thu, 27 Aug 2026 08:04:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D50593D9547
+	for <linux-raid@vger.kernel.org>; Thu, 27 Aug 2026 08:15:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787817863; cv=none; b=A5SkkjBh4vgf7ckLtMiqm1bszLk1Q2EJ+G+/B7JdqDe2F82e93GY2AdYY5qZc9gUoCStf/j8W/0dfnIp9dOP8BMMphlBv1QTeO60m1tb2Iqrp8SH7HYwrx4TDPpbTKBtc+kwI5VUQg30STY6N2DSiNRyJWTusOiwBsL5uBl7pQ0=
+	t=1787818541; cv=none; b=YoY2IlT8URtWAlMKvDIJA+jIGjHhGYlVy1CGLrV8xDqVy0j4NIWEs3ks902OPFpfccda0EoaRXjC9lnnlcIKFKcUfZC0x4x8IwG4OjRFAsUgiKMagn1D5/NPs1lBHCvayoX02sdbHIn0XJUb/BqQlHIn5tSH6pcocKNNqZMeuF0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787817863; c=relaxed/simple;
-	bh=ef5P4NbGxhl4+Uk1F0KDET9+Ox/yvMBq5hL20NFEXW0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=dVQ6Fc3q4JwBxLNQsGmwEifDdXX1Kn0LOxx3OZiVL8aB6ouo34da1zsYhWSYpcpJgIpu2ySmDbVqTwIVE9hpuXVMguAFmUz5dDXsQrwpP1fSbfcQ6ZmEC8UnOKj9pH8vB2ImIYrRIarEF1eeBKiZeQ7neckhIifyGuqTfgzFmSk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=IclEnoYL; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1787818541; c=relaxed/simple;
+	bh=28hzlqNjYwOcfBBYKB5Zp8Iac1rY2eXLd+V6Fo7I+vk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Dg/IC5ffBEtXoZ8pD3XOy9zhTlBz60MA46csAbZk9VGRctEA669zSbHZVMIEDLa/o75oLZi4zYECMGnYYBvTtMHLFiEUyIejANT/ofGWrWAQ+HOEhfieDQa7fFWZeB9wi/d2fu75XE6xCj1ICR8BhBIj8WDh4ja7GRUW1YFVg9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GT6FQusv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="IclEnoYL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=11
-	Gtp5Lb3rQoJvuk/TZT1JfLzY2fuTvHNx2t9ky+IIQ=; b=IclEnoYLn3LzHMnA+5
-	ATZ/rAs3S4xWlMqJmklkgfalYLDIjzF3DsdDkJklqo3WMalPQvQfFHbJ+oJkrw32
-	Y19O/bgforKyYx6rBV7T8N7cS26gMmkTxViC+CBtjLKAUtpgFphijeNjwrq/UzsS
-	zf3HFeMcO+iScuKpbiokOt7Ds=
-Received: from localhost.localdomain (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgD3_wxe749qoz9pPQ--.29344S3;
-	Thu, 27 Aug 2026 16:03:44 +0800 (CST)
-From: ghuicao@163.com
-To: Song Liu <song@kernel.org>
-Cc: Yu Kuai <yukuai@fygo.io>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Cao Guanghui <caoguanghui@kylinos.cn>
-Subject: [PATCH v4 2/2] md/raid5: fix NULL pointer dereference in raid5_free_percpu
-Date: Thu, 27 Aug 2026 16:03:41 +0800
-Message-Id: <20260827080341.112296-2-ghuicao@163.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260827080341.112296-1-ghuicao@163.com>
-References: <20260827063235.85375-1-ghuicao@163.com>
- <20260827080341.112296-1-ghuicao@163.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GT6FQusv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 534041F000E9;
+	Thu, 27 Aug 2026 08:15:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787818539;
+	bh=+7KhzQBPi/7twttTIp6G3VxU46CZFdY3xlEfrj5N3V4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=GT6FQusvyb6irXLuvHFmZDlfAuDcJC9lgmBm10yQAwr1yH+PAhQHudFtPri4akzT8
+	 eJM64G1a7fV+KZizG0HJ1gyP4+XQ2YpOVYZJC99slOMIZaOGDSJql6SS+zt3m2ONNq
+	 9JjBx0/YLgmvGoQhBKWPo8DajeKupQNQ/euKIPss9iaWpgj3ujLXm2HhFJUTpPozeg
+	 vQMBfsfIr4Pius/s7nHaTe6+lpPqYfFT9SKISyvAcb3QOKGjilg3ZxZ+fir1GEs/6s
+	 Z9YyrA96MSteIvzzFS4gNlfV/Ki99OcIoe2iDz0Am4pxrZr188oq6Mr+9010Z2wabf
+	 kQLoa8sjaMmSQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 2/3] md/raid1-10: add rdev_bb_block_sectors() helper
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Li Youhong" <dayou5941@163.com>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20260827075620.3599227-3-dayou5941@163.com>
+References: <20260827075620.3599227-1-dayou5941@163.com>
+ <20260827075620.3599227-3-dayou5941@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 27 Aug 2026 08:15:38 +0000
+Message-Id: <20260827081539.534041F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PigvCgD3_wxe749qoz9pPQ--.29344S3
-X-Coremail-Antispam: 1Uf129KBjvJXoW7ury7Kr1xuFWrZw1fKF48WFg_yoW8Ww4xpw
-	4DJr4Yg3s5AanYk3s2vw4UuF15XwsrGrW8Aas3Ww4rZFs5ZrnFywsxZFW8uFy8AFZaqayx
-	J3s8XrnxJa1DtaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j5AwxUUUUU=
-X-CM-SenderInfo: 5jkxxuldr6il2tof0z/xtbC4ACSJWqP72CvhwAA3V
 
-From: Cao Guanghui <caoguanghui@kylinos.cn>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-If cpuhp_state_add_instance() fails in raid5_alloc_percpu() (e.g., the
-startup callback raid456_cpu_up_prepare fails due to an allocation
-failure), conf->node is never added to the cpuhp instance list and
-its pprev remains NULL (from kzalloc initialization).
+Pre-existing issues:
+- [High] Converting a data-less bio (e.g., REQ_OP_SECURE_ERASE) to REQ_OP_W=
+RITE causes a NULL pointer dereference in error handling.
+--
 
-When setup_conf() then jumps to abort, free_conf() calls
-raid5_free_percpu(), which checks conf->percpu (non-NULL, since it was
-allocated before the cpuhp failure) and proceeds to call
-cpuhp_state_remove_instance().  This calls hlist_del() on the unhashed
-node, which dereferences node->pprev (NULL), causing a kernel panic.
+commit 7d28d3b35b9395eb9bc70edade7e6a8cd0c8563e
+Author: Li Youhong <liyouhong@kylinos.cn>
 
-Guard the removal with hlist_unhashed_lockless() so that the cpuhp
-instance is only removed if it was actually added.  The lockless variant
-uses READ_ONCE() for the pprev read, which is safe here because the
-actual removal is synchronized by cpuhp_state_mutex inside
-cpuhp_state_remove_instance().
+md/raid1-10: add rdev_bb_block_sectors() helper
 
-Fixes: 29c6d1bbd7a2 ("md/raid5: Convert to hotplug state machine")
-Cc: stable@vger.kernel.org
-Signed-off-by: Cao Guanghui <caoguanghui@kylinos.cn>
----
- drivers/md/raid5.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+This commit factors out the badblocks-aligned block size computation
+logic used in both RAID1 and RAID10 into a new inline helper function,
+rdev_bb_block_sectors(). The refactoring simplifies narrow_write_error()
+in both drivers.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7539,7 +7539,8 @@ static void raid5_free_percpu(struct r5conf *conf)
- {
- 	if (!conf->percpu)
- 		return;
- 
--	cpuhp_state_remove_instance(CPUHP_MD_RAID5_PREPARE, &conf->node);
-+	if (!hlist_unhashed_lockless(&conf->node))
-+		cpuhp_state_remove_instance(CPUHP_MD_RAID5_PREPARE, &conf->node);
- 	free_percpu(conf->percpu);
- }
--- 
-2.34.1
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 9d8441348f14a..8a40c69d70a37 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -2465,16 +2465,11 @@ static void narrow_write_error(struct r1bio *r1_b=
+io, int i)
+>  	 * We currently own a reference on the rdev.
+>  	 */
+> =20
+> -	int block_sectors, lbs =3D bdev_logical_block_size(rdev->bdev) >> 9;
+> +	int block_sectors =3D rdev_bb_block_sectors(rdev);
 
+[Severity: High]
+This is a pre-existing issue, but while reviewing the refactoring in
+narrow_write_error(), I noticed a potential problem further down in the
+function.
+
+If a dataless write operation such as REQ_OP_SECURE_ERASE is issued and fai=
+ls
+on an underlying drive, the error handling path clones the failing dataless
+master bio (which lacks data buffers and has bi_io_vec =3D=3D NULL) and doe=
+s the
+following:
+
+drivers/md/raid1.c:narrow_write_error() {
+    ...
+    wbio->bi_opf =3D REQ_OP_WRITE;
+    wbio->bi_iter.bi_sector =3D r1_bio->sector;
+    wbio->bi_iter.bi_size =3D r1_bio->sectors << 9;
+    ...
+}
+
+By unconditionally setting REQ_OP_WRITE without providing a data vector, do=
+es
+this turn a dataless operation into an illegal write?
+
+When this modified bio is trimmed or submitted to the block layer, the block
+core and underlying drivers will treat it as a standard data-carrying write
+and attempt to iterate over its missing data bvecs. Can this cause a NULL
+pointer dereference and kernel panic?
+
+The exact same buggy behavior also exists in raid10 error handling:
+
+drivers/md/raid10.c:narrow_write_error() {
+    ...
+    wbio->bi_iter.bi_sector =3D wsector +
+                              choose_data_offset(r10_bio, rdev);
+    wbio->bi_opf =3D REQ_OP_WRITE;
+    ...
+}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260827075620.3599=
+227-1-dayou5941@163.com?part=3D2
