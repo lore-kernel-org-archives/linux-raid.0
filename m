@@ -1,29 +1,29 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6B731C84D0;
-	Thu, 27 Aug 2026 02:38:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C1CC3812C2;
+	Thu, 27 Aug 2026 02:52:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787798315; cv=none; b=A1sbtqBWty2JvuGZKtUhKMtsUtcqNS0BZ2Mil8z3S/l/2up/oH0Y4dvXFLFtYQJalVBVXuzVpga0QLLX/qAUX2dzyjLQvS4QwAstfa3fOcnsTaD+5EXf90YjRIOiKtomqgEjXZMkZ3K3WsO61xU+z8NI+7ZlKI9Rz2uTe1G8hw4=
+	t=1787799178; cv=none; b=PJz35k4+L7aQL4muO2EPY35mMnyI5urON3IMcax+U8p8YK2wlTSueAeSVG4wE01x+RAF2tqBtfnYCunl4ycEzuybsndmv0sjTdd7c9qBdNU2Sb/l4Pm1fjnv46MKCqRTbfMi3RGlTMDBWhIdlYzEg8VDmbK4oI/tnaXElzykWLk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787798315; c=relaxed/simple;
-	bh=2lgJVWDLJSRQTDln7hZ5jKmiXAVgwNTHvtaG7S34XZE=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kd72S5VdcspK1bpDGz98mxkkfa7EM1ICJ1b24jv7f5cDy48oszdJqXKjnN+xGF0pGa6HZmvRnb+uO74gLjQepGu3ps9gh/sbIUwtZ8y8dk9d3+RE0e7rUPRfjC/4DCwt/1/AXHrYwW7ncx2h63odye8GvTLaMKl3vYFjmeK9xn4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=GfpjjMLa; arc=none smtp.client-ip=117.135.210.4
+	s=arc-20240116; t=1787799178; c=relaxed/simple;
+	bh=biZ/o/U/TU+X1hazTnABtit2M7iAOWQdYiuSnkZn6/4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Pzi+AhErZblvfR5XAXdWULC6MW080xSY2EwKb4Z8E/ZcV3z073My7W1pELcEW4MnReqTH3qefZ7T54+JQdD22Zy4DcCb5hJ1Hb6FpV0gFrscdGkbeVcCnZ0nx2zxm0aj/FtSkq4fiK7vDSSh7UlgZq+za2GLd13yKf6bbJ9QE/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=RHXGCskq; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="GfpjjMLa"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="RHXGCskq"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=kF
-	XxZJ9VVh7dL52uS7/oN/owmsUDo+btzoy5sSb0lOE=; b=GfpjjMLakO0ItZmIMX
-	llkpuWlDpg7BZIDbwBb328GCKFg4HMJcfm+zb1CPYwfaTLbJHphKA16tusGcMHrH
-	1DbCpHcIMu7iPmAwVWiBFvUT24d0gGTASm9e4LK9+34Abyw1X03ltjCFegGP0Ck8
-	J92e//fSsCnd0fWH5F824gEBY=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=GQ
+	/5iD+Dl0CU/ydwpKnFa71HIbspsETfxUx98qiNHPE=; b=RHXGCskqOI3PCd/JiC
+	+vDjzckGHAEUWvQs8kwMmxWoaGbKuNA/+Psn8orc8MJhfpstVHUA326ZHXsvMKUZ
+	Ip+SBHQKA6duEf2v48PmfdKkmtIPfNHe3H44qx3vPidpgGDYitx+lBGQfWrEmzuB
+	WSfBcNzjr4tsILePRbeFEUZ+s=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wD3XyQOo49qe0dfSQ--.11609S2;
-	Thu, 27 Aug 2026 10:38:08 +0800 (CST)
+	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wAHhIhtpo9qE6RhSQ--.15025S2;
+	Thu, 27 Aug 2026 10:52:30 +0800 (CST)
 From: ghuicao@163.com
 To: Song Liu <song@kernel.org>
 Cc: Yu Kuai <yukuai@fygo.io>,
@@ -31,11 +31,10 @@ Cc: Yu Kuai <yukuai@fygo.io>,
 	Xiao Ni <xiao@kernel.org>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
 	Cao Guanghui <caoguanghui@kylinos.cn>
-Subject: [PATCH] md/raid5: set pool_size before extra_page allocation to fix leak on error path
-Date: Thu, 27 Aug 2026 10:38:03 +0800
-Message-Id: <20260827023803.36602-1-ghuicao@163.com>
+Subject: [PATCH] md-cluster: check pers->resize() return value in update_size()
+Date: Thu, 27 Aug 2026 10:52:29 +0800
+Message-Id: <20260827025229.40138-1-ghuicao@163.com>
 X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -44,54 +43,48 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3XyQOo49qe0dfSQ--.11609S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7tryDXFy3Zw47uF4fZFyxXwb_yoW8Ar1Upw
-	srWw1Yg345WryrGry7C3y8uF1rtw40qrWxCFW5W3yqvr9Iqr9agF4rXa4YgrWkAFnakayj
-	qFZ0yrs8Jry5taDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jFeHDUUUUU=
-X-CM-SenderInfo: 5jkxxuldr6il2tof0z/xtbC+xBr-WqPoxDdbwAA3Z
+X-CM-TRANSID:_____wAHhIhtpo9qE6RhSQ--.15025S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7WF48XFW7GryrWr43CrWruFg_yoW8Gry8pr
+	Wvva4akrykC3yUGw47Jws7ua4rKw1xJrWYyry7Cw1Skw4DJrZFkF4Fgas0qan8Cry3XanI
+	qrs8XF4ku3Wv9w7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j72-5UUUUU=
+X-CM-SenderInfo: 5jkxxuldr6il2tof0z/xtbC-A5D1WqPpm7dDAAA3Y
 
 From: Cao Guanghui <caoguanghui@kylinos.cn>
 
-In setup_conf(), conf->disks is allocated with max_disks slots and
-extra_page is allocated for each slot.  However, pool_size remains 0
-(uninitialized from kzalloc) until grow_stripes() sets it later.  If
-any allocation or initialization between the extra_page loop and
-grow_stripes() fails and jumps to abort, free_conf() iterates
-pool_size (= 0) times and skips the extra_page freeing loop entirely,
-leaking max_disks pages.
+In update_size(), when cluster_check_sync_size() detects that not all
+nodes have updated their sync_size, the initiator reverts the array
+size via pers->resize().  However, the return value of resize() is
+immediately overwritten by __sendmsg(), so a resize failure is
+silently lost.
 
-Set pool_size to max_disks right after the disks array allocation
-succeeds, so that free_conf() correctly frees all allocated
-extra_page entries on any error path.  This is safe because:
+If the revert resize fails, the array remains at the new (larger)
+size while other nodes have not confirmed the change, leaving the
+cluster in an inconsistent state with no error logged.
 
-- If kzalloc_objs(disks) fails, pool_size stays 0 and free_conf
-  skips the loop (kfree(NULL) is safe).
-- grow_stripes() later sets pool_size = devs, which equals max_disks,
-  so the early assignment does not change the final value.
-- resize_stripes() only updates pool_size on success and reallocates
-  the disks array in lockstep.
+Check the resize() return value and log an error before sending the
+METADATA_UPDATED message, so that a resize failure is visible to the
+user.
 
-Fixes: d7bd398e97f2 ("md/r5cache: handle alloc_page failure")
-Cc: stable@vger.kernel.org
 Signed-off-by: Cao Guanghui <caoguanghui@kylinos.cn>
 ---
- drivers/md/raid5.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/md/md-cluster.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7732,8 +7732,9 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	conf->disks = kzalloc_objs(struct disk_info, max_disks);
- 
- 	if (!conf->disks)
- 		goto abort;
-+	conf->pool_size = max_disks;
- 
- 	for (i = 0; i < max_disks; i++) {
- 		conf->disks[i].extra_page = alloc_page(GFP_KERNEL);
- 		if (!conf->disks[i].extra_page)
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -1349,7 +1349,10 @@ static void update_size(struct mddev *mddev, sector_t old_dev_sectors)
+ 	} else {
+ 		/* revert to previous sectors */
+ 		ret = mddev->pers->resize(mddev, old_dev_sectors);
++		if (ret)
++			pr_err("%s:%d: failed to revert array size\n",
++			       __func__, __LINE__);
+ 		ret = __sendmsg(cinfo, &cmsg);
+ 		if (ret)
+ 			pr_err("%s:%d: failed to send METADATA_UPDATED msg\n",
+ 			       __func__, __LINE__);
 -- 
 2.34.1
 
