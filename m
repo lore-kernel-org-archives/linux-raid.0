@@ -1,95 +1,133 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD19E36AB56;
-	Thu, 27 Aug 2026 03:17:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE6E1231C91
+	for <linux-raid@vger.kernel.org>; Thu, 27 Aug 2026 03:32:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787800652; cv=none; b=Q7fOCn+p6uxgTVm3yNogXd2cC6KtCoIQvvqPl39sYqwXzoPuQOqHsEFeUZ7K8d2Y2Uv3z+H7c3uhOyUYfiRzvKaOgKH60fUGclyJq1Y8iyxbhKU5plexqCgQebCH8Pcp2JQRk0GsmZpvEPsjlOuRqyuGYPHwe/26f59VZWQEZyc=
+	t=1787801522; cv=none; b=uyJL4zPKLiiKVFBVVNjLp1tmnbkeFMwCmSH3N+dyJOnaajRvIGKCE6fCoBJWkA0V4yYNe3H5YQkK1d5qVBTK1PGh5YkL4olwmVOB0ukMxbFsoWmXRWKSQHIuWv0JtVUdv6V1Vg7IMz+/A2lMCIP1fuKCsUUzHboj4qRYEMxjBlU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787800652; c=relaxed/simple;
-	bh=bAruQZ0cIRVmOCmhEQYA1wQoiKdmxyMg6Rgx4pWc0MI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=GAlibxoA3wNp7oetehH2zkexDMmC0ZSPO6xVYKXfOIBM+5cBtBScbawF4PKlZf0e7GzGUfXWoc8SsUQoIBQVmlbDk33QjIXMkWGYPkZZhgosEoRT+cgQHJChzmo03HU2Sq+yzCbSVGQ0zsGXoDPfpY0Z86RHpJ19PKxwUd/BIv4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=XmpjW/FQ; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1787801522; c=relaxed/simple;
+	bh=P18LY7grLXbGjeVrAD6ccSbEMRAkS9GDkng/7pf79o8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=nPIkltSEN7y0rokCueL5jYT3L8jugl1lydMwT3pz2unZzU3rgWiZLW/zsMRIkZIFlHvLTDatDsY3JdG8OigTyuji6rcn1C23DigWXxPR9r3ezN0+SnDfRtPYlUy0dKPBjMqoPZmKDrwDOiQRiTRBaK7QGO8ct5rz7w5e/7pvwA4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RfcJmIai; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="XmpjW/FQ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=o2
-	kY95xCwNWCpsR/iyxyWE5K4DUXGZxG7v6ikeJdzPI=; b=XmpjW/FQpLGuQdfW1M
-	35vxlcWtMH5DFJYhrWdlSUrgzquvW0XkeXY3rgZBvaI6yjUqAIRC1/q3VZvzIM5H
-	fdR+xiRuh0y2Cg4uXdTKntrUm7ajEQmYTml574TugYOESpr4tMVlXUrsJLy9Myh1
-	ZNcWfvS7PScDNv7Yc7auIiNpc=
-Received: from localhost.localdomain (unknown [])
-	by gzsmtp4 (Coremail) with SMTP id PygvCgCnSSUgrI9q0i_LOQ--.48736S3;
-	Thu, 27 Aug 2026 11:16:52 +0800 (CST)
-From: ghuicao@163.com
-To: Song Liu <song@kernel.org>
-Cc: Yu Kuai <yukuai@fygo.io>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Cao Guanghui <caoguanghui@kylinos.cn>
-Subject: [PATCH 2/2] md/raid5: fix NULL pointer dereference in raid5_free_percpu
-Date: Thu, 27 Aug 2026 11:16:46 +0800
-Message-Id: <20260827031646.49080-2-ghuicao@163.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RfcJmIai"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EFE41F000E9;
+	Thu, 27 Aug 2026 03:32:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787801520;
+	bh=DLJ9oFahH4w0bSYRAhWYvuWLdI7WJWbtm8BeWozzBM0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=RfcJmIai/MJWmVqyXmhN/DizZNONWnREcodu/pvRJeVaPvyE9S47oSBWtGQicJbQt
+	 pOz+3HCQLp0fbEOEY4lyKee6/HpPuK7m8HlBUR15d3V39gbTjQrUQmKoPwt9rkd8yW
+	 ae/Qp9lIzJ6nTBAT9Ynu1mD1eKnbAyvbRLe+ExAyMerqBjp1+hgRXKC/dIhdUL8uvS
+	 qqe1SmFv1HUQ+0w0gD48hUzFlPAuwup8p1rMYgVpssstridX4gT1QsgFBgAUTpjX1T
+	 c2jBrqyrSol/3SKkkjHtdhN43XJJ1cPBc5lWihQ57HIVQO1Wi9ZTc9RJpikuPzpL3V
+	 A5rBCf8REcvIw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/2] md/raid5: fix pool_size leak in resize_stripes
+ error path
+Reply-To: sashiko-reviews@lists.linux.dev
+To: ghuicao@163.com
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
 In-Reply-To: <20260827031646.49080-1-ghuicao@163.com>
 References: <20260827031646.49080-1-ghuicao@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 27 Aug 2026 03:32:00 +0000
+Message-Id: <20260827033200.7EFE41F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PygvCgCnSSUgrI9q0i_LOQ--.48736S3
-X-Coremail-Antispam: 1Uf129KBjvJXoW7ury7Kr1xuFWrZw1fKF48WFg_yoW8Xry8pw
-	4DAr1Yg34rAanYk3s2vw4UuF1YqanrGrW8Aas3Wws5ZFs5Zr9Fyw45ZFW8WFy8AFZaqayx
-	A3s8XrnxJF4DtaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j5cTPUUUUU=
-X-CM-SenderInfo: 5jkxxuldr6il2tof0z/xtbC4ASyRWqPrCQJEgAA3l
 
-From: Cao Guanghui <caoguanghui@kylinos.cn>
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-If cpuhp_state_add_instance() fails in raid5_alloc_percpu() (e.g., the
-startup callback raid456_cpu_up_prepare fails due to an allocation
-failure), conf->node is never added to the cpuhp instance list and
-its pprev remains NULL (from kzalloc initialization).
+New issues:
+- [High] Premature update of `pool_size` causes subsequent reshape retries =
+to bypass stripe cache resizing, leading to a NULL pointer dereference.
 
-When setup_conf() then jumps to abort, free_conf() calls
-raid5_free_percpu(), which checks conf->percpu (non-NULL, since it was
-allocated before the cpuhp failure) and proceeds to call
-cpuhp_state_remove_instance().  This calls hlist_del() on the unhashed
-node, which dereferences node->pprev (NULL), causing a kernel panic.
+Pre-existing issues:
+- [High] Lockless access to `conf->disks` in `raid5_status()` can lead to a=
+ Use-After-Free if it races with `resize_stripes()` freeing the array.
+--
 
-Guard the removal with hlist_unhashed() so that the cpuhp instance is
-only removed if it was actually added.
+commit 021dd13adb2ffa7a0e256f63ee764cd6ee6f46ab
+Author: Cao Guanghui <caoguanghui@kylinos.cn>
 
-Fixes: 29c6d1bbd7a2 ("md/raid5: Convert to hotplug state machine")
-Cc: stable@vger.kernel.org
-Signed-off-by: Cao Guanghui <caoguanghui@kylinos.cn>
----
- drivers/md/raid5.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+md/raid5: fix pool_size leak in resize_stripes error path
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7539,7 +7539,8 @@ static void raid5_free_percpu(struct r5conf *conf)
- {
- 	if (!conf->percpu)
- 		return;
- 
--	cpuhp_state_remove_instance(CPUHP_MD_RAID5_PREPARE, &conf->node);
-+	if (!hlist_unhashed(&conf->node))
-+		cpuhp_state_remove_instance(CPUHP_MD_RAID5_PREPARE, &conf->node);
- 	free_percpu(conf->percpu);
- }
--- 
-2.34.1
+This commit updates conf->pool_size immediately after replacing conf->disks
+in resize_stripes(). It intends to ensure pool_size matches the allocated
+array size so free_conf() frees the correct number of extra page allocations
+on teardown.
 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index b91545ce090de..fa64cf059b8ea 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -2642,6 +2642,7 @@ static int resize_stripes(struct r5conf *conf, int =
+newsize)
+>  		} else {
+>  			kfree(conf->disks);
+
+[Severity: High]
+This is a pre-existing issue, but does freeing the old disks array here
+without synchronization (e.g., an RCU grace period) allow a use-after-free?
+
+Concurrent readers like raid5_status() access the freed disks array lockles=
+sly
+since md_seq_show() only holds mddev->lock (a spinlock), while this code
+executes under mddev->reconfig_mutex and conf->cache_size_mutex.
+
+For example, in raid5_status():
+
+drivers/md/raid5.c:raid5_status() {
+    ...
+    struct md_rdev *rdev =3D READ_ONCE(conf->disks[i].rdev);
+    ...
+}
+
+If an unprivileged user reads /proc/mdstat exactly when root initiates a
+reshape, it appears the kernel will dereference the memory freed here.
+
+>  			conf->disks =3D ndisks;
+> +			conf->pool_size =3D newsize;
+
+[Severity: High]
+Does moving the pool_size update here cause a NULL pointer dereference on
+reshape retries?
+
+If the alloc_page() calls in Step 4 of resize_stripes() fail due to memory
+pressure, the function sets err =3D -ENOMEM and returns, but conf->pool_size
+has already been updated to newsize. The stripes are then released into the
+cache with missing (NULL) pages.
+
+If a user retries the array reshape operation after the -ENOMEM failure,
+check_reshape() will evaluate this condition:
+
+drivers/md/raid5.c:check_reshape() {
+    ...
+    if (conf->previous_raid_disks + mddev->delta_disks <=3D conf->pool_size)
+        return 0; /* never bother to shrink */
+    ...
+}
+
+This evaluates to true because pool_size was already updated. The retry
+bypasses resize_stripes() and proceeds with the reshape. Later, when
+operations like ops_run_io() access the unallocated pages for the new
+devices, it results in a NULL pointer dereference.
+
+>  		}
+>  	} else
+>  		err =3D -ENOMEM;
+
+[ ... ]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260827031646.4908=
+0-1-ghuicao@163.com?part=3D1
