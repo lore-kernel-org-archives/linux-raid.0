@@ -1,54 +1,55 @@
-Received: from smtp153-170.sina.com.cn (smtp153-170.sina.com.cn [61.135.153.170])
+Received: from smtp153-162.sina.com.cn (smtp153-162.sina.com.cn [61.135.153.162])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B7103DAADE
-	for <linux-raid@vger.kernel.org>; Fri, 28 Aug 2026 10:40:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=61.135.153.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CFE5346771
+	for <linux-raid@vger.kernel.org>; Fri, 28 Aug 2026 10:50:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=61.135.153.162
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787913622; cv=none; b=DLw6sQiM8A/SGXxUzt0LefI65fffojlzisND6A7PjMqNPJ34x+g5rKaRwWPlUfZZ1ecVOrIae5g24Me3IzsFM455dX8FK9WswpxUpTHXG5z9J7/66Eu+2pVfV4vhJNCiRt8yT7xzAAINyo4Trr5cWvIlZ7ztD1jNE6VuFgfR2S4=
+	t=1787914239; cv=none; b=Z0chY3ofCY3JNNQW9CcSovrZEkchvKAdF0g6bEIwKr4eGdNJh9WuJAIrCfhBUNGrShquKNrrPX+LdhsshAiHJbFsmyTbDIf0NVQne6W4B4mN3RwZIlesdMaObczzHsqCU8yyRRRba3c9wbG5p8ajXrvBbLhY2OicRDCSTeXwoK4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787913622; c=relaxed/simple;
-	bh=YAUw6g07BXmtWFoD9VCDQoHbfUdwW08Jivc6mI48GEI=;
+	s=arc-20240116; t=1787914239; c=relaxed/simple;
+	bh=33MVvyU6flxL5cQA6YdkwXg1ZbH1BHoYh3xQUJJJusY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MOd/jE5IHxqhgI1riVUpc7i4wWudN7bg5XkdXAkYHDwNmBHPqgVmBS/48waMmG8YHI3/pkkCyS449f6R+8GNJJp69KV+bHs99qAJlPfCVFhkLt5SYr7AIp4vDPtlV5vBmk9HeQ5UBVosF0uCEjYjLn20JsAswIxPIfOykyeVnto=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sina.com; spf=pass smtp.mailfrom=sina.com; dkim=pass (1024-bit key) header.d=sina.com header.i=@sina.com header.b=vc85yMWz; arc=none smtp.client-ip=61.135.153.170
+	 MIME-Version; b=G/DmtbGp54Nn28pYmoJHdDACWww5EqGQDPuRfseKGieJ5ZbKRL8jUTITOVpxj7XPJq9QgUAfxH+1Q04Qz3l9LVYP5YNjavBsB/TkGRibHGXC3nPYI0fXSMX/QPXeZmrG7/qNgo0hYXJjLEo079ndIQk3/iojHmdoKga4ynzyK6k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sina.com; spf=pass smtp.mailfrom=sina.com; dkim=pass (1024-bit key) header.d=sina.com header.i=@sina.com header.b=tJwq3R4g; arc=none smtp.client-ip=61.135.153.162
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sina.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sina.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=sina.com header.i=@sina.com header.b="vc85yMWz"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sina.com; s=201208; t=1787913613;
-	bh=hXY+WbbG19Rh8/V32bq6DCv/4+Yy1+y5L54TzXJtYtU=;
+	dkim=pass (1024-bit key) header.d=sina.com header.i=@sina.com header.b="tJwq3R4g"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sina.com; s=201208; t=1787914233;
+	bh=yuVja7/hyVZ6sVqMdahq1hTCS5fUCdu4lYUx6vfeg8k=;
 	h=From:Subject:Date:Message-ID;
-	b=vc85yMWzuLZVtd/FhgOkMZqCxPTcwIOCQ15awDvkRdN65GrxvKv1FkA8N78tUjsIP
-	 5jVtd3vDErBuUHXGAFokuBvD8ltHbAGrA7p5LN//jHOG5W+v7J64DGOo8F+wvzY6ev
-	 QeJIL6vVgSaVXuEwFZP0Mi6q4QGfhk5LUk9pr2xE=
+	b=tJwq3R4gCxJJwqHnXK3OzNloCk2dB2d6bSaLtzwj2Lep8bwHqp8aLzus/8dsysHBC
+	 n694O2bSssmSl+2PiT1TOaM1d+EdKWVQu80PmelLracaHOROxZ2uKGsLSg2UnipR23
+	 OhO0Sjz/DiZ0HuyXdkm1mrM5Ccm7SqvjHptV/sfU=
 X-SMAIL-HELO: lxu-ped-host..
 Received: from unknown (HELO lxu-ped-host..)([111.198.231.89])
-	by sina.com (10.54.253.34) with ESMTP
-	id 6A91657D00006DC1; Fri, 28 Aug 2026 18:40:03 +0800 (CST)
+	by sina.com (10.54.253.31) with ESMTP
+	id 6A9167C800005330; Fri, 28 Aug 2026 18:49:47 +0800 (CST)
 X-Sender: eadavis@sina.com
 X-Auth-ID: eadavis@sina.com
 Authentication-Results: sina.com;
 	 spf=none smtp.mailfrom=eadavis@sina.com;
 	 dkim=none header.i=none;
 	 dmarc=none action=none header.from=eadavis@sina.com
-X-SMAIL-MID: 3546146291675
-X-SMAIL-UIID: A782ECB0474B43B095A6A99C9A395CF2-20260828-184003-1
+X-SMAIL-MID: 1480266815948
+X-SMAIL-UIID: 6BA2352CF4E049E69E411598473469E8-20260828-184947-1
 From: Edward Adam Davis <eadavis@sina.com>
-To: syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
-Cc: song@kernel.org,
-	yukuai@fygo.io,
-	magiclinan@didiglobal.com,
-	xiao@kernel.org,
+To: eadavis@sina.com
+Cc: linux-kernel@vger.kernel.org,
 	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	syzkaller-bugs@googlegroups.com
-Subject: [PATCH] md/raid1: prevent a race between write and stop request
-Date: Fri, 28 Aug 2026 18:39:57 +0800
-Message-ID: <20260828103957.245658-1-eadavis@sina.com>
+	magiclinan@didiglobal.com,
+	song@kernel.org,
+	syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com,
+	syzkaller-bugs@googlegroups.com,
+	xiao@kernel.org,
+	yukuai@fygo.io
+Subject: [PATCH v2] md/raid1: prevent a race between write and stop request
+Date: Fri, 28 Aug 2026 18:49:44 +0800
+Message-ID: <20260828104944.246837-1-eadavis@sina.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <6a908777.1d9ded08.62e62.00da.GAE@google.com>
-References: <6a908777.1d9ded08.62e62.00da.GAE@google.com>
+In-Reply-To: <20260828103957.245658-1-eadavis@sina.com>
+References: <20260828103957.245658-1-eadavis@sina.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -63,7 +64,7 @@ null-ptr-deref in [1].
 CPU0				CPU1
 ====				====
 md_submit_bio()
-md_handle_request()		do_md_stop()__md_stop()
+md_handle_request()		do_md_stop()
 raid1_make_request()		 __md_stop()
 raid1_write_request()		   mddev->private = NULL
 wait_barrier()
@@ -108,6 +109,8 @@ Closes: https://syzkaller.appspot.com/bug?extid=3fe892ea5fc292e1353f
 Tested-by: syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
 Signed-off-by: Edward Adam Davis <eadavis@sina.com>
 ---
+v1 -> v2: typo in comments
+
  drivers/md/raid1.c | 28 +++++++++++++++++++++++++++-
  1 file changed, 27 insertions(+), 1 deletion(-)
 
