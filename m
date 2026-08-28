@@ -1,147 +1,201 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3EED416D1A
-	for <linux-raid@vger.kernel.org>; Fri, 28 Aug 2026 11:04:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC66146D542
+	for <linux-raid@vger.kernel.org>; Fri, 28 Aug 2026 14:27:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787915093; cv=none; b=RT3XOm1IZjjYgXtASGF/EgOByfmDWgC3bj+wGG5/oqCuocwguAmXBuC3e61Cb/lNoEvT3+Dsxj8rX0w9vaXk8e0JgD5eCTFdidktXsk4c4y3HOrNs7bvFtw00WYgAB3Sy3QFqWDn9YO3hLB2m91azuF8ePy11hDpBySs5xsjtG4=
+	t=1787927282; cv=none; b=ZmrIDtFG42PJ3ALCQK3XZF28aTNhEQQ/tijGQu0j5jvojZKdtJSFpYoCX+P3hWBYybIbCsByjnpZDvOnfu6a7RQWoAlQ2KHQWANC41J0qg4LO9m+6X192ogo46smPRKDiK30mA14gOnnh1ogQ96cE7sk2uJFMBEysIhcgHRIW2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787915093; c=relaxed/simple;
-	bh=qbyK7L4C3jcKWuriP9XCs/buSubJwCWe+SyAXeYjpss=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VNRs0CP+sDtZAP1ScuRI7FaupZn2EgSfb93tvWryxVYvLNmp5w2HCXWsW/gTjvLEB8OHRdWtMlo5JE1542QwBBlu9svzJGXm1TopxFdhbTYHa8EvNH3EDrxxzpvwUK3h8MHOzVBxjTQCaCidH1Qs62YOSB4FTzG43WSHhv7uM2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cT8BpChX; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787927282; c=relaxed/simple;
+	bh=+CmXSLbNHQ2k6FnrUgFLVIdY8e6LhxBGtZUeweq9nb8=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=Y8GBW14BZGKX4DByJafZwLZ3301LvcQqjrlqTy+MktyGGE8gHnXNb2BA0/gYBQnMKfBOscUzh2H13o5JKcutkc67rMvsRCRM59xRcntxPTZLUMGqCruBVkzKW4qLBrNwlZsmY8kiF3UVaQXZPBRfDrJKQEXe+bDZOUxcsnZLzzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WPekUtfk; arc=none smtp.client-ip=209.85.221.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cT8BpChX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 005741F000E9;
-	Fri, 28 Aug 2026 11:04:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787915084;
-	bh=qGSkaBWgQf9YNLB48+kyFWIBrtXJ3mHhOKc6clU+5Ck=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cT8BpChX6fsKOXlwpCxQlKAESzxxuL063e1l+XqY7AWP1ero8W0VYx/XbIYP6fosF
-	 0l5yf9yq+cT5Soud6uXx3tlMxfvgG+C6jHZzEIaiMbbE3NcTKx+/6DV2fZezaf2gqg
-	 666THZO0GjZ93M5oEKonDbMbnzTEEaMYvS6I6c5tJ3X+CGS+FMw/FvCJnQ0jjJeZjV
-	 zS/YSqIWh6T7DZzs6+bayxfk7imjcSa3NcA41a2btKkURP5kACJUBW09oswTWTjYJ6
-	 EYjPiab+4vWpAfDTnSrYVjOTiM33OfbrArgAB1caIBP/4nQd6FcMmM7qbFFilQ5b64
-	 z4g/u7J3E0hBg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] md/raid1: prevent a race between write and stop
- request
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Edward Adam Davis" <eadavis@sina.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260828104944.246837-1-eadavis@sina.com>
-References: <20260828103957.245658-1-eadavis@sina.com>
- <20260828104944.246837-1-eadavis@sina.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 28 Aug 2026 11:04:43 +0000
-Message-Id: <20260828110444.005741F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WPekUtfk"
+Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-4798bea72f9so723357f8f.1
+        for <linux-raid@vger.kernel.org>; Fri, 28 Aug 2026 07:27:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787927276; x=1788532076; darn=vger.kernel.org;
+        h=content-type:mime-version:message-id:date:references:in-reply-to
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=mSBKytCKHqfN5xOe1HlyHmsYxw1ixy635M//OyHPkKY=;
+        b=WPekUtfkT0K9ibVqZbvZY1VKyaX7TnkC048jsqZARKcHCEpOJN0sFM/SrOTUgmd+2W
+         M35+BaCBBnzYl4emGsvEZhcRdPW8ZrvXE5atnI312qZ34QnOhJm4o+ZrXiRKdUAcR6pQ
+         zrbeO3tuNIxDn5AeirpkFxilZu1f1UuEDBsRsKGQd2zXL4kTeL7Ta1VOmVvYrIBgFiXl
+         Au4RmCUQptr7b+mMzxav53wdFzZhzidJEws1HEp/JjQAbAvmJUvRHNJMAEhUvJv7LIu3
+         Y6IhgMeAzh416Ci0iGd0/DZ53GJd+CaUmDCcIJD7EMHjvn5MlRqjcKbVAnVqxe/HU6Cp
+         c91w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787927276; x=1788532076;
+        h=content-type:mime-version:message-id:date:references:in-reply-to
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=mSBKytCKHqfN5xOe1HlyHmsYxw1ixy635M//OyHPkKY=;
+        b=nn2Ob45mrexV+sIsLJlki2yXLJufY/IA8gzcPDbFBFNAg4v1pUZZ5EF2AwkDSs5dgq
+         GSivUH+bDSZK4bFlR5sHOwLWNrBFgfbbYQhNXStyznZc+sbyLVDf9DGZMBJn2TJlB+ct
+         o48tQ1TphYSRm0bbh6Rq9bW4Jbqhz78/yZno1+32tuYs/0bni/QHJ18oA3CNjgr6onoZ
+         XpOwdB9SI61bO0oIySim8CbvvXeEpgaW48gyMeErxFf9iZKp6bmzih05S15mzIcDjFei
+         M+tCVGGMrmilcBj+hQP2iz0JSgGlqxOLrRGOJszW5u4t7u+Hu9qlLdCiZovZx06wQpha
+         W96Q==
+X-Forwarded-Encrypted: i=1; AHgh+RrkfV9OAN+n/2eeX1XpLV2um/rdj0JG34Qf+DmxJTS2/Ne2y72iqnxCdnmjbYy66bMlWx4GOfC+haIA@vger.kernel.org
+X-Gm-Message-State: AFuF++nUNZFoq69UUhGbIKCTlye3Cf4oTJrFSWHwxzPgAgPrWRIgvXo4
+	N97JBCEpo+Q/HaL53YaAfjtcofsKmxPfjKkq62iYxHdFs2WIUhBhUBeO
+X-Gm-Gg: AR+sD12MdidGzqELWghofTx66FwRxnkiRo/wEf0tPjj8MrfmMuJTvPZVK5gAZZ1x4JL
+	fgm8vEO9XfMib9HgYoze7cjBwZqczcvvOxNaNDOwFg7Wsn4aSFPRKSnC+JmWFtJfVWm6OTYezV2
+	/hW0U2kHCGBJfv6zZY/bby74CtkVDMjzP31VpPIZZsIUOHryaSVhHlLOIRjYp7nGWrVwyhSdIjQ
+	Besa3Iy40sTxb5D9Jo0C96194/EtPAvXdxyzdEzWRvE7IZoydwKTVpVUHrePD552a0C9Vzu1Ci+
+	kF+0Ns2DryOT47v2cyNFhJcqovQryQOH233FhnVn9TxLzEaip4mLs9SFpYYWEoNsSNOhlmr4Lq1
+	OrE2OYOWSbVlowW+bsntgjErTiK2AyNlol8YT+OrSZ4RhRNjLwdRy+fSORpe3CeRf6Nn1k1Jqfm
+	9dBcJ0XICxuPCM0OkqskGSONH/KLSm1pEGPhyMhp2MZCVYdwDxt1SfdQQHvCc/YN4PPW3rCDn6S
+	JXOGwByfFrAODULYHXit0Qx2O0dKnM=
+X-Received: by 2002:a05:6000:2401:b0:482:eaa2:7d85 with SMTP id ffacd0b85a97d-482f782b50fmr11013049f8f.0.1787927275570;
+        Fri, 28 Aug 2026 07:27:55 -0700 (PDT)
+Received: from Abds-MacBook-Air.local ([2a02:3037:27f:67cb:9899:2c01:3637:5f2f])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-482fbb27936sm4198160f8f.28.2026.08.28.07.27.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 28 Aug 2026 07:27:50 -0700 (PDT)
+From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+To: Edward Adam Davis <eadavis@sina.com>,
+ syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
+Cc: song@kernel.org, yukuai@fygo.io, magiclinan@didiglobal.com,
+ xiao@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ syzkaller-bugs@googlegroups.com
+Subject: Re: [PATCH] md/raid1: prevent a race between write and stop request
+In-Reply-To: <20260828103957.245658-1-eadavis@sina.com>
+References: <6a908777.1d9ded08.62e62.00da.GAE@google.com>
+ <20260828103957.245658-1-eadavis@sina.com>
+Date: Fri, 28 Aug 2026 16:27:41 +0200
+Message-ID: <m2y0dqmiaq.fsf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
 
-New issues:
-- [High] Acquiring a global configuration mutex (`reconfig_mutex`) in the I=
-/O fast path serializes all RAID1 writes and violates non-blocking semantic=
-s.
-- [High] Using an interruptible lock (`mutex_lock_interruptible`) in the bl=
-ock I/O submission path causes spurious block I/O errors (`BLK_STS_IOERR`) =
-if the submitting process receives a signal.
-- [High] Acquiring `reconfig_mutex` in the block I/O submission path (`raid=
-1_make_request`) introduces a classic memory reclaim deadlock between in-fl=
-ight IOs, `kswapd`, and array management.
+Hi Edward,
 
-Pre-existing issues:
-- [Critical] The patch leaves the READ path completely unprotected against =
-the concurrent `do_md_stop` Use-After-Free race that it was intended to fix=
- for writes.
---
+On Fri, Aug 28, 2026 at 18:39 +0800, Edward Adam Davis wrote:
+> A race condition exists between write and stop requests, leading to a
+> null-ptr-deref in [1].
+>
+> CPU0				CPU1
+> ====				====
+> md_submit_bio()
+> md_handle_request()		do_md_stop()__md_stop()
 
-commit d721c8b809d2e452fb1806262577569049151fb3
-Author: Edward Adam Davis <eadavis@sina.com>
+do_md_stop() must never execute while the array device file is open.
+take a look if this rule is not meet.
 
-md/raid1: prevent a race between write and stop request
-
-The commit aims to resolve a use-after-free triggered by a race condition
-between write requests and array stop requests. It does this by taking the
-array's reconfig_mutex inside the write I/O submission path.
-
-Closes: https://syzkaller.appspot.com/bug?extid=3D3fe892ea5fc292e1353f
-
+> raid1_make_request()		 __md_stop()
+> raid1_write_request()		   mddev->private = NULL
+> wait_barrier()
+> conf->nr_pending //trigger [1]
+>
+> The intervention of a stop request causes inconsistencies in the state
+> of mddev members (such as private and pers) while a write request is
+> executing; the mddev lock is used to synchronize write and stop requests,
+> thereby ensuring consistent mddev state throughout the execution of the
+> write request.
+>
+> Additionally, when a write operation reaches the RAID1 layer, if a stop
+> request acquires the mddev lock first and releases mddev->private, the
+> bio is terminated and the write request exits.
+> 	
+> [1]
+> KASAN: null-ptr-deref in range [0x0000000000000120-0x0000000000000127]
+> RIP: 0010:_wait_barrier+0x8d/0x700 drivers/md/raid1.c:1066
+> Call Trace:
+>  wait_barrier drivers/md/raid1.c:1154 [inline]
+>  raid1_write_request drivers/md/raid1.c:1506 [inline]
+>  raid1_make_request+0x484/0x31a0 drivers/md/raid1.c:1696
+>  md_handle_request+0x824/0x1230 drivers/md/md.c:417
+>  md_submit_bio+0x1e9/0x350 drivers/md/md.c:458
+>  __submit_bio block/blk-core.c:681 [inline]
+>  __submit_bio+0x20e/0x3d0 block/blk-core.c:670
+>  __submit_bio_noacct block/blk-core.c:724 [inline]
+>  submit_bio_noacct_nocheck+0x736/0xc00 block/blk-core.c:792
+>  submit_bio_noacct+0xc93/0x2130 block/blk-core.c:925
+>  bio_await+0x1fa/0x240 block/bio.c:1580
+>  submit_bio_wait+0x19/0x60 block/bio.c:1598
+>  __blkdev_direct_IO_simple+0x4cb/0x8c0 block/fops.c:98
+>  blkdev_direct_IO+0xbee/0x2030 block/fops.c:429
+>  blkdev_direct_write block/fops.c:699 [inline]
+>  blkdev_write_iter+0x703/0xd30 block/fops.c:767
+>  new_sync_write fs/read_write.c:595 [inline]
+>  vfs_write+0x6af/0x1050 fs/read_write.c:687
+>
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Reported-by: syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=3fe892ea5fc292e1353f
+> Tested-by: syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
+> Signed-off-by: Edward Adam Davis <eadavis@sina.com>
+> ---
+>  drivers/md/raid1.c | 28 +++++++++++++++++++++++++++-
+>  1 file changed, 27 insertions(+), 1 deletion(-)
+>
 > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index f0646fb24371f..3b9f1fa65e654 100644
+> index f0646fb24371..3b9f1fa65e65 100644
 > --- a/drivers/md/raid1.c
 > +++ b/drivers/md/raid1.c
-> @@ -1692,11 +1693,36 @@ static bool raid1_make_request(struct mddev *mdde=
-v, struct bio *bio)
->  	if (bio_data_dir(bio) =3D=3D READ)
+> @@ -1674,6 +1674,7 @@ static bool raid1_write_request(struct mddev *mddev, struct bio *bio,
+>  static bool raid1_make_request(struct mddev *mddev, struct bio *bio)
+>  {
+>  	sector_t sectors;
+> +	blk_status_t status;
+>  
+>  	if (unlikely(bio->bi_opf & REQ_PREFLUSH)
+>  	    && md_flush_request(mddev, bio))
+> @@ -1692,11 +1693,36 @@ static bool raid1_make_request(struct mddev *mddev, struct bio *bio)
+>  	if (bio_data_dir(bio) == READ)
 >  		raid1_read_request(mddev, bio, sectors, NULL);
-
-[Severity: Critical]
-This is a pre-existing issue, but does this bypass leave the read path
-completely unprotected against the exact same race condition?
-
-If an array stop operation clears mddev->private concurrently, wouldn't
-raid1_read_request() still dereference a freed or NULL conf pointer at:
-
-wait_read_barrier(conf, bio->bi_iter.bi_sector);
-
 >  	else {
 > +		int err;
 > +
 >  		md_write_start(mddev, bio);
 > -		if (!raid1_write_request(mddev, bio, sectors))
-> +		err =3D mddev_lock(mddev);
-
-[Severity: High]
-Does acquiring a global configuration mutex (reconfig_mutex) in the I/O
-fast path forcibly serialize all concurrent RAID1 writes and severely degra=
-de
-block I/O performance?
-
-Will taking a sleeping lock here also violate non-blocking semantics for
-asynchronous I/O if REQ_NOWAIT is set?
-
-[Severity: High]
-Can acquiring reconfig_mutex in the block I/O submission path introduce a
-memory reclaim deadlock?
-
-If memory pressure forces kswapd to write out dirty pages to the RAID1 arra=
-y,
-will those memory-reclaim writes attempt to acquire reconfig_mutex in
-raid1_make_request()?
-
-Since configuration pathways like do_md_stop() hold reconfig_mutex while
-waiting for in-flight IOs to drain or performing memory allocations, wouldn=
-'t
-this create an ABBA deadlock that hangs the I/O subsystem?
-
+> +		err = mddev_lock(mddev);
 > +
 > +		if (err < 0) {
 > +			md_write_end(mddev);
-> +			status =3D BLK_STS_IOERR;
-
-[Severity: High]
-Does this incorrectly convert a signal interruption into a hard I/O error?
-
-Since mddev_lock() uses mutex_lock_interruptible() to acquire the lock, it
-returns -EINTR if the submitting process receives a signal.
-
-Will converting this directly to BLK_STS_IOERR cause spurious block I/O
-errors for user space applications and potentially abort filesystem journal=
-s?
-
+> +			status = BLK_STS_IOERR;
 > +			goto done;
 > +		}
+> +
+> +		if (!mddev->private) {
+> +			mddev_unlock(mddev);
+> +			md_write_end(mddev);
+> +			status = BLK_STS_OFFLINE;
+> +			goto done;
+> +		}
+> +
+> +		err = raid1_write_request(mddev, bio, sectors);
+> +		mddev_unlock(mddev);
+> +
+> +		if (!err)
+>  			md_write_end(mddev);
+>  	}
+> +out:
+>  	return true;
+> +done:
+> +	bio->bi_status = status;
+> +	bio_endio(bio);
+> +	goto out;
+>  }
+>  
+>  static void raid1_status(struct seq_file *seq, struct mddev *mddev)
+> -- 
+> 2.43.0
+>
+>
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260828104944.2468=
-37-1-eadavis@sina.com?part=3D1
+-- 
+Best Regards,
+Abd-Alrhman
