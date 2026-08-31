@@ -1,143 +1,118 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75A5B39D6DA;
-	Mon, 31 Aug 2026 21:23:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70AAE37C0E6
+	for <linux-raid@vger.kernel.org>; Mon, 31 Aug 2026 22:06:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788211402; cv=none; b=LMQAYxwzzV0f6rUaEu36aUWxEPFxq+g5RJJL7880D9BERXuQlFIM9X4YcxVxJ+G48aiPUoNqkIZRZ3k94spCDs45ZxXS1lBZII6rvHRfiSOnnuhoMqJ4b39iymdqrz2ntprpRhbP7K8Z+hZeBoUOZb421axgddzAqpvcn3wbw2E=
+	t=1788214020; cv=none; b=YAiTlk3CVoEnGa8BZ0jNu48p48lDtoe0dAdMxY/I2gSsKrILDDhjVbMocf2XW5V5+bs+yQB1t1wMO5JJ6c0tgF51jGxf6CY25kpWuUADAdulVv94XKSGnSiWVTPtXrFG+kNsXLRwQqNEPbh8RbTw/QcA+GKovclz5NLwkis6IbA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788211402; c=relaxed/simple;
-	bh=5QoDyQ6X4p1Atd3lG85mmroUjyxaVW/u+lq80I0PCyk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=q6YhNrKjJ7DjsrTieeNtpP/doPdopjePPF/WuTmE6Ztaw74/1sE6vJf4OtPtnC+gs3gIQgL8gjy4RueBy6+tLgo5iQiL/fzare+Bd3M0A8Ph7i/SqIuwKCCsi8kkembBCnhRWofWDvN/1SSnUIckIn4kxymBuvf0o84IHoppmbE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D7LbKsGj; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788214020; c=relaxed/simple;
+	bh=2wlUa5vMtevM/Cjtyr2tJ25R+4E+Hyw9nRjWtSsPfw4=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=mJ8SzUuloybS2zPtn3OZmven66YbyWZ+xn3mDLiTatkZvU9yIUktbpGaPyNoU8IOFtILhEP+lQtMKlr0xjEaiw/tR/BO3kQ28WKWP5E2lgaKczw7gmwHsadXjDsBA67zW8xyTi/uKYYq6gBM5JG5CS4pDRGEOeHBv1XsSK2LyHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rre4FsE+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D7LbKsGj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF46D1F000E9;
-	Mon, 31 Aug 2026 21:23:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rre4FsE+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADAE91F00A3D;
+	Mon, 31 Aug 2026 22:06:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788211401;
-	bh=uLdv8VH0cmD7l6Ogu0tEuQONezqf9xm4zh/RAWSkMGw=;
-	h=From:To:Cc:Subject:Date;
-	b=D7LbKsGj20BbRy6TuN8/LoWJvUHj6zDmoMY39cKj1SCt2Zgh1qq++RCPZ2lsvJ9Hf
-	 fouHdwhq7ByQQj3Ay5Fg2uUAJLETLxig+nRbptMVj92qLJleY3oT+lcheb5cc+NqR6
-	 JZvxISZJDiBtmUKl1nobFkEJaZpPIAF7WpwCIWt8Oega1YUMIZCWU8TjyUbuOtaUUo
-	 q3CPKwcuHS2TyagHfKcXoeeeuzkCA/iisOTP0Z32zFv31cvJhlPDrlyzje+fAQDQJB
-	 jHbNB3MzdzisWen9ORPoN0fMd6gcIy0dP0xyWSmNrADB+qfbzll+dC/36aeBzvSQSK
-	 /P7I2pntonf/A==
-From: Eric Biggers <ebiggers@kernel.org>
-To: Andrew Morton <akpm@linux-foundation.org>,
-	linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	x86@kernel.org,
-	Christoph Hellwig <hch@lst.de>,
-	Eric Biggers <ebiggers@kernel.org>,
-	stable@vger.kernel.org
-Subject: [PATCH RESEND] raid6: add missing vzeroupper to AVX-512 code
-Date: Mon, 31 Aug 2026 14:23:16 -0700
-Message-ID: <20260831212316.213896-1-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.55.0
+	s=k20260515; t=1788214018;
+	bh=xpRo+SPjEFmQQnNj+bm6lPblw0qC5h6RDvbrx4NB7Ss=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Rre4FsE+3URC4KJ9/DrIEgd8fvyCJLNPf9NdHJI+YwstixVHV/LX95h49PnBA09IE
+	 nUbJ2tt4mE8o9wgnhUEsVj04riscBlz1QI2TLj+TZboF+/+wF2yrVrjvfFHdHebAwX
+	 w+4V/S1RfI89ZyaJcpBJp1LoJvDpqZ8zm9CW4IgvUrcF+uZe74ePjEhhkcfx1M0aob
+	 vOFgpfj8OmjcqTizsFOroiAvV5fJyADdYMt1foO8z5svuBySe5eNKIZj+Bppg5+sf8
+	 0+LGOFeJ8j1rBeY0f16Z6YH7hgTChIB1STGpmIAjUK63Ac20kXq0nnphVpPtM15BZ4
+	 I7QZqTRcF7VhQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH RESEND] xor: add missing vzeroupper to AVX code
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Eric Biggers" <ebiggers@kernel.org>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20260831212248.213805-1-ebiggers@kernel.org>
+References: <20260831212248.213805-1-ebiggers@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 31 Aug 2026 22:06:58 +0000
+Message-Id: <20260831220658.ADAE91F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Since the AVX-512 optimized RAID6 code uses ZMM registers, execute
-vzeroupper before returning from it.  This is needed to avoid degrading
-the performance of any later SSE code that may happen to be executed.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Fixes: e0a491c12968 ("lib/raid6: Add AVX512 optimized gen_syndrome functions")
-Fixes: 13c520b2993c ("lib/raid6: Add AVX512 optimized recovery functions")
-Cc: stable@vger.kernel.org
-Signed-off-by: Eric Biggers <ebiggers@kernel.org>
----
+Pre-existing issues:
+- [High] Incomplete fix: Missing `vzeroupper` in parallel AVX2/AVX-512 RAID=
+6 and crypto implementations causes severe AVX-to-SSE transition penalties.
+--
 
-This didn't get taken through the x86 tree.  Andrew, it seems you're
-taking patches to lib/raid/.  Can you apply this one?
+commit 0dc8e5aa3bec5867a6cc446b05765378e42b49c6
+Author: Eric Biggers <ebiggers@kernel.org>
 
- lib/raid/raid6/x86/avx512.c       | 6 ++++++
- lib/raid/raid6/x86/recov_avx512.c | 2 ++
- 2 files changed, 8 insertions(+)
+xor: add missing vzeroupper to AVX code
 
-diff --git a/lib/raid/raid6/x86/avx512.c b/lib/raid/raid6/x86/avx512.c
-index e671eb5bde63..772bfc4af6df 100644
---- a/lib/raid/raid6/x86/avx512.c
-+++ b/lib/raid/raid6/x86/avx512.c
-@@ -78,6 +78,7 @@ static void raid6_avx5121_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	}
- 
- 	asm volatile("sfence" : : : "memory");
-+	asm volatile("vzeroupper");
- 	kernel_fpu_end();
- }
- 
-@@ -137,6 +138,7 @@ static void raid6_avx5121_xor_syndrome(int disks, int start, int stop,
- 	}
- 
- 	asm volatile("sfence" : : : "memory");
-+	asm volatile("vzeroupper");
- 	kernel_fpu_end();
- }
- 
-@@ -208,6 +210,7 @@ static void raid6_avx5122_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	}
- 
- 	asm volatile("sfence" : : : "memory");
-+	asm volatile("vzeroupper");
- 	kernel_fpu_end();
- }
- 
-@@ -292,6 +295,7 @@ static void raid6_avx5122_xor_syndrome(int disks, int start, int stop,
- 	}
- 
- 	asm volatile("sfence" : : : "memory");
-+	asm volatile("vzeroupper");
- 	kernel_fpu_end();
- }
- 
-@@ -396,6 +400,7 @@ static void raid6_avx5124_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	}
- 
- 	asm volatile("sfence" : : : "memory");
-+	asm volatile("vzeroupper");
- 	kernel_fpu_end();
- }
- 
-@@ -529,6 +534,7 @@ static void raid6_avx5124_xor_syndrome(int disks, int start, int stop,
- 			       "m" (q[d+128]), "m" (q[d+192]));
- 	}
- 	asm volatile("sfence" : : : "memory");
-+	asm volatile("vzeroupper");
- 	kernel_fpu_end();
- }
- const struct raid6_calls raid6_avx512x4 = {
-diff --git a/lib/raid/raid6/x86/recov_avx512.c b/lib/raid/raid6/x86/recov_avx512.c
-index ec72d5a30c01..299a3f044d61 100644
---- a/lib/raid/raid6/x86/recov_avx512.c
-+++ b/lib/raid/raid6/x86/recov_avx512.c
-@@ -211,6 +211,7 @@ static void raid6_2data_recov_avx512(int disks, size_t bytes, int faila,
- #endif
- 	}
- 
-+	asm volatile("vzeroupper");
- 	kernel_fpu_end();
- }
- 
-@@ -353,6 +354,7 @@ static void raid6_datap_recov_avx512(int disks, size_t bytes, int faila,
- #endif
- 	}
- 
-+	asm volatile("vzeroupper");
- 	kernel_fpu_end();
- }
- 
+This commit adds a missing vzeroupper instruction to the AVX optimized XOR
+code. This clears the upper bits of the YMM registers before returning,
+preventing severe performance degradation when later SSE code is executed.
 
-base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
-prerequisite-patch-id: ebf41d9b9e92708245f6ae0657896ff3f8ef7d0d
-prerequisite-patch-id: f85f9c7e8bdd6fcfd394edb80f2263d7189e138d
--- 
-2.55.0
+> diff --git a/lib/raid/xor/x86/xor-avx.c b/lib/raid/xor/x86/xor-avx.c
+> index f7777d7aa269b..95b21e7225e8d 100644
+> --- a/lib/raid/xor/x86/xor-avx.c
+> +++ b/lib/raid/xor/x86/xor-avx.c
+> @@ -147,6 +147,7 @@ static void xor_gen_avx(void *dest, void **srcs, unsi=
+gned int src_cnt,
+>  {
+>  	kernel_fpu_begin();
+>  	xor_gen_avx_inner(dest, srcs, src_cnt, bytes);
+> +	asm volatile("vzeroupper");
+>  	kernel_fpu_end();
 
+[Severity: High]
+This is a pre-existing issue, but this fix appears incomplete. While this
+solves the missing vzeroupper in xor_gen_avx(), are there other parallel
+AVX2/AVX-512 RAID6 and crypto implementations that suffer from this same
+AVX-to-SSE transition penalty?
+
+For instance, raid6_avx21_gen_syndrome() in lib/raid/raid6/x86/avx2.c and
+raid6_avx5121_gen_syndrome() in lib/raid/raid6/x86/avx512.c both heavily use
+YMM/ZMM registers but call kernel_fpu_end() without clearing the upper
+halves:
+
+lib/raid/raid6/x86/avx2.c:raid6_avx21_gen_syndrome() {
+	...
+	asm volatile("sfence" : : : "memory");
+	kernel_fpu_end();
+}
+
+Similarly, raid6_2data_recov_avx2() in lib/raid/raid6/x86/recov_avx2.c
+returns without executing vzeroupper:
+
+lib/raid/raid6/x86/recov_avx2.c:raid6_2data_recov_avx2() {
+	...
+	kernel_fpu_end();
+}
+
+Also outside the RAID subsystem, routines like __aria_aesni_avx2_crypt_32wa=
+y()
+in arch/x86/crypto/aria-aesni-avx2-asm_64.S seem to have the exact same
+omission:
+
+arch/x86/crypto/aria-aesni-avx2-asm_64.S:__aria_aesni_avx2_crypt_32way() {
+	...
+	FRAME_END
+	RET;
+}
+
+Could these functions also leave the CPU in a dirty AVX state and cause
+severe performance regressions for subsequent legacy SSE instructions?
+
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831212248.2138=
+05-1-ebiggers@kernel.org?part=3D1
