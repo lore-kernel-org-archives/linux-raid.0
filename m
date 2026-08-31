@@ -1,108 +1,55 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AFCC3B14C0
-	for <linux-raid@vger.kernel.org>; Mon, 31 Aug 2026 22:07:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E71353A9861;
+	Mon, 31 Aug 2026 22:09:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788214076; cv=none; b=U01SqmODJIuEGKDRfYQ27UgPU8SXzUyBtAn1TPs3Dtf6FJR0pzafdQ5RW0l/7qS+IOY8mwEWPXwDiNBmxIIX7Hpe1GlsunZzjXh+D01zBm/Ki8LVyzTXirKVFEom6qQ6oNauiHPFaOFgmI3IBPx0lwJtWN78PeVdcSPL4UKWwq4=
+	t=1788214168; cv=none; b=BOXCrkdqKSDfy+vhlG6WS7au1wy/L1EZi7B/kC5rIk2zhBLN7zSQrp0fGVeZkKKOAv7th2Ba6yU+DcLYX8/tn4RAoH4APURACPbUOvDmn6B6yzmVGPXWe6HCiQ7LmnKS2KJrFawEPJuN9+sVwMnH/rwYJ5yAo9AKu1wN4tzcUKY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788214076; c=relaxed/simple;
-	bh=1RZSSU9vGw6hvspEaQGrTaS4FuPpUeRzgnRLtq8T5wc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=OrTiZ7GqufFUq4ntQ4+Bmmi5bOoK4eq74tBpNVPIaSq+w4kgNk/4t9zi1UdZFOW0ZVMmg2p6D2iMLXtYiEdcp6tPk6cwWeM6DGiyaNoBxzQ1fBBDnGBHuLgSnFMd0Q9OYeAw9d6jsr16fR9b52SEcxosjVeiFumxyG7G0shOMC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JWOXivX+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788214168; c=relaxed/simple;
+	bh=gsaCiGHwWjsNJ4Jdsu8TSc9diuCKB4rP0w9xLfqh3hc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LqS5QTsX1E3q3JdVCLB9nfvmd9A37MT+ybdF1jQoTzIxSNtZKCQBDY+pdDUwwoHHLuFYXg5mlR0ewvZ+ZST+yQA2HFmlYd91G1+z5x3NfOMAE2HGMBAhst1NW1weqXBd/OV7HrlnRxrMeU6bgI2XIg4gTbcpuHZ5erMWYIQEw7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=brAftjV9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JWOXivX+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CD601F000E9;
-	Mon, 31 Aug 2026 22:07:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="brAftjV9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69CC71F000E9;
+	Mon, 31 Aug 2026 22:09:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788214074;
-	bh=sWh9hHpUzijjA37ZlXlU3UvabC5+bAVVosmk780+7sw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JWOXivX+zDWLwsJarm6OfcaoJGALYc6NMjbLIZ5vIxaXtgsN5ycx+jIfmNwACIEdz
-	 O0kXqAiJsJ0CnwXq2V2JqrofoHYedSDjWeGabPKf/g0lpYHM/V0DCYLZWPkRtyTRTQ
-	 Fl5T+i7GC6Bq69N+F1yc5SzF7efbGYa9b8moBegbpge22Kj9VCf/7KpK3ey25j5eCo
-	 MF3Y4j8Lx2/6JecV0/NKUTrl4xL7g8krZtvfbXoYYrCIxURNyNgvzln3Y9beZAuzGv
-	 hhY+9cSDYJhu8CWH4r95iam5RJ3k3SltoaZq3pa3RUD9VpxJZFF0cQvjaxok8H4cEI
-	 CP7jQZEbWzfFw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND] raid6: add missing vzeroupper to AVX-512 code
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Eric Biggers" <ebiggers@kernel.org>
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260831212316.213896-1-ebiggers@kernel.org>
-References: <20260831212316.213896-1-ebiggers@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 22:07:54 +0000
-Message-Id: <20260831220754.8CD601F000E9@smtp.kernel.org>
+	s=k20260515; t=1788214167;
+	bh=w+zouPJaqRZp5dJjnc8IsacOODuHuyxBj8Q0RiIoqNE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=brAftjV9T4pQGK9vatL/VskwlonhQ4IpwwBXNAM+FWEz/aNDOwOrl8+IP2uSxwZNI
+	 LNn5Uj8tltlz3a6/paZu6twOkblMCG8QOYGMlA1iFIDcSGw3Gxb0/MPzpS9dbxZwSn
+	 DSgnHf7Xsn3O1CJq1UiPzdsQlgnP652lJHVuAFc0iUcXlf0al0ntBayPJYhJbb5+OW
+	 VxBPU3nJw8+AMOl9BPZgjT8+AnB0XHPRPJEgDQIlEGDzYNcUKAoc0XvFGR2A7UqqMX
+	 X8BEnjVfh5GLamTtGjPjUo12IE3FPcaVuwlAq0ixhSCzLvd3+aTx1c0UACcWmpykOH
+	 VUEzCe4o0G4VA==
+Date: Mon, 31 Aug 2026 15:09:26 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+Subject: Re: [PATCH RESEND] xor: add missing vzeroupper to AVX code
+Message-ID: <20260831220926.GH86114@quark>
+References: <20260831212248.213805-1-ebiggers@kernel.org>
+ <20260831220658.ADAE91F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260831220658.ADAE91F00A3D@smtp.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Mon, Aug 31, 2026 at 10:06:58PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> 
+> Pre-existing issues:
+> - [High] Incomplete fix: Missing `vzeroupper` in parallel AVX2/AVX-512 RAID6 and crypto implementations causes severe AVX-to-SSE transition penalties.
 
-Pre-existing issues:
-- [High] Missing `vzeroupper` in AVX and AVX2 RAID6 and XOR implementations
-- [High] Missing `vzeroupper` in ARIA GFNI AVX512 crypto routines
---
+Already addressed by other patches I sent.
 
-commit c86f8a80ee519a29f4ac71611d625cca2868db38
-Author: Eric Biggers <ebiggers@kernel.org>
-raid6: add missing vzeroupper to AVX-512 code
-
-This commit adds vzeroupper to the AVX-512 optimized RAID6 routines before
-returning, preventing performance degradation of subsequent SSE code.
-
-> diff --git a/lib/raid/raid6/x86/avx512.c b/lib/raid/raid6/x86/avx512.c
-> --- a/lib/raid/raid6/x86/avx512.c
-> +++ b/lib/raid/raid6/x86/avx512.c
-> @@ -78,6 +78,7 @@ static void raid6_avx5121_gen_syndrome(int disks, size_=
-t bytes, void **ptrs)
->  	}
-> =20
->  	asm volatile("sfence" : : : "memory");
-> +	asm volatile("vzeroupper");
->  	kernel_fpu_end();
->  }
-
-[Severity: High]
-This is a pre-existing issue, but does this incomplete fix also need to
-address the conceptually identical AVX/AVX2 implementations?
-
-For example, in lib/raid/raid6/x86/avx2.c:raid6_avx21_gen_syndrome():
-
-	asm volatile("sfence" : : : "memory");
-	kernel_fpu_end();
-
-And similarly in lib/raid/raid6/x86/recov_avx2.c:raid6_2data_recov_avx2()
-and lib/raid/xor/x86/xor-avx.c:xor_gen_avx(). These routines use YMM
-registers but return to other kernel paths without clearing the upper state.
-
-[Severity: High]
-This isn't a bug introduced by this patch, but are there other areas in the
-kernel that need a similar fix? For example, in the crypto subsystem, the
-ARIA GFNI AVX512 routines dirty ZMM registers but omit the vzeroupper.
-
-arch/x86/crypto/aria_gfni_avx512_glue.c:aria_avx512_ctr_encrypt():
-
-			kernel_fpu_begin();
-			aria_ops.aria_ctr_crypt_64way(ctx, dst, src,
-						      &req_ctx->keystream[0],
-						      walk.iv);
-			kernel_fpu_end();
-
-And in arch/x86/crypto/aria-gfni-avx512-asm_64.S:aria_gfni_avx512_encrypt_6=
-4way(),
-the assembly implementation returns without issuing a vzeroupper to clear
-the upper state of the ZMM registers.
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831212316.2138=
-96-1-ebiggers@kernel.org?part=3D1
+- Eric
