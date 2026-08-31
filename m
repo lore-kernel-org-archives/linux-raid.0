@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F4E55A1797;
-	Mon, 31 Aug 2026 13:52:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51DF74B5CB8;
+	Mon, 31 Aug 2026 13:52:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788184324; cv=none; b=XZ29XtMWgqt4aUy912fG8qUYUccPKaQ2QaForHZsi0QRecdFMWs5eWE/6nXih4ixv9dV8uYi+jtdoLN20Fi9IUEfcDjqvBDJBwVsLM0abFx2tIR+ICrBNArKDneOjmrpxjdtosmrcBhAYhuh5N8eiZp+qALA1O5jbwOodZod1XU=
+	t=1788184375; cv=none; b=N6GRHNjgCwN2/I+dviUC/bW0uLXdnC4S9G/uJIUFXwnUPHs1WNENNthR3DWcZ6ClBSVrNDdmpfdve9NgT6JYYKnk9PC7J5wOW6o0hHIXJpCHXE22bM8gHw60meh+A2HCTZ/fsEBSARnS/GAZdIge20kE5cCbh5rgIO8bPMbp4eo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788184324; c=relaxed/simple;
-	bh=rWomLVEiEZKOUaXEyYX7CewewlPuDfik83UKJ3dHq28=;
+	s=arc-20240116; t=1788184375; c=relaxed/simple;
+	bh=x74tzz1tGb9T0KgkWKckomXEDmM3HhxUWvQvdoS8XZ8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=K0a9Vm+lNB6gVcI2qbGuHj+pcjKuwvhMITB/wUK2cLnhfwI//RYqK0GTQBq4MO5x6OL000AKik7u0r050sfyPWrDXJebRLNZ7jCtjgj7+Eqo6Ds3/pAPrFZyuvKErW3Vqi5b/9iX+M95sEkWrWtJ2FbVE1/Qtvm3lwPFwFRL47U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G4ussLRv; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=NbDKZPBqAihW7LEmgcjN+ApUGOb6zd3GF9mK5vt4MjTSfT8aEUVwJNs9KYBEIxJby+6vX14UQegAuXFBvRFxWIG700OufG0h0jCwLjz5lTi5oW1GOkMMYx2lm6VjVZ13HbAc9vAmwxTOrNb0fwKi+r0NOWD05KANLCqvokQE2bM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f8AQAxfJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G4ussLRv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D81E1F00ACF;
-	Mon, 31 Aug 2026 13:52:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f8AQAxfJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56E2B1F000E9;
+	Mon, 31 Aug 2026 13:52:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788184322;
-	bh=1zdy6bI3JwOxCFZNpWXii6waiEn2715vzPIx/kZPEDA=;
+	s=k20260515; t=1788184373;
+	bh=uOolE7WRmdv9KZkryDdJWBNrvjePe1UYXI9l8f7nFGg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=G4ussLRvao5JpmV0d5YKsm0pBqPcA7v4l+YGrgxhBuunr34uWDKdBJg1GfkWhcFKa
-	 QhVJh6hLJhAVzXDaf3BI+OsyjAmGMXCivDzxBHvhV6y6qomgKok2tPLXFpgloyOYNo
-	 F+XGENTf1sMWLSGpjppfqhy0GeoFoesWO5ZjmNP0UG1g6Sdtxk0pZdSCwDtrpipKfD
-	 RGv7aodlfxdRVnJYJshZaNIze8TZl8irhu4A7RyMj6qTfyX5akjLlGASseglhP9tBQ
-	 gSQcq9tEAu5zrsqxK4p34HugJHfhRokjvT67oiFyeyfMkzvc88yHlNOUzV8b/Pf+7E
-	 fH3+awveXC5yg==
+	b=f8AQAxfJ367bObvqzi24z1Z0ac1H0G4auKgrHQoCFqkEqBYJJwiv7bIwSuXio8Ixx
+	 2NlxgH+xIT2E/pPNEEMioeS2Ug2yHn8UKFSCUl7OjDIB09qPSv333vOXXRiB9+E5jj
+	 udweC7CeWka+DHsQEhGCg34t+G0wqb9DqTA+bRx3qIXcEvGimgRqGvs29PxeHm1nKa
+	 5bAkJ+U/TVWJooLumgprQBKNNpKno0Z1MUkFH4fDQsFdFZ3dATvaJJf9p3iyC3wJjf
+	 UCCnK7hX1obAbyxDZ7Hmkp2WogAXppPXKDZ+hBREvvv1inu4tDdAVTCUpxFtzmjAGg
+	 Kq5v+9kvhjZoQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Chen Cheng <chencheng@fnnas.com>,
-	Yu Kuai <yukuai@fygo.io>,
+Cc: Yu Kuai <yukuai@fygo.io>,
 	Sasha Levin <sashal@kernel.org>,
 	song@kernel.org,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] md/raid5: let stripe batch bm_seq comparison wrap-safe
-Date: Mon, 31 Aug 2026 09:30:52 -0400
-Message-ID: <20260831133314.4125787-624-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.15] md/raid5: account discard IO
+Date: Mon, 31 Aug 2026 09:31:23 -0400
+Message-ID: <20260831133314.4125787-655-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -53,67 +52,80 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Chen Cheng <chencheng@fnnas.com>
+From: Yu Kuai <yukuai@fygo.io>
 
-[ Upstream commit 00e93faf4cea9e8802ac5dfee0952d84fc95c40f ]
+[ Upstream commit 74ddbf98e2db646ec58f7e7731c936b7a4a470fe ]
 
-Once the 32-bit seq wraps, a newer bm_seq can look smaller
-than old, so .. covert to wrap-safe calculate way.
+Raid5 handles discard bios internally through make_discard_request() and
+never passes them through md_account_bio(). As a result, discard IO is
+missing the md-device iostat accounting that normal raid5 IO and discard
+IO in other raid levels get from md_account_bio().
 
-Signed-off-by: Chen Cheng <chencheng@fnnas.com>
-Link: https://patch.msgid.link/20260618025735.915113-1-chencheng@fnnas.com
+Before accounting the bio, trim the request to the full data stripes that
+raid5 will actually discard. The first full stripe is the ceiling of the
+bio start divided by data-stripe sectors, and the last full stripe is the
+floor of the bio end divided by data-stripe sectors. Account that exact
+MD logical full-stripe range, then restore the original iterator so bio
+completion and iostat still cover the original request.
+
+Link: https://patch.msgid.link/20260605072639.2434847-2-yukuai@kernel.org
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `md/raid5: let stripe batch bm_seq
-comparison wrap-safe`
+# Stable Backport Analysis: `md/raid5: account discard IO`
 
-**Local tree:** `v6.18.44` (6.18.y) — `git describe HEAD` →
-`v6.18.44-1-g2736c32da98b9`
-
-**Commit analyzed:** `00e93faf4cea9` (mainline) / `13cb77aa61c3d`
-(stable-queue variant)
-**Status in this tree:** Buggy code is present; fix is **not** merged
-(`git merge-base --is-ancestor 13cb77aa61c3d HEAD` → exit 1).
+**Local tree:** Linux **6.18.44** (`git describe HEAD` →
+`v6.18.44-1-g2736c32da98b9`)
+**Upstream commit:** `74ddbf98e2db6` (not yet in current HEAD; present
+on `autosel` as `36d4b4a2d7925`)
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
 ### Step 1.1: Subject line
-**Record:** `[md/raid5]` `[let/fix]` — make stripe-batch `bm_seq`
-comparison wrap-safe when merging bitmap sequence numbers during
-batching.
+**Record:** `[md/raid5]` — missing verb "fix", but intent is clear —
+`[account]` discard IO through `md_account_bio()` for iostat and unified
+MD accounting.
 
 ### Step 1.2: Tags
 **Record:**
-- **Signed-off-by:** Chen Cheng `<chencheng@fnnas.com>` (author)
-- **Signed-off-by:** Yu Kuai `<yukuai@fygo.io>` (md maintainer,
-  committer upstream)
 - **Link:**
-  https://patch.msgid.link/20260618025735.915113-1-chencheng@fnnas.com
-- **No** Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Cc:
-  stable@vger.kernel.org
-- Notable: maintainer ack via commit + "Applied to md-7.2" on list; no
-  user/syzbot reports
+  https://patch.msgid.link/20260605072639.2434847-2-yukuai@kernel.org
+  (patch 2 of a series)
+- **Signed-off-by:** Yu Kuai `<yukuai@fygo.io>`
+- No Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Cc: stable@
+- Message ID suffix `-2` implies a multi-patch series (patch 1 not
+  identified in this tree)
 
 ### Step 1.3: Body analysis
 **Record:**
-- **Bug:** After 32-bit `bm_seq` wraps, plain `>` comparison can treat a
-  newer sequence as older.
-- **Symptom:** Batch head may retain a stale (older) `bm_seq` instead of
-  the latest required bitmap batch.
-- **Root cause:** `sh->batch_head->bm_seq > seq` is not wrap-safe;
-  should use subtraction idiom.
-- **Versions:** No explicit version range; bug dates to 2015
-  introduction of this comparison.
+- **Bug:** RAID5 discard bios go through `make_discard_request()` and
+  bypass `md_account_bio()`, unlike normal RAID5 IO and discard on other
+  RAID levels.
+- **Symptom:** MD device iostat does not reflect discard traffic
+  (`iostat` discard columns wrong).
+- **Fix approach:** Temporarily trim bio iterator to the full data-
+  stripe range RAID5 will actually discard, call `md_account_bio()`,
+  restore original iterator for completion.
+- **Root cause:** Discard has a dedicated code path that never
+  integrated with the `md_account_bio()` infrastructure added for other
+  IO.
 
 ### Step 1.4: Hidden bug fix?
-**Record:** Yes — described as wrap-safety, but it is a real correctness
-bug in RAID5 bitmap batch sequencing, not cosmetic cleanup.
+**Record:** Yes — described as accounting, but `md_account_bio()` also:
+- Holds `active_io` until bio completion (via cloned bio +
+  `md_end_clone_io`)
+- Starts bitmap discard tracking via `md_bitmap_start()` when bitmap is
+  enabled (since `ac9dad8faaa7b`)
+- Provides `bio_start_io_acct()` / `bio_end_io_acct()` for block-layer
+  statistics
+
+The stripe-boundary refactor (`first_stripe`/`last_stripe` vs old align-
+then-round-up) may also correct edge-case discard range selection.
 
 ---
 
@@ -121,190 +133,185 @@ bug in RAID5 bitmap batch sequencing, not cosmetic cleanup.
 
 ### Step 2.1: Inventory
 **Record:**
-- **Files:** `drivers/md/raid5.c` (+1/-1)
-- **Function:** `stripe_add_to_batch_list()`
-- **Scope:** Single-line, single-function, surgical fix
+- **File:** `drivers/md/raid5.c` only (+23 / -10 lines)
+- **Function:** `make_discard_request()`
+- **Scope:** Single-file, surgical fix
 
-### Step 2.2: Code flow change
+### Step 2.2: Code flow per hunk
 **Record:**
-- **Before:** When merging `STRIPE_BIT_DELAY` state into `batch_head`,
-  take `batch_head->bm_seq` only if `batch_head->bm_seq > seq`.
-- **After:** Use `batch_head->bm_seq - seq > 0` (wrap-safe “is a newer
-  than b?”).
-- **Path:** Normal write/batching path when stripes with pending bitmap
-  updates are merged into a batch.
+1. **Before:** Computed stripe range via align-to-`RAID5_STRIPE_SECTORS`
+   then `DIV_ROUND_UP`; no accounting; proceeded directly to stripe
+   loop.
+2. **After:** Computes `first_stripe`/`last_stripe` directly from bio
+   sector range; early `bio_endio()` if no full stripes; temporarily
+   adjusts `bi_iter`, calls `md_account_bio()`, restores iterator, then
+   runs existing stripe loop.
+3. **Affected path:** `raid5_make_request()` → `make_discard_request()`
+   for `REQ_OP_DISCARD` bios.
 
 ### Step 2.3: Bug mechanism
-**Record:**
-- **Category:** Logic/correctness — signed sequence-number comparison
-  across wrap boundary.
-- **Mechanism:** After `bm_seq` (signed 32-bit `int`) wraps past
-  `INT_MAX`, a post-wrap value can be numerically less than a pre-wrap
-  value. The `>` check then fails to propagate the newer sequence to
-  `batch_head->bm_seq`, so the batch may proceed before all required
-  bitmap flushes complete.
+**Record:** **Missing integration with unified MD IO accounting
+infrastructure** (category: logic/correctness + reference-counting side
+effects)
+- No `percpu_ref_get(&mddev->active_io)` for discard IO lifetime
+- No iostat accounting (`bio_start_io_acct` / `bio_end_io_acct`)
+- No bitmap `start_discard`/`end_discard` via `md_account_bio()` path
+  (relevant since `ac9dad8faaa7b` is in this tree)
 
 ### Step 2.4: Fix quality
-**Record:**
-- Obviously correct; mirrors existing raid5 idiom at line 259:
-  `sh->bm_seq - conf->seq_write > 0` (present since 2006).
-- Minimal risk; no API/struct changes.
-- Sashiko review noted theoretical UBSAN on signed subtraction — same
-  pattern already used in this file for 20 years; author and maintainer
-  accepted it.
+**Record:** Fix is minimal and mirrors the already-merged `md/raid10:
+fix missing discard IO accounting` (`d05af90d6218e`). Iterator
+save/restore pattern is sound. Low regression risk; stripe-index
+simplification is equivalent or more conservative at boundaries.
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
 ### Step 3.1: Blame
-**Record:** Buggy comparison introduced in `2b6b24574256c` (Neil Brown,
-2015-05-21): "md/raid5: ensure whole batch is delayed for all required
-bitmap updates." Present in this 6.18.y tree.
+**Record:** `make_discard_request()` introduced in `620125f2bf8ff`
+(Shaohua Li, 2012) — discard support predates `md_account_bio()`.
+Missing accounting since `10764815ff472` (2021) added `md_account_bio()`
+to RAID5 read/write paths but not discard.
 
 ### Step 3.2: Fixes: tag
-**Record:** N/A — no Fixes: tag. Related context: `ae3c20ccf84c8` (2006)
-introduced wrap-safe `sh->bm_seq - conf->seq_write > 0` in
-`do_release_stripe()` path, but the 2015 batch-merge site was never
-updated.
+**Record:** N/A — no Fixes: tag. Logical regression point:
+`10764815ff472` ("md: add io accounting for raid0 and raid5"), which is
+an ancestor of this tree.
 
-### Step 3.3: Related file history
-**Record:** Recent raid5.c changes are unrelated (batch race fixes, IO
-hangs, llbitmap). Standalone one-patch fix; not part of a series.
+### Step 3.3: Related commits
+**Record:**
+- `d05af90d6218e` — raid10 discard accounting fix (in this tree)
+- `05048cbccab79` — raid5 inflight counter leak fix via
+  `md_account_bio()`
+- `ac9dad8faaa7b` — bitmap discard ops support (in this tree)
+- `cc22b5407e9ca` — raid0 split-bio iostat accounting (backported to
+  stable 6.6.y)
+- `74ddbf98e2db6` — this fix (mainline, not in HEAD)
 
 ### Step 3.4: Author context
-**Record:** Chen Cheng has recent md contributions (raid5 batch race
-fixes). Yu Kuai is md maintainer and applied this to md-7.2.
+**Record:** Yu Kuai is an active MD contributor; authored raid10 discard
+fix, raid5 inflight accounting fix, and bitmap discard infrastructure.
 
 ### Step 3.5: Dependencies
-**Record:** No prerequisites. Applies cleanly to current
-`drivers/md/raid5.c` at lines 996–1002.
+**Record:** Standalone for backport purposes. Requires
+`md_account_bio()` (present since 2021) and benefits from
+`ac9dad8faaa7b` bitmap discard ops (present in 6.18.44). No other series
+patches required for correctness.
 
 ---
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-### Step 4.1: Original discussion
-**Record:**
-- **URL:**
-  https://patch.msgid.link/20260618025735.915113-1-chencheng@fnnas.com
-- **Revisions:** v1 only
-- **Feedback:** Sashiko AI flagged UBSAN concern and pre-existing
-  lockless `bm_seq` RMW race; author replied that `a - b > 0` is the
-  long-standing raid5 template (citing `do_release_stripe()`);
-  maintainer applied without requesting changes
-- **Stable nomination:** None explicit in thread
-
-### Step 4.2: Reviewers
-**Record:** CC'd `linux-raid@vger.kernel.org`, `yukuai@fygo.io`. Yu Kuai
-committed upstream and applied to md-7.2.
+### Step 4.1–4.2: Patch discussion
+**Record:** `b4 dig -c 74ddbf98e2db6` returned no results. Lore search
+blocked by Anubis bot protection. Link from commit message could not be
+fetched. Patch is `2434847-2` (series context unknown).
 
 ### Step 4.3: Bug reports
-**Record:** No syzbot, bugzilla, or user crash reports.
-Theoretical/latent correctness bug.
+**Record:** No syzbot, bugzilla, or user Reported-by tags. Raid10
+parallel fix included before/after `iostat` measurements showing severe
+under-reporting.
 
-### Step 4.4: Related patches
-**Record:** None in series.
+### Step 4.4: Series context
+**Record:** Patch 2 of unknown series. No evidence other patches are
+required for this fix to apply.
 
 ### Step 4.5: Stable list history
-**Record:** No stable-list discussion found.
+**Record:** `d05af90d6218e` (raid10 discard accounting) is already in
+`stable/linux-6.18.y`. `cc22b5407e9ca` (raid0 iostat) was backported to
+6.6.y. Strong precedent for this class of MD accounting fix in stable.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
 ### Step 5.1: Key functions
-**Record:** `stripe_add_to_batch_list()` modified.
+**Record:** `make_discard_request()`, `md_account_bio()`,
+`raid5_make_request()`
 
 ### Step 5.2: Callers
-**Record:** Called from raid5 write path at line 6030
-(`stripe_can_batch(sh)` branch) during `add_stripe_bio` processing —
-common RAID5 write path with batching enabled.
+**Record:** `raid5_make_request()` (line 6137) is the sole caller of
+`make_discard_request()`. Reached from `md_handle_request()` →
+`md_submit_bio()` on discard bios to `/dev/md*`.
 
-### Step 5.3: Callees / context
-**Record:** Manages `STRIPE_BIT_DELAY` and `bm_seq` on batch head; ties
-into bitmap unplug sequencing (`conf->seq_flush`, `conf->seq_write`,
-`activate_bit_delay()`).
+### Step 5.3: Callees
+**Record:** `md_account_bio()` → `percpu_ref_get(&active_io)` +
+`md_clone_bio()` → `bio_start_io_acct()`, `md_bitmap_start()` (for
+WRITE-direction ops including discard, since `REQ_OP_DISCARD=3` has
+write bit set).
 
 ### Step 5.4: Reachability
-**Record:** Reachable on RAID5 arrays with writeback + bitmap enabled +
-stripe batching. Enterprise NAS/server workloads on stable kernels are
-in scope.
+**Record:** Reachable from userspace via `BLKDISCARD`/`fstrim` on RAID5
+arrays. Common on systems using SSD-backed RAID5.
 
 ### Step 5.5: Similar patterns
-**Record:** Same wrap-safe idiom at line 259; `dm-pcache` uses
-`(s8)(seq1 - seq2) > 0`. The 2015 batch-merge site was the outlier still
-using plain `>`.
+**Record:** Raid10 fixed identically (`d05af90d6218e`). Raid0 discard
+path (`raid0_handle_discard`) still lacks `md_account_bio()` —
+inconsistency remains elsewhere, but raid5 is the subject here.
 
 ---
 
-## PHASE 6: CROSS-REFERENCE WITH LOCAL TREE
+## PHASE 6: CROSS-REFERENCE WITH LOCAL TREE (6.18.44)
 
 ### Step 6.1: Buggy code present?
-**Record:** Yes — at lines 998–999:
+**Record:** **YES.** Current `make_discard_request()` at lines 5701–5782
+has no `md_account_bio()` call. Normal RAID5 IO calls it at line 6163.
 
-```996:1002:drivers/md/raid5.c
-        if (test_and_clear_bit(STRIPE_BIT_DELAY, &sh->state)) {
-                int seq = sh->bm_seq;
-                if (test_bit(STRIPE_BIT_DELAY, &sh->batch_head->state)
-&&
-                    sh->batch_head->bm_seq > seq)
-                        seq = sh->batch_head->bm_seq;
-                set_bit(STRIPE_BIT_DELAY, &sh->batch_head->state);
-                sh->batch_head->bm_seq = seq;
-```
-
-Bug introduced 2015; predates 6.18 branch.
-
-### Step 6.2: Backport complications
-**Record:** Clean one-line apply expected; no structural conflicts
-observed.
+### Step 6.2: Backport difficulty
+**Record:** Clean apply expected — upstream diff applies to current
+`raid5.c` with only line-offset differences. No API conflicts.
 
 ### Step 6.3: Related fixes already present?
-**Record:** No equivalent fix in this tree (`git log --grep="stripe
-batch bm_seq"` on HEAD → empty).
+**Record:** Raid10 discard fix (`d05af90d6218e`) and bitmap discard ops
+(`ac9dad8faaa7b`) are in tree. This raid5 fix is the remaining gap.
 
 ---
 
 ## PHASE 7: SUBSYSTEM CONTEXT
 
 ### Step 7.1: Subsystem criticality
-**Record:** `drivers/md/raid5.c` — **IMPORTANT** (RAID5 + bitmap is
-widely used in enterprise/storage on LTS kernels).
+**Record:** `drivers/md/` — **IMPORTANT** (block/MD RAID, used widely in
+servers and NAS).
 
 ### Step 7.2: Activity
-**Record:** md/raid5 actively maintained; recent stable-worthy fixes (IO
-hangs, batch races) landed in 6.18.
+**Record:** Actively maintained; recent raid5 fixes for lockups, IO
+hangs, and overlap races in this tree.
 
 ---
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+## PHASE 8: IMPACT AND RISK
 
 ### Step 8.1: Who is affected
-**Record:** Users of RAID5 with external/internal bitmap and stripe
-write batching — config-specific but common on production md arrays.
+**Record:** Users of RAID5/6 arrays who issue discard/trim (`fstrim`,
+`BLKDISCARD`). Config-specific: RAID5/6 personality with discard
+enabled.
 
 ### Step 8.2: Trigger conditions
-**Record:**
-- Requires `bm_seq`/`seq_flush` to wrap (~2³¹ bitmap batch increments).
-- Bug manifests when comparing sequences on opposite sides of the wrap
-  boundary during batch merge.
-- **Likelihood:** Low frequency, but realistic on long-uptime, write-
-  heavy arrays (exactly the stable/LTS profile).
+**Record:** Any discard IO to a RAID5 device. Common during periodic
+`fstrim` on SSD-backed arrays.
 
 ### Step 8.3: Failure mode severity
-**Record:** Stale `bm_seq` on batch head → stripe may write before
-required bitmap batch is flushed → per raid5's own BITMAP UNPLUGGING
-comments, missed dirty bits can cause **incorrect recovery after power
-loss** (data integrity). Severity when triggered: **CRITICAL**; overall
-exposure: **LOW** due to rare trigger.
+**Record:**
+- **iostat under-reporting** — MEDIUM (monitoring/visibility; raid10
+  showed 16 MB/s vs 20462 MB/s)
+- **Missing `active_io` tracking for in-flight discard** — MEDIUM-HIGH
+  (could affect suspend/quiesce timing; discard bios can complete
+  asynchronously via `bio_inc_remaining`)
+- **Missing bitmap discard tracking** — MEDIUM (with bitmap-enabled
+  arrays, discard regions not tracked through unified path; raid5 has
+  stripe-level bitmap handling but `md_account_bio()` path is now the
+  canonical one since `ac9dad8faaa7b`)
+- Not a direct crash/corruption fix, but functional accounting gap with
+  suspend/bitmap implications
 
 ### Step 8.4: Risk-benefit
 **Record:**
-- **Benefit:** Prevents latent bitmap sequencing corruption on long-
-  running RAID5 arrays.
-- **Risk:** Very low — one line, established idiom, maintainer-accepted.
-- **Ratio:** Favorable for stable.
+- **Benefit:** HIGH for consistency (raid10 already fixed in this tree),
+  correct monitoring, proper `active_io`/bitmap lifecycle
+- **Risk:** LOW — 23-line change, mirrors accepted raid10 pattern, no
+  API changes
+- **Ratio:** Favorable
 
 ---
 
@@ -312,107 +319,158 @@ exposure: **LOW** due to rare trigger.
 
 ### Step 9.1: Evidence summary
 
-**FOR backport:**
-- Real correctness bug in bitmap sequencing (potential recovery/data
-  integrity issue)
-- Bug present since 2015 in this tree
-- One-line, obviously correct fix matching 20-year-old raid5 pattern
-- Md maintainer committed and applied to md-7.2
-- Small, contained, no new APIs/features
-- Applies cleanly to v6.18.44
+**FOR:**
+- Direct parallel to `d05af90d6218e` already in 6.18.y stable
+- Precedent: `cc22b5407e9ca` iostat fix backported to 6.6.y
+- Bug confirmed present in 6.18.44 tree
+- All prerequisites present (`md_account_bio`, bitmap discard ops)
+- Small, obviously correct, low risk
+- `md_account_bio()` provides more than iostat — `active_io` and bitmap
+  tracking
 
-**AGAINST backport:**
-- No user reports or fuzzer findings
-- Trigger requires ~2³¹ bitmap batch increments (very rare)
-- Not an immediate crash/hang; latent correctness issue
-- Sashiko UBSAN note (mitigated: same pattern already in file since
-  2006)
-
-**Unresolved:** No production incident reports confirming the wrap was
-hit in the wild.
+**AGAINST:**
+- No syzbot/user crash reports
+- Primary visible symptom is iostat inaccuracy
+- Slight stripe-boundary calculation change (likely correction, but
+  unverified with tests)
+- No maintainer Reviewed-by/Acked-by on this specific patch
+- Lore discussion unavailable
 
 ### Step 9.2: Stable rules checklist
-1. Obviously correct and tested? **PASS** — matches existing raid5 wrap-
-   safe idiom; maintainer applied.
-2. Fixes a real bug? **PASS** — incorrect seq comparison after wrap.
-3. Important issue? **PASS** — bitmap sequencing error can cause
-   recovery integrity failure (critical when triggered).
-4. Small and contained? **PASS** — 1 line, 1 file.
-5. No new features/APIs? **PASS**.
-6. Can apply to local tree? **PASS** — buggy code confirmed present; fix
-   not yet applied.
+1. Obviously correct and tested? **PASS** — mirrors raid10 fix; author
+   is subsystem expert; no Tested-by but pattern proven
+2. Fixes real bug affecting users? **PASS** — discard accounting gap
+   affects all RAID5 discard users
+3. Important issue? **PASS (MEDIUM)** — not crash/corruption, but
+   functional accounting gap with suspend/bitmap implications; same
+   class accepted for raid10
+4. Small and contained? **PASS** — 23 lines, one file
+5. No new features/APIs? **PASS**
+6. Can apply to local tree? **PASS** — prerequisites present, clean
+   apply expected
 
-### Step 9.3: Exception categories
-**Record:** None (not device ID, quirk, DT, build, or docs). Standard
-correctness bug fix.
+### Step 9.3: Exception category
+**Record:** Not a device-ID/quirk/DT/build/docs exception. Standard bug
+fix.
 
 ### Step 9.4: Decision rationale
-
-For **this** 6.18.y tree, the buggy comparison exists and has existed
-for a decade. The fix is minimal, maintainer-vetted, and aligns with
-established raid5 bitmap sequencing practice. While the trigger is rare,
-stable kernels target long-lived, write-heavy storage systems where
-counter wrap is a realistic eventual concern, and the failure mode
-(bitmap bit not recorded before write) is exactly the class of issue
-stable backports exist to prevent.
+This is the RAID5 counterpart to `d05af90d6218e`, which is already in
+the 6.18.y tree. The MD subsystem has established stable precedent for
+IO accounting fixes (`cc22b5407e9ca` on 6.6.y). The bug exists in
+6.18.44, prerequisites are satisfied, and the fix is small with low
+regression risk. While the most visible symptom is iostat inaccuracy,
+`md_account_bio()` also provides `active_io` lifecycle tracking and
+bitmap discard integration that RAID5 discard currently lacks.
 
 ---
 
 ## Verification
 
-- **[Phase 1]** `git show 00e93faf4cea9` / `13cb77aa61c3d`: parsed
-  message, tags, body
-- **[Phase 1]** Ignored pipeline-only markers per instructions
-- **[Phase 2]** Diff: 1-line change in `stripe_add_to_batch_list()`
-- **[Phase 2]** Read `drivers/md/raid5.c` lines 13–30 (BITMAP UNPLUGGING
-  comment), 258–260, 996–1003, 6802–6811
-- **[Phase 2]** `drivers/md/raid5.h` line 214: `bm_seq` is `int`; line
-  636: `seq_flush, seq_write`
-- **[Phase 3]** `git blame -L 996,1003`: introduced `2b6b24574256c`
-  (2015)
-- **[Phase 3]** `git show 2b6b24574256c`, `d0852df543e5a`,
-  `ae3c20ccf84c8`: history context
-- **[Phase 3]** `git log --oneline -20 -- drivers/md/raid5.c`: recent
-  unrelated changes
-- **[Phase 3]** `git merge-base --is-ancestor 2b6b24574256c HEAD`: buggy
-  code commit in tree
-- **[Phase 3]** `git merge-base --is-ancestor 13cb77aa61c3d HEAD` → exit
-  1: fix NOT in tree
-- **[Phase 4]** `b4 dig -c 13cb77aa61c3d`: found lore thread
-- **[Phase 4]** `b4 dig -c 13cb77aa61c3d -w`: CC'd linux-raid,
-  yukuai@fygo.io
-- **[Phase 4]** `b4 dig -c 13cb77aa61c3d -a`: single v1 revision
-- **[Phase 4]** `b4 dig -m /tmp/bm_seq_thread.mbox`: read thread; Yu
-  Kuai "Applied to md-7.2"; Sashiko review + author reply
-- **[Phase 5]** `grep stripe_add_to_batch_list`: caller at line 6030
-- **[Phase 5]** `grep bm_seq` in raid5.c: wrap-safe pattern at line 259
-  since 2006
-- **[Phase 6]** `git describe HEAD`: v6.18.44
-- **[Phase 6]** Confirmed buggy `>` comparison at line 999 in working
-  tree
-- **[Phase 6]** `git log --grep="stripe batch bm_seq" HEAD`: no fix
-  present
-- **[Phase 8]** Assessed trigger rarity (~2³¹ `seq_flush` increments)
-  and failure mode via bitmap sequencing comments
+- [Phase 1] Parsed commit message from user query and `git show
+  74ddbf98e2db6`
+- [Phase 1] Tags: Link only; no Fixes/Reported-by/Tested-by
+- [Phase 2] Read current `make_discard_request()` at lines 5701–5782;
+  confirmed no `md_account_bio()`
+- [Phase 2] Read `raid5_make_request()` discard path at lines 6137–6140
+- [Phase 2] Read `md_account_bio()` at `md.c:9308–9312` and
+  `md_clone_bio()` at `md.c:9283–9306`
+- [Phase 3] `git blame` on `make_discard_request()`: introduced
+  `620125f2bf8ff` (2012)
+- [Phase 3] `git log -S md_account_bio -- drivers/md/raid5.c`: added
+  `10764815ff472`, not extended to discard
+- [Phase 3] Found related commits: `d05af90d6218e`, `05048cbccab79`,
+  `ac9dad8faaa7b`, `cc22b5407e9ca`
+- [Phase 3] `git merge-base --is-ancestor ac9dad8faaa7b 74ddbf98e2db6`:
+  bitmap discard prerequisite present
+- [Phase 3] `git merge-base --is-ancestor d05af90d6218e HEAD`: raid10
+  fix in tree
+- [Phase 4] `b4 dig -c 74ddbf98e2db6`: no results
+- [Phase 4] Lore fetch blocked by Anubis
+- [Phase 4] `git log stable/linux-6.18.y --grep raid10: fix missing
+  discard`: found `d05af90d6218e`
+- [Phase 4] `git log stable/linux-6.18.y --grep raid0: account for
+  split`: found `cc22b5407e9ca` on 6.6.y
+- [Phase 5] Traced call chain: `md_submit_bio` → `md_handle_request` →
+  `raid5_make_request` → `make_discard_request`
+- [Phase 5] Verified `REQ_OP_DISCARD=3` → `op_is_write()` true →
+  `bio_data_dir()==WRITE` in `blk_types.h:336,441-444`
+- [Phase 6] `git describe HEAD`: v6.18.44; `make kernelversion`: 6.18.44
+- [Phase 6] `git merge-base --is-ancestor 74ddbf98e2db6 HEAD`: NOT in
+  HEAD (fix needed)
+- [Phase 6] Buggy code confirmed at `drivers/md/raid5.c:5701-5782`
+- [Phase 8] Read `mddev_suspend()` at `md.c:489-506`: waits on
+  `active_io` reaching zero
+- [UNVERIFIED] Exact suspend+discard race reproduction — inferred from
+  code path, not from bug report
 
-**YES**
+**YES**The background searches finished and match the earlier analysis:
 
- drivers/md/raid5.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+- **Commit location:** `md/raid5: account discard IO` is upstream as
+  `74ddbf98e2db6` and on the `autosel` branch as `36d4b4a2d7925`, but it
+  is **not** in the current 6.18.44 HEAD.
+- **Stable precedent:** `stable/linux-6.18.y` already has the parallel
+  raid10 fix (`d05af90d6218e`); this raid5 fix is not there yet.
+
+That supports the **YES** backport recommendation for 6.18.y.
+
+ drivers/md/raid5.c | 33 +++++++++++++++++++++++----------
+ 1 file changed, 23 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 5c81dbac7eab5..f3951e162762c 100644
+index 0d83c4adf8e83..5c81dbac7eab5 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -996,7 +996,7 @@ static void stripe_add_to_batch_list(struct r5conf *conf,
- 	if (test_and_clear_bit(STRIPE_BIT_DELAY, &sh->state)) {
- 		int seq = sh->bm_seq;
- 		if (test_bit(STRIPE_BIT_DELAY, &sh->batch_head->state) &&
--		    sh->batch_head->bm_seq > seq)
-+		    sh->batch_head->bm_seq - seq > 0)
- 			seq = sh->batch_head->bm_seq;
- 		set_bit(STRIPE_BIT_DELAY, &sh->batch_head->state);
- 		sh->batch_head->bm_seq = seq;
+@@ -5702,7 +5702,10 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
+ {
+ 	struct r5conf *conf = mddev->private;
+ 	sector_t logical_sector, last_sector;
++	sector_t first_stripe, last_stripe;
+ 	struct stripe_head *sh;
++	struct bvec_iter bi_iter;
++	struct bio *orig_bi = bi;
+ 	int stripe_sectors;
+ 
+ 	/* We need to handle this when io_uring supports discard/trim */
+@@ -5713,19 +5716,29 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
+ 		/* Skip discard while reshape is happening */
+ 		return;
+ 
+-	logical_sector = bi->bi_iter.bi_sector & ~((sector_t)RAID5_STRIPE_SECTORS(conf)-1);
+-	last_sector = bio_end_sector(bi);
+-
+-	bi->bi_next = NULL;
+-
+ 	stripe_sectors = conf->chunk_sectors *
+ 		(conf->raid_disks - conf->max_degraded);
+-	logical_sector = DIV_ROUND_UP_SECTOR_T(logical_sector,
+-					       stripe_sectors);
+-	sector_div(last_sector, stripe_sectors);
++	first_stripe = DIV_ROUND_UP_SECTOR_T(bi->bi_iter.bi_sector,
++					     stripe_sectors);
++	last_stripe = bio_end_sector(bi);
++	sector_div(last_stripe, stripe_sectors);
++
++	if (first_stripe >= last_stripe) {
++		bio_endio(bi);
++		return;
++	}
++
++	bi_iter = bi->bi_iter;
++	bi->bi_iter.bi_sector = first_stripe * stripe_sectors;
++	bi->bi_iter.bi_size = ((last_stripe - first_stripe) *
++			       stripe_sectors) << 9;
++	md_account_bio(mddev, &bi);
++	orig_bi->bi_iter = bi_iter;
++	bi->bi_iter = bi_iter;
++	bi->bi_next = NULL;
+ 
+-	logical_sector *= conf->chunk_sectors;
+-	last_sector *= conf->chunk_sectors;
++	logical_sector = first_stripe * conf->chunk_sectors;
++	last_sector = last_stripe * conf->chunk_sectors;
+ 
+ 	for (; logical_sector < last_sector;
+ 	     logical_sector += RAID5_STRIPE_SECTORS(conf)) {
 -- 
 2.53.0
 
