@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B52894AF168
-	for <linux-raid@vger.kernel.org>; Mon, 31 Aug 2026 17:28:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7249244781F
+	for <linux-raid@vger.kernel.org>; Mon, 31 Aug 2026 17:50:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788197334; cv=none; b=VrbLi2bI+6M6SmvY90Nd094e1M9j/fu8kp8GV09WUuV0MNyHB6DAvZIpgdZtmuXagpeRy6rduOL+6P2eBObCnHJVVYGuwM60zpCxFTtaqNIhM5fxHVdTdwCz5Tulxu6A7tA6p85x6nT2UmSLuklPd1QR1620i+VUPZLweROxEr8=
+	t=1788198646; cv=none; b=hjRGoblVP1j6HAARNiof2bWYUY1HVMsWugmNTAzNVff76pZzUxMONjPsVwrou88zlZwONw9NwsaK+gXDQgVQcZYOW1hd/6z041GdlqTvAw/H5gRhLocz7oAOa+rqlg5e0eu2YG+zvjRgK7BCK65VQ0vCiAYRr+zsBWFkTU8+CCc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788197334; c=relaxed/simple;
-	bh=GOxF4+FqMhr/lhDE020fcDMULlmXpJl04VhsmZiQUpk=;
+	s=arc-20240116; t=1788198646; c=relaxed/simple;
+	bh=dPjcjy6NB1Efs03bLQdd+Pzldo4gTvOPSd0/YpS/xNQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=aQdkbeGoV3WXZ4Zo8avBNnLChgZxtlktpKq0A0fn/IgDd/4TTDVozVb5nE7rBL8xRGfvVLHqGWOrefq7tWfONQT8IBXu+mo52Nj/U5YPcDCM8pufIIQFLYisfAeHRfjCN6xZnyxmvbKfjVE390OroT81g2hou5nHaeWNtz2O3F8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OLJQC5lO; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=pj7mqtGLpZQUZwp855mBQFp/Bz7zI+ER8TSVC6nthZHdq6tPz+wz8gbnhV5JY6gjFxIeCXHClaROkzP1zW9XAdxmpprx1Ik1PgQBH91Srs5xZrRfAd2Kn35r6EoP/KSek7xaKV6tC7VTj6yQb8YphipmD6ziFcWk431caiE0YqU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QwF1vP4N; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OLJQC5lO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 362E51F000E9;
-	Mon, 31 Aug 2026 17:28:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QwF1vP4N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D162C1F000E9;
+	Mon, 31 Aug 2026 17:50:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788197333;
-	bh=jgYLKb19s2S1773nWsUP+QIVH54amtIxh0QTttT/Z5s=;
+	s=k20260515; t=1788198645;
+	bh=63vIZeTrxIt0oZAvXLZWruo6tpbt/Mmuh3j9T+0lKY0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OLJQC5lOPeLOXkT9DenncjWSj+h/4sXLsTgeEpZiSTNsC0qI1SvrsnS17vzKt7S7v
-	 vVIYc+0aseXdKUmVIUnxSj2vH0vlPQEuBzxWe+TKYyT55xHclAJVTzpzlzJHEUlu2w
-	 o0URowDDXbBZoyHdMiNCbf7dvtwBi2LUYHiPT2gZxXyXTv0U9MBAZWVHxCro++b/he
-	 s90TUSLOHopxGfKeeuV8gbTBKdlLFVUkBHbM8gr3zdNntqpa/tm7Dw3nnwquJoWlYm
-	 fOOeLPw4L5cPk7kQREQIUnzfN2R+Z/NK+J6oWBFvVIPbreeAFYt9dRvhkLRGATteKZ
-	 bDAFC4OX4upoQ==
+	b=QwF1vP4Nw4l6PlMrTycyxW0rYzxCxK05TvH1JMIBT4KM2D2bSdgsjmvvjtfk3wlhl
+	 XUw1bHURc7RdURc6Tcj0Z13FrlfuqmCz8IBexS8IkXT4ZsbBlsB5vUf6uedjmDNuUM
+	 VtwpQVziHdKmjKxPCAR6Ou/F+8UJ//TUWe7dn3yRlpEFpcMRAMqtj6lRzSuFvfVi8Q
+	 qLW8lwXnNOlPxSZSXSLxFSzRYquxgIKOjJI/0kDWnfdx7JUN4KZjiI51R8pTvD0hsd
+	 Hzu6vDzgmc6pXCE+IDbvC9lnkOF+kKt2F8voEXDNpRYkNdYSCp4jtTMQ7lSlCUdsbH
+	 3YpDbk3chWhaw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH AUTOSEL 6.18-5.10] md/raid5: let stripe batch bm_seq
- comparison wrap-safe
+Subject: Re: [PATCH AUTOSEL 6.18-5.15] md/raid5: account discard IO
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Sasha Levin" <sashal@kernel.org>
 Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260831133314.4125787-624-sashal@kernel.org>
+In-Reply-To: <20260831133314.4125787-655-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
- <20260831133314.4125787-624-sashal@kernel.org>
+ <20260831133314.4125787-655-sashal@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 17:28:52 +0000
-Message-Id: <20260831172853.362E51F000E9@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 17:50:44 +0000
+Message-Id: <20260831175044.D162C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -49,55 +48,55 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] Lockless Read-Modify-Write (RMW) race on batch_head->bm_seq co=
-uld result in a stale bitmap sequence number.
+- [High] Discard bios are leaked (never completed) if REQ_NOWAIT is set or =
+a reshape is in progress.
 --
 
-commit ec929cd222791eadb056199cc433123ca41575a6
-Author: Chen Cheng <chencheng@fnnas.com>
+commit 411f7ab7bd6961f4f041d0cc04dc0f2c9fb67a13
+Author: Yu Kuai <yukuai@fygo.io>
 
-md/raid5: let stripe batch bm_seq comparison wrap-safe
+md/raid5: account discard IO
 
-This commit fixes a sequence number comparison bug in
-stripe_add_to_batch_list() by changing a direct greater-than comparison to a
-wrap-safe subtraction to ensure proper bitmap batch sequencing.
+This commit adds discard IO to the md-device iostat accounting for RAID5,
+which was previously bypassed. It trims the bio request to the full data
+stripes before accounting it, then restores the iterator to ensure correct
+bio completion and iostat coverage.
 
-Link: https://patch.msgid.link/20260618025735.915113-1-chencheng@fnnas.com
+Link: https://patch.msgid.link/20260605072639.2434847-2-yukuai@kernel.org
 
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 24b32a0c95b40..a163d33b0e075 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
-> @@ -992,7 +992,7 @@ static void stripe_add_to_batch_list(struct r5conf *c=
-onf,
->  	if (test_and_clear_bit(STRIPE_BIT_DELAY, &sh->state)) {
->  		int seq =3D sh->bm_seq;
->  		if (test_bit(STRIPE_BIT_DELAY, &sh->batch_head->state) &&
-> -		    sh->batch_head->bm_seq > seq)
-> +		    sh->batch_head->bm_seq - seq > 0)
->  			seq =3D sh->batch_head->bm_seq;
->  		set_bit(STRIPE_BIT_DELAY, &sh->batch_head->state);
->  		sh->batch_head->bm_seq =3D seq;
+> @@ -5685,7 +5685,10 @@ static void make_discard_request(struct mddev *mdd=
+ev, struct bio *bi)
+>  {
+>  	struct r5conf *conf =3D mddev->private;
+>  	sector_t logical_sector, last_sector;
+> +	sector_t first_stripe, last_stripe;
+>  	struct stripe_head *sh;
+> +	struct bvec_iter bi_iter;
+> +	struct bio *orig_bi =3D bi;
+>  	int stripe_sectors;
+> =20
+>  	/* We need to handle this when io_uring supports discard/trim */
+> @@ -5696,19 +5699,29 @@ static void make_discard_request(struct mddev *md=
+dev, struct bio *bi)
+>  		/* Skip discard while reshape is happening */
+>  		return;
 
-[Severity: Critical]
-This is a pre-existing issue, but could this lockless read-modify-write of
-batch_head->bm_seq result in a stale bitmap sequence number?
+[Severity: High]
+This isn't a bug introduced by this patch, but does returning early from
+make_discard_request() without completing the bio cause an I/O hang?
 
-During concurrent additions to a RAID5 stripe batch, threads handling disjo=
-int
-subordinate stripes (for example, sh1 and sh3) hold different stripe locks.
-Because they do not contend for the same stripe locks, they can execute this
-block concurrently on the same batch_head.
+When a user task issues a discard to a RAID5 array undergoing a reshape,
+raid5_make_request() calls make_discard_request(). If it takes these early
+returns without calling bio_endio(bi), the bio is leaked. Because the
+caller assumes the bio was handled and returns true, the task hangs
+indefinitely waiting for completion.
 
-Could this concurrent access cause one thread to overwrite another thread's
-newer bm_seq with an older one?
-
-If a data race results in the batch head storing an older sequence number,
-could the batch be written to disk before all required bitmap flushes have
-completed? If a power failure occurs under these conditions, it appears the
-dirty bits for some stripes in the batch might not be recorded in the bitma=
-p,
-which might lead to data corruption during array recovery.
+Should these early return paths complete the bio to avoid leaking it?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831133314.4125=
-787-624-sashal@kernel.org?part=3D1
+787-655-sashal@kernel.org?part=3D1
