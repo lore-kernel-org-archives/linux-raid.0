@@ -1,102 +1,129 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2097F37207D
-	for <linux-raid@vger.kernel.org>; Mon, 31 Aug 2026 22:12:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 223C73D890B;
+	Tue,  1 Sep 2026 14:58:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788214358; cv=none; b=Ff3KKjyLCc2M0fIXaAxP7NnflQeztOCZv6goKvoTOmbiVKA1bDWZBIwcrUYn+LnoPefRYpdwn97et8pj5ksIj+NZLK1CnPEJ908izfRfNW+scmLycNft6K+cPPotFxoGusZLONfpUGt5PFQALmWNBz7Qf2u5ZK0O2fpbyCaFIlc=
+	t=1788274694; cv=none; b=PVbhLo99eylpLEbooL9wVupZO57kXktPE5DKglEt1rx46zgODVtG/cGDJo2J8J5qyu3ee4J+0zRGDCOyxk84FIHAn+GM+GXJvreGdU9Ii3PAMb/tCCUQHg0qVGJX/OiNJILpNnwHwG5t87r8GPLTN7sJBGMOVzvyNJHswjo4oTQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788214358; c=relaxed/simple;
-	bh=/X6D3tRcVXC47VkkuIKOpvhuUvOw4npldcZjTFQhBDA=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Fp/0a3swDAVT7048+W+5mF5JzqF7WrkbF1X69rUaxKJT+pkGsoiNxUNwTIwXDXqmilyL7Wwf50Tj32U+ISK3by0UdDN1E67nC5nLdluKP+cGxmhlQdmJuSeYXaVh7m8aOOFqJrRlVCNhlFX1OgrfeMNRz3Va+cvc49E13pqnZtM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cR/Q67K/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788274694; c=relaxed/simple;
+	bh=y83eikXk8GUd2cBtc2uTCXIv0/Xzw6ZdWBcjEeeINTQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sh17K30AiT2rJmVdqvNmT+thowEIZuV+hPiyH0lku6o+MbUMN6lRCtuNzSPaGvjjEZDXNPzT6OZmiD4BJP/IdD7e333Cd+n7WH5AJwKSwiLO8bcBzn1+jG2dzbVBU0/6CZYSHhP3zDggvUG9znV3uzb1wyYt7wxpuGVOEzXA8ig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hSmZEpip; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cR/Q67K/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC9311F000E9;
-	Mon, 31 Aug 2026 22:12:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hSmZEpip"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3573A1F000E9;
+	Tue,  1 Sep 2026 14:58:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788214357;
-	bh=T1lytSezJkIJ7rD01Y4GXFaXY/df/1Ei5OmF2O6jDVI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cR/Q67K/nN6z7zJIJGO7+ppnaY+NhH56gCwKKl4kC6fjSkGIEx3+k+vECtQNcReJ+
-	 mmuTyUVHpv+DWKJW3LO/ynqNcgFxeQM6QqxrVavzQyvhCzlem9Osl/KXfmmOeqki+G
-	 Gn6Oqbmg12j1Fujfo2DBZdT37o5YHnuaxrDZUQ565qxhkXNYP/Jgl+gSJZTO/9jB41
-	 ceqjaYdf7rjiWdIgTc15WlssTvS3IZeFGi16rTAjfbXZM4bEPS42pICnEGJMBkSjt0
-	 5Lanb7b+DBd1EOUxeOyvuBV6pKwmOAi2bRePL4QAWdmnVb3ZmyA1gsNdXVSSwjf29c
-	 d6qa3vzb97gRA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND] raid6: add missing vzeroupper to AVX2 code
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Eric Biggers" <ebiggers@kernel.org>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260831212308.213855-1-ebiggers@kernel.org>
-References: <20260831212308.213855-1-ebiggers@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 22:12:36 +0000
-Message-Id: <20260831221236.DC9311F000E9@smtp.kernel.org>
+	s=k20260515; t=1788274692;
+	bh=iUpjiTv1KRvFABoYYph8lVPGE+bZqchdutvEQG6SYQI=;
+	h=From:To:Cc:Subject:Date;
+	b=hSmZEpipj6ibJ/5DHn71+dcqM3a8A0IRF+6SKnv018OiWNgwKD6W6tTBe/4ljcULg
+	 dLoEAdMBZgUJPLm/f9deS/q4OirmzNLs0IlmRHjRgE7MTNhMQFbyZEz7mp1gJMqs2V
+	 IyKJVxwWwMgbnXNLLQOEb3zXGB+omA6fos0RdiczaNc1di9yOPE/iZmc1NkicK3/Rf
+	 aekc8fEDWh0e8iusb1w5e88WMt5jLecI1HUkP00GCsq/LMSYFcdcLYE2gdv8S8FCYv
+	 sToypstdm6rsI2Jt9K09+tSTD//r1pyD7jiM2KTuZWsm3ZjuFKKD6RbmS/9TFP6YLa
+	 UXU//mxVpX1hw==
+From: Eric Biggers <ebiggers@kernel.org>
+To: x86@kernel.org
+Cc: linux-um@lists.infradead.org,
+	linux-raid@vger.kernel.org,
+	linux-crypto@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Eric Biggers <ebiggers@kernel.org>
+Subject: [PATCH v5 0/8] x86: Remove cpu_has_xfeatures() and add AVX-512 xor_gen()
+Date: Tue,  1 Sep 2026 07:57:32 -0700
+Message-ID: <20260901145740.42337-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+This series consolidates and cleans up how the kernel handles CPU
+feature flags for AVX and AVX-512 when the underlying OS or hypervisor
+(if any) doesn't enable the required xstate features in XCR0.
 
-Pre-existing issues:
-- [High] The patch adds `vzeroupper` to AVX2 functions to avoid AVX-to-SSE =
-transition penalties, but fails to apply the same necessary fix to the corr=
-esponding AVX-512 functions which suffer from the exact same issue.
---
+Specifically, it makes the checks for xstate features be done in a
+single place at boot time for both UML and native x86, instead of
+everywhere kernel code wants to check for AVX or AVX-512 support.
 
-commit 51aca22e4c3be53f90a7f330d0ca103da02290ab
-Author: Eric Biggers <ebiggers@kernel.org>
+Patch 8 then adds an AVX-512 optimized implementation of xor_gen() for
+RAID, which had been blocked on confusion around cpu_has_xfeatures() and
+its lack of implementation on UML.
 
-raid6: add missing vzeroupper to AVX2 code
+Please consider this series for the x86 tree for 7.4.
 
-This patch adds the vzeroupper instruction to the AVX2 optimized RAID6
-code before returning. This prevents degrading the performance of
-subsequent legacy SSE code by avoiding hardware transition penalties.
+Changed in v5:
+  - Replaced benchmark results with the new xor_benchmark
+  - Consolidated the vzeroupper in xor-avx512.c into one location
 
-> diff --git a/lib/raid/raid6/x86/avx2.c b/lib/raid/raid6/x86/avx2.c
-> index 7d829c669ea79..3cc2fe7ac42c5 100644
-> --- a/lib/raid/raid6/x86/avx2.c
-> +++ b/lib/raid/raid6/x86/avx2.c
-> @@ -67,6 +67,7 @@ static void raid6_avx21_gen_syndrome(int disks, size_t =
-bytes, void **ptrs)
->  	}
-> =20
->  	asm volatile("sfence" : : : "memory");
-> +	asm volatile("vzeroupper");
+Changed in v4:
+  - Added missing vzeroupper instructions in xor-avx512.c
 
-[Severity: High]
-This isn't a bug introduced by this patch, but do the AVX-512 versions of
-this code need the same fix?
+Changed in v3:
+  - Updated the implementation of fpu__init_system_xstate() as suggested
+    by Borislav
+  - Added Acked-by tags
+  - Used "xor:" commit subject
 
-In lib/raid/raid6/x86/avx512.c:raid6_avx5121_gen_syndrome():
+Changed in v2:
+  - Made x86 clear the AVX* bits if FPU or XSAVE features are missing.
+  - Updated comment in x86 arch_xor_init().
+  - Updated commit message for the UML commit to clarify that checking
+    XCR0 is standard practice in userspace
 
-	asm volatile("sfence" : : : "memory");
-	kernel_fpu_end();
 
-And in lib/raid/raid6/x86/recov_avx512.c:raid6_2data_recov_avx512():
+Eric Biggers (8):
+  x86/fpu: Check for missing AVX and AVX-512 xstate bits
+  um: Check for missing AVX and AVX-512 xstate bits
+  crypto: x86 - Stop using cpu_has_xfeatures()
+  lib/crypto: x86: Stop using cpu_has_xfeatures()
+  lib/crc: x86: Stop using cpu_has_xfeatures()
+  x86/fpu: Remove cpu_has_xfeatures()
+  xor: Remove redundant X86_FEATURE_OSXSAVE check
+  xor: Add AVX-512 optimized xor_gen()
 
-	}
+ arch/um/kernel/um_arch.c                   |  78 ++++++++++++-
+ arch/x86/crypto/aegis128-aesni-glue.c      |   3 +-
+ arch/x86/crypto/aesni-intel_glue.c         |   7 +-
+ arch/x86/crypto/aria_aesni_avx2_glue.c     |  11 +-
+ arch/x86/crypto/aria_aesni_avx_glue.c      |  11 +-
+ arch/x86/crypto/aria_gfni_avx512_glue.c    |  11 +-
+ arch/x86/crypto/camellia_aesni_avx2_glue.c |  11 +-
+ arch/x86/crypto/camellia_aesni_avx_glue.c  |  11 +-
+ arch/x86/crypto/cast5_avx_glue.c           |   7 +-
+ arch/x86/crypto/cast6_avx_glue.c           |   7 +-
+ arch/x86/crypto/serpent_avx2_glue.c        |   9 +-
+ arch/x86/crypto/serpent_avx_glue.c         |   7 +-
+ arch/x86/crypto/sm4_aesni_avx2_glue.c      |  11 +-
+ arch/x86/crypto/sm4_aesni_avx_glue.c       |  11 +-
+ arch/x86/crypto/twofish_avx_glue.c         |   6 +-
+ arch/x86/include/asm/fpu/api.h             |   9 --
+ arch/x86/kernel/fpu/xstate.c               |  69 +++++-------
+ lib/crc/x86/crc-pclmul-template.h          |   6 +-
+ lib/crypto/x86/blake2s.h                   |   4 +-
+ lib/crypto/x86/chacha.h                    |   3 +-
+ lib/crypto/x86/nh.h                        |   4 +-
+ lib/crypto/x86/poly1305.h                  |   7 +-
+ lib/crypto/x86/sha1.h                      |   4 +-
+ lib/crypto/x86/sha256.h                    |   4 +-
+ lib/crypto/x86/sha512.h                    |   3 +-
+ lib/crypto/x86/sm3.h                       |   3 +-
+ lib/raid/xor/Makefile                      |   2 +-
+ lib/raid/xor/x86/xor-avx512.c              | 122 +++++++++++++++++++++
+ lib/raid/xor/x86/xor_arch.h                |  31 ++++--
+ 29 files changed, 276 insertions(+), 196 deletions(-)
+ create mode 100644 lib/raid/xor/x86/xor-avx512.c
 
-	kernel_fpu_end();
 
-The AVX-512 syndrome generation and recovery functions exit leaving ZMM
-registers dirty without calling vzeroupper. Without vzeroupper after using
-ZMM0-ZMM15 registers, the CPU remains in a dirty upper state. This flaw
-appears to be mirrored across all AVX-512 functions in these files.
+base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+-- 
+2.55.0
 
-If subsequent kernel code on the same CPU core executes legacy 128-bit SSE
-instructions before the state is cleared, could this cause severe hardware
-transition penalties that degrade overall crypto or networking performance
-and cause a performance regression?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831212308.2138=
-55-1-ebiggers@kernel.org?part=3D1
