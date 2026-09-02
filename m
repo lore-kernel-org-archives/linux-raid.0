@@ -1,115 +1,145 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5392B4A9D76
-	for <linux-raid@vger.kernel.org>; Wed,  2 Sep 2026 16:07:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3369747FAE3
+	for <linux-raid@vger.kernel.org>; Wed,  2 Sep 2026 16:18:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788365230; cv=none; b=b5n/Hr5emoVYSZ++OAJJj0oZqiz5orfus6W3abdjKdfrM3LLrVuBRG2n44zNCUiTY3DEeE+vQnMN2iL8OlmipQHyq0jEI713Xlej3T9HKmNlS6uCYcV1HDskGjkbVy7diJq3B4FH6svjbcBp3dPvQp5HQXXvvfvMEYpynGExtnc=
+	t=1788365897; cv=none; b=XYGpQoJt9rPUp8t6vAvax4k2UjBYSLmqM5q85OFAVr/AJsgSucJRZneok7hcuXLMi6lpU0VHdu7S+4UGqnNzKWTkgilGNyyNHpHLxrgUqBjGh069Mfc36RGRqvqjUGgDqlDEspiYNSp8cnDVWKJHQjKeqx4kwTkaxmuDvKXwSqs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788365230; c=relaxed/simple;
-	bh=byZTt5R6BjpzTu8+p8/eAxBr5GXUWYt9qNckwpzaZvs=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qrxTijcJ4v9wvhkhIzWGh08JYudYjai9G1BlCdLzdo39AWr2uyHby4PyDMsL7mS1taQ9MjY/fr1GLJTpVS83xvyZvzecrRY7ICU5inLjZwUNP/FOcHpV1Lxs63T8E7/KpxUA20HimvtnDn34KjAq+I7Dqw9RpyEZRdRSGoIV0GU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Xp4exYyY; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788365897; c=relaxed/simple;
+	bh=HoLZRYotaTzZpagp1TCgMMG+Hcg1A5YWI1dwWnBVPTo=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=diQeuWawAazhtXvOQevQFsmH4CFNZ4XoKyH46LfOCCe+8XYcN5/QL537bwcJv2+wwhVhGUdnsPgqKP+GK1+JTAZf4c0fMGsHZG0PGtVlcU+KPDTODFrb2MTihL5Ue4n3/KxsFhzx2FWzdQ1W23JpJ38QyiCf3m95UxHMUZDWpJg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V2CfLazR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xp4exYyY"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4953e04ef16so11569165e9.2
-        for <linux-raid@vger.kernel.org>; Wed, 02 Sep 2026 09:07:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788365226; x=1788970026; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=0jnVwXo8Qv+75toQ73l7dAA+32JWKJPezOLtyqrUA2Q=;
-        b=Xp4exYyYpT5tyUME3p1PWfQsqIkGqo/wS46qQm98CwI4mVFkw/z1IphW+NUjRhWG60
-         4ltumy3caJ8tkGAGusoxicYN6AxRcLTXNvPWhR4rrwFWc3nuYVozXTFAGf37EAa6cAMS
-         dCuG1Fmd25PmXM8DwhfXr1GzN38/Ken7yy1NrxH6yUsFf9V0C81ZsXyLqXNxizGmtMnU
-         lhogqrx+4GskOwp+SyP44dAuj7OqZEx/Q9kzmcz82WGcGzbeD787LfxANiFJa5wXb2Ym
-         Bb7dA9Xdo6kUti1V11rMUrbBn18nCD+b8DeKcAzuDCKGGIWGxLcSauTOZxa3fiWZ9d2A
-         9QTg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788365226; x=1788970026;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=0jnVwXo8Qv+75toQ73l7dAA+32JWKJPezOLtyqrUA2Q=;
-        b=q5zuleI45U2VGeDHAGO1tLjkJ2TgAEcVz44MOINaophVUNSle4ssgqLLbq5XlT75rO
-         +EvMBAbnmwkF1BZHZpujs7hn8vsxIWAOj06QX7spnKLs6EXh9tby5NZg8MkuCEqoq7w1
-         g5oQJXpFIHr0/XVvm5hb9xY+2ANpRMuybGsjkcapD16J68e1kxdtAnOwHOF3Gkx1pA5y
-         RpejWUjeb4Qk+pNxMKC8022GZqQU4p8K+eN/SbIsbhJJby/9Q/1OtVgYU597MqPGsmfL
-         MttWCDksor4R6ty+tngFE/1bGavi0UZ9odiqFJlS1I9Bpm99jhjWMm3i9jjQ9IJlBLYc
-         F/MQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rp5gtxS1qZNPhChtquqgKKHUU4XZEhB4Y1tW7C//tpnz6wD1BpV49kLSt4LyAPmVXMV+ICwN9yd6gJ0@vger.kernel.org
-X-Gm-Message-State: AFuF++n81qWLrk50sCBWn1vw1B+BYuxLEiPJh098SrZguOqf7zBvDI+i
-	VYeDOLwB73xG9o2e9eXdCBdZWyMHIev+Ek4FAyuJDuCxAu/FEB/nONDg
-X-Gm-Gg: AR+sD10GD6LIy1y0UaWePN65yTiisSPWHy3F/NBBYpxyC6kgW+W7BW9DUaIUk8zuXkn
-	1g66kgHN/9Rn44DiEkfPsOTSkBimSMmXZQoZiNwtMPl82IXtVW6NDjB/cwW59bIfNj81kRJDGb0
-	Tw7JLICd/AdmJ3sjcsr7ITAk64WilmFvVDHUpLi0++VDov+0cJ3oyEZRrD2AymGvTCCjdBtH/iA
-	4S5q5H3KTeA+PURmsQ7l00KUHIzMEY1yYcNiZetNau6Os3eTBhXDJVXctTBFXI/dSEv/lIzgNMx
-	8y+EhvWufVoGP+mP6707LlMMMzHsB8ZKKCAlHt1TI4US+i0bJ1UvzR8PXZewf+EJFdDMVmUi1gL
-	ubzWPcx39TfD5Wc076RYB0qB5/Ou+sDpMKwN34i+YYsDKWAZmWNkLicBJWfiAZ63a+kAFDfMlyS
-	5tL3WmV1ASfixn+LfrwijaANwBIihaUv2/xMLYSumQqBKHOOhiz/zIA7/sYw4dWMoX9nTHxTBqm
-	BY0yLZCy5a7PcxqE6Xf9eg6dA==
-X-Received: by 2002:a05:600c:45c4:b0:499:79b9:e220 with SMTP id 5b1f17b1804b1-49ce5816186mr109276985e9.10.1788365226253;
-        Wed, 02 Sep 2026 09:07:06 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cee5d476esm2206255e9.1.2026.09.02.09.07.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Sep 2026 09:07:05 -0700 (PDT)
-Date: Wed, 2 Sep 2026 17:07:05 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Eric Biggers <ebiggers@kernel.org>, Andrew Morton
- <akpm@linux-foundation.org>, linux-raid@vger.kernel.org,
- linux-kernel@vger.kernel.org, x86@kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH RESEND] xor: add missing vzeroupper to AVX code
-Message-ID: <20260902170705.213d432d@pumpkin>
-In-Reply-To: <20260902133706.GA21538@lst.de>
-References: <20260831212248.213805-1-ebiggers@kernel.org>
-	<20260902133706.GA21538@lst.de>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V2CfLazR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AF991F000E9;
+	Wed,  2 Sep 2026 16:18:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788365895;
+	bh=SGS6k7nFIbagK6otRa9Tkzs1xJYHbPMI5PN4pXzqEIU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=V2CfLazRij16YWzKS3IyrTeIb5/ebc4nXRVk85XwpmmB2Xv42ESJ6mlqzYV5hXISK
+	 emiBx75Q3SEtDpw7UvvmP5EO8WeyzOVO1FrewgumBo3wdff/gG8pY2M3NYstB5sW+y
+	 Eqd5jrCHpEP17PJfSuSAGE2epWkIu0ojYgdEtUIJrAUbqWLtlDjQvSEx6hWmXL6H0p
+	 LY7w5Dgkb2ffIkC2/EQdWpxaoyE0eIGaIKCPAMuf7LFqfBjPBErDvIP9JRGZGHd/Nm
+	 vgjIDRsKLo1HV//8xRlmQ0g53IUE9oTlGVWJqXgc/Z/QDimMZbLibj5kNaiHdfozV6
+	 2p5RJqlGbZHHg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] md/raid5: validate payload size before calculating
+ payload_len
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Martin Wilck" <martin.wilck@suse.com>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20260902160603.218621-1-mwilck@suse.com>
+References: <20260902160603.218621-1-mwilck@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 02 Sep 2026 16:18:15 +0000
+Message-Id: <20260902161815.7AF991F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
 
-On Wed, 2 Sep 2026 15:37:06 +0200
-Christoph Hellwig <hch@lst.de> wrote:
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-> On Mon, Aug 31, 2026 at 02:22:48PM -0700, Eric Biggers wrote:
-> > Since the AVX optimized XOR code uses YMM registers, execute vzeroupper
-> > before returning from it.  This is needed to avoid degrading the
-> > performance of any later SSE code that may happen to be executed.
-> > 
-> > Fixes: ea4d26ae24e5 ("raid5: add AVX optimized RAID5 checksumming")
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Eric Biggers <ebiggers@kernel.org>
-> > ---
-> > 
-> > This didn't get taken through the x86 tree.  Andrew, it seems you're
-> > taking patches to lib/raid/.  Can you apply this one?  
-> 
-> Can we do kernel_avx_{begin,end} instead of having to open code
-> and document this everywhere, please?
+New issues:
+- [High] Uninitialized stack variable used in metadata bounds check
 
-In which case I think you want the vzeroupper in kernel_avx_begin().
+Pre-existing issues:
+- [High] Out-of-bounds read when accessing flexible array members without s=
+ufficient payload size
+--
 
-Actually, for some cpu at least, you need vzeroupper in kernel_fpu_begin()
-even if the code only uses the SSE registers.
+commit b4a013d747a0232b449bf5e128c73f08e565db4a
+Author: Martin Wilck <martin.wilck@suse.com>
+Subject: md/raid5: validate payload size before calculating payload_len
 
-See: https://stackoverflow.com/questions/41303780/why-is-this-sse-code-6-times-slower-without-vzeroupper-on-skylake
-Basically, on Skylake, all SSE hit a penalty if any ymm high bits might be non-zero.
-Don't know what has changed since...
+This patch introduces additional bounds checks in the journal recovery logic
+to ensure that metadata block bounds are respected before accessing variable
+length payload sizes. It adds safety checks before accessing payload->size
+to prevent out-of-bounds reads on corrupted metadata.
 
-I don't have the Intel optimisation manual downloaded (ok, I might have
-it but have NFI where), and the link on that page is broken.
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 7b7546bfa21fb..accf8b472082c 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -2008,6 +2008,9 @@ r5l_recovery_verify_data_checksum_for_mb(struct r5l=
+_log *log,
+>  		payload_flush =3D (void *)mb + mb_offset;
+> =20
+>  		if (le16_to_cpu(payload->header.type) =3D=3D R5LOG_PAYLOAD_DATA) {
+> +			if (mb_offset + sizeof(struct r5l_payload_data_parity)
+> +			    > le32_to_cpu(mb->meta_size))
+> +				goto mismatch;
+>  			payload_len =3D sizeof(struct r5l_payload_data_parity) +
+>  				(sector_t)sizeof(__le32) *
+>  				(le32_to_cpu(payload->size) >> (PAGE_SHIFT - 9));
+> @@ -2018,6 +2021,9 @@ r5l_recovery_verify_data_checksum_for_mb(struct r5l=
+_log *log,
+>  				    payload->checksum[0]) < 0)
 
-David
+[Severity: High]
+This is a pre-existing issue, but is it possible that this access to
+checksum[0] could result in an out-of-bounds memory read?
+
+If payload->size is 0, payload_len could correctly match the base structure
+size without errors. However, reading the flexible array member checksum[0]
+without validating that payload->size > 0 could read outside the allocated
+meta_page.
+
+>  				goto mismatch;
+>  		} else if (le16_to_cpu(payload->header.type) =3D=3D R5LOG_PAYLOAD_PARI=
+TY) {
+
+[ ... ]
+
+> @@ -2035,6 +2041,9 @@ r5l_recovery_verify_data_checksum_for_mb(struct r5l=
+_log *log,
+>  				    payload->checksum[1]) < 0)
+
+[Severity: High]
+This is also a pre-existing issue, but does this similarly read out of boun=
+ds
+if payload->size is not large enough to hold a second parity checksum?
+
+Like the data payload case, this might read past the bounds of the=20
+allocated meta_page if the flexible array member size isn't validated
+for RAID6 parity requirements.
+
+>  				goto mismatch;
+>  		} else if (le16_to_cpu(payload->header.type) =3D=3D R5LOG_PAYLOAD_FLUS=
+H) {
+
+[ ... ]
+
+> @@ -2106,6 +2115,9 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
+>  		if (le16_to_cpu(payload->header.type) =3D=3D R5LOG_PAYLOAD_FLUSH) {
+>  			int i, count;
+> =20
+> +			if (payload_len + sizeof(struct r5l_payload_flush) >
+> +			    le32_to_cpu(mb->meta_size))
+> +				return -EINVAL;
+
+[Severity: High]
+Does this code use payload_len before it is initialized?
+
+In r5c_recovery_analyze_meta_block(), payload_len is declared as a local
+variable at the start of the while loop, but it is not initialized before
+this check.
+
+Should this evaluate mb_offset instead of payload_len? Using an
+uninitialized stack variable here could result in rejecting valid metadata
+and aborting RAID journal recovery.
+
+>  			payload_len =3D sizeof(struct r5l_payload_flush) +
+>  				(sector_t)le32_to_cpu(payload_flush->size);
+>  			if (mb_offset + payload_len >
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902160603.2186=
+21-1-mwilck@suse.com?part=3D1
