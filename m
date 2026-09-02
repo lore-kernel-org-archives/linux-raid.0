@@ -1,145 +1,76 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3369747FAE3
-	for <linux-raid@vger.kernel.org>; Wed,  2 Sep 2026 16:18:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9565E49C4C8;
+	Wed,  2 Sep 2026 16:24:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788365897; cv=none; b=XYGpQoJt9rPUp8t6vAvax4k2UjBYSLmqM5q85OFAVr/AJsgSucJRZneok7hcuXLMi6lpU0VHdu7S+4UGqnNzKWTkgilGNyyNHpHLxrgUqBjGh069Mfc36RGRqvqjUGgDqlDEspiYNSp8cnDVWKJHQjKeqx4kwTkaxmuDvKXwSqs=
+	t=1788366242; cv=none; b=bjCPs8tx25UH/dmvZ57gXZUrD9VkolLTWITJeezB2cgg7sKoYxMqb4DPZ1D4OZLQHpTDjykJgmWX1ARrvVA69l/clE6pN6d2zN6oKDJDm0ydZdJalPQXcvV3uNmtmNcbUw3TjeOUBe53P4lQhVxibXoecA7OE8zRTf/ke8v5Wq0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788365897; c=relaxed/simple;
-	bh=HoLZRYotaTzZpagp1TCgMMG+Hcg1A5YWI1dwWnBVPTo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=diQeuWawAazhtXvOQevQFsmH4CFNZ4XoKyH46LfOCCe+8XYcN5/QL537bwcJv2+wwhVhGUdnsPgqKP+GK1+JTAZf4c0fMGsHZG0PGtVlcU+KPDTODFrb2MTihL5Ue4n3/KxsFhzx2FWzdQ1W23JpJ38QyiCf3m95UxHMUZDWpJg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V2CfLazR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788366242; c=relaxed/simple;
+	bh=Sv8+jp5k/bUDRs3ouxA6bC23CuTA5ChMaFkmgMbFpHQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=f2HLr5jGnXHTxh9iNl+7MIvZhc1zZvlL08gPOOEtcJJRSDGuNyIYh+OE9MEVylFOTIgloL88pwFLeUZKDPqH/S1VXOMSsxmlaw6G0IFu8cxuLe9cpyvtDDmP9b8QaYorjr+zO9cQ1NNYaAfIXQTRyZWoAO8RTeHlyk3NGvvY+yg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fS5z9mkw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V2CfLazR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AF991F000E9;
-	Wed,  2 Sep 2026 16:18:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fS5z9mkw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94A411F000E9;
+	Wed,  2 Sep 2026 16:24:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788365895;
-	bh=SGS6k7nFIbagK6otRa9Tkzs1xJYHbPMI5PN4pXzqEIU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=V2CfLazRij16YWzKS3IyrTeIb5/ebc4nXRVk85XwpmmB2Xv42ESJ6mlqzYV5hXISK
-	 emiBx75Q3SEtDpw7UvvmP5EO8WeyzOVO1FrewgumBo3wdff/gG8pY2M3NYstB5sW+y
-	 Eqd5jrCHpEP17PJfSuSAGE2epWkIu0ojYgdEtUIJrAUbqWLtlDjQvSEx6hWmXL6H0p
-	 LY7w5Dgkb2ffIkC2/EQdWpxaoyE0eIGaIKCPAMuf7LFqfBjPBErDvIP9JRGZGHd/Nm
-	 vgjIDRsKLo1HV//8xRlmQ0g53IUE9oTlGVWJqXgc/Z/QDimMZbLibj5kNaiHdfozV6
-	 2p5RJqlGbZHHg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] md/raid5: validate payload size before calculating
- payload_len
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Martin Wilck" <martin.wilck@suse.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260902160603.218621-1-mwilck@suse.com>
-References: <20260902160603.218621-1-mwilck@suse.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 02 Sep 2026 16:18:15 +0000
-Message-Id: <20260902161815.7AF991F000E9@smtp.kernel.org>
+	s=k20260515; t=1788366241;
+	bh=DzCR3vb3/ecs6a0QnSjA+pH8109oGOY0mJv1v9wZtZA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=fS5z9mkwscerKkaDxWQvaj7vS6Gv3o1ZG9OwTX8u8KouGRFIE6baUwzh9Dr+TlNRg
+	 uJWrsor0gfeqwSWGaIddAaIdjr5EPZAzaEv/+mC6QgD+V0txJOs8i86CsdCx5WiQwg
+	 UeiTqouNj9LST12DMAXBKFlXQyrvyksO2kZKO70/Z9X3jTBENZpT76Zx08jn9VkEFP
+	 8prZ58Hge6niAGJaWXA0z+3TwP2lvxDdh4pm3qgNMv0tkc1y0luLWIk9dpPbb1SnxR
+	 MXXIA2QJG0nqoyDaAXso4MbQlBiX6BYcm+QHC4av0gpxKIpcoKTXhq5yJSGyaA2hiA
+	 a44ysmJ3g6awA==
+Date: Wed, 2 Sep 2026 09:23:59 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org, x86@kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH RESEND] xor: add missing vzeroupper to AVX code
+Message-ID: <20260902162359.GA2497@quark>
+References: <20260831212248.213805-1-ebiggers@kernel.org>
+ <20260902133706.GA21538@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260902133706.GA21538@lst.de>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Wed, Sep 02, 2026 at 03:37:06PM +0200, Christoph Hellwig wrote:
+> On Mon, Aug 31, 2026 at 02:22:48PM -0700, Eric Biggers wrote:
+> > Since the AVX optimized XOR code uses YMM registers, execute vzeroupper
+> > before returning from it.  This is needed to avoid degrading the
+> > performance of any later SSE code that may happen to be executed.
+> > 
+> > Fixes: ea4d26ae24e5 ("raid5: add AVX optimized RAID5 checksumming")
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Eric Biggers <ebiggers@kernel.org>
+> > ---
+> > 
+> > This didn't get taken through the x86 tree.  Andrew, it seems you're
+> > taking patches to lib/raid/.  Can you apply this one?
+> 
+> Can we do kernel_avx_{begin,end} instead of having to open code
+> and document this everywhere, please?
 
-New issues:
-- [High] Uninitialized stack variable used in metadata bounds check
+Again, there are cases in the kernel where both AVX and SSE are used
+within a single kernel-mode FPU section, or where a CPU feature check
+occurs within the section and one or the other is used.  So that
+abstraction will not work as-is, and it would be different from all
+userspace code as well.  If you'd like to try to refactor everything you
+can try to do so, but let's not block fixing these bugs first.
 
-Pre-existing issues:
-- [High] Out-of-bounds read when accessing flexible array members without s=
-ufficient payload size
---
+Also, AVX != "vzeroupper is needed".  The relevant thing is the width of
+the registers used.  There is 128-bit AVX code.
 
-commit b4a013d747a0232b449bf5e128c73f08e565db4a
-Author: Martin Wilck <martin.wilck@suse.com>
-Subject: md/raid5: validate payload size before calculating payload_len
-
-This patch introduces additional bounds checks in the journal recovery logic
-to ensure that metadata block bounds are respected before accessing variable
-length payload sizes. It adds safety checks before accessing payload->size
-to prevent out-of-bounds reads on corrupted metadata.
-
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 7b7546bfa21fb..accf8b472082c 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -2008,6 +2008,9 @@ r5l_recovery_verify_data_checksum_for_mb(struct r5l=
-_log *log,
->  		payload_flush =3D (void *)mb + mb_offset;
-> =20
->  		if (le16_to_cpu(payload->header.type) =3D=3D R5LOG_PAYLOAD_DATA) {
-> +			if (mb_offset + sizeof(struct r5l_payload_data_parity)
-> +			    > le32_to_cpu(mb->meta_size))
-> +				goto mismatch;
->  			payload_len =3D sizeof(struct r5l_payload_data_parity) +
->  				(sector_t)sizeof(__le32) *
->  				(le32_to_cpu(payload->size) >> (PAGE_SHIFT - 9));
-> @@ -2018,6 +2021,9 @@ r5l_recovery_verify_data_checksum_for_mb(struct r5l=
-_log *log,
->  				    payload->checksum[0]) < 0)
-
-[Severity: High]
-This is a pre-existing issue, but is it possible that this access to
-checksum[0] could result in an out-of-bounds memory read?
-
-If payload->size is 0, payload_len could correctly match the base structure
-size without errors. However, reading the flexible array member checksum[0]
-without validating that payload->size > 0 could read outside the allocated
-meta_page.
-
->  				goto mismatch;
->  		} else if (le16_to_cpu(payload->header.type) =3D=3D R5LOG_PAYLOAD_PARI=
-TY) {
-
-[ ... ]
-
-> @@ -2035,6 +2041,9 @@ r5l_recovery_verify_data_checksum_for_mb(struct r5l=
-_log *log,
->  				    payload->checksum[1]) < 0)
-
-[Severity: High]
-This is also a pre-existing issue, but does this similarly read out of boun=
-ds
-if payload->size is not large enough to hold a second parity checksum?
-
-Like the data payload case, this might read past the bounds of the=20
-allocated meta_page if the flexible array member size isn't validated
-for RAID6 parity requirements.
-
->  				goto mismatch;
->  		} else if (le16_to_cpu(payload->header.type) =3D=3D R5LOG_PAYLOAD_FLUS=
-H) {
-
-[ ... ]
-
-> @@ -2106,6 +2115,9 @@ r5c_recovery_analyze_meta_block(struct r5l_log *log,
->  		if (le16_to_cpu(payload->header.type) =3D=3D R5LOG_PAYLOAD_FLUSH) {
->  			int i, count;
-> =20
-> +			if (payload_len + sizeof(struct r5l_payload_flush) >
-> +			    le32_to_cpu(mb->meta_size))
-> +				return -EINVAL;
-
-[Severity: High]
-Does this code use payload_len before it is initialized?
-
-In r5c_recovery_analyze_meta_block(), payload_len is declared as a local
-variable at the start of the while loop, but it is not initialized before
-this check.
-
-Should this evaluate mb_offset instead of payload_len? Using an
-uninitialized stack variable here could result in rejecting valid metadata
-and aborting RAID journal recovery.
-
->  			payload_len =3D sizeof(struct r5l_payload_flush) +
->  				(sector_t)le32_to_cpu(payload_flush->size);
->  			if (mb_offset + payload_len >
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902160603.2186=
-21-1-mwilck@suse.com?part=3D1
+- Eric
