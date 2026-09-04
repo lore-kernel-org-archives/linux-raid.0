@@ -1,64 +1,64 @@
-Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com [209.85.210.47])
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 677EA3F39ED
-	for <linux-raid@vger.kernel.org>; Fri,  4 Sep 2026 12:48:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8407D48B37B
+	for <linux-raid@vger.kernel.org>; Fri,  4 Sep 2026 12:48:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788526113; cv=none; b=pGVDG31HomDjZOcrx2kBFTdENzg92qGvbX6YdUoIVdNUZlpWyZhoNr79m1W6zfCFxhZWs1duPIBHnTmdTJwFuLPM1IkdkeA6PXvFxl4qx/wnriAjB8QEjUaElWJYewwBcTMPe6yz+4WDNJ5T3dEGh/YDkYCAubiP/FRbAyFIIv4=
+	t=1788526117; cv=none; b=mt+YzPpPnzHMW20YJc9sbia9OqIiBvQPQgh+k3Gk8RdjBOfDq3/yLYx7W1pEIQ5rnkaaPhtqxYkyY3u/DJJfiDLPfCsbPjf6JSKCy01aKi5ivrZmTIyi2Kt62Z+Ix+jMY5MRjwafQWSangUE0APRgBGC1DCaRxAXSot61OoKfnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788526113; c=relaxed/simple;
-	bh=g9LdAadAtJGK6RqR7HDIfb2VvRgfe6mcHH0mudZfMpI=;
+	s=arc-20240116; t=1788526117; c=relaxed/simple;
+	bh=zVE2F+Q1jzi+4s7GEnyAJlcwVF7Z8vYLbY2cCvFD2h0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sVta+/rky5Wm6odosSiYuisESd5Yor+d8wmAzexeGEPPqQGQM6G26uSxMuFzz/rTl3hyBBSfBYxRh+JW/rqNGdO1jlzuKQYr4rWP9VyFnL11v/4lsKcZE0+SJKBuMikftr4EAuaUljbJ0vm4qF/PkNHGAMA4zPS9oHa39IXFJiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rzo4ugzr; arc=none smtp.client-ip=209.85.210.47
+	 MIME-Version; b=Xmi3td/t3DGpJFf8SW+Fh0I+BmDQa7kjat4R5JayfTLxF9h3Uf6rnfLx4GzsnLC0XOcE2hYU5XG6Fcjo48wCJlOcDEiNRuRy4LrLNQBkT9czCZM6pOyw3aUqp9kyD/92IpcMljSGyDE7lT+d11EDdOvzixp8pCNmRgvA4LdHRNU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HqQz6Nld; arc=none smtp.client-ip=209.85.216.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rzo4ugzr"
-Received: by mail-ot1-f47.google.com with SMTP id 46e09a7af769-7f4e729368fso899157a34.0
-        for <linux-raid@vger.kernel.org>; Fri, 04 Sep 2026 05:48:32 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HqQz6Nld"
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-398a5aad413so712208a91.3
+        for <linux-raid@vger.kernel.org>; Fri, 04 Sep 2026 05:48:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788526111; x=1789130911; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1788526115; x=1789130915; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=TWn5zE/4ywVNMIe1WvKfWNKisJcFEJDCvB/UV2P/7NE=;
-        b=rzo4ugzrFHswgSDR0U7nO7YzcAnzImSbccbCh4W3BQPrub87F0LKF5Nu7MCiCKtD6Y
-         sWwYMWC8s9xhGJNw3UUg3qG2x/lbDqmbo3WtT1EqBp/BSOtNam6rxB8ld3JlL4e/TuV5
-         qfEdyivIWZyb+4VAGusNJavIOPPl+yTtL9MUaQxFgxO2hIFw6CXIHJ1rAY7daYwZjSV4
-         xWV7uC/NxmWHq+XitSgOuPexFiRwGeuB8Hg8SEJM8ei6jf+pKp32HFNagprqZNzr3q13
-         aKBXM5er7zRltjK4Jo0ToX4dmPSh5jP691kEeAGykfxdqmB9xnI7jn345WB7V725MMbb
-         s+8g==
+        bh=jqQvXBnpuTjdY51Nwgka12FoQyHZLRsODERgLeADk1M=;
+        b=HqQz6NldXuAz+4A/PzdijuhBCtvZoxnASR1uwDRc8sD2GDJqgnYmxKpm1fDweInbPH
+         p1wtWJXImoidCRIw8uXFYWq/UNtd9KsGiMkShJ/SFNTEM5cyY91WbyXsVBHacnTCT20f
+         NykST7te5beNkDdf7yqxoh7+NZYAkcfT3XsySWoUb+ko9xgwPukW9Wk3pjyZ0gH+G4uq
+         O39vCqFg/7nbaRRinYe00Gs8eBiP7clFF41iCXISNGTFvcKwSGyO4/IdNI+OnMUFPODe
+         smMp8NYCOFIJFndhiUoAzygb7e64knHumZalv6TPpiFr0ngdBuSpUHOW6p/sLaz9K4z0
+         SbCQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788526111; x=1789130911;
+        d=1e100.net; s=20251104; t=1788526115; x=1789130915;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=TWn5zE/4ywVNMIe1WvKfWNKisJcFEJDCvB/UV2P/7NE=;
-        b=ErY3fl7bL+VNKdWn2s8PDoYBqP8LX9sFU2sdyXBJYGVjLGlHadHe/K//kLpqZc2xc6
-         e/RML1EKDaj+C4GjVuhBzYhVmJ9tgx55UL+RYovr5ONr2xPYuFQeJYLsFqyHJOpOrpmE
-         zL6ZoxyK5bDoY8YmWkdglyi0RoALnnhlFEUezw1OVBndAF5A+lqFnJR9ZFoPS/cTjVUl
-         lu+RHuBjXjDox6DftA8km4MVEtaX1Y6w22psJ8NRxBCXrL4WlOzF4C8+aLdrhUdnW5cE
-         c9zlHGK0yZnP5H9GHXI08GFK9996mjeXq03XkChzmcCoJCXKPXknZduouwgozu2tfeek
-         wA5w==
-X-Forwarded-Encrypted: i=1; AKwUvBzFpzwI1Rv+ck0GPbQik+NyKPX4u06gb62hPuDjuVkOJLuKLWyPwS5EorP8dRLurAfrSR8G82x/4xFT@vger.kernel.org
-X-Gm-Message-State: AFuF++kjFGeB/avxYXdzKB/3/Gcdr5mdUIsQYAgoX4FNMk1T4+jHJSRf
-	NPskTqU5FuJi4HaBXCUHKMSKXSITwaWe4Alncao0yZTtWJgN8/rq061uYIac73DjirQ=
-X-Gm-Gg: AYBFou1gT/X2QKxuvNqdasWFTko7bvaeItp0XOloi7N2mPfowArQoGWFnJg869f5oVP
-	uaUR95gwx/pkhc49RGwqD11KKEZAnfVvFalyQoKncpt2z99TGZlu7vX1cRgjA9o648n4EV8DYOf
-	cJFt7NovyKsU0oG7RiKn0MV+til4ZIs1oHohlDX1G+GxBOIAQTAW5BknMjX8gY+v9oRbJX0H4Fc
-	unMvqrQyaSlq18tGj33u0bVs+RyQ0RtxWxER5A/GBOYqu2LqT6XENRs44RM/janyYH4Q9SXwtHN
-	XXKtYoyBLeXWoxNnnKdjZFLs75u1IDDnfJI47LdZhaEHmDSOeEFvPHK786qnOKEofsIPKQcNb8+
-	sDP+t2Yo2UY00oVr2VIbzHq3A4KNl5XnuHPwBzqw5SpnakUjyMYpSL5dHw1GQBTnH0M9LGhu30q
-	978kChpJU5+KQqly6fZoAXKzatkzdwOj0eHy3bSdWYiYn29siSEq4j1MvV9zXeXzDFW3vdUkbma
-	MwnElaHSFIpLlQ=
-X-Received: by 2002:a05:6820:16a6:b0:6b7:8415:d779 with SMTP id 006d021491bc7-6b78415d96fmr1566458eaf.36.1788526111318;
-        Fri, 04 Sep 2026 05:48:31 -0700 (PDT)
+        bh=jqQvXBnpuTjdY51Nwgka12FoQyHZLRsODERgLeADk1M=;
+        b=JE4Na0WqbHHQapvnSKQ8iCQfMi/gNWgbxHL/gAvW/Kl+InM4bs95pJ2eUsoEoh9IV9
+         36qGwiCBQVspLDhtip2nY12vfg6AFiMsduNt+kjmLmWrULmOPwoJcYQl7an0J02VIvXD
+         SG4KxJQ/tMwXW9POUTauIa5yNb7W2bUtkm+TL0FR97U/REfCLhygZamrXaDxXRjv/9JP
+         Nv00hxtLSJ/hTr8Nk+Q99jF8iHTWGyYZIXQ2DXbillGegMDw4k7H21YDPNgVfHXtZeGC
+         sYz44OMib4srg1htJdEXdOGPzlz0/0XP3IGZj9aQpIV8tsMRjnwQHpXys1SgME6tQXBE
+         VKdg==
+X-Forwarded-Encrypted: i=1; AKwUvBxe9PF8/kVkaibE4q0+bWtFw70H1TVAjY9E3JsPoxTOvQU4htsLXpVY1eGBEWY8V0XzyNAEuDcUv02F@vger.kernel.org
+X-Gm-Message-State: AFuF++nUYG8EYP2d95Sk7zin0RuhuotzrGtdNpmG5IbXZl58TKiHXoGK
+	Q35p8o3W3QVr5t2qqeoQ3rNl3uxUmVy1dauV9WeqTFPSdn+aXHBBM9o5aAj8rwYR0N0=
+X-Gm-Gg: AYBFou1EizDUqMC6Em/GxchBW+/8yNQZYeoCAsnTKLjiM8isD5pIlTWQN5LiSoKZySh
+	jZ15dLaNxnkmEwIjzp7pO9idt0H7zQOk3Lr/+db1i3k7cnKWf/BXOktqSQvv5Gz/OG5TvjNjRms
+	z8ydVRSSSbR8ZvWR5UVgYKjIC4Um4bFPWoXY05jrH0zLXa0XJGdaZ/2eeTNuAWQHflZWCfGIEbG
+	nch9HWNrLMA3EiJueD1Gq8iauM6BVDKs4eiz+1XQ9pAdPZ4z5XbsRzjKyDP2zoRz6H6NI9HD87I
+	x0n24VTkGzRWjOVOmt2bAyCmrlI7FZshKg5G0jJMJGxrDlHUIYc547hrB3kOsjIVa97XNI8Ie87
+	0JiQcHr6Ke+2UK1m7avk2g9aZPqz9KAIr65hBRCGGmtKLyT90Nnfvqtz4AqgSYuX438CDn7Dr72
+	f9WQ495rUax7nU0Ne3bH5e2f2DFCPKY4+0uXLwwY7gDn+RW94vPqFHj3KIGKE0kg7gseXbEwcJ0
+	4ntuy2zX9wv3PypNCG7I8bBMw==
+X-Received: by 2002:a17:90b:314e:b0:38f:efed:5445 with SMTP id 98e67ed59e1d1-39b261500fdmr7594249a91.4.1788526114583;
+        Fri, 04 Sep 2026 05:48:34 -0700 (PDT)
 Received: from volcano9f6e-hostos.amd.com ([165.204.217.251])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339befe870sm7322412eec.30.2026.09.04.05.48.28
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339befe870sm7322412eec.30.2026.09.04.05.48.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2026 05:48:30 -0700 (PDT)
+        Fri, 04 Sep 2026 05:48:34 -0700 (PDT)
 From: Hemanth Selam <hemanth.selam@gmail.com>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fygo.io>,
@@ -66,9 +66,9 @@ To: Song Liu <song@kernel.org>,
 	Xiao Ni <xiao@kernel.org>
 Cc: linux-kernel@vger.kernel.org,
 	linux-raid@vger.kernel.org
-Subject: [PATCH 1/2] md: fix typos in comments
-Date: Fri,  4 Sep 2026 18:18:21 +0530
-Message-ID: <20260904124824.9585-2-hemanth.selam@gmail.com>
+Subject: [PATCH 2/2] lib: fix repeated word 'the' in comment
+Date: Fri,  4 Sep 2026 18:18:22 +0530
+Message-ID: <20260904124824.9585-3-hemanth.selam@gmail.com>
 X-Mailer: git-send-email 2.48.1
 In-Reply-To: <20260904124824.9585-1-hemanth.selam@gmail.com>
 References: <20260904124824.9585-1-hemanth.selam@gmail.com>
@@ -80,43 +80,28 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Fix typos in comments, reported by scripts/checkpatch.pl using the
-misspelling list in scripts/spelling.txt.  Only touches comments, no code
-changes.
+Drop the second 'the', reported by checkpatch.pl as a possible repeated
+word.  Only touches a comment, no code changes.
 
 Assisted-by: Cursor:claude-opus-5
 Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
 ---
- drivers/md/raid1-10.c | 2 +-
- drivers/md/raid10.c   | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ lib/raid/raid6/algos.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-index 3b0e230692ba..852346420848 100644
---- a/drivers/md/raid1-10.c
-+++ b/drivers/md/raid1-10.c
-@@ -87,7 +87,7 @@ static inline struct resync_pages *get_resync_pages(struct bio *bio)
- 	return bio->bi_private;
- }
- 
--/* generally called after bio_reset() for reseting bvec */
-+/* generally called after bio_reset() for resetting bvec */
- static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pages *rp,
- 			       int size)
- {
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 1093c798d9dd..2ac2dadda19a 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1921,7 +1921,7 @@ static void raid10_status(struct seq_file *seq, struct mddev *mddev)
- }
- 
- /* check if there are enough drives for
-- * every block to appear on atleast one.
-+ * every block to appear on at least one.
-  * Don't consider the device numbered 'ignore'
-  * as we might be about to remove it.
-  */
+diff --git a/lib/raid/raid6/algos.c b/lib/raid/raid6/algos.c
+index 011aa9d0eb3c..182ab9844ba9 100644
+--- a/lib/raid/raid6/algos.c
++++ b/lib/raid/raid6/algos.c
+@@ -66,7 +66,7 @@ EXPORT_SYMBOL_GPL(raid6_gen_syndrome);
+  * This is used to update parity in place using the following sequence:
+  *
+  * 1) call raid6_xor_syndrome(disk, start, stop, ...) for the existing data.
+- * 2) update the the data in @ptrs[@start..@stop].
++ * 2) update the data in @ptrs[@start..@stop].
+  * 3) call raid6_xor_syndrome(disk, start, stop, ...) for the new data.
+  *
+  * Data between @start and @stop that is not changed should be filled
 -- 
 2.48.1
 
