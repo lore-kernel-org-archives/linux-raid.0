@@ -1,107 +1,115 @@
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+Received: from mail-oo1-f71.google.com (mail-oo1-f71.google.com [209.85.161.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8407D48B37B
-	for <linux-raid@vger.kernel.org>; Fri,  4 Sep 2026 12:48:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 976CB38398E
+	for <linux-raid@vger.kernel.org>; Fri,  4 Sep 2026 20:46:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788526117; cv=none; b=mt+YzPpPnzHMW20YJc9sbia9OqIiBvQPQgh+k3Gk8RdjBOfDq3/yLYx7W1pEIQ5rnkaaPhtqxYkyY3u/DJJfiDLPfCsbPjf6JSKCy01aKi5ivrZmTIyi2Kt62Z+Ix+jMY5MRjwafQWSangUE0APRgBGC1DCaRxAXSot61OoKfnQ=
+	t=1788554788; cv=none; b=h/Nch6PFTj4i5udeNsIDleNPyuUihoZCWjDorkfJoG3PVz90n97Zj1uvSolvyRi1M0Zy0THJ86uzrnDfw4OHg4SQhRANGqZWy6DcEIVKeDnjZHceo7ouY9khG7c6YR+7752yH4ifu5dkBO72gSR6440TcJBModmw3xRoQ0czj/c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788526117; c=relaxed/simple;
-	bh=zVE2F+Q1jzi+4s7GEnyAJlcwVF7Z8vYLbY2cCvFD2h0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Xmi3td/t3DGpJFf8SW+Fh0I+BmDQa7kjat4R5JayfTLxF9h3Uf6rnfLx4GzsnLC0XOcE2hYU5XG6Fcjo48wCJlOcDEiNRuRy4LrLNQBkT9czCZM6pOyw3aUqp9kyD/92IpcMljSGyDE7lT+d11EDdOvzixp8pCNmRgvA4LdHRNU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HqQz6Nld; arc=none smtp.client-ip=209.85.216.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HqQz6Nld"
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-398a5aad413so712208a91.3
-        for <linux-raid@vger.kernel.org>; Fri, 04 Sep 2026 05:48:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788526115; x=1789130915; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=jqQvXBnpuTjdY51Nwgka12FoQyHZLRsODERgLeADk1M=;
-        b=HqQz6NldXuAz+4A/PzdijuhBCtvZoxnASR1uwDRc8sD2GDJqgnYmxKpm1fDweInbPH
-         p1wtWJXImoidCRIw8uXFYWq/UNtd9KsGiMkShJ/SFNTEM5cyY91WbyXsVBHacnTCT20f
-         NykST7te5beNkDdf7yqxoh7+NZYAkcfT3XsySWoUb+ko9xgwPukW9Wk3pjyZ0gH+G4uq
-         O39vCqFg/7nbaRRinYe00Gs8eBiP7clFF41iCXISNGTFvcKwSGyO4/IdNI+OnMUFPODe
-         smMp8NYCOFIJFndhiUoAzygb7e64knHumZalv6TPpiFr0ngdBuSpUHOW6p/sLaz9K4z0
-         SbCQ==
+	s=arc-20240116; t=1788554788; c=relaxed/simple;
+	bh=zHoit6yLi3fXOCiRdtBQT2k7fF7NAw0hJ+ckUM7JHuk=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=MZOQPyPA5bWG/Hxq83zlW0yM3YFEgoCTFTHpXhww0xRF73yNX70WGy4J9lTxjBhcnHEVFloxWEgG7mrK4AGNUykZVpJCrOWSppDaPGsc+qBZhGpscQbSdWBo9fK4aBx0vvUQmg2xlrvpdbFu2NZactgzNOhQy1HFo+lNhZpnecE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f71.google.com with SMTP id 006d021491bc7-6b34c5c6de4so1733000eaf.1
+        for <linux-raid@vger.kernel.org>; Fri, 04 Sep 2026 13:46:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788526115; x=1789130915;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=jqQvXBnpuTjdY51Nwgka12FoQyHZLRsODERgLeADk1M=;
-        b=JE4Na0WqbHHQapvnSKQ8iCQfMi/gNWgbxHL/gAvW/Kl+InM4bs95pJ2eUsoEoh9IV9
-         36qGwiCBQVspLDhtip2nY12vfg6AFiMsduNt+kjmLmWrULmOPwoJcYQl7an0J02VIvXD
-         SG4KxJQ/tMwXW9POUTauIa5yNb7W2bUtkm+TL0FR97U/REfCLhygZamrXaDxXRjv/9JP
-         Nv00hxtLSJ/hTr8Nk+Q99jF8iHTWGyYZIXQ2DXbillGegMDw4k7H21YDPNgVfHXtZeGC
-         sYz44OMib4srg1htJdEXdOGPzlz0/0XP3IGZj9aQpIV8tsMRjnwQHpXys1SgME6tQXBE
-         VKdg==
-X-Forwarded-Encrypted: i=1; AKwUvBxe9PF8/kVkaibE4q0+bWtFw70H1TVAjY9E3JsPoxTOvQU4htsLXpVY1eGBEWY8V0XzyNAEuDcUv02F@vger.kernel.org
-X-Gm-Message-State: AFuF++nUYG8EYP2d95Sk7zin0RuhuotzrGtdNpmG5IbXZl58TKiHXoGK
-	Q35p8o3W3QVr5t2qqeoQ3rNl3uxUmVy1dauV9WeqTFPSdn+aXHBBM9o5aAj8rwYR0N0=
-X-Gm-Gg: AYBFou1EizDUqMC6Em/GxchBW+/8yNQZYeoCAsnTKLjiM8isD5pIlTWQN5LiSoKZySh
-	jZ15dLaNxnkmEwIjzp7pO9idt0H7zQOk3Lr/+db1i3k7cnKWf/BXOktqSQvv5Gz/OG5TvjNjRms
-	z8ydVRSSSbR8ZvWR5UVgYKjIC4Um4bFPWoXY05jrH0zLXa0XJGdaZ/2eeTNuAWQHflZWCfGIEbG
-	nch9HWNrLMA3EiJueD1Gq8iauM6BVDKs4eiz+1XQ9pAdPZ4z5XbsRzjKyDP2zoRz6H6NI9HD87I
-	x0n24VTkGzRWjOVOmt2bAyCmrlI7FZshKg5G0jJMJGxrDlHUIYc547hrB3kOsjIVa97XNI8Ie87
-	0JiQcHr6Ke+2UK1m7avk2g9aZPqz9KAIr65hBRCGGmtKLyT90Nnfvqtz4AqgSYuX438CDn7Dr72
-	f9WQ495rUax7nU0Ne3bH5e2f2DFCPKY4+0uXLwwY7gDn+RW94vPqFHj3KIGKE0kg7gseXbEwcJ0
-	4ntuy2zX9wv3PypNCG7I8bBMw==
-X-Received: by 2002:a17:90b:314e:b0:38f:efed:5445 with SMTP id 98e67ed59e1d1-39b261500fdmr7594249a91.4.1788526114583;
-        Fri, 04 Sep 2026 05:48:34 -0700 (PDT)
-Received: from volcano9f6e-hostos.amd.com ([165.204.217.251])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339befe870sm7322412eec.30.2026.09.04.05.48.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2026 05:48:34 -0700 (PDT)
-From: Hemanth Selam <hemanth.selam@gmail.com>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org
-Subject: [PATCH 2/2] lib: fix repeated word 'the' in comment
-Date: Fri,  4 Sep 2026 18:18:22 +0530
-Message-ID: <20260904124824.9585-3-hemanth.selam@gmail.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20260904124824.9585-1-hemanth.selam@gmail.com>
-References: <20260904124824.9585-1-hemanth.selam@gmail.com>
+        d=1e100.net; s=20251104; t=1788554783; x=1789159583;
+        h=content-type:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=pWzV16Ft4hj12P0wEeA5w+i7D224GdQ4JfXKDriSivw=;
+        b=NZPs8Nf2Ru1vQqXCbiykNwg9gX17hFTy1UNBI2Bq0wt6MSJvhKjS5IlKdavOkQoCqA
+         hSEmFFHn8JRWhyBvLBBn0Xz5BJST/g5/86E0aEwPiVE83qPYZVsp2V12/fqMaLBN0ME1
+         xI2pI29dW560U5SDMMCSI//VQXsGoYRAjiZ7lXtLHqFol5UlTWZZJ1/H7aFvVQfLifTq
+         92q0loHaZOkY4vp45HkCuLqHheKItGnMEonptXr2j3IUOVydCb5G9HwoCXVE+wzXm+UY
+         CWh5IGr4de6d2ibydnEp5pnid9AOUQMug3KmmolmQ6jxi4HpkdCia8O7mgmfiORi/JTT
+         r+uA==
+X-Forwarded-Encrypted: i=1; AKwUvBzkkdpAS/6NC0hCBQ2ZA0GK8xN1xQvVZKuRC8tKMAD0X5MnwUexmfHj36z9nU25QMPYR27MGrqAawUi@vger.kernel.org
+X-Gm-Message-State: AFuF++n3Mef5fn+1m10SuLskIHnrRXebgGFhhrrJdkB+eLAiYG2XCOKr
+	28gT6Zh1pN0vnI1/yVE26AOm8P/4pAb7D+PUWRbDZekQxIB2u7LSW9dMyjXKrqdB2o+5dg2rSMY
+	VbCwFi7joqkwa7U2hVAh1fI6zSVgei7kZhUemhxKSw/guKR3yKKwU2tYdTXg=
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Received: by 2002:a05:6820:f08:b0:6b1:b23c:2142 with SMTP id
+ 006d021491bc7-6b6fa5e819cmr6179657eaf.1.1788554783551; Fri, 04 Sep 2026
+ 13:46:23 -0700 (PDT)
+Date: Fri, 04 Sep 2026 13:46:23 -0700
+In-Reply-To: <6a972e63.610165a0.2b3dfd.0001.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a9b2e1f.a5e650b3.363816.0001.GAE@google.com>
+Subject: Re: [syzbot] [raid?] WARNING in create_strip_zones (2)
+From: syzbot <syzbot+a32ff75e417c0f49a8e9@syzkaller.appspotmail.com>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
+	magiclinan@didiglobal.com, song@kernel.org, syzkaller-bugs@googlegroups.com, 
+	xiao@kernel.org, yukuai@fnnas.com, yukuai@fygo.io
+Content-Type: text/plain; charset="UTF-8"
 
-Drop the second 'the', reported by checkpatch.pl as a possible repeated
-word.  Only touches a comment, no code changes.
+syzbot has found a reproducer for the following issue on:
 
-Assisted-by: Cursor:claude-opus-5
-Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
+HEAD commit:    bc35965f6940 Merge tag 'mm-hotfixes-stable-2026-09-03-17-4..
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+console output: https://syzkaller.appspot.com/x/log.txt?x=12271215580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=8c5c3949d762a91f
+dashboard link: https://syzkaller.appspot.com/bug?extid=a32ff75e417c0f49a8e9
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=173f2b49580000
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+a32ff75e417c0f49a8e9@syzkaller.appspotmail.com
+
+------------[ cut here ]------------
+!(flags & __GFP_NOWARN)
+WARNING: mm/slub.c:7013 at __kvmalloc_node_noprof+0x646/0x9b0 mm/slub.c:7013, CPU#3: syz-executor142/6020
+Modules linked in:
+CPU: 3 UID: 0 PID: 6020 Comm: syz-executor142 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+RIP: 0010:__kvmalloc_node_noprof+0x646/0x9b0 mm/slub.c:7013
+Code: c1 e8 2e 07 ff ff 4d 85 f6 0f 85 b6 fd ff ff 48 81 fb ff ff ff 7f 0f 86 4d fd ff ff 41 81 e4 00 20 00 00 0f 85 9c fd ff ff 90 <0f> 0b 90 e9 93 fd ff ff 41 be 10 00 00 00 e9 88 fd ff ff be 42 01
+RSP: 0018:ffffc900036bf948 EFLAGS: 00010246
+RAX: 0000000000000001 RBX: 0000000200000000 RCX: 0000000200000000
+RDX: 0000000000000000 RSI: ffffffff8c620f00 RDI: ffffffff8e6b6938
+RBP: 00000000001fffff R08: 00000000000029c0 R09: 00000000ffffffff
+R10: 0000000000000001 R11: 0000000000000000 R12: 0000000000000000
+R13: 00000000000029c0 R14: 0000000000000000 R15: 00000000ffffffff
+FS:  0000555559921400(0000) GS:ffff8880d5e60000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000055bcaf223cc0 CR3: 0000000055943000 CR4: 0000000000352ef0
+Call Trace:
+ <TASK>
+ create_strip_zones+0x57f/0x1fa0 drivers/md/raid0.c:150
+ raid0_run+0x341/0x410 drivers/md/raid0.c:424
+ md_run+0xc2f/0x2510 drivers/md/md.c:6779
+ do_md_run+0x36/0x660 drivers/md/md.c:6880
+ md_ioctl+0x27eb/0x36d0 drivers/md/md.c:8515
+ blkdev_ioctl+0x5ad/0x6f0 block/ioctl.c:798
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:597 [inline]
+ __se_sys_ioctl fs/ioctl.c:583 [inline]
+ __x64_sys_ioctl+0x18e/0x210 fs/ioctl.c:583
+ do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+ do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f76d13e162b
+Code: 00 48 89 44 24 18 31 c0 48 8d 44 24 60 c7 04 24 10 00 00 00 48 89 44 24 08 48 8d 44 24 20 48 89 44 24 10 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 1c 48 8b 44 24 18 64 48 2b 04 25 28 00 00
+RSP: 002b:00007ffc9fbd7ba0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007f76d13e162b
+RDX: 0000000000000000 RSI: 00000000400c0930 RDI: 0000000000000003
+RBP: 0000000000000004 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 00007f76d143a032
+R13: 0000000000000002 R14: 00007f76d1464cc0 R15: 0000000000000002
+ </TASK>
+
+
 ---
- lib/raid/raid6/algos.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/lib/raid/raid6/algos.c b/lib/raid/raid6/algos.c
-index 011aa9d0eb3c..182ab9844ba9 100644
---- a/lib/raid/raid6/algos.c
-+++ b/lib/raid/raid6/algos.c
-@@ -66,7 +66,7 @@ EXPORT_SYMBOL_GPL(raid6_gen_syndrome);
-  * This is used to update parity in place using the following sequence:
-  *
-  * 1) call raid6_xor_syndrome(disk, start, stop, ...) for the existing data.
-- * 2) update the the data in @ptrs[@start..@stop].
-+ * 2) update the data in @ptrs[@start..@stop].
-  * 3) call raid6_xor_syndrome(disk, start, stop, ...) for the new data.
-  *
-  * Data between @start and @stop that is not changed should be filled
--- 
-2.48.1
-
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
