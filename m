@@ -1,35 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com [209.85.210.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E50F4E8E03;
-	Thu,  3 Sep 2026 16:11:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 677EA3F39ED
+	for <linux-raid@vger.kernel.org>; Fri,  4 Sep 2026 12:48:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788451868; cv=none; b=K4W6WSS6FZjl5ezUNL//f67eN3Dk0lSS026kxjJy5APsVZLUVf7tY4PTm61HSHuJv2ApprT1BxebULfIxdvFITSdRUf4BSeVhSzIeTM1ogYipQqitVXFPXbDB4lnkJXj/jJr9g8UEFjt6puR7iDWWyJgnWmOtGW0WCbBbM8dC+o=
+	t=1788526113; cv=none; b=pGVDG31HomDjZOcrx2kBFTdENzg92qGvbX6YdUoIVdNUZlpWyZhoNr79m1W6zfCFxhZWs1duPIBHnTmdTJwFuLPM1IkdkeA6PXvFxl4qx/wnriAjB8QEjUaElWJYewwBcTMPe6yz+4WDNJ5T3dEGh/YDkYCAubiP/FRbAyFIIv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788451868; c=relaxed/simple;
-	bh=l35oToW/fo74fXmscJTEC53dmZRIZLoLhJhrPRWkVDA=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=cnIsHkH71IhJUamXq94MZxahwP7TBbDlO+b5Ye3nUWG2xGBccXc0LjOcPN+fkXOrY9HkEcewy4f5iTapokAjwcKRrOw8e+ZZQi0oB0nSKEXbSOfD9ASeukirXOiCSvv5bEG/jpJvaI0T02CIdE4PiTKbXg0TzghGHTsZk5/z2TA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cX5S97ua; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788526113; c=relaxed/simple;
+	bh=g9LdAadAtJGK6RqR7HDIfb2VvRgfe6mcHH0mudZfMpI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=sVta+/rky5Wm6odosSiYuisESd5Yor+d8wmAzexeGEPPqQGQM6G26uSxMuFzz/rTl3hyBBSfBYxRh+JW/rqNGdO1jlzuKQYr4rWP9VyFnL11v/4lsKcZE0+SJKBuMikftr4EAuaUljbJ0vm4qF/PkNHGAMA4zPS9oHa39IXFJiI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rzo4ugzr; arc=none smtp.client-ip=209.85.210.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cX5S97ua"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 119AE1F00A3E;
-	Thu,  3 Sep 2026 16:11:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788451866;
-	bh=wQC/B3FS4e5cPaDkFUi05H5/4Cpx4sxh25n+vGHWmYc=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc;
-	b=cX5S97uavmnQ1oACZHN9HgQC0w4BW6l7gd3KhLLv7D3CEwvQqVkkISIabPe6cAz15
-	 lWkG+FcJx8T5bL8zvHYmPd7BTeb+q0xV22oPkTs+7zHVI76huUqtzlAazKHgiijpXC
-	 fPayLcChJfd8lQhKnDDxnDwCYBYoono4GRg6E8M/XmWnKu3w06nB/6JtY5EZEZ4JTc
-	 Ls6Rs/u56x5sozaE9TxltbKV3YH5hTFABAAIOg6efQ6qc4ZyXelz1bMHFgK7aaDnWZ
-	 9Y02WV5P78L1/Fs/n5/fmLT+8/kOHgOC2mjZC6o6yNFynXnGH6uYX4iYf9Gpt3FU4F
-	 Kd4tFkH7OtvQA==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 9386938119CB;
-	Thu,  3 Sep 2026 16:10:08 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rzo4ugzr"
+Received: by mail-ot1-f47.google.com with SMTP id 46e09a7af769-7f4e729368fso899157a34.0
+        for <linux-raid@vger.kernel.org>; Fri, 04 Sep 2026 05:48:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788526111; x=1789130911; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=TWn5zE/4ywVNMIe1WvKfWNKisJcFEJDCvB/UV2P/7NE=;
+        b=rzo4ugzrFHswgSDR0U7nO7YzcAnzImSbccbCh4W3BQPrub87F0LKF5Nu7MCiCKtD6Y
+         sWwYMWC8s9xhGJNw3UUg3qG2x/lbDqmbo3WtT1EqBp/BSOtNam6rxB8ld3JlL4e/TuV5
+         qfEdyivIWZyb+4VAGusNJavIOPPl+yTtL9MUaQxFgxO2hIFw6CXIHJ1rAY7daYwZjSV4
+         xWV7uC/NxmWHq+XitSgOuPexFiRwGeuB8Hg8SEJM8ei6jf+pKp32HFNagprqZNzr3q13
+         aKBXM5er7zRltjK4Jo0ToX4dmPSh5jP691kEeAGykfxdqmB9xnI7jn345WB7V725MMbb
+         s+8g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788526111; x=1789130911;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=TWn5zE/4ywVNMIe1WvKfWNKisJcFEJDCvB/UV2P/7NE=;
+        b=ErY3fl7bL+VNKdWn2s8PDoYBqP8LX9sFU2sdyXBJYGVjLGlHadHe/K//kLpqZc2xc6
+         e/RML1EKDaj+C4GjVuhBzYhVmJ9tgx55UL+RYovr5ONr2xPYuFQeJYLsFqyHJOpOrpmE
+         zL6ZoxyK5bDoY8YmWkdglyi0RoALnnhlFEUezw1OVBndAF5A+lqFnJR9ZFoPS/cTjVUl
+         lu+RHuBjXjDox6DftA8km4MVEtaX1Y6w22psJ8NRxBCXrL4WlOzF4C8+aLdrhUdnW5cE
+         c9zlHGK0yZnP5H9GHXI08GFK9996mjeXq03XkChzmcCoJCXKPXknZduouwgozu2tfeek
+         wA5w==
+X-Forwarded-Encrypted: i=1; AKwUvBzFpzwI1Rv+ck0GPbQik+NyKPX4u06gb62hPuDjuVkOJLuKLWyPwS5EorP8dRLurAfrSR8G82x/4xFT@vger.kernel.org
+X-Gm-Message-State: AFuF++kjFGeB/avxYXdzKB/3/Gcdr5mdUIsQYAgoX4FNMk1T4+jHJSRf
+	NPskTqU5FuJi4HaBXCUHKMSKXSITwaWe4Alncao0yZTtWJgN8/rq061uYIac73DjirQ=
+X-Gm-Gg: AYBFou1gT/X2QKxuvNqdasWFTko7bvaeItp0XOloi7N2mPfowArQoGWFnJg869f5oVP
+	uaUR95gwx/pkhc49RGwqD11KKEZAnfVvFalyQoKncpt2z99TGZlu7vX1cRgjA9o648n4EV8DYOf
+	cJFt7NovyKsU0oG7RiKn0MV+til4ZIs1oHohlDX1G+GxBOIAQTAW5BknMjX8gY+v9oRbJX0H4Fc
+	unMvqrQyaSlq18tGj33u0bVs+RyQ0RtxWxER5A/GBOYqu2LqT6XENRs44RM/janyYH4Q9SXwtHN
+	XXKtYoyBLeXWoxNnnKdjZFLs75u1IDDnfJI47LdZhaEHmDSOeEFvPHK786qnOKEofsIPKQcNb8+
+	sDP+t2Yo2UY00oVr2VIbzHq3A4KNl5XnuHPwBzqw5SpnakUjyMYpSL5dHw1GQBTnH0M9LGhu30q
+	978kChpJU5+KQqly6fZoAXKzatkzdwOj0eHy3bSdWYiYn29siSEq4j1MvV9zXeXzDFW3vdUkbma
+	MwnElaHSFIpLlQ=
+X-Received: by 2002:a05:6820:16a6:b0:6b7:8415:d779 with SMTP id 006d021491bc7-6b78415d96fmr1566458eaf.36.1788526111318;
+        Fri, 04 Sep 2026 05:48:31 -0700 (PDT)
+Received: from volcano9f6e-hostos.amd.com ([165.204.217.251])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339befe870sm7322412eec.30.2026.09.04.05.48.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Sep 2026 05:48:30 -0700 (PDT)
+From: Hemanth Selam <hemanth.selam@gmail.com>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>,
+	Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org
+Subject: [PATCH 1/2] md: fix typos in comments
+Date: Fri,  4 Sep 2026 18:18:21 +0530
+Message-ID: <20260904124824.9585-2-hemanth.selam@gmail.com>
+X-Mailer: git-send-email 2.48.1
+In-Reply-To: <20260904124824.9585-1-hemanth.selam@gmail.com>
+References: <20260904124824.9585-1-hemanth.selam@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -37,71 +79,44 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: Re: [f2fs-dev] [PATCH v2 00/14] Remove PG_private by using
- page/folio->private checks instead
-From: patchwork-bot+f2fs@kernel.org
-Message-Id: 
- <178845180715.3423963.14220073137991024856.git-patchwork-notify@kernel.org>
-Date: Thu, 03 Sep 2026 16:10:07 +0000
-References: <20260831-remove-pg_private-v2-0-3668159cd9e8@nvidia.com>
-In-Reply-To: <20260831-remove-pg_private-v2-0-3668159cd9e8@nvidia.com>
-To: Zi Yan <ziy@nvidia.com>
-Cc: david@kernel.org, willy@infradead.org, akpm@linux-foundation.org,
- muchun.song@linux.dev, ljs@kernel.org, liam@infradead.org, vbabka@kernel.org,
- rppt@kernel.org, surenb@google.com, mhocko@suse.com,
- baolin.wang@linux.alibaba.com, nico.pache@linux.dev, ryan.roberts@arm.com,
- dev.jain@arm.com, baohua@kernel.org, lance.yang@linux.dev,
- usama.arif@linux.dev, gourry@gourry.net, ying.huang@linux.alibaba.com,
- apopple@nvidia.com, hannes@cmpxchg.org, qi.zheng@linux.dev,
- shakeel.butt@linux.dev, kasong@tencent.com, mark.rutland@arm.com,
- irogers@google.com, jack@suse.cz, linux-doc@vger.kernel.org,
- amarkuze@redhat.com, peterz@infradead.org, kexec@lists.infradead.org,
- dave.hansen@linux.intel.com, ruirui.yang@linux.dev, adrian.hunter@intel.com,
- linux-mm@kvack.org, hongbohbli@tencent.com, hpa@zytor.com,
- guochunhai@vivo.com, skhan@linuxfoundation.org, ceph-devel@vger.kernel.org,
- baoquan.he@linux.dev, matthew.brost@intel.com, anna@kernel.org,
- sstabellini@kernel.org, zbestahu@gmail.com, rakie.kim@sk.com,
- minchan@kernel.org, richard@nod.at, x86@kernel.org, ebiggers@kernel.org,
- alexander.shishkin@linux.intel.com, mingo@redhat.com, slava@dubeyko.com,
- weixugc@google.com, yukuai@fygo.io, xen-devel@lists.xenproject.org,
- xiang@kernel.org, magiclinan@didiglobal.com, mhiramat@kernel.org,
- joshua.hahnjy@gmail.com, xiao@kernel.org, byungchul@sk.com,
- james.clark@linaro.org, acme@kernel.org, linux-raid@vger.kernel.org,
- linux-fscrypt@vger.kernel.org, bp@alien8.de, rostedt@goodmis.org,
- linux-mtd@lists.infradead.org, axelrasmussen@google.com,
- jefflexu@linux.alibaba.com, namhyung@kernel.org, jaegeuk@kernel.org,
- yuanchu@google.com, idryomov@gmail.com, osalvador@suse.de, jgross@suse.com,
- pratyush@kernel.org, linux-nfs@vger.kernel.org, tytso@mit.edu,
- oleksandr_tyshchenko@epam.com, song@kernel.org, corbet@lwn.net,
- pasha.tatashin@soleen.com, linux-kernel@vger.kernel.org,
- linux-f2fs-devel@lists.sourceforge.net, linux-perf-users@vger.kernel.org,
- senozhatsky@chromium.org, tglx@kernel.org, jolsa@kernel.org,
- linux-fsdevel@vger.kernel.org, mathieu.desnoyers@efficios.com,
- linux-trace-kernel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
- trondmy@kernel.org
 
-Hello:
+Fix typos in comments, reported by scripts/checkpatch.pl using the
+misspelling list in scripts/spelling.txt.  Only touches comments, no code
+changes.
 
-This patch was applied to jaegeuk/f2fs.git (dev)
-by Jaegeuk Kim <jaegeuk@kernel.org>:
+Assisted-by: Cursor:claude-opus-5
+Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
+---
+ drivers/md/raid1-10.c | 2 +-
+ drivers/md/raid10.c   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-On Mon, 31 Aug 2026 15:25:23 -0400 you wrote:
-> Hi all,
-> 
-> This patchset removes PG_private to make space for upcoming PG_folio
-> (reserved as __PG_folio) for identifying pages from a folio (more details
-> in Note below). Instead of checking PG_private, all code is changed to
-> check page/folio->private != NULL instead.
-> 
-> [...]
-
-Here is the summary with links:
-  - [f2fs-dev,v2,06/14] f2fs: stop using PG_private
-    https://git.kernel.org/jaegeuk/f2fs/c/5ad9409a9533
-
-You are awesome, thank you!
+diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+index 3b0e230692ba..852346420848 100644
+--- a/drivers/md/raid1-10.c
++++ b/drivers/md/raid1-10.c
+@@ -87,7 +87,7 @@ static inline struct resync_pages *get_resync_pages(struct bio *bio)
+ 	return bio->bi_private;
+ }
+ 
+-/* generally called after bio_reset() for reseting bvec */
++/* generally called after bio_reset() for resetting bvec */
+ static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pages *rp,
+ 			       int size)
+ {
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 1093c798d9dd..2ac2dadda19a 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1921,7 +1921,7 @@ static void raid10_status(struct seq_file *seq, struct mddev *mddev)
+ }
+ 
+ /* check if there are enough drives for
+- * every block to appear on atleast one.
++ * every block to appear on at least one.
+  * Don't consider the device numbered 'ignore'
+  * as we might be about to remove it.
+  */
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
+2.48.1
 
