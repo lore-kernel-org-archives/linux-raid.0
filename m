@@ -1,166 +1,96 @@
-Received: from va-2-44.ptr.blmpb.com (va-2-44.ptr.blmpb.com [209.127.231.44])
+Received: from sg-3-27.ptr.tlmpb.com (sg-3-27.ptr.tlmpb.com [101.45.255.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F5DA78F2F
-	for <linux-raid@vger.kernel.org>; Sat,  5 Sep 2026 03:18:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4008F45DF65
+	for <linux-raid@vger.kernel.org>; Sat,  5 Sep 2026 10:44:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.45.255.27
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788578297; cv=none; b=LglWYXFsMgm979OXBtr2g06SCCADDaGPEr58XRwoDw3uMKYbzPeHk80QCtVobwf1XuLtj/keuuo2Yg0erVAQViV7w6uJZ0pDIfyx2tcLdpNzDhvx49qQmmyGDWqgvlSf+zsRefbmlSMmCCU0bw684HfbGYejGenkvF+3QBKI/Jg=
+	t=1788605078; cv=none; b=cYrkCAs6vs3YDNwE7fF7piAe/ddB7ZvCf9AYl8138B4ElSZO/iGsiK0loG8/ALs04UG63pwC/buh1kdR/D0kQd0hbXSloYZaU1VIfjs9vsOAxs7PoGD2/8sOMF6DUM3BqVWjQX35N+c6kLSLoqy1CBfzmM4QFairR9BLPdvIT7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788578297; c=relaxed/simple;
-	bh=DK2cQEis3KVkcqXm8bpzd17Xk3EyX9uX/mFmYfrQW6I=;
-	h=References:To:Date:Mime-Version:Subject:Message-Id:Content-Type:
-	 In-Reply-To:Cc:From; b=RdV2dnCbkeZrDru5O5gyXMqvLCCZf+dIgTMXFgR8XFbARWye07OV+gm2In+xUdqcTHF2WhsAqjJ4rBeGSC/J9/D8YFKzjqIWXWLAVeua3wSLvlXLFOKmhsCCGiJuBQ0h22qmIkMTppge4s41P0gxOXC077wCiWRs7KHCc0G+6Ig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=Y4gLhq0R; arc=none smtp.client-ip=209.127.231.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1788605078; c=relaxed/simple;
+	bh=3LS5IxpNW7mSbPP6+nzU8XNGykeoU8q4AXHjLqimIek=;
+	h=From:Subject:Mime-Version:Date:To:Message-Id:Cc:Content-Type; b=kqASLKswYziZ3V4ldW5DmLuNTIyFO3C68FJk5sQl4768tK1MgjOpDaVm0/e1w3gXCXhNT7Jd3RPa5xJVoxPo9yXp967gCDuM3H6XpecmI8TIyE4ySLbZbzXMsy3KoEYH7jo9luS17jjwlyWpX+6SUu9m4BnXJYy/utc4nwenKVs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=0qpl9SlY; arc=none smtp.client-ip=101.45.255.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="Y4gLhq0R"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="0qpl9SlY"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1788578284;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1788605016;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=QepHmHRXKxDaFStFMuxMtj/OCwtBjnK85AwkNR/yQX4=;
- b=Y4gLhq0RJIl7s6hA4dD5xBo+6uFyeEIuTeruQtJFn+nGuAUvqSPC/8+VFvLKIY+OpKNDQi
- +QAYZEhyIWIM+6L1X0E2fduhCTb5VnGd8CukDWP9FIufAGJLrIBkjYyric+y3lFGv5yCwr
- 0FhkCjdXXYCKKSdqEWscj/nWvmMeCN9Ycs6hW6Fn+942Vfqj5TOpguayzuDdqIZAgccgD9
- cXK/ZIoo1LdLUZ4ikM6R2e5wtfxYPJSPT8j6wn03ZyUH/OHcr29DDKgrbMt1YYmOzP1wgv
- ZL67wXPK3AfojpeiLwrZgQ2HdPbXQp0j8Usrm0uqHxA/W+SqZRu2SuTai6VlvQ==
-References: <20260902095307.358569-1-dayou5941@163.com>
-User-Agent: Mozilla Thunderbird
-Reply-To: yukuai@fygo.io
-To: "Li Youhong" <dayou5941@163.com>, <song@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-Date: Sat, 5 Sep 2026 11:17:58 +0800
+ bh=dO/UcKNO87WKC8ZlQdKd4LNnXFAjCa2VErtE3XJa2+E=;
+ b=0qpl9SlY2a//WBR3LIlHUO5WiVfh1SWRw+JDBG/EsjHl1Gl41BgInt93mpsc2vHFk6Z/+e
+ oqB2ZNn7HwT4C0FGnvTCrVSQR0hcgMYV0vekl+16hDBQHJWbY8ly4Uga20p+sGvHkDBZVZ
+ Wr26qhgDWwhpY8hLLdJqd4anY7xxfUeMF+HwhCe3WQKzn1z1oJrD9qEzdavHjXPXVjcEX8
+ T6RDTHqHLne5uEMyByyyylnwBU3rtLXubm1Tw/DfcTWeFVAdWekOGAw4bjbK6vog8DN+UV
+ K8QArCd8EiMe6TxzGnFV2qnLCeE61N5FkWbr30bcsJL6X+gyVoLTg332D2h9fg==
+From: "Chen Cheng" <chencheng@fnnas.com>
+Subject: [PATCH v2] md/raid5: reject raid4/5 arrays with too few disks
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Lms-Return-Path: <lba+26a9b89eb+d8f617+vger.kernel.org+yukuai@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.178]) by smtp.larksuite.com with ESMTPS; Sat, 05 Sep 2026 03:18:02 +0000
-Subject: Re: [PATCH] md/raid5: serialize plug list add with device_lock
-Message-Id: <826d82e9-0f0c-450e-a5f9-ea6675b7adc6@fygo.io>
+X-Lms-Return-Path: <lba+26a9bf256+4d7a0e+vger.kernel.org+chencheng@fnnas.com>
+Date: Sat,  5 Sep 2026 18:43:23 +0800
+X-Original-From: chencheng@fnnas.com
+To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <xiaoni@fygo.io>
+Message-Id: <20260905104323.2202902-1-chencheng@fnnas.com>
+Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>, 
+	<syzbot+de94ddbfff0c9e6fe030@syzkaller.appspotmail.com>
+X-Mailer: git-send-email 2.55.0
+Received: from fedora ([183.34.161.2]) by smtp.feishu.cn with ESMTPS; Sat, 05 Sep 2026 18:43:34 +0800
+Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset=UTF-8
-In-Reply-To: <20260902095307.358569-1-dayou5941@163.com>
-Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"Li Youhong" <liyouhong@kylinos.cn>, <stable@vger.kernel.org>
-From: "yu kuai" <yukuai@fygo.io>
-X-Original-From: yu kuai <yukuai@fygo.io>
-Content-Transfer-Encoding: quoted-printable
 
-Hi,
+From: Chen Cheng <chencheng@fnnas.com>
 
-=E5=9C=A8 2026/9/2 17:53, Li Youhong =E5=86=99=E9=81=93:
-> From: Li Youhong <liyouhong@kylinos.cn>
->
-> raid5_unplug() can spin forever under conf->device_lock when
-> raid5_plug_cb.list still points at a stripe whose sh->lru has
-> already been reinitialized (self-looped). That disables IRQs on
-> the holder CPU and causes multi-CPU hard lockups on waiters of
-> the same lock.
->
-> This happens because release_stripe_plug() sets
-> STRIPE_ON_UNPLUG_LIST and list_add_tail(sh->lru) without
-> device_lock, while do_release_stripe() may concurrently move the
-> same lru onto handle/inactive when the last reference drops.
->
-> Note: a 2020 proposal tried extra refs / checking
-> STRIPE_ON_UNPLUG_LIST in do_release_stripe() without serializing
-> the plug enqueue:
-> https://lore.kernel.org/linux-raid/20200108163023.9301-1-guoqing.jiang@cl=
-oud.ionos.com/
-> That still leaves a TOCTOU window where the bit is clear during
-> the check and set afterwards, allowing two list_add on the same
-> lru. It was not merged.
->
-> Serialize the bit update and list_add with device_lock. If
-> do_release_stripe() still sees STRIPE_ON_UNPLUG_LIST, restore the
-> reference and let raid5_unplug() own the final release.
->
-> Observed on production 9-disk NVMe RAID5 under MySQL AIO
-> (io_submit -> blk_finish_plug -> raid5_unplug).
->
-> Fixes: 8811b5968f62 ("raid5: make_request use batch stripe release")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
-> ---
->   drivers/md/raid5.c | 33 ++++++++++++++++++++++++++++++---
->   1 file changed, 30 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index b91545ce090d..c9197b63b1c4 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -229,6 +229,17 @@ static void do_release_stripe(struct r5conf *conf, s=
-truct stripe_head *sh,
->   	int i;
->   	int injournal =3D 0;	/* number of date pages with R5_InJournal */
->  =20
-> +	/*
-> +	 * Stripe is owned by release_stripe_plug()'s cb->list. A concurrent
-> +	 * last-ref release can reach here after the stripe was queued for
-> +	 * unplug (lru may already be non-empty). Do not re-add lru elsewhere;
-> +	 * restore the reference and let raid5_unplug() finish the release.
-> +	 */
-> +	if (test_bit(STRIPE_ON_UNPLUG_LIST, &sh->state)) {
-> +		atomic_inc(&sh->count);
-> +		return;
-> +	}
-> +
->   	BUG_ON(!list_empty(&sh->lru));
->   	BUG_ON(atomic_read(&conf->active_stripes)=3D=3D0);
->  =20
-> @@ -5760,6 +5771,9 @@ static void release_stripe_plug(struct mddev *mddev=
-,
->   		raid5_unplug, mddev,
->   		sizeof(struct raid5_plug_cb));
->   	struct raid5_plug_cb *cb;
-> +	struct r5conf *conf =3D mddev->private;
-> +	unsigned long flags;
-> +	bool queued =3D false;
->  =20
->   	if (!blk_cb) {
->   		raid5_release_stripe(sh);
-> @@ -5775,9 +5789,22 @@ static void release_stripe_plug(struct mddev *mdde=
-v,
->   			INIT_LIST_HEAD(cb->temp_inactive_list + i);
->   	}
->  =20
-> -	if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state))
-> -		list_add_tail(&sh->lru, &cb->list);
-> -	else
-> +	/*
-> +	 * Serialize with do_release_stripe() on device_lock so sh->lru cannot
-> +	 * be added to handle/inactive and cb->list at the same time.
-> +	 */
-> +	spin_lock_irqsave(&conf->device_lock, flags);
-> +	if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state)) {
-> +		if (unlikely(!list_empty(&sh->lru))) {
-> +			clear_bit(STRIPE_ON_UNPLUG_LIST, &sh->state);
-> +		} else {
-> +			list_add_tail(&sh->lru, &cb->list);
-> +			queued =3D true;
-> +		}
-> +	}
-> +	spin_unlock_irqrestore(&conf->device_lock, flags);
+raid4 requires at least two disks and raid5 requires at least three disks,
+but setup_conf() only rejects raid6 arrays with fewer than four disks. As a
+result, an invalid raid4 or raid5 array can be assembled with no data disks
+and later reach raid5_set_limits().
 
-Do you run some performance test on this patch? I believe this is from IO h=
-ot path,
-a spinlock is not acceptable. I know there is already some spinlock for rai=
-d5, but
-I'd like not to introduce new lock contention.
+Reject such arrays before the r5conf is created. This prevents the invalid
+geometry from reaching queue limit setup, where roundup_pow_of_two() can be
+called with a zero stripe size.
 
-Can this problem be fixed by a new llist in stripe_head?
+Reported-by: syzbot+de94ddbfff0c9e6fe030@syzkaller.appspotmail.com
+Closes: https://lore.kernel.org/r/6a778c82.01d0871a.3a0d52.006a.GAE@google.com/
+Fixes: f63f17350e53 ("md/raid5: use the atomic queue limit update APIs")
+Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+---
+v1->v2:
+- Fix wrong tags
+- Check raid-4 also
+---
+ drivers/md/raid5.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-> +
-> +	if (!queued)
->   		raid5_release_stripe(sh);
->   }
->  =20
-
---=20
-Thanks,
-Kuai
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index b91545ce090d..4d8bb0cf2605 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7655,13 +7655,16 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	     && !algorithm_valid_raid6(mddev->new_layout))) {
+ 		pr_warn("md/raid:%s: layout %d not supported\n",
+ 			mdname(mddev), mddev->new_layout);
+ 		return ERR_PTR(-EIO);
+ 	}
+-	if (mddev->new_level == 6 && mddev->raid_disks < 4) {
+-		pr_warn("md/raid:%s: not enough configured devices (%d, minimum 4)\n",
+-			mdname(mddev), mddev->raid_disks);
++	if ((mddev->new_level == 4 && mddev->raid_disks < 2) ||
++	    (mddev->new_level == 5 && mddev->raid_disks < 3) ||
++	    (mddev->new_level == 6 && mddev->raid_disks < 4)) {
++		pr_warn("md/raid:%s: not enough configured devices (%d, minimum %d)\n",
++			mdname(mddev), mddev->raid_disks,
++			mddev->new_level - 2);
+ 		return ERR_PTR(-EINVAL);
+ 	}
+ 
+ 	if (!mddev->new_chunk_sectors ||
+ 	    (mddev->new_chunk_sectors << 9) % PAGE_SIZE ||
+-- 
+2.55.0
