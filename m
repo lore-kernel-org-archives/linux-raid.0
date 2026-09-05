@@ -1,98 +1,165 @@
-Received: from va-2-43.ptr.blmpb.com (va-2-43.ptr.blmpb.com [209.127.231.43])
+Received: from va-2-44.ptr.blmpb.com (va-2-44.ptr.blmpb.com [209.127.231.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40DB42F5A06
-	for <linux-raid@vger.kernel.org>; Sat,  5 Sep 2026 02:44:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F5DA78F2F
+	for <linux-raid@vger.kernel.org>; Sat,  5 Sep 2026 03:18:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788576253; cv=none; b=Pj6mOU8HFX6qMRW9QIWODmdd7hFd6I4GiHwx2aGEeIJCx6qp2HzSgVek62ayBU7b/Sxz9Uy8/eqdjae3b0CvBa4u2L6LdzgwJmgMQF42A/No4Jy/QzYrlnPT8s7tTq7VR4Wpq2S/paxMjuQR127gKivVn8XSyd80nV3AeI3Rbuk=
+	t=1788578297; cv=none; b=LglWYXFsMgm979OXBtr2g06SCCADDaGPEr58XRwoDw3uMKYbzPeHk80QCtVobwf1XuLtj/keuuo2Yg0erVAQViV7w6uJZ0pDIfyx2tcLdpNzDhvx49qQmmyGDWqgvlSf+zsRefbmlSMmCCU0bw684HfbGYejGenkvF+3QBKI/Jg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788576253; c=relaxed/simple;
-	bh=PjLFEOJXzsiksEEWOe9DgEKZdTBW3QPu+gu8TAGEeU4=;
-	h=From:Date:References:In-Reply-To:Content-Type:To:Message-Id:Cc:
-	 Subject:Mime-Version; b=gtMPSqS69QfCUVRz09qW8oujJn5JrmZUiguGWjbc8fLAhTvQMtycqisFzsr2ZjHOl0/4TtcQn7swo9lPrQ7u+AwkIGeXz6rhx6an81Xq+hOIZGH0aloGsnR7L+VnTMtW9wXDfl6YcpDn7CiYnF40/R9f5SBh0AEh76EU4OSrpwA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=ADG0m9R5; arc=none smtp.client-ip=209.127.231.43
+	s=arc-20240116; t=1788578297; c=relaxed/simple;
+	bh=DK2cQEis3KVkcqXm8bpzd17Xk3EyX9uX/mFmYfrQW6I=;
+	h=References:To:Date:Mime-Version:Subject:Message-Id:Content-Type:
+	 In-Reply-To:Cc:From; b=RdV2dnCbkeZrDru5O5gyXMqvLCCZf+dIgTMXFgR8XFbARWye07OV+gm2In+xUdqcTHF2WhsAqjJ4rBeGSC/J9/D8YFKzjqIWXWLAVeua3wSLvlXLFOKmhsCCGiJuBQ0h22qmIkMTppge4s41P0gxOXC077wCiWRs7KHCc0G+6Ig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=Y4gLhq0R; arc=none smtp.client-ip=209.127.231.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="ADG0m9R5"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="Y4gLhq0R"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1788576238;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1788578284;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=AS1vfi3VihSVIsjeaIeKxQPfiMDmXIiNUcRd+v/2Xx4=;
- b=ADG0m9R5s2QQzZZZBkkOqe/SsyFFECyEhFZv/k2porsr9Kw7fOWKKCbl8FTA/aju3iycpP
- oImifmJ2/WN25sUOZ86TMKwYzMTzZl0r2IkRvd/oxqRDNZ7JiPtt5z+9cU4caSUiFevd1b
- 1K0h13Rh5A8waeVReiyHfuhyrYkLYVLVfzyw//145CB4ili/4i9J/+xVJfKF644tAaM1Hq
- adx1aNSofix4e5p6FLPBwO4WpQ2M4Iy3qU/MZpSxj6s5mmBn4j6RW/5gofTlcArcn0lnsi
- hWNpUbuvONpbg0ZQuRDwUb+DFwGTJGX4fNQxPTyX570cl+DCq74bifxWR76aCg==
-From: "yu kuai" <yukuai@fygo.io>
-Date: Sat, 5 Sep 2026 10:43:53 +0800
-X-Original-From: yu kuai <yukuai@fygo.io>
-References: <20260827075620.3599227-1-dayou5941@163.com>
-In-Reply-To: <20260827075620.3599227-1-dayou5941@163.com>
-Reply-To: yukuai@fygo.io
-Content-Type: text/plain; charset=UTF-8
+ bh=QepHmHRXKxDaFStFMuxMtj/OCwtBjnK85AwkNR/yQX4=;
+ b=Y4gLhq0RJIl7s6hA4dD5xBo+6uFyeEIuTeruQtJFn+nGuAUvqSPC/8+VFvLKIY+OpKNDQi
+ +QAYZEhyIWIM+6L1X0E2fduhCTb5VnGd8CukDWP9FIufAGJLrIBkjYyric+y3lFGv5yCwr
+ 0FhkCjdXXYCKKSdqEWscj/nWvmMeCN9Ycs6hW6Fn+942Vfqj5TOpguayzuDdqIZAgccgD9
+ cXK/ZIoo1LdLUZ4ikM6R2e5wtfxYPJSPT8j6wn03ZyUH/OHcr29DDKgrbMt1YYmOzP1wgv
+ ZL67wXPK3AfojpeiLwrZgQ2HdPbXQp0j8Usrm0uqHxA/W+SqZRu2SuTai6VlvQ==
+References: <20260902095307.358569-1-dayou5941@163.com>
 User-Agent: Mozilla Thunderbird
+Reply-To: yukuai@fygo.io
 To: "Li Youhong" <dayou5941@163.com>, <song@kernel.org>, 
 	"yu kuai" <yukuai@fygo.io>
-Message-Id: <b0d041de-deed-4a93-804e-5c0503595b81@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.178]) by smtp.larksuite.com with ESMTPS; Sat, 05 Sep 2026 02:43:57 +0000
-Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, "Li Youhong" <liyouhong@kylinos.cn>
-Subject: Re: [PATCH 0/3] md: raid helper cleanups
+Date: Sat, 5 Sep 2026 11:17:58 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Lms-Return-Path: <lba+26a9b81ed+4c7877+vger.kernel.org+yukuai@fygo.io>
+X-Lms-Return-Path: <lba+26a9b89eb+d8f617+vger.kernel.org+yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.178]) by smtp.larksuite.com with ESMTPS; Sat, 05 Sep 2026 03:18:02 +0000
+Subject: Re: [PATCH] md/raid5: serialize plug list add with device_lock
+Message-Id: <826d82e9-0f0c-450e-a5f9-ea6675b7adc6@fygo.io>
+Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20260902095307.358569-1-dayou5941@163.com>
+Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	"Li Youhong" <liyouhong@kylinos.cn>, <stable@vger.kernel.org>
+From: "yu kuai" <yukuai@fygo.io>
+X-Original-From: yu kuai <yukuai@fygo.io>
 Content-Transfer-Encoding: quoted-printable
 
-=E5=9C=A8 2026/8/27 15:56, Li Youhong =E5=86=99=E9=81=93:
+Hi,
 
+=E5=9C=A8 2026/9/2 17:53, Li Youhong =E5=86=99=E9=81=93:
 > From: Li Youhong <liyouhong@kylinos.cn>
 >
-> This series factors a few repeated md/raid patterns into small helpers.
-> There is no intentional behaviour change; each patch is a mechanical
-> extract of existing logic.
+> raid5_unplug() can spin forever under conf->device_lock when
+> raid5_plug_cb.list still points at a stripe whose sh->lru has
+> already been reinitialized (self-looped). That disables IRQs on
+> the holder CPU and causes multi-CPU hard lockups on waiters of
+> the same lock.
 >
-> Patch 1 adds rdev_record_write_error() in md.h for the
-> WriteErrorSeen + WantReplacement + MD_RECOVERY_NEEDED sequence shared by
-> raid1, raid10 and raid5.
+> This happens because release_stripe_plug() sets
+> STRIPE_ON_UNPLUG_LIST and list_add_tail(sh->lru) without
+> device_lock, while do_release_stripe() may concurrently move the
+> same lru onto handle/inactive when the last reference drops.
 >
-> Patches 2 and 3 move raid1/raid10-only helpers into raid1-10.c, which is
-> #included by both drivers:
+> Note: a 2020 proposal tried extra refs / checking
+> STRIPE_ON_UNPLUG_LIST in do_release_stripe() without serializing
+> the plug enqueue:
+> https://lore.kernel.org/linux-raid/20200108163023.9301-1-guoqing.jiang@cl=
+oud.ionos.com/
+> That still leaves a TOCTOU window where the bit is clear during
+> the check and set afterwards, allowing two list_add on the same
+> lru. It was not merged.
 >
->    - rdev_bb_block_sectors() for the badblocks-aligned block size used in
->      narrow_write_error()
->    - flush_bio_list() for the bitmap plug flush path previously duplicate=
-d
->      in raid10's flush_pending_writes() and raid10_unplug()
+> Serialize the bit update and list_add with device_lock. If
+> do_release_stripe() still sees STRIPE_ON_UNPLUG_LIST, restore the
+> reference and let raid5_unplug() own the final release.
 >
-> The helpers in raid1-10.c follow the existing static inline convention
-> used by raid1_submit_write(), check_decay_read_errors(), and others in
-> that file.
+> Observed on production 9-disk NVMe RAID5 under MySQL AIO
+> (io_submit -> blk_finish_plug -> raid5_unplug).
 >
-> Li Youhong (3):
->        md: add rdev_record_write_error() helper
->        md/raid1-10: add rdev_bb_block_sectors() helper
->        md/raid1-10: share flush_bio_list between raid1 and raid10
+> Fixes: 8811b5968f62 ("raid5: make_request use batch stripe release")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
 > ---
->   drivers/md/md.h       |  7 +++++++
->   drivers/md/raid1-10.c | 27 +++++++++++++++++++++++++++
->   drivers/md/raid1.c    | 42 +++++++-----------------------------------
->   drivers/md/raid10.c   | 50 +++++++-------------------------------------=
-------
->   drivers/md/raid5.c    |  5 +----
->   5 files changed, 48 insertions(+), 83 deletions(-)
+>   drivers/md/raid5.c | 33 ++++++++++++++++++++++++++++++---
+>   1 file changed, 30 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index b91545ce090d..c9197b63b1c4 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -229,6 +229,17 @@ static void do_release_stripe(struct r5conf *conf, s=
+truct stripe_head *sh,
+>   	int i;
+>   	int injournal =3D 0;	/* number of date pages with R5_InJournal */
+>  =20
+> +	/*
+> +	 * Stripe is owned by release_stripe_plug()'s cb->list. A concurrent
+> +	 * last-ref release can reach here after the stripe was queued for
+> +	 * unplug (lru may already be non-empty). Do not re-add lru elsewhere;
+> +	 * restore the reference and let raid5_unplug() finish the release.
+> +	 */
+> +	if (test_bit(STRIPE_ON_UNPLUG_LIST, &sh->state)) {
+> +		atomic_inc(&sh->count);
+> +		return;
+> +	}
+> +
+>   	BUG_ON(!list_empty(&sh->lru));
+>   	BUG_ON(atomic_read(&conf->active_stripes)=3D=3D0);
+>  =20
+> @@ -5760,6 +5771,9 @@ static void release_stripe_plug(struct mddev *mddev=
+,
+>   		raid5_unplug, mddev,
+>   		sizeof(struct raid5_plug_cb));
+>   	struct raid5_plug_cb *cb;
+> +	struct r5conf *conf =3D mddev->private;
+> +	unsigned long flags;
+> +	bool queued =3D false;
+>  =20
+>   	if (!blk_cb) {
+>   		raid5_release_stripe(sh);
+> @@ -5775,9 +5789,22 @@ static void release_stripe_plug(struct mddev *mdde=
+v,
+>   			INIT_LIST_HEAD(cb->temp_inactive_list + i);
+>   	}
+>  =20
+> -	if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state))
+> -		list_add_tail(&sh->lru, &cb->list);
+> -	else
+> +	/*
+> +	 * Serialize with do_release_stripe() on device_lock so sh->lru cannot
+> +	 * be added to handle/inactive and cb->list at the same time.
+> +	 */
+> +	spin_lock_irqsave(&conf->device_lock, flags);
+> +	if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state)) {
+> +		if (unlikely(!list_empty(&sh->lru))) {
+> +			clear_bit(STRIPE_ON_UNPLUG_LIST, &sh->state);
+> +		} else {
+> +			list_add_tail(&sh->lru, &cb->list);
+> +			queued =3D true;
+> +		}
+> +	}
+> +	spin_unlock_irqrestore(&conf->device_lock, flags);
 
-Reviewed-by: Yu Kuai <yukuai@fygo.io>
+Do you run some performance test on this patch? I believe this is from IO h=
+ot path,
+a spinlock is not acceptable. I know there is already some spinlock for rai=
+d5, but
+I'd like not to introduce new lock contention.
 
-Noted only bug fix can be accepted for current merge window, cleanup patche=
-s
-will be applied later for 6.4.
+Can this problem be fixed by a new llist in stripe_head?
+
+> +
+> +	if (!queued)
+>   		raid5_release_stripe(sh);
+>   }
+>  =20
 
 --=20
 Thanks,
