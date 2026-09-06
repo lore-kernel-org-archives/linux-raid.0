@@ -1,302 +1,186 @@
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE36E3909AE
-	for <linux-raid@vger.kernel.org>; Sun,  6 Sep 2026 10:13:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DFE5369D5C;
+	Sun,  6 Sep 2026 10:58:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788689637; cv=none; b=PHI7HngG8VbLaMSbroaaqJGT1phS/PbXjb5iUfroBs6CytWJB4gJq8Fau73QLhYh9YFFAqqc1+D20FlHJY5D+ZWRnO2qdZSy5B1InAl0XHoNFz66rwKbrftBS3hCRPtsMwbP6CUwfhK3Vi3z9O/o/DVGfTDik7Dy3dK03Pzqam8=
+	t=1788692315; cv=none; b=lzl2R3zs1XIk85Rp+ZtTucl4ykvILvkMtXth53jrBlIMsf+70U2H56+eJXiJ4svXGuyjAITgFwBAkO9lrxMmOlTg1wHBfqnOqRdzTH/uk1q+C+aBfQx1UQ7xQEE8RvLi7S9VMy9yQ9OO9mWqC3ewEbnjuSTlCOVc+n6WrZki9uY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788689637; c=relaxed/simple;
-	bh=2PwtB6kLiVvDcKFdb2HwQL/sdwD5dtYQaZpqxsE1A4w=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=R7y7iY3L1ioeuyVDX52gFT/WqVNxkxNJGQOirsw/ZauXtTnRpsRcXV7rN576SCPS7Z+IqCh6lJWJgbK8Tffrv9B7JxQOl3qu1/+/6rzZgVbFIO8PFNIcX63TXFUH+I1rOAk7jQUJD1OQH38NlR3L55aabu4ceLwI6A+s3bmHytg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QslXpm9a; arc=none smtp.client-ip=209.85.221.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788692315; c=relaxed/simple;
+	bh=0sPJ2ft3SlDeiaCh+SHknVtFAqPO3k/VezhFQIhCmRw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Ivy42FId2rRQnL0sHetjAgMviF/t6+5TcpMiw125cCTCycvfz2R7zCaCjPWNnzTlpJh6I3xDY4Zqrn4554djnT54OKgHq/HLrJ2IBeTyJBF/+rjwx8rQ+3+CUyDiTl1UCY+W/aGLMxGXOo5hzaV+z2oFEwTW7cYYLcy3KY/gpPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=S7rYxxY6; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QslXpm9a"
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-48436216a98so1595383f8f.0
-        for <linux-raid@vger.kernel.org>; Sun, 06 Sep 2026 03:13:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788689634; x=1789294434; darn=vger.kernel.org;
-        h=content-type:mime-version:message-id:date:references:in-reply-to
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=4MV+DtHFnknelIeSr2Ogt1AHuCaTwwIg9+ZSOQmRrC4=;
-        b=QslXpm9a2yHmUnEJgzcrONiDiOcCot8P4TNIOM1a1AJjmOUTVdMlLX1dO6hL9sLfHs
-         kQ9w8SaQpMYcP7RWeWv7NqUAdjILkkNk+gt8v/MwJ4d/2MLPf5etvJb1lNyx78k9106+
-         zSPq0qztXcgZwW9bzzvlKpYm+muE47tyW7W7TqIvkiedHzjg1oAyfDWoj95hZy0GfU7I
-         GV99VX+wBJgwuVghVqhS+vV95rwasjsI8nbQlgtsiCA62RTomsLGdlosdMB39IOITkT4
-         yZkqceezewyVHNHnuOtn0NLMuv6cyAD5eZ3mKSPP0vlXvzJckywt6Qedyq5bWBLtXjMV
-         DTiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788689634; x=1789294434;
-        h=content-type:mime-version:message-id:date:references:in-reply-to
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=4MV+DtHFnknelIeSr2Ogt1AHuCaTwwIg9+ZSOQmRrC4=;
-        b=GZXbPA6FMLqCm/r9/5JUFTqmYvwJSqD4pzqcffJZGp54LejxereNhPqKCInMvFyT0e
-         Hcsexe23TeFLujn4w7rr4R6LhuOO1xhcL1jhXu0fNSr1KH4na6ho3VPjpquKLnHdkbn1
-         1+pr2WCsCV6HsnsoPPeq28g14dObdI+su05rBeFiFWvqGWkBU80opfw76Blxqfw/geXv
-         maW4qEBqygCDVLHCgOfe78g9G9OKwRK+6wWS9oUIs53Hj/5thGFhT5ZvpZxF8MUDBlJd
-         myyo4Yj8hZ1csAgwzCOrELiIHJvQjMNISXq5Vi1p8kVkw60+btIIOTj3f0btLdDmXKoo
-         dP4w==
-X-Forwarded-Encrypted: i=1; AKwUvBzipEKXrn76fyBjjRKkPmatbwKpkrvZObkCkWsYgTrEWKi3t2oyAMuIEcLAX7RQ7NtBlO7eDpWahl61@vger.kernel.org
-X-Gm-Message-State: AFuF++nYHQ8BCfrsFer7dts/IrKV24Oiq5xO26ALbl9gO09g+GYy0va9
-	aPks34B57XqnFjNGTO18gAwocPWJDqAOrdyV4XsfRidBMQJB2xyIGjc1
-X-Gm-Gg: AYBFou1PBYkmHqAleN+hpmWr7BM0ybnEWwMPhOP2slVNHTI4sFxTanI7x9ib9nTCEBu
-	XjdUX1Cg3Ntj2A6vLLR3BC2SKy3bMcIf4rOar9VN1AqTOq3Y31oa74kVrKsgf1czEj207YoMn4J
-	J/JifpWLUIGoSLVbjyOMw+UXOHYI/O0CthjQaJ7108sWswiWMLY6tsZ1BzpageFME2axcRor9Uh
-	6yDbut9F0Ha+7Xa4XrciiVAd62loGxSDAk2itUPQ5d5RrFaedLgVFwS0jitWR9813fXHPT1bFNC
-	uqwt3TdvnrhSSsuPfYLOSQYGUpCOaMjDBKAMtHaGdufqIkP+3unYT2mnR5xCZr/ycptp0tVcybG
-	KYXAItSl0bIiL2jNUB1LOnKfEQQkRZwd3+7DNqwT9TCXrGfGviyXGDp/Z2A2PNzsr4U7udRMOww
-	TcqE8qlol18FgNksfF+szJrXCo9buL5nHGL8KIEhdpu8cw1eqqIaAj4AxAonrMkAwFK8AbclmfV
-	JatGaG87NzIdLxaJKKywU1XmBN2mK7+IsrmKOObqt9fo7V/Jz7e+dqRVmRfDsLXOXB+
-X-Received: by 2002:a05:600c:a087:b0:49c:d26a:cf70 with SMTP id 5b1f17b1804b1-49cf825a75dmr163710045e9.15.1788689633488;
-        Sun, 06 Sep 2026 03:13:53 -0700 (PDT)
-Received: from Abds-MacBook-Air.local (cb-8021x-nat-134-110.net.uni-frankfurt.de. [141.2.134.110])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49d04fe7f9dsm119275575e9.0.2026.09.06.03.13.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 06 Sep 2026 03:13:52 -0700 (PDT)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: Jinpu Wang <jinpu.wang@cloud.ionos.com>, linux-raid
- <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>
-Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>, Jens Axboe
- <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Ming Lei
- <ming.lei@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, Nilay Shroff
- <nilay@linux.ibm.com>
-Subject: Re: [BUG] md/raid1: deadlock between a queue limits sysfs store and
- a spare re-add
-In-Reply-To: <CAMGffEn0RcbyEcgCCVdxEf8Zwd6hnrjnYPdqrMsf8TL8qEBKRA@mail.gmail.com>
-References: <CAMGffEn0RcbyEcgCCVdxEf8Zwd6hnrjnYPdqrMsf8TL8qEBKRA@mail.gmail.com>
-Date: Sun, 06 Sep 2026 12:13:48 +0200
-Message-ID: <m2h5k2661v.fsf@gmail.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="S7rYxxY6"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 686020Vg1726960;
+	Sun, 6 Sep 2026 10:57:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=CJO3x7
+	/ku4GwOfAHK1yvS6a4nMjaD6JvRAuX0wDLQ8c=; b=S7rYxxY6zcM8nbVMOWgdTF
+	L8STcgd3CrahGJAaNzeN85LFgAx4i+cFmGpuaY7VPvKvSk+8oLkN8xQrsStdoDxW
+	3ttpzWz2tsVceDcm7JmiDxrKl5LpUwfU0glVgegZgPxS2sMeXR4lPsFpLClYYmIf
+	Yltjiq+LJlsxp2vEMwMIjrZQ85C3b3kuvQf+aIhc42I9OxlEdecc7/hQJpUCDBCh
+	D0mpYXHMjP0JbIUSS2AwbH1NqiMOjjgzGn4pj2TBNFKp3Erh+AcsCk/PSCjyeyPL
+	VYqtG34u7zhxUJL36MRb+OU7UeYYdJNm+wkQ5sFqOUXY+fsFwWmlVmcFbLQ++INA
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4ggbhkc16y-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 06 Sep 2026 10:57:15 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 686AubWd003155;
+	Sun, 6 Sep 2026 10:57:14 GMT
+Received: from smtprelay01.wdc07v.mail.ibm.com ([172.16.1.68])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4ggxwgs4m4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 06 Sep 2026 10:57:14 +0000 (GMT)
+Received: from smtpav05.dal12v.mail.ibm.com (smtpav05.dal12v.mail.ibm.com [10.241.53.104])
+	by smtprelay01.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 686AvDaR63242526
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sun, 6 Sep 2026 10:57:14 GMT
+Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id AA76C58052;
+	Sun,  6 Sep 2026 10:57:13 +0000 (GMT)
+Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id CC6575805D;
+	Sun,  6 Sep 2026 10:56:51 +0000 (GMT)
+Received: from [9.61.37.159] (unknown [9.61.37.159])
+	by smtpav05.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Sun,  6 Sep 2026 10:56:51 +0000 (GMT)
+Message-ID: <49d724b8-57c6-48fc-8099-69cd1b072351@linux.ibm.com>
+Date: Sun, 6 Sep 2026 16:26:49 +0530
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/3] blk-cgroup: store blkcg in bio instead of blkg
+To: Yu Kuai <yukuai@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+        Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>
+Cc: Yu Kuai <yukuai@fygo.io>, Christoph Hellwig <hch@lst.de>,
+        Tao Cui <cui.tao@linux.dev>, Jan Kara <jack@suse.cz>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Shuah Khan <skhan@linuxfoundation.org>, Coly Li <colyli@fygo.io>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+        Mikulas Patocka <mpatocka@redhat.com>,
+        Benjamin Marzinski <bmarzins@redhat.com>, Song Liu <song@kernel.org>,
+        Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
+        Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
+        Dan Williams <djbw@kernel.org>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Alison Schofield <alison.schofield@intel.com>,
+        Ira Weiny
+ <iweiny@kernel.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
+        Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>,
+        Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
+        Youngjun Park <youngjun.park@lge.com>, cgroups@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
+        dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
+        nvdimm@lists.linux.dev, virtualization@lists.linux.dev,
+        gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org
+References: <20260823133045.970199-1-yukuai@kernel.org>
+ <20260823133045.970199-3-yukuai@kernel.org>
+Content-Language: en-US
+From: Nilay Shroff <nilay@linux.ibm.com>
+In-Reply-To: <20260823133045.970199-3-yukuai@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA2MDExNSBTYWx0ZWRfX8nPzv8kos0rY
+ gaRnUKKcGNALxzB3/vHAzbEqdW0xDiZOYAx4ILGILucwdKgIFk887ytDoFJHjdLNIIoU0U28wkg
+ 99kGWRVx/84hhz99DvHnFHlPkgq8t4g=
+X-Proofpoint-ORIG-GUID: QO9cXpi63Ac-WgxFKSeRW1G3065a91Z0
+X-Authority-Analysis: v=2.4 cv=NMDlPU6g c=1 sm=1 tr=0 ts=6a9d470c cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VFI7-riRab948bACfH8A:9
+ a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA2MDExNSBTYWx0ZWRfX5kApbW8gd3Qz
+ DMpvom0X+zhm7irsaQJ6mAVaI4c7fFZb6OCUL4FN1VsE8gIKoml2VgwWSS3Ht89m4Kx903rFHzm
+ +w8Ln4HvNUOX8KbjCmz7cWCUEoP5shl5WP1KULzpnJ6bhD+uNxh5FpCYTK63tI8/lnkZlAV1XYR
+ dOdi2asLwGkdvxgVpbTW1/4TlQJy3DAkd7C77yuCK+gyFTK8uV6i7LGBTHBM/f/to9s60Mrpf3T
+ 5g1JIEWFPtKNi+fT7YYNNyR0xx0UffonzsL4DAJLRuH2FVubnlofbGit1v+6LN0JH69tf9rZtiC
+ 4GaqdYZlLu0dcpN2b4oXW0lr2G0Sl6qaCz1W8ovkl7z9izgXVNPEoOKIijRQ4AKbnW2OsSXnfLY
+ EVf0FPSp1XJfKu+lkUJhQ29RGLuLbqT0l6tYVJvTIABWcBejSLG1RWLoxLvxHhHdEZrbvp2nA67
+ eT0+svYbY1yfB0y+dTA==
+X-Proofpoint-GUID: 4Azach-Fc91njV1xry32_utpY9oMYi9C
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-05_08,2026-09-03_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 spamscore=0 lowpriorityscore=0 clxscore=1011 adultscore=0
+ impostorscore=0 bulkscore=0 malwarescore=0 priorityscore=1501 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609060115
 
+On 8/23/26 7:00 PM, Yu Kuai wrote:
+> @@ -257,20 +262,21 @@ static inline bool bio_issue_as_root_blkg(struct bio *bio)
+>    * @blkcg: blkcg of interest
+>    * @q: request_queue of interest
+>    *
+>    * Lookup a blkg for the @blkcg - @q pair, whether it is online or dying.
+>    *
+> - * Must be called in a RCU critical section.
+> + * Must be called with either RCU read lock or queue_lock held.
+>    *
+>    * This does not acquire a reference.  The caller must already hold one, or
+>    * have the blkg pinned by I/O.
+>    */
+>   static inline struct blkcg_gq *blkg_lookup_any(struct blkcg *blkcg,
+>   					       struct request_queue *q)
+>   {
+> -	RCU_LOCKDEP_WARN(!rcu_read_lock_held(),
+> -			 "blkg_lookup_any() requires an RCU read lock");
+> +	RCU_LOCKDEP_WARN(!rcu_read_lock_held() &&
+> +			 !lockdep_is_held(&q->queue_lock),
+> +			 "blkg_lookup_any() requires an RCU read lock or queue_lock");
+>   
+>   	return rhashtable_lookup(&q->blkg_hash, &blkcg->css.id,
+>   				 blkg_hash_params);
+>   }
 
-Hi Jack,
+The changes look good to me. However, rhashtable_lookup() is annotated
+with __must_hold_shared(RCU). Since we now officially support Clang
+context annotations in the block layer, compiling with the latest
+Clang/LLVM generates a number of context warnings, for example:
 
-On Sun, Sep 06, 2026 at 06:58 +0200, Jinpu Wang wrote:
-> Hi,
->
-> writing to a queue limit attribute of an md array while a spare is being
-> re-added deadlocks the array, with three tasks left unkillable in D state.
-> The host has to be rebooted to recover.
->
-> We hit this in production on 6.12.100 with RAID1 arrays, triggered by a
-> udev rule writing queue/max_sectors_kb.  Reading the code, v7.2 looks
-> affected too; see "Which versions" below for exactly what was tested and
-> what was not.
->
-> The cycle
-> =========
->
-> Three tasks, one array:
->
->   udev-worker     queue_attr_store() holds q->limits_lock and waits in
->                   blk_mq_freeze_queue() for q_usage_counter to drain
->
->   fio             holds a q_usage_counter reference, waits in
->                   md_handle_request()'s is_suspended() loop
->
->   md_start_sync   holds mddev->suspended, waits for q->limits_lock
->
-> Nobody can proceed: the freeze needs the in-flight I/O to finish, that
-> I/O needs mddev->suspended cleared, and clearing it needs the spare add
-> to finish, which is blocked on the lock the first task holds.
->
-> The three legs in v7.2 (8d3ae59288f1):
->
-> block/blk-sysfs.c, queue_attr_store():
->
-> struct queue_limits lim = queue_limits_start_update(q);
->
-> res = entry->store_limit(disk, page, length, &lim);
-> if (res < 0) {
-> queue_limits_cancel_update(q);
-> return res;
-> }
->
-> res = queue_limits_commit_update_frozen(q, &lim);
->
-> queue_limits_start_update() takes q->limits_lock, and
-> queue_limits_commit_update_frozen() calls blk_mq_freeze_queue() with it
-> still held.  max_sectors_kb is a QUEUE_LIM_RW_ENTRY, so a plain
->
-> echo 1024 > /sys/block/mdN/queue/max_sectors_kb
->
-> reaches this path.
->
-> drivers/md/md.c, md_start_sync():
->
-> if (mddev->reshape_position == MaxSector &&
->    md_spares_need_change(mddev)) {
-> suspend = true;
-> mddev_suspend(mddev, false);
-> }
->
-> mddev_lock_nointr(mddev);
->
-> and from there md_choose_sync_action() -> remove_and_add_spares() ->
-> ->hot_add_disk() -> raid1_add_disk() -> mddev_stack_new_rdev(), which
-> does a blocking
->
-> lim = queue_limits_start_update(mddev->gendisk->queue);
->
-> while mddev->suspended is set.
->
-> drivers/md/md.c, md_handle_request(), where the in-flight I/O waits:
->
-> if (is_suspended(mddev, bio)) {
-> ...
-> wait_event(mddev->sb_wait, !is_suspended(mddev, bio));
->
-> So md acquires q->limits_lock while holding a quiescing primitive that
-> blocks exactly the I/O a concurrent freeze is waiting to drain.
->
-> Backtraces
-> ==========
->
-> From a 6.12.100 based kernel:
->
->   INFO: task kworker/2:2 blocked for more than 184 seconds.
->   Workqueue: md_misc md_start_sync [md_mod]
->   Call Trace:
->    __mutex_lock.constprop.0+0x31c/0x6d0
->    mddev_stack_new_rdev+0x59/0x150 [md_mod]
->    raid1_add_disk+0x97/0x180 [raid1]
->    remove_and_add_spares+0xe8/0x230 [md_mod]
->    md_start_sync+0x14c/0x3e0 [md_mod]
->    process_one_work+0x162/0x370
->
->   INFO: task (udev-worker) blocked for more than 184 seconds.
->   Call Trace:
->    blk_mq_freeze_queue_wait+0x9e/0xd0
->    queue_limits_commit_update_frozen+0x12/0x40
->    queue_attr_store+0xc9/0x1c0
->    kernfs_fop_write_iter+0x133/0x220
->    vfs_write+0x29c/0x450
->
->   INFO: task fio blocked for more than 184 seconds.
->   Call Trace:
->    md_handle_request+0x10d/0x2b0 [md_mod]
->    __submit_bio+0x23e/0x2f0
->    submit_bio_noacct_nocheck+0x1a3/0x3c0
->    blkdev_direct_IO+0x265/0x5d0
->
-> /proc/mdstat at that point, with the spare add never completing:
->
->   md0 : active raid1 rnbd0[0] rnbd1[1](S)
->         5238784 blocks super 1.2 [2/1] [U_]
->
-> Reproducer
-> ==========
->
-> On a scratch machine, with two ram devices:
->
->   mdadm -C /dev/md111 --force -e 1.2 --assume-clean -l 1 \
->         --bitmap=internal -n 2 /dev/ram0 /dev/ram1
->
->   # keep I/O in flight
->   fio --direct=1 --rw=randrw --ioengine=libaio --iodepth=32 --numjobs=4 \
->       --time_based=1 --runtime=180 --filename=/dev/md111 --name=repro &
->
->   # stand in for the udev worker
->   while :; do
->       echo 128 > /sys/block/md111/queue/max_sectors_kb 2>/dev/null
->   done &
->
->   # drive spare re-adds
->   for i in $(seq 20); do
->       mdadm /dev/md111 --fail /dev/ram0
->       mdadm /dev/md111 --remove /dev/ram0
->       mdadm /dev/md111 --add /dev/ram0
->       mdadm --wait /dev/md111
->   done
->
-> It reproduced on the first iteration for us, though it is a race, so it
-> may need a few attempts on other machines.
->
-> Which versions
-> ==============
->
-> Reproduced: 6.12.100 (distro kernel carrying the stable backport of
-> c99f66e4084a), RAID1, repeatedly, on several hosts.
->
-> Not reproduced, code inspection only: v7.2 (8d3ae59288f1).  All three
-> legs quoted above are from the v7.2 tree and are unchanged there, so it
-> looks affected, but we have not run the reproducer on a mainline build.
-> Happy to do that if it helps.
->
-> raid10 calls mddev_stack_new_rdev() from raid10_add_disk() in the same
-> way, so it looks exposed too; we have only tested raid1.
->
-> When it started
-> ===============
->
-> Before commit c99f66e4084a ("block: fix queue freeze vs limits lock
-> order in sysfs store methods"), queue_attr_store() froze the queue first
-> and took limits_lock afterwards, so limits_lock was never held across the
-> freeze wait and this cycle could not form.  That commit moved the freeze
-> inside queue_limits_commit_update_frozen(), i.e. under limits_lock:
->
->   Fixes: c99f66e4084a ("block: fix queue freeze vs limits lock order
-> in sysfs store methods")
->
-> That is not an argument for reverting it: it exists so sd_revalidate_disk()
-> can issue SCSI commands while holding the limits lock, which cannot work
-> on a frozen queue.  The md side is on the wrong side of the ordering the
-> block layer expects, as spelled out in commit 06a2ff603f1f ("loop: Fix
-> recently introduced lock inversion"): all block driver code takes
-> queue_limits_start_update() before freezing.  md instead takes a
-> quiescing primitive of its own first.
->
-> What we are running
-> ===================
->
-> We fixed it on the md side, by taking the limits update in
-> md_start_sync() before mddev_suspend(), threading the queue_limits
-> through ->hot_add_disk() so the personality stacks into it without
-> taking the lock itself, and committing before resuming, so the update
-> still lands while the array is quiesced.  That removes the inversion
-> without touching the shared block layer code.
->
+block/blk-cgroup.h:277:9: warning: calling function 'rhashtable_lookup'
+requires holding __ctx_lock_RCU 'RCU' [-Wthread-safety-analysis]
+   277 |         return rhashtable_lookup(&q->blkg_hash, &blkcg->css.id,
+       |                ^
 
-I am working on a bug in slot_store(). It calls remove_and_add_spares()
-without suspending the array. If I just suspend the array without taking
-care of q->limits_lock, it would  trigger the same issue you mentioned.
-2- state_store() also calls remove_and_add_spares(), while the array is
-suspended by rdev_attr_store(), so it would probably trigger the same
-issue as well.
+The same warning is reported from several other block layer source
+files that include blk-cgroup.h.
 
-> Two approaches we tried first and discarded, in case they save someone
-> the detour:
->
-> - mutex_trylock() in mddev_stack_new_rdev() with a retry on contention.
->   A writer that keeps retaking limits_lock wins nearly every time, so
->   the retry does not converge: we measured 1132 backoffs against 1
->   success, the array staying degraded with an idle spare throughout, and
->   md_check_recovery() suspending and resuming the array on every pass.
->
-> - Dropping limits_lock around the freeze wait inside
->   queue_limits_commit_update_frozen().  This works, but it inverts the
->   ordering the block layer has standardised on, and a concurrent update
->   committing in the window is then silently overwritten.
->
-> We can post the md-side patch if that direction looks right, or defer to
-> whatever you prefer.  Reproducer script and the full logs are available.
->
-> Thanks,
-> Jack
->
+This indicates that rhashtable_lookup() requires the RCU read lock
+from Clang's context-analysis perspective. Looking at the call paths of
+blkg_lookup_any(), it appears that not all callers hold
+rcu_read_lock() when invoking it.
 
--- 
-Best Regards,
-Abd-Alrhman
+I think we should fix those call paths to acquire rcu reader lock
+before calling blkg_lookup_any(), rather than weakening or bypassing
+the context annotation in blkg_lookup_any().
+
+Thanks,
+--Nilay
+
