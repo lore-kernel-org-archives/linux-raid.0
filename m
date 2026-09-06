@@ -1,313 +1,136 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E60B32EC090
-	for <linux-raid@vger.kernel.org>; Sun,  6 Sep 2026 13:22:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6968B1EFFA1
+	for <linux-raid@vger.kernel.org>; Sun,  6 Sep 2026 14:41:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788700968; cv=none; b=Tyfb4TZ4RcrmaARSayOdCfZRk/BTkHLaBftK/HUwgsQ7h+PzJjVx4Qswj8iA1dBj2jSwzMVhyhDzEzIbGLFwkYWOfPJPdks9zBuxeiLwUI1yZ5NW/wdjHU4SN8WNAeyva3+ubfFHhMsOv8LqQllvtUB4+G7QVVVN+sIhi/o7o20=
+	t=1788705661; cv=none; b=XyhXqvFSgTNQC5mWPBNXgZVmyj1wLLOTeW+u0r6HLfZ5rnGtcY/4IJscDOowRqbIFFVkDS2dsUdeRIDdlEP8kZkAIi3jm1fRNqxJbUkokz7dpW0Lxw/Le8m6/0/mYE09emikP4mzTpoyb/LoqB1TRo1lLiqmAxFPwFThHgnpTMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788700968; c=relaxed/simple;
-	bh=TN48gfAD+iP/BbuTXiw3TGQX/mZeORvIfLXRz9gxCGI=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=O8w5yEVdl0LIJMVpt+OYyAsG4gThYAYN6fO2v0IBmqrBUvT9IwU2aKMU+6c6pHQmnG7lZlEq9PCU9LKr9piloERnCi9RlsqqK0/Y14Ns6iQDB+tpAkoOwCd0pKDPgnl52fz8iR+mAH6y82QNTuG+/Po8GD2GOTJKYgaRrH2Wbo0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fgIlrYA7; arc=none smtp.client-ip=209.85.128.43
+	s=arc-20240116; t=1788705661; c=relaxed/simple;
+	bh=qSkze1wnDFxPe2Qp8CSDQ7kKZ1F5vdgOvkv/4UTabOQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jIrsSXfdGQfcvkkSrU0p5aw7SEZv7ai4PZGSk5N7Zg/BumJcM3qagOPh7zFVvmLKOTJAkJ6ztNeFzSlhD+XJQSui6UObInJBnMWjLMGKPqxc4TG0oyXT5eeOvygS7a9KwFDkBfJoO24x6uwp7l9e6xklFAnw3T3gGjP4b3Zn8kk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sOTY7hYB; arc=none smtp.client-ip=209.85.216.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fgIlrYA7"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-49d0d2d37ceso1654345e9.0
-        for <linux-raid@vger.kernel.org>; Sun, 06 Sep 2026 06:22:46 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sOTY7hYB"
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-39b52169dacso498051a91.3
+        for <linux-raid@vger.kernel.org>; Sun, 06 Sep 2026 07:41:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788700965; x=1789305765; darn=vger.kernel.org;
-        h=content-type:mime-version:message-id:date:references:in-reply-to
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=xGMx1hxcqQv5YhxgiEUavmBXn/V3/g7fRKgYE76rark=;
-        b=fgIlrYA7O5H2r01yffxpZDjG0c+aPHwsVqzpKAybJTZ007Ud0u+5MCjvK3IuecRvHQ
-         E1dkfrGEQxnZZ5ajonXR3BsR9Rej8HI2ZE5haECaAUudYoysuK5KWPbeT/xpyP9cf8MU
-         HgPLDHj6Y6fK6Yy6H8n3oFsfoDM1ngAq/WfSgaEzbLW/83UNn9wrBfv5lSFANNnz2zGQ
-         NuDzyGqTNrhIYprmr8CX+mK4ng1OXpO00yBSBFDpbbBeS394eBE7osKEyHvbvcmDpMJQ
-         xSYQNizCbz0a3gw85fHZNcS5TmTcyfDavngt8sw4yAMFkUdnsT/Sqh8Q8ZoSeelCaEQj
-         wq+A==
+        d=gmail.com; s=20251104; t=1788705660; x=1789310460; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Y29ZXwt6eztTyx4fKyFoN65StSazZKPoWVgHCLODAmY=;
+        b=sOTY7hYBDrrd+DpLGnmOg6hPtxP8PM1ibQyQJdFtIy44RFnbhHCE4yx2TItdKte3JV
+         4zuzQTIAe0UxE1XTKc3ZZyXlBrnBrxepwPPR1tTD4kJDL9cz6oD97KBqhe/VrkbshUiw
+         eqc/j7FSGOpVqAGYva3yBOF2vf+D+UE2kM3dJCHSDSdL4EoSNbMwfCGs5MNxtQX1aUuT
+         2FrvoaGNRXT7h3puf4faaocePja7PfxEYPTegkgB1QBKFZ06ocLny1yhGJso4PVesyOm
+         uBy/kY0tzsNTKu9HHbaVoP5km7GH9UoNOmE6PiivqJwE5DCDWE6znbo512sS6gNtKs0c
+         ii6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788700965; x=1789305765;
-        h=content-type:mime-version:message-id:date:references:in-reply-to
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=xGMx1hxcqQv5YhxgiEUavmBXn/V3/g7fRKgYE76rark=;
-        b=e0yER3hP9Qc+2eFcEQJMIT4lZLPDn2bKujl0OSZ7i0S6PVAGZeUWN8l2h1/Q8q9gb8
-         FhWoToChZ5QxJYTPg8OizUs9bs0tBJZYrAFM2eXq13sChcIbwYZ2JVWlerwCUtfghNyo
-         1ShfP7djTwD/usnKm6F4ra/8OZdtat7nGniCM0tb8SqwqlezelibTYTDC83VjyThM7vB
-         ubQAgc8WcaBIglaq/UWpZwKof2DSBhSgGHiN/nhCITYBofU1I3mbh5TC6Bqi2NdVXv0G
-         RraplM/w+kOLnwmV7ADA1h8/bAHyqrU6W3THPX92NoiirJzsFBujgioiCQreon1TDa8h
-         r8MA==
-X-Forwarded-Encrypted: i=1; AKwUvByS3gEHX+MOYqJTWBABSMoG/Ir5+3CYTFUlUbcHTT9TM6ewiGf6vwFecTZZqsVsWn6gsQyk7/CmaEqv@vger.kernel.org
-X-Gm-Message-State: AFuF++mRSAZ5UmwTwlg5/qyY/ir33ceJyjoofd9xggPFY1dUaNdGFKSP
-	UM4MgAQH/WShjT+0zFNoGPvf10ypChtEQTx3U6xgiFBUjsCBn0WS9cpK
-X-Gm-Gg: AYBFou0fKpfoynoHCZn6jvC+oZr3J/Z+8Mk71wAvajVwbF8Q1HZFWLh3HPoYAXSr8OU
-	kWGWplzYtrI9pQGxMBOoLLNp3WERG3uarMdEe0DWGbfFpG7bt13HEmLnQhpenYRe4ZhqGIE0JT3
-	iagBOLOWepJMnJmB8VPHX63VfYsdR+WFCRjkvyR/mHKSZZSwp57UwUjEE8fGddUuZNROveP+Bj9
-	4MOZyp89JFonIIyaxONbMc6FZ+BfR+rYkzDlC3DYGVZ8QTj63vyMLUsePAjRFCCK20/WlDrjbp3
-	+hbT2M29hyaNG1tpXi9qOu/fW898iXth/vjq9LU8zeHcNegg8EeeGxG8xV2MM7wBlXBwf6hMFir
-	aMxMfLOB29cTleN/Ik6zUrMHl6asDxczfWz+j4bBzOx9Z67KhLCgXgFOezF9DUGp4p/SAhQ+gX6
-	qmapFAnnbgONRULrsacCZa6vOyIS2OV3UhvQZqR5/FG96QLs98r6qRrLAGlFQplnrLVwpwL4a3D
-	ADomHCnokQwk8WDv9IQ3kMyDbkP1D4=
-X-Received: by 2002:a05:600c:c48f:b0:497:fecd:5b00 with SMTP id 5b1f17b1804b1-49cf825d507mr177339265e9.9.1788700964867;
-        Sun, 06 Sep 2026 06:22:44 -0700 (PDT)
-Received: from Abds-MacBook-Air.local ([2a02:3037:26b:8dd9:70ba:6dc3:6d92:e139])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cf7740d44sm527677145e9.15.2026.09.06.06.22.43
+        d=1e100.net; s=20251104; t=1788705660; x=1789310460;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Y29ZXwt6eztTyx4fKyFoN65StSazZKPoWVgHCLODAmY=;
+        b=cOJUHfR7kdI6rirMT5bWGRV5JRqditfItLGyzi5RVy4kNXlASLErN8YcRL3XxDdmjd
+         8/d7Fr+6ra6HlYzkkisez0dbOsKmnRMhPXokgWTPK/OZZ91100yBU5OEm6caknRU+l+I
+         ufCI5vrHChRPxzRUKqzouGlAeFlU4upuqXBIdCYlQGDvLE7ofox5EDBKdJSVGEqp6Fnr
+         8ZPzFkXBMFPa/t6zU5hmqmzEOksu4QOXwvv5y5yust4SKoVjn621AYxlz4lTjEH3SEKy
+         amN3kFtAs6w1T4xejE1h4inQzpmYUUXiSCk6eG3TEN7aumLSAOsNqUPqA41z20khePKJ
+         NOAQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzUANeTOt4rooJE8xIIqYbb5KBrQyU1/6kxKUM8sTSY5+tT05+2TOQOmKULFMaqoekOCu12JlmsYSq9@vger.kernel.org
+X-Gm-Message-State: AFuF++k9hzquvWBQQhct2uZ9W9Sv9TRPJHyIhAMlwcOIgv5uiz1XYHpG
+	Qsyi/cS1dQNZ30Q53UCcw+lPUsLpEFatZX1SMiVi0HEXJpe8zV8xXYJ5
+X-Gm-Gg: AYBFou0+VywejWDpypVegSfyTt66gSx6hp3GbTWi3qklAAv6qwT0aPv4BdPbVOLsBj9
+	CsvI5pSRetyGKVxWiPs5Yqkt23Iqw2eTkCHWMPrmpTy8NrTmtqk2/j+topR7/W/GPBLX43oZPHG
+	e5QjR2DnzsA55mHdF7O9gSsDBxJLW/fBKlgaVPDhLJoqiIdTEb8cZ/epF2UJnJmkah0wWD6iSVd
+	H/L2gcX/EpA5GD8yLf5GemURjmFqdnVa83FmaePLuZndm47klKTHNDD/Q7CB6brSYvdwgOhiCE+
+	jB81hr773i4mENak0unbNkEwRe8z3QhPbO32Fpz2bbj3iaiwBYCvpIppVSERNL7QK1dJO30tBoS
+	d6GdHJNhy2m3zm89YWDeec0kMRx1uCm70+/BP4f5KJRcyCjT83KnQqsBzUSMHHXBrSiJ1lvQHfC
+	PuuXBTDQWVT1EnNezbi88J3tqMl4R/z8eEo9z+dwsZC9/gEF90Bx99EfpFECr3m7tqdhuzZc6k
+X-Received: by 2002:a17:90a:d2c6:b0:395:4de4:92c7 with SMTP id 98e67ed59e1d1-39b260d2f07mr27672809a91.3.1788705659725;
+        Sun, 06 Sep 2026 07:40:59 -0700 (PDT)
+Received: from TheRealOne ([152.58.138.157])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39b260fdc1dsm15583678a91.7.2026.09.06.07.40.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 06 Sep 2026 06:22:44 -0700 (PDT)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: Jinpu Wang <jinpu.wang@cloud.ionos.com>, linux-raid
- <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>
-Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>, Jens Axboe
- <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Ming Lei
- <ming.lei@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, Nilay Shroff
- <nilay@linux.ibm.com>
-Subject: Re: [BUG] md/raid1: deadlock between a queue limits sysfs store and
- a spare re-add
-In-Reply-To: <m2h5k2661v.fsf@gmail.com>
-References: <CAMGffEn0RcbyEcgCCVdxEf8Zwd6hnrjnYPdqrMsf8TL8qEBKRA@mail.gmail.com>
- <m2h5k2661v.fsf@gmail.com>
-Date: Sun, 06 Sep 2026 15:22:43 +0200
-Message-ID: <m2ecf65xb0.fsf@gmail.com>
+        Sun, 06 Sep 2026 07:40:59 -0700 (PDT)
+From: Chandradhar Kumar <chandradhar.2003@gmail.com>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>,
+	linux-raid@vger.kernel.org
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	Chandradhar Kumar <chandradhar.2003@gmail.com>,
+	syzbot+a32ff75e417c0f49a8e9@syzkaller.appspotmail.com
+Subject: [PATCH] md/raid0: validate device count before allocating devlist
+Date: Sun,  6 Sep 2026 20:09:28 +0530
+Message-ID: <20260906143928.105165-1-chandradhar.2003@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-On Sun, Sep 06, 2026 at 12:13 +0200, Abd-Alrhman Masalkhi wrote:
-> Hi Jack,
->
-> On Sun, Sep 06, 2026 at 06:58 +0200, Jinpu Wang wrote:
->> Hi,
->>
->> writing to a queue limit attribute of an md array while a spare is being
->> re-added deadlocks the array, with three tasks left unkillable in D state.
->> The host has to be rebooted to recover.
->>
->> We hit this in production on 6.12.100 with RAID1 arrays, triggered by a
->> udev rule writing queue/max_sectors_kb.  Reading the code, v7.2 looks
->> affected too; see "Which versions" below for exactly what was tested and
->> what was not.
->>
->> The cycle
->> =========
->>
->> Three tasks, one array:
->>
->>   udev-worker     queue_attr_store() holds q->limits_lock and waits in
->>                   blk_mq_freeze_queue() for q_usage_counter to drain
->>
->>   fio             holds a q_usage_counter reference, waits in
->>                   md_handle_request()'s is_suspended() loop
->>
->>   md_start_sync   holds mddev->suspended, waits for q->limits_lock
->>
->> Nobody can proceed: the freeze needs the in-flight I/O to finish, that
->> I/O needs mddev->suspended cleared, and clearing it needs the spare add
->> to finish, which is blocked on the lock the first task holds.
->>
->> The three legs in v7.2 (8d3ae59288f1):
->>
->> block/blk-sysfs.c, queue_attr_store():
->>
->> struct queue_limits lim = queue_limits_start_update(q);
->>
->> res = entry->store_limit(disk, page, length, &lim);
->> if (res < 0) {
->> queue_limits_cancel_update(q);
->> return res;
->> }
->>
->> res = queue_limits_commit_update_frozen(q, &lim);
->>
->> queue_limits_start_update() takes q->limits_lock, and
->> queue_limits_commit_update_frozen() calls blk_mq_freeze_queue() with it
->> still held.  max_sectors_kb is a QUEUE_LIM_RW_ENTRY, so a plain
->>
->> echo 1024 > /sys/block/mdN/queue/max_sectors_kb
->>
->> reaches this path.
->>
->> drivers/md/md.c, md_start_sync():
->>
->> if (mddev->reshape_position == MaxSector &&
->>    md_spares_need_change(mddev)) {
->> suspend = true;
->> mddev_suspend(mddev, false);
->> }
->>
->> mddev_lock_nointr(mddev);
->>
->> and from there md_choose_sync_action() -> remove_and_add_spares() ->
->> ->hot_add_disk() -> raid1_add_disk() -> mddev_stack_new_rdev(), which
->> does a blocking
->>
->> lim = queue_limits_start_update(mddev->gendisk->queue);
->>
->> while mddev->suspended is set.
->>
->> drivers/md/md.c, md_handle_request(), where the in-flight I/O waits:
->>
->> if (is_suspended(mddev, bio)) {
->> ...
->> wait_event(mddev->sb_wait, !is_suspended(mddev, bio));
->>
->> So md acquires q->limits_lock while holding a quiescing primitive that
->> blocks exactly the I/O a concurrent freeze is waiting to drain.
->>
->> Backtraces
->> ==========
->>
->> From a 6.12.100 based kernel:
->>
->>   INFO: task kworker/2:2 blocked for more than 184 seconds.
->>   Workqueue: md_misc md_start_sync [md_mod]
->>   Call Trace:
->>    __mutex_lock.constprop.0+0x31c/0x6d0
->>    mddev_stack_new_rdev+0x59/0x150 [md_mod]
->>    raid1_add_disk+0x97/0x180 [raid1]
->>    remove_and_add_spares+0xe8/0x230 [md_mod]
->>    md_start_sync+0x14c/0x3e0 [md_mod]
->>    process_one_work+0x162/0x370
->>
->>   INFO: task (udev-worker) blocked for more than 184 seconds.
->>   Call Trace:
->>    blk_mq_freeze_queue_wait+0x9e/0xd0
->>    queue_limits_commit_update_frozen+0x12/0x40
->>    queue_attr_store+0xc9/0x1c0
->>    kernfs_fop_write_iter+0x133/0x220
->>    vfs_write+0x29c/0x450
->>
->>   INFO: task fio blocked for more than 184 seconds.
->>   Call Trace:
->>    md_handle_request+0x10d/0x2b0 [md_mod]
->>    __submit_bio+0x23e/0x2f0
->>    submit_bio_noacct_nocheck+0x1a3/0x3c0
->>    blkdev_direct_IO+0x265/0x5d0
->>
->> /proc/mdstat at that point, with the spare add never completing:
->>
->>   md0 : active raid1 rnbd0[0] rnbd1[1](S)
->>         5238784 blocks super 1.2 [2/1] [U_]
->>
->> Reproducer
->> ==========
->>
->> On a scratch machine, with two ram devices:
->>
->>   mdadm -C /dev/md111 --force -e 1.2 --assume-clean -l 1 \
->>         --bitmap=internal -n 2 /dev/ram0 /dev/ram1
->>
->>   # keep I/O in flight
->>   fio --direct=1 --rw=randrw --ioengine=libaio --iodepth=32 --numjobs=4 \
->>       --time_based=1 --runtime=180 --filename=/dev/md111 --name=repro &
->>
->>   # stand in for the udev worker
->>   while :; do
->>       echo 128 > /sys/block/md111/queue/max_sectors_kb 2>/dev/null
->>   done &
->>
->>   # drive spare re-adds
->>   for i in $(seq 20); do
->>       mdadm /dev/md111 --fail /dev/ram0
->>       mdadm /dev/md111 --remove /dev/ram0
->>       mdadm /dev/md111 --add /dev/ram0
->>       mdadm --wait /dev/md111
->>   done
->>
->> It reproduced on the first iteration for us, though it is a race, so it
->> may need a few attempts on other machines.
->>
->> Which versions
->> ==============
->>
->> Reproduced: 6.12.100 (distro kernel carrying the stable backport of
->> c99f66e4084a), RAID1, repeatedly, on several hosts.
->>
->> Not reproduced, code inspection only: v7.2 (8d3ae59288f1).  All three
->> legs quoted above are from the v7.2 tree and are unchanged there, so it
->> looks affected, but we have not run the reproducer on a mainline build.
->> Happy to do that if it helps.
->>
->> raid10 calls mddev_stack_new_rdev() from raid10_add_disk() in the same
->> way, so it looks exposed too; we have only tested raid1.
->>
->> When it started
->> ===============
->>
->> Before commit c99f66e4084a ("block: fix queue freeze vs limits lock
->> order in sysfs store methods"), queue_attr_store() froze the queue first
->> and took limits_lock afterwards, so limits_lock was never held across the
->> freeze wait and this cycle could not form.  That commit moved the freeze
->> inside queue_limits_commit_update_frozen(), i.e. under limits_lock:
->>
->>   Fixes: c99f66e4084a ("block: fix queue freeze vs limits lock order
->> in sysfs store methods")
->>
->> That is not an argument for reverting it: it exists so sd_revalidate_disk()
->> can issue SCSI commands while holding the limits lock, which cannot work
->> on a frozen queue.  The md side is on the wrong side of the ordering the
->> block layer expects, as spelled out in commit 06a2ff603f1f ("loop: Fix
->> recently introduced lock inversion"): all block driver code takes
->> queue_limits_start_update() before freezing.  md instead takes a
->> quiescing primitive of its own first.
->>
->> What we are running
->> ===================
->>
->> We fixed it on the md side, by taking the limits update in
->> md_start_sync() before mddev_suspend(), threading the queue_limits
->> through ->hot_add_disk() so the personality stacks into it without
->> taking the lock itself, and committing before resuming, so the update
->> still lands while the array is quiesced.  That removes the inversion
->> without touching the shared block layer code.
->>
->
-> I am working on a bug in slot_store(). It calls remove_and_add_spares()
-> without suspending the array. If I just suspend the array without taking
-> care of q->limits_lock, it would  trigger the same issue you
-> mentioned.
+create_strip_zones() allocates conf->devlist based on mddev->raid_disks
+before verifying that enough devices are present. Validate the number of
+member devices before allocating devlist to reject invalid
+configurations early.
 
-To clarify, I haven't submitted my patch for slot_store() yet. I was 
-going to, but your report shows that won't be enough. I'll hold off on
-my changes so I can use your queue_limits threading approach.
+The existing validation later in the function already rejects this
+condition, but it occurs after the potentially excessive allocation.
 
-> 2- state_store() also calls remove_and_add_spares(), while the array is
-> suspended by rdev_attr_store(), so it would probably trigger the same
-> issue as well.
->
->> Two approaches we tried first and discarded, in case they save someone
->> the detour:
->>
->> - mutex_trylock() in mddev_stack_new_rdev() with a retry on contention.
->>   A writer that keeps retaking limits_lock wins nearly every time, so
->>   the retry does not converge: we measured 1132 backoffs against 1
->>   success, the array staying degraded with an idle spare throughout, and
->>   md_check_recovery() suspending and resuming the array on every pass.
->>
->> - Dropping limits_lock around the freeze wait inside
->>   queue_limits_commit_update_frozen().  This works, but it inverts the
->>   ordering the block layer has standardised on, and a concurrent update
->>   committing in the window is then silently overwritten.
->>
->> We can post the md-side patch if that direction looks right, or defer to
->> whatever you prefer.  Reproducer script and the full logs are available.
->>
->> Thanks,
->> Jack
->>
->
-> -- 
-> Best Regards,
-> Abd-Alrhman
+Reported-by: syzbot+a32ff75e417c0f49a8e9@syzkaller.appspotmail.com
+Closes: https://syzbot.org/bug?extid=a32ff75e417c0f49a8e9
+Signed-off-by: Chandradhar Kumar <chandradhar.2003@gmail.com>
+---
+ drivers/md/raid0.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 35e103f0c2c3..586e3411f24c 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -69,7 +69,7 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+ 	sector_t curr_zone_end, sectors;
+ 	struct md_rdev *smallest, *rdev1, *rdev2, *rdev, **dev;
+ 	struct strip_zone *zone;
+-	int cnt;
++	int cnt, nr_devs;
+ 	struct r0conf *conf = kzalloc_obj(*conf);
+ 	unsigned int blksize = 512;
+ 
+@@ -79,7 +79,10 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+ 	*private_conf = ERR_PTR(-ENOMEM);
+ 	if (!conf)
+ 		return -ENOMEM;
++
++	nr_devs = 0;
+ 	rdev_for_each(rdev1, mddev) {
++		nr_devs++;
+ 		pr_debug("md/raid0:%s: looking at %pg\n",
+ 			 mdname(mddev),
+ 			 rdev1->bdev);
+@@ -147,6 +150,14 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+ 	conf->strip_zone = kvzalloc_objs(struct strip_zone, conf->nr_strip_zones);
+ 	if (!conf->strip_zone)
+ 		goto abort;
++
++	if (nr_devs < mddev->raid_disks) {
++		pr_warn("md/raid0:%s: too few disks (%d of %d) - aborting!\n",
++			mdname(mddev), nr_devs, mddev->raid_disks);
++		err = -EINVAL;
++		goto abort;
++	}
++
+ 	conf->devlist = kvzalloc(array3_size(sizeof(struct md_rdev *),
+ 					     conf->nr_strip_zones,
+ 					     mddev->raid_disks),
 -- 
-Best Regards,
-Abd-Alrhman
+2.55.0
+
