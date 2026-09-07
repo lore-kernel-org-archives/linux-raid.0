@@ -1,63 +1,63 @@
 Received: from mail-ej2-f12.google.com (mail-ej2-f12.google.com [74.125.228.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 774804E80BD
-	for <linux-raid@vger.kernel.org>; Mon,  7 Sep 2026 13:39:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE69D4E8DE0
+	for <linux-raid@vger.kernel.org>; Mon,  7 Sep 2026 13:39:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788788379; cv=none; b=nxZX97ov5l5g6p7vKNarG7gdOrL4HVfBfLY9cp1rd2QIHqExfVHRLFrwGNFx3M6BUoEuc0VFKJpD24TnQDHUXfvvkez0eVTyRFooasAkrChjabHYdzYpoYhzzpykLLIfDiVKMLSFdY0BSwq2pgdwUl8KzB2vdYJ6wsA9APBWmyU=
+	t=1788788380; cv=none; b=fu6TTVJHn3jwr61gpS2R5ez+0q8QYM1Cdg88uLGNsfAOj9QIlQ4y/sOAUXdJnsFcVfwOS82YtBd1GRSaMp8LfxXYuQiK5Q4xcz3Z7aF8t5cf2PeiEaxxufR570rr5kedpo8mVUAksbIibYmfMTuXlmq3Oe6CWQT1x323KHnlT9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788788379; c=relaxed/simple;
-	bh=prXCmebQaCdjvFRyVULFNIUZsB2Io5vL9bOuq7Cyvzo=;
+	s=arc-20240116; t=1788788380; c=relaxed/simple;
+	bh=j1qQhW/DMga9//Ebbmvtda5D1XA/aQWh2EDKH/0LM2Y=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uK77udJEoVNE/kQSwB5qzZa/NPU0f6DChhHbJKU8U1I9kedytq+qiea27uq1TfCKAUuEfpUXcoHWvEBZalrYILT6aYhRefYM7HK5uYF2o79d3nwTCf4vpQ/4d6ZYMzDyG3CVZiEnyPwbjTP+o05Ryz7uMrISdAhkYQb0rkDZW5w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=XZEC4oMM; arc=none smtp.client-ip=74.125.228.140
+	 MIME-Version; b=BIFnRhubCzSfIN4J9B8lLOhJubWoW5cJUeGGK8VPgokLR9Gvsznr5p/4/wiY/c9zbpHKp/cS0sX9HyI5Jm0cIqjOPiXonDa/t32lSud6HcKGwrQ6jHIPY3wZB97Ehp4l/RSiDnK1w/8pOh9O4JMXJcoilgaH8nWVJ3nshFinVHI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=gkqhCZIZ; arc=none smtp.client-ip=74.125.228.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="XZEC4oMM"
-Received: by mail-ej2-f12.google.com with SMTP id a640c23a62f3a-c25085f2426so34397566b.3
-        for <linux-raid@vger.kernel.org>; Mon, 07 Sep 2026 06:39:37 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="gkqhCZIZ"
+Received: by mail-ej2-f12.google.com with SMTP id a640c23a62f3a-c2507a0a21fso27738666b.3
+        for <linux-raid@vger.kernel.org>; Mon, 07 Sep 2026 06:39:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1788788376; x=1789393176; darn=vger.kernel.org;
+        d=ionos.com; s=google; t=1788788377; x=1789393177; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=C6b6jYO/XjuLk8J/F6waPCNC7mnrRvLEmjN6AteE2ZA=;
-        b=XZEC4oMMHB3ZzqsIhxtD9p4xUgLagfX/efUa6fj9gpTzcAGig2jtji4ZgRR8j1onVH
-         dA5Pq4vm1KRRRuWlsOMaUsEDz4dzZkeoUQJ8er7Q5nI8uqHO1r7y4wmPenBLVyWNQkjp
-         zHbH/7OwBMQ1b4IJ3MhAkuzxf/UUpNbc0RQleWQLtrVmmxI/H/T3gbFi7z4X77Z8kiCI
-         0T45JHaLApiepKpW7KMWxh467VjW3VqJ3d3oCAMWnrjiJf0f+CxTIpjsUNuWlgwgvhHM
-         99wHM3nxSTbReurHNrIV04QP0i8RISewAk2nl+5l6FzaoI7Q1sUwTDgCGmcn2vFxAIoJ
-         6jyw==
+        bh=G+X7Aa1PtynLQRsIRhDWSLMhkCeEiNsDSsNbut1hjAs=;
+        b=gkqhCZIZRlnPMXRltd6zez8wMjALrsemQCpiQl0OWgMtke6I9Kxu2FVXwpzoYljRlJ
+         ODMhOqJXgyzbO29kCM4Q4cNhrUWEsCvprHlyPyYkMMbF+6QiUoj3VRRSb7m4pnSnBwAh
+         pDFHgKkgsxjxUnhCAwQHP5g4MDCnfaNAATEcSRqdnea6Xif5bn+83D4BzQA0U/o1oig3
+         OMcqhtRewqs6OPmNr3NSpFpt/XG3GPh6A1rG5RzFD7m8I9QVQLjjFg/yUzGb1ZTSyriK
+         818QpeORuOwSA3alBsNd5MFPL2qcscoptIT+XDLhLx0L1uOxGiY+x66K1bAgs1Wsjiht
+         ox2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788788376; x=1789393176;
+        d=1e100.net; s=20251104; t=1788788377; x=1789393177;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=C6b6jYO/XjuLk8J/F6waPCNC7mnrRvLEmjN6AteE2ZA=;
-        b=h7hVez/CKKaDZn7PYtEc51fJ+sXP7NzuF2Ekx1OWnY6vC6jiIKu/wQfn+tFSOzjPQh
-         xl7MNer4UR91IAGF7SFCWBNhzPZvaCfzJ5mepYVrTNmWI+0RBZepyYXLmeqczCQms8Hk
-         BBvi/ck1cNQ7nTZ5gc4cmfFV6pZ7Tm87toTC/KJ+N5bUBUmnZcSc+08MTJJWHwPH4B/W
-         ahWmMdbdSclohrFF1pV2j04qQBVGxG1w00XDePcUso5ilgkKJoaj16pQiEHgbmCUJ+Cu
-         9wKDjFQQJ14VmwH5D8iC62Bub+l7XTgdSKdb8z7qwGRgo58vyc8NxmE58liBhZbIGTVd
-         7Jow==
-X-Gm-Message-State: AFuF++lqwlqe62vHnXbxJea+q5o+B7PbU5JIcHtFTgt96U9WYerDKArR
-	TGOlWu6ujjZBCDvHAQrB5BYR/QEAPsCaKxavAlE3vwdjFzVXF9aHTODmTHN19M3XPrw=
-X-Gm-Gg: AYBFou1Crc9iIDh0Ifjb4NHBhRXjyQspRNeihyCaFtQoruzT/JwgIveE3CWIH1BBYfW
-	WwX6s7u1Nh8pKzMZDP1HvOyZxYDduzsvp5GSJsvjc6WdKYnfwumlXxcIxHNvQyD4TvNBw+5tsoh
-	i4wb4Og6Ma7crjmEpUn0c3hYXQV+dsyG7yKdlkhNsOkLpAr4c1BZFbYLCo0cL+M9bltlBCEWho7
-	J7WQ5MwqLwN2oeuaFR3OXlbTSd+dCytM1nz6ZaxKPuadufKz1QVraj3XqR+VJp4/TE/F/fl0pzV
-	h+SL3Rw8ET5IFrR5ZDE1y+8DbtfnbWlaCUloI4Lz9h7gHbJUeeynz6hn0Rno0pQJHcE+BjA0AXM
-	dz7Sr/GilKyNlh8y87M+8z5VgY0LG/09E1KZ/Ww6cHSZD/T07NmgQqT/JBuOXZCiLjO1Sm8gFJn
-	TgnIANbiytTj1sitLPVa8n6eQ1VHBwFxAr70Y1aBwaXHb0zM73XLaMNSuh7WFUCSu9/3IR7Eysq
-	rlN4lqfOYdgz9eJeSz5a9kFcbgdyPZJTt8=
-X-Received: by 2002:a17:907:3f8d:b0:c25:ca8a:8e25 with SMTP id a640c23a62f3a-c2624eef698mr544864766b.1.1788788375696;
-        Mon, 07 Sep 2026 06:39:35 -0700 (PDT)
+        bh=G+X7Aa1PtynLQRsIRhDWSLMhkCeEiNsDSsNbut1hjAs=;
+        b=gBH3vq5ssTvbiH/orYdMw0KzmNIw7ZYGHcCYVeM4lDetAOJoh2JKg50Yevv3C42JAx
+         kb1mtdxzREFUVaX9DkQmGxJytbxyjkAl+OqHWvpRU201wyXD5antjowMuRz9eEKbVPih
+         vKX31zF1GzOSW/kY8LwGoGlpJmZvybXFsSPutyGtIdZuKYOsqMvAw0Ib3fNk6m9yBU1U
+         BWDrYUQjGdpxPFY4XuZq4a1y4NcZLcaKloyrsRLM3AlAuXZAADyyzM7foJmeDzUihWMT
+         +/heOCYRTN+0TL9l1fVhHQLu3nMcufx1GGQzXkguHym7TzBxUzEUcP01vE0TL1rhNfcU
+         yf7g==
+X-Gm-Message-State: AFuF++kIVp+PDAUn70kq/oSN8HH2kbdTQABMl3zTqMy7weKjA1LGm5yO
+	fnvHZX3bNKfcF30QbOiLvH4N1ceRg32LamoxUVRXcQTwZmb8phPpN2n2uzvnZxQ8rrQ=
+X-Gm-Gg: AYBFou3ZsteWra54Cq7xdoQ3o3BA/dvrtUogC59Jq4GENJMo0Kpb6w0WHUajJbgubLU
+	P27+P+IVoy7r0ZfapZIhjwxhq0CSSvXv26uaabq9xphRKYsuQc+ujZY9n3/5ekY0OU4lSICezXM
+	m7usQ18O+iPIRCt1w6cmTusGRC9TwzfO8r2hyzJ8U9aCpFEWL1G7c7UsQk2l+GNvHjzLr6mKx/y
+	TzXjQnvTaCjgyVIJHFhSnuN6XZeobRqLnKr2j1P1/lxJ+Nd/7cDeCLTCvGySKdyh466Rl7FlSxD
+	1hI3c1Ai/cIsB2J/LdQNilfKBGWCv/Z3Vt5mEiShbnDw+uDJsi8F1kn9ixggsQV+JZlAcB5nhk1
+	EnUX+eA+4YUmBlolhLhMR3xj2gM0e/mcyt8ZKWNNa/gL/bKnmowyhnNLAGDhj0chRX6VswwVEjt
+	q2oDg/+Hfc2DKDIwMtKnU+yah4pBraQxBhdbKJF2fuqVT/FwYf+lmLGvHtAdlmI2pib/7IKKAW0
+	gbrP3bMWVhzy6grxt7za6bNN6c+c56YK1F4NlfLzL3p
+X-Received: by 2002:a17:907:3fa7:b0:c1f:4754:d87b with SMTP id a640c23a62f3a-c2624f0a4f6mr557429666b.1.1788788377056;
+        Mon, 07 Sep 2026 06:39:37 -0700 (PDT)
 Received: from jwang-ThinkPad-T14-Gen-6.fkb.profitbricks.net ([212.227.34.98])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c262c770678sm314301866b.53.2026.09.07.06.39.34
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c262c770678sm314301866b.53.2026.09.07.06.39.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Sep 2026 06:39:35 -0700 (PDT)
+        Mon, 07 Sep 2026 06:39:36 -0700 (PDT)
 From: Jack Wang <jinpu.wang@ionos.com>
 To: Nilay Shroff <nilay@linux.ibm.com>,
 	abd.masalkhi@gmail.com
@@ -70,9 +70,9 @@ Cc: linux-raid <linux-raid@vger.kernel.org>,
 	Yu Kuai <yukuai@fygo.io>,
 	tom.leiming@gmail.com,
 	Jack Wang <jinpu.wang@cloud.ionos.com>
-Subject: [PATCH 3/6] md: don't wait for q->limits_lock in check_sb_changes()
-Date: Mon,  7 Sep 2026 15:39:26 +0200
-Message-ID: <20260907133929.1081540-4-jinpu.wang@ionos.com>
+Subject: [PATCH 4/6] md: pass a queue_limits through the rdev sysfs stores
+Date: Mon,  7 Sep 2026 15:39:27 +0200
+Message-ID: <20260907133929.1081540-5-jinpu.wang@ionos.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260907133929.1081540-1-jinpu.wang@ionos.com>
 References: <20260907133929.1081540-1-jinpu.wang@ionos.com>
@@ -86,81 +86,160 @@ Content-Transfer-Encoding: 8bit
 
 From: Jack Wang <jinpu.wang@cloud.ionos.com>
 
-check_sb_changes() activates a spare added by another node, with
-reconfig_mutex held, from md_reload_sb().  Stacking that leg's limits
-waits for q->limits_lock while holding the mutex, and the lock's holder
-waits for I/O that can be waiting for a superblock update needing the
-same mutex.
+state_store() and slot_store() can add a leg, which stacks its queue
+limits, and the caller has to own that update because q->limits_lock
+must be taken before the array is locked and suspended.
 
-Take the update without blocking and keep the activation inline.  On a
-contended pass only remove; MD_RECOVERY_NEEDED is set below, so
-md_start_sync() does the add.
+Give the rdev sysfs store callback a queue_limits argument.
+rdev_attr_store() passes NULL, so no functional change; the user
+follows.
 
 Assisted-by: Claude:claude-opus-5
 Signed-off-by: Jack Wang <jinpu.wang@ionos.com>
 ---
- drivers/md/md.c | 34 +++++++++++++++++++++++++++++++++-
- 1 file changed, 33 insertions(+), 1 deletion(-)
+ drivers/md/md.c | 45 ++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 32 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 28fc903ffeea..c7d1f9813f5d 100644
+index c7d1f9813f5d..8ad6fe178e96 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -6310,6 +6310,20 @@ int mddev_stack_rdev_into(struct mddev *mddev, struct md_rdev *rdev,
+@@ -3033,7 +3033,13 @@ static int cmd_match(const char *cmd, const char *str)
+ struct rdev_sysfs_entry {
+ 	struct attribute attr;
+ 	ssize_t (*show)(struct md_rdev *, char *);
+-	ssize_t (*store)(struct md_rdev *, const char *, size_t);
++	/*
++	 * @lim: a queue limits update the caller owns, or NULL.  Stores that
++	 * can add a leg to the array must stack into it rather than take
++	 * q->limits_lock themselves, see md_start_sync().
++	 */
++	ssize_t (*store)(struct md_rdev *rdev, const char *page, size_t len,
++			 struct queue_limits *lim);
+ };
+ 
+ static ssize_t
+@@ -3079,7 +3085,8 @@ state_show(struct md_rdev *rdev, char *page)
  }
- EXPORT_SYMBOL_GPL(mddev_stack_rdev_into);
  
-+/* for callers that must not wait for q->limits_lock, see md_start_sync() */
-+static bool mddev_stack_limits_trylock(struct mddev *mddev,
-+				       struct queue_limits *lim)
-+{
-+	struct request_queue *q;
-+
-+	if (mddev_is_dm(mddev))
-+		return false;
-+
-+	q = mddev->gendisk->queue;
-+
-+	return queue_limits_start_update_trylock(q, lim);
-+}
-+
- /* update the optimal I/O size after a reshape */
- void mddev_update_io_opt(struct mddev *mddev, unsigned int nr_stripes)
+ static ssize_t
+-state_store(struct md_rdev *rdev, const char *buf, size_t len)
++state_store(struct md_rdev *rdev, const char *buf, size_t len,
++	    struct queue_limits *lim)
  {
-@@ -10829,6 +10843,7 @@ static int __init md_init(void)
+ 	/* can write
+ 	 *  faulty  - simulates an error
+@@ -3257,7 +3264,8 @@ errors_show(struct md_rdev *rdev, char *page)
+ }
  
- static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
+ static ssize_t
+-errors_store(struct md_rdev *rdev, const char *buf, size_t len)
++errors_store(struct md_rdev *rdev, const char *buf, size_t len,
++	     struct queue_limits *lim)
  {
-+	struct queue_limits lim;
- 	struct mdp_superblock_1 *sb = page_address(rdev->sb_page);
- 	struct md_rdev *rdev2, *tmp;
- 	int role, ret;
-@@ -10885,7 +10900,24 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
- 					rdev2->saved_raid_disk = -1;
- 				else
- 					rdev2->saved_raid_disk = role;
--				ret = remove_and_add_spares(mddev, rdev2, NULL);
-+				/*
-+				 * reconfig_mutex is held, so don't wait for
-+				 * q->limits_lock; MD_RECOVERY_NEEDED below
-+				 * leaves a skipped add to md_start_sync().
-+				 */
-+				if (mddev_stack_limits_trylock(mddev, &lim)) {
-+					struct request_queue *q =
-+						mddev->gendisk->queue;
+ 	unsigned int n;
+ 	int rv;
+@@ -3283,7 +3291,8 @@ slot_show(struct md_rdev *rdev, char *page)
+ }
+ 
+ static ssize_t
+-slot_store(struct md_rdev *rdev, const char *buf, size_t len)
++slot_store(struct md_rdev *rdev, const char *buf, size_t len,
++	   struct queue_limits *lim)
+ {
+ 	int slot;
+ 	int err;
+@@ -3378,7 +3387,8 @@ offset_show(struct md_rdev *rdev, char *page)
+ }
+ 
+ static ssize_t
+-offset_store(struct md_rdev *rdev, const char *buf, size_t len)
++offset_store(struct md_rdev *rdev, const char *buf, size_t len,
++	     struct queue_limits *lim)
+ {
+ 	unsigned long long offset;
+ 	if (kstrtoull(buf, 10, &offset) < 0)
+@@ -3404,7 +3414,8 @@ static ssize_t new_offset_show(struct md_rdev *rdev, char *page)
+ }
+ 
+ static ssize_t new_offset_store(struct md_rdev *rdev,
+-				const char *buf, size_t len)
++				const char *buf, size_t len,
++				struct queue_limits *lim)
+ {
+ 	unsigned long long new_offset;
+ 	struct mddev *mddev = rdev->mddev;
+@@ -3511,7 +3522,8 @@ static int strict_blocks_to_sectors(const char *buf, sector_t *sectors)
+ }
+ 
+ static ssize_t
+-rdev_size_store(struct md_rdev *rdev, const char *buf, size_t len)
++rdev_size_store(struct md_rdev *rdev, const char *buf, size_t len,
++		struct queue_limits *lim)
+ {
+ 	struct mddev *my_mddev = rdev->mddev;
+ 	sector_t oldsectors = rdev->sectors;
+@@ -3573,7 +3585,8 @@ static ssize_t recovery_start_show(struct md_rdev *rdev, char *page)
+ 	return sprintf(page, "%llu\n", recovery_start);
+ }
+ 
+-static ssize_t recovery_start_store(struct md_rdev *rdev, const char *buf, size_t len)
++static ssize_t recovery_start_store(struct md_rdev *rdev, const char *buf, size_t len,
++				    struct queue_limits *lim)
+ {
+ 	unsigned long long recovery_start;
+ 
+@@ -3612,7 +3625,9 @@ static ssize_t bb_show(struct md_rdev *rdev, char *page)
+ {
+ 	return badblocks_show(&rdev->badblocks, page, 0);
+ }
+-static ssize_t bb_store(struct md_rdev *rdev, const char *page, size_t len)
 +
-+					ret = remove_and_add_spares(mddev,
-+								    rdev2, &lim);
-+					queue_limits_commit_update(q, &lim);
-+				} else if (mddev_is_dm(mddev)) {
-+					ret = remove_and_add_spares(mddev,
-+								    rdev2, NULL);
-+				} else {
-+					ret = remove_spares(mddev, rdev2);
-+				}
- 				pr_info("Activated spare: %pg\n",
- 					rdev2->bdev);
- 				/* wakeup mddev->thread here, so array could
++static ssize_t bb_store(struct md_rdev *rdev, const char *page, size_t len,
++			struct queue_limits *lim)
+ {
+ 	int rv = badblocks_store(&rdev->badblocks, page, len, 0);
+ 	/* Maybe that ack was all we needed */
+@@ -3627,7 +3642,9 @@ static ssize_t ubb_show(struct md_rdev *rdev, char *page)
+ {
+ 	return badblocks_show(&rdev->badblocks, page, 1);
+ }
+-static ssize_t ubb_store(struct md_rdev *rdev, const char *page, size_t len)
++
++static ssize_t ubb_store(struct md_rdev *rdev, const char *page, size_t len,
++			 struct queue_limits *lim)
+ {
+ 	return badblocks_store(&rdev->badblocks, page, len, 1);
+ }
+@@ -3641,7 +3658,8 @@ ppl_sector_show(struct md_rdev *rdev, char *page)
+ }
+ 
+ static ssize_t
+-ppl_sector_store(struct md_rdev *rdev, const char *buf, size_t len)
++ppl_sector_store(struct md_rdev *rdev, const char *buf, size_t len,
++		 struct queue_limits *lim)
+ {
+ 	unsigned long long sector;
+ 
+@@ -3680,7 +3698,8 @@ ppl_size_show(struct md_rdev *rdev, char *page)
+ }
+ 
+ static ssize_t
+-ppl_size_store(struct md_rdev *rdev, const char *buf, size_t len)
++ppl_size_store(struct md_rdev *rdev, const char *buf, size_t len,
++	       struct queue_limits *lim)
+ {
+ 	unsigned int size;
+ 
+@@ -3766,7 +3785,7 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
+ 		if (rdev->mddev == NULL)
+ 			rv = -ENODEV;
+ 		else
+-			rv = entry->store(rdev, page, length);
++			rv = entry->store(rdev, page, length, NULL);
+ 		suspend ? mddev_unlock_and_resume(mddev) : mddev_unlock(mddev);
+ 	}
+ 
 -- 
 2.43.0
 
