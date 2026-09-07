@@ -1,143 +1,144 @@
-Received: from va-2-50.ptr.blmpb.com (va-2-50.ptr.blmpb.com [209.127.231.50])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9B8C3FF1D0
-	for <linux-raid@vger.kernel.org>; Mon,  7 Sep 2026 06:49:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B41B4F30C3
+	for <linux-raid@vger.kernel.org>; Mon,  7 Sep 2026 13:29:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788763770; cv=none; b=LgV51AotCRO+92oQRbIPrzDo99b0pDgfPxe32tR5rzR/ZgRFV3HzxUDWYibXB0mV0q3PG+ba0jcoAA8CJQhbUi3TrsZNlpn0hL1iDsLpb1IssV+QBOV6gjI31whlLQwlYZK3efGPsuA7rzXvJ3LNcS6yav6w1jMCxcIwv+88mnw=
+	t=1788787798; cv=none; b=YSQxI5fhTwunJFgtnBkWLckQG/4uImcdQ96OMe5ZVNEu5TnkbFUH2hOmF0m/DnfsRTWe7+OkWnuCYcqPLmT2inCFRII2yxvZ0zKK32S4hxfllrD2BCgoL62xbPYtqxsHNFq9qY6rjlTYvGPDx2trYWESgpjg7i+W2m7xUDXEcvw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788763770; c=relaxed/simple;
-	bh=PUkd9XVvw3JA8R/e7pRNDV22AvJTtU+3EqHoU3TXr9c=;
-	h=Content-Type:Date:Subject:Message-Id:To:Cc:In-Reply-To:References:
-	 From:Mime-Version; b=Nd1xANoFoOOCgbJ2yt5MbJGogPv37zy/YOk0u6REMuUP0VImBk1ckqH+PK2tkimy7TUlB7uU4T+K+8UcxAaVJqESI/KvJeHaYFcigTBjsFMKfnT46njfCEQrQvG2Gg51QcQVxDQFyQpTxdC0vzBP72LK4Azv9gx4Q9cGUk3fjH8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=R1jhHUrk; arc=none smtp.client-ip=209.127.231.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1788787798; c=relaxed/simple;
+	bh=DU09zw/q2QurpiDsBXe0WYUFmSbboztu/xbFyBYnU9s=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iZkor5yj3H1D0ATp3SH8jEI4J6SbPOrSXOh3GxuBUIsCdlOgXh05LXOKJYe3NY0XOsaYBPbZrREwHz7j3jGGh5PwIpGgvIofcDOdJunfQgHAfvD96Ynq1IZn/SZSYNePmNnsUKAVEWdp7n6rok/60qoLT+TIWth4rcnQ7GfV4RQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZcCp65oO; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="R1jhHUrk"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1788763762;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=tjx4nYlEdvMkKa+4XKr7qNE//HL1DSGFGYD8GEIfeU4=;
- b=R1jhHUrk3wr75st3AILga1G1d4GWn3lFJbDSKXgAcRfNv2v5LJehr87DCBeCDFg0s0lWnN
- ugrdqd8RoMVZdKGQ/gMooHkpC/1+9e7daDXZXLtvr8sL977rMyQ8hANCw6xpEhC2iDb5YX
- iY4tbQGdr0gLuEQhjlLXlRNpccOf7PvAuZ1CvTVjHUGjLYF6y7X6vObe8ikf57LKGkkdJE
- /Pu/MQAbfHhSxqBuDMk15gGGOtGuCv28XTVeaV8VFsWMYYXBIcMifjVSWqScwAkSxJQFe7
- w3Z2mvu8MydyA93bwJMA4RgP6bINxpoKkO+UehLt0m21VwoJ0Hbj+LLmMB4YrQ==
-Content-Type: text/plain; charset=UTF-8
-Reply-To: yukuai@fygo.io
-Date: Mon, 7 Sep 2026 14:49:17 +0800
-X-Lms-Return-Path: <lba+26a9e5e72+fb0b37+vger.kernel.org+yukuai@fygo.io>
-X-Original-From: yu kuai <yukuai@fygo.io>
-Subject: Re: [PATCH v2] md/raid0: validate device count before allocating devlist
-Message-Id: <b89b96ce-36cb-4e98-bcba-26ba2dbd461a@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.161]) by smtp.larksuite.com with ESMTPS; Mon, 07 Sep 2026 06:49:21 +0000
-To: "Chandradhar Kumar" <chandradhar.2003@gmail.com>, <song@kernel.org>, 
-	<linux-raid@vger.kernel.org>, "yu kuai" <yukuai@fygo.io>
-Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<linux-kernel@vger.kernel.org>, 
-	<syzbot+a32ff75e417c0f49a8e9@syzkaller.appspotmail.com>
-In-Reply-To: <20260906184406.2141-1-chandradhar.2003@gmail.com>
-References: <20260906184406.2141-1-chandradhar.2003@gmail.com>
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Mozilla Thunderbird
-From: "yu kuai" <yukuai@fygo.io>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZcCp65oO"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2d9db539a54so27881165ad.0
+        for <linux-raid@vger.kernel.org>; Mon, 07 Sep 2026 06:29:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788787792; x=1789392592; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=LTHmmouueQufOHOv0npHPHbHQCg0ThYyw+cVo5nAdfw=;
+        b=ZcCp65oOo9ZAzDjcGPNgQ/lB1KBryJ9vcq28A4/PCoWg1fHm19Pkufpl0mPJuBud3j
+         VnxcI8czd93e4ZWdsv29kzlzLjqm20Xe07HJKNRKZmkeyrFjAunhSAfzmQDNRqlM9R2u
+         yzAZ8KdFpajBIXmVLUycknZg9GG4QkNGoEdeyWKKUr8UoaFM7zChZLO1g/a5BIsfRnnZ
+         5paGBSv3ZC/xMbd7Rtq110s3epdrlAtj2rlQvQbWeqdSlpUBUOA2w4YS0o8svi7n3wNC
+         QhJTfvVBtivku6ESJWzoi7EI6P8gVOqR/cIvF7PyZD01XSJZz/wcsd/FK63ehNynAqih
+         33gQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788787792; x=1789392592;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=LTHmmouueQufOHOv0npHPHbHQCg0ThYyw+cVo5nAdfw=;
+        b=W4kIPOEfESsQT3ObnD2x46t7EV9dRNKyZTBghBKTXEdo0ZzAWTwVU3zmnPyQRikUvn
+         B4DAKTJsdaTm4ImwvS6mOHRuD3l/6LO2mQIRJcgwEqnweXrRVaLHrKKNdU6k8DWSn7Xt
+         RbtGgeBgUtxjL+GheUjNlaz4LI2ri+bPhzKDQx8o0FXOEEAQWoHTWA8N5y95FxP3KjdW
+         eKxuptxie4FHwMIseVEz72eNh2POfgIr8HCRrgH9LCOhXcN8Epy8ipoD3v2bluHjWDk+
+         W1Qox/HB277yIiypQJ+YTLW+og9+LL/gKJJcgcs2c/RukexZZKzkY5HxE2A/UgO7QE5n
+         ng8w==
+X-Forwarded-Encrypted: i=1; AKwUvBz5m4k1F4YVfspYRrHiVNj1Lr7UgzVlCn+QnOE3Se66sSmS6Zkf2TGHcDoo4FCzTVRiYKlFT4Os09xR@vger.kernel.org
+X-Gm-Message-State: AFuF++nkrwzyBhKHcdbQaEG8q2EFskxkpqZn4+bE26K7npnlT/08rVrt
+	4k2K0qbNGqQ1JgkX9rSj5JW8S2b5pvA7hBiLyx2+EQaXuwDXmbblQC0v4lZiYnF0
+X-Gm-Gg: AYBFou0TH2r5vP62tcl0XFpaIE0uG6i4KW7z8IIohZGqe5Ud8fgJIDSWWkZHsdSUw6b
+	8CfhRX8/02aAYhM4sl28CuB8r2DfCl9VBpLOyC88UV/VC7+tACIX8qT+LnHH1rG+TCNkZLot3op
+	n7gnv/N1XKzw+kX+voEyl9xL3wdj4fEusjsG2k0vNkzNHwVVB+bVZOGYcCK47LPovG1VqcaMyC4
+	g80EebPjDdhKlQHjKMk2n3ptNoXQniBBlwexVl7O5HMmwQEycJCihYHmEPzsqaR+BBuHIlTkxtV
+	kcek2vXYY/tdCO0nhYdez491N22dMocbOwqUpQuAaNLeOgoaALEvXM9ESxWv0LiX2DV9IXWhWqh
+	mQtLrma/po02Ul8N3bwJpUbhcNNOCuriATJyi6vXIuR3dJz3fPGz+/yBH4yLLbsEmJrust77YCX
+	7WOgq1txpnGpYw7hf0z+0LmBA28a99d69nL3cVUDpgcZ6z2PStssb2JcX7wb3UZMIa4WwJzl4=
+X-Received: by 2002:a17:903:3810:b0:2d6:3c22:99bf with SMTP id d9443c01a7336-2db124afcefmr356207555ad.9.1788787791874;
+        Mon, 07 Sep 2026 06:29:51 -0700 (PDT)
+Received: from TheRealOne ([2409:40e1:48a:6453:40cf:4035:e63:363a])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2db1499df27sm45871125ad.50.2026.09.07.06.29.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Sep 2026 06:29:51 -0700 (PDT)
+From: Chandradhar Kumar <chandradhar.2003@gmail.com>
+To: song@kernel.org,
+	yukuai@fygo.io
+Cc: magiclinan@didiglobal.com,
+	xiao@kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	syzbot+a32ff75e417c0f49a8e9@syzkaller.appspotmail.com,
+	Chandradhar Kumar <chandradhar.2003@gmail.com>
+Subject: [PATCH v3] md/raid0: validate device count before allocating devlist
+Date: Mon,  7 Sep 2026 18:59:36 +0530
+Message-ID: <20260907132936.6677-1-chandradhar.2003@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Hi,
+create_strip_zones() allocates conf->devlist based on mddev->raid_disks
+before verifying that number of devices matches raid_disks. Move the
+existing device count validation before allocation to reject invalid
+configurations before attempting a potentially excessive allocation.
 
-=E5=9C=A8 2026/9/7 2:44, Chandradhar Kumar =E5=86=99=E9=81=93:
-> create_strip_zones() allocates conf->devlist based on mddev->raid_disks
-> before verifying that enough devices are present. Validate the number of
-> member devices before allocating devlist to reject invalid
-> configurations early.
->
-> The existing validation later in the function already rejects this
-> condition, but it occurs after the potentially excessive allocation.
+Fixes: 078d1d8e688d ("md/raid0: use kvzalloc/kvfree for strip_zone and devlist allocations")
+Reported-by: syzbot+a32ff75e417c0f49a8e9@syzkaller.appspotmail.com
+Closes: https://syzbot.org/bug?extid=a32ff75e417c0f49a8e9
+Signed-off-by: Chandradhar Kumar <chandradhar.2003@gmail.com>
+---
+v2 -> v3:
+- Move the existing device count validation before the allocation
+- Add the requested fixes tag
 
-Since there is already a checking cnt !=3D mddev->raid_disks, it doesn't ma=
-ke
-sense to introduce redundant checking. Please move the checking forward to
-fix the problem.
+v1: https://lore.kernel.org/all/20260906143928.105165-1-chandradhar.2003@gmail.com/
+v2: https://lore.kernel.org/all/20260906184406.2141-1-chandradhar.2003@gmail.com/
 
->
-> Reported-by: syzbot+a32ff75e417c0f49a8e9@syzkaller.appspotmail.com
-> Closes: https://syzbot.org/bug?extid=3Da32ff75e417c0f49a8e9
+ drivers/md/raid0.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-Please add a fix tag.
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 35e103f0c2c3..453e8abda22b 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -79,7 +79,10 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+ 	*private_conf = ERR_PTR(-ENOMEM);
+ 	if (!conf)
+ 		return -ENOMEM;
++
++	cnt = 0;
+ 	rdev_for_each(rdev1, mddev) {
++		cnt++;
+ 		pr_debug("md/raid0:%s: looking at %pg\n",
+ 			 mdname(mddev),
+ 			 rdev1->bdev);
+@@ -144,6 +147,14 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+ 	}
+ 
+ 	err = -ENOMEM;
++
++	if (cnt != mddev->raid_disks) {
++		pr_warn("md/raid0:%s: too few disks (%d of %d) - aborting!\n",
++			mdname(mddev), cnt, mddev->raid_disks);
++		err = -EINVAL;
++		goto abort;
++	}
++
+ 	conf->strip_zone = kvzalloc_objs(struct strip_zone, conf->nr_strip_zones);
+ 	if (!conf->strip_zone)
+ 		goto abort;
+@@ -200,11 +211,6 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+ 			smallest = rdev1;
+ 		cnt++;
+ 	}
+-	if (cnt != mddev->raid_disks) {
+-		pr_warn("md/raid0:%s: too few disks (%d of %d) - aborting!\n",
+-			mdname(mddev), cnt, mddev->raid_disks);
+-		goto abort;
+-	}
+ 	zone->nb_dev = cnt;
+ 	zone->zone_end = smallest->sectors * cnt;
+ 
+-- 
+2.55.0
 
-> Signed-off-by: Chandradhar Kumar <chandradhar.2003@gmail.com>
->
-> v2:
-> - Reject non-positive raid-disks values, which can bypass the device
->    count validation and result in an oversized allocation.
-> ---
-
-And change log should not be placed in commit message. Just move them here,=
- and they
-will be dropped when I apply the patch.
-
->   drivers/md/raid0.c | 20 +++++++++++++++++++-
->   1 file changed, 19 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index 35e103f0c2c3..8eaf078606d6 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -69,7 +69,7 @@ static int create_strip_zones(struct mddev *mddev, stru=
-ct r0conf **private_conf)
->   	sector_t curr_zone_end, sectors;
->   	struct md_rdev *smallest, *rdev1, *rdev2, *rdev, **dev;
->   	struct strip_zone *zone;
-> -	int cnt;
-> +	int cnt, nr_devs;
->   	struct r0conf *conf =3D kzalloc_obj(*conf);
->   	unsigned int blksize =3D 512;
->  =20
-> @@ -79,7 +79,10 @@ static int create_strip_zones(struct mddev *mddev, str=
-uct r0conf **private_conf)
->   	*private_conf =3D ERR_PTR(-ENOMEM);
->   	if (!conf)
->   		return -ENOMEM;
-> +
-> +	nr_devs =3D 0;
->   	rdev_for_each(rdev1, mddev) {
-> +		nr_devs++;
->   		pr_debug("md/raid0:%s: looking at %pg\n",
->   			 mdname(mddev),
->   			 rdev1->bdev);
-> @@ -144,6 +147,21 @@ static int create_strip_zones(struct mddev *mddev, s=
-truct r0conf **private_conf)
->   	}
->  =20
->   	err =3D -ENOMEM;
-> +
-> +	if (mddev->raid_disks <=3D 0) {
-> +		pr_warn("md/raid0:%s: invalid number of disks %d - aborting!\n",
-> +			mdname(mddev), mddev->raid_disks);
-> +		err =3D -EINVAL;
-> +		goto abort;
-> +	}
-> +
-> +	if (nr_devs < mddev->raid_disks) {
-> +		pr_warn("md/raid0:%s: too few disks (%d of %d) - aborting!\n",
-> +			mdname(mddev), nr_devs, mddev->raid_disks);
-> +		err =3D -EINVAL;
-> +		goto abort;
-> +	}
-> +
->   	conf->strip_zone =3D kvzalloc_objs(struct strip_zone, conf->nr_strip_z=
-ones);
->   	if (!conf->strip_zone)
->   		goto abort;
-
---=20
-Thanks,
-Kuai
