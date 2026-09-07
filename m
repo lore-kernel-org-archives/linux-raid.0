@@ -1,105 +1,93 @@
-Received: from va-2-54.ptr.blmpb.com (va-2-54.ptr.blmpb.com [209.127.231.54])
+Received: from va-2-51.ptr.blmpb.com (va-2-51.ptr.blmpb.com [209.127.231.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F7093FC5AE
-	for <linux-raid@vger.kernel.org>; Mon,  7 Sep 2026 06:32:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34B7138BF9C
+	for <linux-raid@vger.kernel.org>; Mon,  7 Sep 2026 06:35:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788762773; cv=none; b=IjAyvKlXvUeiESOc5OzPQNo7D35twFASu6JatfNEddpk3NK6wb4+Pb/UZsikYhXIacajP0Cpo7thPFFoNCxeThlt9R0YE1HGQ7c95YCkss+nqJ0dqkpr5CD+BYOGjC5DLZ6HkjM+ijLWOh6hvae73MiL1FvO+PavDyOK74iujR0=
+	t=1788762951; cv=none; b=i/CQgB0z/p9BFanPm+YK5BtJGcmfo9fDuqxvZ0mEBRTOxfgnz/6PQjj94+j+P5v9YHIJkZRusRh0LCI4auJv6rf8kZtjyTUfDPbMbrYiN9PcOnA+tjeaUifFdxuymzzf7p+GjHdBZfc5Mh1S8/xYKpmmZs7GO9eRpTjZFPJIzaY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788762773; c=relaxed/simple;
-	bh=Rwl6+KIHPaNEg/U11nkWziInYelHWzlevofguxlERD0=;
-	h=Content-Type:To:From:Date:Message-Id:Mime-Version:References:Cc:
-	 Subject:In-Reply-To; b=BnlJfi/fD6qy+g8jokL9+U9dl6D5PPFuO9BgxM6fbWqbngdx0AAZa7twufK4hczpnI2OoNzl58wLYKrc3IbE+F15bAV17D/DgzAjk+RviPuk/KZaPnbf1KpJ55sqF0fyqyCXPD7M3N0S9zRezuRUi22sakrY5PvgTq66PqrWUcY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=ebsptd27; arc=none smtp.client-ip=209.127.231.54
+	s=arc-20240116; t=1788762951; c=relaxed/simple;
+	bh=erausLEaZYfQyVhT+1fhvRlt/PyADFF1K69ceUD3C7c=;
+	h=Content-Type:Date:Message-Id:References:Mime-Version:In-Reply-To:
+	 Cc:From:To:Subject; b=ZSp+5XFnTapr6dyvHo1RubVsMEaAyeTZEvZ1wEfLEiP03XqZsg8el1wsU97666fh8/qWjKpRfnK0dD5Q21WWB4SSCte/1RWw7yMqjCQzKtA2R+Sb9VdhSgNLc1PxbejmHIK4EaYLxq+23L2MgiHQYF6wElFvikyYg4q9gYm4tao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=NdaveWod; arc=none smtp.client-ip=209.127.231.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="ebsptd27"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="NdaveWod"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1788762764;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1788762939;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=O8oIkgpyTsX/KGG5caPTVxOxKkkZWwf60569EzqLa9s=;
- b=ebsptd27m+L88D770bGLM7m3oz/zLWZRKouGzTEgIMedP6jSq7934Hx+PGLHOwdeBBrFga
- GP6qb/tDZQ227zQBeBPvDyFE1+0URCkNM4YLXTNtOA8+s1thh72cLweW65g9XM4oRJz9eP
- cCyTdcAl8Ampuj7riMXOo18/ffsTIjVFeQzkUAZtasBJSKYRRwZp+ATfr3QfNv5nM7Os1c
- IJIHp6i5jCOFaf6uMxrGX2GUEIhcLghrdAyeGjByU8/pW6S6CWodfm8p/EwD6a8qusfaMC
- 6ycOZcXCxW0uGceANgdOqmx9MSAJX9Rfq24Z26RtfjhM4Zdyarxuo/kW5AFmKA==
+ bh=ALIfe2KFmHm/GZ+77nw/pKD7pycaH98L8Iit1Jfgxek=;
+ b=NdaveWodGDkZfyzSrlP9UXsCPfFqEuH/rePHeeEy18sdfwb0SGJlBETSz4M2vqijHcGoBH
+ ZfvE2Q8/0BObhGrUUUNzJ6vHBHYqxcslKe9y5hek9dKgkEUQ14vj/z7zLCwYewryZYVjX5
+ Pey8w4TLx6FsmhdOVtWGDdfZj0gY2SPhMdaouMYCLxI4r41XkZU37fE0jt17oWkBfGj/Gz
+ dpwVrgupEYJ6LC+trm+SFTm/s192ftNae80HfmxBtTsj1bmVMbKHu+wmuHkz9RPnBr3/uC
+ HB7POCcDa9lThgbDRqXKV35PfAmv8mJwyDHQnloLPzyOPCDwr80a9ZORUb5GjA==
 Content-Type: text/plain; charset=UTF-8
+Date: Mon, 7 Sep 2026 14:35:33 +0800
+Message-Id: <35ada20d-3d39-4db5-802e-f478d052cf3f@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.161]) by smtp.larksuite.com with ESMTPS; Mon, 07 Sep 2026 06:35:37 +0000
+References: <20260905104323.2202902-1-chencheng@fnnas.com> <20260905110026.5C0571F00A3D@smtp.kernel.org>
 X-Original-From: yu kuai <yukuai@fygo.io>
-To: "Hemanth Selam" <hemanth.selam@gmail.com>, "Song Liu" <song@kernel.org>, 
-	"Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 7 Sep 2026 14:32:39 +0800
-Message-Id: <17352596-20c0-430a-8628-1202ded1b389@fygo.io>
+Reply-To: yukuai@fygo.io
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Received: from [192.168.1.104] ([39.182.0.161]) by smtp.larksuite.com with ESMTPS; Mon, 07 Sep 2026 06:32:43 +0000
-References: <20260904124824.9585-1-hemanth.selam@gmail.com> <20260904124824.9585-2-hemanth.selam@gmail.com>
-X-Lms-Return-Path: <lba+26a9e5a8b+24b9c0+vger.kernel.org+yukuai@fygo.io>
-Reply-To: yukuai@fygo.io
-Cc: <linux-kernel@vger.kernel.org>, <linux-raid@vger.kernel.org>
-Subject: Re: [PATCH 1/2] md: fix typos in comments
-In-Reply-To: <20260904124824.9585-2-hemanth.selam@gmail.com>
+In-Reply-To: <20260905110026.5C0571F00A3D@smtp.kernel.org>
+X-Lms-Return-Path: <lba+26a9e5b3a+7030e2+vger.kernel.org+yukuai@fygo.io>
+Cc: <linux-raid@vger.kernel.org>
+From: "yu kuai" <yukuai@fygo.io>
 User-Agent: Mozilla Thunderbird
+Content-Transfer-Encoding: quoted-printable
+To: <sashiko-reviews@lists.linux.dev>, "Chen Cheng" <chencheng@fnnas.com>, 
+	"yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH v2] md/raid5: reject raid4/5 arrays with too few disks
 
 Hi,
 
-=E5=9C=A8 2026/9/4 20:48, Hemanth Selam =E5=86=99=E9=81=93:
-> Fix typos in comments, reported by scripts/checkpatch.pl using the
-> misspelling list in scripts/spelling.txt.  Only touches comments, no code
-> changes.
+=E5=9C=A8 2026/9/5 19:00, sashiko-bot@kernel.org =E5=86=99=E9=81=93:
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index b91545ce090de..4d8bb0cf26055 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -7657,9 +7657,12 @@ static struct r5conf *setup_conf(struct mddev *md=
+dev)
+>>   			mdname(mddev), mddev->new_layout);
+>>   		return ERR_PTR(-EIO);
+>>   	}
+>> -	if (mddev->new_level =3D=3D 6 && mddev->raid_disks < 4) {
+>> -		pr_warn("md/raid:%s: not enough configured devices (%d, minimum 4)\n"=
+,
+>> -			mdname(mddev), mddev->raid_disks);
+>> +	if ((mddev->new_level =3D=3D 4 && mddev->raid_disks < 2) ||
+>> +	    (mddev->new_level =3D=3D 5 && mddev->raid_disks < 3) ||
+> [Severity: High]
+> Does this unintentionally break 2-disk RAID5 arrays?
 >
-> Assisted-by: Cursor:claude-opus-5
-> Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
-> ---
->   drivers/md/raid1-10.c | 2 +-
->   drivers/md/raid10.c   | 2 +-
->   2 files changed, 2 insertions(+), 2 deletions(-)
-
-I'll not accept typo fixed like this, because it will introduce conflicts f=
-or
-stable backport. However, it's still welcome to fix typos together with oth=
-er
-cleanup or bugfix.
-
+> The md driver supports and intentionally creates 2-disk RAID5 arrays duri=
+ng a
+> RAID1-to-RAID5 reshape. For example, in drivers/md/raid5.c
+> raid5_takeover_raid1() creates a 2-disk RAID5:
 >
-> diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-> index 3b0e230692ba..852346420848 100644
-> --- a/drivers/md/raid1-10.c
-> +++ b/drivers/md/raid1-10.c
-> @@ -87,7 +87,7 @@ static inline struct resync_pages *get_resync_pages(str=
-uct bio *bio)
->   	return bio->bi_private;
->   }
->  =20
-> -/* generally called after bio_reset() for reseting bvec */
-> +/* generally called after bio_reset() for resetting bvec */
->   static void md_bio_reset_resync_pages(struct bio *bio, struct resync_pa=
-ges *rp,
->   			       int size)
->   {
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 1093c798d9dd..2ac2dadda19a 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1921,7 +1921,7 @@ static void raid10_status(struct seq_file *seq, str=
-uct mddev *mddev)
->   }
->  =20
->   /* check if there are enough drives for
-> - * every block to appear on atleast one.
-> + * every block to appear on at least one.
->    * Don't consider the device numbered 'ignore'
->    * as we might be about to remove it.
->    */
+>      mddev->new_level =3D 5;
+>      mddev->new_layout =3D ALGORITHM_LEFT_SYMMETRIC;
+>      mddev->new_chunk_sectors =3D chunksect;
+>
+>      ret =3D setup_conf(mddev);
+>
+> By unconditionally rejecting mddev->new_level =3D=3D 5 && mddev->raid_dis=
+ks < 3
+> here, doesn't this cause valid reshape operations and assembly of legitim=
+ate
+> 2-disk RAID5 arrays to fail with -EINVAL?
+
+This make sense, 2 disks raid1 reshape to raid5 should not be broken.
 
 --=20
 Thanks,
