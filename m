@@ -1,140 +1,137 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AEE1233924
-	for <linux-raid@vger.kernel.org>; Sun,  6 Sep 2026 18:55:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DC6E3EC2EF;
+	Mon,  7 Sep 2026 03:24:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788720934; cv=none; b=fpbfQ2JDL76F0RVevHGXktIHp1PPkRlRoo7GffIKuM0+N+CnoJIYB5oiVHxYqTgvWLzI+DyQAqjfwjzSV+1xGmCfRQndHwFzNYxvK/ENjgkwKzuPKyu9WA48z5kpmhnCadxKKuAm85gngN3+ofy9MrFpF/fnlQn5FsXy1/S/szM=
+	t=1788751501; cv=none; b=kTIhaL93Dfq6nSZo0MGdH5x/K5wzOxDSHpE1C4AN9rTvYNaukPI258O71+vsJ57sa+w7hqVeCqQCuOWjykt5/rMmhhj5jSxV2hrqU3SUhT1XsD2mXAANQ+sMsab3/+Dsc4OIo4XNhKi61MGjuJH8PgSZN33147/2x9vrN1SbYYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788720934; c=relaxed/simple;
-	bh=Z8VkikbWuqxW3M9i9edGXVi62tbW4qiyA2qvDHSMmWg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=KBhWb4oSgjI2mO2gC0VU2WHhPRQc8BwPigVrastvVqWGLm2SM4eXHUpI00WsowTPZ4z7pEDiYmxIG17KBg6D31vFPaYc/U2fAy9oAkZhMS2rXG2dv5OFi71uEfCimr1MgKHR8NtLCkVmmNc0XXVElwWk//dWAgtw604L05T5EW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y4zCT8Yt; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788751501; c=relaxed/simple;
+	bh=AD06Ggucm6suXkByqhZDSNq6WiVyhvl/f36DqhXGFxU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=FDHqoQtod+lrfpaQEnKo9BRsns0xr9tYKgijDEGCmneVf+7YYpXED2Y4vx1mraZPiOfkx84Sef/E/F0zC/SvXyuY7gpfr2uQcFbif/b33plbCH1UK6Pun9J6n5aeK0D8inW+Fhnkkhn5lTFOddIKZdxrQ+mPgwG3P4DSuKxzcH0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=GJ6udfw1; arc=none smtp.client-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y4zCT8Yt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E26CC1F00A3A;
-	Sun,  6 Sep 2026 18:55:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788720933;
-	bh=X9Naxk1u7HATaUI2dFBh+rDaqizFpHqgxfs7iHMcqRc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Y4zCT8YtL4BZU30FERvIThhEq0V6SKKy+3xuwtWCbRwwYmNckUV8020faUG/B5Eh5
-	 /j9T5sfBk0AeijxdoConcpd/mO+YtC7PJGIVmB+0cqBEhBGC9kADs5zKMNUG591Srv
-	 avzvDJOZlJ/gRn2i4lx+EF/i+PJK0pqyNHBNwZXbFuZQJfUEEP+2s/mTjmVBaQvoMO
-	 Mt/aGDDADkQm+z4AjXiFl7Zntffe3cIgyufVuz+43iBwu5BEYCuYbFg81FrK9O5g91
-	 N3zxSXppZlPlpuzNfXCJWffuKvDgLe/sbxzP9aiyE5S9o0jXscq3Gaofv81YHSB+Ms
-	 3wN2JNoskWiRQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] md/raid0: validate device count before allocating
- devlist
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chandradhar Kumar" <chandradhar.2003@gmail.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260906184406.2141-1-chandradhar.2003@gmail.com>
-References: <20260906184406.2141-1-chandradhar.2003@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 06 Sep 2026 18:55:32 +0000
-Message-Id: <20260906185532.E26CC1F00A3A@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="GJ6udfw1"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
+	Message-ID; bh=AD06Ggucm6suXkByqhZDSNq6WiVyhvl/f36DqhXGFxU=; b=G
+	J6udfw1lyRn9Kt/uizcvf7XAbiwlHMYkBFAeH8Fo16lo36R8/8MezX3a7ZAqfJqS
+	fFJibaLLpbuYRa6Ts6SqMCqDzuWJ6RR4wPxFlcx6xdCzHozTttIAMgzqu4j0zSeY
+	JFZ5xQc00/5zcnIt5xRz8a13CywTvoHNVrflN/oy40=
+Date: Mon, 7 Sep 2026 11:24:26 +0800 (CST)
+From: =?GBK?B?wO7T07roIA==?= <dayou5941@163.com>
+To: yukuai@fygo.io
+Cc: song@kernel.org, magiclinan@didiglobal.com, xiao@kernel.org,
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Li Youhong" <liyouhong@kylinos.cn>, stable@vger.kernel.org
+Subject: Re:Re: [PATCH] md/raid5: serialize plug list add with device_lock
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
+ 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 163com
+In-Reply-To: <826d82e9-0f0c-450e-a5f9-ea6675b7adc6@fygo.io>
+References: <20260902095307.358569-1-dayou5941@163.com>
+ <826d82e9-0f0c-450e-a5f9-ea6675b7adc6@fygo.io>
+X-NTES-SC: AL_Qu2TCvuevkwt4CaYY+kckk4Wjug8Wcexufwj34NTc98FiDnyxQAgWH9YIH7x+t6mDx6MnzWOSARs6ftfZqR/PVzIRNV0ZaGU+ELRyvfqnQ==
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Message-ID: <6edbeca2.341a.1a079e5507c.Coremail.dayou5941@163.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:hygvCgD3n7FrLp5qNNoJAA--.1316W
+X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC+QvnlmqeLmv9+wAA30
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-
-Pre-existing issues:
-- [High] Integer overflow in `chunk_size` sysfs handler allows a zero-divis=
-ion kernel panic in `map_sector()`.
---
-
-commit ff4c12b29e562bce41f4e75365704e1e7f8e00b2
-Author: Chandradhar Kumar <chandradhar.2003@gmail.com>
-
-md/raid0: validate device count before allocating devlist
-
-create_strip_zones() allocates conf->devlist based on mddev->raid_disks
-before verifying that enough devices are present. Validate the number of
-member devices before allocating devlist to reject invalid
-configurations early.
-
-Reported-by: syzbot+a32ff75e417c0f49a8e9@syzkaller.appspotmail.com
-Closes: https://syzbot.org/bug?extid=3Da32ff75e417c0f49a8e9
-
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index 35e103f0c2c3e..8eaf078606d6f 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-[ ... ]
-> @@ -144,6 +147,21 @@ static int create_strip_zones(struct mddev *mddev, s=
-truct r0conf **private_conf)
->  	}
-> =20
->  	err =3D -ENOMEM;
-> +
-> +	if (mddev->raid_disks <=3D 0) {
-> +		pr_warn("md/raid0:%s: invalid number of disks %d - aborting!\n",
-> +			mdname(mddev), mddev->raid_disks);
-> +		err =3D -EINVAL;
-> +		goto abort;
-> +	}
-> +
-> +	if (nr_devs < mddev->raid_disks) {
-> +		pr_warn("md/raid0:%s: too few disks (%d of %d) - aborting!\n",
-> +			mdname(mddev), nr_devs, mddev->raid_disks);
-> +		err =3D -EINVAL;
-> +		goto abort;
-> +	}
-> +
->  	conf->strip_zone =3D kvzalloc_objs(struct strip_zone, conf->nr_strip_zo=
-nes);
-
-[Severity: High]
-This is a pre-existing issue, but does this code allow an integer overflow
-in mddev->chunk_sectors that leads to a division-by-zero kernel panic in
-map_sector()?
-
-In drivers/md/md.c:chunk_size_store(), the chunk size is parsed with no
-upper bounds checking:
-
-	err =3D kstrtoul(buf, 10, &n);
-	...
-	mddev->chunk_sectors =3D n >> 9;
-
-A large value written to the chunk_size sysfs node of a non-running RAID0
-array is bitshifted and truncated into the 32-bit signed integer
-mddev->chunk_sectors.
-
-When the array is started and I/O is submitted, the code in map_sector()
-can overflow:
-
-drivers/md/raid0.c:map_sector() {
-	...
-		sector_div(chunk, zone->nb_dev << chunksect_bits);
-	} else{
-		sect_in_chunk =3D sector_div(sector, chunk_sects);
-		chunk =3D *sector_offset;
-		sector_div(chunk, chunk_sects * zone->nb_dev);
-	}
-	...
-}
-
-If chunk_sects is a power of 2 (e.g., 0x80000000) and nb_dev =3D 2,
-zone->nb_dev << chunksect_bits evaluates to 2 << 31, which overflows to 0
-in 32-bit math.
-
-If chunk_sects is not a power of 2 (e.g., 0xC0000000) and nb_dev =3D 4,
-chunk_sects * zone->nb_dev evaluates to 0xC0000000 * 4, which also overflows
-to 0.
-
-In both branches, sector_div(chunk, 0) executes and panics the kernel. Can
-chunk_size_store() be updated to validate the upper bounds of chunk_size to
-prevent this crash?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260906184406.2141=
--1-chandradhar.2003@gmail.com?part=3D1
+CgoKCkhpIEt1YWksCgoKCgoKCgoKCgoKCkF0IDIwMjYtMDktMDUgMTE6MTc6NTgsICJ5dSBrdWFp
+IiA8eXVrdWFpQGZ5Z28uaW8+IHdyb3RlOgo+SGksCj4KPtTaIDIwMjYvOS8yIDE3OjUzLCBMaSBZ
+b3Vob25nINC0tcA6Cj4+IEZyb206IExpIFlvdWhvbmcgPGxpeW91aG9uZ0BreWxpbm9zLmNuPgo+
+Pgo+PiByYWlkNV91bnBsdWcoKSBjYW4gc3BpbiBmb3JldmVyIHVuZGVyIGNvbmYtPmRldmljZV9s
+b2NrIHdoZW4KPj4gcmFpZDVfcGx1Z19jYi5saXN0IHN0aWxsIHBvaW50cyBhdCBhIHN0cmlwZSB3
+aG9zZSBzaC0+bHJ1IGhhcwo+PiBhbHJlYWR5IGJlZW4gcmVpbml0aWFsaXplZCAoc2VsZi1sb29w
+ZWQpLiBUaGF0IGRpc2FibGVzIElSUXMgb24KPj4gdGhlIGhvbGRlciBDUFUgYW5kIGNhdXNlcyBt
+dWx0aS1DUFUgaGFyZCBsb2NrdXBzIG9uIHdhaXRlcnMgb2YKPj4gdGhlIHNhbWUgbG9jay4KPj4K
+Pj4gVGhpcyBoYXBwZW5zIGJlY2F1c2UgcmVsZWFzZV9zdHJpcGVfcGx1ZygpIHNldHMKPj4gU1RS
+SVBFX09OX1VOUExVR19MSVNUIGFuZCBsaXN0X2FkZF90YWlsKHNoLT5scnUpIHdpdGhvdXQKPj4g
+ZGV2aWNlX2xvY2ssIHdoaWxlIGRvX3JlbGVhc2Vfc3RyaXBlKCkgbWF5IGNvbmN1cnJlbnRseSBt
+b3ZlIHRoZQo+PiBzYW1lIGxydSBvbnRvIGhhbmRsZS9pbmFjdGl2ZSB3aGVuIHRoZSBsYXN0IHJl
+ZmVyZW5jZSBkcm9wcy4KPj4KPj4gTm90ZTogYSAyMDIwIHByb3Bvc2FsIHRyaWVkIGV4dHJhIHJl
+ZnMgLyBjaGVja2luZwo+PiBTVFJJUEVfT05fVU5QTFVHX0xJU1QgaW4gZG9fcmVsZWFzZV9zdHJp
+cGUoKSB3aXRob3V0IHNlcmlhbGl6aW5nCj4+IHRoZSBwbHVnIGVucXVldWU6Cj4+IGh0dHBzOi8v
+bG9yZS5rZXJuZWwub3JnL2xpbnV4LXJhaWQvMjAyMDAxMDgxNjMwMjMuOTMwMS0xLWd1b3Fpbmcu
+amlhbmdAY2xvdWQuaW9ub3MuY29tLwo+PiBUaGF0IHN0aWxsIGxlYXZlcyBhIFRPQ1RPVSB3aW5k
+b3cgd2hlcmUgdGhlIGJpdCBpcyBjbGVhciBkdXJpbmcKPj4gdGhlIGNoZWNrIGFuZCBzZXQgYWZ0
+ZXJ3YXJkcywgYWxsb3dpbmcgdHdvIGxpc3RfYWRkIG9uIHRoZSBzYW1lCj4+IGxydS4gSXQgd2Fz
+IG5vdCBtZXJnZWQuCj4+Cj4+IFNlcmlhbGl6ZSB0aGUgYml0IHVwZGF0ZSBhbmQgbGlzdF9hZGQg
+d2l0aCBkZXZpY2VfbG9jay4gSWYKPj4gZG9fcmVsZWFzZV9zdHJpcGUoKSBzdGlsbCBzZWVzIFNU
+UklQRV9PTl9VTlBMVUdfTElTVCwgcmVzdG9yZSB0aGUKPj4gcmVmZXJlbmNlIGFuZCBsZXQgcmFp
+ZDVfdW5wbHVnKCkgb3duIHRoZSBmaW5hbCByZWxlYXNlLgo+Pgo+PiBPYnNlcnZlZCBvbiBwcm9k
+dWN0aW9uIDktZGlzayBOVk1lIFJBSUQ1IHVuZGVyIE15U1FMIEFJTwo+PiAoaW9fc3VibWl0IC0+
+IGJsa19maW5pc2hfcGx1ZyAtPiByYWlkNV91bnBsdWcpLgo+Pgo+PiBGaXhlczogODgxMWI1OTY4
+ZjYyICgicmFpZDU6IG1ha2VfcmVxdWVzdCB1c2UgYmF0Y2ggc3RyaXBlIHJlbGVhc2UiKQo+PiBD
+Yzogc3RhYmxlQHZnZXIua2VybmVsLm9yZwo+PiBTaWduZWQtb2ZmLWJ5OiBMaSBZb3Vob25nIDxs
+aXlvdWhvbmdAa3lsaW5vcy5jbj4KPj4gLS0tCj4+ICAgZHJpdmVycy9tZC9yYWlkNS5jIHwgMzMg
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tCj4+ICAgMSBmaWxlIGNoYW5nZWQsIDMw
+IGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCj4+Cj4+IGRpZmYgLS1naXQgYS9kcml2ZXJz
+L21kL3JhaWQ1LmMgYi9kcml2ZXJzL21kL3JhaWQ1LmMKPj4gaW5kZXggYjkxNTQ1Y2UwOTBkLi5j
+OTE5N2I2M2IxYzQgMTAwNjQ0Cj4+IC0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuYwo+PiArKysgYi9k
+cml2ZXJzL21kL3JhaWQ1LmMKPj4gQEAgLTIyOSw2ICsyMjksMTcgQEAgc3RhdGljIHZvaWQgZG9f
+cmVsZWFzZV9zdHJpcGUoc3RydWN0IHI1Y29uZiAqY29uZiwgc3RydWN0IHN0cmlwZV9oZWFkICpz
+aCwKPj4gICAJaW50IGk7Cj4+ICAgCWludCBpbmpvdXJuYWwgPSAwOwkvKiBudW1iZXIgb2YgZGF0
+ZSBwYWdlcyB3aXRoIFI1X0luSm91cm5hbCAqLwo+PiAgIAo+PiArCS8qCj4+ICsJICogU3RyaXBl
+IGlzIG93bmVkIGJ5IHJlbGVhc2Vfc3RyaXBlX3BsdWcoKSdzIGNiLT5saXN0LiBBIGNvbmN1cnJl
+bnQKPj4gKwkgKiBsYXN0LXJlZiByZWxlYXNlIGNhbiByZWFjaCBoZXJlIGFmdGVyIHRoZSBzdHJp
+cGUgd2FzIHF1ZXVlZCBmb3IKPj4gKwkgKiB1bnBsdWcgKGxydSBtYXkgYWxyZWFkeSBiZSBub24t
+ZW1wdHkpLiBEbyBub3QgcmUtYWRkIGxydSBlbHNld2hlcmU7Cj4+ICsJICogcmVzdG9yZSB0aGUg
+cmVmZXJlbmNlIGFuZCBsZXQgcmFpZDVfdW5wbHVnKCkgZmluaXNoIHRoZSByZWxlYXNlLgo+PiAr
+CSAqLwo+PiArCWlmICh0ZXN0X2JpdChTVFJJUEVfT05fVU5QTFVHX0xJU1QsICZzaC0+c3RhdGUp
+KSB7Cj4+ICsJCWF0b21pY19pbmMoJnNoLT5jb3VudCk7Cj4+ICsJCXJldHVybjsKPj4gKwl9Cj4+
+ICsKPj4gICAJQlVHX09OKCFsaXN0X2VtcHR5KCZzaC0+bHJ1KSk7Cj4+ICAgCUJVR19PTihhdG9t
+aWNfcmVhZCgmY29uZi0+YWN0aXZlX3N0cmlwZXMpPT0wKTsKPj4gICAKPj4gQEAgLTU3NjAsNiAr
+NTc3MSw5IEBAIHN0YXRpYyB2b2lkIHJlbGVhc2Vfc3RyaXBlX3BsdWcoc3RydWN0IG1kZGV2ICpt
+ZGRldiwKPj4gICAJCXJhaWQ1X3VucGx1ZywgbWRkZXYsCj4+ICAgCQlzaXplb2Yoc3RydWN0IHJh
+aWQ1X3BsdWdfY2IpKTsKPj4gICAJc3RydWN0IHJhaWQ1X3BsdWdfY2IgKmNiOwo+PiArCXN0cnVj
+dCByNWNvbmYgKmNvbmYgPSBtZGRldi0+cHJpdmF0ZTsKPj4gKwl1bnNpZ25lZCBsb25nIGZsYWdz
+Owo+PiArCWJvb2wgcXVldWVkID0gZmFsc2U7Cj4+ICAgCj4+ICAgCWlmICghYmxrX2NiKSB7Cj4+
+ICAgCQlyYWlkNV9yZWxlYXNlX3N0cmlwZShzaCk7Cj4+IEBAIC01Nzc1LDkgKzU3ODksMjIgQEAg
+c3RhdGljIHZvaWQgcmVsZWFzZV9zdHJpcGVfcGx1ZyhzdHJ1Y3QgbWRkZXYgKm1kZGV2LAo+PiAg
+IAkJCUlOSVRfTElTVF9IRUFEKGNiLT50ZW1wX2luYWN0aXZlX2xpc3QgKyBpKTsKPj4gICAJfQo+
+PiAgIAo+PiAtCWlmICghdGVzdF9hbmRfc2V0X2JpdChTVFJJUEVfT05fVU5QTFVHX0xJU1QsICZz
+aC0+c3RhdGUpKQo+PiAtCQlsaXN0X2FkZF90YWlsKCZzaC0+bHJ1LCAmY2ItPmxpc3QpOwo+PiAt
+CWVsc2UKPj4gKwkvKgo+PiArCSAqIFNlcmlhbGl6ZSB3aXRoIGRvX3JlbGVhc2Vfc3RyaXBlKCkg
+b24gZGV2aWNlX2xvY2sgc28gc2gtPmxydSBjYW5ub3QKPj4gKwkgKiBiZSBhZGRlZCB0byBoYW5k
+bGUvaW5hY3RpdmUgYW5kIGNiLT5saXN0IGF0IHRoZSBzYW1lIHRpbWUuCj4+ICsJICovCj4+ICsJ
+c3Bpbl9sb2NrX2lycXNhdmUoJmNvbmYtPmRldmljZV9sb2NrLCBmbGFncyk7Cj4+ICsJaWYgKCF0
+ZXN0X2FuZF9zZXRfYml0KFNUUklQRV9PTl9VTlBMVUdfTElTVCwgJnNoLT5zdGF0ZSkpIHsKPj4g
+KwkJaWYgKHVubGlrZWx5KCFsaXN0X2VtcHR5KCZzaC0+bHJ1KSkpIHsKPj4gKwkJCWNsZWFyX2Jp
+dChTVFJJUEVfT05fVU5QTFVHX0xJU1QsICZzaC0+c3RhdGUpOwo+PiArCQl9IGVsc2Ugewo+PiAr
+CQkJbGlzdF9hZGRfdGFpbCgmc2gtPmxydSwgJmNiLT5saXN0KTsKPj4gKwkJCXF1ZXVlZCA9IHRy
+dWU7Cj4+ICsJCX0KPj4gKwl9Cj4+ICsJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmY29uZi0+ZGV2
+aWNlX2xvY2ssIGZsYWdzKTsKPgo+RG8geW91IHJ1biBzb21lIHBlcmZvcm1hbmNlIHRlc3Qgb24g
+dGhpcyBwYXRjaD8gSSBiZWxpZXZlIHRoaXMgaXMgZnJvbSBJTyBob3QgcGF0aCwKPmEgc3Bpbmxv
+Y2sgaXMgbm90IGFjY2VwdGFibGUuIEkga25vdyB0aGVyZSBpcyBhbHJlYWR5IHNvbWUgc3Bpbmxv
+Y2sgZm9yIHJhaWQ1LCBidXQKPkknZCBsaWtlIG5vdCB0byBpbnRyb2R1Y2UgbmV3IGxvY2sgY29u
+dGVudGlvbi4KPgoKPkNhbiB0aGlzIHByb2JsZW0gYmUgZml4ZWQgYnkgYSBuZXcgbGxpc3QgaW4g
+c3RyaXBlX2hlYWQ/CgoKSSBhZ3JlZSB0aGF0IGFkZGluZyBkZXZpY2VfbG9jayBvbiB0aGlzIHBh
+dGggY2FuIGJyaW5nIHNvbWUKb3ZlcmhlYWQ7IEkgd2lsbCBmb2xsb3cgdXAgd2l0aCBwZXJmb3Jt
+YW5jZSBudW1iZXJzLgoKClJlZ2FyZGluZyB0aGUgYWx0ZXJuYXRpdmU6IGRpZCB5b3UgbWVhbiBh
+ZGRpbmcgYSBkZWRpY2F0ZWQKbGxpc3Rfbm9kZSBpbiBzdHJpcGVfaGVhZCBmb3IgdGhlIHBsdWcv
+dW5wbHVnIHBhdGggKGluc3RlYWQgb2YKcmV1c2luZyBzaC0+bHJ1KSwgc28gdGhhdCByZWxlYXNl
+X3N0cmlwZV9wbHVnKCkgYW5kCmRvX3JlbGVhc2Vfc3RyaXBlKCkgbm8gbG9uZ2VyIHNoYXJlIHRo
+ZSBzYW1lIGxpc3Qgbm9kZT8KCgpJZiB3ZSBzdGlsbCBxdWV1ZSB0aGUgcGx1ZyBsaXN0IHZpYSBz
+aC0+bHJ1LCBzd2l0Y2hpbmcgdGhhdCBsaXN0CnRvIGFuIGxsaXN0IHdvdWxkIG5vdCByZW1vdmUg
+dGhlIHJhY2UsIGJlY2F1c2UgZG9fcmVsZWFzZV9zdHJpcGUoKQpjYW4gc3RpbGwgbGlzdF9hZGQg
+dGhlIHNhbWUgbHJ1IG9udG8gaGFuZGxlL2luYWN0aXZlIGNvbmN1cnJlbnRseS4KQSBzZXBhcmF0
+ZSBub2RlIHdvdWxkIGF2b2lkIHRoYXQsIGJ1dCB1bnBsdWcgd291bGQgdGhlbiBuZWVkIHRvCm1v
+dmUgc3RyaXBlcyBmcm9tIHRoZSBwbHVnIGxsaXN0IG9udG8gdGhlIGV4aXN0aW5nIGxydS1iYXNl
+ZApyZWxlYXNlIHBhdGgsIHdoaWNoIGlzIGEgbGFyZ2VyIGNoYW5nZS4KCgpQbGVhc2UgbGV0IG1l
+IGtub3cgaWYgdGhhdCBtYXRjaGVzIHdoYXQgeW91IGhhZCBpbiBtaW5kLgoKClRoYW5rcywKTGkg
+WW91aG9uZz4KPj4gKwo+PiArCWlmICghcXVldWVkKQo+PiAgIAkJcmFpZDVfcmVsZWFzZV9zdHJp
+cGUoc2gpOwo+PiAgIH0KPj4gICAKPgo+LS0gCj5UaGFua3MsCj5LdWFpCg==
