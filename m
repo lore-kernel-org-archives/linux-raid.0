@@ -1,81 +1,81 @@
 Received: from mail-ej2-f12.google.com (mail-ej2-f12.google.com [74.125.228.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCBD633BBD7
-	for <linux-raid@vger.kernel.org>; Tue,  8 Sep 2026 04:43:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F2B732E13B
+	for <linux-raid@vger.kernel.org>; Tue,  8 Sep 2026 04:45:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.140
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788842637; cv=pass; b=c1aWi2AEJ1s7tEP/XoMhVRmrYWcxhljWMzS1wEsWViH58eXkBwfpBO8h38nFaJwGNtvzdtjuVxVpoQQ7ETunRa9jjNE1VMVAq2iGYPAKlbbr0nNPVg0LwZ4ybTHg9RoaQrF3C+s8zsD3jT6IDyRu9Dn+dK0Hro84aZ+FGRotgmI=
+	t=1788842710; cv=pass; b=PtdeA3dU7lV3KWXavvyyul2KKRENxYhdy/JUndx4DDZDzu3bg45CytRUrbOB/H7f0R8zDR5dXk9P4vJM2ujFJlVW41UW+97CK/6IpKQY0j1YYoJkRkfsDTczqClpfbdUZSOebdQIhow+hsjmQL833kpW+a5IviRE9hmGst9g8Zg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788842637; c=relaxed/simple;
-	bh=8vsteFJKg7AwDfREPOwh3IZlj+5W2Opz5jTY9fZZN+A=;
+	s=arc-20240116; t=1788842710; c=relaxed/simple;
+	bh=BhoqelLA0SZQhL3W8H9XntAdaEDx8LHDQuj/4lBDOfc=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZWENDb1A7RhmS5JE6k/Xk5JxXduK5CDfyp83RtXzc0hZqsMxPl1D/tzJ83xnpvxOvCJa5YsOSY9qGOYIlcTX8IXdrfrf+5uO+EN01qk28oY3+iI8uI7yj4ohU15bIkfRtGlUVoIA67HMl7b8iooUQ5QLxJKNeSKJFESBP8ESV08=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b=B4J6m3B7; arc=pass smtp.client-ip=74.125.228.140
+	 To:Cc:Content-Type; b=Nu9/zB25YW4UGEDad06S3czIPjRU0wLHYxnNzty9qVrd4rwXfVxKqbWKFoeyqM2mSoBpOsSSde+J0KSMg+B+K80UYlfn46vqbhqmKN5tiboykCTNFxK/GEIzpQ0MpAFmMrVAf85eQE5ExrTwfrs2J3nEz48rJ9PEe5oPJliZzyY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b=N3YzwNO5; arc=pass smtp.client-ip=74.125.228.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="B4J6m3B7"
-Received: by mail-ej2-f12.google.com with SMTP id a640c23a62f3a-c254c50ff6fso44810966b.2
-        for <linux-raid@vger.kernel.org>; Mon, 07 Sep 2026 21:43:53 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788842632; cv=none;
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="N3YzwNO5"
+Received: by mail-ej2-f12.google.com with SMTP id a640c23a62f3a-c250848d127so47247066b.3
+        for <linux-raid@vger.kernel.org>; Mon, 07 Sep 2026 21:45:08 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788842706; cv=none;
         d=google.com; s=arc-20260327;
-        b=ULl+5kBCcp6x99H0j8vc7m59YwgcA4g0PPQg6Nm9ZZkh8N89EUrLS4auBYMsWf3cpa
-         HUtIhdDAEAEmYh0oG2FffYg/TuOdTU1EYK7wNXGtMplQNG0z4jnuOV2knbpIKm5JMsff
-         FGyykdRCfVPsSt/W4jE8SKoS0eUYzOLcEfQUMOgvvGHvkjBwYP+lpyt+NNIAIQBJ11Ru
-         6N9b8+iA5CwN2ZewEBJisBlxb0+dJhhLQcc05kAHSmtBXq3ecGJ4XAXXbXZ+tZEbba2A
-         mgMaoMUcrqeUD6f6k+YrSTWs3i1njwwwo36mBFYtWZT+l86E8WtVKTQVXl7ZQnP/9lDv
-         6Emg==
+        b=ZP1ODH5QkJP8RY/Nj5pxToRZ6ygbV5ll7HacZXkOfchfMAOrnHzXAb1dmmDCYKeS2t
+         W/DnateqkuJn4bL6ZvUcXmEyRKlx53iUoxWStxR91sv7Np5FBW7yT31Lb5M1s/ScStG+
+         hXy5Rb4nOb/+NIlUDL9Dk+IyP9gxgH/3poUnLrxT4o4lz+druGijoyDLwIgdnCmEhMGT
+         1snDaBpjErQQ8XABb6PnzWJ5tknOoPf4A4Mp702hyPv553mrKd5QyA/YfdR75dUjeQrm
+         qi7ALa/sC7DEu6horCGElBBcFchK9X8+zp+g4/SLvIUgPUo887HQoI+oe/jq3rsulZp5
+         Zbuw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=DPxar+zPdGaJ5HhOGiKhNQM3J7uOCr+14/bCQzXtVzc=;
+        bh=3rHo9ESoHXNd0UzaMM9hjklUasOY59724tGJSkfHmbc=;
         fh=mTP6TkWV1IhQRgyhsEpYqIpiXvhDlZKdHAfNRdOTDjk=;
-        b=M/wSzSiZFM6TXy2C7iBlstCpT2c0buKZxixdFvKX0NvQPhJuDFrMYZMxg/iWe3KfqU
-         2RnLhGIwCIIyaJ58JxvCvBu2xrLw735wzZClFw2W/SnWjKJ7o33vlwh5ebvFaedmr5Eo
-         WL63OP3oBMhCew3BC7hO0BtDeMLFIkBAZywOT/7hz4guooMi7kWRHF6ScRjmiCVGBiip
-         QzifsJPFLPdTNdtf2+Y2MDnO5WyKBIHwMhdOePkmgBc96rOxPUVYxDCs4aFNxDFLsz7a
-         gS/GwqpKza+vUVH4qHeGzpbLvuPTwqLCBXUJANYjf5LofXwjVxseeFlT7f8skFpfeuvb
-         glrw==;
+        b=n+uAz+IFcad5q7kSgV5EH8KuWRAeZRkL4VtAder2jfTlHMkPaRkooHSUx792lMuJU3
+         HTtdItK5YdeWIAxF0JXPqEHU3iobfYMC9YQy+r7F4rMr84aTh5LY0rdE9TKZIBC9KfHh
+         GqZ5iTFPcVe8nBM1Hv7E7Li6+X4XObGW0CLigPtONNIKw5U3qk2dTVyEzkd2UJXiwo0f
+         L+3yLf9PcowPPJEdjhSDOSsm2wDYeto60rF6A9VOd4wVmM2/Ri/zXP+e99ojxgTKSHfi
+         J4l6FpYb0jl8kK+4HkjEaJ6A1o9s6kZelnmQeFdcrXYt9pkmnad39hxBr94LTA1Dsx8d
+         Q1gg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google; t=1788842632; x=1789447432; darn=vger.kernel.org;
+        d=cloud.ionos.com; s=google; t=1788842706; x=1789447506; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=DPxar+zPdGaJ5HhOGiKhNQM3J7uOCr+14/bCQzXtVzc=;
-        b=B4J6m3B7qiZsUy70wdJfdsd5tJh53o8YGZOv8TVszkJONnLqIDthmnplqtJymRlD+U
-         JTvkwKAYOQbnOMEPJr913s1Wb1ijkYb+3ypKVAuiiEEfJxhSj414RZ8sw+hVRWGkr1PD
-         1+5tXaBtRkRjaiPX1u5d7hOilpu7Utx6Vw/JJytGsFhJ2FIm4DQj995x6xzUZgmZFS6n
-         uAw4Y0EmDqX/oxzHsGa7PsSzCRAnV6t0ew9cLg5jkPSCygKCsPBfiVfTjmgK3POwtY41
-         geU2lgzXxLlJsQNJh6+hNfAYeYyy8zG4VkVj80yJchHQQBf3F6Pl2ojOsh7IQfs9rA65
-         AJ+w==
+        bh=3rHo9ESoHXNd0UzaMM9hjklUasOY59724tGJSkfHmbc=;
+        b=N3YzwNO5flD97qORLX9ANqqQe0ujZD/isn6zp/ym5H/ns6HbjEm1ijcgeZlAWbDp01
+         1ZYiP+V2L1roZqbe72ObocYhPTiptXt+CuYeIjX7gOwch13ePYTuPjoH4vtalJlhAXCK
+         glP97H3ROfHBl2LDOt8IyXhEMQaUF+iHwC27iP+uhnhPj6DgDWGtgO7g66Ee5gsvOF9y
+         NciMzNRgsPDqxaMyaNU/lwertycXu9hmHGvI1o6UmKm+L+PEOIyCjCfmIq5BaOotGf2k
+         LtX/MP0TBC7MMnixkzBRc0OongqUkpjuzGhAv/uVLkJVzhmnbn0rKhNfbl0wcq06gatF
+         wrSg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788842632; x=1789447432;
+        d=1e100.net; s=20251104; t=1788842706; x=1789447506;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=DPxar+zPdGaJ5HhOGiKhNQM3J7uOCr+14/bCQzXtVzc=;
-        b=mpObi7NLCt0XOHv9FpQ3l5lIm144IHJZ0ya3ZTdE9fAga87ekAPkNdosiV9oJJKApx
-         kmDDNDLE7EOPmFxNk6Ca5+4EXMW7Gfb0wGhcPeQecd0vfgibA5cnJfDdJgaVQQSbPSc5
-         i5CSsS0XgSlF9D8xgUWbOnFxetQdiouWl8bsTJJsp25piOWBif+VlpH2Q4xsMThatzMQ
-         qFenVKysfHiDksQr5TfGM4IvUuYMOBeeOG5aq/wB9vQmEw9VndiqdObcBMFneGvh/fIj
-         cx+TLsOZaevJ4jr+ZyI/zc53/IASBPck+72iTQFtSqI7fEXbJpuM5oZNSk5fueLJsJHJ
-         3dVg==
-X-Gm-Message-State: AFuF++kEtC20E/lwdIdiQR0HZJHQ6QQOxs48FVaI8lyGqPq9vknSltf0
-	jeaKOVAG02Tql0XsMgDTnQctZqHlDM1EdOt9JyFqyXQXdzNfbNiOle6tbG8VVD/+G3uvZzitctV
-	uLQDuqYYz3FWfD4CW86HC37OrUREi0d8P97nmK/plm2ZvI7sY4865Oig=
-X-Gm-Gg: AYBFou1Bcmkell1DI5vGpB66PB5rUjMKCsrbNyWGa63Znwd3tzvZCEDXxca7Q/Pkx/5
-	heXUIWCeuj3IQ3kY7Q6+4/p9H9FxJY/y9DtbuDP5hbaXqSSJOlUmBK1RNtsVUqeeSQp4zJE4SD5
-	QFaLlyEnzB4cQj/XyGUwR/jIBT6gMzPwXZLMQhmMRRfMxDByY/18C1A5G5UzXhOF2wpXRYwJQ6C
-	Y61hu3guH5iBEODszOEmXDhxga+hGrwPxD09cXu+1lpYmclsIV137ud5650AnHLvpUaeITAkek8
-	YaBdfRW3pR5/h+oGRaE9shUPwHZETtwv7iCwWLnTlMIU8su9J6dCOdizLYzL5Z1+yGoFeo4mMMI
-	dGQ==
-X-Received: by 2002:a17:907:c1b:b0:c15:ccda:26d5 with SMTP id
- a640c23a62f3a-c2612b8e83fmr1061905366b.4.1788842631880; Mon, 07 Sep 2026
- 21:43:51 -0700 (PDT)
+        bh=3rHo9ESoHXNd0UzaMM9hjklUasOY59724tGJSkfHmbc=;
+        b=RQaNGKk8KCrX85FL7rL1JGUyGSHDGpxKCqwh8PydPGVBytA4yHQMr01Yw5YR98IHmc
+         4U/wVJGNq6WRONOZiBH1v0ud0nwPehBeiSeyyl1eroTSguFLG1VYfiykvf5F5BWalTM2
+         HJOCwRjsyaR7QUuA1EUKWRjs7cFRpBZScGPZSWUz+pDCArvZs9mal4Lw/J035M4WZ8Ea
+         /LBG9mzG7gQ4I1oWSVgw1uLRF3xcpbdYdoojOo1LJIaSmJtoS7d4f3i34TGEZ7K+uFM8
+         137fHCf74T+ICEQyEIpCkRDPmEZq5l7dIv6hHB2Hj2sSLidm2qLeEA1sFilC13PotEEJ
+         ZRAg==
+X-Gm-Message-State: AFuF++kSXbXLTjzWZ86cikI38WcI2XSzv/9Kumlxr4hQJOHUr+KE8Jfw
+	KTCchwGudTUZDcIifwq6y0NzkrXGM4yW+foVzQ2wo0aYLkJZjNO9kRNY5M0jbdbfEtmkRDFfAqc
+	oSVVHirlnGp0HynxqcHHNIxSrin0465w6fT6nhQ/S826v/6p5U2AN9/1QFw==
+X-Gm-Gg: AYBFou1RJ1JA2BBaqC5rf1Ufwfbq2GxlLsw1kgZ2IOI8/yPLynaRa1KCgLKNEeAY+tQ
+	liVPbyO3FvPyaNJn9skWxOlq2Ggxhx7P4X1GzkMIXId/CFqu37FLePFKv6az+julxPzh8R44iR9
+	zENFCZu/ruzIUm/dRVMeczMsOcjEH1TuG8bebTnSTQPJHgjIHArVGjc/laYuzYaYu6Rxf7r31Ts
+	s7b+7CZDaN0tG0hX4GDU38ThLfsL4i2royNWRuCuaIWsnXDSoJrgvPmC2FHZYfBgqGRDfflc8nl
+	Hr17CbKpA+YMrRxlJHUHBOYnczottZONT35WEvuNf8Q5ebghlTy2GCZl4lHdFqGm9RucfQbE7oU
+	GPRGJV8jFfJKV
+X-Received: by 2002:a17:907:94d3:b0:c16:1290:11a7 with SMTP id
+ a640c23a62f3a-c2624f0a534mr748736666b.1.1788842706538; Mon, 07 Sep 2026
+ 21:45:06 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -83,174 +83,150 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260907133929.1081540-1-jinpu.wang@ionos.com>
- <20260907133929.1081540-3-jinpu.wang@ionos.com> <20260907135604.280C41F00A3D@smtp.kernel.org>
-In-Reply-To: <20260907135604.280C41F00A3D@smtp.kernel.org>
+ <20260907133929.1081540-7-jinpu.wang@ionos.com> <20260907140031.C781F1F00A3D@smtp.kernel.org>
+In-Reply-To: <20260907140031.C781F1F00A3D@smtp.kernel.org>
 From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date: Tue, 8 Sep 2026 06:43:38 +0200
-X-Gm-Features: AcwNN1WZMVuMvqYmLR--l9kFxspZma9xmdbpzkfECQwjUT0fbxCOEuZeQejf8gs
-Message-ID: <CAMGffEmU4HovbTB=E12kw-HFa2EgKQmf30-cbG8tBvpi0cD5fg@mail.gmail.com>
-Subject: Re: [PATCH 2/6] md: pass a queue_limits down to ->hot_add_disk()
+Date: Tue, 8 Sep 2026 06:44:53 +0200
+X-Gm-Features: AcwNN1UH1ToXGgiVaFhNPIYJsuOQ1CTBIOsRe4-FrEnGV7uGBHzzhpDdaajZFSs
+Message-ID: <CAMGffE=pibzgtDnYSLXP08=PAv0OPth4u4v4juQb6iyvXF5hXQ@mail.gmail.com>
+Subject: Re: [PATCH 6/6] md: take q->limits_lock before locking and suspending
+ the array
 To: sashiko-reviews@lists.linux.dev
 Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Sep 7, 2026 at 3:56=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+On Mon, Sep 7, 2026 at 4:00=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
 >
-> Thank you for your contribution! Sashiko AI review found 3 potential issu=
+> Thank you for your contribution! Sashiko AI review found 2 potential issu=
 e(s) to consider:
 >
 > New issues:
-> - [High] `linear_add()` ignores the new `lim` argument and unconditionall=
-y calls `queue_limits_set()`, which will cause a deadlock.
-
-Will fix in newer version.
+> - [Medium] queue_limits_commit_update() return value is ignored and calle=
+d unconditionally on error paths instead of queue_limits_cancel_update()
 >
+Will fix in newer version
 > Pre-existing issues:
-> - [High] Missing limit check and queue limit stacking for replacement dis=
-ks in `raid1_add_disk()`.
-> - [High] Missing limits update and stacking when hot-adding a disk in `ra=
-id5_add_disk()`.
+> - [High] ABBA deadlock between q->limits_lock and mddev_suspend in level_=
+store()
+
+Yes, there is a plan: thread a queue_limits through ->run() in all
+five personalities so level_store() owns the update, the way
+md_ioctl() now does. I left it out because it's ~40 lines across
+raid0/1/5/10/linear and orthogonal to the deadlock being fixed here.
+I'll post it as a follow-up. Worth noting the hang you describe is
+reachable today without this series, since queue_limits_set() freezes
+the queue while level_store() has the array suspended =E2=80=94 the freeze
+then waits for I/O that mddev->suspended is holding back, no second
+task needed.
 > --
 >
-> commit 37bd7159af00deb7b9d45549d34775a10b587170
+> commit ecb6e260e45c52011fdf103645ad33814409ccd9
 > Author: Jack Wang <jinpu.wang@cloud.ionos.com>
 >
->     md: pass a queue_limits down to ->hot_add_disk()
+> md: take q->limits_lock before locking and suspending the array
 >
->     Adding a leg stacks its queue limits, which mddev_stack_new_rdev() do=
-es
->     by taking q->limits_lock itself.  Callers that hold reconfig_mutex, o=
-r
->     have the array suspended, must not do that: the lock's holder waits f=
-or
->     I/O they are blocking.  They need to own the update instead.
+> This commit updates the block layer limits locking order for MD devices t=
+o
+> prevent a deadlock when writing queue limits attributes during disk opera=
+tions.
+> It takes the limits update before locking and suspending the array, passi=
+ng it
+> down into personality stacks.
 >
->     Give ->hot_add_disk(), remove_and_add_spares() and
->     md_choose_sync_action() a queue_limits argument, and add
->     mddev_stack_rdev_into() to stack into a caller-owned update.  Every
->     caller passes NULL, so no functional change; the users follow.
->
-> > diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
-> > index 73b367b61b873..1f44c2d7db93d 100644
-> > --- a/drivers/md/md-linear.c
-> > +++ b/drivers/md/md-linear.c
-> > @@ -186,7 +186,8 @@ static int linear_run(struct mddev *mddev)
-> >       return ret;
-> >  }
-> >
-> > -static int linear_add(struct mddev *mddev, struct md_rdev *rdev)
-> > +static int linear_add(struct mddev *mddev, struct md_rdev *rdev,
-> > +                   struct queue_limits *lim)
-> >  {
-> >       /* Adding a drive to a linear array allows the array to grow.
-> >        * It is permitted if the new drive has a matching superblock
+> > Two callers still take the lock inside reconfig_mutex, both with the
+> > array suspended: ->start_reshape() from action_store(), which suspends
+> > before flushing sync_work so the update cannot be held across it, and
+> > raid*_run() -> queue_limits_set() from level_store(), which already
+> > hangs on its own because it freezes the queue while suspended.
 >
 > [Severity: High]
-> Does linear_add() miss using the new lim argument?
+> This is a pre-existing issue, but is there a plan to address the ABBA
+> deadlock in level_store()? When the array is suspended and locked, normal
+> I/O parks on the queue usage counter. Concurrently, a udev sysfs write ca=
+n
+> take q->limits_lock and wait in blk_mq_freeze_queue() for the counter to
+> drain, while level_store() holds the suspend lock and waits for
+> q->limits_lock via pers->run() -> queue_limits_set(), causing a system
+> hang.
 >
-> Looking at the body of linear_add(), it unconditionally calls linear_conf=
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -3780,15 +3783,37 @@ rdev_attr_store(struct kobject *kobj, struct at=
+tribute *attr,
+> [ ... ]
+> >       rv =3D suspend ? mddev_suspend_and_lock(mddev) : mddev_lock(mddev=
+);
+> >       if (!rv) {
+> >               if (rdev->mddev =3D=3D NULL)
+> >                       rv =3D -ENODEV;
+> >               else
+> > -                     rv =3D entry->store(rdev, page, length, NULL);
+> > +                     rv =3D entry->store(rdev, page, length, limp);
+> > +             /* apply the limits before the array takes I/O again */
+> > +             if (limp) {
+> > +                     queue_limits_commit_update(q, limp);
+> > +                     limp =3D NULL;
+> > +             }
+>
+> [Severity: Medium]
+> Are we missing a check for the return value of queue_limits_commit_update=
 ()
-> without passing the limits down. In the final state of this patch series,=
- when
-> the caller already holds q->limits_lock, linear_conf() will eventually ca=
+> here? If the block layer rejects the new limits because blk_validate_limi=
+ts()
+> fails, the return value is ignored. This could allow the array to proceed
+> using the new disk with old limits, risking I/O errors if requests exceed
+> the disk's hardware limits.
+>
+> >               suspend ? mddev_unlock_and_resume(mddev) : mddev_unlock(m=
+ddev);
+> >       }
+> >
+> > +     if (limp)
+> > +             queue_limits_commit_update(q, limp);
+> > +
+>
+> [Severity: Medium]
+> Does this code incorrectly call queue_limits_commit_update() unconditiona=
+lly
+> on error paths? If mddev_suspend_and_lock() or mddev_lock() failed, rv wi=
 ll
-> queue_limits_set() which tries to take the lock again. Could this lead to=
- a
-> deadlock on q->limits_lock when hot-adding a disk?
+> be non-zero but limp will still be set. In this situation, the code will
+> commit unchanged limits instead of cancelling them via
+> queue_limits_cancel_update().
 >
 > [ ... ]
-> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> > index f0646fb24371f..dd348b5695d06 100644
-> > --- a/drivers/md/raid1.c
-> > +++ b/drivers/md/raid1.c
-> > @@ -1898,7 +1898,8 @@ static bool raid1_remove_conf(struct r1conf *conf=
-, int disk)
-> >       return true;
-> >  }
+> > @@ -8618,6 +8673,9 @@ static int md_ioctl(struct block_device *bdev, bl=
+k_mode_t mode,
+> >           err !=3D -EINVAL)
+> >               mddev->hold_active =3D 0;
 > >
-> > -static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
-> > +static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev,
-> > +                       struct queue_limits *lim)
-> >  {
-> >       struct r1conf *conf =3D mddev->private;
-> >       int err =3D -EEXIST;
-> > @@ -1923,7 +1924,10 @@ static int raid1_add_disk(struct mddev *mddev, s=
-truct md_rdev *rdev)
-> >       for (mirror =3D first; mirror <=3D last; mirror++) {
-> >               p =3D conf->mirrors + mirror;
-> >               if (!p->rdev) {
-> > -                     err =3D mddev_stack_new_rdev(mddev, rdev);
-> > +                     if (lim)
-> > +                             err =3D mddev_stack_rdev_into(mddev, rdev=
-, lim);
-> > +                     else
-> > +                             err =3D mddev_stack_new_rdev(mddev, rdev)=
-;
-> >                       if (err)
-> >                               return err;
+> > +     if (limp)
+> > +             queue_limits_commit_update(q, limp);
+> > +
 >
-> [Severity: High]
-> This is a pre-existing issue, but I noticed that further down in
-> raid1_add_disk(), we add a replacement disk but omit any limit checks:
->
->         if (err && repl_slot >=3D 0) {
->                 /* Add this device as a replacement */
->                 clear_bit(In_sync, &rdev->flags);
->                 set_bit(Replacement, &rdev->flags);
->                 raid1_add_conf(conf, rdev, repl_slot, true);
->                 err =3D 0;
->                 conf->fullsync =3D 1;
->         }
->
-> Since mddev_stack_new_rdev() or mddev_stack_rdev_into() is skipped for th=
-is
-> path, could this allow a replacement disk with incompatible queue limits
-> (such as differing integrity profiles or larger logical block sizes) to j=
-oin
-> the array, resulting in data corruption or I/O failures?
+> [Severity: Medium]
+> Similar to the rdev_attr_store() issue above, should this use
+> queue_limits_cancel_update() on error paths? If an inner ioctl command
+> fails, this will erroneously commit the unchanged limits rather than
+> cancelling the update.
 >
 > [ ... ]
-> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index b91545ce090de..0ec555ada64a0 100644
-> > --- a/drivers/md/raid5.c
-> > +++ b/drivers/md/raid5.c
-> > @@ -8441,7 +8441,8 @@ static int raid5_remove_disk(struct mddev *mddev,=
- struct md_rdev *rdev)
-> >       return err;
-> >  }
-> >
-> > -static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev)
-> > +static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev,
-> > +                       struct queue_limits *lim)
-> >  {
-> >       struct r5conf *conf =3D mddev->private;
-> >       int ret, err =3D -EEXIST;
+> > @@ -10419,6 +10497,8 @@ static void md_start_sync(struct work_struct *w=
+s)
+> >        *     https://bugzilla.kernel.org/show_bug.cgi?id=3D218200
+> >        * Therefore, use __mddev_resume(mddev, false).
+> >        */
+> > +     if (limp)
+> > +             queue_limits_commit_update(q, limp);
 >
-> [Severity: High]
-> This isn't a bug introduced by this patch, but I noticed that raid5_add_d=
-isk()
-> does not stack or check queue limits at all when hot-adding a disk:
->
->         for (disk =3D first; disk <=3D last; disk++) {
->                 p =3D conf->disks + disk;
->                 if (p->rdev =3D=3D NULL) {
->                         clear_bit(In_sync, &rdev->flags);
->                         rdev->raid_disk =3D disk;
->                         if (rdev->saved_raid_disk !=3D disk)
->                                 conf->fullsync =3D 1;
->                         WRITE_ONCE(p->rdev, rdev);
->
->                         err =3D log_modify(conf, rdev, true);
->
->                         goto out;
->                 }
->         }
->
-> Because mddev_stack_new_rdev() or mddev_stack_rdev_into() are not called
-> here, and the new lim argument is ignored, could this allow disks with
-> incompatible limits to be successfully added to the array?
+> [Severity: Medium]
+> Does this safely handle limit validation failures when adding spares? The
+> return value is ignored, which could leave the array with outdated limits=
+ if
+> the limits fail to stack correctly.
 >
 > --
 > Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260907133929.10=
-81540-1-jinpu.wang@ionos.com?part=3D2
+81540-1-jinpu.wang@ionos.com?part=3D6
