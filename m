@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBCA6581225;
-	Wed,  9 Sep 2026 14:18:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72DA05867E8;
+	Wed,  9 Sep 2026 14:23:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788963519; cv=none; b=BZjI6AXjnGFse/t1i/8OwjHiuTAs1He6DtluQKUKOwyQiQH3wJPk66egUlj16Iu5NS2bNl3uqJ0uFwjVGB5bnM8CA6qNod5iZ6+6BIP4N3fTZmaC446E5/aLiziOC+o8dCpR/YP6+ccJupgJtnj/rAzEIU29IRlkjFjwdQBWUWM=
+	t=1788963803; cv=none; b=g6N4jo2G3B7PK+uci4R9bfeqqxHuw8Yg80vTTNrFZz/Tx3oEHPeFssEmebfBpoyla6sSE3u0wbc5/PDU8d39ZHv9eHvTP8UsDxz4xrRpVKIuug4/FRtNRe4GUP4dmchHcAaA9S/xmMwkG/J2gEa2j2nBtkXm/Bg8tjs+PzvPY+k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788963519; c=relaxed/simple;
-	bh=KZQEJH1+p27ju92W7ORD1ObpdeNCRB/p3Fsm+EqdAdA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WauvejUfinSnX4ocjUnvUjWqSPjFIqwOH8yMLnw861fDDg8pt3tyv6d2kAvYs22YSp2iiap/Ah/CbFALi3BXG1MJ0G+M1fVjEon/mulAn+UYBbvuQO6Kl8GabUcoADu6Ac6SxqN89CApetQN84xXvYP/11VCXpBC8H7SkeNt3t8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jBV9vu/+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788963803; c=relaxed/simple;
+	bh=dy01aDxufwelqexVSCSUVNLfdhvIcd/QeRZKDOC1JFE=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=gLaQJCKtjSw/7lXkVH2iWkdub4dqDfXzIOtNRfsqEF1RzqyBRChB7xX/cLHP3fJt1TrzLOGHGHbgQdNnmQ8ZRY2M8qfxCOSl9orCkyDlkAbWL4/daF/WD7lu6z7s1Oji/IKqNTkoqE5Dbz1VMhaIUdiCpaFB+w6hqQDxTJiC61I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IQiuCrQG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jBV9vu/+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51FC61F00AC4;
-	Wed,  9 Sep 2026 14:18:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IQiuCrQG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D312F1F00A3A;
+	Wed,  9 Sep 2026 14:23:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788963518;
-	bh=X08fjZM7RBobs8taxaav9ECpncRKwsgdKENAu88U/cw=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=jBV9vu/+PUjSA8EfGZJHnTbzSojvvSdorQ5pRUDYPv/81JFP66GR/g5iYBWc1zq4e
-	 dOqm35fhJ3mhVN9bmhWeDeqC0pQ0ME2zXBkwXZy9PVITMLv5J623/DdYfiHBrtQKBb
-	 QqJKfqgW+oqcg2G5748bn/irz3p84Sap6TZn+9NFiXfS+Vf0NL6i5li10zDbJ76N3Q
-	 UW8LQRt+XvnbIZOFYoxPLFJ3jhjG5aU/1ukQ+cZ0/iCiVymnaMT4VgsOZfEyLsfOWb
-	 0f9fmig/kwTnVdp3VgSjvoAR3qRVdt+CoUdcQNzZtlSRGxDZnFPrFVR3eX0XZx3dG+
-	 Z274TGHNWTqvw==
-Message-ID: <afc196d8-8e17-4cdd-a6be-94b8816f2a57@kernel.org>
-Date: Wed, 9 Sep 2026 16:18:26 +0200
+	s=k20260515; t=1788963802;
+	bh=i6W2FGwXgxwv6NRv5ZRSdh10FfBE7WUHV7rXrybSwJ8=;
+	h=Date:Subject:From:To:Cc:References:In-Reply-To;
+	b=IQiuCrQGfz/BNM0KjlCtC6onVCVz8KRUfEkYfYaus7vqqG27w98ZjrAnsKsKOzPHt
+	 4fH96H8AwHsQOjwGzabUEx27K1X7KBLc4EqiSufWnxQ46vitgzJfGTBy28c7C4WAjv
+	 i9byds1do2aeLwOEdHAyfRQyKVWihBqcTTdDplc+OYOi9U7UlUaRe7tayrhF5DOS8W
+	 563z85pdqkMIzG9Mv0VEn2tXd6vjaelbCchqReVT/whqJRFnb23yL6aBQ9Sk1FahoC
+	 D3RCMc6ohPHre8ZPzLd+XuEb8mhS4HWwD7CVFSHJO7Yn6OsdQJPwWo5EIAGHMLllkJ
+	 bM9QojvCuIZvA==
+Message-ID: <fb37c097-4c12-4eb8-9739-e3513127eb35@kernel.org>
+Date: Wed, 9 Sep 2026 16:23:13 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -37,6 +37,7 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v3 12/14] treewide: replace PagePrivate() with
  page_private()
+From: "David Hildenbrand (Arm)" <david@kernel.org>
 To: Zi Yan <ziy@nvidia.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  Muchun Song <muchun.song@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>,
@@ -58,7 +59,7 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  ceph-devel@vger.kernel.org
 References: <20260907-remove-pg_private-v3-0-6ae22f9d9272@nvidia.com>
  <20260907-remove-pg_private-v3-12-6ae22f9d9272@nvidia.com>
-From: "David Hildenbrand (Arm)" <david@kernel.org>
+ <afc196d8-8e17-4cdd-a6be-94b8816f2a57@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
  xsFNBFXLn5EBEAC+zYvAFJxCBY9Tr1xZgcESmxVNI/0ffzE/ZQOiHJl6mGkmA1R7/uUpiCjJ
@@ -104,47 +105,28 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20260907-remove-pg_private-v3-12-6ae22f9d9272@nvidia.com>
+In-Reply-To: <afc196d8-8e17-4cdd-a6be-94b8816f2a57@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 9/8/26 04:56, Zi Yan wrote:
-> PG_private is going to be removed and its check is replaced by checking
-> page->private != NULL.
+On 9/9/26 16:18, David Hildenbrand (Arm) wrote:
+> On 9/8/26 04:56, Zi Yan wrote:
+>> PG_private is going to be removed and its check is replaced by checking
+>> page->private != NULL.
+>>
 > 
+> You should likely clarify here that, for these users (the pages they deal with),
+> PG_private is set if and only if page->private != NULL. Consequently, there is
+> no functional change.
 
-You should likely clarify here that, for these users (the pages they deal with),
-PG_private is set if and only if page->private != NULL. Consequently, there is
-no functional change.
+Ah, in previous patch:
 
-> Replace page_buffers() with page_private() and delete page_buffers(),
-> since only two users left and both can be converted to use page_private().
-> 
-[...]
++static __always_inline int PagePrivate(const struct page *page)
++{
++	return !!page->private;
++}
 
-> diff --git a/fs/ceph/addr.c b/fs/ceph/addr.c
-> index 657c2cb0f8811..fad17df1d5082 100644
-> --- a/fs/ceph/addr.c
-> +++ b/fs/ceph/addr.c
-> @@ -70,9 +70,7 @@ static int ceph_netfs_check_write_begin(struct file *file, loff_t pos, unsigned
->  
->  static inline struct ceph_snap_context *page_snap_context(struct page *page)
->  {
-> -	if (PagePrivate(page))
-> -		return (void *)page->private;
-> -	return NULL;
-> +	return (void *)page->private;
->  }
-
-I'd even split this up into 2 (or even 3) patches:
-
-1) Remove PagePrivate usage in ceph
-
-2) Remove PagePrivate usage in md
-
-3) Inline page_buffers() and remove it
-
-Acked-by: David Hildenbrand (Arm) <david@kernel.org>
+So this is not about PG_private *at all* :) Best to clarify that.
 
 -- 
 Cheers,
