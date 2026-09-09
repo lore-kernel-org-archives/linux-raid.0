@@ -1,157 +1,126 @@
-Received: from mail-ed2-f12.google.com (mail-ed2-f12.google.com [74.125.228.76])
+Received: from mail-ot1-f72.google.com (mail-ot1-f72.google.com [209.85.210.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73E33526A8B
-	for <linux-raid@vger.kernel.org>; Wed,  9 Sep 2026 10:36:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.76
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788950167; cv=pass; b=Cku/WRtSqvO6570ZElUpD3UIX35PZ6a2RgbNlD4ERDgUz/1uz/M+xQEmUyfXYLacSYBlK4ycVGAIXAoBMDWFcdcZPjQAoXUV2RBrSxXkv4F7oyDTopeOTUHjzpTLfdNLCQB06NJfhzT9bFVgSI+X/hMUit6c0Zs2FzfPQe+0R0I=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788950167; c=relaxed/simple;
-	bh=jiUSKPWQHUb8wgWpAcCdYB6GZGkWirt+xiv0f1KbsrE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=JbECcLnz0UnrvuyFZay6pv+Ma9OZP+I5FcXcOsJStoSc78APZhQXLvw8JPB+8bNlYY+NwiBJuAUdphfvmHeM/TGFzw+7v6ztyr2eEghH2jPV9ene/8c7DoKCNlrIkBeuTa+x4u1vo0/jhTlAs5RNE8EFwY1FlbrBaZEPY3WV02I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b=K2aGm/dj; arc=pass smtp.client-ip=74.125.228.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="K2aGm/dj"
-Received: by mail-ed2-f12.google.com with SMTP id 4fb4d7f45d1cf-6a5f3317027so434316a12.3
-        for <linux-raid@vger.kernel.org>; Wed, 09 Sep 2026 03:36:03 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788950160; cv=none;
-        d=google.com; s=arc-20260327;
-        b=cOOVah4JcgckzQjk8SOBtQWqG3D6hVGf28JAeHo7YPoRCF7JYkLjlJbL7hfFStHILG
-         949XUVjT+jqPu39UsPaItJrhSxz7/pLTHfrYs/I4yj4NVl4zwA6+s+IV1h/fuN8KAVfu
-         EBT531JAvQKFGexf6nLT9AknDg67EVm8h5pac4EJzhc2zuDzQFHtyjsQZhoO088P545M
-         Ct/9h7nyoihW2Q6yG4xwjWOt98QL+JH4l1oCpkQrQPwpBbL6dXDnWkxotH+SPYD0rxmO
-         pn0hZUlSo8y+AXmhhYWpHphxNWKKyNjjlGp6sLjJCgFnABoI0sP1YOMhVguw7NW+sQx/
-         va4A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=PiYK9hlMysoO7QWt3It5QIF3PriSPcy84exsAliRPN0=;
-        fh=wiFvfBxQ/5+Joy2ttka30WBYXXaVaPVDRhIP82JtkRQ=;
-        b=IPBIWf7N8Vuk/elD2eWNdcEuRrYJnfJi5RKsdiNCjQx5nJNU73EUht97oLNVWbd2NC
-         Prr+CVSfhfKE2DRboNOPYO3tPUKl58qAID9U+wa/dBk7LSCD+btSZprDZKk4TmV+hNcB
-         bu9lYXtEwTC8P752rOfNvf6+9r76kGJPk18j/CepzBCwnDE2nT7K3smUYUZF6Bsi2iwZ
-         Nd7X4Wbp4k8cNkCydbgJjfUMWdV8+Is8Wbp0tMKEd3lVu6bpy1g5DUmsgLn8RUxlarQQ
-         /PaaBO1ssyRDeKljjWKmw+18Bubc+m6WltC+MiX9Yrd732z5vVH4ikv7P/TrKkrxRu4E
-         1Rxw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google; t=1788950160; x=1789554960; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=PiYK9hlMysoO7QWt3It5QIF3PriSPcy84exsAliRPN0=;
-        b=K2aGm/djq+KyUsHQ4ltRqRnnwRxbM+WSPbrCCiChCKHH8CK9xQRr5L8zYzAx9MDth/
-         eLdOWdXEEFTSl4XzBbPGRdg7h4rPEntreCLR8gABJ+LOjQL6XH94d2sAs7lNYaJVFNeI
-         ar1yA8r69P80gdUrOcNhlpDxCirdhcPjrZF3ESbb0a30af1hw6C3/fWYm9RVcfZE2QYT
-         QZe1WqC+jATZE5bICQ6sfIspkNlFJ31p3cn95IPSL9Ne3kx3mdFIWUJ5kXaN/eYouaIo
-         hzqynPwTDpTcuJSaW9uSWpqvq6asfj/PuyNCsjfb3ghaALHcNa8C2JMbanUeJF2scucx
-         poIw==
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD5C0533582
+	for <linux-raid@vger.kernel.org>; Wed,  9 Sep 2026 11:27:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.72
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788953250; cv=none; b=dZ44sR7+qALeQZNHgzoPzSo0Lzu3pS0DgzT9SELrB2eEzu5UARkXLXYx37IaAfoDBIprINjP2um7F3M9LQbBVnrdH5BXJn5zNtxBIKSHp8+xk+gomJd4UX/vRxnjgD8GN1LCuw+j4wal1zcmg4S+Bf+8zsGatdkZovYgFa5QgU0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788953250; c=relaxed/simple;
+	bh=w9ltMKPC7FxIL2LdZjYaFQY9LYuMDWYBPJFCSHRx4Es=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=F+0a4yhRefG2WV5g/sen4jOr/rCiBYRPw3RCDqLw7DgU5kEbbSAqYKXnqYmMT+Y4gcHmG2O7tRL//DXYndKjNSE+lHJCtaRpB/PhQqiZG4N1iPM7Q6YSOzsDss9Sd5tdhMacJ6LBe4/wLye4PCQcKiKZhhSVvkjX+XMxyhiV0Q8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.210.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-ot1-f72.google.com with SMTP id 46e09a7af769-7eb6429750eso6576166a34.0
+        for <linux-raid@vger.kernel.org>; Wed, 09 Sep 2026 04:27:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788950160; x=1789554960;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=PiYK9hlMysoO7QWt3It5QIF3PriSPcy84exsAliRPN0=;
-        b=kuAI+HBBVRT2Eo9GcEN3ki0e/Z9Q5deJaXRjauIEqbpPfPv1X5jMXDKO+oSxdCdKAD
-         W6kDxgP45UW65Ou4T81jYdL484mjSGxqbSffA5it4A748OLQimUpSP6Q26dEzUIS6Fuv
-         tTaO1yL/O04G2TeKB+jHhVnEoxIUf8eyYZMSS9OGcHR65HHcwQOA9ZAhWckAeWuz+JDu
-         lk4TLCqTevTaDsQqwH+vHOW1NkSRIMCBz8ZdYn6LL1hNOyWlV9fS8UXbYvAlcESCmOii
-         fqDH6biFagmVe5VCCzOf5BxmwKhjdB+CVlJNxJD6qrbfr7mxCuQCH1YkqVKmtz4DO35y
-         ngYg==
-X-Forwarded-Encrypted: i=1; AKwUvBw0RbDmTsf1facwLDPVgtDxAwaZkqwKxPhYVIyqFLN/M484poXpXIzhokYLLIJ5pJwgP76xtOZtoPpq@vger.kernel.org
-X-Gm-Message-State: AFuF++nBmzdbMKaJK6OQ1RLj/WlQ+T0pDJwzPjQr4vvZITz5Zeheyf5i
-	qSx0Cr1Sa4oFYh4fhnYk2kJ0Tzi/U3+588wXnkPVfozLVNxbNcoZulJ/gPSkuMQjTl8VmRZZGsh
-	am57eCmBWMp34kpzd2WMZnUB7GZU9Mffb5DaEY8tJO+HCpx6bsdSEMK/6uw==
-X-Gm-Gg: AYBFou3eWiPjfFdowtlQt1duIWIw5Gq/2gCpzcC0W1R65k3fxHMlQP0h5JG11BOctvY
-	e9Y7oSuvuuNua/O8X02kLoNEiHVwPukAhGLD7JkYT9V992BBK54edIbWu88madlHDcOumaiiFW6
-	qZWqjOZqgjccJ99K8Z345+SvrqGEoeC7JKnfcauClPul5MN03ubcBXR5hZfazEGagsFUUEnZtCf
-	NAUQpEJhJktAR5qYGG3dFbgDpiTAxV/J5o09ctRI9ux0ZqycMql5Kk77Lk7WC94qOaAC1B15zRz
-	Bu3uOZ10GeRTj+gHaNZ7b+UgyKDDJWSZNas+YrDeeVTtovabTQ2ezv4=
-X-Received: by 2002:a17:907:940d:b0:c25:3ccf:bd87 with SMTP id
- a640c23a62f3a-c2624d27f76mr997745066b.0.1788950160219; Wed, 09 Sep 2026
- 03:36:00 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1788953248; x=1789558048;
+        h=content-type:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=f1CvJn7NYjTtkQkEwkFRULKmMA7w0g21i7peffLilg8=;
+        b=E2WGSVatJXvsLWHTK9AFPPYXhLwIHapClh2VGaAqW5zqJiAh2ii6gXoYKP2hc7Mm5J
+         nnhnGNvQHUHyq2ufuwexkmwJrLo/D/i67ejsxYwdBBLUw8wqNoyWc3jhdJzcEyjSVmS7
+         CoSX9QJkh8nSDzJwZYpSrpHZw7dc1QmgjvSUDopyYKBrtTVWQrucGQcmsCAKaOugB7+5
+         OAI5G42HBRVs+8HNfdtKB2QWJQLyEzth2A7jNYDL+eBvHr1mqZ3YaCJwn5TquTiMu2Qj
+         6ZSTULQqs9hfeQQGVECkwq1lL7RU4PMzTupD01OSTN5/bs/sTzsuxwCGC+DQgFoRrOKF
+         znRw==
+X-Forwarded-Encrypted: i=1; AKwUvBzUWK4GiaET15g8EEmscSq1CqtPDhKdo9t/Xz9aU41V+TFgBQvx1tob4Yjmhya6vdQwNGygTDnrylEs@vger.kernel.org
+X-Gm-Message-State: AFuF++lJ6zsZFvfIm9jDV6MAzdyQlnmo/JAJ7lBO2XrVQA/DBqxpA9+b
+	xloBYWdx7R5UmBTCpH9bMLY48Jql2ijX9oztCimA8FH6+yGmRGpVjl6o49c8CzOQLHM3t7dP0n2
+	VfAaLQPQx2vr73Jj1/kcrMR6RRfcmCvfWo9HyL70igYmT00vbo+B6VlTWkqA=
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260907133929.1081540-1-jinpu.wang@ionos.com>
- <20260907133929.1081540-2-jinpu.wang@ionos.com> <20260909062923.GB29874@lst.de>
-In-Reply-To: <20260909062923.GB29874@lst.de>
-From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date: Wed, 9 Sep 2026 12:35:49 +0200
-X-Gm-Features: AcwNN1X-2oF0MYpARsjLKHXLdD4JaJtQpG0Ei6Y9Q2CxFNEsVa4yPYfrtiGyUCo
-Message-ID: <CAMGffEngy4GGR0ScFYRAUwsGrnO17gL2HRJE3wBX8tHBaq5SNg@mail.gmail.com>
-Subject: Re: [PATCH 1/6] block: add queue_limits_start_update_trylock()
-To: Christoph Hellwig <hch@lst.de>
-Cc: Nilay Shroff <nilay@linux.ibm.com>, abd.masalkhi@gmail.com, 
-	linux-raid <linux-raid@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, 
-	Song Liu <song@kernel.org>, Jens Axboe <axboe@kernel.dk>, Damien Le Moal <dlemoal@kernel.org>, 
-	Yu Kuai <yukuai@fygo.io>, tom.leiming@gmail.com
+X-Received: by 2002:a05:6820:200f:b0:6b9:7d9e:5708 with SMTP id
+ 006d021491bc7-6bdc949e3b9mr5591427eaf.3.1788953247713; Wed, 09 Sep 2026
+ 04:27:27 -0700 (PDT)
+Date: Wed, 09 Sep 2026 04:27:27 -0700
+In-Reply-To: <6aa12989.f2639fcc.29487d.0000.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6aa1429f.6e6c5f9e.28f11f.0024.GAE@google.com>
+Subject: Re: [syzbot] [raid?] kernel BUG in raid5_run
+From: syzbot <syzbot+1f5a7de91d547763f4c8@syzkaller.appspotmail.com>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
+	magiclinan@didiglobal.com, song@kernel.org, syzkaller-bugs@googlegroups.com, 
+	xiao@kernel.org, yukuai@fnnas.com, yukuai@fygo.io
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Sep 9, 2026 at 8:29=E2=80=AFAM Christoph Hellwig <hch@lst.de> wrote=
-:
->
-> On Mon, Sep 07, 2026 at 03:39:24PM +0200, Jack Wang wrote:
-> > From: Jack Wang <jinpu.wang@cloud.ionos.com>
-> >
-> > Some callers must not wait for q->limits_lock, because they hold
-> > something the current holder waits for.  md is one: its
-> > check_sb_changes() runs with reconfig_mutex held, while a
-> > queue_attr_store() holding limits_lock waits in blk_mq_freeze_queue()
-> > for I/O that can be waiting for a superblock update needing that mutex.
-> >
-> > Add a trylock variant of queue_limits_start_update() for them.
->
-> I don't think this is a good idea, please fix the lock ordering
-> instead.
-Fair enough, I will drop the trylock.
+syzbot has found a reproducer for the following issue on:
 
-The ordering fix is the rest of the series: the callers that add a new
-leg take q->limits_lock before reconfig_mutex and the suspend.
->
-> > Assisted-by: Claude:claude-opus-5
->
-> But if not please try to come up with helpers like this based on
-> your own.  We don't really need this amount of AI slop.
+HEAD commit:    5acbae5f7eb3 Merge tag 'powerpc-7.3-2' of git://git.kernel..
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+console output: https://syzkaller.appspot.com/x/log.txt?x=1574d749580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=8c5c3949d762a91f
+dashboard link: https://syzkaller.appspot.com/bug?extid=1f5a7de91d547763f4c8
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1774d749580000
 
-Noted.
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+1f5a7de91d547763f4c8@syzkaller.appspotmail.com
 
-Thanks!
->
-> > + * Like queue_limits_start_update(), but fails instead of waiting when=
- another
-> > + * update is in flight.  For callers that must not block on q->limits_=
-lock
-> > + * because they hold something its current owner is waiting for.
-> > + *
-> > + * Context: process context.
-> > + */
-> > +static inline bool
-> > +queue_limits_start_update_trylock(struct request_queue *q,
-> > +                               struct queue_limits *lim)
-> > +     __cond_acquires(true, &q->limits_lock)
-> > +{
-> > +     if (!mutex_trylock(&q->limits_lock))
-> > +             return false;
-> > +
-> > +     *lim =3D q->limits;
-> > +
-> > +     return true;
-> > +}
-> > +
-> >  int queue_limits_commit_update_frozen(struct request_queue *q,
-> >               struct queue_limits *lim) __releases(&q->limits_lock);
-> >  int queue_limits_commit_update(struct request_queue *q,
-> > --
-> > 2.43.0
-> ---end quoted text---
+------------[ cut here ]------------
+kernel BUG at drivers/md/raid5.c:8117!
+Oops: invalid opcode: 0000 [#1] SMP KASAN NOPTI
+CPU: 2 UID: 0 PID: 6026 Comm: syz-executor387 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+RIP: 0010:raid5_run+0x11a7/0x1670 drivers/md/raid5.c:8117
+Code: 03 00 00 41 8b ae d0 01 00 00 31 ff 89 ee e8 f0 f6 82 f9 48 c7 44 24 10 00 00 00 00 85 ed 0f 84 44 f4 ff ff e8 6a fc 82 f9 90 <0f> 0b e8 62 fc 82 f9 49 8d 86 e0 00 00 00 48 89 c2 48 89 44 24 60
+RSP: 0018:ffffc90003c879f8 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+RDX: ffff88802bdb2580 RSI: ffffffff888914a6 RDI: ffff88802bdb2580
+RBP: 0000000000000001 R08: 0000000000000005 R09: 0000000000000000
+R10: 0000000000000001 R11: 0000000000000001 R12: 0000000000000008
+R13: 0000000000000000 R14: ffff88802cfb0000 R15: ffff88802cfb0028
+FS:  00005555884d2400(0000) GS:ffff8880d5d5d000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fff95c66058 CR3: 000000005631b000 CR4: 0000000000352ef0
+Call Trace:
+ <TASK>
+ md_run+0xc2f/0x2510 drivers/md/md.c:6779
+ do_md_run+0x36/0x660 drivers/md/md.c:6880
+ array_state_store+0x9c5/0xcf0 drivers/md/md.c:4765
+ md_attr_store+0x1c5/0x330 drivers/md/md.c:6158
+ sysfs_kf_write+0xf2/0x150 fs/sysfs/file.c:145
+ kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345
+ new_sync_write fs/read_write.c:595 [inline]
+ vfs_write+0x6af/0x1050 fs/read_write.c:687
+ ksys_write+0x12a/0x250 fs/read_write.c:739
+ do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+ do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7fe6b68b8a77
+Code: 48 89 fa 4c 89 df e8 98 1d 00 00 8b 93 08 03 00 00 59 5e 48 83 f8 fc 74 1a 5b c3 0f 1f 84 00 00 00 00 00 48 8b 44 24 10 0f 05 <5b> c3 0f 1f 80 00 00 00 00 83 e2 39 83 fa 08 75 de e8 23 ff ff ff
+RSP: 002b:00007ffd56632d40 EFLAGS: 00000202 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00005555884d2400 RCX: 00007fe6b68b8a77
+RDX: 0000000000000006 RSI: 00007fe6b68f21aa RDI: 0000000000000003
+RBP: 0000000000000032 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000202 R12: 00007fe6b68f21aa
+R13: 00007fe6b68f4500 R14: 0000000000000002 R15: 00007fe6b68f44b0
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:raid5_run+0x11a7/0x1670 drivers/md/raid5.c:8117
+Code: 03 00 00 41 8b ae d0 01 00 00 31 ff 89 ee e8 f0 f6 82 f9 48 c7 44 24 10 00 00 00 00 85 ed 0f 84 44 f4 ff ff e8 6a fc 82 f9 90 <0f> 0b e8 62 fc 82 f9 49 8d 86 e0 00 00 00 48 89 c2 48 89 44 24 60
+RSP: 0018:ffffc90003c879f8 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+RDX: ffff88802bdb2580 RSI: ffffffff888914a6 RDI: ffff88802bdb2580
+RBP: 0000000000000001 R08: 0000000000000005 R09: 0000000000000000
+R10: 0000000000000001 R11: 0000000000000001 R12: 0000000000000008
+R13: 0000000000000000 R14: ffff88802cfb0000 R15: ffff88802cfb0028
+FS:  00005555884d2400(0000) GS:ffff8880d5d5d000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fff95c66058 CR3: 000000005631b000 CR4: 0000000000352ef0
+
+
+---
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
