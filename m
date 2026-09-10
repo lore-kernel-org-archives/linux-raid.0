@@ -1,168 +1,158 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5017F367B7E
-	for <linux-raid@vger.kernel.org>; Thu, 10 Sep 2026 08:51:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DFAD35C69A
+	for <linux-raid@vger.kernel.org>; Thu, 10 Sep 2026 13:11:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789030279; cv=none; b=UH2hPtRoxSXOvuTbIaCUk6kDtcI9ORqKeemMSS/lfJ1hIpVjsZer9B22OYZZY7J7ugTU9HxibcJfsfiv17gwRJXHCN7hhHwzQsqS4rkPbjZuVYvuxgW0JM4e2vc6eWOgxYJwtxAZ5SSgHbhpTxC0at4H9tac08eth+5ayQnjUtw=
+	t=1789045885; cv=none; b=jdlLA66aXcW/38jKiYMDQxzZGLyzx5AxgVJRSfpFGYZHMQra8YpzIjb5DfQEoNVaVzNX5KOdD3x9kWFz5N77oiqFtkOsgQI2IkvZhrbd0aOMmsZz4NznHQqchExnPgG28+HKH1qYWhaSKi6AyzTXnzSE82eF6OtNG+M8V8FiG4A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789030279; c=relaxed/simple;
-	bh=FaUTFTsgIFG+GxNRoYtuTZg3OMhkevxpYmDEzjktRho=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=rc9RmLRoLJoFQ8xhpvVdOOuUR0bdVW/YfXOprtHUgcbQI1g4eA60ZMgk9R8JDWLkpIUN6t3mqH0GRWe4rDADuhBi6xdoTtCYyaDDkgR+Jih+C48cq14vQkPTPrS1fMfc8NVMgBLkk4vLt8zhVtiozGwdUvRyId4SyO5UARHLITg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TSSKaI0R; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789045885; c=relaxed/simple;
+	bh=IasFbIhvEWdxx3Mayak5dNwTr943NOuE+pZeN4b7SfQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XlbHsE4YUX4YWm7a34vho/lWUR3dMuhmWRZ9X0ANx3JwAX62U84NJuvjUAa1Zt+vBJl67vRYicFdZtf1ZEw/5/cPRDyllhRKyDrOh/Eh3QIsBU7HsT+lfXwYJYNAhZ2GhqFuufLmTyScJzaYg4rBbav1wuiHzc5X/n7+Nt5H4Rk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HEgnS2sw; arc=none smtp.client-ip=209.85.215.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TSSKaI0R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E46F11F00893;
-	Thu, 10 Sep 2026 08:51:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789030273;
-	bh=F81dq5sOLM7MLbb/tSrXAX4DQZ9ppQBiLQpGoyNth7o=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TSSKaI0R+oDZdCgPs7zjuLhS4z/xa4phSzA3w8Qf0/uQGdOeWmVKIcHdU5BDfa/6p
-	 cbYe5HM7HAlnGVJfZp1woeGpC76M1p9d8gNmMFCyYKS/YJbo9kepv6frsT8gIFn1es
-	 cb9J8A661O4e9A81bQVc6yKZapq6aFLcENZrtS2D6Tn5O24HGAjSjBlg7O3QYkSbff
-	 rL7Hqpm1jh/KeKbz3S6CIn0ivBs5bUtNG/7qSNl8BFLjMxCLfr3IxkhyBYuV9KqNHF
-	 bzhSzrXhBWSc67kQgY3BeFEMoOpOZ7tuf90hgVjBJPPmxAostEQpNozuyOcOm/q7Y+
-	 GMlIgrKwokKdQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 5/8] md: take q->limits_lock before locking and
- suspending the array
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jack Wang" <jinpu.wang@ionos.com>
-Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20260910081114.1605746-6-jinpu.wang@ionos.com>
-References: <20260910081114.1605746-1-jinpu.wang@ionos.com>
- <20260910081114.1605746-6-jinpu.wang@ionos.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 10 Sep 2026 08:51:12 +0000
-Message-Id: <20260910085112.E46F11F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HEgnS2sw"
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-cbee846deecso999043a12.1
+        for <linux-raid@vger.kernel.org>; Thu, 10 Sep 2026 06:11:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789045884; x=1789650684; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=MXrl1WeDEyODhGv9M/Bbf3QLYXjOYW/oTcQCSReevjE=;
+        b=HEgnS2swIIVL8OSy+vtGsJrQ1lr2sd3i3sdjJVrza4DCvco2Tzv+QQUFiOW/amMsz3
+         C1U3PsFfYWv8Quli2tzlghd7hfiJKWkuqZW3E1n/r1q4cPVQJDthNkwInJsrTeyumxEa
+         NNO+zjVzhpp6L4ObGjazyZTBIcVul6VwycJG1MJLhvLBh1MJN8GCvov8HPHby8ceZztk
+         FFL2yeUP3KlRqyL6nrEUOswXnmCHOEyYdqQ7St3G5UWcY6eV8Rg1koYZjDoXLWF2W8V3
+         wE/hkp/uEOBM8ud8aByUtzjGnujYyI3w2XCflYguddeulg6yCEuNqUAIib2etqUNMcd9
+         zNWA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789045884; x=1789650684;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=MXrl1WeDEyODhGv9M/Bbf3QLYXjOYW/oTcQCSReevjE=;
+        b=PzoQLQp8T2DBRUzBrb1/UVRJa7BxiG1rZt2NZAo49KoTTKWzuKh4u9AiGo/DGbLFqE
+         05f+riD//P/492rbA7rojICBYg0KaovP6Rx/oWIa+hymuxYN7OHvlPDhh7qkeo4j1hDn
+         abgdwiH61sO2c/PJi5hEtVPxgZf8ZfDhAROmBir244AcAbtjlPqCSIi5ejfI4Knl9nyI
+         GZaX/vo7w03P+QrEKGbDQEaFhn3dn054aPYrk+4q5cZ3pgCo85P0AjGJJ+XK6wA8D5Ez
+         Viv2CXi26yr3voLjjxb+yeNjgqHIrzmbzlKonn3slFJBzOfRK7b7fGBHjgY3q83oQm17
+         owOg==
+X-Forwarded-Encrypted: i=1; AKwUvBwWpks7dZ2MjMaF/K05yVQAjlh8HtNL4skPXC0UgWGmDKjp4qG81567/Ukji7A9/KnCbRtErQlN6LY9@vger.kernel.org
+X-Gm-Message-State: AFuF++ks+EU85Pz91rb1MpKoPUcX0zN7hrTyjhV+GI6Vggh5dVMsGKhk
+	oq6GVpuLn0PYy+Oc/d83eTbxPQXgTAnYzfiw8q9eGC+EW3PpaT5y+BZt
+X-Gm-Gg: AYBFou3513sDl/6j25YkUNGQgcLVQ59vY7TvVIJi5VF2OfqgBmwRM6r9nr0x8Zq8CKk
+	wQFrqXArl782FOZlJ9bHImhInW9AhD/O78MpJP/NLIoeaURKsHKOISnwuIeqQY+HyY18PIaT9qm
+	1xMNsdvWjoLaQYw0eez0GX+85I9edDEvfx5IRnqy+5fkv03mxMvskzYciB8MvpkR570uymO1Y3h
+	zwu6Zny53e+cjODMYS9E3rVk8jMPbg1ralBSWr7orGH1g4OIhuwecDyNRqD1J9z91TT+84DKFea
+	qcFsp8Mqv5MpVXYzRR0rwJnVRfjAnjLAh+vcYC5YDTip2wEg63XWu4scsdaIKHLFI+SwBHI3WPs
+	IXKuavknof69gorrpl5RWsOrgxfCvx5xHe6kdXOQfDNYmqzjO4Iiu6dKxap4ce422PaDcwYNazW
+	sx6tkc5VOyXKOHU2aFoQUqupoEvSWJzcI+Tspi1dqMOPbirvlIkoVjg2jYxsWTG97XMDR5IC1AA
+	+S4aVd9yqe14vAVbXK3nSVmByhTLJ5SUB8=
+X-Received: by 2002:a17:90b:2e0e:b0:398:9be5:b419 with SMTP id 98e67ed59e1d1-39b2622bfecmr60777094a91.20.1789045883692;
+        Thu, 10 Sep 2026 06:11:23 -0700 (PDT)
+Received: from LAPTOP-450UDG4J ([223.185.135.143])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2db14959954sm87252765ad.27.2026.09.10.06.11.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Sep 2026 06:11:23 -0700 (PDT)
+From: Yogesh Gaur <yogeshgaur.83@gmail.com>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yogesh Gaur <yogeshgaur.83@gmail.com>,
+	syzbot+1f5a7de91d547763f4c8@syzkaller.appspotmail.com
+Subject: [PATCH] md/raid5: don't BUG() on an inconsistent reshape state from
+ the superblock
+Date: Thu, 10 Sep 2026 18:41:03 +0530
+Message-ID: <20260910131103.988-1-yogeshgaur.83@gmail.com>
+X-Mailer: git-send-email 2.55.0.windows.5
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-
-New issues:
-- [High] Missing rollback when `queue_limits_commit_update()` fails, leavin=
-g the array mutated with rejected and potentially dangerous block limits.
-
-Pre-existing issues:
-- [High] The patch leaves an ABBA deadlock unresolved in `action_store()` w=
-hen triggering `ACTION_RESHAPE`.
-- [High] Writing 'remove' to a spare disk's state attribute in a degraded a=
-rray incorrectly hot-adds the disk to the array instead of removing it.
---
-
-commit 7025b63183a90cd4ea9de7b41e69a4702b7c8d13
-Author: Jack Wang <jinpu.wang@cloud.ionos.com>
-
-md: take q->limits_lock before locking and suspending the array
-
-This commit modifies block limit handling during MD array reconfigurations
-to acquire q->limits_lock before locking and suspending the array. This=20
-fixes an ABBA deadlock between the limits lock, reconfig_mutex, and the=20
-array suspend state.
-
-> Two callers still take the lock inside reconfig_mutex with the array
-> suspended: ->start_reshape() from action_store(), which suspends before
-> flushing sync_work so the update cannot be held across it, and
-> raid*_run() from level_store(), which a later patch converts.
-
-[Severity: High]
-This is a pre-existing issue, but by leaving the action_store() path
-unresolved here, does this leave the system vulnerable to the same ABBA
-deadlock if a user writes 'reshape' to sync_action? Concurrent I/O could=20
-still park in the block layer, and a sysfs write to queue limits could=20
-still wait in blk_mq_freeze_queue for q_usage_counter to drain while=20
-mddev_stack_new_rdev attempts to acquire q->limits_lock.
-
-[ ... ]
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 87e17ba86d93a..0668a048db716 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-[ ... ]
-> @@ -3119,7 +3119,7 @@ state_store(struct md_rdev *rdev, const char *buf, =
-size_t len,
->  	} else if (cmd_match(buf, "remove")) {
->  		if (rdev->mddev->pers) {
->  			clear_bit(Blocked, &rdev->flags);
-> -			remove_and_add_spares(rdev->mddev, rdev, NULL);
-> +			remove_and_add_spares(rdev->mddev, rdev, lim);
->  		}
->  		if (rdev->raid_disk >=3D 0)
->  			err =3D -EBUSY;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but if an admin tries to remove
-a spare from a degraded array by writing "remove" to the state attribute,
-could this unintentionally hot-add the spare instead? Looking at
-remove_and_add_spares(), rdev_removeable() would skip spares because they
-have raid_disk < 0. Then rdev_addable() might return true, causing
-hot_add_disk() to be called and returning -EBUSY.
-
-[ ... ]
-> @@ -3782,15 +3785,41 @@ rdev_attr_store(struct kobject *kobj, struct attr=
-ibute *attr,
-[ ... ]
->  	rv =3D suspend ? mddev_suspend_and_lock(mddev) : mddev_lock(mddev);
->  	if (!rv) {
->  		if (rdev->mddev =3D=3D NULL)
->  			rv =3D -ENODEV;
->  		else
-> -			rv =3D entry->store(rdev, page, length, NULL);
-> +			rv =3D entry->store(rdev, page, length, limp);
-> +		/* apply the limits before the array takes I/O again */
-> +		if (limp) {
-> +			int err =3D queue_limits_commit_update(q, limp);
-> +
-> +			limp =3D NULL;
-> +			if (err && rv >=3D 0)
-> +				rv =3D err;
-> +		}
-
-[Severity: High]
-If queue_limits_commit_update() fails and rejects the stacked limits, the
-error is bubbled up, but is it possible that the array has already been=20
-mutated by entry->store() (such as structurally binding a new disk)? This
-might leave the disk actively bound to the array configuration with
-stale/rejected block limits.
-
-[ ... ]
-> @@ -8618,6 +8677,9 @@ static int md_ioctl(struct block_device *bdev, blk_=
-mode_t mode,
->  	    err !=3D -EINVAL)
->  		mddev->hold_active =3D 0;
-> =20
-> +	if (limp)
-> +		err =3D queue_limits_commit_update(q, limp) ?: err;
-> +
-
-[Severity: High]
-Similar to the rdev_attr_store() path above, if the limit commit fails
-here, are the array mutations (such as ADD_NEW_DISK) reverted?
-
-[ ... ]
-> @@ -10419,6 +10501,8 @@ static void md_start_sync(struct work_struct *ws)
-[ ... ]
->  	 *     https://bugzilla.kernel.org/show_bug.cgi?id=3D218200
->  	 * Therefore, use __mddev_resume(mddev, false).
->  	 */
-> +	if (limp && queue_limits_commit_update(q, limp))
-> +		pr_err("%s: could not apply queue limits\n", mdname(mddev));
-
-[Severity: High]
-If the limit commit fails, this merely logs an error. Will any spares=20
-recently added via remove_and_add_spares() remain fully active with
-stale limits, potentially causing data corruption or crashing lower-level=20
-drivers?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260910081114.1605=
-746-1-jinpu.wang@ionos.com?part=3D5
+raid5_run() branches on mddev->reshape_position. When it is MaxSector --=0D
+no reshape in progress -- the else branch asserts that nothing else=0D
+describes one:=0D
+=0D
+	BUG_ON(mddev->level !=3D mddev->new_level);=0D
+	BUG_ON(mddev->layout !=3D mddev->new_layout);=0D
+	BUG_ON(mddev->chunk_sectors !=3D mddev->new_chunk_sectors);=0D
+	BUG_ON(mddev->delta_disks !=3D 0);=0D
+=0D
+Nothing enforces that invariant. Both superblock validators copy the=0D
+reshape fields straight off disk without cross-checking them against=0D
+each other: super_1_validate() takes reshape_position, delta_disks,=0D
+new_level, new_layout and new_chunk from the superblock whenever=0D
+MD_FEATURE_RESHAPE_ACTIVE is set, and super_90_validate() does the same=0D
+for minor version 91. A superblock that sets the reshape feature while=0D
+leaving reshape_position at the MaxSector sentinel therefore reaches the=0D
+else branch with a non-zero delta_disks, and assembling the array takes=0D
+the machine down:=0D
+=0D
+  kernel BUG at drivers/md/raid5.c:8117!=0D
+  Oops: invalid opcode: 0000 [#1] SMP KASAN NOPTI=0D
+  RIP: 0010:raid5_run+0x11a7/0x1670 drivers/md/raid5.c:8117=0D
+  Call Trace:=0D
+   md_run+0xc2f/0x2510 drivers/md/md.c:6779=0D
+   do_md_run+0x36/0x660 drivers/md/md.c:6880=0D
+   array_state_store+0x9c5/0xcf0 drivers/md/md.c:4765=0D
+   md_attr_store+0x1c5/0x330 drivers/md/md.c:6158=0D
+   sysfs_kf_write+0xf2/0x150 fs/sysfs/file.c:145=0D
+   kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345=0D
+=0D
+This is reachable by anyone who can present an md superblock, so BUG()=0D
+is the wrong response. Refuse to start the array instead, the way the=0D
+reshape_position !=3D MaxSector branch a few lines above already refuses a=
+=0D
+reshape it cannot resume. Nothing has been allocated at this point --=0D
+the journal-and-bitmap check just above returns -EINVAL the same way --=0D
+so there is nothing to unwind.=0D
+=0D
+Reported-by: syzbot+1f5a7de91d547763f4c8@syzkaller.appspotmail.com=0D
+Closes: https://syzkaller.appspot.com/bug?extid=3D1f5a7de91d547763f4c8=0D
+Fixes: 91adb56473fe ("md/raid5: refactor raid5 "run"")=0D
+Assisted-by: LLM=0D
+Signed-off-by: Yogesh Gaur <yogeshgaur.83@gmail.com>=0D
+---=0D
+ drivers/md/raid5.c | 16 +++++++++++-----=0D
+ 1 file changed, 11 insertions(+), 5 deletions(-)=0D
+=0D
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c=0D
+index b91545ce090d..682812277ce5 100644=0D
+--- a/drivers/md/raid5.c=0D
++++ b/drivers/md/raid5.c=0D
+@@ -8110,11 +8110,17 @@ static int raid5_run(struct mddev *mddev)=0D
+ 		}=0D
+ 		pr_debug("md/raid:%s: reshape will continue\n", mdname(mddev));=0D
+ 		/* OK, we should be able to continue; */=0D
+-	} else {=0D
+-		BUG_ON(mddev->level !=3D mddev->new_level);=0D
+-		BUG_ON(mddev->layout !=3D mddev->new_layout);=0D
+-		BUG_ON(mddev->chunk_sectors !=3D mddev->new_chunk_sectors);=0D
+-		BUG_ON(mddev->delta_disks !=3D 0);=0D
++	} else if (mddev->level !=3D mddev->new_level ||=0D
++		   mddev->layout !=3D mddev->new_layout ||=0D
++		   mddev->chunk_sectors !=3D mddev->new_chunk_sectors ||=0D
++		   mddev->delta_disks !=3D 0) {=0D
++		/* No reshape is in progress, but the array describes one.=0D
++		 * The superblock validators do not cross-check these against=0D
++		 * reshape_position, so this is reachable from disk.=0D
++		 */=0D
++		pr_warn("md/raid:%s: inconsistent reshape state - aborting.\n",=0D
++			mdname(mddev));=0D
++		return -EINVAL;=0D
+ 	}=0D
+ =0D
+ 	if (test_bit(MD_HAS_JOURNAL, &mddev->flags) &&=0D
+-- =0D
+2.34.1=0D
+=0D
