@@ -1,77 +1,168 @@
-Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85F003AFD0E;
-	Thu, 10 Sep 2026 08:38:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F082D381E9B
+	for <linux-raid@vger.kernel.org>; Thu, 10 Sep 2026 08:48:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789029498; cv=none; b=sH7xiNrq7g9ud1zeYolQ/xJwtMBeggRFoGrcITumNHwdl+qfv9apdM7PnclCmHtCIo3nhCg4XcOFJiG6ViT3XF4LqcJY/NVSGAdNZ7l8UaC5bxLaTMdd/s1TPb58QewpUyEcVV4JjTNXIPtZsF2pKmhivjy4tEbJGlYp6xEUW5c=
+	t=1789030098; cv=none; b=sbHHhXhTPpY4tHa80B4pI/yXVpv3Lux4rZnFrl9LuW9ppAZ22BaqOlKAtBoiNNeJVIK1QsI06lLPLsX98f4evpSKAGNbVXEAXGazYs5v1BCAJaa5nB9PrVcet16g0RLFfIskV1y4CjBHXghc/e3j/PpflCNvXMKaLnLBoUH3GaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789029498; c=relaxed/simple;
-	bh=zK73mQCE7eL25giVjETkO1jHrD9oIHRwKKp1VRgnYrk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sPZmyVxZ9I9uh7ZKOCRwk347kEkLXxik/JrqHVtGPz0BzUDwbZGAoaY6dAa3m0I1Gy7VAxhnqynOPkAZST/r5p8WbdlZwn7Ioj7oJARXBYJi1GUb55m57UxJ1Ifb/bR62p3v8yUFsv7V8x4P7BfRf7+If8VUj3f5Kyp/f78XuJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eJEcYmwb; arc=none smtp.client-ip=90.155.92.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1789030098; c=relaxed/simple;
+	bh=YOhjkdzvSGJS5i8oB9EYlLeb47G4uR6j3cUU7bqFuNw=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=d8Plt/Qa+yShdaXl6enWCSewuMpSdu/hPoDbuzcw9RYQjW27V6SsUioy9d9TWePfVxq0MCippqy48JTyDrTDP0uts7p1PH/KyaJ+DnCL652baJjrqgWK6y8lkz76Qu1ZB2Qn0gnbhgmCKgjCsilmpXiNiv0XL8UGDWP6VQEowrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P4kk/ARi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eJEcYmwb"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=mG/4AGN6tjfd63G18lYs6f5vejXgChWS/qvpHpogEEE=; b=eJEcYmwbeaU9Von9rzUqN922Y8
-	/LYSnBHA1uZsh91UEF2DJYRHPrVy6B3UjC1uMfbSG/lv5mtiTb6822MmMms6UJOEgFw+3SQmSLxOQ
-	gTlmt4Ie9xzj3O60Eu+hEM0VlmsLaEyW+OBlBB33IkfTG85xxvnoYRCrrf2SfDWmmU48b1NkProQ+
-	3AUxJZ/JMOZre/1eZRS8kr96tLtZSXxE9WiXuoA5swejH8Qx8FpzP5awusmh0mlCYhHJExWjM5ih/
-	9pcwde1UfS8NSNe1H5bwiI7sac7PnJPz+UDBPcoiT/upywFCOkNt9tzc9T/xq9TpaU7/Fo5s5G44y
-	DPP6Sxnw==;
-Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
-	by desiato.infradead.org with esmtpsa (Exim 4.99.2 #2 (Red Hat Linux))
-	id 1x4aIF-00000002CmU-1F4p;
-	Thu, 10 Sep 2026 08:38:03 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id B502E30056B; Thu, 10 Sep 2026 10:38:01 +0200 (CEST)
-Date: Thu, 10 Sep 2026 10:38:01 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: x86@kernel.org, linux-um@lists.infradead.org,
-	linux-raid@vger.kernel.org, linux-crypto@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v5 6/8] x86/fpu: Remove cpu_has_xfeatures()
-Message-ID: <20260910083801.GU4121339@noisy.programming.kicks-ass.net>
-References: <20260901145740.42337-1-ebiggers@kernel.org>
- <20260901145740.42337-7-ebiggers@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P4kk/ARi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CFE81F000FF;
+	Thu, 10 Sep 2026 08:48:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789030096;
+	bh=gOvH6fZH+6Zh9hSv6w1Oa67yv4hTYEpyJLDQf1E5wgA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=P4kk/ARiBQT7hOaWyA5XjfBKFD6tpzplFocaxuTHhWdb9qcu5nsGJwzBcfpWco60C
+	 /QQvFTwl7JU9YXn2i49flWF3SuQICqW54dYiRapE8vSg7ZvYTQfOjlm47q6d0Ar1Ev
+	 xZGFvpYFT27e28q34MloQI9XLX2kc6iZW/YO3npMn2WtypA4Fuk6ql9i7oWU8AwIrH
+	 7maG6SxqeRAiBUt2oLNX3PnaVUtrAf/XiGhWAD/OmNreYMaxYyqCslxSACHnUsbpxu
+	 40eDUSz4vqkB3CWKm2KBW7ZAfRaUjDaqxSKanrXcv2zZK0zIH6PRBsHVhYBilkOB28
+	 612c3mXlCWgvg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 7/8] md: open new legs before locking the array
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Jack Wang" <jinpu.wang@ionos.com>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260910081114.1605746-8-jinpu.wang@ionos.com>
+References: <20260910081114.1605746-1-jinpu.wang@ionos.com>
+ <20260910081114.1605746-8-jinpu.wang@ionos.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 10 Sep 2026 08:48:15 +0000
+Message-Id: <20260910084816.3CFE81F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260901145740.42337-7-ebiggers@kernel.org>
 
-On Tue, Sep 01, 2026 at 07:57:38AM -0700, Eric Biggers wrote:
-> The only remaining caller of cpu_has_xfeatures() is
-> print_xstate_features(), which uses it only to check and get the name of
-> a single feature.
-> 
-> Remove it and just inline the needed code into print_xstate_features().
-> 
-> This also makes the "unknown xstate feature" entry at index XFEATURE_MAX
-> of xfeature_names[] unnecessary, so remove that too.
-> 
-> Acked-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Eric Biggers <ebiggers@kernel.org>
-> ---
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] The patch leaves export_rdev() calls inside the mddev->reconfig_mu=
+tex critical section on error paths, failing to completely break the disk->=
+open_mutex deadlock cycle.
+- [Medium] The snapshot check in md_add_new_disk() is bypassed when nd->rde=
+v is NULL, allowing concurrent array reconfigurations to trigger a WARN_ON_=
+ONCE.
+--
 
-Turns out there are a few new ones in tip/perf/core, so if you merge
-tip/x86/fpu and tip/perf/core things no longer build.
+commit 140222a8600d2514747d88643188f131c16b6c50
+Author: Jack Wang <jinpu.wang@cloud.ionos.com>
 
-I'm not entirely sure how to go about fixing this. Some seem trivial
-enough, but others, like XFEATURE_MASK_OPMASK I don't readily see a
-replacement for.
+md: open new legs before locking the array
 
-Boris, can you have a look? For now I'm reverting this patch locally.
+This commit aims to resolve a lockdep cycle between disk->open_mutex and
+mddev->reconfig_mutex by opening new devices before acquiring the array
+lock. It updates functions like md_import_new_disk() and new_dev_store()
+to snapshot configuration and validate it after locking.
+
+> diff --git a/drivers/md/md-autodetect.c b/drivers/md/md-autodetect.c
+> index e15ae2fb58a2d..e592577356ad3 100644
+> --- a/drivers/md/md-autodetect.c
+> +++ b/drivers/md/md-autodetect.c
+> @@ -216,7 +217,21 @@ static void __init md_setup_drive(struct md_setup_ar=
+gs *args)
+>  				(1 << MD_DISK_ACTIVE) | (1 << MD_DISK_SYNC);
+>  		}
+> =20
+> -		md_add_new_disk(mddev, &dinfo, NULL);
+> +		/*
+> +		 * Opening a leg takes disk->open_mutex, which must not nest
+> +		 * inside reconfig_mutex, see md_import_new_disk().  Drop the
+> +		 * array lock around it; this is __init and the array is not
+> +		 * reachable yet, so nothing else can touch it in between.
+> +		 */
+> +		mddev_unlock(mddev);
+> +		if (md_import_new_disk(mddev, &dinfo, &nd)) {
+> +			mddev_lock_nointr(mddev);
+> +			continue;
+> +		}
+> +		mddev_lock_nointr(mddev);
+> +
+> +		md_add_new_disk(mddev, &dinfo, &nd, NULL);
+> +		md_put_new_disk(&nd);
+
+[Severity: High]
+Does md_put_new_disk() recreate the lockdep cycle we are trying to fix?
+
+Since md_put_new_disk() calls export_rdev() internally, and export_rdev()
+acquires disk->open_mutex, calling it here while mddev_lock_nointr() is
+held appears to preserve the reconfig_mutex -> disk->open_mutex lock order.
+
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 5be956e80563d..fa033d7d38318 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+
+[ ... ]
+
+> @@ -7685,12 +7706,35 @@ static int get_disk_info(struct mddev *mddev, voi=
+d __user * arg)
+>  	return 0;
+>  }
+> =20
+> +/*
+> + * @nd carries an rdev the caller opened before locking the array, for t=
+he
+> + * branch its snapshot selected.  Every caller must open first; doing it
+> + * here would nest disk->open_mutex inside reconfig_mutex.
+> + */
+>  int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
+> -		    struct queue_limits *lim)
+> +		    struct md_new_disk *nd, struct queue_limits *lim)
+>  {
+>  	struct md_rdev *rdev;
+>  	dev_t dev =3D MKDEV(info->major,info->minor);
+> =20
+> +	/*
+> +	 * The open ran unlocked, so anything that selects a different branch
+> +	 * below, or a different superblock format, means it was done against
+> +	 * an array that no longer looks like this one.
+> +	 */
+> +	if (nd && nd->rdev &&
+> +	    (nd->have_raid_disks !=3D (mddev->raid_disks !=3D 0) ||
+> +	     nd->have_pers !=3D !!mddev->pers ||
+> +	     nd->persistent !=3D mddev->persistent ||
+> +	     nd->major_version !=3D mddev->major_version ||
+> +	     nd->minor_version !=3D mddev->minor_version)) {
+
+[Severity: Medium]
+Is this validation check bypassed if nd->rdev is NULL?
+
+If md_import_new_disk() is called on an array where ADD_NEW_DISK is
+unsupported (for example, raid_disks !=3D 0 and pers =3D=3D NULL), it retur=
+ns 0
+with nd->rdev =3D NULL. If a concurrent ioctl like STOP_ARRAY resets
+raid_disks to 0 before md_add_new_disk() acquires the lock, the condition
+checking nd->rdev evaluates to false, skipping the validation entirely.
+
+This allows the function to proceed into the !mddev->raid_disks branch
+and hit the WARN_ON_ONCE(!nd || !nd->rdev) below, triggering a kernel splat.
+
+> +		pr_warn("%s: array reconfigured while opening %pg\n",
+> +			mdname(mddev), nd->rdev->bdev);
+> +		export_rdev(nd->rdev);
+> +		nd->rdev =3D NULL;
+> +		return -EBUSY;
+> +	}
+
+[Severity: High]
+This new failure path also executes with reconfig_mutex held, directly
+calling export_rdev() and recreating the lockdep cycle.
+
+Could this leave the system vulnerable to the same deadlock on error paths?
+
+This pattern also occurs in new_dev_store(), where the error path calls
+export_rdev() before mddev_unlock_and_resume().
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260910081114.1605=
+746-1-jinpu.wang@ionos.com?part=3D7
