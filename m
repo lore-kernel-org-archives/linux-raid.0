@@ -1,158 +1,83 @@
-Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DFAD35C69A
-	for <linux-raid@vger.kernel.org>; Thu, 10 Sep 2026 13:11:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62C7149BD74;
+	Thu, 10 Sep 2026 14:23:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789045885; cv=none; b=jdlLA66aXcW/38jKiYMDQxzZGLyzx5AxgVJRSfpFGYZHMQra8YpzIjb5DfQEoNVaVzNX5KOdD3x9kWFz5N77oiqFtkOsgQI2IkvZhrbd0aOMmsZz4NznHQqchExnPgG28+HKH1qYWhaSKi6AyzTXnzSE82eF6OtNG+M8V8FiG4A=
+	t=1789050212; cv=none; b=XjlI6Ew1ZckaHU+uMRa4B39ori134ROXnE69XvvTXRdNmM7a4DndUkGNk+dMu6CBAfv0LvHmioq4cNW5DrJWxYjtBaVSR3ErEWOsRONlcoc9VVMoXFQZR5KVKKHx2FRLY+Pq9tLyi7w5218lVEo8IdrBrTzsTtg0ESXPc5AOspw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789045885; c=relaxed/simple;
-	bh=IasFbIhvEWdxx3Mayak5dNwTr943NOuE+pZeN4b7SfQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XlbHsE4YUX4YWm7a34vho/lWUR3dMuhmWRZ9X0ANx3JwAX62U84NJuvjUAa1Zt+vBJl67vRYicFdZtf1ZEw/5/cPRDyllhRKyDrOh/Eh3QIsBU7HsT+lfXwYJYNAhZ2GhqFuufLmTyScJzaYg4rBbav1wuiHzc5X/n7+Nt5H4Rk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HEgnS2sw; arc=none smtp.client-ip=209.85.215.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789050212; c=relaxed/simple;
+	bh=oQLfe0josw0afgf5qbypjfJkfaRgUMkwMRxthXux920=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fOgLqTAVkn1YkUS/ednn6pYe4iUQ/udGHmJV9uQkB/Z4dOYeOmrckf+l6cjHb+CGudBrjp9K1r8POi2kXCmtkBHg+b+njxf3BLBd3Rcqz0gdNox2hgkxQPrTMAI32i4O/t8DfmNhq2aOSXuHuMv94MDDdmrC9Azp+DP6h2OE3p8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=D1meaicj; arc=none smtp.client-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HEgnS2sw"
-Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-cbee846deecso999043a12.1
-        for <linux-raid@vger.kernel.org>; Thu, 10 Sep 2026 06:11:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789045884; x=1789650684; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=MXrl1WeDEyODhGv9M/Bbf3QLYXjOYW/oTcQCSReevjE=;
-        b=HEgnS2swIIVL8OSy+vtGsJrQ1lr2sd3i3sdjJVrza4DCvco2Tzv+QQUFiOW/amMsz3
-         C1U3PsFfYWv8Quli2tzlghd7hfiJKWkuqZW3E1n/r1q4cPVQJDthNkwInJsrTeyumxEa
-         NNO+zjVzhpp6L4ObGjazyZTBIcVul6VwycJG1MJLhvLBh1MJN8GCvov8HPHby8ceZztk
-         FFL2yeUP3KlRqyL6nrEUOswXnmCHOEyYdqQ7St3G5UWcY6eV8Rg1koYZjDoXLWF2W8V3
-         wE/hkp/uEOBM8ud8aByUtzjGnujYyI3w2XCflYguddeulg6yCEuNqUAIib2etqUNMcd9
-         zNWA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789045884; x=1789650684;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=MXrl1WeDEyODhGv9M/Bbf3QLYXjOYW/oTcQCSReevjE=;
-        b=PzoQLQp8T2DBRUzBrb1/UVRJa7BxiG1rZt2NZAo49KoTTKWzuKh4u9AiGo/DGbLFqE
-         05f+riD//P/492rbA7rojICBYg0KaovP6Rx/oWIa+hymuxYN7OHvlPDhh7qkeo4j1hDn
-         abgdwiH61sO2c/PJi5hEtVPxgZf8ZfDhAROmBir244AcAbtjlPqCSIi5ejfI4Knl9nyI
-         GZaX/vo7w03P+QrEKGbDQEaFhn3dn054aPYrk+4q5cZ3pgCo85P0AjGJJ+XK6wA8D5Ez
-         Viv2CXi26yr3voLjjxb+yeNjgqHIrzmbzlKonn3slFJBzOfRK7b7fGBHjgY3q83oQm17
-         owOg==
-X-Forwarded-Encrypted: i=1; AKwUvBwWpks7dZ2MjMaF/K05yVQAjlh8HtNL4skPXC0UgWGmDKjp4qG81567/Ukji7A9/KnCbRtErQlN6LY9@vger.kernel.org
-X-Gm-Message-State: AFuF++ks+EU85Pz91rb1MpKoPUcX0zN7hrTyjhV+GI6Vggh5dVMsGKhk
-	oq6GVpuLn0PYy+Oc/d83eTbxPQXgTAnYzfiw8q9eGC+EW3PpaT5y+BZt
-X-Gm-Gg: AYBFou3513sDl/6j25YkUNGQgcLVQ59vY7TvVIJi5VF2OfqgBmwRM6r9nr0x8Zq8CKk
-	wQFrqXArl782FOZlJ9bHImhInW9AhD/O78MpJP/NLIoeaURKsHKOISnwuIeqQY+HyY18PIaT9qm
-	1xMNsdvWjoLaQYw0eez0GX+85I9edDEvfx5IRnqy+5fkv03mxMvskzYciB8MvpkR570uymO1Y3h
-	zwu6Zny53e+cjODMYS9E3rVk8jMPbg1ralBSWr7orGH1g4OIhuwecDyNRqD1J9z91TT+84DKFea
-	qcFsp8Mqv5MpVXYzRR0rwJnVRfjAnjLAh+vcYC5YDTip2wEg63XWu4scsdaIKHLFI+SwBHI3WPs
-	IXKuavknof69gorrpl5RWsOrgxfCvx5xHe6kdXOQfDNYmqzjO4Iiu6dKxap4ce422PaDcwYNazW
-	sx6tkc5VOyXKOHU2aFoQUqupoEvSWJzcI+Tspi1dqMOPbirvlIkoVjg2jYxsWTG97XMDR5IC1AA
-	+S4aVd9yqe14vAVbXK3nSVmByhTLJ5SUB8=
-X-Received: by 2002:a17:90b:2e0e:b0:398:9be5:b419 with SMTP id 98e67ed59e1d1-39b2622bfecmr60777094a91.20.1789045883692;
-        Thu, 10 Sep 2026 06:11:23 -0700 (PDT)
-Received: from LAPTOP-450UDG4J ([223.185.135.143])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2db14959954sm87252765ad.27.2026.09.10.06.11.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2026 06:11:23 -0700 (PDT)
-From: Yogesh Gaur <yogeshgaur.83@gmail.com>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>
-Cc: Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Yogesh Gaur <yogeshgaur.83@gmail.com>,
-	syzbot+1f5a7de91d547763f4c8@syzkaller.appspotmail.com
-Subject: [PATCH] md/raid5: don't BUG() on an inconsistent reshape state from
- the superblock
-Date: Thu, 10 Sep 2026 18:41:03 +0530
-Message-ID: <20260910131103.988-1-yogeshgaur.83@gmail.com>
-X-Mailer: git-send-email 2.55.0.windows.5
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="D1meaicj"
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 60AA540E01DD;
+	Thu, 10 Sep 2026 14:23:25 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id JlEgMq8cfcwl; Thu, 10 Sep 2026 14:23:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1789050195; bh=oazBnerJKBXfynp5uGUgQGCP5CJIKWsROgSUMUbl4yM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=D1meaicjse+es/+8OSM9lXaQVJ22Ma8RICYFH+AKCVCVtmrIEV50ALRE1EIaKXaaO
+	 zUz983449jzmJzwfllrEDiPSDk+NDzDt+n1J1sBFavIj4kDdN+zE1YnIgBs7H2P9d9
+	 mcpPTfbPDTeZhklPoT7pWxFmOlGoT2vOzbv3eajeBP9g5rNGK7Fi7UKYqB5a1Dqps4
+	 TJfhj9EJoZj0FXuAyFeuAW+NCHjPB+CS3YcAOkioiBkz2YiABsTfCueSf+mW+SXIRx
+	 qd3em2EQ7l9u8pSKrzT5Bqv2ho1agTxx1RoeUrWB2BV2RUMg0ebjNa17HUu3ON6e7d
+	 nVQ02h/1AaLAfriIgs+TNjHxHc+VY+GYOnoJlk9GHbPu7kJ9EIo9C9aXnVgb6PMn5I
+	 TKLe8CXssgvuYzAeUvwc7XpkVWQhlNr6WtXZQ6zPvxC3czTysE75mmR9JgLSludc01
+	 1jfcf4ruW7Sj6u1EXYE6F7d6I/nXg2uAX21EqH7q/0TjlUrFh9mNPOlWGo2XQaEgBf
+	 VVRYB/lMQNCa0cxitws60mOodDHxp3zYn2kXrIdPVxWA9YtML9eXV8QLl0rAjh0pOi
+	 Nix2IeAnQJxv2yvHcIHqSV6yddrGQEXRc186uIkRWFaEwGdEqRt8KtrIDHxe1wse9W
+	 jiiPVvzzi4wMbo+xQmcAma3s=
+Received: from stx.tnic (unknown [IPv6:2600:1700:38ca:c00::3a])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id C01DB40E00E8;
+	Thu, 10 Sep 2026 14:23:05 +0000 (UTC)
+Date: Thu, 10 Sep 2026 07:23:01 -0700
+From: Borislav Petkov <bp@alien8.de>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Eric Biggers <ebiggers@kernel.org>, x86@kernel.org,
+	linux-um@lists.infradead.org, linux-raid@vger.kernel.org,
+	linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v5 6/8] x86/fpu: Remove cpu_has_xfeatures()
+Message-ID: <20260910142301.GAaqK9RVdjjmpwX876@fat_crate.local>
+References: <20260901145740.42337-1-ebiggers@kernel.org>
+ <20260901145740.42337-7-ebiggers@kernel.org>
+ <20260910083801.GU4121339@noisy.programming.kicks-ass.net>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260910083801.GU4121339@noisy.programming.kicks-ass.net>
 
-raid5_run() branches on mddev->reshape_position. When it is MaxSector --=0D
-no reshape in progress -- the else branch asserts that nothing else=0D
-describes one:=0D
-=0D
-	BUG_ON(mddev->level !=3D mddev->new_level);=0D
-	BUG_ON(mddev->layout !=3D mddev->new_layout);=0D
-	BUG_ON(mddev->chunk_sectors !=3D mddev->new_chunk_sectors);=0D
-	BUG_ON(mddev->delta_disks !=3D 0);=0D
-=0D
-Nothing enforces that invariant. Both superblock validators copy the=0D
-reshape fields straight off disk without cross-checking them against=0D
-each other: super_1_validate() takes reshape_position, delta_disks,=0D
-new_level, new_layout and new_chunk from the superblock whenever=0D
-MD_FEATURE_RESHAPE_ACTIVE is set, and super_90_validate() does the same=0D
-for minor version 91. A superblock that sets the reshape feature while=0D
-leaving reshape_position at the MaxSector sentinel therefore reaches the=0D
-else branch with a non-zero delta_disks, and assembling the array takes=0D
-the machine down:=0D
-=0D
-  kernel BUG at drivers/md/raid5.c:8117!=0D
-  Oops: invalid opcode: 0000 [#1] SMP KASAN NOPTI=0D
-  RIP: 0010:raid5_run+0x11a7/0x1670 drivers/md/raid5.c:8117=0D
-  Call Trace:=0D
-   md_run+0xc2f/0x2510 drivers/md/md.c:6779=0D
-   do_md_run+0x36/0x660 drivers/md/md.c:6880=0D
-   array_state_store+0x9c5/0xcf0 drivers/md/md.c:4765=0D
-   md_attr_store+0x1c5/0x330 drivers/md/md.c:6158=0D
-   sysfs_kf_write+0xf2/0x150 fs/sysfs/file.c:145=0D
-   kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345=0D
-=0D
-This is reachable by anyone who can present an md superblock, so BUG()=0D
-is the wrong response. Refuse to start the array instead, the way the=0D
-reshape_position !=3D MaxSector branch a few lines above already refuses a=
-=0D
-reshape it cannot resume. Nothing has been allocated at this point --=0D
-the journal-and-bitmap check just above returns -EINVAL the same way --=0D
-so there is nothing to unwind.=0D
-=0D
-Reported-by: syzbot+1f5a7de91d547763f4c8@syzkaller.appspotmail.com=0D
-Closes: https://syzkaller.appspot.com/bug?extid=3D1f5a7de91d547763f4c8=0D
-Fixes: 91adb56473fe ("md/raid5: refactor raid5 "run"")=0D
-Assisted-by: LLM=0D
-Signed-off-by: Yogesh Gaur <yogeshgaur.83@gmail.com>=0D
----=0D
- drivers/md/raid5.c | 16 +++++++++++-----=0D
- 1 file changed, 11 insertions(+), 5 deletions(-)=0D
-=0D
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c=0D
-index b91545ce090d..682812277ce5 100644=0D
---- a/drivers/md/raid5.c=0D
-+++ b/drivers/md/raid5.c=0D
-@@ -8110,11 +8110,17 @@ static int raid5_run(struct mddev *mddev)=0D
- 		}=0D
- 		pr_debug("md/raid:%s: reshape will continue\n", mdname(mddev));=0D
- 		/* OK, we should be able to continue; */=0D
--	} else {=0D
--		BUG_ON(mddev->level !=3D mddev->new_level);=0D
--		BUG_ON(mddev->layout !=3D mddev->new_layout);=0D
--		BUG_ON(mddev->chunk_sectors !=3D mddev->new_chunk_sectors);=0D
--		BUG_ON(mddev->delta_disks !=3D 0);=0D
-+	} else if (mddev->level !=3D mddev->new_level ||=0D
-+		   mddev->layout !=3D mddev->new_layout ||=0D
-+		   mddev->chunk_sectors !=3D mddev->new_chunk_sectors ||=0D
-+		   mddev->delta_disks !=3D 0) {=0D
-+		/* No reshape is in progress, but the array describes one.=0D
-+		 * The superblock validators do not cross-check these against=0D
-+		 * reshape_position, so this is reachable from disk.=0D
-+		 */=0D
-+		pr_warn("md/raid:%s: inconsistent reshape state - aborting.\n",=0D
-+			mdname(mddev));=0D
-+		return -EINVAL;=0D
- 	}=0D
- =0D
- 	if (test_bit(MD_HAS_JOURNAL, &mddev->flags) &&=0D
--- =0D
-2.34.1=0D
-=0D
+On Thu, Sep 10, 2026 at 10:38:01AM +0200, Peter Zijlstra wrote:
+> Boris, can you have a look? For now I'm reverting this patch locally.
+
+Yeah, I'll zap it from the x86/fpu lineup and then we can see how to fix up
+everything later.
+
+Thx.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+https://people.kernel.org/tglx/notes-about-netiquette
