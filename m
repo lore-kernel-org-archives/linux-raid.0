@@ -1,64 +1,64 @@
 Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9A58430CCA
-	for <linux-raid@vger.kernel.org>; Thu, 10 Sep 2026 08:11:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F5FE4334D0
+	for <linux-raid@vger.kernel.org>; Thu, 10 Sep 2026 08:11:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789027893; cv=none; b=SZ7tt+UVzQx9G/EsIEckU1UD/qPfl51UORWIRwLY4mGJiPF+2hyMIUS3n/wTjNQWZZpaD+1VWOYecarDO1GTnge5hNXip0gVj0gaVProMQVv0edYlHmyrwurv9s4FOaCjBU2Pdbhq/RmjLCUkpCqFn7MuORdknXOivB2FgbRY44=
+	t=1789027895; cv=none; b=JxQXpBc4rR/l3wpuQwolrJXIm+u1b7CKyaz7ZVL2NRNFmJOAHYX6YRLx3qOfbK9J9th1g+LLt5bjiHZrGPZKx0xAELENO7pi5rukqaGhdzdtTff4NocsUIIFsw/jWW8TFNq2iO+bJMV8UvaTBAXbGT4eq5iB4BORV6oayp9Kqfg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789027893; c=relaxed/simple;
-	bh=N4W4/1Nb4xxCQW/b/yh4LAIUt+gjMzmX7Ei/zLa6UWE=;
+	s=arc-20240116; t=1789027895; c=relaxed/simple;
+	bh=VWJq79Pbtf4IbOZyn7AR5EcaHFmtf9h2nH5b25XhR2E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gA/3FxIbMig3/XuPgBuXoYW9PlvdGTiJ0lNNkaAjaTeTq/BPeXNrEZKzCGU5i7iqmglA3SLKeondFOzA1DKYo2YmpyvyjoWTh7VhsvIEFO1TSBqkB/CummHNYRdr0C/fGgVjahbtOKotfs6ZN1P/eOnZdmsbu300F9EW+aqkvNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=T0cUXcFR; arc=none smtp.client-ip=74.125.225.140
+	 MIME-Version; b=VeaMUixw1lHJNSUtKmFeLTAxQrzBGHUIVyoGN6+nRlJeh5ZLETfgAsnv03bOXvnPvTqTsr/wHGZsofDlbU7bAUqpGI0ADRn0JpiLTnuHoaFmAzdi4k66dfzK3mnH4kWcWBtnsVYnfkibgo9Yvf0Guki2vOs6VBHQwzJbniO1MrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=TE/57EFV; arc=none smtp.client-ip=74.125.225.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="T0cUXcFR"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49d1ddd5d0aso1916455e9.3
-        for <linux-raid@vger.kernel.org>; Thu, 10 Sep 2026 01:11:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="TE/57EFV"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49d1ddd5d0aso1916535e9.3
+        for <linux-raid@vger.kernel.org>; Thu, 10 Sep 2026 01:11:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1789027886; x=1789632686; darn=vger.kernel.org;
+        d=ionos.com; s=google; t=1789027888; x=1789632688; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=+GHgzzQ8rfbRP2Put64Cq82EilqCh8jYa5rghgFsni8=;
-        b=T0cUXcFRSTTCOZWzfmdw5HeKCYRLaYu12TxzP2/SIWE6PyPMHPyt89TkO5VQE+snSf
-         tx9HUy0BVsGsBuWC1/WpnSEMPRS06BxJ/lEp+/+1cGEhmp9IoOus4x6O+MD7GvxOVJ+Q
-         pdiZJpfEgsWdkODpzHVo4b9cj9pwbbrxAfGt5KNagkjAcD63Ri4Khqa40rVXueVjsNlt
-         FI9x16Nzy7fhPNZsDYqef2jzxrrJb1oenLhvORzggAzha/aga88CuPzIoSdFQNAcK36K
-         +NOjZZeR+vkm8H0MamnFkPIpW1svySdoLdnBcIN3lfkXS89CklcY9P06Oy/hNiu+Vtan
-         ++vQ==
+        bh=7WxxmD3yg0pg+i13gK8J2zlyLTSoxJMhIHGtHp0KYMk=;
+        b=TE/57EFVuI+OZ/IiWW5Il/G1G+sP8z2qb3niY8ltt02d7SvWDiEv4y2+JsgB1uZpuZ
+         NlkOcgVOmzdfLBo9dKE+TTnKthv2BzaS0uqpu8kS6oB1CO01zW5ZmrjEx7b7wncNv2az
+         BkIAzeBogew5N2LQwO14t/UYLzSmCN/yHsEwHOn2pKe9N5SNTVNyK2W0O+vyF733wB6P
+         wJzf7A4Vft/wXSE6lh4pKXtUDSPqqfK11SVkykpc4GiSfk6Cg1E56HPlrEzgIOCGiH96
+         ulWcvp0M9aF4WHHbDkxS/g1tI55KUguX0D/0aHgIrgkFHi5WnintFHxUT4o5R+F9qATX
+         lrIQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789027886; x=1789632686;
+        d=1e100.net; s=20251104; t=1789027888; x=1789632688;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=+GHgzzQ8rfbRP2Put64Cq82EilqCh8jYa5rghgFsni8=;
-        b=VPjz4+qWjGXLMaoCpwFDKL6mcegWsrt2uqx8yut8U5bsah10T1qZyQ1mn2fl+nQ7w5
-         RKNIpzfnih6jvH4P3vjJGVgVTupfGsrTLH+VZVumAFdQe7LOPyCLC677uT6Y6kThKUy9
-         a4D49wbIONIMbhhdm9SmqHe8Oys1ndIolpHrMRoan2FnWdP7biQiDungDxpxq8vOCQNQ
-         PZqEA7nC8xTDp75FCKv/XYoc2UZq7eRFsAhX/YWA1q0CIfUMhJGTEFSz+sdvG+CidB2v
-         MLTmksVgriCmeE9iJhA/hQ83Kka4LaTMTmkTB7/hGV1C9IhudUtlUuoXTVQouDCCA3wd
-         LtgQ==
-X-Forwarded-Encrypted: i=1; AKwUvBy3Q40RUyXb8gMG97Ggtt1lWU7tM8fPmRo05WVNL44sk9epd1Ageqjv/q8rx1LwGGPAQneG66sA7al4@vger.kernel.org
-X-Gm-Message-State: AFuF++lhAgw7mOh54/cye5N6OtfumdmSfkK/mplQSEuGy3J0trnZSemj
-	ATleTuNv1rZOdIhdbtDH7ulQpUG8M65vHfRdxKkYq0kZIhTSNOzdVnKwvkSSNtbeWCw=
-X-Gm-Gg: AYBFou1b22YZPzBFnUKrobS6Cflpb4JgRwg+jZmLhI5sNGR3l/5rVk5ezcSSVtHbJg8
-	VzWQ2YZT0GSOT1RP2B1l6TUCroHaSeNDckO66AXgRkT4AU0zAt/0TukBuaEKo010B/ZniK9+BVE
-	pwS+9yh6lfbfv3i97O0MWFWf7Y72B4MCDLgNWOZhq5fGyli67YM5LhrZ22aJrpbIKWeAAar8v2x
-	LRpuFlDyV7pXM5ashCnZ++ig8dQ6RvC9ntuAoLW2y9CBzfv9X0PdzshT/bP/xNnTsqcycBGCMPH
-	xfcD1Oq27Fo3WX1mHq3M41j9fl10Ak3WPQHG2rIx9kJ2k+IiCh58mcvkp6ro7WUCcyKwFXP+4f4
-	efdWianuR175SAqDWPM4q7R8OhNvE86z939IQt+c7N8lcK9U0La+X5D+mdz7JVIn2ldFi539u1u
-	HCiLQye3aDJxFQhRjgx479+XH9JUlLLFiQ7b7ff2LWIFSU7x4vNnacNysQeep+8o4DmLiLinjEn
-	/6cNw6J9yFpVXvmxmFG0H9dplxx6spM25hp2KxuOJ9v
-X-Received: by 2002:a05:600c:c48f:b0:49b:9241:7ff0 with SMTP id 5b1f17b1804b1-49d010c4f64mr288757255e9.0.1789027885618;
-        Thu, 10 Sep 2026 01:11:25 -0700 (PDT)
+        bh=7WxxmD3yg0pg+i13gK8J2zlyLTSoxJMhIHGtHp0KYMk=;
+        b=igQ/YwjG3gk2ZeTBPfbyEOnQM8Se9wiGYIKy9lKpFk328qtVTm+G5ZKNyBgy56hpYn
+         ow44mxKlGeKJzN20Y1OUFiVtgFiYFURrjUi3s3RDWDseFtMtFkaToFHEDrMpobYvM8lb
+         szY+4jbzGl8ERqetJVSVYozMUh3HykP0hsUhly7290owX1iqhhcXlEU36eRywFQbiyL4
+         lFWkBkpHZ7gaPn9QzchlDCTSvBqGfd7R9wtNBJG2yS4xjwqVrzQTFE0ChV4NR5Cb5dxz
+         ZukQi1IGAgmRl/01lQOSBzcIFVA7Jd2rvcKPy2xDUbbFTq4/BNbVuPYvSgZL5cmMfQFr
+         98kg==
+X-Forwarded-Encrypted: i=1; AKwUvBzU8lYxW0S5THMToXJpXPTysoRngMq3vwb9e3yCDnTUxGoGoniQuUZcKvu2jDMIOxsY5UXxRwT5uy4F@vger.kernel.org
+X-Gm-Message-State: AFuF++lAwR1hyUuhzgX4p90+6jA1siwunPMrWvqJCusxVCEjAJ168Y48
+	PaAYR9mEjnihxxJB5W5HjYNeb1tn99hv26qnJdXNRC0tE1ZKM0ZkSYgp5f6lzyBmb+U=
+X-Gm-Gg: AYBFou2PdnwmIWixWUoCtTa7CFlHnesawydvz+8cKGD9Hpe3TobECcQObnnDrHD3NhH
+	fnYcru0Dwc0Z/JdVgrFJvm+POGcE8l632BoRNJxa3QPiNhIxbQNlnYJrJneE9N3hcgQW62lr8Bv
+	0t6vZAJ0SK9qaEMd1sfs8+Pwod52dDN/PrulqklsqG2zMGcSdMP9ugZu1PPdHisjmBuVyoKwQPG
+	yqyqDuPC1x9bVfJNB1OCrlPr14uSNNv/t5r+6F7y0iAgwGj+8KFRZC2UE/ZTazdago4FLCNGnqi
+	Ui6x1EM4mFrisoUiKgrWXOHx9kXkGu5X6qp9ruytWsvc31YkzDoKfpD0xoWiNq6sojHDS8UyJkt
+	FZW6lQlQFL7HPNL+TYAV01417v+fAeUepOTvuCs0jcNSSvW1UanNTEwJb4iYr6VIXGhdCm+IsxD
+	hfjASHu6G11aiMQHB+eUkb0+bPJlMVcqM+CPaQyLLbpJ0NEwbmm7mcaxRJrze5efEMllbEF6oqX
+	KxCxCkBRJSs4NzUDwc+6BmL628W3UbF8TAUweFhltt5
+X-Received: by 2002:a05:600c:3b25:b0:49b:910c:76fb with SMTP id 5b1f17b1804b1-49d01dd415bmr272852515e9.2.1789027887561;
+        Thu, 10 Sep 2026 01:11:27 -0700 (PDT)
 Received: from jwang-ThinkPad-T14-Gen-6.fkb.profitbricks.net ([212.227.34.98])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49d20fc1be3sm55261135e9.4.2026.09.10.01.11.24
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49d20fc1be3sm55261135e9.4.2026.09.10.01.11.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Sep 2026 01:11:25 -0700 (PDT)
+        Thu, 10 Sep 2026 01:11:26 -0700 (PDT)
 From: Jack Wang <jinpu.wang@ionos.com>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fygo.io>,
@@ -77,9 +77,9 @@ Cc: linux-block@vger.kernel.org,
 	dm-devel@lists.linux.dev,
 	linux-kernel@vger.kernel.org,
 	Jack Wang <jinpu.wang@cloud.ionos.com>
-Subject: [PATCH v2 7/8] md: open new legs before locking the array
-Date: Thu, 10 Sep 2026 10:11:12 +0200
-Message-ID: <20260910081114.1605746-8-jinpu.wang@ionos.com>
+Subject: [PATCH v2 8/8] md: link a new leg's holder before locking the array
+Date: Thu, 10 Sep 2026 10:11:13 +0200
+Message-ID: <20260910081114.1605746-9-jinpu.wang@ionos.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260910081114.1605746-1-jinpu.wang@ionos.com>
 References: <20260910081114.1605746-1-jinpu.wang@ionos.com>
@@ -93,471 +93,308 @@ Content-Transfer-Encoding: 8bit
 
 From: Jack Wang <jinpu.wang@cloud.ionos.com>
 
-Opening a leg takes disk->open_mutex, and the scsi disk probe path nests
-q->limits_lock inside it (sd_open() -> sd_revalidate_disk()).  md opens
-legs under reconfig_mutex, which this series makes q->limits_lock nest
-outside, closing a cycle.  Booting with lockdep on an md root reports it
-during assembly:
+bd_link_disk_holder() takes the leg's disk->open_mutex, and
+bind_rdev_to_array() calls it with reconfig_mutex held, so the
+dependency the previous patch removed from md_import_device() is still
+there by another route:
 
   -> #2 (&q->limits_lock):        sd_revalidate_disk / sd_open
-  -> #1 (&disk->open_mutex):      md_import_device
+  -> #1 (&disk->open_mutex):      bd_link_disk_holder
+                                  bind_rdev_to_array
                                   md_add_new_disk
                                   md_ioctl        <- ADD_NEW_DISK
   -> #0 (&mddev->reconfig_mutex): md_ioctl        <- RUN_ARRAY
 
-Move every open out from under the lock.  md_import_new_disk() mirrors
-md_add_new_disk()'s branch selection so all three of its branches take a
-pre-opened leg, and hot_add_disk(), new_dev_store() and md_setup_drive()
-open before they lock as well.
+bd_unlink_disk_holder() only takes blk_holder_mutex, which is why the
+release side needs no change and made the link side easy to miss.
 
-The mddev fields the open depends on are read without reconfig_mutex, so
-each caller rechecks them once the array is locked and rejects the add
-with -EBUSY if the branch or the superblock format would have changed.
+Link the holder where the leg is opened, before the array is locked, and
+record it in a new HolderLinked flag so the release side knows whether
+there is a link to drop.  A failed link is not fatal, as before.  A leg
+that is linked but not yet bound is released through md_export_rdev(),
+which drops the link first.
 
-md_autostart_arrays() needs no change: it opens under
-detected_devices_mutex.
+A leg is now linked before it is known to be acceptable, so a leg the
+array goes on to reject shows up in its slaves directory until the
+error path releases it.
+
+md then no longer takes disk->open_mutex under reconfig_mutex: of the
+functions that take it, md reaches bdev_open() and bd_link_disk_holder()
+from the paths above, bdev_release() and bdev_fput() only through fput(),
+which defers to task work, del_gendisk() only from mddev teardown, and
+never sync_bdevs().
 
 Assisted-by: LLM
 Signed-off-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 ---
- drivers/md/md-autodetect.c |  17 ++-
- drivers/md/md.c            | 238 ++++++++++++++++++++++++++-----------
- drivers/md/md.h            |  21 +++-
- 3 files changed, 203 insertions(+), 73 deletions(-)
+ drivers/md/md-autodetect.c |  2 +-
+ drivers/md/md.c            | 70 ++++++++++++++++++++++++++++----------
+ drivers/md/md.h            |  7 +++-
+ 3 files changed, 59 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/md/md-autodetect.c b/drivers/md/md-autodetect.c
-index e15ae2fb58a2..e592577356ad 100644
+index e592577356ad..b6f9fb36f1bb 100644
 --- a/drivers/md/md-autodetect.c
 +++ b/drivers/md/md-autodetect.c
-@@ -208,6 +208,7 @@ static void __init md_setup_drive(struct md_setup_args *args)
- 			.major	= MAJOR(devices[i]),
- 			.minor	= MINOR(devices[i]),
- 		};
-+		struct md_new_disk nd;
+@@ -231,7 +231,7 @@ static void __init md_setup_drive(struct md_setup_args *args)
+ 		mddev_lock_nointr(mddev);
  
- 		if (args->level != LEVEL_NONE) {
- 			dinfo.number = i;
-@@ -216,7 +217,21 @@ static void __init md_setup_drive(struct md_setup_args *args)
- 				(1 << MD_DISK_ACTIVE) | (1 << MD_DISK_SYNC);
- 		}
- 
--		md_add_new_disk(mddev, &dinfo, NULL);
-+		/*
-+		 * Opening a leg takes disk->open_mutex, which must not nest
-+		 * inside reconfig_mutex, see md_import_new_disk().  Drop the
-+		 * array lock around it; this is __init and the array is not
-+		 * reachable yet, so nothing else can touch it in between.
-+		 */
-+		mddev_unlock(mddev);
-+		if (md_import_new_disk(mddev, &dinfo, &nd)) {
-+			mddev_lock_nointr(mddev);
-+			continue;
-+		}
-+		mddev_lock_nointr(mddev);
-+
-+		md_add_new_disk(mddev, &dinfo, &nd, NULL);
-+		md_put_new_disk(&nd);
+ 		md_add_new_disk(mddev, &dinfo, &nd, NULL);
+-		md_put_new_disk(&nd);
++		md_put_new_disk(mddev, &nd);
  	}
  
  	/*
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5be956e80563..fa033d7d3831 100644
+index fa033d7d3831..235f0d645cea 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -4942,6 +4942,7 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
- 	struct md_rdev *rdev;
- 	unsigned int noio_flags;
- 	int err;
-+	int persistent, external, major_version, minor_version;
+@@ -2632,7 +2632,7 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
+ 		sysfs_get_dirent_safe(rdev->kobj.sd, "bad_blocks");
  
- 	if (!*buf || *e != ':' || !e[1] || e[1] == '\n')
- 		return -EINVAL;
-@@ -4953,32 +4954,52 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
- 	    minor != MINOR(dev))
- 		return -EOVERFLOW;
+ 	list_add_rcu(&rdev->same_set, &mddev->disks);
+-	bd_link_disk_holder(rdev->bdev, mddev->gendisk);
++	/* the holder is linked with the open, see md_link_rdev_holder() */
  
--	err = mddev_suspend_and_lock(mddev);
--	if (err)
--		return err;
--	noio_flags = memalloc_noio_save();
--	if (mddev->persistent) {
--		rdev = md_import_device(dev, mddev->major_version,
--					mddev->minor_version);
--		if (!IS_ERR(rdev) && !list_empty(&mddev->disks)) {
--			struct md_rdev *rdev0
--				= list_entry(mddev->disks.next,
--					     struct md_rdev, same_set);
--			err = super_types[mddev->major_version]
--				.load_super(rdev, rdev0, mddev->minor_version);
--			if (err < 0)
--				goto out;
--		}
--	} else if (mddev->external)
-+	/*
-+	 * Open before locking the array: bdev_open() takes disk->open_mutex,
-+	 * which must not nest inside reconfig_mutex, see md_import_new_disk().
-+	 * The fields below are read without the lock and rechecked under it.
-+	 */
-+	persistent = READ_ONCE(mddev->persistent);
-+	external = READ_ONCE(mddev->external);
-+	major_version = READ_ONCE(mddev->major_version);
-+	minor_version = READ_ONCE(mddev->minor_version);
+ 	return 0;
+ 
+@@ -2648,6 +2648,23 @@ void md_autodetect_dev(dev_t dev);
+ /* just for claiming the bdev */
+ static struct md_rdev claim_rdev;
+ 
++/*
++ * bd_link_disk_holder() takes the leg's disk->open_mutex, so the link is
++ * made with the open, before the array is locked.  bd_unlink_disk_holder()
++ * only takes blk_holder_mutex, so dropping it is safe under any lock.
++ */
++static void md_link_rdev_holder(struct md_rdev *rdev, struct mddev *mddev)
++{
++	if (!bd_link_disk_holder(rdev->bdev, mddev->gendisk))
++		set_bit(HolderLinked, &rdev->flags);
++}
 +
-+	if (persistent)
-+		rdev = md_import_device(dev, major_version, minor_version);
-+	else if (external)
- 		rdev = md_import_device(dev, -2, -1);
- 	else
- 		rdev = md_import_device(dev, -1, -1);
++static void md_unlink_rdev_holder(struct md_rdev *rdev, struct mddev *mddev)
++{
++	if (test_and_clear_bit(HolderLinked, &rdev->flags))
++		bd_unlink_disk_holder(rdev->bdev, mddev->gendisk);
++}
++
+ static void export_rdev(struct md_rdev *rdev)
+ {
+ 	pr_debug("md: export_rdev(%pg)\n", rdev->bdev);
+@@ -2661,11 +2678,18 @@ static void export_rdev(struct md_rdev *rdev)
+ 	kobject_put(&rdev->kobj);
+ }
  
--	if (IS_ERR(rdev)) {
--		memalloc_noio_restore(noio_flags);
--		mddev_unlock_and_resume(mddev);
-+	if (IS_ERR(rdev))
++/* release a leg that was linked before the array was locked */
++static void md_export_rdev(struct mddev *mddev, struct md_rdev *rdev)
++{
++	md_unlink_rdev_holder(rdev, mddev);
++	export_rdev(rdev);
++}
++
+ static void md_kick_rdev_from_array(struct md_rdev *rdev)
+ {
+ 	struct mddev *mddev = rdev->mddev;
+ 
+-	bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
++	md_unlink_rdev_holder(rdev, rdev->mddev);
+ 	list_del_rcu(&rdev->same_set);
+ 	pr_debug("md: unbind<%pg>\n", rdev->bdev);
+ 	mddev_destroy_serial_pool(rdev->mddev, rdev);
+@@ -4974,9 +4998,11 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (IS_ERR(rdev))
  		return PTR_ERR(rdev);
+ 
++	md_link_rdev_holder(rdev, mddev);
 +
-+	err = mddev_suspend_and_lock(mddev);
-+	if (err) {
-+		export_rdev(rdev);
-+		return err;
+ 	err = mddev_suspend_and_lock(mddev);
+ 	if (err) {
+-		export_rdev(rdev);
++		md_export_rdev(mddev, rdev);
+ 		return err;
  	}
-+	noio_flags = memalloc_noio_save();
-+
-+	if (persistent != mddev->persistent || external != mddev->external ||
-+	    major_version != mddev->major_version ||
-+	    minor_version != mddev->minor_version) {
-+		pr_warn("%s: array reconfigured while opening %pg\n",
-+			mdname(mddev), rdev->bdev);
-+		err = -EBUSY;
-+		goto out;
-+	}
-+
-+	if (mddev->persistent && !list_empty(&mddev->disks)) {
-+		struct md_rdev *rdev0
-+			= list_entry(mddev->disks.next,
-+				     struct md_rdev, same_set);
-+		err = super_types[mddev->major_version]
-+			.load_super(rdev, rdev0, mddev->minor_version);
-+		if (err < 0)
-+			goto out;
-+	}
-+
+ 	noio_flags = memalloc_noio_save();
+@@ -5003,7 +5029,7 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
  	err = bind_rdev_to_array(rdev, mddev);
   out:
  	if (err)
-@@ -7685,12 +7706,35 @@ static int get_disk_info(struct mddev *mddev, void __user * arg)
+-		export_rdev(rdev);
++		md_export_rdev(mddev, rdev);
+ 	memalloc_noio_restore(noio_flags);
+ 	mddev_unlock_and_resume(mddev);
+ 	if (!err)
+@@ -7519,6 +7545,10 @@ static void autorun_devices(int part)
+ 			limp = &lim;
+ 		}
+ 
++		/* link before locking, see md_link_rdev_holder() */
++		rdev_for_each_list(rdev, tmp, &candidates)
++			md_link_rdev_holder(rdev, mddev);
++
+ 		if (mddev_suspend_and_lock(mddev)) {
+ 			pr_warn("md: %s locked, cannot run\n", mdname(mddev));
+ 			if (limp) {
+@@ -7538,7 +7568,7 @@ static void autorun_devices(int part)
+ 			rdev_for_each_list(rdev, tmp, &candidates) {
+ 				list_del_init(&rdev->same_set);
+ 				if (bind_rdev_to_array(rdev, mddev))
+-					export_rdev(rdev);
++					md_export_rdev(mddev, rdev);
+ 			}
+ 			autorun_array(mddev, limp);
+ 			if (limp && queue_limits_commit_update(q, limp))
+@@ -7552,7 +7582,7 @@ static void autorun_devices(int part)
+ 		 */
+ 		rdev_for_each_list(rdev, tmp, &candidates) {
+ 			list_del_init(&rdev->same_set);
+-			export_rdev(rdev);
++			md_export_rdev(mddev, rdev);
+ 		}
+ 		mddev_put(mddev);
+ 	}
+@@ -7730,7 +7760,7 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
+ 	     nd->minor_version != mddev->minor_version)) {
+ 		pr_warn("%s: array reconfigured while opening %pg\n",
+ 			mdname(mddev), nd->rdev->bdev);
+-		export_rdev(nd->rdev);
++		md_export_rdev(mddev, nd->rdev);
+ 		nd->rdev = NULL;
+ 		return -EBUSY;
+ 	}
+@@ -7763,13 +7793,13 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
+ 				pr_warn("md: %pg has different UUID to %pg\n",
+ 					rdev->bdev,
+ 					rdev0->bdev);
+-				export_rdev(rdev);
++				md_export_rdev(mddev, rdev);
+ 				return -EINVAL;
+ 			}
+ 		}
+ 		err = bind_rdev_to_array(rdev, mddev);
+ 		if (err)
+-			export_rdev(rdev);
++			md_export_rdev(mddev, rdev);
+ 		return err;
+ 	}
+ 
+@@ -7806,7 +7836,7 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
+ 			/* This was a hot-add request, but events doesn't
+ 			 * match, so reject it.
+ 			 */
+-			export_rdev(rdev);
++			md_export_rdev(mddev, rdev);
+ 			return -EINVAL;
+ 		}
+ 
+@@ -7832,7 +7862,7 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
+ 				}
+ 			}
+ 			if (has_journal || mddev->bitmap) {
+-				export_rdev(rdev);
++				md_export_rdev(mddev, rdev);
+ 				return -EBUSY;
+ 			}
+ 			set_bit(Journal, &rdev->flags);
+@@ -7847,7 +7877,7 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
+ 				/* --add initiated by this node */
+ 				err = mddev->cluster_ops->add_new_disk(mddev, rdev);
+ 				if (err) {
+-					export_rdev(rdev);
++					md_export_rdev(mddev, rdev);
+ 					return err;
+ 				}
+ 			}
+@@ -7857,7 +7887,7 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
+ 		err = bind_rdev_to_array(rdev, mddev);
+ 
+ 		if (err)
+-			export_rdev(rdev);
++			md_export_rdev(mddev, rdev);
+ 
+ 		if (mddev_is_clustered(mddev)) {
+ 			if (info->state & (1 << MD_DISK_CANDIDATE)) {
+@@ -7919,7 +7949,7 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
+ 
+ 		err = bind_rdev_to_array(rdev, mddev);
+ 		if (err) {
+-			export_rdev(rdev);
++			md_export_rdev(mddev, rdev);
+ 			return err;
+ 		}
+ 	}
+@@ -8031,7 +8061,7 @@ static int hot_add_disk(struct mddev *mddev, struct md_new_disk *nd)
+ 	return 0;
+ 
+ abort_export:
+-	export_rdev(rdev);
++	md_export_rdev(mddev, rdev);
+ 	return err;
+ }
+ 
+@@ -8577,15 +8607,18 @@ int md_import_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
+ 		return err;
+ 	}
+ 
++	/* link the holder here too, for the same reason */
++	md_link_rdev_holder(rdev, mddev);
++
+ 	nd->rdev = rdev;
  	return 0;
  }
  
-+/*
-+ * @nd carries an rdev the caller opened before locking the array, for the
-+ * branch its snapshot selected.  Every caller must open first; doing it
-+ * here would nest disk->open_mutex inside reconfig_mutex.
-+ */
- int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
--		    struct queue_limits *lim)
-+		    struct md_new_disk *nd, struct queue_limits *lim)
+ /* release a leg md_add_new_disk() did not take ownership of */
+-void md_put_new_disk(struct md_new_disk *nd)
++void md_put_new_disk(struct mddev *mddev, struct md_new_disk *nd)
  {
- 	struct md_rdev *rdev;
- 	dev_t dev = MKDEV(info->major,info->minor);
- 
-+	/*
-+	 * The open ran unlocked, so anything that selects a different branch
-+	 * below, or a different superblock format, means it was done against
-+	 * an array that no longer looks like this one.
-+	 */
-+	if (nd && nd->rdev &&
-+	    (nd->have_raid_disks != (mddev->raid_disks != 0) ||
-+	     nd->have_pers != !!mddev->pers ||
-+	     nd->persistent != mddev->persistent ||
-+	     nd->major_version != mddev->major_version ||
-+	     nd->minor_version != mddev->minor_version)) {
-+		pr_warn("%s: array reconfigured while opening %pg\n",
-+			mdname(mddev), nd->rdev->bdev);
-+		export_rdev(nd->rdev);
-+		nd->rdev = NULL;
-+		return -EBUSY;
-+	}
-+
- 	if (mddev_is_clustered(mddev) &&
- 		!(info->state & ((1 << MD_DISK_CLUSTER_ADD) | (1 << MD_DISK_CANDIDATE)))) {
- 		pr_warn("%s: Cannot add to clustered mddev.\n",
-@@ -7703,13 +7747,12 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
- 
- 	if (!mddev->raid_disks) {
- 		int err;
-+
- 		/* expecting a device which has a superblock */
--		rdev = md_import_device(dev, mddev->major_version, mddev->minor_version);
--		if (IS_ERR(rdev)) {
--			pr_warn("md: md_import_device returned %ld\n",
--				PTR_ERR(rdev));
--			return PTR_ERR(rdev);
--		}
-+		if (WARN_ON_ONCE(!nd || !nd->rdev))
-+			return -EINVAL;
-+		rdev = nd->rdev;
-+		nd->rdev = NULL;
- 		if (!list_empty(&mddev->disks)) {
- 			struct md_rdev *rdev0
- 				= list_entry(mddev->disks.next,
-@@ -7742,16 +7785,10 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
- 				mdname(mddev));
- 			return -EINVAL;
+ 	if (nd->rdev) {
+-		export_rdev(nd->rdev);
++		md_export_rdev(mddev, nd->rdev);
+ 		nd->rdev = NULL;
+ 	}
+ }
+@@ -8717,6 +8750,7 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
+ 			err = -EINVAL;
+ 			goto out;
  		}
--		if (mddev->persistent)
--			rdev = md_import_device(dev, mddev->major_version,
--						mddev->minor_version);
--		else
--			rdev = md_import_device(dev, -1, -1);
--		if (IS_ERR(rdev)) {
--			pr_warn("md: md_import_device returned %ld\n",
--				PTR_ERR(rdev));
--			return PTR_ERR(rdev);
--		}
-+		if (WARN_ON_ONCE(!nd || !nd->rdev))
-+			return -EINVAL;
-+		rdev = nd->rdev;
-+		nd->rdev = NULL;
- 		/* set saved_raid_disk if appropriate */
- 		if (!mddev->persistent) {
- 			if (info->state & (1<<MD_DISK_SYNC)  &&
-@@ -7853,12 +7890,11 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
- 
- 	if (!(info->state & (1<<MD_DISK_FAULTY))) {
- 		int err;
--		rdev = md_import_device(dev, -1, 0);
--		if (IS_ERR(rdev)) {
--			pr_warn("md: error, md_import_device() returned %ld\n",
--				PTR_ERR(rdev));
--			return PTR_ERR(rdev);
--		}
-+
-+		if (WARN_ON_ONCE(!nd || !nd->rdev))
-+			return -EINVAL;
-+		rdev = nd->rdev;
-+		nd->rdev = NULL;
- 		rdev->desc_nr = info->number;
- 		if (info->raid_disk < mddev->raid_disks)
- 			rdev->raid_disk = info->raid_disk;
-@@ -7930,7 +7966,8 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev,
- 	return -EBUSY;
- }
- 
--static int hot_add_disk(struct mddev *mddev, dev_t dev)
-+/* @nd carries a leg the caller opened before the array was locked */
-+static int hot_add_disk(struct mddev *mddev, struct md_new_disk *nd)
- {
- 	int err;
- 	struct md_rdev *rdev;
-@@ -7949,12 +7986,10 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
- 		return -EINVAL;
++		md_link_rdev_holder(nd.rdev, mddev);
  	}
  
--	rdev = md_import_device(dev, -1, 0);
--	if (IS_ERR(rdev)) {
--		pr_warn("md: error, md_import_device() returned %ld\n",
--			PTR_ERR(rdev));
-+	if (WARN_ON_ONCE(!nd->rdev))
- 		return -EINVAL;
--	}
-+	rdev = nd->rdev;
-+	nd->rdev = NULL;
- 
- 	if (mddev->persistent)
- 		rdev->sb_start = calc_dev_sboffset(rdev);
-@@ -8497,14 +8532,61 @@ static inline int md_ioctl_valid(unsigned int cmd)
-  * journal device or a personality without ->hot_remove_disk, but that depends
-  * on disk info still in user memory here, so it is included as a whole.
-  */
--static bool md_ioctl_may_add_disk(unsigned int cmd)
-+
-+/*
-+ * Open the leg before the array is locked; bdev_open() takes
-+ * disk->open_mutex, which must not nest inside reconfig_mutex.  mddev is
-+ * read unlocked on purpose, and md_add_new_disk() rechecks the snapshot.
-+ */
-+int md_import_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
-+		       struct md_new_disk *nd)
- {
--	switch (cmd) {
--	case ADD_NEW_DISK:
--	case HOT_REMOVE_DISK:
--		return true;
--	default:
--		return false;
-+	dev_t dev = MKDEV(info->major, info->minor);
-+	struct md_rdev *rdev;
-+
-+	memset(nd, 0, sizeof(*nd));
-+	nd->have_raid_disks = READ_ONCE(mddev->raid_disks) != 0;
-+	nd->have_pers = !!READ_ONCE(mddev->pers);
-+	nd->persistent = READ_ONCE(mddev->persistent);
-+	nd->major_version = READ_ONCE(mddev->major_version);
-+	nd->minor_version = READ_ONCE(mddev->minor_version);
-+
-+	if (!nd->have_raid_disks) {
-+		/* a device with a superblock, for an array being assembled */
-+		rdev = md_import_device(dev, nd->major_version,
-+					nd->minor_version);
-+	} else if (nd->have_pers) {
-+		/* a hot spare; this is the branch that stacks limits */
-+		nd->stacks = true;
-+		if (nd->persistent)
-+			rdev = md_import_device(dev, nd->major_version,
-+						nd->minor_version);
-+		else
-+			rdev = md_import_device(dev, -1, -1);
-+	} else if (nd->major_version == 0) {
-+		rdev = md_import_device(dev, -1, 0);
-+	} else {
-+		/* md_add_new_disk() rejects this, nothing to open */
-+		return 0;
-+	}
-+
-+	if (IS_ERR(rdev)) {
-+		int err = PTR_ERR(rdev);
-+
-+		pr_warn("md: md_import_device returned %d\n", err);
-+		return err;
-+	}
-+
-+	nd->rdev = rdev;
-+	return 0;
-+}
-+
-+/* release a leg md_add_new_disk() did not take ownership of */
-+void md_put_new_disk(struct md_new_disk *nd)
-+{
-+	if (nd->rdev) {
-+		export_rdev(nd->rdev);
-+		nd->rdev = NULL;
- 	}
- }
- 
-@@ -8566,6 +8648,8 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 	struct request_queue *q = NULL;
- 	struct queue_limits lim;
- 	struct queue_limits *limp = NULL;
-+	struct md_new_disk nd = { };
-+	mdu_disk_info_t info;
- 	bool suspend;
- 
- 	err = md_ioctl_valid(cmd);
-@@ -8616,8 +8700,27 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 	if (!md_is_rdwr(mddev))
- 		flush_work(&mddev->sync_work);
- 
-+	if (cmd == ADD_NEW_DISK) {
-+		if (copy_from_user(&info, argp, sizeof(info))) {
-+			err = -EFAULT;
-+			goto out;
-+		}
-+		err = md_import_new_disk(mddev, &info, &nd);
-+		if (err)
-+			goto out;
-+	} else if (cmd == HOT_ADD_DISK) {
-+		nd.rdev = md_import_device(new_decode_dev(arg), -1, 0);
-+		if (IS_ERR(nd.rdev)) {
-+			pr_warn("md: error, md_import_device() returned %ld\n",
-+				PTR_ERR(nd.rdev));
-+			nd.rdev = NULL;
-+			err = -EINVAL;
-+			goto out;
-+		}
-+	}
-+
  	/* q->limits_lock nests outside both, see md_start_sync() */
--	if ((md_ioctl_may_add_disk(cmd) || cmd == RUN_ARRAY) &&
-+	if ((nd.stacks || cmd == HOT_REMOVE_DISK || cmd == RUN_ARRAY) &&
- 	    !mddev_is_dm(mddev)) {
- 		q = mddev->gendisk->queue;
- 		lim = queue_limits_start_update(q);
-@@ -8681,14 +8784,10 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 		 * So require mddev->pers and MD_DISK_SYNC.
- 		 */
- 		if (mddev->pers) {
--			mdu_disk_info_t info;
--			if (copy_from_user(&info, argp, sizeof(info)))
--				err = -EFAULT;
--			else if (!(info.state & (1<<MD_DISK_SYNC)))
-+			if (!(info.state & (1<<MD_DISK_SYNC)))
- 				/* Need to clear read-only for this */
- 				break;
--			else
--				err = md_add_new_disk(mddev, &info, limp);
-+			err = md_add_new_disk(mddev, &info, &nd, limp);
- 			goto unlock;
- 		}
- 		break;
-@@ -8721,14 +8820,8 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 
- 	switch (cmd) {
- 	case ADD_NEW_DISK:
--	{
--		mdu_disk_info_t info;
--		if (copy_from_user(&info, argp, sizeof(info)))
--			err = -EFAULT;
--		else
--			err = md_add_new_disk(mddev, &info, limp);
-+		err = md_add_new_disk(mddev, &info, &nd, limp);
- 		goto unlock;
--	}
- 
- 	case CLUSTERED_DISK_NACK:
- 		if (mddev_is_clustered(mddev))
-@@ -8738,7 +8831,7 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 		goto unlock;
- 
- 	case HOT_ADD_DISK:
--		err = hot_add_disk(mddev, new_decode_dev(arg));
-+		err = hot_add_disk(mddev, &nd);
- 		goto unlock;
- 
- 	case RUN_ARRAY:
-@@ -8770,6 +8863,9 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
- 	}
+@@ -8864,7 +8898,7 @@ static int md_ioctl(struct block_device *bdev, blk_mode_t mode,
  
  out:
-+	/* a leg we opened but nothing took ownership of */
-+	md_put_new_disk(&nd);
-+
+ 	/* a leg we opened but nothing took ownership of */
+-	md_put_new_disk(&nd);
++	md_put_new_disk(mddev, &nd);
+ 
  	if (cmd == STOP_ARRAY_RO || (err && cmd == STOP_ARRAY))
  		clear_bit(MD_CLOSING, &mddev->flags);
- 	return err;
 diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 73f6ef20f266..73a27d83d65a 100644
+index 73a27d83d65a..1a0d57d58ad1 100644
 --- a/drivers/md/md.h
 +++ b/drivers/md/md.h
-@@ -1051,8 +1051,27 @@ struct mdu_disk_info_s;
- extern int mdp_major;
- void md_autostart_arrays(int part);
- int md_set_array_info(struct mddev *mddev, struct mdu_array_info_s *info);
-+/*
-+ * A leg opened before the array was locked, with the mddev fields that
-+ * selected the branch and the superblock format.  Opening takes
-+ * disk->open_mutex, which must not nest inside reconfig_mutex; the fields
-+ * are read unlocked and md_add_new_disk() rechecks them.
-+ */
-+struct md_new_disk {
-+	struct md_rdev *rdev;
-+	bool stacks;		/* the add can reach ->hot_add_disk() */
-+	bool have_pers;
-+	bool have_raid_disks;
-+	int persistent;
-+	int major_version;
-+	int minor_version;
-+};
-+
-+int md_import_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
-+		       struct md_new_disk *nd);
-+void md_put_new_disk(struct md_new_disk *nd);
+@@ -294,6 +294,11 @@ enum flag_bits {
+ 				 * serial bios.
+ 				 */
+ 	Nonrot,			/* non-rotational device (SSD) */
++	HolderLinked,		/* bd_link_disk_holder() succeeded for this
++				 * leg.  The link is made before the array is
++				 * locked, as it takes disk->open_mutex,
++				 * see md_import_new_disk().
++				 */
+ };
+ 
+ static inline int is_badblock(struct md_rdev *rdev, sector_t s, sector_t sectors,
+@@ -1069,7 +1074,7 @@ struct md_new_disk {
+ 
+ int md_import_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
+ 		       struct md_new_disk *nd);
+-void md_put_new_disk(struct md_new_disk *nd);
++void md_put_new_disk(struct mddev *mddev, struct md_new_disk *nd);
  int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info,
--		    struct queue_limits *lim);
-+		    struct md_new_disk *nd, struct queue_limits *lim);
+ 		    struct md_new_disk *nd, struct queue_limits *lim);
  int do_md_run(struct mddev *mddev, struct queue_limits *lim);
- #define MDDEV_STACK_INTEGRITY	(1u << 0)
- int mddev_stack_rdev_limits(struct mddev *mddev, struct queue_limits *lim,
 -- 
 2.43.0
 
