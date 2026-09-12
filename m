@@ -1,100 +1,148 @@
-Received: from va-2-43.ptr.blmpb.com (va-2-43.ptr.blmpb.com [209.127.231.43])
+Received: from va-2-60.ptr.blmpb.com (va-2-60.ptr.blmpb.com [209.127.231.60])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C032226A0D5
-	for <linux-raid@vger.kernel.org>; Sat, 12 Sep 2026 05:36:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 075D738E11A
+	for <linux-raid@vger.kernel.org>; Sat, 12 Sep 2026 07:48:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.60
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789191390; cv=none; b=RguoEQEXStpzJys9r0gGRTIzlbgXjmNrKrM73aEsiwtBFc7ym3ps5wurOcYTLqGj4rZJ8bU/MxqdBoU7wPvf17pZ1D4VkHatPOkPxtt5pHZQqvye5csLEHhOycU0r2y9plj6RwU0JUwHlUYF7JyTQljViG7tdHbOiqd6EZMwbA4=
+	t=1789199298; cv=none; b=OiytV+2vl4Yt1e1/FFtDcdhYhlfDRHDmW3/3LRpKDV4Rspq19B74YXEvDWqaerKGEHAqIrazpGpgvk7oY05bTviZ9YSsmsTiR866Vc5L1m+JXhfqg+1i6BO0LPyAy8NtGmD0RdiPrAXi35P28DjwV/FJn+4QFuBY6FKYVcJJCsk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789191390; c=relaxed/simple;
-	bh=YS6Bmi3ur/g06pxTgi2HZpCx66s+nN/m2XgLl6TIFoc=;
-	h=From:Subject:Date:Message-Id:To:References:Cc:Mime-Version:
-	 Content-Type:In-Reply-To; b=OYadKiDipB8HlGdRO7I3sXIIGsGtBRxPHlaqXfQmdW4RJW9i/wjOqfJAjDUJPyCarPF2v/y+eXTz/sOXJaTJRZogR9Un2WzE/lcFLVDWlnn22bsr7XN3i16DGeFKe1ylvjwsMhTKUd60Zm7SYXgMIwBgnpfvtTXxHSaWADAKUOc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=C5NCI/ga; arc=none smtp.client-ip=209.127.231.43
+	s=arc-20240116; t=1789199298; c=relaxed/simple;
+	bh=j7DPIT46L3jwPBs/m4i9dXxYp91/V5WPUKCQ73DO1cs=;
+	h=Subject:In-Reply-To:From:Mime-Version:Message-Id:References:Date:
+	 To:Cc:Content-Type; b=CqO5zhTSyvtxIW5Z77C96m47XfnZG5CHGJOTWOI64byb0TiF6LvTGib6l/9zkHMK4Oqx887aNs4E6Mx/JvtKQs7YqQNnSCEiW35LHRH8Brx0XWaGRuuq5W4oYUJZueqk9fvZjBJ4SC/l+igj9CWjRa8fA6VBBqGXLtADIDGfceA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=NikpzdR0; arc=none smtp.client-ip=209.127.231.60
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="C5NCI/ga"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="NikpzdR0"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1789191375;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1789199285;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=x+1CHNOPbt8KaGgVhkriM21cLehyfxKo3I2vYEiFVTs=;
- b=C5NCI/gaNmTQJVI8mi6MRMxoYDZ02O3ptav1cEtNf/TaFf5ASu1MK6A5khFKV2bjvyEbkz
- ZNe0FwP/Aar/GGTKG/eNTFDvvQ7dfUmSgCtfXG4NAreiwU0378bRsf2/HsGQzY+DR87aA8
- 6sOfGb4shG4oPVRdTKBBf466TfLwZ5t89zc7muVyV7SlbhRFZkWC9dQP32QY5MiKdb3zum
- Vtk1nGk7mXqMEzmwwCZvchKbioFvcR9U8EWwdJWDbY5R6OCfJeGBw2ZP0LZXi/Qa11Md73
- Be1udthljMXXCPkETu5Legc9wLI2vExyd48+9gxPm4dx0mAwFsam8OKB0WkwVw==
-X-Original-From: yu kuai <yukuai@fygo.io>
+ bh=1VyD7DaC6wasXE9S7pArhsSgm3Sx7MaWSQX/kiC/gJ4=;
+ b=NikpzdR09/F8jjEurW0CDFTH6PkpC4QLjhIWtGTyY2EGlJjBO5bIcO6Bd2yb2gL4q7SfCQ
+ xljC87r0sRehHc+iFA1dUhhc6f4MJjddtcf1o9sOkPRHza6hi9M/IYpH29fwaVOtAvrpHK
+ srW+p7PHZlNXRg9cPxBtjTU1lwoikkIzQMcx3y91mp2brO1uxFCkEstSTb7jhX0f97McF0
+ F9ALnFYNx7/MpiWh/ZKDPO/5yFLiz/EyoUmb04lRICLngIJWhpFRMJT0ngOE7LTovgQ9pO
+ aulCGlzLnrh63Ui0JyG9cZKR2LqMMbCUD6NOAKaJCeZlW4HS5+Nlxvs0/d2HIA==
+Subject: Re: [PATCH] md/raid5: don't BUG() on an inconsistent reshape state from the superblock
+In-Reply-To: <20260910131103.988-1-yogeshgaur.83@gmail.com>
+Received: from [192.168.1.104] ([39.182.0.161]) by smtp.larksuite.com with ESMTPS; Sat, 12 Sep 2026 07:48:04 +0000
 From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH v4] md/raid5: validate payload size before calculating payload_len
-Date: Sat, 12 Sep 2026 13:36:10 +0800
-Message-Id: <f55e0683-efec-4447-9c12-bd400470c281@fygo.io>
-Reply-To: yukuai@fygo.io
-To: "Martin Wilck" <martin.wilck@suse.com>, "Song Liu" <song@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.161]) by smtp.larksuite.com with ESMTPS; Sat, 12 Sep 2026 05:36:14 +0000
 User-Agent: Mozilla Thunderbird
-References: <20260907155103.2325511-1-mwilck@suse.com>
-Cc: "Xiao Ni" <xiao@kernel.org>, "Li Nan" <magiclinan@didiglobal.com>, 
-	<linux-raid@vger.kernel.org>, "Martin Wilck" <mwilck@suse.com>, 
-	"Junrui Luo" <moonafterrain@outlook.com>, <stable@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Lms-Return-Path: <lba+26aa4e4cf+b95795+vger.kernel.org+yukuai@fygo.io>
+Message-Id: <15056940-2572-4395-a72b-8cba7d8d11b7@fygo.io>
+X-Original-From: yu kuai <yukuai@fygo.io>
+References: <20260910131103.988-1-yogeshgaur.83@gmail.com>
+X-Lms-Return-Path: <lba+26aa503b4+1d33de+vger.kernel.org+yukuai@fygo.io>
+Date: Sat, 12 Sep 2026 15:48:00 +0800
+To: "Yogesh Gaur" <yogeshgaur.83@gmail.com>, "Song Liu" <song@kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<syzbot+1f5a7de91d547763f4c8@syzkaller.appspotmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <20260907155103.2325511-1-mwilck@suse.com>
+Reply-To: yukuai@fygo.io
 
-=E5=9C=A8 2026/9/7 23:51, Martin Wilck =E5=86=99=E9=81=93:
+=E5=9C=A8 2026/9/10 21:11, Yogesh Gaur =E5=86=99=E9=81=93:
 
-> Commit b0cc3ae97e89 ("md/raid5: validate payload size before accessing
-> journal metadata") introduced a bounds check to verify that a given paylo=
-ad
-> fits into the current metadata block. In order to calculate the payload
-> size, it has to access the members payload->header.type and payload->size=
-,
-> the offset of which may already be past the end of the metadata block,
-> because the loop condition only checks that the first byte of the payload
-> is inside, and the payload entries have variable sizes. Later on,
-> payload->checksum[0] and payload->checksum[1] are accessed without
-> verifying that payload->size is large enough.
+> raid5_run() branches on mddev->reshape_position. When it is MaxSector --
 >
-> Add another check to make sure that payload->size can be safely
-> accessed, and make sure that the checksum fields are accessible.
+> no reshape in progress -- the else branch asserts that nothing else
 >
-> This issue has been found by AI (gemma4, Gemini) during a backport
-> review.
+> describes one:
 >
-> Cc: Junrui Luo<moonafterrain@outlook.com>
-> Cc:stable@vger.kernel.org
-> Fixes: b0cc3ae97e89 ("md/raid5: validate payload size before accessing jo=
-urnal metadata")
-> Signed-off-by: Martin Wilck<mwilck@suse.com>
+>
+>
+> 	BUG_ON(mddev->level !=3D mddev->new_level);
+>
+> 	BUG_ON(mddev->layout !=3D mddev->new_layout);
+>
+> 	BUG_ON(mddev->chunk_sectors !=3D mddev->new_chunk_sectors);
+>
+> 	BUG_ON(mddev->delta_disks !=3D 0);
+>
+>
+>
+> Nothing enforces that invariant. Both superblock validators copy the
+>
+> reshape fields straight off disk without cross-checking them against
+>
+> each other: super_1_validate() takes reshape_position, delta_disks,
+>
+> new_level, new_layout and new_chunk from the superblock whenever
+>
+> MD_FEATURE_RESHAPE_ACTIVE is set, and super_90_validate() does the same
+>
+> for minor version 91. A superblock that sets the reshape feature while
+>
+> leaving reshape_position at the MaxSector sentinel therefore reaches the
+>
+> else branch with a non-zero delta_disks, and assembling the array takes
+>
+> the machine down:
+>
+>
+>
+>    kernel BUG at drivers/md/raid5.c:8117!
+>
+>    Oops: invalid opcode: 0000 [#1] SMP KASAN NOPTI
+>
+>    RIP: 0010:raid5_run+0x11a7/0x1670 drivers/md/raid5.c:8117
+>
+>    Call Trace:
+>
+>     md_run+0xc2f/0x2510 drivers/md/md.c:6779
+>
+>     do_md_run+0x36/0x660 drivers/md/md.c:6880
+>
+>     array_state_store+0x9c5/0xcf0 drivers/md/md.c:4765
+>
+>     md_attr_store+0x1c5/0x330 drivers/md/md.c:6158
+>
+>     sysfs_kf_write+0xf2/0x150 fs/sysfs/file.c:145
+>
+>     kernfs_fop_write_iter+0x3e0/0x5f0 fs/kernfs/file.c:345
+>
+>
+>
+> This is reachable by anyone who can present an md superblock, so BUG()
+>
+> is the wrong response. Refuse to start the array instead, the way the
+>
+> reshape_position !=3D MaxSector branch a few lines above already refuses =
+a
+>
+> reshape it cannot resume. Nothing has been allocated at this point --
+>
+> the journal-and-bitmap check just above returns -EINVAL the same way --
+>
+> so there is nothing to unwind.
+>
+>
+>
+> Reported-by:syzbot+1f5a7de91d547763f4c8@syzkaller.appspotmail.com
+>
+> Closes:https://syzkaller.appspot.com/bug?extid=3D1f5a7de91d547763f4c8
+>
+> Fixes: 91adb56473fe ("md/raid5: refactor raid5 "run"")
+>
+> Assisted-by: LLM
+>
+> Signed-off-by: Yogesh Gaur<yogeshgaur.83@gmail.com>
+>
 > ---
-> Changes v3 -> v4 (Yu Kuai)
 >
-> * use u32 instead of uint32_t
-> * use <=3D in loop condition
+>   drivers/md/raid5.c | 16 +++++++++++-----
 >
-> Changes v2 -> v3: Fixed another issue reported by Sashiko
->
-> * Modify loop condition to make sure the payload->header.type can be acce=
-ssed
->
-> Changes v1 -> v2: Fixed issues reported by Sashiko
->
-> * fix use of wrong variable name payload_len instead of mb_offset
-> * add checks to ensure payload->size is large enough to hold the checksum=
- values
-> ---
->   drivers/md/raid5-cache.c | 34 ++++++++++++++++++++++++++--------
->   1 file changed, 26 insertions(+), 8 deletions(-)
+>   1 file changed, 11 insertions(+), 5 deletions(-)
 Applied to md-7.3
 
 --=20
