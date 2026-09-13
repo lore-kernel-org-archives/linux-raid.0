@@ -1,89 +1,142 @@
-Received: from mail-oo1-f71.google.com (mail-oo1-f71.google.com [209.85.161.71])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 595DB3845D8
-	for <linux-raid@vger.kernel.org>; Sun, 13 Sep 2026 23:46:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.71
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8106379993
+	for <linux-raid@vger.kernel.org>; Sun, 13 Sep 2026 23:51:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789343198; cv=none; b=EtnrmP4xx/zpWpn4UF7o++Zz6GwYn7gGdWRQCbAUduLmpHi2O0b0DgK8xpa8gF+hF/RtIRMkf/BuK/UcKkMHhLE1H4/nrTD22kkrW3IG2ITFlFfxyRWMdK0p8gmGeMHxUiu6jMY+M5hO6fvIcguj4IdYc6LGs7rh5LL+RDMqVpI=
+	t=1789343520; cv=none; b=lnTi5IsFSMhdgj0q0rdUcXSHF6SA14tFpfSuB+DyweiXyMtO87+QFg2ekRcAtxBBS0iDiaj21ocuBB/4ywC6mF2kUVL7BHD6QqEs6/7FNr73rFw+KzYKMRAnOs6JDqC/HoAOq1BTO1O9AaJsh8CdgQKwxsNhGbpTyhVf0zgfXho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789343198; c=relaxed/simple;
-	bh=Qn9lIkgmGdmg09kU+H9Bzm5YtdGfa5a/RA3U99GBCpk=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
-	 Content-Type; b=TDPtb0D0tQHSUyDVDjDwtGoHY+dDy2j2OGaRmUQ0HSneLBVvPcAjlHrL54pcZyd/ldqfYPmsLfZgoOqA2L42/dz/Z5ysFhXyXSIcF2N1sKnLQwj0lTl88RSqv+Mdd3J8ZUmkQU9+6qLi0F153OUHKrxrwYqRU5KxrNQhVdx8144=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.71
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oo1-f71.google.com with SMTP id 006d021491bc7-6c1a8f2c565so2645338eaf.2
-        for <linux-raid@vger.kernel.org>; Sun, 13 Sep 2026 16:46:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789343196; x=1789947996;
-        h=content-type:cc:to:from:subject:message-id:in-reply-to:date
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=cjOiu+m9w1SzNUGZg72zZnORRd0gFlaMH0tXwn0wV5g=;
-        b=RkWGjmoZR5FpKWOWiuYKK6rfustWmOQlEFbBt7E75GnLUwKEfr26nI39jrXpwborZc
-         VLoT8oxzpBGkGrdfswFip/jPL5sRstQdXyz/GGHFlIDifuEoXl+48uMObDid9L4h3yhX
-         TCKqK/ebbwYsQ/SaHGfVed/CiIAwejsOYSRwY3bIqch1EqsLaZ527FHx1syWdFAQKQJi
-         tk3sOeFaJs44udOb+IMk6T8nrgbwLa9V8xVBBwbyPFm48nautzz8iDHUbt+ymdtxddw3
-         QRFmfwFJShgEtoaQRRgT75Xkwzug+Qfso/ZJFACB16DGMDt5h5q3RGiN78cC2V8sJzgS
-         uBKg==
-X-Forwarded-Encrypted: i=1; AKwUvBzEuc/O0C8uEgzwaPQ58dbsp0AS6D6q1GGnCw4ovWujXDG1vsUdwsad2/iCi2ApMo50eB8aiUa2HZrd@vger.kernel.org
-X-Gm-Message-State: AFuF++kpSxnaa4mRkMCjw9QDRs0ffbJNq+ZPIcsYj3xKtxqcyjZubjYe
-	WuEq2Cc2LPU7lIZPYE/+Zwq1tKBit0kXnCIOFOgmpgv2G26MtdqZ4byVrQyEF7pJDzs/jr7iw3n
-	0JSq50B/SCmVBfUgU31Rn0TQAIKM3EXxCQ6cEmPaIbj/v0meh02GFRXU9jAk=
+	s=arc-20240116; t=1789343520; c=relaxed/simple;
+	bh=4SkibaXj3C9G81Wjj2aCFkbxOzLJ/YybY7cvQFTcDeQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=aQVcXVnZIhyidlWm+ASEaalumZZ4CBRTRHNGVfLcc8rRxULc9/JAkk29BdbYsYHhZ77LI17Qav5QhJ4OSKZVsaVSbbAvRzGbXgmL0JNC4EyDyhY1/SvvY/wKlmFH+s3u9CjqLsxTTk+p7W5x4ObMsHiPps87HHSJnZ+UsUN00Sk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K9j+b4MP; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K9j+b4MP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20D681F000FF;
+	Sun, 13 Sep 2026 23:51:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789343516;
+	bh=vgFuNN5vy7BxMbuWJkgEPamACOKnRRLP6Sk+ueNFuE4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=K9j+b4MPkav0BI7qs4F89FJ4TuQ+hEacqSAtEU4hNcNrPHsbdrNev/Rz3Zax+KXbz
+	 vngAjEFLXwwULvPkAV6RD866S7XREEY7c68PnjUzPeC8e2QmoclrE6mvKHNuWMjtjj
+	 /t9wwNA6pOua1qtd3EoCeO+eKPNZoaaTiNsJOMYpFY5RjSDaBbSPcQf8Iap+gI8y34
+	 tB7TTDIMcSVpyQ7ZAud3ghYDpAOz8Lap7+mM7oe4BBzVB/u8WnWr+FO8kTJJgT+cFV
+	 Oq5hq091e4TM2NfWXqe6XjeHQpsWs+01yVIVY26Xsus7xG3t8BSqH2jhyvb8ftDLPP
+	 iIxixXdSnQv/A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] md: add max_disks bound check in older version
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Aaditya Kansal" <aadityakansal390@gmail.com>
+Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
+In-Reply-To: <20260913233717.464321-1-aadityakansal390@gmail.com>
+References: <6aa6deac.f670cee1.72fc4.0013.GAE@google.com>
+ <20260913233717.464321-1-aadityakansal390@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 13 Sep 2026 23:51:55 +0000
+Message-Id: <20260913235156.20D681F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-Received: by 2002:a4a:e842:0:b0:6bd:e592:2c66 with SMTP id
- 006d021491bc7-6c544cac0demr5509eaf.46.1789343196358; Sun, 13 Sep 2026
- 16:46:36 -0700 (PDT)
-Date: Sun, 13 Sep 2026 16:46:36 -0700
-In-Reply-To: <20260913234627.465492-1-aadityakansal390@gmail.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6aa735dc.3aa11909.1a03b8.0004.GAE@google.com>
-Subject: Re: [PATCH] md: add max_disks bound check in older version
-From: syzbot <syzbot+9e3014263a35700ab49b@syzkaller.appspotmail.com>
-To: aadityakansal390@gmail.com
-Cc: aadityakansal390@gmail.com, linux-raid@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
 
-> #syz test
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-"" does not look like a valid git branch or commit.
+Pre-existing issues:
+- [Critical] The patch prevents an out-of-bounds write in `super_90_sync()`=
+ by adding a bounds check, but leaves an out-of-bounds read unhandled at th=
+e end of the function, which can be exploited as a kernel information leak.
+- [High] A maliciously crafted version 0.90 superblock on disk can trigger =
+an out-of-bounds read in `super_90_validate()` due to completely missing bo=
+unds validation of `this_disk.number` when the superblock is loaded.
+--
 
->
+commit bca793f34834f5048d928e016591b4ea5cf035dc
+Author: Aaditya Kansal <aadityakansal390@gmail.com>
+
+md: add max_disks bound check in older version
+
+This commit adds bounds checking for raid_disks in super_90_sync() to preve=
+nt
+an array-index-out-of-bounds access. It addresses a syzbot report where
+a high value written to the raid_disks sysfs attribute triggered the bug.
+
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 680b34a63cb3..f5fce41637f1 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -1693,6 +1693,12 @@ static void super_90_sync(struct mddev *mddev, struct md_rdev *rdev)
->  			desc_nr = rdev2->raid_disk;
+> @@ -1693,6 +1693,12 @@ static void super_90_sync(struct mddev *mddev, str=
+uct md_rdev *rdev)
+>  			desc_nr =3D rdev2->raid_disk;
 >  		else
->  			desc_nr = next_spare++;
+>  			desc_nr =3D next_spare++;
 > +
-> +		if (desc_nr >= MD_SB_DISKS) {
-> +			pr_warn("md: raid_disks = %d exceeds max_disks = %d for version 0.90\n",
+> +		if (desc_nr >=3D MD_SB_DISKS) {
+> +			pr_warn("md: raid_disks =3D %d exceeds max_disks =3D %d for version 0=
+.90\n",
 > +					desc_nr, MD_SB_DISKS);
 > +			continue;
 > +		}
->  		rdev2->desc_nr = desc_nr;
->  		d = &sb->disks[rdev2->desc_nr];
->  		nr_disks++;
-> @@ -1722,7 +1728,7 @@ static void super_90_sync(struct mddev *mddev, struct md_rdev *rdev)
->  			d->state |= (1<<MD_DISK_FAILFAST);
->  	}
->  	/* now set the "removed" and "faulty" bits on any missing devices */
-> -	for (i=0 ; i < mddev->raid_disks ; i++) {
-> +	for (i = 0; i < mddev->raid_disks && i < MD_SB_DISKS; i++) {
->  		mdp_disk_t *d = &sb->disks[i];
->  		if (d->state == 0 && d->number == 0) {
->  			d->number = i;
-> --
-> 2.55.0
->
+
+[Severity: Critical]
+This isn't a bug introduced by this patch, but could this continue statement
+leave rdev->desc_nr unvalidated, leading to an out-of-bounds read later?
+
+If an attacker provides a malicious block device with a version 0.90
+superblock containing a large this_disk.number, super_90_load() assigns
+this to rdev->desc_nr. Later, when md_update_sb() calls super_90_sync(),
+the newly added bounds check skips updating rdev2->desc_nr because of the
+continue statement.
+
+At the end of super_90_sync(), the unvalidated rdev->desc_nr is then
+unconditionally used to index into the array:
+
+drivers/md/md.c:super_90_sync() {
+    ...
+    sb->this_disk =3D sb->disks[rdev->desc_nr];
+    sb->sb_csum =3D calc_sb_csum(sb);
+}
+
+This copies 128 bytes from memory far past the 4KB superblock page into
+sb->this_disk. The updated superblock is then written back to disk, which
+can persistently leak out-of-bounds kernel memory to the attacker.
+Alternatively, if raid_disks is manipulated via sysfs for a new disk,
+rdev->desc_nr could remain -1, triggering a UBSAN out-of-bounds read.
+
+[Severity: High]
+This is a pre-existing issue, but does super_90_load() completely miss
+bounds validation of this_disk.number when the superblock is loaded?
+
+drivers/md/md.c:super_90_load() {
+    ...
+    rdev->desc_nr =3D sb->this_disk.number;
+    ...
+}
+
+When a block device with a crafted version 0.90 superblock is discovered
+and assembled, super_90_load() blindly assigns this field without ensuring
+it is less than MD_SB_DISKS. Subsequently, super_90_validate() computes
+and dereferences an out-of-bounds pointer:
+
+drivers/md/md.c:super_90_validate() {
+    ...
+    if (sb->disks[rdev->desc_nr].state & (
+                (1<<MD_DISK_SYNC) | (1 << MD_DISK_ACTIVE)))
+        ...
+    desc =3D sb->disks + rdev->desc_nr;
+    if (desc->state & (1<<MD_DISK_FAULTY))
+        ...
+}
+
+For large values, this dereferences a pointer significantly past the
+allocated 4KB superblock page, hitting unmapped memory and causing a kernel
+panic. Can bounds validation be added to super_90_load() to prevent this
+denial-of-service vector?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260913233717.4643=
+21-1-aadityakansal390@gmail.com?part=3D1
