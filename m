@@ -1,42 +1,42 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E12B33D6F0
-	for <linux-raid@vger.kernel.org>; Mon, 14 Sep 2026 04:18:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22AB63BB57
+	for <linux-raid@vger.kernel.org>; Mon, 14 Sep 2026 04:18:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789359528; cv=none; b=XqCyIk39MuUE0FbOtvZgTQ1Vm5sK+elDWsjbjeU4DYuzcsF8/fkBHOACbgPqLTyo2AR8fC7HY6J/8u5rFNL2w6CiyDOcDDiTsKkjHN0bPbl/KmBsjRz60SckUTRXrsQB3yW4cMPLG6ZWzK9JUxZa3xlQUvLyLOTiPkHzu7HI8Ds=
+	t=1789359530; cv=none; b=tkl4bfI07K8ly7/H87LchBP/LXZh7JWTvaXeEGfoNEXArQaO6fsVgD16GjPjcYw7vN/XkzoRWfPKfSafHIo9NeCvS6h+c5GOPQB/xN1ZRrYFVMAiub9gef+J9h5oPJ+9vpbFSOmB0cj19+ge+mKOhkq8pyUuktQXwWdfOMrzigw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789359528; c=relaxed/simple;
-	bh=ya3YiTgxkSJ4A0nB/XiozuMid8tCgtBkGcYLatqTFts=;
+	s=arc-20240116; t=1789359530; c=relaxed/simple;
+	bh=YNYtsuUBVVvcaqaTGe1H/D+zXhHoSkFBhoksc1HNsJE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VmTBi2Cz7+/h3vJgd8iLqU0RGDQvCjd2twfmuAhobjIOETdeWeF5dwRcQgXO04L/DtKcTYBiY8TQoPwdrtFAKK0t2lQKhZWswBmw6ufmJxg+rMj+UGVeKBzlH24HFRAoPI3kO92SN6s8x9bh24tfpp4pbPLGI2J/WQjkkPKTdqg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=kc2A+7jd; arc=none smtp.client-ip=90.155.50.34
+	 MIME-Version; b=XJWI1+aPO3NCjm8ERadWCLpmE808qgb2LeWBwhSdxzktaGwflMe/8EznqaRQJx5AVa+i/C5S3ekhQ7uWhUQimin1Sxm2j1105oSzz5XOJbGu9fgoStBKMscslmIgbq1ED8Xm/yp2JQ8zMyyCUsVlFkZvEANP3LQW3x0Xn4FTJEI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=lfJqfYVL; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kc2A+7jd"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lfJqfYVL"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:
 	Content-Type:Content-ID:Content-Description;
-	bh=4chEaOjoN9yQ/BXFRXOnQ16jio7Vi+Ozuc940HohS+k=; b=kc2A+7jdgBYQ1W/+6/flgqBCoD
-	boPvxRb0PO3nwGj1LTv032o0ViM9luEtc1kJbI2szQPu3UHFobumKtWfo7nSt7fnNhbQT+aMkPLDN
-	wQMaqIFmNc62vR2HeEkkBBZBwQus7uGr9gpiym8Jj6nqMzf0GVwxvAMsAmf/0+Dgrv+WoG0OpvDeS
-	ZqgQvg+9Jf+sB2b+oMOB9qulEediMAl7UTq/xljTLDDr7GEOdwXSQnAmVqwPNPdE1l8VTxj4to28/
-	ccKWIFfzd4i24/8cDsyG3DYFb4ABERugHlaHC8cDIIY4IJWDD8np+A1zptgMNAFep1qwKcIX5iOac
-	z/cGNcUg==;
+	bh=w0QS+yRZerwS7r9ZIT395XGB5TnODXn+M6COboka6d4=; b=lfJqfYVLFkWoSh58tWNEgYZIqq
+	8rxttqf5ZrcVCZ27NcR3Wxir1GQoSuAfmjin4m9PShwqeELFxRYmi6L5V60xShOfHLRy9X2DEgu7r
+	JO7o1JB9b+1TlelvxXOOoE4Y6EqwTQ491IajOmpVc1ki42H96H0F2vt+YPtUZwLdPcL/fDQHOfCH/
+	4+ggBPJrAdfQsklSfuAonJ3Qnge89yGsK9TKmVwi+hOfmMXSgXbkgc0qVNUtH+xG6JmxIdsuWhjSA
+	l2If62jmvafz8G/IUhehE49wq8xdYmI/qyaLr8o5QbPhVTqm78WXkIEfKIYMS2LX9TIfxL99MkP8L
+	JICnt6ug==;
 Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1x5y9K-00000008hHX-2bM1;
+	id 1x5y9K-00000008hGE-1YlF;
 	Mon, 14 Sep 2026 04:18:34 +0000
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To: Zi Yan <ziy@nvidia.com>
 Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>,
 	linux-raid@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: [PATCH 3/3] md: Remove the last use of page_buffers()
-Date: Mon, 14 Sep 2026 05:18:10 +0100
-Message-ID: <20260914041830.2072626-3-willy@infradead.org>
+Subject: [PATCH 1/3] md: Use folio_alloc_buffers()
+Date: Mon, 14 Sep 2026 05:18:08 +0100
+Message-ID: <20260914041830.2072626-1-willy@infradead.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260913-remove-pg_private-v4-0-848550f7574e@nvidia.com>
 References: <20260913-remove-pg_private-v4-0-848550f7574e@nvidia.com>
@@ -48,48 +48,74 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Convert the page to a folio and use folio_buffers() instead.  This
-does introduce one extra call to compound_head(), but will simplify a
-later conversion of md-bitmap to use folios instead of pages.
+Remove the last user of alloc_page_buffers().  This isn't _great_,
+but prevents new callers of alloc_page_buffers() existing.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- drivers/md/md-bitmap.c      | 3 ++-
- include/linux/buffer_head.h | 7 +------
- 2 files changed, 3 insertions(+), 7 deletions(-)
+ drivers/md/md-bitmap.c      | 5 +++--
+ fs/buffer.c                 | 8 --------
+ include/linux/buffer_head.h | 1 -
+ 3 files changed, 3 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 7b42db87d536..c2528220c406 100644
+index b8325cb09a37..5f1637f974c1 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
-@@ -516,7 +516,8 @@ static void end_bitmap_write(struct bio *bio)
- 
- static void write_file_page(struct bitmap *bitmap, struct page *page, int wait)
+@@ -560,6 +560,7 @@ static int read_file_page(struct file *file, unsigned long index,
  {
--	struct buffer_head *bh = page_buffers(page);
+ 	int ret = 0;
+ 	struct inode *inode = file_inode(file);
 +	struct folio *folio = page_folio(page);
-+	struct buffer_head *bh = folio_buffers(folio);
+ 	struct buffer_head *bh;
+ 	sector_t block, blk_cur;
+ 	unsigned long blocksize = i_blocksize(inode);
+@@ -567,12 +568,12 @@ static int read_file_page(struct file *file, unsigned long index,
+ 	pr_debug("read bitmap file (%dB @ %llu)\n", (int)PAGE_SIZE,
+ 		 (unsigned long long)index << PAGE_SHIFT);
  
- 	while (bh && bh->b_blocknr) {
- 		atomic_inc(&bitmap->pending_writes);
+-	bh = alloc_page_buffers(page, blocksize);
++	bh = folio_alloc_buffers(folio, blocksize, GFP_NOFS | __GFP_ACCOUNT);
+ 	if (!bh) {
+ 		ret = -ENOMEM;
+ 		goto out;
+ 	}
+-	attach_page_private(page, bh);
++	folio_attach_private(folio, bh);
+ 	blk_cur = index << (PAGE_SHIFT - inode->i_blkbits);
+ 	while (bh) {
+ 		block = blk_cur;
+diff --git a/fs/buffer.c b/fs/buffer.c
+index c9342aeb8cdf..367be053d07b 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -781,14 +781,6 @@ struct buffer_head *folio_alloc_buffers(struct folio *folio, unsigned long size,
+ }
+ EXPORT_SYMBOL_GPL(folio_alloc_buffers);
+ 
+-struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size)
+-{
+-	gfp_t gfp = GFP_NOFS | __GFP_ACCOUNT;
+-
+-	return folio_alloc_buffers(page_folio(page), size, gfp);
+-}
+-EXPORT_SYMBOL_GPL(alloc_page_buffers);
+-
+ static inline void link_dev_buffers(struct folio *folio,
+ 		struct buffer_head *head)
+ {
 diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
-index c9918176adaa..1d5eb6ba4576 100644
+index 1d55f7770cad..c9918176adaa 100644
 --- a/include/linux/buffer_head.h
 +++ b/include/linux/buffer_head.h
-@@ -175,12 +175,7 @@ static inline unsigned long bh_offset(const struct buffer_head *bh)
- 	return (unsigned long)(bh)->b_data & (page_size(bh->b_page) - 1);
- }
- 
--/* If we *know* page->private refers to buffer_heads */
--#define page_buffers(page)					\
--	({							\
--		BUG_ON(!PagePrivate(page));			\
--		((struct buffer_head *)page_private(page));	\
--	})
-+/* If we *know* folio->private refers to buffer_heads */
- #define folio_buffers(folio)		folio_get_private(folio)
- 
- void buffer_check_dirty_writeback(struct folio *folio,
+@@ -197,7 +197,6 @@ void folio_set_bh(struct buffer_head *bh, struct folio *folio,
+ 		  unsigned long offset);
+ struct buffer_head *folio_alloc_buffers(struct folio *folio, unsigned long size,
+ 					gfp_t gfp);
+-struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size);
+ struct buffer_head *create_empty_buffers(struct folio *folio,
+ 		unsigned long blocksize, unsigned long b_state);
+ void end_buffer_read_sync(struct buffer_head *bh, int uptodate);
 -- 
 2.47.3
 
