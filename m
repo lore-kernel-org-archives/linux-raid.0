@@ -1,261 +1,221 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010024.outbound.protection.outlook.com [52.101.201.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi2-f11.google.com (mail-oi2-f11.google.com [74.125.231.203])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 190AE3BB134
-	for <linux-raid@vger.kernel.org>; Mon, 14 Sep 2026 16:25:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.24
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789403106; cv=fail; b=KJSBnw6JoUdj6FONfKL5VlyetIxyTCgMMCudOtISEQKZmeeDO8TvlAMbC68uP6USw4hBUkQ60YdFRaY1RJ0Bd7osjok0LuCDsnFae/Q9h9cshkg8UvDIzUqBr0r2qA1/Gcg5PiNvpoFVnYo45gmiZmuhpzj0TXBjR6A8VjdTkWc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789403106; c=relaxed/simple;
-	bh=LUsE8GfUoBqB5G0xIqjXehkcsO7kXXlufK4eKHfUXOI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=sm4DSEtFWJLcJ/x0PtIJmFTqgIK8F/rXrDg1LidMRO2qmBNVk7CiiPchh0OAO/32aRNbm5nJv/bYHXSmEgsf2zJYjSjYCHLYofA9yhwEBl8+ZiieRrFtSspNDW3lLQ5qBTX7TWXNProUa3qacoOl3tL051BOWNhKM5YfoK/l+bE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=kM3mnivu; arc=fail smtp.client-ip=52.101.201.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="kM3mnivu"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=gK/NZY8R+vNxuec9qZwJxV33qj1zvSKyPorIbXBj/0AsMSPZsUTe6Z8iNiMA3sDfQrN+7B6jN230FQXEnaXz50aHKFwc3FXS3bnMlPvR16VZRkNwOO5gAWrDElrs71/Zw0lS+mVZZ+h4le9JIfA86whhQsHuDsLcffK90FIdp0e81gUAO3fXFZShhcmWiaBMddX2R0Zj0exE2Vm3IL73aHGdAUa5dYBKnraIhTL3/7L0H/ca2RKiyN4j660NKWTkuncQZ4cbWc0D/TxqvXeF8nCsxfosYJ8aThQGBEZWDwwSGrADdFjq3dqBBYggMhbhfvr5JoHy6hg6yp6qvQCHNA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XrySJZJHv9uKqtuSvBa30Qrzuo8yFq2rvwl+NYaEIns=;
- b=n736RUgGzYBzDwW2Ji8yrc9qBNZYbLKV7hMsLQspJ8826Cu3Blda+zq+qfrR4NGHq9x6ZAmEke0/XNqu1ejdv7HyJiomtMl+/LFqxMb04DBXqmucIJ8AQg5qyqqDLE9bfmN/7iOdsej/fCd0sruB9iafEdBATnVDuxN2qxbotCDcKE6H9acn7LL5AlZGPgnQbreWMAm1SeoyzU9s1cLYe2blqVChhfujWDa+5eXimm8KbuCI1wAQjG/+96VHdeE5yxiVW6HAPXFT1dmc+41+HHmYgfb0eN+v7TLju+jcFrAilHNFsFLDPpvICWvm8rXXwJqmWqnP4bMK46tULLXCow==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XrySJZJHv9uKqtuSvBa30Qrzuo8yFq2rvwl+NYaEIns=;
- b=kM3mnivuocAlwXWqWNTq0W3uDN4a21bUEf9ZUloji88zs516cRpnuoxI5EkWFHS7+PdnlTMuV7m2eqbJHsSjTFtKatqkBRXHWyoGvmuqExH9BX6KhRTTrzoZcOgMf8ShH6Z9VcihMibO7ax3gUw8qyekxcLOotr5yHXcBSraA8L20oikC5UEC/1A9X5WuyFndN2+9YmdXOnSAHIWfVz+9tcB8fBV6fJ2Pyb9Olh5hxvYQVNzObpPHmJTYrCgTRlIWdR3+jCITIHE0jF3NexE05vsIv1sxR1hm/iidcHUlslqgrysabpKeAwZGNAWXnaW2ZwhTxW1ozL9fJoEH/7h6w==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from IA0PR12MB8374.namprd12.prod.outlook.com (2603:10b6:208:40e::7)
- by MN2PR12MB4048.namprd12.prod.outlook.com (2603:10b6:208:1d5::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.12; Mon, 14 Sep
- 2026 16:25:01 +0000
-Received: from IA0PR12MB8374.namprd12.prod.outlook.com
- ([fe80::d85f:4c87:ae84:3f16]) by IA0PR12MB8374.namprd12.prod.outlook.com
- ([fe80::d85f:4c87:ae84:3f16%5]) with mapi id 15.21.0406.007; Mon, 14 Sep 2026
- 16:25:00 +0000
-From: Zi Yan <ziy@nvidia.com>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: sashiko-reviews@lists.linux.dev, yukuai@fygo.io,
- linux-raid@vger.kernel.org, David Hildenbrand <david@kernel.org>,
- linux-mm@kvack.org
-Subject: Re: [PATCH 2/3] md: Use folio APIs in free_page()
-Date: Mon, 14 Sep 2026 12:25:02 -0400
-X-Mailer: MailMate (3.0r7032)
-Message-ID: <2F873AFD-7428-4937-8F4B-A2346D1149B3@nvidia.com>
-In-Reply-To: <aqgfA0QFi98gXYG2@casper.infradead.org>
-References: <20260913-remove-pg_private-v4-0-848550f7574e@nvidia.com>
- <20260914041830.2072626-2-willy@infradead.org>
- <20260914043129.C6F8D1F000FF@smtp.kernel.org>
- <aqgfA0QFi98gXYG2@casper.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-MS-Reactions: disallow
-X-ClientProxiedBy: BN9PR03CA0066.namprd03.prod.outlook.com
- (2603:10b6:408:fc::11) To IA0PR12MB8374.namprd12.prod.outlook.com
- (2603:10b6:208:40e::7)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B2EF412BF6
+	for <linux-raid@vger.kernel.org>; Mon, 14 Sep 2026 21:21:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.203
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789420904; cv=none; b=TFVfeczcu0CCY5yOjQ7piTir9PtkPaIXV1p1VVCGP0kxKQEmi4wZ4jDX09mX/2t8s8jycMg0IVQGdALQJUBgfiAlqgLmN/e7fTiLeAb8MBC0Nan/nLBEo5saDHpIGjipIYZg+seMizeSl/uML/Tahtb77pmOMV/SziCwUFJXaI0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789420904; c=relaxed/simple;
+	bh=7AipFZiuIX6H9VaRrR5s6pZahTpna7iGdA2XXv+rnLI=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=GQtf40Dg+v4qyX2s6edVBB9w1LkSLSCfYgmG6ydkoOoZz4r/kQNamb+ENTQAGaqOb0NaTf+kDe6nr+llb6AzwA0uBlIqg8zRMDyfKznKP6wtzRBXbt1unXmwAW/EqaG7WamZp0InygUnuU+H9KN/mkAr3AYUXiJidVACeFN6jrw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=74.125.231.203
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi2-f11.google.com with SMTP id 5614622812f47-4bfec71901fso1428120b6e.1
+        for <linux-raid@vger.kernel.org>; Mon, 14 Sep 2026 14:21:42 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789420902; x=1790025702;
+        h=content-type:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=9VeItKbl45Jm7bqObM1L7eopLnqU0YHTMZpvnbTuOzc=;
+        b=eK7iGsC84g32g50suL6+eSLsNKQnHrpV/lzcIpWYNW5Icp/QzyrhnJzyk5QvwMcPC8
+         5+UyCVE5zotkX/HysusWDaBPzmVF88LiA2bRurbIkyE33qD2nLLDbh2w2A4i1I+3pRyl
+         imiUAzRnCa3qaGwsuhKry/suZezfyP8iyNoEA38L3aOzs/KQIPenYMH6lY1VisKTavoe
+         EBZ5hH7s13kFDHxrz/Sl95fO5Y+XwwuV8h3kTOKSWl0GxKTArpS8odJ4/LhZfv/sXnlJ
+         /g6hex6iNFxU/Ba92lVvdWYzlSXWKyFU4cerslJKGHS9vXfL6UO4biNmDJYZ0nIDYIT1
+         G2AA==
+X-Forwarded-Encrypted: i=1; AKwUvBwQJjcfgzM64NDCdPZWB7haeX2raXBFLJh8xf81FYJ7quyxS5SPz4i6hBJr/rW1fLonqrSD8u+kDSvR@vger.kernel.org
+X-Gm-Message-State: AFuF++lCB14GXM0Rc6egepLhDr+jopBN/vCHAFFInokHV5KaWS3LWQne
+	i1X+h7UwkpADC5OJh3wnpi1U8LRc0KE5BGIetyLkN4fbDAofpNAeEP5Hr2uqorBpRZi1rC8NCCY
+	6qV0y4gRj/nWH99s3DHZwGPUN91rHr41KQF1fPU+ZBu/6AMI1+v+d3tG3PQA=
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: IA0PR12MB8374:EE_|MN2PR12MB4048:EE_
-X-MS-Office365-Filtering-Correlation-Id: bc4bfb60-e73a-46d4-b5a9-08df127cb96c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|1800799024|366016|6133799003|22082099003|18002099003|4143699003|10067099003|56012099006|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	IWwlpVWScr3/p2Y7u7hVw/mx0r6yG6FuVf0hpOTJP6fiPdBTnpextpU369CmWRbjCZ+7+soUzwh/uYAr/d7TD9E0Cg9eTu5mRUkNu1vONKFBHp5pBBeyMd32ES4WEbo8HCN21x2gAlofSpYh+BOIAYwokaDu7ze5GWx6AQAYj6mCyaoZFUKBBx/0ErhXYy3PoyVbBu5N7Wd7MUeRnGK77v+q3bo6MRksc5bXgtXrZ3Z1DsSCXgNgXwHWJCdIv8EGLEtYEuSZ547nQ+1MkI3Zjv6lmw+JnHyIinp6k/Cd2S3UtSCPb3ubGPdzn7Dvjy93FQm3dai3cruJiHpVCGGinIz90pTBIHbqpQixKgaH8XRfm/5EA7ESV9moZGWMjuzTveqZmvguIBtGhdmKQBg94qviZ2sJgkViy+tBCggDiYDhRhcK69nUMjXXeYchEuh12ffCBhN29BbyHv6YRplqtzAmGtyf6Vi7FFIsGa0AC5774Ndi/zxnyi95W3woLLQjbFj0qicy3vT3FPUL8oyqVy6ZgAZ7I08h7jChFg+H9pYS4s8hPv7Jd0bha5fjQa49dmoLeO5tj/+JWoSg/ybjoI8V+HLotJV7xyM1bnEqnLWHePh186nfLVVeUFs9QH2rjtRWoEArJMULR6KhsZmlWFizPXHcnwl1rlNCWCZqkH4=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA0PR12MB8374.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(1800799024)(366016)(6133799003)(22082099003)(18002099003)(4143699003)(10067099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?YXFrWHMrRlhUQ0JPdE1zbENaVGNqU1ZpczZXRk1pb0NLNXRrdHRlMmlwSVVS?=
- =?utf-8?B?V3hScUx0Z3hUbWMrTHgyUzR2UWFPOVloSzNiR2Z3VDJ1YU9hZ1FjRDVtUEd2?=
- =?utf-8?B?SGFvcEVIQzROc1FlNzVxWXVOZE5MSkhTaEtCNGxBMkN5Q3dsRUJ3THh6WWI1?=
- =?utf-8?B?bjlMQjdlbDFJMEZpejcwalkwR2FIZ1k1NWZrL1hpKzAxMkZPOE1SNDlPMVR3?=
- =?utf-8?B?NjJIeVAzTDBmOTBDYjZYTktiR0hOVkgvV0JOaEpZdGRmNW1rYUZ5azRFWXhW?=
- =?utf-8?B?Q3gzcGJTa3puOWJIYTRmV0dGdWx4KzI3cVA0SUxiK29kMllFL09tMUxXc0t0?=
- =?utf-8?B?Tm5RTFpib2d4U3pVYnFMTXFNa0RPUTZ1YWNrZ3ZiTnVlU3NKZUtBYjY3L0o1?=
- =?utf-8?B?ZU5xcW9waTVUTFAyMU5GUkt0cTVCbEY5WFFTOEtOM3pEOFRuTGU2d1c5VW9y?=
- =?utf-8?B?QkV4Q0UxZ1RoNjExUzMvWFJRb1VIVU55SUc5SlIrQkFudUYvV2ljbEswWmJv?=
- =?utf-8?B?SElvVWgwVjhhU1dqRWhQbHlMek85UUlkQTZJblZsMFM2YW9pa2lBdzg5b0Vt?=
- =?utf-8?B?d091dTRpbFp0R2E0ckYvMGMrWlM4RDVkT0twQlA4L2NVRjJ6L3FiRWM3b0w0?=
- =?utf-8?B?RHN1a1RkV25mSjJMS1N6S2pHOVppOVRMcnFPTklOdU1UYUpkU20rdmNPYTMx?=
- =?utf-8?B?eVRCY0FSQm13WTZZajBENlRnQThHcW0zM1htNmFvZlhTWFNnTGhTdnNqdm1S?=
- =?utf-8?B?N1ZvVU81a2VIU0NrUEFXTnlUcGhDS0tvbmNMTEx4TUsvSzJSbE1ZMTVSVElO?=
- =?utf-8?B?NzVZbE5JZXVSV2ZhRjVjK3RMMGpXam84TlcyQlZzWlJDRnFjYkc5K1RsZzF3?=
- =?utf-8?B?dlRDaC9ick5ub3VuY3hrUzZsbHgvZ0o4d0lzQ2p6eVd5M25qM0k3c0JuekpC?=
- =?utf-8?B?eGZmVG40VE1rTVdCalc5a2h3SGNyR1ZDVCs1N1dGN0FnZEdnN2QzeUxYRlZm?=
- =?utf-8?B?VnRNbS9HMjU5UW1CTE9HcUhEbXhnYThaMWFic3dGMFFSUGVvWlJvTGFXTWM2?=
- =?utf-8?B?UUZ1QjV0UkdTOGsvQkR5Y1FRNG50YWVLUEJMN0RveU9XOU5ZT20waXI1SnFM?=
- =?utf-8?B?bStPOTBMOGh0V3hoQXVPTXlyVWpxMHJKTUZGU1pMbmQ0UEU3SGVnbXFQdDNC?=
- =?utf-8?B?QTNxZ1lVeitCZ042dXZSaHNTVHhlb29pSkFONVV5Z3pLalJ0cFlTdGROV0E1?=
- =?utf-8?B?NTZiY0kwekpyeUlKUmJjQjdXandWUjBmczV5OGtxRXhnOHRPWHZMS0VxTUhS?=
- =?utf-8?B?NTl5WUZwaGtkSmlDV3ZjQTFIRzZGR0ltTUlJUU5FeHY4b3h5eXRRYVlhS2ZG?=
- =?utf-8?B?cWpibHN6K1NPejNib2FJMFFpTEN5blY4OUo4Z3J3TWhwYTdEUCtkUUV2bUJY?=
- =?utf-8?B?a1pVMG1Hekd0eXhyMkQ0ZkQ2Qy9qa0UvZTFMYWhxM0pYcm9qOXMzZ2x3aVVC?=
- =?utf-8?B?T1FlTktlU2NWWTAyMm9SR0ZtS01UT0VxdC9qTHJIT1NUQVJLcGtQaWtTTUlp?=
- =?utf-8?B?YWdpRWxXNkNITVQ5RHNsa0d5cGVUeXBjS2RuWm9ZZ0ZUNHJCREIrSDVsWGY0?=
- =?utf-8?B?b2Z5ajZhU3pPM2ZQaDl2UjZ2bm5CZ3ZaWllSQ2hjL2RCc21pR2RaRnJ1VFhW?=
- =?utf-8?B?VGtSMG1UL29IS0ZIaVc1K1RiYlhvMWFnZTdTVlloRDgvc2ErS1d0SEVNOW5Z?=
- =?utf-8?B?ZGJSWmtYakhmUWQ0YytiMFF5RldUL0t2U0NqRDA4eW41SC9zMzZubHR1V1RN?=
- =?utf-8?B?bTFtV1pqaDd5RFF6RXhLNEN0K0h6ZlB3QmR5ZllpZWVUcXFMWWxSMDUxYXJr?=
- =?utf-8?B?Vk1kdS9JT0VzNVBTVFpEZlNCK3ZOSVVXR0drZWg0NERUYVZEbEZOV0pMVGlv?=
- =?utf-8?B?SSszWnF6UWpGd1dLS3BGMThHUkF0M1BSaWlVOVZUcFFPbXNwR01tdVJId0h2?=
- =?utf-8?B?MFJSZnd5aWZRWVBxQ1dOLy9wTGowME83cUR4cFpjd054NW9UcXk2TW41SDRR?=
- =?utf-8?B?VGNpMzFZWDBua3BhTnBBc2pPNHJ4YU5XRzJCNWsrRVlPR29YNm5ZWHZzUW1y?=
- =?utf-8?B?bmt1K21icUdBSFc1aUdkTU9CaUV3UVNJdWk0ZG9HNE5RZDVjaHdMSkdOankv?=
- =?utf-8?B?SlhLV2MwWDZTYnBCNFFHSy9GWFVyRDJKQzk4QjViM0hlTFdmRFVJMm1jb2Fi?=
- =?utf-8?B?OGVmbk5lWlg5bVU2ZXplOHhiUlp1R2xzZ212ZGxpclNRaG9aY3MrR2ErK1Jy?=
- =?utf-8?B?TW5GUjdCajhxMlI1RGZnNHYxOU1YTWV4UlA5T0E0TmlhT3ZzQlArZz09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bc4bfb60-e73a-46d4-b5a9-08df127cb96c
-X-MS-Exchange-CrossTenant-AuthSource: IA0PR12MB8374.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Sep 2026 16:25:00.7597
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Nxs6wl5GqhzG2l3XmDeaapDAAT/VoAzy4LYf29IRaHN9HolZAQ07Y5SY2Ov0OImM
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4048
+X-Received: by 2002:a05:6820:1988:b0:6b1:b31f:132e with SMTP id
+ 006d021491bc7-6c540088804mr2643760eaf.6.1789420901903; Mon, 14 Sep 2026
+ 14:21:41 -0700 (PDT)
+Date: Mon, 14 Sep 2026 14:21:41 -0700
+In-Reply-To: <6a6e88a1.13bfb6d0.1ecdd5.0261.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6aa86565.f670cee1.72fc4.0021.GAE@google.com>
+Subject: Re: [syzbot] [kernel?] possible deadlock in md_start_sync
+From: syzbot <syzbot+13eb8132f7693fe21d7d@syzkaller.appspotmail.com>
+To: bp@alien8.de, dave.hansen@linux.intel.com, hpa@zytor.com, 
+	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
+	magiclinan@didiglobal.com, mingo@redhat.com, song@kernel.org, 
+	syzkaller-bugs@googlegroups.com, tglx@kernel.org, x86@kernel.org, 
+	xiao@kernel.org, yukuai@fnnas.com, yukuai@fygo.io
+Content-Type: text/plain; charset="UTF-8"
 
-On 14 Sep 2026, at 12:21, Matthew Wilcox wrote:
+syzbot has found a reproducer for the following issue on:
 
-> On Mon, Sep 14, 2026 at 04:31:29AM +0000, sashiko-bot@kernel.org wrote:
->> Thank you for your contribution! Sashiko AI review found 1 potential iss=
-ue(s) to consider:
->>
->> Pre-existing issues:
->> - [High] Memory leak of internal bitmap pages and uninitialized file bit=
-map pages during teardown or error handling due to an early return in free_=
-buffers().
->> --
->
-> Yes, I thought the early return looked weird.  I just believed that I
-> hadn't looked into the code enough to understand why it looked weird but
-> was right.  Since the AI says it's wrong, I'm happy to believe it's wrong=
-.
-> It's probably not really a high seveirty problem because most RAIDs are
-> set up once and then never removed, so the leak doesn't matter.
->
-> The other thing that looks weird is that this code believes the b_this_pa=
-ge
-> list is NULL terminated.  Most loops over "all BHs attached to a folio"
-> have a circular list.  However, that is established by link_dev_buffers()
-> which is not called by md-bitmap.  So it's correct, even though weird.
->
-> The good news is this is an easy fix:
->
-> @@ -536,9 +536,6 @@ static void free_buffers(struct page *page)
->         struct folio *folio =3D page_folio(page);
->         struct buffer_head *bh =3D folio_detach_private(folio);
->
-> -       if (!bh)
-> -               return;
-> -
->         while (bh) {
->                 struct buffer_head *next =3D bh->b_this_page;
->                 free_buffer_head(bh);
->
-> I can submit a new vrsion, or Zi can just pick this up.
+HEAD commit:    704340f1cd0d Merge tag 'x86_urgent_for_7.3-rc4' of git://g..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=14051925580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=8c5c3949d762a91f
+dashboard link: https://syzkaller.appspot.com/bug?extid=13eb8132f7693fe21d7d
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=12a5bdf9580000
 
-I can fold this into your patch. Or should this be sent separately
-as a fix and maybe a backport?
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/192c594c6096/disk-704340f1.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/79d1488deb4b/vmlinux-704340f1.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/fd108c2b8ca0/bzImage-704340f1.xz
 
->
->> commit d68f524234e61e6567e52a27e09b9d2546ab54af
->> Author: Matthew Wilcox (Oracle) <willy@infradead.org>
->>
->> md: Use folio APIs in free_page()
->>
->> This commit converts the page to a folio, removing some of the last uses=
- of
->> a few page APIs and replacing two calls to compound_head() with one.
->>
->>> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
->>> index 5f1637f974c15..7b42db87d536d 100644
->>> --- a/drivers/md/md-bitmap.c
->>> +++ b/drivers/md/md-bitmap.c
->>> @@ -533,19 +533,18 @@ static void write_file_page(struct bitmap *bitmap=
-, struct page *page, int wait)
->>>
->>>  static void free_buffers(struct page *page)
->>>  {
->>> -	struct buffer_head *bh;
->>> +	struct folio *folio =3D page_folio(page);
->>> +	struct buffer_head *bh =3D folio_detach_private(folio);
->>>
->>> -	if (!PagePrivate(page))
->>> +	if (!bh)
->>>  		return;
->>
->> [Severity: High]
->> This is a pre-existing issue, but this early return skips the folio_put(=
-)
->> required to drop the base allocation reference for pages that do not hav=
-e
->> buffers attached.
->>
->> For internal bitmaps, pages are allocated via alloc_page() with a refcou=
-nt
->> of 1 in md_bitmap_storage_alloc():
->>
->> drivers/md/md-bitmap.c:md_bitmap_storage_alloc() {
->> 	...
->> 	store->filemap[pnum] =3D alloc_page(GFP_KERNEL|__GFP_ZERO);
->> 	...
->> }
->>
->> During MD array teardown or failure, md_bitmap_file_unmap() calls
->> free_buffers() on these pages:
->>
->> drivers/md/md-bitmap.c:md_bitmap_file_unmap() {
->> 	...
->> 	free_buffers(map[pages]);
->> 	...
->> }
->>
->> Because internal bitmap pages don't have buffers attached, (!bh) evaluat=
-es
->> to true, triggering the early return and completely bypassing the folio_=
-put()
->> at the end of the function.
->>
->> This permanently leaks the pages allocated for the internal bitmap's fil=
-emap
->> and superblock.
->>
->> Does this early return need to be updated so that folio_put() is still
->> called for folios without buffers?
->>
->>> -	bh =3D page_buffers(page);
->>>  	while (bh) {
->>>  		struct buffer_head *next =3D bh->b_this_page;
->>>  		free_buffer_head(bh);
->>>  		bh =3D next;
->>>  	}
->>> -	detach_page_private(page);
->>> -	put_page(page);
->>> +	folio_put(folio);
->>>  }
->>
->> --=20
->> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260913-remove-=
-pg_private-v4-0-848550f7574e@nvidia.com?part=3D2
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+13eb8132f7693fe21d7d@syzkaller.appspotmail.com
+
+======================================================
+WARNING: possible circular locking dependency detected
+syzkaller #0 Not tainted
+------------------------------------------------------
+kworker/0:0/9 is trying to acquire lock:
+ffff888026076358 (&mddev->reconfig_mutex){+.+.}-{4:4}, at: mddev_lock_nointr drivers/md/md.h:734 [inline]
+ffff888026076358 (&mddev->reconfig_mutex){+.+.}-{4:4}, at: md_start_sync+0xc4/0xea0 drivers/md/md.c:10275
+
+but task is already holding lock:
+ffffc900000e7d08 ((work_completion)(&mddev->sync_work)){+.+.}-{0:0}, at: process_one_work+0xa2c/0x1b10 kernel/workqueue.c:3372
+
+which lock already depends on the new lock.
 
 
-Best Regards,
-Yan, Zi
+the existing dependency chain (in reverse order) is:
+
+-> #3 ((work_completion)(&mddev->sync_work)){+.+.}-{0:0}:
+       lock_acquire kernel/locking/lockdep.c:5942 [inline]
+       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+       process_one_work+0xa32/0x1b10 kernel/workqueue.c:3372
+       process_scheduled_works kernel/workqueue.c:3479 [inline]
+       worker_thread+0x5ef/0xe50 kernel/workqueue.c:3560
+       kthread+0x373/0x450 kernel/kthread.c:436
+       ret_from_fork+0x730/0xd60 arch/x86/kernel/process.c:158
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+-> #2 ((wq_completion)md_misc){+.+.}-{0:0}:
+       lock_acquire kernel/locking/lockdep.c:5942 [inline]
+       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+       touch_wq_lockdep_map+0xad/0x1c0 kernel/workqueue.c:4111
+       __flush_workqueue+0x131/0x1200 kernel/workqueue.c:4153
+       md_alloc+0x30/0x10a0 drivers/md/md.c:6334
+       md_alloc_and_put drivers/md/md.c:6423 [inline]
+       md_probe drivers/md/md.c:6439 [inline]
+       md_probe+0x73/0xf0 drivers/md/md.c:6434
+       blk_probe_dev+0x149/0x1e0 block/genhd.c:888
+       blk_request_module+0x16/0xc0 block/genhd.c:901
+       blkdev_get_no_open+0x9b/0xf0 block/bdev.c:870
+       blkdev_open+0x141/0x4f0 block/fops.c:665
+       do_dentry_open+0x6ab/0x14d0 fs/open.c:996
+       vfs_open+0x82/0x3f0 fs/open.c:1101
+       do_open fs/namei.c:4837 [inline]
+       path_openat+0x19fa/0x2440 fs/namei.c:5000
+       do_file_open+0x20e/0x430 fs/namei.c:5029
+       do_sys_openat2+0x10f/0x1e0 fs/open.c:1417
+       do_sys_open fs/open.c:1423 [inline]
+       __do_sys_openat fs/open.c:1439 [inline]
+       __se_sys_openat fs/open.c:1434 [inline]
+       __x64_sys_openat+0x12d/0x210 fs/open.c:1434
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+-> #1 (major_names_lock){+.+.}-{4:4}:
+       lock_acquire kernel/locking/lockdep.c:5942 [inline]
+       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+       blk_probe_dev+0x28/0x1e0 block/genhd.c:885
+       blk_request_module+0x16/0xc0 block/genhd.c:901
+       blkdev_get_no_open+0x9b/0xf0 block/bdev.c:870
+       bdev_file_open_by_dev block/bdev.c:1091 [inline]
+       bdev_file_open_by_dev+0x70/0x210 block/bdev.c:1079
+       md_import_device+0x120/0x360 drivers/md/md.c:3847
+       md_add_new_disk+0xdbf/0x1820 drivers/md/md.c:7656
+       md_ioctl+0x2bec/0x36d0 drivers/md/md.c:8499
+       blkdev_ioctl+0x5ad/0x6f0 block/ioctl.c:798
+       vfs_ioctl fs/ioctl.c:51 [inline]
+       __do_sys_ioctl fs/ioctl.c:597 [inline]
+       __se_sys_ioctl fs/ioctl.c:583 [inline]
+       __x64_sys_ioctl+0x18e/0x210 fs/ioctl.c:583
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x123/0x790 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+-> #0 (&mddev->reconfig_mutex){+.+.}-{4:4}:
+       check_prev_add+0xeb/0xe60 kernel/locking/lockdep.c:3209
+       check_prevs_add kernel/locking/lockdep.c:3328 [inline]
+       validate_chain kernel/locking/lockdep.c:3952 [inline]
+       __lock_acquire+0x1528/0x1f40 kernel/locking/lockdep.c:5288
+       lock_acquire kernel/locking/lockdep.c:5942 [inline]
+       lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+       mddev_lock_nointr drivers/md/md.h:734 [inline]
+       md_start_sync+0xc4/0xea0 drivers/md/md.c:10275
+       process_one_work+0xac7/0x1b10 kernel/workqueue.c:3396
+       process_scheduled_works kernel/workqueue.c:3479 [inline]
+       worker_thread+0x5ef/0xe50 kernel/workqueue.c:3560
+       kthread+0x373/0x450 kernel/kthread.c:436
+       ret_from_fork+0x730/0xd60 arch/x86/kernel/process.c:158
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+other info that might help us debug this:
+
+Chain exists of:
+  &mddev->reconfig_mutex --> (wq_completion)md_misc --> (work_completion)(&mddev->sync_work)
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock((work_completion)(&mddev->sync_work));
+                               lock((wq_completion)md_misc);
+                               lock((work_completion)(&mddev->sync_work));
+  lock(&mddev->reconfig_mutex);
+
+ *** DEADLOCK ***
+
+locks held by kworker/0:0/9: 2, last CPU#0:
+ #0: ffff88801fadf140 ((wq_completion)md_misc){+.+.}-{0:0}, at: process_one_work+0x1466/0x1b10 kernel/workqueue.c:3371
+ #1: ffffc900000e7d08 ((work_completion)(&mddev->sync_work)){+.+.}-{0:0}, at: process_one_work+0xa2c/0x1b10 kernel/workqueue.c:3372
+
+stack backtrace:
+CPU: 0 UID: 0 PID: 9 Comm: kworker/0:0 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 08/05/2026
+Workqueue: md_misc md_start_sync
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
+ print_circular_bug.cold+0x178/0x1be kernel/locking/lockdep.c:2087
+ check_noncircular+0x146/0x160 kernel/locking/lockdep.c:2219
+ check_prev_add+0xeb/0xe60 kernel/locking/lockdep.c:3209
+ check_prevs_add kernel/locking/lockdep.c:3328 [inline]
+ validate_chain kernel/locking/lockdep.c:3952 [inline]
+ __lock_acquire+0x1528/0x1f40 kernel/locking/lockdep.c:5288
+ lock_acquire kernel/locking/lockdep.c:5942 [inline]
+ lock_acquire+0x1d1/0x380 kernel/locking/lockdep.c:5899
+ __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+ __mutex_lock+0x1a4/0x1bd0 kernel/locking/mutex.c:821
+ mddev_lock_nointr drivers/md/md.h:734 [inline]
+ md_start_sync+0xc4/0xea0 drivers/md/md.c:10275
+ process_one_work+0xac7/0x1b10 kernel/workqueue.c:3396
+ process_scheduled_works kernel/workqueue.c:3479 [inline]
+ worker_thread+0x5ef/0xe50 kernel/workqueue.c:3560
+ kthread+0x373/0x450 kernel/kthread.c:436
+ ret_from_fork+0x730/0xd60 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+ </TASK>
+
+
+---
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
