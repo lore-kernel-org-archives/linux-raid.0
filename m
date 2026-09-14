@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58D6C35292A
-	for <linux-raid@vger.kernel.org>; Mon, 14 Sep 2026 13:12:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 661F74582CA
+	for <linux-raid@vger.kernel.org>; Mon, 14 Sep 2026 13:13:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789391557; cv=none; b=U5UEMqWXLwvRrDPoJnsUPcf83en+StizlebK0x8KU1IuHWXU8ikOM1/Vu5pDzWaWYwiSdhl0cCZgns+1+YkuqDPeAo3Tj7DoSL8rRgjj0JnJ0fYeXA4sCgRTkMB0ZsTSmQyupt2xzscfNwgYL7YhKZGUgOQouNYI1mZvtWJPsFQ=
+	t=1789391636; cv=none; b=YQObp/2rel0+RH9Dw/xhC7DN+2ZbQLMyf1dVQI5ejwOzbPeeeISmXs4TqRLj9c8Zkh33UY1RWDSa4mWZjTw8CK9m3K49Izu771TgrPFqetUdsztNOEKhpLZNCzx2pX8tKCEwQ7oWAO1kWKX3kptWNQKrbXxNVMCbWJNOB7I2z/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789391557; c=relaxed/simple;
-	bh=NJvzKZYQH8uqxGwg14xME3stuxWg7MDLUYdBLWkS+PA=;
+	s=arc-20240116; t=1789391636; c=relaxed/simple;
+	bh=h7F+cbc/QIf7ydCCa803lvo8VBaZ1KNapw9DyuMlr38=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=A2o9uYJGPpeMPWKy5PZlxP23X11qLq1V6SccNXGvZR0ZvxvO+2PH/9OujhosqTkkqN3zoCouyyuw39TBbzc+nt3HK4/tVHXWZcpSQhBo4TcQRW/s7Y5+LCl5APffhedQHXXIrMb/NGwi/OTkRbQtwuZOFBZ5Qu4/UMftJbzNkJg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U9l6uz2y; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=kBwXVLaGur0phJYUXbzTH5oN3ncaDIAmiOeUCboRZi+yAVCnYTtm06dJyQjyQGz6V5defc1nj6nEFLKu4leX9Wy5EdrKa6ihVUuy+jJiCSyTB5C2RLdnzRIDmLMIBNrS6WGImpB51ff69n8QAw2z3bzeI3lEHH0Uc8Elg0/ufDE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JzAsP9EQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U9l6uz2y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3F2B1F00893;
-	Mon, 14 Sep 2026 13:12:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JzAsP9EQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F1CD1F000FF;
+	Mon, 14 Sep 2026 13:13:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789391556;
-	bh=vZfwqBdvOFpQKew+Hh4SK3LM5/rd4AbqHnwLPn0HUtE=;
+	s=k20260515; t=1789391635;
+	bh=aokfXWqf4Omn2K37qVJrtEDTPmx21fzHBeWcZX5PiT8=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=U9l6uz2yNakdSuy2bAOFywFnasaDqMo7M7iuS2ZuOFlmA7iXFxZ3HQOrSDdiCiPmS
-	 DwfZn50H/wewrGGL7Z2bzprqHQj+l27pinMzT1CPgCbQ4CnjLVRLyKYaYjcHn0v7Ok
-	 WkfIne7vSOcevZKRNXci5De3LGHv8skOXI9AKZK6BZYlDejlluJryTC/AJT0d3GuNS
-	 c3RCMXn7lhFrx9IznJ6g21XHECoccaF0X411VpnLhGBngMvbMr8ai+VYSxVCMXaLk7
-	 XbFTA0jSaYqGWo1xJv18F6NdQl03lqWARNJAaIT5H9k4QwvtTS+bFtrma20VRVWdwT
-	 1iv6xlzBULprg==
-Message-ID: <7efaff54-3f19-4c0c-a8c9-fcbacb1aa4e2@kernel.org>
-Date: Mon, 14 Sep 2026 15:12:31 +0200
+	b=JzAsP9EQNmpip2IZ+1q8uGwSdivHJf+BN/OhzW1IaEaPCudr1HooaypwLQohvGXv2
+	 7EMESu+dvEtamAjVtby1qT5sJixIEGSv8hlBEOqetJjVjRQ5cIvvjXssGZ7pE/WTJK
+	 Fa9U5+RvLMRMN8BEOyMiXpN62lmeMgPRysI5vtN9p8LOS7sNyTBu3KUXK0404RYp6A
+	 jq428PaaR6zzj3KU0V+OO8RiIAbFrvEig6jI7OZyxd7ESt8ngMAPLM90tU11+Qkpkl
+	 sqyf9GD1Up+PCvK3oYl4S3C9dG4dM33q/LB1Dc988vQQrpl0C3bGq2eXN2wMDCZ295
+	 f134ji6phSFrA==
+Message-ID: <e63e6edc-245a-4c83-8a0d-e419f6a8bd46@kernel.org>
+Date: Mon, 14 Sep 2026 15:13:50 +0200
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -35,11 +35,11 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] md: Use folio_alloc_buffers()
+Subject: Re: [PATCH 2/3] md: Use folio APIs in free_page()
 To: "Matthew Wilcox (Oracle)" <willy@infradead.org>, Zi Yan <ziy@nvidia.com>
 Cc: linux-raid@vger.kernel.org, linux-mm@kvack.org
 References: <20260913-remove-pg_private-v4-0-848550f7574e@nvidia.com>
- <20260914041830.2072626-1-willy@infradead.org>
+ <20260914041830.2072626-2-willy@infradead.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -86,20 +86,19 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20260914041830.2072626-1-willy@infradead.org>
+In-Reply-To: <20260914041830.2072626-2-willy@infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 9/14/26 06:18, Matthew Wilcox (Oracle) wrote:
-> Remove the last user of alloc_page_buffers().  This isn't _great_,
+> Convert the page to a folio.  This removes some of the last uses of a
+> few page APIs (detach_page_private(), page_buffers()).  Replaces two
+> calls to compound_head() with one.
+> 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> ---
 
-You should tell us "why" this isn't great.
-
-Because we're allocating folios although these things are not actually folios? I
-can only speculate :)
-
-Code itself looks good.
-
+Reviewed-by: David Hildenbrand (Arm) <david@kernel.org>
 
 -- 
 Cheers,
