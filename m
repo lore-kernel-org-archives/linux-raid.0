@@ -1,171 +1,140 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EF0A383985
-	for <linux-raid@vger.kernel.org>; Mon, 14 Sep 2026 05:56:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC1DD3B840B
+	for <linux-raid@vger.kernel.org>; Mon, 14 Sep 2026 06:06:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789365399; cv=none; b=PxiF9e7bb4gGVTagKuAk43upmvr9lBrvot8gmn1VL6lepfg5sfP9ldOri3U3qtZL3U31mQamZT3/v5oE0LJTX6tIqzck3KfgkfcjOm/fuDR2K0zXtYOYqucaxZtvYuIhsC+cq+PDwtNLVbc9XRjS3C0/Y9JW1IttvJBDkES2CfI=
+	t=1789366021; cv=none; b=U7p5c59eihy//WFNN3sKAo4+LwdcGwQLn6dJAv4+tla27YNAxjjLSN0k6BPYFPB/ML1vMnnJ9hof0J4697VomBk5QmWwmR+iGQLKqfoSvC1lKbbwMKFKX2MTGqg9mWb2BfO3Byl6heFqLUma7xNE5NFD7Nu2cCBGKI4nDjl1VZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789365399; c=relaxed/simple;
-	bh=TpSPkH+SXiJ3GUAtyS7rFYndR00eT9614I4bRCa+GH4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=S1mSgHbdgUqAPF6ATzTRAi8ftiWYIMsNSGJZVeZf9Vd+ymIpxfERmbJ2ByfPqeaccKPGzcbzGdJ20V0ByamlD6Hd0kVmts3CxW6rKXPEJr4Kvrm9yEox936TUfRXpIo1XE6/sRMTTtLf7kvzVN1leCjWT+QYtZxECmFoSq1cA2k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kuwUDlbu; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789366021; c=relaxed/simple;
+	bh=iI5+PZvGtbOzRMYq0PjqtqAi+3bMFL5QBN+IyqXLt88=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=B4yf+AjDZIuOL3ewXmNDq0s6XRw8yokngX2QM2BcPaPJQTH0wHMIAjcomp1ODtJY64qvbFqW0IFjj0vNBtgCqi2nQSx/tHzGaZQ4dJcycvn9kPs1KWp488FqwVm8DAytVc+wZMXWK6xYu83bDm9dppyFxuIFlwB/+zep+jfMLmQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HXXTLG1N; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kuwUDlbu"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2cfbbdfa60bso29973865ad.3
-        for <linux-raid@vger.kernel.org>; Sun, 13 Sep 2026 22:56:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789365386; x=1789970186; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=bRMmXFSdNXlIVborRjU6mCE3PD/OEqkVPn+DnkXz8F0=;
-        b=kuwUDlbuHpjvvJT+x1YwMJxRUk5W2nBsDXlxqN7e8wdoUHV56rf4660vFvMmf2lJiQ
-         nqBXmDczQHcVp/jU6dYkrH/0/w9bLBwXowO5oIz2u0Q8Zl6TFa3EtxR8oXs69sfVoHHj
-         8yRT+MvfjZrHrICAWabsXV9T1dFSxXu5rZmUGEzhTBSxau5aZN3Gv5GsQeOGAGXFxn30
-         oBCYiQ9EWQm2SA8HoUZFfJCEeswX2XcOYkYqaQYFMBjUmRbkS8xngVu9QfA3t0eh3FWk
-         RCYMDE1Jw2YEwrbh2LLOZ0XISEHcpm7Dn1orXbGgFWtayMlc5gO/PLBuJEFqfInkk1MC
-         3F0Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789365386; x=1789970186;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=bRMmXFSdNXlIVborRjU6mCE3PD/OEqkVPn+DnkXz8F0=;
-        b=j6M91N0B1F5nU+2Oelw6rYc/lEACRgs/LcawuOZZ9QuetnSabfhCgCIoBRUKn/jznG
-         r6+p0yxhVlUTQKwAasZrpsjRmkSBoxNUpch6dQuYVbu2v0RByjTRXfUQFRZpTwfxcP1z
-         v37n9xzbkER4S2YuvKr/JpMAKoi9dy99AfZHWAZNAMt0+zodbcVzJlP1HwQdz5Q0CKtD
-         L1qYtn7TycHJK1nJhjSGTGq+W8P9l7aDc0j5vvJP09EvkZcbkIUBqtVOopOoJDyUa9yk
-         jN67fkkxH80+cQByLMvjsISvWPZ/qgE311pES14otDG6HnqGk66K3qmHq7Snqe40DaDn
-         fBpQ==
-X-Forwarded-Encrypted: i=1; AKwUvBx+lbzsuTNNio7nbl1qnGyNYB5k1Eqlz1oEuV7SLBMXKqA39vjyQj0v2bHM/K4jAbCMeHLCNxawC2vV@vger.kernel.org
-X-Gm-Message-State: AFuF++kcA2kDpKLb29z9MKcNdqNSCpI5TGXPi+f6pRTEGr9ccmx0KAVi
-	lYctrvL2vgBwVVInCwusbTpNY41xnfd1gfNeLLKL+WI+z+ZZDkJcvn13
-X-Gm-Gg: AYBFou2UpHAVRe8t4X5bNyFmU8ob9jclae54AnxjBdqvkX1XndPcG/WVGmbVA/IyQ4S
-	lxubqt3zvGCRbsa9ryHWZ+oqganPqIOjAjAbyKvNX19fdvWVMHkHk61D8pf2q3c/7KcW7HjbECd
-	JZcDiqpJBQxvFrC7zJNgB9nW18HJ7Zpl4j/v9K4yIXveaDeeR56+dme1I1xFI3n5C/TUFDMuUMv
-	uONGtRTIZGUq8p71OJc7GOXdL0e7YW1+f2SWSB/Pg0fIvQ945MazP1oxSi5PuYi41Wngat5KXnz
-	1a6v737AS+3yZs4w7cLx9LpxQ0ltl13CgyCrxev15OLiLLrvBrUQhjKAXLPxeV7wLVX7BlUcUAy
-	ddlf5vuNWIsd6ayiDIRaSWJ++cKh3ZvETmchBWV+zivUiERZdW/tWv/ICM64vaDWhHuL8N72TRt
-	1YGtRoKRKvHDxXq3lLyNw7rHZI2UgwAE+zG6BF9BP8mDDjvuUf/ZBYSwBpSeCgclVaAHyYlLN2k
-	p0vwvCs77ZhLkjFLHPqxAh/jkfQU6bHSwU=
-X-Received: by 2002:a17:902:f644:b0:2d9:3636:d01a with SMTP id d9443c01a7336-2dd6c725048mr27735915ad.15.1789365386312;
-        Sun, 13 Sep 2026 22:56:26 -0700 (PDT)
-Received: from deepanshu.. ([2405:201:682f:383f:70f2:8a07:cfbd:d0e7])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2dd44ad5d5bsm31494665ad.75.2026.09.13.22.56.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 13 Sep 2026 22:56:25 -0700 (PDT)
-From: Deepanshu Kartikey <kartikey406@gmail.com>
-To: song@kernel.org,
-	yukuai@fygo.io
-Cc: magiclinan@didiglobal.com,
-	xiao@kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Deepanshu Kartikey <kartikey406@gmail.com>,
-	syzbot+9e3014263a35700ab49b@syzkaller.appspotmail.com
-Subject: [PATCH] md: fix out-of-bounds access to superblock disk array
-Date: Mon, 14 Sep 2026 11:26:19 +0530
-Message-Id: <20260914055619.32929-1-kartikey406@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HXXTLG1N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 937B01F000FF;
+	Mon, 14 Sep 2026 06:06:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789366016;
+	bh=iNTS0sjH5LyECgZUnCELnuAoDkniTwL7MuxtYIqFRLM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=HXXTLG1NACnvD4ew1Drovp2LadNbyPDF41JkEhk7P7sgpEODoBz480M3yf3alXVx6
+	 dJdRbHqpQ+AO+hClYX/mLXkxE3conxmYNsgesm29RGC8cjYuFcqqUr5TM9oHHrpCnF
+	 YQkmcxNCdplfwyKD2xrV1sSM7zt//uXpsXfOEy7q3KMVVFnlTgQrSmBb266C+vJvwC
+	 yvqVvNXYi2x13OKJEddeXv5GgPVcgA+45X0mvCvjJbXVK4QviI2hxG57uDdkp6RFKA
+	 NY7uNIPCRjr13xd6gCRLQgJIuJe+qs1AE7Kcpxpyy6tnCiCaVq+gHV0yIJ9jZvf9lU
+	 oc6NwYTTstdhg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] md: fix out-of-bounds access to superblock disk array
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Deepanshu Kartikey" <kartikey406@gmail.com>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20260914055619.32929-1-kartikey406@gmail.com>
+References: <20260914055619.32929-1-kartikey406@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 14 Sep 2026 06:06:56 +0000
+Message-Id: <20260914060656.937B01F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-The v0.90 superblock format can only describe MD_SB_DISKS (27) member
-disks, but several places did not enforce this limit, allowing an
-out-of-bounds access to sb->disks[]:
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
- 1. super_90_load() only checked that sb->raid_disks was positive,
-    not that it fit within MD_SB_DISKS. A crafted superblock with an
-    oversized raid_disks value was accepted into mddev->raid_disks.
+New issues:
+- [High] Skipping devices with an out-of-bounds `desc_nr` in `super_90_sync=
+()` leaves `rdev2->desc_nr` stale, silently corrupting the superblock's `th=
+is_disk` field.
 
- 2. super_90_sync() computed desc_nr from rdev2->raid_disk or a
-    running spare counter without checking it stayed within bounds
-    before indexing sb->disks[desc_nr].
+Pre-existing issues:
+- [High] The patch fails to validate `sb->this_disk.number` in `super_90_lo=
+ad()`, allowing an unvalidated value to be assigned to `rdev->desc_nr`, whi=
+ch subsequently leads to out-of-bounds array reads in `super_90_validate()`.
+--
 
- 3. super_90_sync() also indexed sb->disks[rdev->desc_nr] for
-    sb->this_disk without any bounds check.
+commit b64c4503567571cb6b3f8a25617dfc053378beea
+Author: Deepanshu Kartikey <kartikey406@gmail.com>
+md: fix out-of-bounds access to superblock disk array
 
- 4. The "missing devices" loop in super_90_sync() iterated up to
-    mddev->raid_disks with no per-iteration bound on sb->disks[].
+This commit adds bounds checks for raid_disks and desc_nr when loading and
+syncing v0.90 superblocks. It aims to prevent out-of-bounds array accesses
+to the 27-element sb->disks array caused by maliciously crafted or
+corrupted metadata.
 
-Any of these could be reached with a bad raid_disks/desc_nr value
-and cause an out-of-bounds array access:
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 680b34a63cb3d..81588c3fee49a 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1393,7 +1393,8 @@ static int super_90_load(struct md_rdev *rdev, stru=
+ct md_rdev *refdev, int minor
+>  		goto abort;
+>  	}
+> =20
+> -	if (sb->raid_disks <=3D 0)
+> +	if (sb->raid_disks <=3D 0 ||
+> +	    sb->raid_disks > MD_SB_DISKS)
+>  		goto abort;
+> =20
+>  	if (md_csum_fold(calc_sb_csum(sb)) !=3D md_csum_fold(sb->sb_csum)) {
 
-  UBSAN: array-index-out-of-bounds in drivers/md/md.c:1697:17
-  index 124 is out of range for type 'mdp_disk_t [27]'
+[Severity: High]
+This is a pre-existing issue, but while we are adding bounds checks to
+super_90_load(), does this function still leave a critical path vulnerable?
 
-Validate raid_disks at load time, and add bounds checks at each
-point sb->disks[] is indexed as defense in depth.
+Slightly further down in super_90_load(), the code does:
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Reported-by: syzbot+9e3014263a35700ab49b@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=9e3014263a35700ab49b
-Assisted-by: Claude
-Tested-by: syzbot+9e3014263a35700ab49b@syzkaller.appspotmail.com
-Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
----
- drivers/md/md.c | 19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
+    rdev->desc_nr =3D sb->this_disk.number;
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 680b34a63cb3..f950e6fd144c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1393,7 +1393,8 @@ static int super_90_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor
- 		goto abort;
- 	}
- 
--	if (sb->raid_disks <= 0)
-+	if (sb->raid_disks <= 0 ||
-+	    sb->raid_disks > MD_SB_DISKS)
- 		goto abort;
- 
- 	if (md_csum_fold(calc_sb_csum(sb)) != md_csum_fold(sb->sb_csum)) {
-@@ -1693,6 +1694,13 @@ static void super_90_sync(struct mddev *mddev, struct md_rdev *rdev)
- 			desc_nr = rdev2->raid_disk;
- 		else
- 			desc_nr = next_spare++;
-+
-+		if (desc_nr < 0 || desc_nr >= MD_SB_DISKS) {
-+			pr_warn("md: %s: desc_nr %d out of range for rdev %pg, skipping\n",
-+				mdname(mddev), desc_nr, rdev2->bdev);
-+			continue;
-+		}
-+
- 		rdev2->desc_nr = desc_nr;
- 		d = &sb->disks[rdev2->desc_nr];
- 		nr_disks++;
-@@ -1722,7 +1730,7 @@ static void super_90_sync(struct mddev *mddev, struct md_rdev *rdev)
- 			d->state |= (1<<MD_DISK_FAILFAST);
- 	}
- 	/* now set the "removed" and "faulty" bits on any missing devices */
--	for (i=0 ; i < mddev->raid_disks ; i++) {
-+	for (i = 0 ; i < mddev->raid_disks && i < MD_SB_DISKS ; i++) {
- 		mdp_disk_t *d = &sb->disks[i];
- 		if (d->state == 0 && d->number == 0) {
- 			d->number = i;
-@@ -1737,8 +1745,11 @@ static void super_90_sync(struct mddev *mddev, struct md_rdev *rdev)
- 	sb->working_disks = working;
- 	sb->failed_disks = failed;
- 	sb->spare_disks = spare;
--
--	sb->this_disk = sb->disks[rdev->desc_nr];
-+	if (rdev->desc_nr >= 0 && rdev->desc_nr < MD_SB_DISKS)
-+		sb->this_disk = sb->disks[rdev->desc_nr];
-+	else
-+		pr_warn("md: %s: rdev desc_nr %d out of range, this_disk not set\n",
-+			mdname(mddev), rdev->desc_nr);
- 	sb->sb_csum = calc_sb_csum(sb);
- }
- 
--- 
-2.34.1
+Since sb->this_disk.number is read from the untrusted superblock without
+validation against MD_SB_DISKS, an unvalidated value is assigned directly
+to rdev->desc_nr. Later during array assembly, super_90_validate()=20
+unconditionally uses rdev->desc_nr to index the 27-element sb->disks array:
 
+    desc =3D sb->disks + rdev->desc_nr;
+    if (desc->state & (1<<MD_DISK_FAULTY))
+
+Can a maliciously crafted MD superblock still trigger an out-of-bounds
+memory read through this unvalidated rdev->desc_nr?
+
+[ ... ]
+
+> @@ -1693,6 +1694,13 @@ static void super_90_sync(struct mddev *mddev, str=
+uct md_rdev *rdev)
+>  			desc_nr =3D rdev2->raid_disk;
+>  		else
+>  			desc_nr =3D next_spare++;
+> +
+> +		if (desc_nr < 0 || desc_nr >=3D MD_SB_DISKS) {
+> +			pr_warn("md: %s: desc_nr %d out of range for rdev %pg, skipping\n",
+> +				mdname(mddev), desc_nr, rdev2->bdev);
+> +			continue;
+> +		}
+> +
+
+[Severity: High]
+Does skipping out-of-bounds devices here leave rdev2->desc_nr with a stale
+value?
+
+By using continue to early-exit the loop, we skip the subsequent
+rdev2->desc_nr =3D desc_nr assignment. Later in this same function, the
+superblock's this_disk field is populated using rdev->desc_nr:
+
+    if (rdev->desc_nr >=3D 0 && rdev->desc_nr < MD_SB_DISKS)
+        sb->this_disk =3D sb->disks[rdev->desc_nr];
+
+If the target device was skipped during the rdev_for_each loop, will it
+reuse its stale desc_nr and copy the descriptor of whichever other active
+device took that slot, potentially causing metadata corruption?
+
+>  		rdev2->desc_nr =3D desc_nr;
+>  		d =3D &sb->disks[rdev2->desc_nr];
+>  		nr_disks++;
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260914055619.3292=
+9-1-kartikey406@gmail.com?part=3D1
