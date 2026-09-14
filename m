@@ -1,140 +1,124 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-29.ptr.blmpb.com (va-2-29.ptr.blmpb.com [209.127.231.29])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC1DD3B840B
-	for <linux-raid@vger.kernel.org>; Mon, 14 Sep 2026 06:06:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30A88443E38
+	for <linux-raid@vger.kernel.org>; Mon, 14 Sep 2026 12:18:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.29
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789366021; cv=none; b=U7p5c59eihy//WFNN3sKAo4+LwdcGwQLn6dJAv4+tla27YNAxjjLSN0k6BPYFPB/ML1vMnnJ9hof0J4697VomBk5QmWwmR+iGQLKqfoSvC1lKbbwMKFKX2MTGqg9mWb2BfO3Byl6heFqLUma7xNE5NFD7Nu2cCBGKI4nDjl1VZY=
+	t=1789388296; cv=none; b=OAY+1eHM3eqtirn2E6o4Bi9PVG8E0mWzMdkbhxe0iumiTNqaeKp4RR241O6M2OF8GNKmBYVMsmHYmTXp23BMKjE0Cw2U7kiwqCy4M7FLvhhrfHCVVUOdxhqCmfGdYh89SxW4zXldDi14faYXXJvnGuMjKyEVaJDZSv8V/vzuou8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789366021; c=relaxed/simple;
-	bh=iI5+PZvGtbOzRMYq0PjqtqAi+3bMFL5QBN+IyqXLt88=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=B4yf+AjDZIuOL3ewXmNDq0s6XRw8yokngX2QM2BcPaPJQTH0wHMIAjcomp1ODtJY64qvbFqW0IFjj0vNBtgCqi2nQSx/tHzGaZQ4dJcycvn9kPs1KWp488FqwVm8DAytVc+wZMXWK6xYu83bDm9dppyFxuIFlwB/+zep+jfMLmQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HXXTLG1N; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789388296; c=relaxed/simple;
+	bh=iPWmuuWWN46rm/34V008espnd6sdzL0kZqgwfppqYN0=;
+	h=Cc:Content-Type:To:Subject:From:Date:Message-Id:In-Reply-To:
+	 Mime-Version:References; b=IAjS8B9TeitajQhG0Nq2FasWL4hjBYpWtpnJ4PdSoUE+HycxvZe44Z2v03V/FHXuNnpbJAgKTubbYFCHGlUvtwtpMyeIDARKHHJKYZFRR90zZLY6VFm6T5kHufnYE+2/ub0gmKowIRHaoeEFu1bWeX5Wh9BreWKWH/4x6PPcMHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=DRcTN459; arc=none smtp.client-ip=209.127.231.29
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HXXTLG1N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 937B01F000FF;
-	Mon, 14 Sep 2026 06:06:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789366016;
-	bh=iNTS0sjH5LyECgZUnCELnuAoDkniTwL7MuxtYIqFRLM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HXXTLG1NACnvD4ew1Drovp2LadNbyPDF41JkEhk7P7sgpEODoBz480M3yf3alXVx6
-	 dJdRbHqpQ+AO+hClYX/mLXkxE3conxmYNsgesm29RGC8cjYuFcqqUr5TM9oHHrpCnF
-	 YQkmcxNCdplfwyKD2xrV1sSM7zt//uXpsXfOEy7q3KMVVFnlTgQrSmBb266C+vJvwC
-	 yvqVvNXYi2x13OKJEddeXv5GgPVcgA+45X0mvCvjJbXVK4QviI2hxG57uDdkp6RFKA
-	 NY7uNIPCRjr13xd6gCRLQgJIuJe+qs1AE7Kcpxpyy6tnCiCaVq+gHV0yIJ9jZvf9lU
-	 oc6NwYTTstdhg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] md: fix out-of-bounds access to superblock disk array
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Deepanshu Kartikey" <kartikey406@gmail.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260914055619.32929-1-kartikey406@gmail.com>
-References: <20260914055619.32929-1-kartikey406@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 14 Sep 2026 06:06:56 +0000
-Message-Id: <20260914060656.937B01F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="DRcTN459"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1789388282;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=uZslS5NlIIWsH2nl/2FSkNsZ6lOa0rNE9WaU0b70Q4E=;
+ b=DRcTN459kxMEB9289Bm9G2myS3nC+HkxSJH90WP2vo8fhNNQ/qL7QaSqifOK9vcu1q2oEJ
+ wO7ncnP1p+oP1a9YxDCslROCeoZXRwLA/zQXa8HI4tr0tfOXKMY6mDL4n4q1w37ndTe4og
+ GkDIIgDASckrRnKfa9Y1UvFvgi9E/scPxCZpWsUdGr1pfAlb+KfiSiLPa/D74J9WkZkiLR
+ iV6GbXuWsPu2z6jc1oSTusUN3bOBdoG965eZU3OgrNlP7eWSqtJA1uCrqHhGhLKBZSZKN3
+ Esm2eQ0lc+3TR8yS1r/UPyXZeVO4kKo4CI/OlBp2n6Dq6Nk7OUezTLWAmQJkxA==
+Cc: <chencheng@fnnas.com>, <linux-kernel@vger.kernel.org>
+X-Original-From: chencheng@fnnas.com
+Content-Type: text/plain; charset=UTF-8
+To: <linux-raid@vger.kernel.org>, <yukuai@fygo.io>, <nixiao@fygo.io>
+Subject: [PATCH v1 1/2] md/raid5: extract min_raid_disks()
+Content-Transfer-Encoding: 7bit
+X-Lms-Return-Path: <lba+26aa7e5f8+971af5+vger.kernel.org+chencheng@fnnas.com>
+From: "Chen Cheng" <chencheng@fnnas.com>
+Date: Mon, 14 Sep 2026 20:17:46 +0800
+Message-Id: <f79037a8c7cceafab6a6d372bc2bc7810de8653f.1789387793.git.chencheng@fnnas.com>
+In-Reply-To: <cover.1789387793.git.chencheng@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.55.0
+References: <cover.1789387793.git.chencheng@fnnas.com>
+Received: from fedora ([183.34.164.60]) by smtp.feishu.cn with ESMTPS; Mon, 14 Sep 2026 20:17:59 +0800
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+From: Chen Cheng <chencheng@fnnas.com>
 
-New issues:
-- [High] Skipping devices with an out-of-bounds `desc_nr` in `super_90_sync=
-()` leaves `rdev2->desc_nr` stale, silently corrupting the superblock's `th=
-is_disk` field.
+Reuse the minimum disk count in setup_conf() and check_reshape().
 
-Pre-existing issues:
-- [High] The patch fails to validate `sb->this_disk.number` in `super_90_lo=
-ad()`, allowing an unvalidated value to be assigned to `rdev->desc_nr`, whi=
-ch subsequently leads to out-of-bounds array reads in `super_90_validate()`.
---
+Signed-off-by: Chen Cheng <chencheng@fnnas.com>
+---
+ drivers/md/raid5.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
-commit b64c4503567571cb6b3f8a25617dfc053378beea
-Author: Deepanshu Kartikey <kartikey406@gmail.com>
-md: fix out-of-bounds access to superblock disk array
-
-This commit adds bounds checks for raid_disks and desc_nr when loading and
-syncing v0.90 superblocks. It aims to prevent out-of-bounds array accesses
-to the 27-element sb->disks array caused by maliciously crafted or
-corrupted metadata.
-
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 680b34a63cb3d..81588c3fee49a 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -1393,7 +1393,8 @@ static int super_90_load(struct md_rdev *rdev, stru=
-ct md_rdev *refdev, int minor
->  		goto abort;
->  	}
-> =20
-> -	if (sb->raid_disks <=3D 0)
-> +	if (sb->raid_disks <=3D 0 ||
-> +	    sb->raid_disks > MD_SB_DISKS)
->  		goto abort;
-> =20
->  	if (md_csum_fold(calc_sb_csum(sb)) !=3D md_csum_fold(sb->sb_csum)) {
-
-[Severity: High]
-This is a pre-existing issue, but while we are adding bounds checks to
-super_90_load(), does this function still leave a critical path vulnerable?
-
-Slightly further down in super_90_load(), the code does:
-
-    rdev->desc_nr =3D sb->this_disk.number;
-
-Since sb->this_disk.number is read from the untrusted superblock without
-validation against MD_SB_DISKS, an unvalidated value is assigned directly
-to rdev->desc_nr. Later during array assembly, super_90_validate()=20
-unconditionally uses rdev->desc_nr to index the 27-element sb->disks array:
-
-    desc =3D sb->disks + rdev->desc_nr;
-    if (desc->state & (1<<MD_DISK_FAULTY))
-
-Can a maliciously crafted MD superblock still trigger an out-of-bounds
-memory read through this unvalidated rdev->desc_nr?
-
-[ ... ]
-
-> @@ -1693,6 +1694,13 @@ static void super_90_sync(struct mddev *mddev, str=
-uct md_rdev *rdev)
->  			desc_nr =3D rdev2->raid_disk;
->  		else
->  			desc_nr =3D next_spare++;
-> +
-> +		if (desc_nr < 0 || desc_nr >=3D MD_SB_DISKS) {
-> +			pr_warn("md: %s: desc_nr %d out of range for rdev %pg, skipping\n",
-> +				mdname(mddev), desc_nr, rdev2->bdev);
-> +			continue;
-> +		}
-> +
-
-[Severity: High]
-Does skipping out-of-bounds devices here leave rdev2->desc_nr with a stale
-value?
-
-By using continue to early-exit the loop, we skip the subsequent
-rdev2->desc_nr =3D desc_nr assignment. Later in this same function, the
-superblock's this_disk field is populated using rdev->desc_nr:
-
-    if (rdev->desc_nr >=3D 0 && rdev->desc_nr < MD_SB_DISKS)
-        sb->this_disk =3D sb->disks[rdev->desc_nr];
-
-If the target device was skipped during the rdev_for_each loop, will it
-reuse its stale desc_nr and copy the descriptor of whichever other active
-device took that slot, potentially causing metadata corruption?
-
->  		rdev2->desc_nr =3D desc_nr;
->  		d =3D &sb->disks[rdev2->desc_nr];
->  		nr_disks++;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260914055619.3292=
-9-1-kartikey406@gmail.com?part=3D1
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index e1f20035703b..4ab31af34b9f 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7628,14 +7628,19 @@ static unsigned long raid5_cache_count(struct shrinker *shrink,
+ 		/* unlikely, but not impossible */
+ 		return 0;
+ 	return max_stripes - min_stripes;
+ }
+ 
++static int min_raid_disks(int level)
++{
++	return level == 6 ? 4 : 2;
++}
++
+ static struct r5conf *setup_conf(struct mddev *mddev)
+ {
+ 	struct r5conf *conf;
+-	int raid_disk, memory, max_disks;
++	int raid_disk, memory, max_disks, min_disks;
+ 	struct md_rdev *rdev;
+ 	struct disk_info *disk;
+ 	char pers_name[6];
+ 	int i;
+ 	int group_cnt;
+@@ -7655,15 +7660,15 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	     && !algorithm_valid_raid6(mddev->new_layout))) {
+ 		pr_warn("md/raid:%s: layout %d not supported\n",
+ 			mdname(mddev), mddev->new_layout);
+ 		return ERR_PTR(-EIO);
+ 	}
+-	if ((mddev->new_level != 6 && mddev->raid_disks < 2) ||
+-	    (mddev->new_level == 6 && mddev->raid_disks < 4)) {
++	min_disks = min_raid_disks(mddev->new_level);
++	if (mddev->raid_disks < min_disks) {
+ 		pr_warn("md/raid:%s: not enough configured devices (%d, minimum %d)\n",
+ 			mdname(mddev), mddev->raid_disks,
+-			mddev->new_level == 6 ? 4 : 2);
++			min_disks);
+ 		return ERR_PTR(-EINVAL);
+ 	}
+ 
+ 	if (!mddev->new_chunk_sectors ||
+ 	    (mddev->new_chunk_sectors << 9) % PAGE_SIZE ||
+@@ -8600,17 +8605,13 @@ static int check_reshape(struct mddev *mddev)
+ 	if (!mddev->new_chunk_sectors)
+ 		return -EINVAL;
+ 	if (mddev->delta_disks < 0 && mddev->reshape_position == MaxSector) {
+ 		/* We might be able to shrink, but the devices must
+ 		 * be made bigger first.
+-		 * For raid6, 4 is the minimum size.
+-		 * Otherwise 2 is the minimum
+ 		 */
+-		int min = 2;
+-		if (mddev->level == 6)
+-			min = 4;
+-		if (mddev->raid_disks + mddev->delta_disks < min)
++		if (mddev->raid_disks + mddev->delta_disks <
++		    min_raid_disks(mddev->level))
+ 			return -EINVAL;
+ 	}
+ 
+ 	if (!check_stripe_cache(mddev))
+ 		return -ENOSPC;
+-- 
+2.55.0
