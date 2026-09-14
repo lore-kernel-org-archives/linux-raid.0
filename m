@@ -1,130 +1,90 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDDC435C19F;
-	Mon, 14 Sep 2026 03:40:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22B392DAFAF
+	for <linux-raid@vger.kernel.org>; Mon, 14 Sep 2026 04:18:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789357204; cv=none; b=Bz1bbXd7g4NUI3TERWNuqN74MGxTnxFVv/D9qfJCGbjIX8y4dSddxUAnVMoTQIuvvk2/BeXDP4tQoGeCHS3hWoXy5e+9HCO4f4f3ab9myjIDqevIEHGYe4mLj2MGVr9PmIX4JoGEBfYl9t/v2xxBGZdS3JvdFhbEK1T6yDoyIp4=
+	t=1789359527; cv=none; b=RhdXjSasAYpu4XgCthEmxLft0CpScLF3qv8PqND7hRW6GuLrZgnyIONIN0xxnT7A93reLxD/Op0yWqSQJkgEs0KeMlsKNB13XDcdykgIs3tTaKcQhBL28MyHSdAllmsw4QE6qcLio1wElISDT7nT5iEHW8G6h/J3XWBtBjlu3Ks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789357204; c=relaxed/simple;
-	bh=1A6s3fqev0839R6hce//sj+/jCLqDJTSBW2SC0bjfpA=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=YAIijsDBCk/O1l5y7L4q9Ort/+eTEJIG8ZLJxbEq+oY7rKz6bFNyRj9Uk57UkpPJq5pN4eizEHIJ6GE+Am3ubyyHbleMWkup/vT1EXfckm2ZsjQl9gIO10FbbWTE/3qXytcuLSj8wKwVcaGw4LgMoyauMnmGeuUqm/bVrKwe8EI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=pHy6fbef; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789359527; c=relaxed/simple;
+	bh=aubhCq2qaCz1Wt3CTa+Xo5u2Snvnamxs/6eM6y5+/VY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=GWJssFZ2ZNzIR+bG90cvwifsEKE+JGsWVcEViz7vEzkssdZ9/0g0XnROkpV386YEFsY5uHkiLJGJ2wV/TrMWGuTn3BreQ65O+YzMGAeA1hxunY0pWvGHS48mhlzbhpK4Gk7tLZNAcvPdSsKG1DxwvoMg3najRA0mbyCCBEJn/2w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=v2bylMmI; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="pHy6fbef"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92FF91F000FF;
-	Mon, 14 Sep 2026 03:39:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1789357202;
-	bh=x5zisV7HoQ8XMweM1XOT4E07P1NlnKsteMfQzVmO4Js=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=pHy6fbeflVTU8QtsqFS5eh8OvOR3ntwRr+lHZYMkoAT3ltm91/zKHpwN5XKZntEOS
-	 ILIVvwKavB+/VLgc77oFP5R90/PbqE2ALcouMF/TdFK9XZ9ovr5QioyLZB1yLh6r2e
-	 gdt1bOJXa+0zPlb1i7I7WNxSlmbqXRfHn0UsNCp4=
-Date: Sun, 13 Sep 2026 20:39:59 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="v2bylMmI"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:
+	Content-Type:Content-ID:Content-Description;
+	bh=HOiZiTTcnOGDiQNW6U8572Zud0tx8Q1ZcO5S5HNlCAo=; b=v2bylMmILt3EvBjj6MUA9IPF+K
+	rDN/3MxBs4Akwii0ZCS5VDYTTgvAiu4KSvdAqErQoMAz+Cfz3+Sgpsn93up2dXEDkH61BOU9oOFZr
+	6MdDqhsWD9VSXJ1vGG+UHCWROHwJdGmLsWW6+e2b1ccAtsVuHSXsyXfTYwyO3fbtTTaUDIjVm0YHE
+	D7h3pjglRTpo998zzlJeY7W2/y2DT4osN0xzJOfzYerPjh4EhE8IgDeamAdjfvgtn2/fes1WmK5AK
+	aYfg1Ms6SK2oQz54LcjDp7ZCYUh3q1uQlE6L/9aVEOgfl1WKlLt6EQe+AQNrNfReUGvd/NW08qcJp
+	DltpjGkw==;
+Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x5y9K-00000008hGx-28L0;
+	Mon, 14 Sep 2026 04:18:34 +0000
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To: Zi Yan <ziy@nvidia.com>
-Cc: David Hildenbrand <david@kernel.org>, "Matthew Wilcox (Oracle)"
- <willy@infradead.org>, Muchun Song <muchun.song@linux.dev>, Lorenzo Stoakes
- <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka
- <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan
- <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Baolin Wang
- <baolin.wang@linux.alibaba.com>, Nico Pache <nico.pache@linux.dev>, Ryan
- Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song
- <baohua@kernel.org>, Lance Yang <lance.yang@linux.dev>, Usama Arif
- <usama.arif@linux.dev>, Gregory Price <gourry@gourry.net>, Ying Huang
- <ying.huang@linux.alibaba.com>, Alistair Popple <apopple@nvidia.com>,
- Johannes Weiner <hannes@cmpxchg.org>, Qi Zheng <qi.zheng@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Kairui Song <kasong@tencent.com>,
- linux-mm@kvack.org, linux-kernel@vger.kernel.org, Minchan Kim
- <minchan@kernel.org>, Sergey Senozhatsky <senozhatsky@chromium.org>, Peter
- Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Arnaldo
- Carvalho de Melo <acme@kernel.org>, Namhyung Kim <namhyung@kernel.org>,
- Thomas Gleixner <tglx@kernel.org>, Borislav Petkov <bp@alien8.de>, Dave
- Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Mark Rutland
- <mark.rutland@arm.com>, Alexander Shishkin
- <alexander.shishkin@linux.intel.com>, Jiri Olsa <jolsa@kernel.org>, Ian
- Rogers <irogers@google.com>, Adrian Hunter <adrian.hunter@intel.com>, James
- Clark <james.clark@linaro.org>, "H. Peter Anvin" <hpa@zytor.com>,
- linux-perf-users@vger.kernel.org, Juergen Gross <jgross@suse.com>, Stefano
- Stabellini <sstabellini@kernel.org>, Oleksandr Tyshchenko
- <oleksandr_tyshchenko@epam.com>, xen-devel@lists.xenproject.org, Eric
- Biggers <ebiggers@kernel.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk
- Kim <jaegeuk@kernel.org>, linux-fscrypt@vger.kernel.org, Oscar Salvador
- <osalvador@suse.de>, Chao Yu <chao@kernel.org>,
- linux-f2fs-devel@lists.sourceforge.net, Tal Zussman <tz2294@columbia.edu>,
- Gao Xiang <xiang@kernel.org>, Jan Kara <jack@suse.cz>, Yue Hu
- <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>, Sandeep
- Dhavale <dhavale@google.com>, Hongbo Li <hongbohbli@tencent.com>, Chunhai
- Guo <guochunhai@vivo.com>, linux-erofs@lists.ozlabs.org,
- linux-fsdevel@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>, Masami
- Hiramatsu <mhiramat@kernel.org>, Mathieu Desnoyers
- <mathieu.desnoyers@efficios.com>, Matthew Brost <matthew.brost@intel.com>,
- Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>,
- Byungchul Park <byungchul@sk.com>, Axel Rasmussen
- <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu
- <weixugc@google.com>, linux-trace-kernel@vger.kernel.org, Trond Myklebust
- <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>,
- linux-nfs@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, Alex Markuze
- <amarkuze@redhat.com>, Viacheslav Dubeyko <slava@dubeyko.com>,
- ceph-devel@vger.kernel.org, Song Liu <song@kernel.org>, Yu Kuai
- <yukuai@fygo.io>, Li Nan <magiclinan@didiglobal.com>, Xiao Ni
- <xiao@kernel.org>, linux-raid@vger.kernel.org, Richard Weinberger
- <richard@nod.at>, Zhihao Cheng <chengzhihao1@huawei.com>,
- linux-mtd@lists.infradead.org, Baoquan He <baoquan.he@linux.dev>, Pasha
- Tatashin <pasha.tatashin@soleen.com>, Pratyush Yadav <pratyush@kernel.org>,
- Jonathan Corbet <corbet@lwn.net>, Dave Young <ruirui.yang@linux.dev>, Shuah
- Khan <skhan@linuxfoundation.org>, kexec@lists.infradead.org,
- linux-doc@vger.kernel.org
-Subject: Re: [PATCH v4 00/16] Remove PG_private by using page/folio->private
- checks instead
-Message-Id: <20260913203959.6b46b0b5a052aec818a7f267@linux-foundation.org>
+Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	linux-raid@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: [PATCH 2/3] md: Use folio APIs in free_page()
+Date: Mon, 14 Sep 2026 05:18:09 +0100
+Message-ID: <20260914041830.2072626-2-willy@infradead.org>
+X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260913-remove-pg_private-v4-0-848550f7574e@nvidia.com>
 References: <20260913-remove-pg_private-v4-0-848550f7574e@nvidia.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Sun, 13 Sep 2026 22:23:58 -0400 Zi Yan <ziy@nvidia.com> wrote:
+Convert the page to a folio.  This removes some of the last uses of a
+few page APIs (detach_page_private(), page_buffers()).  Replaces two
+calls to compound_head() with one.
 
-> This patchset removes PG_private to make space for upcoming PG_folio for
-> identifying pages from a folio (more details in Note below). Instead of
-> checking PG_private, all code is changed to check page/folio->private !=
-> NULL instead.
-> 
-> MM people are cc'd on all patches and subsystem people are cc'd on the
-> cover letter and corresponding patches.
-> 
-> Patch 6 is picked up separately in f2fs tree, but since mm-new does not
-> have it yet, it is sent for MM testing.
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
+ drivers/md/md-bitmap.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-AI review claims to have found a pre-existing critical level deadlock
-in f2fs:
-
-	https://sashiko.dev/#/patchset/20260913-remove-pg_private-v4-0-848550f7574e@nvidia.com
-
-it also had a few things to say about this patchset and, as always,
-hugetlb.c.
-
-
-Thanks, The MM bits appear adequately reviewed and review of the non-MM
-bits are, as usual:
-
-  Great to have but I won't permit lack of other-than-MM review to
-  block MM improvements.
-
-So I'll queue it all up and shall push it into -next after a few days.
-
-Acks from non-MM maintainers are appreciated.
-
-If a non-MM patch appears in linux-next I'll autodrop the mm.git copy
-of that patch.
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 5f1637f974c1..7b42db87d536 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -533,19 +533,18 @@ static void write_file_page(struct bitmap *bitmap, struct page *page, int wait)
+ 
+ static void free_buffers(struct page *page)
+ {
+-	struct buffer_head *bh;
++	struct folio *folio = page_folio(page);
++	struct buffer_head *bh = folio_detach_private(folio);
+ 
+-	if (!PagePrivate(page))
++	if (!bh)
+ 		return;
+ 
+-	bh = page_buffers(page);
+ 	while (bh) {
+ 		struct buffer_head *next = bh->b_this_page;
+ 		free_buffer_head(bh);
+ 		bh = next;
+ 	}
+-	detach_page_private(page);
+-	put_page(page);
++	folio_put(folio);
+ }
+ 
+ /* read a page from a file.
+-- 
+2.47.3
 
