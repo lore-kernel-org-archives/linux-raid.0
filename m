@@ -1,160 +1,127 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-16.ptr.blmpb.com (va-2-16.ptr.blmpb.com [209.127.231.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A6B24766BF;
-	Tue, 15 Sep 2026 08:34:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A2354AFE17
+	for <linux-raid@vger.kernel.org>; Tue, 15 Sep 2026 15:43:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789461284; cv=none; b=asYgtvxQFEKgqwV7KnTH3iYX0FN+c+ToOh1QqwEXzpQmesuEvddUZHyhulF20LRjbk2m+PtRCbgZt8RE0UDxK5PjjW+2QYtpE/cLmOfCc9ms7NxILzdKwFmqnuHr2lr4InP6IbVTT+DamH4eLGKEWzqBrkzavK+XNmwE7SCn7/M=
+	t=1789487041; cv=none; b=Mf/2ENuiHPXNDEgbb604jzoehGvfXwUPd/OVRCxHLK/vLBJR/Tn7j5d7Gt2mueeRF8oKN0+bqLB0blQcAwgRG8OCehZmD6daSokSoDd3ANvbYEjDZEVI7WvPEvn7Y56CuKHWK53lY80YCXHOqFqXqV4MumVNuBfFV8NN6B7wQ6E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789461284; c=relaxed/simple;
-	bh=6DLNcmtvRsehOtnn2S88NWmL6N3IMM5srCTOmr+cYhQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ObJtWebnBxJyVsyXLoaqz5nHqrBLZUoU3tcRwfRVoSOhAySaHXIsbjxhQubv03ZUv2OaNCbL371pV2LOlOGY1lkl4hbbIS9lN99t4BaAKgBe7JsnJJzH5CscF6uCnMgh8gOY/gBfPR0r+qkZmsq8vEUCYizVTrXUH/2kyupV4Ts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=peQmBNAP; arc=none smtp.client-ip=220.197.31.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1789487041; c=relaxed/simple;
+	bh=X0OA0zd3t2u7iXfF0yPqLYpX2BIJuMIZZ+1R/TrabeE=;
+	h=Date:In-Reply-To:Mime-Version:References:Content-Type:Cc:From:
+	 Subject:Message-Id:To; b=qDOqFLnUPfYS3ONY00izy4irETOjz6C9JRo5e1C29mGDAJgT2gUln6YkF8GvLm8eUZMz2vAqLJplJmz58/IpOVPgd8pPCZ6Rtsf7u/AcGTO6w+ZYJEpaxWfMCYZQIb82qB3BHBJksHtGhys5wTicbQ4zVdPnhY1le4kFTvdwKiY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=Yxfwj8cU; arc=none smtp.client-ip=209.127.231.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="peQmBNAP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=UU
-	eT3fPjaKoDpC/6zpcrC4PUg2GLPa4VJpN10SVSjj0=; b=peQmBNAP/LBWc03Sx8
-	doKnRsK69tihp8LHlLZAMrgjCVtvaGvBvHwJUELnUjxRGM9w1K7YYV/kffAoIXVh
-	vmT8GRGfh53nHu0m4qZ6tEW3UefIe+YG+ky1Ifx+zykrDOLRbqEYTKmUKhXmmKlg
-	lly+kRMiWzRyZgTOyX+jNvPmc=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wA3RXrzAqlqno1LAw--.39237S2;
-	Tue, 15 Sep 2026 16:33:56 +0800 (CST)
-From: "Li Youhong" <dayou5941@163.com>
-To: song@kernel.org,
-	yukuai@fygo.io
-Cc: magiclinan@didiglobal.com,
-	xiao@kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Li Youhong <liyouhong@kylinos.cn>,
-	syzbot+68e1f51046d68329940f@syzkaller.appspotmail.com
-Subject: [PATCH] md: don't flush md_misc_wq from md_alloc()
-Date: Tue, 15 Sep 2026 16:33:54 +0800
-Message-Id: <20260915083354.1603416-1-dayou5941@163.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="Yxfwj8cU"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1789487022;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=d0n1MM6xxPsL/QERF+JcaetyUJsQd2U/h4AXxBLwz/w=;
+ b=Yxfwj8cUnFaenowRxaFu7ujBz88KmMiwrPqOyEtY6KZc4/KQz4cV/ZtjypgMIhf0dG2Uad
+ 6g6MGTRY3tKrIxSxXvqAu5qt3BMoccdgG3hBtOlsZsePr6nKRM5o7U1EdtYm6DEbWtVQBI
+ WM92Ay6NSYf0X2LK2355OATd/dEsYA0u/CMQBtXoHf4B21rN+d/C7OtAPByvu/uEEG++16
+ pp4Rn4USo8LFuLM6R4KRW0n1ICP901jwzGYtcrg68abH3D+RbEZOATqpUFQANlaz7XtIEB
+ w0JSFBa6avJtYocfqxxBYQXyT6MyxrO7G73aMh85L3A+71SaK3HzCkh+IVHoSA==
+Date: Tue, 15 Sep 2026 23:43:32 +0800
+In-Reply-To: <20260915064950.GA13417@lst.de>
+User-Agent: Mozilla Thunderbird
+X-Lms-Return-Path: <lba+26aa967ad+4153f6+vger.kernel.org+yukuai@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wA3RXrzAqlqno1LAw--.39237S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxZFy5ArW7Kr47JF1fArykGrg_yoWrXw18pr
-	W5tF15trW8tr4jqayUKa1UWa45Kw1kKr9rXryIgw1SyFn5Xry8Wws7Ka48XFW5JFZ8XF45
-	AFWrXFZxua4UtrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UlNt3UUUUU=
-X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC+RXCcWqpAvXjOAAA3w
+Mime-Version: 1.0
+X-Original-From: yu kuai <yukuai@fygo.io>
+Content-Transfer-Encoding: quoted-printable
+References: <cover.1789237876.git.yukuai@fygo.io> <ef547fdb7a6c8e39a25a1b9473c444f24a0f03be.1789237876.git.yukuai@fygo.io> <20260915064950.GA13417@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Reply-To: yukuai@fygo.io
+Cc: "Jens Axboe" <axboe@kernel.dk>, "Josef Bacik" <josef@toxicpanda.com>, 
+	"Tejun Heo" <tj@kernel.org>, "Johannes Weiner" <hannes@cmpxchg.org>, 
+	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	"Jonathan Corbet" <corbet@lwn.net>, 
+	"Shuah Khan" <skhan@linuxfoundation.org>, 
+	"Randy Dunlap" <rdunlap@infradead.org>, "Coly Li" <colyli@fygo.io>, 
+	"Kent Overstreet" <kent.overstreet@linux.dev>, 
+	"Alasdair Kergon" <agk@redhat.com>, "Mike Snitzer" <snitzer@kernel.org>, 
+	"Mikulas Patocka" <mpatocka@redhat.com>, 
+	"Benjamin Marzinski" <bmarzins@redhat.com>, "Song Liu" <song@kernel.org>, 
+	"Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	"Andreas Gruenbacher" <agruenba@redhat.com>, 
+	"Matthew Wilcox" <willy@infradead.org>, "Jan Kara" <jack@suse.cz>, 
+	"Andrew Morton" <akpm@linux-foundation.org>, 
+	"Chris Li" <chrisl@kernel.org>, "Kairui Song" <kasong@tencent.com>, 
+	"Kemeng Shi" <shikemeng@huaweicloud.com>, 
+	"Nhat Pham" <nphamcs@gmail.com>, "Baoquan He" <baoquan.he@linux.dev>, 
+	"Barry Song" <baohua@kernel.org>, 
+	"Youngjun Park" <youngjun.park@lge.com>, 
+	"Nathan Chancellor" <nathan@kernel.org>, 
+	"Nick Desaulniers" <ndesaulniers@google.com>, 
+	"Bill Wendling" <morbo@google.com>, 
+	"Justin Stitt" <justinstitt@google.com>, 
+	"Nilay Shroff" <nilay@linux.ibm.com>, "Tao Cui" <cuitao@kylinos.cn>, 
+	<linux-block@vger.kernel.org>, <cgroups@vger.kernel.org>, 
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<linux-bcache@vger.kernel.org>, <dm-devel@lists.linux.dev>, 
+	<linux-raid@vger.kernel.org>, <gfs2@lists.linux.dev>, 
+	<linux-fsdevel@vger.kernel.org>, <linux-mm@kvack.org>, 
+	<llvm@lists.linux.dev>
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH v2 2/3] blk-cgroup: store blkcg in bio instead of blkg
+Message-Id: <06e3c977-461c-4469-80ec-b9f54aa51eea@fygo.io>
+To: "Christoph Hellwig" <hch@lst.de>, "Yu Kuai" <yukuai@kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.142]) by smtp.larksuite.com with ESMTPS; Tue, 15 Sep 2026 15:43:40 +0000
 
-From: Li Youhong <liyouhong@kylinos.cn>
+Hi,
 
-md_alloc() is called from md_probe(), while blk_probe_dev() still holds
-major_names_lock. The flush of md_misc_wq in md_alloc() is only meant to
-wait for the previous mddev_delayed_delete() to finish.
+=E5=9C=A8 2026/9/15 14:49, Christoph Hellwig =E5=86=99=E9=81=93:
+> On Sun, Sep 13, 2026 at 02:54:39PM +0800, Yu Kuai wrote:
+>> @@ -6243,10 +6245,17 @@ static void bfq_insert_request(struct blk_mq_hw_=
+ctx *hctx, struct request *rq,
+>>   	bool idle_timer_disabled =3D false;
+>>   	blk_opf_t cmd_flags;
+>>   	LIST_HEAD(free);
+>>  =20
+>>   #ifdef CONFIG_BFQ_GROUP_IOSCHED
+>> +	/*
+>> +	 * Pin the blkg used to look up bfqg.  If this is the first IO for
+>> +	 * the blkcg on this queue, create the bfqg before holding bfqd->lock.
+>> +	 */
+>> +	if (rq->bio && !bio_flagged(rq->bio, BIO_BLKG_REF))
+>> +		bio_blkg(rq->bio);
+> Can rq->bio be NULL here?  flush or empty passthrough request should
+> never enter the scheuler.
+Yes, rq->bio should never be NULL.
+>
+>>   	if (!cgroup_subsys_on_dfl(io_cgrp_subsys) && rq->bio)
+>>   		bfqg_stats_update_legacy_io(q, rq);
+> But I guess given that the code below checks it, we should at least
+> be consistent, so I guess it is better to keep it for now.
+>
+>>  =20
+>>   static inline void dm_bio_record(struct dm_bio_details *bd, struct bio=
+ *bio)
+>>   {
+>>   	bd->bi_bdev =3D bio->bi_bdev;
+>> -	bd->bi_flags =3D bio->bi_flags;
+>> +	/* Restoring an ownership bit cannot recreate the associated reference=
+. */
+>> +	bd->bi_flags =3D bio->bi_flags & ~(1U << BIO_BLKG_REF);
+> I have a bit of a hard time parsing this, the line also is overly
+> long.
 
-md_misc_wq also runs sync_work (md_start_sync), and md_start_sync takes
-reconfig_mutex. On the other path, md_ioctl() already holds
-reconfig_mutex when md_import_device() opens a bdev and takes
-major_names_lock.
+This is an issue found by AI, if the new flag is recorded to bi_flags, and =
+the flag can be
+restored to new bio by dm_bio_restore() without actually acquire a blkg ref=
+erence. And I
+checked this is the only place to read/write bi_flags directly in driver.
 
-Flushing md_misc_wq under major_names_lock therefore creates a lockdep
-cycle:
-
-  major_names_lock -> md_misc_wq -> reconfig_mutex -> major_names_lock
-
-Move del_work to a dedicated workqueue and flush only that queue from
-md_alloc(). Leave sync_work on md_misc_wq.
-
-Reported-by: syzbot+68e1f51046d68329940f@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=68e1f51046d68329940f
-Fixes: e804ac780e2f ("md: fix and update workqueue usage")
-Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
----
- drivers/md/md.c | 28 +++++++++++++++++++++-------
- 1 file changed, 21 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 680b34a63cb3..87a851466892 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -86,13 +86,16 @@ static const struct kobj_type md_ktype;
- static DECLARE_WAIT_QUEUE_HEAD(resync_wait);
- 
- /*
-- * This workqueue is used for sync_work to register new sync_thread, and for
-- * del_work to remove rdev, and for event_work that is only set by dm-raid.
-+ * md_misc_wq runs sync_work (new sync_thread) and event_work (dm-raid).
-+ * sync_work grabs reconfig_mutex, so this queue must not be flushed while
-+ * holding reconfig_mutex, nor while holding major_names_lock (md_probe /
-+ * md_alloc is called from blk_probe_dev with that lock held).
-  *
-- * Noted that sync_work will grab reconfig_mutex, hence never flush this
-- * workqueue whith reconfig_mutex grabbed.
-+ * md_del_wq runs only del_work (mddev_delayed_delete). md_alloc() flushes
-+ * this queue to wait for a previous instance of the same device to go away.
-  */
- static struct workqueue_struct *md_misc_wq;
-+static struct workqueue_struct *md_del_wq;
- 
- static int remove_and_add_spares(struct mddev *mddev,
- 				 struct md_rdev *this);
-@@ -651,7 +654,7 @@ static void __mddev_put(struct mddev *mddev)
- 	 * Call queue_work inside the spinlock so that flush_workqueue() after
- 	 * mddev_find will succeed in waiting for the work to be done.
- 	 */
--	queue_work(md_misc_wq, &mddev->del_work);
-+	queue_work(md_del_wq, &mddev->del_work);
- }
- 
- static void mddev_put_locked(struct mddev *mddev)
-@@ -6329,9 +6332,12 @@ struct mddev *md_alloc(dev_t dev, char *name)
- 
- 	/*
- 	 * Wait for any previous instance of this device to be completely
--	 * removed (mddev_delayed_delete).
-+	 * removed (mddev_delayed_delete). Do not flush md_misc_wq: it also
-+	 * runs sync_work, which takes reconfig_mutex and can take
-+	 * major_names_lock via md_import_device(). md_alloc() is called from
-+	 * md_probe() while blk_probe_dev() already holds major_names_lock.
- 	 */
--	flush_workqueue(md_misc_wq);
-+	flush_workqueue(md_del_wq);
- 
- 	mutex_lock(&disks_mutex);
- 	mddev = mddev_alloc(dev);
-@@ -10765,6 +10771,10 @@ static int __init md_init(void)
- 	if (!md_misc_wq)
- 		goto err_misc_wq;
- 
-+	md_del_wq = alloc_workqueue("md_del", WQ_PERCPU, 0);
-+	if (!md_del_wq)
-+		goto err_del_wq;
-+
- 	ret = __register_blkdev(MD_MAJOR, "md", md_probe);
- 	if (ret < 0)
- 		goto err_md;
-@@ -10783,6 +10793,8 @@ static int __init md_init(void)
- err_mdp:
- 	unregister_blkdev(MD_MAJOR, "md");
- err_md:
-+	destroy_workqueue(md_del_wq);
-+err_del_wq:
- 	destroy_workqueue(md_misc_wq);
- err_misc_wq:
- 	md_llbitmap_exit();
-@@ -11093,6 +11105,7 @@ static __exit void md_exit(void)
- 	spin_unlock(&all_mddevs_lock);
- 
- 	destroy_workqueue(md_misc_wq);
-+	destroy_workqueue(md_del_wq);
- 	md_bitmap_exit();
- }
- 
--- 
-2.43.0
-
+--=20
+Thanks,
+Kuai
