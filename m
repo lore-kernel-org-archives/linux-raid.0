@@ -1,40 +1,47 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68ADA4B0C83;
-	Wed, 16 Sep 2026 09:59:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A18C7481238;
+	Wed, 16 Sep 2026 12:19:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.224
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789552771; cv=none; b=IUZD7/steQ62c/RKFegNoaR2JNUngVj+uYx+2UUyCdHQPVmt1WPVILH3tIu3xgB5bFzhV+Wy77BN5Rfz+jCrVE43NAushFgNt2Qc2XtsaGf13TyDsUnYcs1pegCVxVttR6lRPTL99ha4cff9Jht5xK+NNQtW49SUxwa6snfut20=
+	t=1789561162; cv=none; b=T21pN2rGGAk965XIL1m1SiP+TXKety3kUZEngZY8UhZVpUoP7clfgJAHpQtd3pxAoWzEnCD4QFPEY0mPHD7vJSXQDjHBqHx8IZfPQ8G3FVMexQQilcqwe3kQDjcqMFe5Ixm+U8ZTnqOR4zZSeGiKGlGSF7nMiY74FsHkdReTalM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789552771; c=relaxed/simple;
-	bh=+TXRvxpFo83g7o5W+VY7kuHQYYo1oEJrBFeQuAdMvaU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=s73KNivMToTK0JdCYu3ZRJD3MkrRygmGGOLLJjMkXD9CSVgZ1OpSRYvPVfoQow0yg+0oi6llpouQSMoQJ0dsZjAJIRh51mJbn0HdW/kHTqm7eS4P6omt/0T7i77ecjfAKoCTTugo7dpbIUyYx7L8usF1sqqA6Ja7z7eEK3OFsio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4hlDqs3GLJzKHLxM;
-	Wed, 16 Sep 2026 17:59:05 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A4B6E4056E;
-	Wed, 16 Sep 2026 17:59:19 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.50.85.155])
-	by APP4 (Coremail) with UTF8SMTPSA id gCh0CgBHFyp2aKpqAYEIAg--.795S4;
-	Wed, 16 Sep 2026 17:59:19 +0800 (CST)
-From: Zizhi Wo <wozizhi@huaweicloud.com>
-To: song@kernel.org,
-	yukuai@fygo.io,
-	magiclinan@didiglobal.com,
-	xiao@kernel.org,
-	linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	yangerkun@huawei.com,
-	chengzhihao1@huawei.com,
-	wozizhi@huawei.com
-Subject: [PATCH] md/raid5: reject a per-device size smaller than one chunk
-Date: Wed, 16 Sep 2026 17:51:36 +0800
-Message-ID: <20260916095137.1157801-1-wozizhi@huaweicloud.com>
+	s=arc-20240116; t=1789561162; c=relaxed/simple;
+	bh=jmx7/yWhal1Ww0spXVCH3wKe4jQDQSBTK9V0nYDAg1Y=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=AIANyrkl+gkbTsG1cxwa1hbiO24CYQsh3cVIhnwHQ68kz5CLKOC2Oe7kG0p62/cSLJKAmn2Wh0D43m73zRDnI+HDJBaoadd1ZuMhMdGjUw8Hyc3r1Fy4KUsghO03z3hWNO3/dzaQVBYJf/cLZ6luHOOakBImTuVkn1LThgDrN0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=hGWKbDUd; arc=none smtp.client-ip=113.46.200.224
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="hGWKbDUd"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=WucdU+U+fDtH/dtaM74XSmEX2/Z1Bt+S4MDbGB5y5Vs=;
+	b=hGWKbDUd4/4znpJBctaK+2GsDhJTzEF2OF0TIlwfkftz8hk9m1u4qZtahBDqVnbf1nQQ/TJQB
+	OdQHI1b+PBMgXce4fVJMdMX6AYuAoIrcrfsza9D1wE0DvWtm0JbT8f7kjgod0fgXd0u6teRpgVW
+	8JqN2S8nsXxk7KC82IFm0xc=
+Received: from mail.maildlp.com (unknown [172.19.163.127])
+	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4hlHhm5bq6z1cyPY;
+	Wed, 16 Sep 2026 20:08:08 +0800 (CST)
+Received: from whupemo200011.china.huawei.com (unknown [7.152.185.179])
+	by mail.maildlp.com (Postfix) with ESMTPS id D1A65402AB;
+	Wed, 16 Sep 2026 20:19:06 +0800 (CST)
+Received: from huawei.com (10.50.85.155) by whupemo200011.china.huawei.com
+ (7.152.185.179) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Wed, 16 Sep
+ 2026 20:19:05 +0800
+From: Zhihao Cheng <chengzhihao1@huawei.com>
+To: <agk@redhat.com>, <snitzer@kernel.org>, <mpatocka@redhat.com>,
+	<bmarzins@redhat.com>, <song@kernel.org>, <yukuai@fygo.io>,
+	<eadavis@sina.com>
+CC: <dm-devel@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+	<linux-raid@vger.kernel.org>, <chengzhihao1@huawei.com>,
+	<yangerkun@huawei.com>, <yi.zhang@huawei.com>
+Subject: [PATCH] md: Fix the null-ptr-deref of 'mddev->private' while submitting IO
+Date: Wed, 16 Sep 2026 20:11:20 +0800
+Message-ID: <20260916121120.1242281-1-chengzhihao1@huawei.com>
 X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -43,114 +50,144 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBHFyp2aKpqAYEIAg--.795S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxGr1DJFWUZF1fCryUZw4ruFg_yoW5uFy3p3
-	yfJF9Iqr18WFy5Jws5A3Z7KFWFy39xJr4DtFyfXay8X3WSgrWDJry5Gry5WFyUAwnYyrWr
-	t3WDJrWqka4kK3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyCb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_JFI_Gr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij
-	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE
-	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
-	xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
-	7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UAwIDUUUUU=
-X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ whupemo200011.china.huawei.com (7.152.185.179)
 
-From: Zizhi Wo <wozizhi@huawei.com>
+Concurrent processes md_stop and IO submitting could trigger a
+null-ptr-deref of 'mddev->private':
 
-Both raid5_run() and raid5_resize() align the per-device size down to a
-whole multiple of the chunk size:
-
-	mddev->dev_sectors &= ~(chunk_sectors - 1);
-
-Neither checks the result, so a size smaller than one chunk silently
-becomes zero.
-
-In raid5_run() that is harmless: the array size is derived from the same
-zero, so the disk just ends up with no capacity.
-
-In raid5_resize() it leaves the array inconsistent -- mddev->dev_sectors
-becomes zero, while mddev->array_sectors and the gendisk capacity keep the
-previous. A later raid4/raid5 -> raid0 takeover copies the zero into every
-rdev->sectors (raid0_takeover_raid45()), so create_strip_zones() builds a
-strip zone table whose zone_end is zero. Any read then passes
-bio_check_eod() against the stale capacity and hits the BUG() in
-find_zone():
-
- kernel BUG at drivers/md/raid0.c:318!
- Oops: invalid opcode: 0000 [#1] SMP KASAN NOPTI
- CPU: 45 UID: 0 PID: 1300 Comm: mdadm Not tainted 7.3.0-rc3+ #106 PREEMPT(full)
- Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.17.0-4.fc41 04/01/2014
- RIP: 0010:raid0_make_request+0x10cb/0x16a0
+ BUG: kernel NULL pointer dereference, address: 0000000000000070
+ RIP: 0010:_wait_barrier+0x2f/0x250
  Call Trace:
-   <TASK>
-   md_handle_request+0x566/0xb40
-   __submit_bio+0x2b2/0x600
-   submit_bio_noacct_nocheck+0x509/0xb30
-   block_read_full_folio+0x364/0x6d0
-   filemap_read_folio+0xa2/0x200
-   do_read_cache_folio+0x1b6/0x330
-   read_part_sector+0xb6/0x2a0
-   read_lba+0x17d/0x280
-   efi_partition+0x2a6/0x2520
-   bdev_disk_changed+0x6e0/0xfa0
-   ......
-   bdev_open+0x214/0xc40
+  raid1_make_request+0x150/0xf50
+  md_handle_request+0x104/0x530
+  md_submit_bio+0x76/0x130
+  submit_bio+0xdd/0x250
+  submit_bio_wait+0x1f/0x40
+  __blkdev_direct_IO_simple+0x1f6/0x370
+  blkdev_write_iter+0x3b2/0x520
+  ksys_write+0x7d/0x190
 
-Reject a size smaller than one chunk in both functions, so that a running
-raid4/raid5 array always has mddev->dev_sectors >= one chunk.
+              P1
+  fd = open(/dev/md0, O_RDWR)
+	                      P2 (forked from P1, fd' <= fd)
+  write(fd)
+   submit_bio
+    md_handle_request
+     raid1_make_request
+      raid1_write_request
+                                  ioctl(fd, STOP_ARRAY)
+		                   mddev_set_closing_and_sync_blockdev
+				   // check passed, mddev->openers = 1,
+				   // because md_open() is only called
+				   // once in P1->open
+				   do_md_stop
+				    __md_stop
+				     mddev->private = NULL
 
-The check is done where the value takes effect, not where it is assigned.
-mddev->dev_sectors is written from several places, and none of them can
-tell whether the value is usable: the chunk size may still change later.
-raid5_run() and raid5_resize() are where every input is final, so one check
-in each covers them all.
+       conf = mddev->private // NULL
+        wait_barrier(conf, sector) // null-ptr-deref !
 
-Fixes: eea136d69f9f ("md: fix buglet in RAID5 -> RAID0 conversion.")
-Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
+It is a common problem for raid0/1/10/5, and __md_stop could be
+triggered by several paths(eg. ioctl, sysfs, ->dtr). Fix it by
+replacing mddev_lock() with mddev_suspend_and_lock() for all
+__md_stop() callers.
+
+Fetch a reproducer in https://bugzilla.kernel.org/show_bug.cgi?id=222020
+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Reported-by: syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=3fe892ea5fc292e1353f
+Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
 ---
- drivers/md/raid5.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/md/dm-raid.c |  7 +++++--
+ drivers/md/md.c      | 18 +++++++++++++++---
+ 2 files changed, 20 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b91545ce090d..e0f1a8e7bd3a 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -8201,10 +8201,16 @@ static int raid5_run(struct mddev *mddev)
- 		goto abort;
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index 8f5a5e1342a9..3dda494fe172 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3326,12 +3326,15 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+ 
+ static void raid_dtr(struct dm_target *ti)
+ {
++	unsigned int noio_flags = 0;
+ 	struct raid_set *rs = ti->private;
+ 
+-	mddev_lock_nointr(&rs->md);
++	mddev_suspend_and_lock_nointr(&rs->md);
++	noio_flags = memalloc_noio_save();
+ 	md_stop(&rs->md);
+ 	rs->md.dm_gendisk = NULL;
+-	mddev_unlock(&rs->md);
++	memalloc_noio_restore(noio_flags);
++	mddev_unlock_and_resume(&rs->md);
+ 
+ 	if (work_pending(&rs->md.event_work))
+ 		flush_work(&rs->md.event_work);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 680b34a63cb3..e292acd54bb0 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4657,6 +4657,8 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ {
+ 	int err = 0;
+ 	enum array_state st = match_word(buf, array_states);
++	unsigned int noio_flags = 0;
++	bool suspend = false;
+ 
+ 	/* No lock dependent actions */
+ 	switch (st) {
+@@ -4666,9 +4668,11 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 	case broken:		/* cannot be set */
+ 	case bad_word:
+ 		return -EINVAL;
++	case inactive:
+ 	case clear:
++		suspend = true;
++		fallthrough;
+ 	case readonly:
+-	case inactive:
+ 	case read_auto:
+ 		if (!mddev->pers || !md_is_rdwr(mddev))
+ 			break;
+@@ -4702,9 +4706,11 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 		spin_unlock(&mddev->lock);
+ 		return err ?: len;
  	}
+-	err = mddev_lock(mddev);
++	err = suspend ? mddev_suspend_and_lock(mddev) : mddev_lock(mddev);
+ 	if (err)
+ 		return err;
++	if (suspend)
++		noio_flags = memalloc_noio_save();
  
- 	/* device size must be a multiple of chunk size */
- 	mddev->dev_sectors &= ~((sector_t)mddev->chunk_sectors - 1);
-+	if (!mddev->dev_sectors) {
-+		pr_warn("md/raid:%s: device size is smaller than one chunk\n",
-+			mdname(mddev));
-+		ret = -EINVAL;
-+		goto abort;
+ 	switch (st) {
+ 	case inactive:
+@@ -4775,7 +4781,12 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 			mddev->hold_active = 0;
+ 		sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 	}
+-	mddev_unlock(mddev);
++	if (suspend) {
++		memalloc_noio_restore(noio_flags);
++		mddev_unlock_and_resume(mddev);
++	} else {
++		mddev_unlock(mddev);
 +	}
- 	mddev->resync_max_sectors = mddev->dev_sectors;
  
- 	if (mddev->degraded > dirty_parity_disks &&
- 	    mddev->resync_offset != MaxSector) {
- 		if (test_bit(MD_HAS_PPL, &mddev->flags))
-@@ -8534,10 +8540,12 @@ static int raid5_resize(struct mddev *mddev, sector_t sectors)
- 	struct r5conf *conf = mddev->private;
- 
- 	if (raid5_has_log(conf) || raid5_has_ppl(conf))
- 		return -EINVAL;
- 	sectors &= ~((sector_t)conf->chunk_sectors - 1);
-+	if (!sectors)
-+		return -EINVAL;
- 	newsize = raid5_size(mddev, sectors, mddev->raid_disks);
- 	if (mddev->external_size &&
- 	    mddev->array_sectors > newsize)
- 		return -EINVAL;
- 
+ 	if (st == readonly || st == read_auto || st == inactive ||
+ 	    (err && st == clear))
+@@ -8299,6 +8310,7 @@ static bool md_ioctl_need_suspend(unsigned int cmd)
+ 	case HOT_REMOVE_DISK:
+ 	case SET_BITMAP_FILE:
+ 	case SET_ARRAY_INFO:
++	case STOP_ARRAY:
+ 		return true;
+ 	default:
+ 		return false;
 -- 
 2.52.0
 
