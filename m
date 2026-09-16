@@ -1,193 +1,170 @@
-Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A18C7481238;
-	Wed, 16 Sep 2026 12:19:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.224
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20B4248B38A
+	for <linux-raid@vger.kernel.org>; Wed, 16 Sep 2026 12:33:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789561162; cv=none; b=T21pN2rGGAk965XIL1m1SiP+TXKety3kUZEngZY8UhZVpUoP7clfgJAHpQtd3pxAoWzEnCD4QFPEY0mPHD7vJSXQDjHBqHx8IZfPQ8G3FVMexQQilcqwe3kQDjcqMFe5Ixm+U8ZTnqOR4zZSeGiKGlGSF7nMiY74FsHkdReTalM=
+	t=1789561983; cv=none; b=ZxpLHPFfkEduD7r6lKICXQ1mLzGzpe5NvguwUgIwyDHGci5LQ5XixZbr8JfscXDv0odgeaFAVJ4vgAqu5mJa1cMfIE9QlYtDT4uj2c7Wb7ZLf43hBMuIzykyJLHYMKUIAey+JBcNYh1F/FEbuI4o+gbJZCd+ZEr3gPCtDo80oQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789561162; c=relaxed/simple;
-	bh=jmx7/yWhal1Ww0spXVCH3wKe4jQDQSBTK9V0nYDAg1Y=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=AIANyrkl+gkbTsG1cxwa1hbiO24CYQsh3cVIhnwHQ68kz5CLKOC2Oe7kG0p62/cSLJKAmn2Wh0D43m73zRDnI+HDJBaoadd1ZuMhMdGjUw8Hyc3r1Fy4KUsghO03z3hWNO3/dzaQVBYJf/cLZ6luHOOakBImTuVkn1LThgDrN0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=hGWKbDUd; arc=none smtp.client-ip=113.46.200.224
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1789561983; c=relaxed/simple;
+	bh=gOgiMuuCjhLMJYWZlXpzeSMzcvZSPWwhznmzVw/zsEM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=JMBcTytze8oKjNSUHWgP/0UiKqIf8g5OVObafpLStLBGlEeMHluN1vLYZownuJvyhZ1lFR+jivVtzMQEmWaNMFkglf09Vi56C8qu1fiDd8Kdn2jaqsLPG/fqac2bN8j/hKAJfkT/QbBuTqMC3gmkRO5c2ff3TTWIOmVL/EtYoe4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IRGnssFD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="hGWKbDUd"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=WucdU+U+fDtH/dtaM74XSmEX2/Z1Bt+S4MDbGB5y5Vs=;
-	b=hGWKbDUd4/4znpJBctaK+2GsDhJTzEF2OF0TIlwfkftz8hk9m1u4qZtahBDqVnbf1nQQ/TJQB
-	OdQHI1b+PBMgXce4fVJMdMX6AYuAoIrcrfsza9D1wE0DvWtm0JbT8f7kjgod0fgXd0u6teRpgVW
-	8JqN2S8nsXxk7KC82IFm0xc=
-Received: from mail.maildlp.com (unknown [172.19.163.127])
-	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4hlHhm5bq6z1cyPY;
-	Wed, 16 Sep 2026 20:08:08 +0800 (CST)
-Received: from whupemo200011.china.huawei.com (unknown [7.152.185.179])
-	by mail.maildlp.com (Postfix) with ESMTPS id D1A65402AB;
-	Wed, 16 Sep 2026 20:19:06 +0800 (CST)
-Received: from huawei.com (10.50.85.155) by whupemo200011.china.huawei.com
- (7.152.185.179) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Wed, 16 Sep
- 2026 20:19:05 +0800
-From: Zhihao Cheng <chengzhihao1@huawei.com>
-To: <agk@redhat.com>, <snitzer@kernel.org>, <mpatocka@redhat.com>,
-	<bmarzins@redhat.com>, <song@kernel.org>, <yukuai@fygo.io>,
-	<eadavis@sina.com>
-CC: <dm-devel@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
-	<linux-raid@vger.kernel.org>, <chengzhihao1@huawei.com>,
-	<yangerkun@huawei.com>, <yi.zhang@huawei.com>
-Subject: [PATCH] md: Fix the null-ptr-deref of 'mddev->private' while submitting IO
-Date: Wed, 16 Sep 2026 20:11:20 +0800
-Message-ID: <20260916121120.1242281-1-chengzhihao1@huawei.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IRGnssFD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77B101F00893;
+	Wed, 16 Sep 2026 12:33:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789561981;
+	bh=ThBiEWa+O0MKCWqgHNMN8Uae9/cTWAev9ZVZJtDpMu8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=IRGnssFD3nYBTG9jIuYVIZYIKnfBKLZYQ98TQd9Wpu1qdVp8y8RXsY884jnwRsxDy
+	 phAyCfJmbPrYcLv7sFqBG1SGsS7jut5dENkkS3EnA9Swm9EkrJiytdXJPy9WSWXkZy
+	 fX4C9rQKIm7AHF/xpXe3mNdX2+jBPbxcqcMYYs+tjmkqR+g4mYXUidsu1eMLSNvoMz
+	 jzHBeQJzJSMajLcvSZzComXMd5ZVj6pElpKvY5PKBKk7clprSrC72OenVuPgrfsNMq
+	 2xSlUFCtEx3+JTdP/PjMp3hhJgj8Wzu7jvnZL85B7uqfZ0BsjOk04QnQLEyrHwREwM
+	 VxJ2TuasCwp9Q==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] md: Fix the null-ptr-deref of 'mddev->private' while
+ submitting IO
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Zhihao Cheng" <chengzhihao1@huawei.com>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20260916121120.1242281-1-chengzhihao1@huawei.com>
+References: <20260916121120.1242281-1-chengzhihao1@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 16 Sep 2026 12:33:00 +0000
+Message-Id: <20260916123301.77B101F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
- whupemo200011.china.huawei.com (7.152.185.179)
 
-Concurrent processes md_stop and IO submitting could trigger a
-null-ptr-deref of 'mddev->private':
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Critical] md: NULL pointer dereference in md_handle_request() on array t=
+eardown
+- [High] md: memory reclaim deadlock due to premature memalloc_noio_restore
+--
 
- BUG: kernel NULL pointer dereference, address: 0000000000000070
- RIP: 0010:_wait_barrier+0x2f/0x250
- Call Trace:
-  raid1_make_request+0x150/0xf50
-  md_handle_request+0x104/0x530
-  md_submit_bio+0x76/0x130
-  submit_bio+0xdd/0x250
-  submit_bio_wait+0x1f/0x40
-  __blkdev_direct_IO_simple+0x1f6/0x370
-  blkdev_write_iter+0x3b2/0x520
-  ksys_write+0x7d/0x190
+commit 86c9448b538e3d50a408040bfd47956ef0397e1a
+Author: Zhihao Cheng <chengzhihao1@huawei.com>
 
-              P1
-  fd = open(/dev/md0, O_RDWR)
-	                      P2 (forked from P1, fd' <= fd)
-  write(fd)
-   submit_bio
-    md_handle_request
-     raid1_make_request
-      raid1_write_request
-                                  ioctl(fd, STOP_ARRAY)
-		                   mddev_set_closing_and_sync_blockdev
-				   // check passed, mddev->openers = 1,
-				   // because md_open() is only called
-				   // once in P1->open
-				   do_md_stop
-				    __md_stop
-				     mddev->private = NULL
+md: Fix the null-ptr-deref of 'mddev->private' while submitting IO
 
-       conf = mddev->private // NULL
-        wait_barrier(conf, sector) // null-ptr-deref !
+This patch replaces mddev_lock() with mddev_suspend_and_lock() across
+__md_stop() callers. It aims to prevent concurrent IO submissions from
+dereferencing mddev->private while the array is being torn down.
 
-It is a common problem for raid0/1/10/5, and __md_stop could be
-triggered by several paths(eg. ioctl, sysfs, ->dtr). Fix it by
-replacing mddev_lock() with mddev_suspend_and_lock() for all
-__md_stop() callers.
+Closes: https://syzkaller.appspot.com/bug?extid=3D3fe892ea5fc292e1353f
 
-Fetch a reproducer in https://bugzilla.kernel.org/show_bug.cgi?id=222020
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 680b34a63cb3d..e292acd54bb00 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+[ ... ]
+> @@ -4775,7 +4781,12 @@ array_state_store(struct mddev *mddev, const char =
+*buf, size_t len)
+>  			mddev->hold_active =3D 0;
+>  		sysfs_notify_dirent_safe(mddev->sysfs_state);
+>  	}
+> -	mddev_unlock(mddev);
+> +	if (suspend) {
+> +		memalloc_noio_restore(noio_flags);
+> +		mddev_unlock_and_resume(mddev);
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Reported-by: syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=3fe892ea5fc292e1353f
-Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
----
- drivers/md/dm-raid.c |  7 +++++--
- drivers/md/md.c      | 18 +++++++++++++++---
- 2 files changed, 20 insertions(+), 5 deletions(-)
+[Severity: Critical]
+Could unconditionally resuming the array here lead to a NULL pointer
+dereference for trapped IOs?
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 8f5a5e1342a9..3dda494fe172 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3326,12 +3326,15 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 
- static void raid_dtr(struct dm_target *ti)
- {
-+	unsigned int noio_flags = 0;
- 	struct raid_set *rs = ti->private;
- 
--	mddev_lock_nointr(&rs->md);
-+	mddev_suspend_and_lock_nointr(&rs->md);
-+	noio_flags = memalloc_noio_save();
- 	md_stop(&rs->md);
- 	rs->md.dm_gendisk = NULL;
--	mddev_unlock(&rs->md);
-+	memalloc_noio_restore(noio_flags);
-+	mddev_unlock_and_resume(&rs->md);
- 
- 	if (work_pending(&rs->md.event_work))
- 		flush_work(&rs->md.event_work);
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 680b34a63cb3..e292acd54bb0 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4657,6 +4657,8 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- {
- 	int err = 0;
- 	enum array_state st = match_word(buf, array_states);
-+	unsigned int noio_flags = 0;
-+	bool suspend = false;
- 
- 	/* No lock dependent actions */
- 	switch (st) {
-@@ -4666,9 +4668,11 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 	case broken:		/* cannot be set */
- 	case bad_word:
- 		return -EINVAL;
-+	case inactive:
- 	case clear:
-+		suspend = true;
-+		fallthrough;
- 	case readonly:
--	case inactive:
- 	case read_auto:
- 		if (!mddev->pers || !md_is_rdwr(mddev))
- 			break;
-@@ -4702,9 +4706,11 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 		spin_unlock(&mddev->lock);
- 		return err ?: len;
- 	}
--	err = mddev_lock(mddev);
-+	err = suspend ? mddev_suspend_and_lock(mddev) : mddev_lock(mddev);
- 	if (err)
- 		return err;
-+	if (suspend)
-+		noio_flags = memalloc_noio_save();
- 
- 	switch (st) {
- 	case inactive:
-@@ -4775,7 +4781,12 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 			mddev->hold_active = 0;
- 		sysfs_notify_dirent_safe(mddev->sysfs_state);
- 	}
--	mddev_unlock(mddev);
-+	if (suspend) {
-+		memalloc_noio_restore(noio_flags);
-+		mddev_unlock_and_resume(mddev);
-+	} else {
-+		mddev_unlock(mddev);
-+	}
- 
- 	if (st == readonly || st == read_auto || st == inactive ||
- 	    (err && st == clear))
-@@ -8299,6 +8310,7 @@ static bool md_ioctl_need_suspend(unsigned int cmd)
- 	case HOT_REMOVE_DISK:
- 	case SET_BITMAP_FILE:
- 	case SET_ARRAY_INFO:
-+	case STOP_ARRAY:
- 		return true;
- 	default:
- 		return false;
--- 
-2.52.0
+If an IO is submitted concurrently with array teardown (e.g. sysfs inactive
+or STOP_ARRAY ioctl), it is trapped in md_handle_request() by wait_event()
+waiting for the array to not be suspended.
 
+The teardown thread sets mddev->pers =3D NULL in md_stop() and then calls
+mddev_unlock_and_resume() here. The resumption resurrects active_io and wak=
+es
+up the trapped IO, which then blindly dereferences mddev->pers:
+
+drivers/md/md.c:md_handle_request() {
+        ...
+        if (!percpu_ref_tryget_live(&mddev->active_io))
+                goto check_suspended;
+        }
+        if (!mddev->pers->make_request(mddev, bio)) {
+        ...
+}
+
+[Severity: High]
+Is there a risk of a memory reclaim deadlock due to the NOIO restoration or=
+der
+here?
+
+By restoring NOIO flags before calling mddev_unlock_and_resume(), we run
+mddev_unlock() without NOIO protection while the array is still suspended:
+
+drivers/md/md.h:mddev_unlock_and_resume() {
+        mddev_unlock(mddev);
+        mddev_resume(mddev);
+}
+
+If memory reclaim is triggered by allocations inside mddev_unlock() and tri=
+es
+to submit IO to this suspended array, it will block indefinitely waiting for
+the array to resume, preventing this thread from ever reaching mddev_resume=
+().
+
+> +	} else {
+> +		mddev_unlock(mddev);
+> +	}
+> =20
+>  	if (st =3D=3D readonly || st =3D=3D read_auto || st =3D=3D inactive ||
+>  	    (err && st =3D=3D clear))
+[ ... ]
+> @@ -8299,6 +8310,7 @@ static bool md_ioctl_need_suspend(unsigned int cmd)
+>  	case HOT_REMOVE_DISK:
+>  	case SET_BITMAP_FILE:
+>  	case SET_ARRAY_INFO:
+> +	case STOP_ARRAY:
+
+[Severity: Critical]
+Might unconditionally suspending and then resuming the array during STOP_AR=
+RAY
+lead to a similar NULL pointer dereference for trapped IOs?
+
+Because STOP_ARRAY now returns true here, the existing logic in md_ioctl()
+will suspend the array, call do_md_stop(), and then unconditionally restore
+NOIO flags and call mddev_unlock_and_resume(mddev).
+
+This allows trapped IOs waiting in md_handle_request() to wake up after
+mddev->pers has been cleared, resulting in a NULL pointer dereference when
+they attempt to call mddev->pers->make_request().
+
+[Severity: High]
+Will this NOIO restoration order cause the same memory reclaim deadlock in =
+the
+ioctl path?
+
+As in the sysfs path, md_ioctl() now suspends and later restores NOIO before
+mddev_unlock_and_resume(mddev), risking a deadlock if allocations within
+mddev_unlock() trigger reclaim that submits IO to the suspended array:
+
+drivers/md/md.c:md_ioctl() {
+        ...
+        if (suspend) {
+                memalloc_noio_restore(noio_flags);
+                mddev_unlock_and_resume(mddev);
+        ...
+}
+
+>  		return true;
+>  	default:
+>  		return false;
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260916121120.1242=
+281-1-chengzhihao1@huawei.com?part=3D1
