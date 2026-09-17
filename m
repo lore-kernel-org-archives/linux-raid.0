@@ -1,196 +1,154 @@
-Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-16.ptr.blmpb.com (va-2-16.ptr.blmpb.com [209.127.231.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3ADD3A2556;
-	Thu, 17 Sep 2026 02:50:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C8553DA7C5
+	for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2026 06:26:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789613439; cv=none; b=hX+IRDkYBhr3p/6g013pUPwzImUyvi/CY58BI2Yq6wVylfGyO6VkwEOwN54MEgeEGg0m8OUm4UPRaFIKGJ7p1uZ7Zu52iWVEhzlQcb76sWPKpGFpM3m+uaqrUvyLXhKWpE8AJZe8aUo6KiP7sxJr+CsIGIauAi8zNQu/lJNBDd8=
+	t=1789626401; cv=none; b=SuEm0gEX7XqQXdHhgnEzk7NJILvXifAs2upuPYFaAtJNhgt3Wta0r1IMJGn4NuE4aXuZbGJan+iYpGRBeSoQP1AltbWRCcpUjXMMCep/g013acRHVxC0DFzbd5E7L6eVWlsvaAUY/6/0Wfx4lrdajj1Ko0NMIc+WAQlslTchLOg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789613439; c=relaxed/simple;
-	bh=aGa+R4CVm6Z7Z5yqLsifND01+EWY62Q5EOY/mDesFm8=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=txsN2p0c3UZwjeVb8W7QRZ6XKn4HOqruhMo913+khWGAStQCvRzWW1GDa9GcYoWUM24rJtfX2nkYmC9OPJgaZDQ7AVKlYK/Hzszm1GsTeDNRroQb86UqYMZH7btAmGI2d4DfP5mLPKVtL0kH1CW5FqBcOmTyxentEdRrhe9wXPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=N0LWOl1r; arc=none smtp.client-ip=113.46.200.219
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1789626401; c=relaxed/simple;
+	bh=ILiVyg8+6YLMeqY60B64k49374KXRjjZE3oVWLDpoow=;
+	h=From:Message-Id:To:Mime-Version:Subject:Cc:References:
+	 Content-Type:In-Reply-To:Date; b=L3xxKe4/OaeluQ0tadtat31ZTOfCLuFMY0axKzN4uKjS1TrQe1d8e76m5zz957PfffkjmYl6G++9Bjp5XMGA7gU/BXlWqJwgG8o/5hOScxjgUQmnrPGBlVE/uFLG43OV2pmjR5AP2THL2dAH2L8ySrno6fg5V+qwzZBcWkAvPgk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=dUlb4Chh; arc=none smtp.client-ip=209.127.231.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="N0LWOl1r"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=tVDvHIicrcLkocQWr0K70sGvb0i/8LhsaYqL36DA6rA=;
-	b=N0LWOl1rUQ+RUXaGdr+aoVGqetXcb4Snbr7hOHxDXp4JGtfs9qVp7+GIzyoDDPzC0+B360DCs
-	ufBC/ljeJasIrwEtoGJTUMcW0hDY/aTlu7tUSIvJGgR0dHCwhufWnrDiySBWJMXAySitkQaX3bc
-	XnagZQ7qeQJxGUfuxXO+gYs=
-Received: from mail.maildlp.com (unknown [172.19.162.223])
-	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4hlg1b0pTpz1prLc;
-	Thu, 17 Sep 2026 10:38:59 +0800 (CST)
-Received: from whupemo200011.china.huawei.com (unknown [7.152.185.179])
-	by mail.maildlp.com (Postfix) with ESMTPS id 966E440561;
-	Thu, 17 Sep 2026 10:49:59 +0800 (CST)
-Received: from huawei.com (10.50.85.155) by whupemo200011.china.huawei.com
- (7.152.185.179) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Thu, 17 Sep
- 2026 10:49:58 +0800
-From: Zhihao Cheng <chengzhihao1@huawei.com>
-To: <song@kernel.org>, <yukuai@fygo.io>, <xiao@kernel.org>,
-	<magiclinan@didiglobal.com>, <eadavis@sina.com>, <abd.masalkhi@gmail.com>
-CC: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<chengzhihao1@huawei.com>, <yangerkun@huawei.com>, <yi.zhang@huawei.com>
-Subject: [PATCH v2] md: Fix the null-ptr-deref of 'mddev->private' while submitting IO
-Date: Thu, 17 Sep 2026 10:42:05 +0800
-Message-ID: <20260917024205.2331019-1-chengzhihao1@huawei.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="dUlb4Chh"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1789626391;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=q9MN/pbFfh46oJfXN3YCcT64DX0HXtLINWr7ccWWP4A=;
+ b=dUlb4ChhREAKtNmDl7VpdCnRs9qvEr6VA+sDWS8Nsi99CBeexkbxHq0LfPixbQHPYnrkge
+ WcSC7cnjAieT8we4aaQkTxZkR57B75c7SjN24Vu4w1QV7SEWqtWFX7pufvjMNhlXDji2KQ
+ VjJlclfYEOSifJR234ZlwSb6TNuQ7BDEDfAjxpvnIST6vQ2ZMOLMAFnlajH+G2Zfqg6pgL
+ UAcXIOTzIhsCou0yEV4t1DcVgwShppjVbEZd7HmEfBX9YkpuFvnXfN/ZBh8HYQ83kYZDTw
+ cSuHhJYmpWfFjpKCqey3S6DSSDamoeccEksjxpC0h4DKX7WvJzcXKLE7n59Nmw==
+From: "yu kuai" <yukuai@fygo.io>
+Message-Id: <5e214547-0993-4219-a6b7-b64b5fcc8e48@fygo.io>
+X-Original-From: yu kuai <yukuai@fygo.io>
+X-Lms-Return-Path: <lba+26aab8817+bbf298+vger.kernel.org+yukuai@fygo.io>
+To: <sashiko-reviews@lists.linux.dev>, 
+	"Deepanshu Kartikey" <kartikey406@gmail.com>, "yu kuai" <yukuai@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- whupemo200011.china.huawei.com (7.152.185.179)
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH] md: fix out-of-bounds access to superblock disk array
+Cc: <linux-raid@vger.kernel.org>
+References: <20260914055619.32929-1-kartikey406@gmail.com> <20260914060656.937B01F000FF@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Reply-To: yukuai@fygo.io
+Received: from [192.168.1.104] ([39.182.0.142]) by smtp.larksuite.com with ESMTPS; Thu, 17 Sep 2026 06:26:30 +0000
+User-Agent: Mozilla Thunderbird
+In-Reply-To: <20260914060656.937B01F000FF@smtp.kernel.org>
+Date: Thu, 17 Sep 2026 14:26:27 +0800
 
-Concurrent processes md_stop and IO submitting could trigger a
-null-ptr-deref of 'mddev->private':
+Hi,
 
- BUG: kernel NULL pointer dereference, address: 0000000000000070
- RIP: 0010:_wait_barrier+0x2f/0x250
- Call Trace:
-  raid1_make_request+0x150/0xf50
-  md_handle_request+0x104/0x530
-  md_submit_bio+0x76/0x130
-  submit_bio+0xdd/0x250
-  submit_bio_wait+0x1f/0x40
-  __blkdev_direct_IO_simple+0x1f6/0x370
-  blkdev_write_iter+0x3b2/0x520
-  ksys_write+0x7d/0x190
+=E5=9C=A8 2026/9/14 14:06, sashiko-bot@kernel.org =E5=86=99=E9=81=93:
+> Thank you for your contribution! Sashiko AI review found 2 potential issu=
+e(s) to consider:
+>
+> New issues:
+> - [High] Skipping devices with an out-of-bounds `desc_nr` in `super_90_sy=
+nc()` leaves `rdev2->desc_nr` stale, silently corrupting the superblock's `=
+this_disk` field.
+>
+> Pre-existing issues:
+> - [High] The patch fails to validate `sb->this_disk.number` in `super_90_=
+load()`, allowing an unvalidated value to be assigned to `rdev->desc_nr`, w=
+hich subsequently leads to out-of-bounds array reads in `super_90_validate(=
+)`.
+> --
+>
+> commit b64c4503567571cb6b3f8a25617dfc053378beea
+> Author: Deepanshu Kartikey <kartikey406@gmail.com>
+> md: fix out-of-bounds access to superblock disk array
+>
+> This commit adds bounds checks for raid_disks and desc_nr when loading an=
+d
+> syncing v0.90 superblocks. It aims to prevent out-of-bounds array accesse=
+s
+> to the 27-element sb->disks array caused by maliciously crafted or
+> corrupted metadata.
+>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 680b34a63cb3d..81588c3fee49a 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -1393,7 +1393,8 @@ static int super_90_load(struct md_rdev *rdev, str=
+uct md_rdev *refdev, int minor
+>>   		goto abort;
+>>   	}
+>>  =20
+>> -	if (sb->raid_disks <=3D 0)
+>> +	if (sb->raid_disks <=3D 0 ||
+>> +	    sb->raid_disks > MD_SB_DISKS)
+>>   		goto abort;
+>>  =20
+>>   	if (md_csum_fold(calc_sb_csum(sb)) !=3D md_csum_fold(sb->sb_csum)) {
+> [Severity: High]
+> This is a pre-existing issue, but while we are adding bounds checks to
+> super_90_load(), does this function still leave a critical path vulnerabl=
+e?
+>
+> Slightly further down in super_90_load(), the code does:
+>
+>      rdev->desc_nr =3D sb->this_disk.number;
+>
+> Since sb->this_disk.number is read from the untrusted superblock without
+> validation against MD_SB_DISKS, an unvalidated value is assigned directly
+> to rdev->desc_nr. Later during array assembly, super_90_validate()
+> unconditionally uses rdev->desc_nr to index the 27-element sb->disks arra=
+y:
+>
+>      desc =3D sb->disks + rdev->desc_nr;
+>      if (desc->state & (1<<MD_DISK_FAULTY))
+>
+> Can a maliciously crafted MD superblock still trigger an out-of-bounds
+> memory read through this unvalidated rdev->desc_nr?
+>
+> [ ... ]
+>
+>> @@ -1693,6 +1694,13 @@ static void super_90_sync(struct mddev *mddev, st=
+ruct md_rdev *rdev)
+>>   			desc_nr =3D rdev2->raid_disk;
+>>   		else
+>>   			desc_nr =3D next_spare++;
+>> +
+>> +		if (desc_nr < 0 || desc_nr >=3D MD_SB_DISKS) {
+>> +			pr_warn("md: %s: desc_nr %d out of range for rdev %pg, skipping\n",
+>> +				mdname(mddev), desc_nr, rdev2->bdev);
+>> +			continue;
+>> +		}
+>> +
+> [Severity: High]
+> Does skipping out-of-bounds devices here leave rdev2->desc_nr with a stal=
+e
+> value?
+>
+> By using continue to early-exit the loop, we skip the subsequent
+> rdev2->desc_nr =3D desc_nr assignment. Later in this same function, the
+> superblock's this_disk field is populated using rdev->desc_nr:
+>
+>      if (rdev->desc_nr >=3D 0 && rdev->desc_nr < MD_SB_DISKS)
+>          sb->this_disk =3D sb->disks[rdev->desc_nr];
+>
+> If the target device was skipped during the rdev_for_each loop, will it
+> reuse its stale desc_nr and copy the descriptor of whichever other active
+> device took that slot, potentially causing metadata corruption?
+This looks like a real issue.
+>
+>>   		rdev2->desc_nr =3D desc_nr;
+>>   		d =3D &sb->disks[rdev2->desc_nr];
+>>   		nr_disks++;
 
-              P1
-  fd = open(/dev/md0, O_RDWR)
-	                      P2 (forked from P1, fd' <= fd)
-  write(fd)
-   submit_bio
-    md_handle_request
-     raid1_make_request
-      raid1_write_request
-                                  ioctl(fd, STOP_ARRAY)
-		                   mddev_set_closing_and_sync_blockdev
-				   // check passed, mddev->openers = 1,
-				   // because md_open() is only called
-				   // once in P1->open
-				   do_md_stop
-				    __md_stop
-				     mddev->private = NULL
-
-       conf = mddev->private // NULL
-        wait_barrier(conf, sector) // null-ptr-deref !
-
-It is a common problem for raid0/1/10/5, and __md_stop could be
-triggered by several paths(eg. ioctl, sysfs, ->dtr). Fix it by
-replacing mddev_lock() with mddev_suspend_and_lock() for all
-__md_stop() callers. The caller dm_table_destroy() is guaranteed
-being invoked with device suspended, so raid_dtr() could keep
-using mddev_lock_nointr(). Besides, fail the submitting IO in
-md_handle_request() if the 'mddev->pers' becomes NULL.
-
-Fetch a reproducer in https://bugzilla.kernel.org/show_bug.cgi?id=222020
-
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Reported-by: syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=3fe892ea5fc292e1353f
-Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
----
- v1->v2:
-  1. Add 'mddev->pers != NULL' check before make_request
-  2. Delete dm-raid caller(->dtr) modifications
-  3. Move memalloc_noio_restore after mddev_unlock_and_resume
- drivers/md/md.c | 32 +++++++++++++++++++++++++++++---
- 1 file changed, 29 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 680b34a63cb3..3dfc34caa2dc 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -414,6 +414,20 @@ bool md_handle_request(struct mddev *mddev, struct bio *bio)
- 		if (!percpu_ref_tryget_live(&mddev->active_io))
- 			goto check_suspended;
- 	}
-+	if (!mddev->pers) {
-+		/*
-+		 * The __md_stop() sets 'mddev->private' to NULL during
-+		 * the IO submitting, check 'mddev->pers' before the IO
-+		 * being processed by specific driver to avoid the
-+		 * null-ptr-deref of 'mddev-><member>'. The check is
-+		 * safe because the IO has got the 'mddev->active_io'
-+		 * reference, and all __md_stop() callers will wait for
-+		 * the reference to be zero.
-+		 */
-+		bio_io_error(bio);
-+		percpu_ref_put(&mddev->active_io);
-+		return true;
-+	}
- 	if (!mddev->pers->make_request(mddev, bio)) {
- 		percpu_ref_put(&mddev->active_io);
- 		if (mddev_is_dm(mddev) && mddev->pers->prepare_suspend)
-@@ -4657,6 +4671,8 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- {
- 	int err = 0;
- 	enum array_state st = match_word(buf, array_states);
-+	unsigned int noio_flags = 0;
-+	bool suspend = false;
- 
- 	/* No lock dependent actions */
- 	switch (st) {
-@@ -4666,9 +4682,11 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 	case broken:		/* cannot be set */
- 	case bad_word:
- 		return -EINVAL;
-+	case inactive:
- 	case clear:
-+		suspend = true;
-+		fallthrough;
- 	case readonly:
--	case inactive:
- 	case read_auto:
- 		if (!mddev->pers || !md_is_rdwr(mddev))
- 			break;
-@@ -4702,9 +4720,11 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 		spin_unlock(&mddev->lock);
- 		return err ?: len;
- 	}
--	err = mddev_lock(mddev);
-+	err = suspend ? mddev_suspend_and_lock(mddev) : mddev_lock(mddev);
- 	if (err)
- 		return err;
-+	if (suspend)
-+		noio_flags = memalloc_noio_save();
- 
- 	switch (st) {
- 	case inactive:
-@@ -4775,7 +4795,12 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 			mddev->hold_active = 0;
- 		sysfs_notify_dirent_safe(mddev->sysfs_state);
- 	}
--	mddev_unlock(mddev);
-+	if (suspend) {
-+		mddev_unlock_and_resume(mddev);
-+		memalloc_noio_restore(noio_flags);
-+	} else {
-+		mddev_unlock(mddev);
-+	}
- 
- 	if (st == readonly || st == read_auto || st == inactive ||
- 	    (err && st == clear))
-@@ -8299,6 +8324,7 @@ static bool md_ioctl_need_suspend(unsigned int cmd)
- 	case HOT_REMOVE_DISK:
- 	case SET_BITMAP_FILE:
- 	case SET_ARRAY_INFO:
-+	case STOP_ARRAY:
- 		return true;
- 	default:
- 		return false;
--- 
-2.52.0
-
+--=20
+Thanks,
+Kuai
