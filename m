@@ -1,211 +1,158 @@
-Received: from mail-wm2-f13.google.com (mail-wm2-f13.google.com [74.125.225.141])
+Received: from mail-oi2-f0.google.com (mail-oi2-f0.google.com [74.125.231.192])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40D3255C1AA
-	for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2026 13:58:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D81E249D588
+	for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2026 19:30:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.192
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789653532; cv=none; b=QD0BpatMi1MipeT+XAnaatY0M6qKfrhrLdph4/Dnl30Yp22YYFGRPkTAdmFPxYpePZjmMAZLI4dakaplubwe95DipHBHvzJl6yRlCXyHUT3pehJJhtOiAKeqejkwVGXHp34PppZrJ894DPIQpW7xUzE6fvgtmBUX9xVRY7k3mq0=
+	t=1789673437; cv=none; b=CGCrg8sFd4dUfRjQyg3VqbMAiTYKgYAZ4FpLMOAwye0/rVIw5vHRc1vTUNHa26acrWEPYpYxzd3q3D78WcBUguG7zqDl9XhfJhn3dGZqGcKCAJ7evEYXRd1KGQ13x2CE0hoyv8/yTEQEoraIUSNxsCOlfPQUKu36po3sJTjWbyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789653532; c=relaxed/simple;
-	bh=bCFpQtachC1KJwXz7PqZLmT28jPdHjKwLuHYzFZREks=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=snKumtx718VrBcY5D4HgdKOVdMTNcExYA0nKfklZy+EzoVZZdYbfBxSuEJVSKdAZUFWs+jCUzFP8wTmd4ydaAQDy9m0bMRSvlWXWhkP2ASn71V8oPBJEF6WNxYRxZb7wQtwAZkXzJBnNuClLyFOwzm+pS5ZOFN+WIo83iRg1CT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=F5Wvvs4q; arc=none smtp.client-ip=74.125.225.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="F5Wvvs4q"
-Received: by mail-wm2-f13.google.com with SMTP id 5b1f17b1804b1-49e620fa473so5319595e9.1
-        for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2026 06:58:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1789653528; x=1790258328; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=bCFpQtachC1KJwXz7PqZLmT28jPdHjKwLuHYzFZREks=;
-        b=F5Wvvs4qQ85b33FvRPmucAwKHR2HK3OQMrVtjLQRY2WoFr9FQAB3Whx2uitxq3OT7P
-         AJR5Yq3aBomTRuP6Nzjk8oQCVfVO0ewRP2gcRy8KRONsXRSmfMCidxgPQdgB/tlo+9qQ
-         2jysOGRGwEi5FbhPqpeSElQSvLM8DxRDgAhjsD4OVTuuo+DQfd4uYh47omBK01U4a4Rt
-         +Es9XgE4okcIL2eSCAp6prKmknmv2c7HmewzluAmRIJ/Hv5hw9020Y/FG2QHdgUYFcpg
-         HF3EWKSKMGhbBX9M0YoIe4j690KHzeoOblefw5bPoeZmYliBXyPxK8s4VG+vhj8X2sg5
-         fvSQ==
+	s=arc-20240116; t=1789673437; c=relaxed/simple;
+	bh=eMaq8RLV8quYoQsiaB8eCxVRfk+jd+94+wshSktzVnQ=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=Yl2KdkmgLhU1Fi7SYP96PcWc8IWb6fqWekzUsvChPWKs8/uO2/PpqhFPLJaH1IPjtOHNmeCbiWehXUxcppLK7NrxpL2IR9xohpHr1U5F//q++K0bHx6ODDpUDhwQQC2g0Z1l9Fb0LL6JqXTeI9vvtmDN/obIj35ItqCdUyGP4Og=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=74.125.231.192
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi2-f0.google.com with SMTP id 5614622812f47-4a49b13b745so18061b6e.0
+        for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2026 12:30:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789653528; x=1790258328;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+        d=1e100.net; s=20260707; t=1789673433; x=1790278233;
+        h=content-type:to:from:subject:message-id:date:mime-version
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=bCFpQtachC1KJwXz7PqZLmT28jPdHjKwLuHYzFZREks=;
-        b=XUGnCdjm0mRjWLrStza8xB/R1PWXHQGs0EzZawEGJxN734WnLJYhq7dzkaO3YEx144
-         9SJZTO6ZKL+CXB3Xb3nbnTpiAEci2JXwD+rl3D7mU/8f0/sxq/zJhaa7Di5mLEGJTCTi
-         wvMKwBdWyHfRo0W+/BNpiFoTF52QhBiD/g/I4uSLxET9HrthglYOZgjh8TXOdqIhtGUi
-         zVYtY71IzKIUm2nhs0mlMPvLifzyjc1eEzxbUgq3siyZ9YM4Zhr35RgM0UEp7Zb1YaFL
-         LXuGeNqFo+c0hl5ES22dWv9RwTzONJcUM2qrrpQQ8KJVqspFjcr/5D80pL1QuBIf3R0P
-         kW+g==
-X-Gm-Message-State: AFuF++mA4w4gFxlcBgMsQ7mMqPBrW/CjtOfBxqnWA5/XpaS6nVg9Vbkz
-	t/8o41Oih/0dl6EsBwH2fFJEOOKoO3lO0BvOFh+nqy/D9PBuRpH4O7anYSm0sX9VcrI=
-X-Gm-Gg: AYBFou0FlbBskh3STA+UlTa5WWg+p+hi8274PBxmq5IFqkvLVaN7/FuY6NYLkP0PQwe
-	KoDkLZ+kXIDmCljGff0/T0o48KeddwQe+eC4RzNzrenLSb6UV0BjqHHxu0kEVdEE03KwtvD9ejn
-	HeW/2ub96rBRZ5We1DajypopjAXgiE/9QUa9n+xSe4YJ87iJ+O5h1QGjwfxRzAn7vU/DkvUlApu
-	dHCDDlU4Wbr5GxBknFRCkYlHyarba1jRfG4nR5hTpZJlifw38mPHDBlwzXN6Aude8f1YP5aJxm7
-	6/h2HrpJGMW610BnvPPUwXtGW5CYBtgwo3qO9g4oeIxqrVqQGQf7+NqgJ/YODFFT8amLYsdufE/
-	tqsjqI9mfW02W/X6c2E1wHVJDJwHBVWcIuRcw31R8lxoXuotJG0H8dkhVLXLAhXrLM3uSXPxn+X
-	I4vBQdjljceaj3cJI6FkDJBX8P9jLvCOPfVD+pUbjIzhuSmtI69KkbXkIUdTj2OMpBAdMzQRPs2
-	W8YnPASrbMGHQfpUX7ApKWbLJj7E1AIC1DBgYf5sygShwhNMauWLc89ka9fyBPPXuSw1ZiGr2Fc
-	UiIBUABcAsThx/LC2FYiEejGPqD0v1NTxDWNM80MC2OqJg==
-X-Received: by 2002:a05:600c:a00e:b0:49e:63cd:31fb with SMTP id 5b1f17b1804b1-49eac4679b3mr92674295e9.9.1789653528216;
-        Thu, 17 Sep 2026 06:58:48 -0700 (PDT)
-Received: from p200300de37172700e7f885d729fa4be7.dip0.t-ipconnect.de (p200300de37172700e7f885d729fa4be7.dip0.t-ipconnect.de. [2003:de:3717:2700:e7f8:85d7:29fa:4be7])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49fbd2160c2sm81755845e9.6.2026.09.17.06.58.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Sep 2026 06:58:47 -0700 (PDT)
-Message-ID: <0cce3ff7dc782ef2f2618212b6b87889aea8e653.camel@suse.com>
-Subject: Re: [PATCH v6 1/2] md: Don't set MD_BROKEN for RAID1 and RAID10
- when using FailFast
-From: Martin Wilck <martin.wilck@suse.com>
-To: Kenta Akagi <k@mgml.me>, Xiao Ni <xni@redhat.com>,
- linan666@huaweicloud.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- song@kernel.org, 	yukuai@fnnas.com, shli@fb.com, mtkaczyk@kernel.org
-Date: Thu, 17 Sep 2026 15:58:46 +0200
-In-Reply-To: <b2cc7f6e-b029-48d8-9c1a-cc8bdbdc4f1a@mgml.me>
-References: <7944a042-2e1e-1487-1b42-529768afbbd0@huaweicloud.com>
-	 <0106019b9349bf39-5460c782-3d63-43cb-a56e-e34760ce51cd-000000@ap-northeast-1.amazonses.com>
-	 <CALTww282Kyg9ERXeSiY5Thd-O40vEXjAXsD8A2PxEsd-h-Cg3Q@mail.gmail.com>
-	 <b2cc7f6e-b029-48d8-9c1a-cc8bdbdc4f1a@mgml.me>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 
+        bh=QxfZm777yiB3GOiVhcaZHS4Wrc/4+22T9DdmmcwZ2XQ=;
+        b=Z/Qq+waZyY2a/BFIZIMy7plM28imglVFvGe9Xzi6WJanCno6ZNfzAeFclBGLikqwqT
+         7+s5cLXTADrmQxHOCMb+R8/AZkp0jPQhYN2OZcV2eoMwj/0MVV5w9v/8kAiKxwlthzzU
+         6Hb1rL03qjTVL6M0z/QuzkSqpcICWlVFLh/R6DIQhoBi6S01rZ0KZOizFWqmBU9QmdXK
+         ZUqIdLdE7EBxjVswK/92VmT5moUBzA0I5m7LWTN+I4LyGF3nVLPvFt8mj4FnAP5S4SIF
+         0sEUAgUQ70MKlsd4bXOMp3PQytQq9QW8qcr9mjukcKGbbMr8bQLQwPT4aw4Kc26mu+cM
+         xGEg==
+X-Forwarded-Encrypted: i=1; AKwUvBzeA4JZVnzWmn5IhERBrbUz1LtVyJEt/rQoFxv61gPWZklVjuV39oPrU4r7og0jJ0V3ZpcRUPRP9D2P@vger.kernel.org
+X-Gm-Message-State: AFuF++mngQrcwB3GzT+nrpub89H8YPxEBJSST6UQw6KWhrXsz6/bzfel
+	sZ7xZSFcM5U71xMRy+OPK8mYDtEvicqkKMCe3yLw5yAuzSV2ox06t+4+fQTp7CHtYyfbJaL9RQF
+	FGnHEelX3YLXK+8s7kYSN7K3mdBTXeQ1lDYa1NlZ1fmAYcVnPQrCfGijAYYU=
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-Received: by 2002:a05:6808:c162:b0:4c9:90bf:5f5d with SMTP id
+ 5614622812f47-4ccf6e6dfe3mr329110b6e.11.1789673433779; Thu, 17 Sep 2026
+ 12:30:33 -0700 (PDT)
+Date: Thu, 17 Sep 2026 12:30:33 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6aac3fd9.b398a7c9.1f86be.0022.GAE@google.com>
+Subject: [syzbot] [raid?] WARNING in ppl_init_log
+From: syzbot <syzbot+2ef75c54d0b2ac5d00ba@syzkaller.appspotmail.com>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
+	magiclinan@didiglobal.com, song@kernel.org, syzkaller-bugs@googlegroups.com, 
+	xiao@kernel.org, yukuai@fnnas.com, yukuai@fygo.io
+Content-Type: text/plain; charset="UTF-8"
 
-Hello Kenta, all,
+Hello,
 
-On Fri, 2026-01-16 at 11:04 +0900, Kenta Akagi wrote:
->=20
->=20
-> On 2026/01/07 12:35, Xiao Ni wrote:
-> > On Tue, Jan 6, 2026 at 8:30=E2=80=AFPM Kenta Akagi <k@mgml.me> wrote:
-> > >=20
-> > > Hi,
-> > > Thank you for reviewing.
-> > >=20
-> > > On 2026/01/06 11:57, Li Nan wrote:
-> > > >=20
-> > > >=20
-> > > > =E5=9C=A8 2026/1/5 22:40, Kenta Akagi =E5=86=99=E9=81=93:
-> > > > > After commit 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and
-> > > > > RAID10"),
-> > > > > if the error handler is called on the last rdev in RAID1 or
-> > > > > RAID10,
-> > > > > the MD_BROKEN flag will be set on that mddev.
-> > > > > When MD_BROKEN is set, write bios to the md will result in an
-> > > > > I/O error.
-> > > > >=20
-> > > > > This causes a problem when using FailFast.
-> > > > > The current implementation of FailFast expects the array to
-> > > > > continue
-> > > > > functioning without issues even after calling md_error for
-> > > > > the last
-> > > > > rdev.=C2=A0 Furthermore, due to the nature of its functionality,
-> > > > > FailFast may
-> > > > > call md_error on all rdevs of the md. Even if retrying I/O on
-> > > > > an rdev
-> > > > > would succeed, it first calls md_error before retrying.
-> > > > >=20
-> > > > > To fix this issue, this commit ensures that for RAID1 and
-> > > > > RAID10, if the
-> > > > > last In_sync rdev has the FailFast flag set and the mddev's
-> > > > > fail_last_dev
-> > > > > is off, the MD_BROKEN flag will not be set on that mddev.
-> > > > >=20
-> > > > > This change impacts userspace. After this commit, If the rdev
-> > > > > has the
-> > > > > FailFast flag, the mddev never broken even if the failing bio
-> > > > > is not
-> > > > > FailFast. However, it's unlikely that any setup using
-> > > > > FailFast expects
-> > > > > the array to halt when md_error is called on the last rdev.
-> > > > >=20
-> > > >=20
-> > > > In the current RAID design, when an IO error occurs, RAID
-> > > > ensures faulty
-> > > > data is not read via the following actions:
-> > > > 1. Mark the badblocks (no FailFast flag); if this fails,
-> > > > 2. Mark the disk as Faulty.
-> > > >=20
-> > > > If neither action is taken, and BROKEN is not set to prevent
-> > > > continued RAID
-> > > > use, errors on the last remaining disk will be ignored.
-> > > > Subsequent reads
-> > > > may return incorrect data. This seems like a more serious issue
-> > > > in my opinion.
-> > >=20
-> > > I agree that data inconsistency can certainly occur in this
-> > > scenario.
-> > >=20
-> > > However, a RAID1 with only one remaining rdev can considered the
-> > > same as a plain
-> > > disk. From that perspective, I do not believe it is the mandatory
-> > > responsibility
-> > > of md raid to block subsequent writes nor prevent data
-> > > inconsistency in this situation.
-> > >=20
-> > > The commit 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and
-> > > RAID10") that introduced
-> > > BROKEN for RAID1/10 also does not seem to have done so for that
-> > > responsibility.
-> > >=20
-> > > >=20
-> > > > In scenarios with a large number of transient IO errors, is
-> > > > FailFast not a
-> > > > suitable configuration? As you mentioned: "retrying I/O on an
-> > > > rdev would
-> > >=20
-> > > It seems be right about that. Using FailFast with unstable
-> > > underlayer is not good.
-> > > However, as md raid, which is issuer of FailFast bios,
-> > > I believe it is incorrect to shutdown the array due to the
-> > > failure of a FailFast bio.
-> >=20
-> > Hi all
-> >=20
-> > I understand @Li Nan 's point now. The badblock can't be recorded
-> > in
-> > this situation and the last working device is not set to faulty. To
-> > be
-> > frank, I think consistency of data is more important. Users don't
-> > think it's a single disk, they must think raid1 should guarantee
-> > the
-> > consistency. But the write request should return an error when
-> > calling
-> > raid1_error for the last working device, right? So there is no
-> > consistency problem?
->=20
-> Hi all,
->=20
-> I understand that when md_error is issued for the last remaining
-> rdev,=20
-> the array should be stopped except in the failfast case, also,=20
-> it is no longer appropriate to treat an RAID1 array that has lost=20
-> redundancy as "just a normal single drive" [1].
->=20
-> I will post an PATCH v7 based on v5.
+syzbot found the following issue on:
 
-I wonder what became of this v7 series. Have you given up on this?
-If yes, what is the bottom line - simply not using failfast in setups
-like the one you described?
+HEAD commit:    238650ef6c7c Merge tag 'powerpc-7.3-4' of git://git.kernel..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=107c7925580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=5e4e3a0e188a497e
+dashboard link: https://syzkaller.appspot.com/bug?extid=2ef75c54d0b2ac5d00ba
+compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
 
-Martin
+Unfortunately, I don't have any reproducer for this issue yet.
 
---=20
-Dr. Martin Wilck <mwilck@suse.com>
-SUSE Software Solutions Germany GmbH, Frankenstr. 146, 90461 N=C3=BCrnberg,
-Germany
-Gesch=C3=A4ftsf=C3=BChrer: Stefan Gaiser, Jochen Jaser, Abhinav Puri (HRB
-36809,AG N=C3=BCrnberg)
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/35551601d170/disk-238650ef.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/62ad5ac38086/vmlinux-238650ef.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/bd8d0f191876/bzImage-238650ef.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+2ef75c54d0b2ac5d00ba@syzkaller.appspotmail.com
+
+md/raid:md0: raid level 5 active with 2 out of 2 devices, algorithm 2
+------------[ cut here ]------------
+kmem_cache of name 'ppl_io_unit' already exists
+WARNING: mm/slab_common.c:112 at kmem_cache_sanity_check mm/slab_common.c:111 [inline], CPU#1: syz.0.52/6045
+WARNING: mm/slab_common.c:112 at __kmem_cache_create_args+0xae/0x460 mm/slab_common.c:352, CPU#1: syz.0.52/6045
+Modules linked in:
+CPU: 1 UID: 0 PID: 6045 Comm: syz.0.52 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 08/05/2026
+RIP: 0010:kmem_cache_sanity_check mm/slab_common.c:111 [inline]
+RIP: 0010:__kmem_cache_create_args+0xb1/0x460 mm/slab_common.c:352
+Code: e7 8e 4d 8b 24 24 49 81 fc 68 2e e7 8e 74 20 49 8b 7c 24 f8 48 89 de e8 ad fe c8 09 85 c0 75 e2 48 8d 3d 52 cc 66 0e 48 89 de <67> 48 0f b9 3a 48 89 df be 20 00 00 00 e8 4d 00 c9 09 48 85 c0 0f
+RSP: 0018:ffffc9000555f9a0 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: ffffffff8cf7a820 RCX: 0000000000000004
+RDX: 000000008cf7a803 RSI: ffffffff8cf7a820 RDI: ffffffff907ec6e0
+RBP: 0000000000000000 R08: ffffffff907a3e7f R09: 1ffffffff20f47cf
+R10: dffffc0000000000 R11: fffffbfff20f47d0 R12: ffff88801d79d2e0
+R13: 0000000000000000 R14: 00000000000002d8 R15: ffffc9000555fa80
+FS:  00007faf490c56c0(0000) GS:ffff888124dd1000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fab21a7a010 CR3: 000000007a880000 CR4: 0000000000350ef0
+Call Trace:
+ <TASK>
+ ppl_init_log+0x285/0x1310 drivers/md/raid5-ppl.c:1363
+ log_init drivers/md/raid5-log.h:138 [inline]
+ raid5_change_consistency_policy+0x255/0x740 drivers/md/raid5.c:9141
+ consistency_policy_store+0x7f/0x230 drivers/md/md.c:5883
+ md_attr_store+0x3b7/0x640 drivers/md/md.c:6158
+ kernfs_fop_write_iter+0x3a4/0x540 fs/kernfs/file.c:345
+ new_sync_write fs/read_write.c:595 [inline]
+ vfs_write+0x612/0xba0 fs/read_write.c:687
+ ksys_write+0x150/0x270 fs/read_write.c:739
+ do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+ do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7faf4819e159
+Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007faf490c5028 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007faf48425fa0 RCX: 00007faf4819e159
+RDX: 0000000000000004 RSI: 0000200000000500 RDI: 0000000000000009
+RBP: 00007faf4823506b R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007faf48426038 R14: 00007faf48425fa0 R15: 00007ffc85c60718
+ </TASK>
+----------------
+Code disassembly (best guess):
+   0:	e7 8e                	out    %eax,$0x8e
+   2:	4d 8b 24 24          	mov    (%r12),%r12
+   6:	49 81 fc 68 2e e7 8e 	cmp    $0xffffffff8ee72e68,%r12
+   d:	74 20                	je     0x2f
+   f:	49 8b 7c 24 f8       	mov    -0x8(%r12),%rdi
+  14:	48 89 de             	mov    %rbx,%rsi
+  17:	e8 ad fe c8 09       	call   0x9c8fec9
+  1c:	85 c0                	test   %eax,%eax
+  1e:	75 e2                	jne    0x2
+  20:	48 8d 3d 52 cc 66 0e 	lea    0xe66cc52(%rip),%rdi        # 0xe66cc79
+  27:	48 89 de             	mov    %rbx,%rsi
+* 2a:	67 48 0f b9 3a       	ud1    (%edx),%rdi <-- trapping instruction
+  2f:	48 89 df             	mov    %rbx,%rdi
+  32:	be 20 00 00 00       	mov    $0x20,%esi
+  37:	e8 4d 00 c9 09       	call   0x9c90089
+  3c:	48 85 c0             	test   %rax,%rax
+  3f:	0f                   	.byte 0xf
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
