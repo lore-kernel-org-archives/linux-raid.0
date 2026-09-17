@@ -1,64 +1,64 @@
 Received: from mail-pj2-f13.google.com (mail-pj2-f13.google.com [74.125.227.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FA5248FF73
-	for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2026 08:38:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 280F93B0580
+	for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2026 08:39:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789634354; cv=none; b=Gv3pzH3tePdr1cUEyYOMq3PWF10mirvLr/M/eeHzwwLWaim5oB8CLEhbYjYUk4P42LexkLe0zjYuJHinBl4WpUvZgNXKKDb3B+iCDqnMCCzXrgd8vxbn4riq2xFAvdZ3N1iOZi4y4CCNMh8S474CEh9objYctBdVNBEOC985Uow=
+	t=1789634369; cv=none; b=dfrkS4ztlFM7Xlyh1+/tdUeYFbizNvz4ZZgVotwPtN+2+7PbFvOJ0gBSX6RXP36NDYKCIULKhvsrjJIV7RTGdvuAX7RaasU6GxzyecmVnEpiUgSIEOABN9I050ehvMQuPnhYODxYJadBznf5PoNUSXHpoTTmm+pObdHINZm6Pmo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789634354; c=relaxed/simple;
-	bh=Haa1z/DghnZT1qkXm5SKTSly5CBcdv1q5VCtlQW+b8U=;
+	s=arc-20240116; t=1789634369; c=relaxed/simple;
+	bh=C4kFc9I6aVRIR23qveBzfUYCOoqafUcO8GKRY8IEUQc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=X5UkTvW+cMnrGYx+/ZOwklAGxc6XqyV5LY1ghfnaJtHM1kOuxY/enOJlJeTOSi/2y4fNmKGwirn6+fYsMZMxCKOiEP3xpA5pgqI812tkcSvXD4vWEIYwbKGClRIDInvv9rC6qXF+g2A9Q2C9j/jBUv6Fkn7jFRgdYrD+vKAKABk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RwRqLRT3; arc=none smtp.client-ip=74.125.227.141
+	 MIME-Version; b=VmqgB6zoQXm/F7Hs2+RfkG891m0OB69aw3ctfQWUDkPG1qyMnCUO/ADcA5iA06soRhLiiCCeFsqWXx0c4IAaD6pOP4SQTcYLQhPSCRGPbIhS/KO5oG5HIXuoHws7LebsSq7Y+w8m4i2v/cDlVlxXBtlfaW5YiDOd+zcjU5hN8jA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AEFu//zu; arc=none smtp.client-ip=74.125.227.141
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RwRqLRT3"
-Received: by mail-pj2-f13.google.com with SMTP id 98e67ed59e1d1-39b31b4281eso486106a91.2
-        for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2026 01:38:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AEFu//zu"
+Received: by mail-pj2-f13.google.com with SMTP id d9443c01a7336-2d90ba1d807so6662195ad.3
+        for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2026 01:39:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789634331; x=1790239131; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1789634353; x=1790239153; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=T87rxYlu6jlwQQ8pbt3sOEyP8di5cJFMReAsYyBJE5U=;
-        b=RwRqLRT3E/I5+GyUW6iiUaS5UrbEM0+7CLmwl4kIN2NIa1cMKGQUHq0Bd3mQk8PFnh
-         W7bj6qi+UfmgbetWwYPFwLUCrxLotWtenhESEvQoBfS6tuaXTQbzDGgAK4ukMVxGwpgh
-         3rniXTUhp8rHA7FgCqvH7xjLZRsdERoxxCNW/0AwENaJm522hX2T3Zv936xlBIexs+RW
-         MyLlvoki2J5inSvJsWVUUU+lxLkWhHe9SkAz4YSIy+hsCd0sQ8KvWWxeT9SKUXx3LVsl
-         FFNXS6mjYbyrgt72IYQ8oNfRHj75nipqBefyMAkm3oT6cIN2Sn2hP5lowyHEg3c/oJnc
-         kkzg==
+        bh=SRUmR5tq1gmAFewuT5+MHhVWDUO1ZXIe6LR8I7vNdgA=;
+        b=AEFu//zulXtVjumPlHI7xvNGFCO7l90G+bFXk8ZSNrV19JDF+veQ4oHp01BZ+AA+FS
+         UbheYbgoXWzCdesBt9Cxlq5zAGC/wKc0/YwB7PsOsqvJs4vJ7KG6l7Lh3Ldw4qAEoRMx
+         kt+e+YOYThjHK8P74TTL1jE+LJMJ2gk22yHJG7eSWLTEtR6ykL0nrzoI0p71XfBI9yfW
+         1SkYVVsAJmUm1HqGKF4TXKPEeJNkN3PNscPfSVrY1OhIUMZoPxxIHHBGT15AtyIZcZ+k
+         B3Uw2B8BTrkckErw10Lxu0CbvKVLk3u8Hi3xwzIvKNfrNx1CKYnXfieTHkB/J55sK96X
+         tSCw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789634331; x=1790239131;
+        d=1e100.net; s=20260707; t=1789634353; x=1790239153;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=T87rxYlu6jlwQQ8pbt3sOEyP8di5cJFMReAsYyBJE5U=;
-        b=s18MmzWrOGP0SBidCwFrRX8aCuB+Ug0ktqmQWf4IRq4Nhp8WxOPvW5NQng0Yrx8eY8
-         dm9mOhtQMcSyvRcfuSAZqsne8lb+APuDTjBEYHS6jcB9L9KVevQ4eGfkSPN9cNMSBUgs
-         kxLtrzAA95c6q6rgBOTniV7HbYnBDRHceOMe1mP2HcqMbP2CRL2Ey/RKnftrSs0s4ceY
-         uzI9ko5LsV+4TH9esI6tR7uwxPY/O7WN5Ukp9t7c4xPTdQaqPccI2WgsVLaq4fcyXInQ
-         +1Fm+TWRfbf+C8+POqJl9jkFUMHEfRbVDfpFJ38aviSJkF9w/FKnh+5lUi5uF56HY3vh
-         IE3Q==
-X-Forwarded-Encrypted: i=1; AKwUvByxdZFGrK8ER3MeVQ2AY6aoKmPmM1PFX2WKC0CItgd0+wdMle+3JP1O8FM622PJmQo6UmTaIfEkErdz@vger.kernel.org
-X-Gm-Message-State: AFuF++lHuGx7TFF/nDOgCYCKVGYzDmwpc089pWpmWDjgQeXBUDkiwnXy
-	pgUgp4s0UHIYoaID1zHt0BXAQRMTXQY+YwYnIVr+JPtJhupP25jZ/lfL
-X-Gm-Gg: AYBFou1VtUgIK1GeKAZzWICiUbTdEDVNwtXbpCDYCB1jCSOYYkY5cAPQVbaqpGMY/0y
-	o0OXFmdZVJR4/3F1ky/4oySxQXWP3xHwKH177LkMzsJnKTKqrAGJKVZ6yzeLlaXL8SvUQbbqJqU
-	37zoxV8jtyZS3JSz4dEZ0F+0gmVR7QUtQtNrImHQ1Z/nu0y8yTShy2+NCKdW9IM1omaiJpUAjgE
-	YwEbKdFtZCGbephZA5DP+OX9L1MjwuUaVzqFqpF/JbbyAK3tT8XdOBhyQdfCr1RzRClRpt5iLmA
-	TyRpyspneLdUIssiVuSjtYzlpzn4GbPoMTq57jJDQdjVrflKiS7/2xf5Ipd2RWHrVYRxWsJ7rC/
-	wze+7OOnAIZSlbmTxDQaPFxI5S/OrRTzU7CA5cH6aS5Srg5IkyFX/V3+j+sNMHaAjiXfaAPI3zr
-	dE8qliubyjhKb9pJjT2KeS/6pvJiw7RkZieYPicV2+VwMCfA2d/YMPJq/T3+RGmDJfeFX2wU9Gw
-	f5YgnphPv+1S+ELzAuWxqJU5P2y
-X-Received: by 2002:a17:90b:2d45:b0:39e:261:4e0d with SMTP id 98e67ed59e1d1-39e1e506786mr15054330a91.25.1789634331347;
-        Thu, 17 Sep 2026 01:38:51 -0700 (PDT)
+        bh=SRUmR5tq1gmAFewuT5+MHhVWDUO1ZXIe6LR8I7vNdgA=;
+        b=JSj0Ommwsrb2n5BWX2oGoDcj9SU85cREz9Gk9knBlp/NwLVn1JSNXdG0hgENcl/Ss4
+         mRaWI8SktCO/yhDsg4+6xKwq8ZAwr/USBJsWw17HRzZ6fK55WL7AUNRMzl8gY3UHxscA
+         OV0K52Xic2seTwfP39LyNpkulJ2/n40nG0sVdKBtvZ0BhYUsAmc5qJaBtw2gF0WrMXZ6
+         dSfv1nwpYarQnrczXZ0TItTSOFOs6y4oWev2iD0RqYSuLcHXJ9IlgaCYvYAbCrVXkf3P
+         DkCIkO1aQWON9kOe6Tmv2OYdi9Q13oAkEthb7XSSpv1SBp6+W6vQOPrbBAPJbKwve2oL
+         2YlA==
+X-Forwarded-Encrypted: i=1; AKwUvBx3GAtOxvT2q44zNh7sUUFenBDCCONBJXG73muR4ajxSNj8O1d3ebgjdozffDTHPRHPugdoyTx4e7sH@vger.kernel.org
+X-Gm-Message-State: AFuF++lFMRO8om6XFxHG6Xo9rkePo4oXvi6x/+huAkJcssrZS98WBvOG
+	0ks7HUrO+zFWxYhpEi7KB+DCEavxUrQqqLqYMlFp/+Uf7VKTwJ0VNuKf
+X-Gm-Gg: AYBFou3Le2/gwT5g78UcTrfVtWpKtStvivnj2iZlv+vDqbw56aeMHCYrOW0WDzu+Tjv
+	R9Q6KcRbTqMATeFtsomfqQP3bCXKdKVtFDfuSWrXF1kI+mXQpF2dsX2xcPqKXiqoCNOun53RQQS
+	3SmXZQ5cTX1d0q0+DNiglBLNCgXwSCJDQeoEXriwZkzaQwLsfC3ugbZr94WXYOOEI+m8TtvW5Q/
+	6woS1yGqnhn4CNuflZDgccYC0PEfNC15Jroz/xnQ4e9NYaH9I1No/5t5O8Q3drssUkWhkjNPrEC
+	JtwWLEg4CQiCrEfWtLanA4WgYdMes0F1FgPiFgaauOLQuQOAxEuaDemituGCC9gHxjcR2fbBuYz
+	96dbevp/AhAArLn7Sceyc7C206TVs8gh6b8+KbCCK9gPNwhcZi0ATLurMPnuLNYAhkOXLYdDSDi
+	09OYz7XoZnsq1C6oFhqusI56c9jpENbQn/KZVltvcJuE9/SOeCXKaJ/AHSK57BawBALeoTL8vSb
+	GKy2gaLQ+7SBvzhyg1vjPo2a2vrtA==
+X-Received: by 2002:a17:90a:1c97:b0:39e:1fb6:9659 with SMTP id 98e67ed59e1d1-39e1fb6994cmr8667721a91.22.1789634353131;
+        Thu, 17 Sep 2026 01:39:13 -0700 (PDT)
 Received: from localhost.localdomain ([183.194.144.114])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39e35e56298sm3871317a91.9.2026.09.17.01.38.48
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39e35e56298sm3871317a91.9.2026.09.17.01.39.10
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Thu, 17 Sep 2026 01:38:50 -0700 (PDT)
+        Thu, 17 Sep 2026 01:39:12 -0700 (PDT)
 From: zjamg <ndaugoing@gmail.com>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fygo.io>
@@ -67,11 +67,10 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	NeilBrown <neil@brown.name>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	zjamg <ndaugoing@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH 1/2] md: fix bblog_size-driven OOB read in super_1_load() and super_1_sync()
-Date: Thu, 17 Sep 2026 16:38:19 +0800
-Message-ID: <20260917083820.57091-2-ndaugoing@gmail.com>
+	zjamg <ndaugoing@gmail.com>
+Subject: [PATCH 2/2] md: add defensive bounds check for bio in md_write_metadata()
+Date: Thu, 17 Sep 2026 16:38:20 +0800
+Message-ID: <20260917083820.57091-3-ndaugoing@gmail.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20260917083820.57091-1-ndaugoing@gmail.com>
 References: <20260917083820.57091-1-ndaugoing@gmail.com>
@@ -83,61 +82,37 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In super_1_load(), when the on-disk feature_map does not have the
-MD_FEATURE_BAD_BLOCKS flag set, but sb->bblog_offset is non-zero,
-rdev->badblocks.shift is initialized to 0 while completely bypassing
-the sectors > (PAGE_SIZE / 512) validation check on sb->bblog_size.
+md_write_metadata() allocates a single-bvec bio via bio_alloc_bioset()
+with nr_vecs = 1 and attaches a single page 'page' (either rdev->sb_page
+or rdev->bb_page) via __bio_add_page(bio, page, size, offset).
 
-Subsequently, when badblocks are updated, super_1_sync() enables the
-MD_FEATURE_BAD_BLOCKS feature flag and assigns bb->size directly from
-sb->bblog_size without validating that bb->size fits within the single
-allocated rdev->bb_page (which is PAGE_SIZE, or PAGE_SIZE / 512 sectors).
+Because the bio can only ever represent a single backing page, passing
+a non-positive size or a length where offset + size > PAGE_SIZE is invalid
+and can lead to out-of-bounds reads during I/O submission.
 
-When md_update_sb() later writes metadata via md_write_metadata(), an
-unvalidated bb->size (e.g. 0xFFFF) results in a bio whose length exceeds
-the backing page, causing out-of-bounds reads into kernel memory during
-block I/O and leaking kernel slab/page contents to disk.
+Add a defensive check in md_write_metadata() so that any oversized or
+invalid request triggers WARN_ON_ONCE() and aborts before constructing
+the bio.
 
-Fix this by:
-1. Validating sb->bblog_size in the 'else if (sb->bblog_offset != 0)'
-   branch of super_1_load(), returning -EINVAL on oversized values.
-2. Clamping bb->size in super_1_sync() to PAGE_SIZE / 512 to ensure it
-   never exceeds the backing rdev->bb_page capacity.
-
-Fixes: 2699b67223ac ("md: load/store badblock list from v1.x metadata")
-Cc: stable@vger.kernel.org
 Signed-off-by: zjamg <ndaugoing@gmail.com>
 ---
- drivers/md/md.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/md/md.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 680b34a63cb3..d2433cf41e65 100644
+index d2433cf41e65..3fda2965c631 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -1934,8 +1934,11 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
- 			if (!badblocks_set(&rdev->badblocks, sector, count, 1))
- 				return -EINVAL;
- 		}
--	} else if (sb->bblog_offset != 0)
-+	} else if (sb->bblog_offset != 0) {
-+		if (le16_to_cpu(sb->bblog_size) > (PAGE_SIZE / 512))
-+			return -EINVAL;
- 		rdev->badblocks.shift = 0;
-+	}
+@@ -1142,6 +1142,9 @@ void md_write_metadata(struct mddev *mddev, struct md_rdev *rdev,
+ 	if (test_bit(Faulty, &rdev->flags))
+ 		return;
  
- 	if ((le32_to_cpu(sb->feature_map) &
- 	    (MD_FEATURE_PPL | MD_FEATURE_MULTIPLE_PPLS))) {
-@@ -2313,7 +2316,8 @@ static void super_1_sync(struct mddev *mddev, struct md_rdev *rdev)
- 
- 			bb->sector = (rdev->sb_start +
- 				      (int)le32_to_cpu(sb->bblog_offset));
--			bb->size = le16_to_cpu(sb->bblog_size);
-+			bb->size = min_t(sector_t, le16_to_cpu(sb->bblog_size),
-+					 PAGE_SIZE / 512);
- 		}
- 	}
- 
++	if (WARN_ON_ONCE(size <= 0 || offset + size > PAGE_SIZE))
++		return;
++
+ 	bio = bio_alloc_bioset(rdev->meta_bdev ? rdev->meta_bdev : rdev->bdev,
+ 			      1,
+ 			      REQ_OP_WRITE | REQ_SYNC | REQ_IDLE | REQ_META
 -- 
 2.53.0
 
