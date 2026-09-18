@@ -1,263 +1,195 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8B2B3C5DA1;
-	Fri, 18 Sep 2026 04:18:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83B952CCC5;
+	Fri, 18 Sep 2026 05:48:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789705110; cv=none; b=tgeZabWi3JzfsBJq8HkIbS6O1BhK5hgM/BWV7e8grWM4jA+Qga4iJv99IZGubLD1yXpL31YLBph1WxjMuSkz1JZ28BM4v5J1Mgmqo6XeeJV7MBjVrOcpA6ykPtjRrhS9NSPV7lTjnkTVgQoEGrysczpNDYGpaqxAKgNSQd0CRVM=
+	t=1789710532; cv=none; b=a7FTi7m+BdkuqdfNB++AoswbUBg8xkDFdeCxpF7fd7G5b09q5OKAI4TpHhKlQvYef9fS5zabKoHOYOtnz+f0ARAFPyNvjc84OtkW7bOzwjmFvszP8i5RphgGsjcsbT2+y1t/SNaGG1JABtu101MzAFchWrmj3iTAwM56pG2e12g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789705110; c=relaxed/simple;
-	bh=qexSzwfDHX65vvCPIdbP4qMTEGtxMwxaV4rTeQRm78U=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HEEorEJqFXJbMOHGGCDf7vMqUjIkgAwR2IK9lKrIXwS11K62Casf7DyzghrXuh9XFDrnhu6Bs9CL0bi1ZdZ8qvAjcw6tVMJmMnYP++AfaVDbUaY26Yn7a2G5tNFrqBvwq5FWkWspetdLnCgeGMmeAj4Vd0gEUrw9sAIZ2c2/Ew8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IAwWiY7D; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789710532; c=relaxed/simple;
+	bh=rQj5cq82Vf/LntBACJzXT8GyfW0+uIRKhaB8VEz4bzk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=UsJu3khksUWt/riESfPPmOQ1citSufCKgKR1kuDIjuWkmszA0ousicRW3/MmEOSW3+pZpUVPlgNHjecTbTih+EayGQQ4Aa5CwQ80QWG8MnP3DOKzriDKHLQ9GTZT9vxk2zArEXKVIHYIJuM+CzLsXm0xgw0wLd0e25Qxttrz8pY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=BayCrVZM; arc=none smtp.client-ip=220.197.31.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IAwWiY7D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F02D1F00893;
-	Fri, 18 Sep 2026 04:18:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789705108;
-	bh=IfppJp8zrxHMpzyaV8VLzykkmDT25fBzST+B7CKyroc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=IAwWiY7Deif7+Op6gb6GTVrcArdtHpbZNbaSOIvOLfg6xNsYUstfjsHxncwqEtpfl
-	 QLB+whWLHYdrRa0XmEoYUgIakQ72eSVY/qdZErsXoAIWvfs6KmDM3fdiX2gm9Ov4hy
-	 ntu71EE3AAu0PcI3ZCImhPon24ne5FPDnPVuEEJZOnJvLytoTHvkQY1qaqNYNUN1er
-	 UOu9VQwtWOG4Om8WSjVYir9knzzfaf1GUkJKbfj3qPoKbx5E4Aq67QCPLdhnCyNTF1
-	 opEYoRB3bzAQMyYxtaF1HHsVaSX0js+vBicMtWeMmAzZ7GU0pWjqQgHpRLKogLEJmM
-	 4C+DutKsVjfAA==
-From: Yu Kuai <yukuai@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Coly Li <colyli@fygo.io>,
-	Kent Overstreet <kent.overstreet@linux.dev>,
-	Alasdair Kergon <agk@redhat.com>,
-	Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	Benjamin Marzinski <bmarzins@redhat.com>,
-	Song Liu <song@kernel.org>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	Jan Kara <jack@suse.cz>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Chris Li <chrisl@kernel.org>,
-	Kairui Song <kasong@tencent.com>,
-	Kemeng Shi <shikemeng@huaweicloud.com>,
-	Nhat Pham <nphamcs@gmail.com>,
-	Baoquan He <baoquan.he@linux.dev>,
-	Barry Song <baohua@kernel.org>,
-	Youngjun Park <youngjun.park@lge.com>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Nick Desaulniers <ndesaulniers@google.com>,
-	Bill Wendling <morbo@google.com>,
-	Justin Stitt <justinstitt@google.com>
-Cc: Yu Kuai <yukuai@fygo.io>,
-	Christoph Hellwig <hch@lst.de>,
-	Nilay Shroff <nilay@linux.ibm.com>,
-	Tao Cui <cuitao@kylinos.cn>,
-	linux-block@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-bcache@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org,
-	gfs2@lists.linux.dev,
-	linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org,
-	llvm@lists.linux.dev
-Subject: [PATCH v3 3/3] blk-cgroup: move async bio punt state to blkcg
-Date: Fri, 18 Sep 2026 12:17:44 +0800
-Message-ID: <20260918041744.1526924-4-yukuai@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260918041744.1526924-1-yukuai@kernel.org>
-References: <20260918041744.1526924-1-yukuai@kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="BayCrVZM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
+	Message-ID; bh=rQj5cq82Vf/LntBACJzXT8GyfW0+uIRKhaB8VEz4bzk=; b=B
+	ayCrVZMxv8/5X+lzq2hIirouGrgZ/Q6a1UNaQpveFCHDsvoPFugV8mx7YGH3GCvC
+	6rGBnEYOLDULZT/lZJENHnyetFpxSs4J50huVNzkioPGf5J4TZnXLUA7qcgv/I0c
+	RDrSXA6DWSUPo4A7n9jcbQlvy3XWULMZcBDNmouxFc=
+Date: Fri, 18 Sep 2026 13:48:21 +0800 (CST)
+From: =?GBK?B?wO7T07roIA==?= <dayou5941@163.com>
+To: yukuai@fygo.io
+Cc: song@kernel.org, magiclinan@didiglobal.com, xiao@kernel.org,
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Li Youhong" <liyouhong@kylinos.cn>, stable@vger.kernel.org
+Subject: Re:Re:Re: [PATCH] md/raid5: serialize plug list add with
+ device_lock
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
+ 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 163com
+In-Reply-To: <755ed382.67bf.1a0ae5a7bbb.Coremail.dayou5941@163.com>
+References: <20260902095307.358569-1-dayou5941@163.com>
+ <826d82e9-0f0c-450e-a5f9-ea6675b7adc6@fygo.io>
+ <6edbeca2.341a.1a079e5507c.Coremail.dayou5941@163.com>
+ <116efada-45f3-4c68-92d9-2bf56fcc7629@fygo.io>
+ <755ed382.67bf.1a0ae5a7bbb.Coremail.dayou5941@163.com>
+X-NTES-SC: AL_Qu2TC/uav00r5yeQZekckk4Wjug8Wcexufwj34NTc8oEly3j+zInTFFRBFfI6s+2IT2VjDawUx580MNaQ4d4p8ASoBcQdvkVRtvqesG+qw==
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Message-ID: <4fbdb007.4565.1a0b30f079a.Coremail.dayou5941@163.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:fCgvCgD3d5Sm0KxqEVdJAA--.37041W
+X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC3gYj0Wqs0KbQZwAA3t
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 
-From: Yu Kuai <yukuai@fygo.io>
-
-blkcg_punt_bio_submit() currently queues punted bios on blkg->async_bios,
-so it has to call bio_blkg() to find or create a queue-local blkg.  Bios
-now carry and pin the blkcg css, so punted bio lifetime no longer needs to
-be anchored by a blkg.
-
-Keeping the punt state in blkg can instantiate a blkg even when no blkcg
-policy is enabled, just to bounce submission from a shared kthread.  Move
-async_bio_lock, async_bios and async_bio_work to struct blkcg, and queue
-punted bios on bio_blkcg() for non-root cgroups.  Root or unassociated bios
-are submitted directly.
-
-This preserves the priority-inversion avoidance while preventing
-blkcg_punt_bio_submit() from creating blkgs that are not needed by any
-policy.
-
-Signed-off-by: Yu Kuai <yukuai@fygo.io>
----
- block/blk-cgroup.c | 40 +++++++++++++++++-----------------------
- block/blk-cgroup.h | 14 ++++++--------
- 2 files changed, 23 insertions(+), 31 deletions(-)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 59ccfefe16a8..32e82880893b 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -180,14 +180,10 @@ static void blkg_free(struct blkcg_gq *blkg)
- 
- static void __blkg_release(struct rcu_head *rcu)
- {
- 	struct blkcg_gq *blkg = container_of(rcu, struct blkcg_gq, rcu_head);
- 
--#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
--	WARN_ON(!bio_list_empty(&blkg->async_bios));
--#endif
--
- 	blkg_free(blkg);
- }
- 
- /*
-  * A group is RCU protected, but having an rcu lock does not mean that one
-@@ -226,23 +222,22 @@ static void blkg_release(struct percpu_ref *ref)
- }
- 
- #ifdef CONFIG_BLK_CGROUP_PUNT_BIO
- static struct workqueue_struct *blkcg_punt_bio_wq;
- 
--static void blkg_async_bio_workfn(struct work_struct *work)
-+static void blkcg_async_bio_workfn(struct work_struct *work)
- {
--	struct blkcg_gq *blkg = container_of(work, struct blkcg_gq,
--					     async_bio_work);
-+	struct blkcg *blkcg = container_of(work, struct blkcg, async_bio_work);
- 	struct bio_list bios = BIO_EMPTY_LIST;
- 	struct bio *bio;
- 	struct blk_plug plug;
- 	bool need_plug = false;
- 
--	/* as long as there are pending bios, @blkg can't go away */
--	spin_lock(&blkg->async_bio_lock);
--	bio_list_merge_init(&bios, &blkg->async_bios);
--	spin_unlock(&blkg->async_bio_lock);
-+	/* as long as there are pending bios, @blkcg can't go away */
-+	spin_lock(&blkcg->async_bio_lock);
-+	bio_list_merge_init(&bios, &blkcg->async_bios);
-+	spin_unlock(&blkcg->async_bio_lock);
- 
- 	/* start plug only when bio_list contains at least 2 bios */
- 	if (bios.head && bios.head->bi_next) {
- 		need_plug = true;
- 		blk_start_plug(&plug);
-@@ -259,19 +254,19 @@ static void blkg_async_bio_workfn(struct work_struct *work)
-  * cgroup.  Use this helper instead of submit_bio to punt the actual issuing to
-  * a dedicated per-blkcg work item to avoid such priority inversions.
-  */
- void blkcg_punt_bio_submit(struct bio *bio)
- {
--	struct blkcg_gq *blkg = bio_blkg(bio);
-+	struct blkcg *blkcg = bio_blkcg(bio);
- 
--	if (blkg && blkg->parent) {
--		spin_lock(&blkg->async_bio_lock);
--		bio_list_add(&blkg->async_bios, bio);
--		spin_unlock(&blkg->async_bio_lock);
--		queue_work(blkcg_punt_bio_wq, &blkg->async_bio_work);
-+	if (blkcg && cgroup_parent(blkcg->css.cgroup)) {
-+		spin_lock(&blkcg->async_bio_lock);
-+		bio_list_add(&blkcg->async_bios, bio);
-+		spin_unlock(&blkcg->async_bio_lock);
-+		queue_work(blkcg_punt_bio_wq, &blkcg->async_bio_work);
- 	} else {
--		/* Never bounce if there is no non-root blkg to queue on. */
-+		/* Never bounce if there is no non-root blkcg to queue on. */
- 		submit_bio(bio);
- 	}
- }
- EXPORT_SYMBOL_GPL(blkcg_punt_bio_submit);
- 
-@@ -350,15 +345,10 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
- 	blkg->q = disk->queue;
- 	INIT_LIST_HEAD(&blkg->q_node);
- 	blkg->blkcg = blkcg;
- 	blkg->blkcg_id = blkcg->css.id;
- 	blkg->iostat.blkg = blkg;
--#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
--	spin_lock_init(&blkg->async_bio_lock);
--	bio_list_init(&blkg->async_bios);
--	INIT_WORK(&blkg->async_bio_work, blkg_async_bio_workfn);
--#endif
- 
- 	u64_stats_init(&blkg->iostat.sync);
- 	for_each_possible_cpu(cpu) {
- 		u64_stats_init(&per_cpu_ptr(blkg->iostat_cpu, cpu)->sync);
- 		per_cpu_ptr(blkg->iostat_cpu, cpu)->blkg = blkg;
-@@ -1447,10 +1437,14 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 	}
- 
- 	spin_lock_init(&blkcg->lock);
- 	refcount_set(&blkcg->online_pin, 1);
- 	INIT_HLIST_HEAD(&blkcg->blkg_list);
-+#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-+	spin_lock_init(&blkcg->async_bio_lock);
-+	INIT_WORK(&blkcg->async_bio_work, blkcg_async_bio_workfn);
-+#endif
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	INIT_LIST_HEAD(&blkcg->cgwb_list);
- #endif
- 	list_add_tail(&blkcg->all_blkcgs_node, &all_blkcgs);
- 
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index f68ea21958f5..7fee8555e713 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -75,18 +75,11 @@ struct blkcg_gq {
- 
- 	struct blkg_iostat_set __percpu	*iostat_cpu;
- 	struct blkg_iostat_set		iostat;
- 
- 	struct blkg_policy_data		*pd[BLKCG_MAX_POLS];
--#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
--	spinlock_t			async_bio_lock;
--	struct bio_list			async_bios;
--#endif
--	union {
--		struct work_struct	async_bio_work;
--		struct work_struct	free_work;
--	};
-+	struct work_struct		free_work;
- 
- 	atomic_t			use_delay;
- 	atomic64_t			delay_nsec;
- 	atomic64_t			delay_start;
- 	u64				last_delay;
-@@ -111,10 +104,15 @@ struct blkcg {
- 	/*
- 	 * List of updated percpu blkg_iostat_set's since the last flush.
- 	 */
- 	struct llist_head __percpu	*lhead;
- 
-+#ifdef CONFIG_BLK_CGROUP_PUNT_BIO
-+	spinlock_t			async_bio_lock;
-+	struct bio_list			async_bios __guarded_by(&async_bio_lock);
-+	struct work_struct		async_bio_work;
-+#endif
- #ifdef CONFIG_BLK_CGROUP_FC_APPID
- 	char                            fc_app_id[FC_APPID_LEN];
- #endif
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	struct list_head		cgwb_list;
--- 
-2.51.0
-
+CgoKCgoKCgoKCgoKCgoKCgpBdCAyMDI2LTA5LTE3IDE1OjUyOjQwLCAiwO7T07roICIgPGRheW91
+NTk0MUAxNjMuY29tPiB3cm90ZToKPgo+Cj4KPgo+Cj4KPgo+Cj4KPgo+Cj4KPgo+Cj4KPgo+Cj5B
+dCAyMDI2LTA5LTEyIDIyOjA0OjEyLCAieXUga3VhaSIgPHl1a3VhaUBmeWdvLmlvPiB3cm90ZToK
+Pj5IaSwKPj4KPj7U2iAyMDI2LzkvNyAxMToyNCwgwO7T07roINC0tcA6Cj4+Pgo+Pj4KPj4+Cj4+
+PiBIaSBLdWFpLAo+Pj4KPj4+Cj4+Pgo+Pj4KPj4+Cj4+Pgo+Pj4KPj4+Cj4+Pgo+Pj4KPj4+Cj4+
+Pgo+Pj4gQXQgMjAyNi0wOS0wNSAxMToxNzo1OCwgInl1IGt1YWkiIDx5dWt1YWlAZnlnby5pbz4g
+d3JvdGU6Cj4+Pj4gSGksCj4+Pj4KPj4+PiDU2iAyMDI2LzkvMiAxNzo1MywgTGkgWW91aG9uZyDQ
+tLXAOgo+Pj4+PiBGcm9tOiBMaSBZb3Vob25nIDxsaXlvdWhvbmdAa3lsaW5vcy5jbj4KPj4+Pj4K
+Pj4+Pj4gcmFpZDVfdW5wbHVnKCkgY2FuIHNwaW4gZm9yZXZlciB1bmRlciBjb25mLT5kZXZpY2Vf
+bG9jayB3aGVuCj4+Pj4+IHJhaWQ1X3BsdWdfY2IubGlzdCBzdGlsbCBwb2ludHMgYXQgYSBzdHJp
+cGUgd2hvc2Ugc2gtPmxydSBoYXMKPj4+Pj4gYWxyZWFkeSBiZWVuIHJlaW5pdGlhbGl6ZWQgKHNl
+bGYtbG9vcGVkKS4gVGhhdCBkaXNhYmxlcyBJUlFzIG9uCj4+Pj4+IHRoZSBob2xkZXIgQ1BVIGFu
+ZCBjYXVzZXMgbXVsdGktQ1BVIGhhcmQgbG9ja3VwcyBvbiB3YWl0ZXJzIG9mCj4+Pj4+IHRoZSBz
+YW1lIGxvY2suCj4+Pj4+Cj4+Pj4+IFRoaXMgaGFwcGVucyBiZWNhdXNlIHJlbGVhc2Vfc3RyaXBl
+X3BsdWcoKSBzZXRzCj4+Pj4+IFNUUklQRV9PTl9VTlBMVUdfTElTVCBhbmQgbGlzdF9hZGRfdGFp
+bChzaC0+bHJ1KSB3aXRob3V0Cj4+Pj4+IGRldmljZV9sb2NrLCB3aGlsZSBkb19yZWxlYXNlX3N0
+cmlwZSgpIG1heSBjb25jdXJyZW50bHkgbW92ZSB0aGUKPj4+Pj4gc2FtZSBscnUgb250byBoYW5k
+bGUvaW5hY3RpdmUgd2hlbiB0aGUgbGFzdCByZWZlcmVuY2UgZHJvcHMuCj4+Pj4+Cj4+Pj4+IE5v
+dGU6IGEgMjAyMCBwcm9wb3NhbCB0cmllZCBleHRyYSByZWZzIC8gY2hlY2tpbmcKPj4+Pj4gU1RS
+SVBFX09OX1VOUExVR19MSVNUIGluIGRvX3JlbGVhc2Vfc3RyaXBlKCkgd2l0aG91dCBzZXJpYWxp
+emluZwo+Pj4+PiB0aGUgcGx1ZyBlbnF1ZXVlOgo+Pj4+PiBodHRwczovL2xvcmUua2VybmVsLm9y
+Zy9saW51eC1yYWlkLzIwMjAwMTA4MTYzMDIzLjkzMDEtMS1ndW9xaW5nLmppYW5nQGNsb3VkLmlv
+bm9zLmNvbS8KPj4+Pj4gVGhhdCBzdGlsbCBsZWF2ZXMgYSBUT0NUT1Ugd2luZG93IHdoZXJlIHRo
+ZSBiaXQgaXMgY2xlYXIgZHVyaW5nCj4+Pj4+IHRoZSBjaGVjayBhbmQgc2V0IGFmdGVyd2FyZHMs
+IGFsbG93aW5nIHR3byBsaXN0X2FkZCBvbiB0aGUgc2FtZQo+Pj4+PiBscnUuIEl0IHdhcyBub3Qg
+bWVyZ2VkLgo+Pj4+Pgo+Pj4+PiBTZXJpYWxpemUgdGhlIGJpdCB1cGRhdGUgYW5kIGxpc3RfYWRk
+IHdpdGggZGV2aWNlX2xvY2suIElmCj4+Pj4+IGRvX3JlbGVhc2Vfc3RyaXBlKCkgc3RpbGwgc2Vl
+cyBTVFJJUEVfT05fVU5QTFVHX0xJU1QsIHJlc3RvcmUgdGhlCj4+Pj4+IHJlZmVyZW5jZSBhbmQg
+bGV0IHJhaWQ1X3VucGx1ZygpIG93biB0aGUgZmluYWwgcmVsZWFzZS4KPj4+Pj4KPj4+Pj4gT2Jz
+ZXJ2ZWQgb24gcHJvZHVjdGlvbiA5LWRpc2sgTlZNZSBSQUlENSB1bmRlciBNeVNRTCBBSU8KPj4+
+Pj4gKGlvX3N1Ym1pdCAtPiBibGtfZmluaXNoX3BsdWcgLT4gcmFpZDVfdW5wbHVnKS4KPj4+Pj4K
+Pj4+Pj4gRml4ZXM6IDg4MTFiNTk2OGY2MiAoInJhaWQ1OiBtYWtlX3JlcXVlc3QgdXNlIGJhdGNo
+IHN0cmlwZSByZWxlYXNlIikKPj4+Pj4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcKPj4+Pj4g
+U2lnbmVkLW9mZi1ieTogTGkgWW91aG9uZyA8bGl5b3Vob25nQGt5bGlub3MuY24+Cj4+Pj4+IC0t
+LQo+Pj4+PiAgICBkcml2ZXJzL21kL3JhaWQ1LmMgfCAzMyArKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKystLS0KPj4+Pj4gICAgMSBmaWxlIGNoYW5nZWQsIDMwIGluc2VydGlvbnMoKyksIDMg
+ZGVsZXRpb25zKC0pCj4+Pj4+Cj4+Pj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMg
+Yi9kcml2ZXJzL21kL3JhaWQ1LmMKPj4+Pj4gaW5kZXggYjkxNTQ1Y2UwOTBkLi5jOTE5N2I2M2Ix
+YzQgMTAwNjQ0Cj4+Pj4+IC0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuYwo+Pj4+PiArKysgYi9kcml2
+ZXJzL21kL3JhaWQ1LmMKPj4+Pj4gQEAgLTIyOSw2ICsyMjksMTcgQEAgc3RhdGljIHZvaWQgZG9f
+cmVsZWFzZV9zdHJpcGUoc3RydWN0IHI1Y29uZiAqY29uZiwgc3RydWN0IHN0cmlwZV9oZWFkICpz
+aCwKPj4+Pj4gICAgCWludCBpOwo+Pj4+PiAgICAJaW50IGluam91cm5hbCA9IDA7CS8qIG51bWJl
+ciBvZiBkYXRlIHBhZ2VzIHdpdGggUjVfSW5Kb3VybmFsICovCj4+Pj4+ICAgIAo+Pj4+PiArCS8q
+Cj4+Pj4+ICsJICogU3RyaXBlIGlzIG93bmVkIGJ5IHJlbGVhc2Vfc3RyaXBlX3BsdWcoKSdzIGNi
+LT5saXN0LiBBIGNvbmN1cnJlbnQKPj4+Pj4gKwkgKiBsYXN0LXJlZiByZWxlYXNlIGNhbiByZWFj
+aCBoZXJlIGFmdGVyIHRoZSBzdHJpcGUgd2FzIHF1ZXVlZCBmb3IKPj4+Pj4gKwkgKiB1bnBsdWcg
+KGxydSBtYXkgYWxyZWFkeSBiZSBub24tZW1wdHkpLiBEbyBub3QgcmUtYWRkIGxydSBlbHNld2hl
+cmU7Cj4+Pj4+ICsJICogcmVzdG9yZSB0aGUgcmVmZXJlbmNlIGFuZCBsZXQgcmFpZDVfdW5wbHVn
+KCkgZmluaXNoIHRoZSByZWxlYXNlLgo+Pj4+PiArCSAqLwo+Pj4+PiArCWlmICh0ZXN0X2JpdChT
+VFJJUEVfT05fVU5QTFVHX0xJU1QsICZzaC0+c3RhdGUpKSB7Cj4+Pj4+ICsJCWF0b21pY19pbmMo
+JnNoLT5jb3VudCk7Cj4+Pj4+ICsJCXJldHVybjsKPj4+Pj4gKwl9Cj4+Pj4+ICsKPj4+Pj4gICAg
+CUJVR19PTighbGlzdF9lbXB0eSgmc2gtPmxydSkpOwo+Pj4+PiAgICAJQlVHX09OKGF0b21pY19y
+ZWFkKCZjb25mLT5hY3RpdmVfc3RyaXBlcyk9PTApOwo+Pj4+PiAgICAKPj4+Pj4gQEAgLTU3NjAs
+NiArNTc3MSw5IEBAIHN0YXRpYyB2b2lkIHJlbGVhc2Vfc3RyaXBlX3BsdWcoc3RydWN0IG1kZGV2
+ICptZGRldiwKPj4+Pj4gICAgCQlyYWlkNV91bnBsdWcsIG1kZGV2LAo+Pj4+PiAgICAJCXNpemVv
+ZihzdHJ1Y3QgcmFpZDVfcGx1Z19jYikpOwo+Pj4+PiAgICAJc3RydWN0IHJhaWQ1X3BsdWdfY2Ig
+KmNiOwo+Pj4+PiArCXN0cnVjdCByNWNvbmYgKmNvbmYgPSBtZGRldi0+cHJpdmF0ZTsKPj4+Pj4g
+Kwl1bnNpZ25lZCBsb25nIGZsYWdzOwo+Pj4+PiArCWJvb2wgcXVldWVkID0gZmFsc2U7Cj4+Pj4+
+ICAgIAo+Pj4+PiAgICAJaWYgKCFibGtfY2IpIHsKPj4+Pj4gICAgCQlyYWlkNV9yZWxlYXNlX3N0
+cmlwZShzaCk7Cj4+Pj4+IEBAIC01Nzc1LDkgKzU3ODksMjIgQEAgc3RhdGljIHZvaWQgcmVsZWFz
+ZV9zdHJpcGVfcGx1ZyhzdHJ1Y3QgbWRkZXYgKm1kZGV2LAo+Pj4+PiAgICAJCQlJTklUX0xJU1Rf
+SEVBRChjYi0+dGVtcF9pbmFjdGl2ZV9saXN0ICsgaSk7Cj4+Pj4+ICAgIAl9Cj4+Pj4+ICAgIAo+
+Pj4+PiAtCWlmICghdGVzdF9hbmRfc2V0X2JpdChTVFJJUEVfT05fVU5QTFVHX0xJU1QsICZzaC0+
+c3RhdGUpKQo+Pj4+PiAtCQlsaXN0X2FkZF90YWlsKCZzaC0+bHJ1LCAmY2ItPmxpc3QpOwo+Pj4+
+PiAtCWVsc2UKPj4+Pj4gKwkvKgo+Pj4+PiArCSAqIFNlcmlhbGl6ZSB3aXRoIGRvX3JlbGVhc2Vf
+c3RyaXBlKCkgb24gZGV2aWNlX2xvY2sgc28gc2gtPmxydSBjYW5ub3QKPj4+Pj4gKwkgKiBiZSBh
+ZGRlZCB0byBoYW5kbGUvaW5hY3RpdmUgYW5kIGNiLT5saXN0IGF0IHRoZSBzYW1lIHRpbWUuCj4+
+Pj4+ICsJICovCj4+Pj4+ICsJc3Bpbl9sb2NrX2lycXNhdmUoJmNvbmYtPmRldmljZV9sb2NrLCBm
+bGFncyk7Cj4+Pj4+ICsJaWYgKCF0ZXN0X2FuZF9zZXRfYml0KFNUUklQRV9PTl9VTlBMVUdfTElT
+VCwgJnNoLT5zdGF0ZSkpIHsKPj4+Pj4gKwkJaWYgKHVubGlrZWx5KCFsaXN0X2VtcHR5KCZzaC0+
+bHJ1KSkpIHsKPj4+Pj4gKwkJCWNsZWFyX2JpdChTVFJJUEVfT05fVU5QTFVHX0xJU1QsICZzaC0+
+c3RhdGUpOwo+Pj4+PiArCQl9IGVsc2Ugewo+Pj4+PiArCQkJbGlzdF9hZGRfdGFpbCgmc2gtPmxy
+dSwgJmNiLT5saXN0KTsKPj4+Pj4gKwkJCXF1ZXVlZCA9IHRydWU7Cj4+Pj4+ICsJCX0KPj4+Pj4g
+Kwl9Cj4+Pj4+ICsJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmY29uZi0+ZGV2aWNlX2xvY2ssIGZs
+YWdzKTsKPj4+PiBEbyB5b3UgcnVuIHNvbWUgcGVyZm9ybWFuY2UgdGVzdCBvbiB0aGlzIHBhdGNo
+PyBJIGJlbGlldmUgdGhpcyBpcyBmcm9tIElPIGhvdCBwYXRoLAo+Pj4+IGEgc3BpbmxvY2sgaXMg
+bm90IGFjY2VwdGFibGUuIEkga25vdyB0aGVyZSBpcyBhbHJlYWR5IHNvbWUgc3BpbmxvY2sgZm9y
+IHJhaWQ1LCBidXQKPj4+PiBJJ2QgbGlrZSBub3QgdG8gaW50cm9kdWNlIG5ldyBsb2NrIGNvbnRl
+bnRpb24uCj4+Pj4KPj4+PiBDYW4gdGhpcyBwcm9ibGVtIGJlIGZpeGVkIGJ5IGEgbmV3IGxsaXN0
+IGluIHN0cmlwZV9oZWFkPwo+Pj4KPj4+IEkgYWdyZWUgdGhhdCBhZGRpbmcgZGV2aWNlX2xvY2sg
+b24gdGhpcyBwYXRoIGNhbiBicmluZyBzb21lCj4+PiBvdmVyaGVhZDsgSSB3aWxsIGZvbGxvdyB1
+cCB3aXRoIHBlcmZvcm1hbmNlIG51bWJlcnMuCj4+Pgo+Pj4KPj4+IFJlZ2FyZGluZyB0aGUgYWx0
+ZXJuYXRpdmU6IGRpZCB5b3UgbWVhbiBhZGRpbmcgYSBkZWRpY2F0ZWQKPj4+IGxsaXN0X25vZGUg
+aW4gc3RyaXBlX2hlYWQgZm9yIHRoZSBwbHVnL3VucGx1ZyBwYXRoIChpbnN0ZWFkIG9mCj4+PiBy
+ZXVzaW5nIHNoLT5scnUpLCBzbyB0aGF0IHJlbGVhc2Vfc3RyaXBlX3BsdWcoKSBhbmQKPj4+IGRv
+X3JlbGVhc2Vfc3RyaXBlKCkgbm8gbG9uZ2VyIHNoYXJlIHRoZSBzYW1lIGxpc3Qgbm9kZT8KPj4+
+Cj4+Pgo+Pj4gSWYgd2Ugc3RpbGwgcXVldWUgdGhlIHBsdWcgbGlzdCB2aWEgc2gtPmxydSwgc3dp
+dGNoaW5nIHRoYXQgbGlzdAo+Pj4gdG8gYW4gbGxpc3Qgd291bGQgbm90IHJlbW92ZSB0aGUgcmFj
+ZSwgYmVjYXVzZSBkb19yZWxlYXNlX3N0cmlwZSgpCj4+PiBjYW4gc3RpbGwgbGlzdF9hZGQgdGhl
+IHNhbWUgbHJ1IG9udG8gaGFuZGxlL2luYWN0aXZlIGNvbmN1cnJlbnRseS4KPj4+IEEgc2VwYXJh
+dGUgbm9kZSB3b3VsZCBhdm9pZCB0aGF0LCBidXQgdW5wbHVnIHdvdWxkIHRoZW4gbmVlZCB0bwo+
+Pj4gbW92ZSBzdHJpcGVzIGZyb20gdGhlIHBsdWcgbGxpc3Qgb250byB0aGUgZXhpc3RpbmcgbHJ1
+LWJhc2VkCj4+PiByZWxlYXNlIHBhdGgsIHdoaWNoIGlzIGEgbGFyZ2VyIGNoYW5nZS4KPj4KPj5J
+IG1lYW4gYSBuZXcgbGlzdCBmb3IgdW5wbHVnIGluIHNoIGxpa2UgdW5wbHVnX2xsaXN0LiBBbmQg
+SSB0aGluayBpdCdzCj4+ZmluZSB0byB1c2UgdGhlIGxsaXN0IGRpcmVjdGx5IGZvciB1bnBsdWcs
+IHRoZXJlIGlzIG5vIG5lZWQgdG8gbW92ZQo+PnNoIGZyb20gdW5wbHVnIGxsaXN0IHRvIGxydSBs
+aXN0IGZpcnN0Lgo+Pgo+Cj5BIGRlZGljYXRlZCBsbGlzdCB3b3VsZCBhdm9pZCB0d28gbGlzdF9h
+ZGRzIG9uIHRoZSBzYW1lIHNoLT5scnUgZnJvbSBwbHVnIGFuZCBkb19yZWxlYXNlX3N0cmlwZSgp
+LiAKPkxhc3QtcmVmIGVucXVldWUgc3RpbGwgZG9lcyBub3QgZHJvcCBzaC0+Y291bnQ7IHRoZSBk
+ZWNyZW1lbnQgaGFwcGVucyBsYXRlciBpbiBfX3JlbGVhc2Vfc3RyaXBlKCkuIAo+U28gYXQgY291
+bnQgPT0gMSB0aGUgc2FtZSBzdHJpcGUgY2FuIHNpdCBvbiBib3RoIHRoZSBwbHVnIGxpc3QgYW5k
+IHJlbGVhc2VkX3N0cmlwZXMuIFdoYXQgZm9sbG93cyBpcyAKPnRoYXQgb25lIHVuZHJvcHBlZCBs
+YXN0LXJlZiBiZWluZyByZWxlYXNlZCB0d2ljZSBieSBfX3JlbGVhc2Vfc3RyaXBlKCksIG5vdCBh
+IHNlcGFyYXRlIGJ1Zy4KPgo+cmFpZDVfdW5wbHVnKCkgYW5kIHJlbGVhc2Vfc3RyaXBlX2xpc3Qo
+KSBib3RoIHRha2UgZGV2aWNlX2xvY2ssIHNvIHRoZXkgZG8gbm90IHJ1biBfX3JlbGVhc2Vfc3Ry
+aXBlKCkgaW4gcGFyYWxsZWwuIAo+VGhleSBydW4gb25lIGFmdGVyIHRoZSBvdGhlci4gVGhlIG9u
+bHkgZGlmZmVyZW5jZSBpcyB3aGV0aGVyIGFub3RoZXIgZ2V0IGhhcHBlbnMgYmV0d2VlbiB0aGUg
+dHdvIGRyYWlucy4KPgo+MS4gTm8gZ2V0IGluIGJldHdlZW4KPlRoZSBmaXJzdCBfX3JlbGVhc2Vf
+c3RyaXBlKCkgZG9lcyAxofowIGFuZCBwdXRzIHRoZSBzdHJpcGUgb24gaW5hY3RpdmUuCj5UaGUg
+c2Vjb25kIGRvZXMgMKH6LTEuIGRlY19hbmRfdGVzdCBpcyBmYWxzZSwgc28gaXQgZG9lcyBub3Qg
+ZW50ZXIgZG9fcmVsZWFzZV9zdHJpcGUoKSAKPmFuZCB0aGVyZSBpcyBubyBzZWNvbmQgbGlzdF9h
+ZGQobHJ1KS4gQ291bnQgaXMgYWxyZWFkeSAtMSwgc28gYSBsYXRlciBnZXRfZnJlZV9zdHJpcGUo
+KSCh+iBpbml0X3N0cmlwZSgpIGhpdHMgdGhlIEJVRy4KPgo+Mi4gQSBnZXQgaW4gYmV0d2Vlbgo+
+VGhlIGZpcnN0IF9fcmVsZWFzZV9zdHJpcGUoKSBkb2VzIDGh+jAuCj5UaGUgc3RyaXBlIGlzIGdv
+dHRlbiBhZ2FpbiBhbmQgY291bnQgaXMgMTsgdGhhdCBpcyB0aGUgbmV3IEkvTydzIHJlZmVyZW5j
+ZS4KPlRoZSBzZWNvbmQgX19yZWxlYXNlX3N0cmlwZSgpIGRyb3BzIHRoYXQgbmV3IDEgdG8gMC4K
+Pgo+VGhlIHNlY29uZCBkcmFpbiBpcyBub3QgbmVjZXNzYXJpbHkgdW5wbHVnOyByZWxlYXNlX3N0
+cmlwZV9saXN0KCkgcnVubmluZyBzZWNvbmQgaXMgdGhlIHNhbWUuIAo+QXQgZHJhaW4gdGltZSBj
+b3VudCA9PSAxIGRvZXMgbm90IHRlbGwgeW91IHdoZXRoZXIgdGhpcyBpcyB0aGUgcGFya2VkIGxh
+c3QtcmVmIG9yIGEgcmVmIGFmdGVyIHJldXNlLgo+Cj5FbnF1ZXVlIHRvIHJlbGVhc2VkX3N0cmlw
+ZXMgaGFwcGVucyBvbmx5IGF0IGNvdW50ID09IDEuIFdoZW4gY291bnQgPiAxLCByYWlkNV9yZWxl
+YXNlX3N0cmlwZSgpIG9ubHkgZG9lcyBhZGRfdW5sZXNzIGFuZCByZXR1cm5zOyAKPml0IGRvZXMg
+bm90IGVucXVldWUuIElmIHRoZSBzdHJpcGUgaXMgYWxyZWFkeSBvbiByZWxlYXNlZF9zdHJpcGVz
+LCBhIGdldCByYWlzZXMgY291bnQgYWJvdmUgMSwgYW5kIHRoZW4gcGx1ZyBydW5zLCBib3RoIGxp
+c3RzIGNhbiBiZSBvY2N1cGllZC4gCj5UaGF0IGlzIHR3byByZWZlcmVuY2VzIGFuZCB0d28gZHJh
+aW5zIGVhY2ggZHJvcHBpbmcgb25lOyBvbmx5IHRoZSBkcm9wIHRvIDAgZG9lcyBsaXN0X2FkZChs
+cnUpLiBDYXNlcyAxIGFuZCAyIGFyZSBvbmx5IGFib3V0IHBhcmtpbmcgdHdpY2UgYXQgY291bnQg
+PT0gMS4KPgo+U28gYW4gbGxpc3Qgb25seSBmaXhlcyB0aGUgbHJ1IGNvbGxpc2lvbi4gSXQgZG9l
+cyBub3QgZml4IGxhc3QtcmVmIG93bmVyc2hpcC4gSSBkbyBub3Qgc2VlIGEgbG9ja2xlc3Mgd2F5
+IHRvIGZpeCB0aGF0Lgo+Cj5UaGFua3MsCj5MaSBZb3Vob25nCgo+CgpTb3JyeSBmb3IgdGhlIG5v
+aXNlIG9uIHRoZSBsYXN0LXJlZiAvIGR1YWwtbGlzdCBwYXJ0LgoKSSBzYWlkIGEgc3RyaXBlIGF0
+IGNvdW50ID09IDEgY291bGQgc2l0IG9uIGJvdGggdGhlIHBsdWcgbGlzdCBhbmQgCnJlbGVhc2Vk
+X3N0cmlwZXMsIHNvIHR3byBsYXRlciBfX3JlbGVhc2Vfc3RyaXBlKCkgY2FsbHMgd291bGQgZHJv
+cCAKdGhlIHNhbWUgdW5kcm9wcGVkIGxhc3QtcmVmLiBJIGRvIG5vdCBoYXZlIGEgY29kZSBwYXRo
+IHRoYXQgc2hvd3MgCnJhaWQ1X3JlbGVhc2Vfc3RyaXBlKCkgdW5wYWlyZWQgd2l0aCBnZXQsIHNv
+IEkgc2hvdWxkIG5vdCBoYXZlIHRyZWF0ZWQgCnRoYXQgYXMgYSByZWFzb24gdG8gcmVqZWN0IGxs
+aXN0LgoKQSBkZWRpY2F0ZWQgbGxpc3Qgc3RpbGwgbG9va3MgcmlnaHQ6IGl0IHN0b3BzIHBsdWcg
+YW5kIGRvX3JlbGVhc2Vfc3RyaXBlKCkgCmZyb20gbGlzdF9hZGQoKWluZyB0aGUgc2FtZSBzaC0+
+bHJ1LiBJJ2xsIHBvc3QgYSB2MiB0aGF0IHdheS4KClRoYW5rcywgCkxpIFlvdWhvbmc+Cg==
