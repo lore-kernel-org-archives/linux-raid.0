@@ -1,182 +1,231 @@
-Received: from va-2-55.ptr.blmpb.com (va-2-55.ptr.blmpb.com [209.127.231.55])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EBA03A963E
-	for <linux-raid@vger.kernel.org>; Fri, 18 Sep 2026 06:30:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 209C437187E;
+	Fri, 18 Sep 2026 06:39:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789713044; cv=none; b=MgvQ1UR+lPQBIfZhuVUKs6flnkwMDIotq+X3t3TTjV6P7boDiwe4Og3dJZxZ45O4zsj5ni783bTqAfVt519/Cv2ZmwP99iMKlYnSuHlSQ8IX6ThHqQqDNccaC3+rtFEtt19Vc+VsZhTiphIsBwCjD2PwNipkIScyslwl6KKGz6M=
+	t=1789713569; cv=none; b=Ae+MxELezWohUcfVioqqmfIug/tifqUeK4Mh0OhaSPQ1/gUBx0CvEHRWQYZMcxSJSMLb2bXwKrfYAk8ST4yGlFml7NvkKe+RjwVgrtrXKuS4V70MQDwh8oxMjm1We2Xu998gj+OA1MHa7YlyGt6SEusuyDFpw8GYHHCcA8C6Ick=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789713044; c=relaxed/simple;
-	bh=9bK7s9Q61gh0ennZPV7Mzwx3gXArYbvqbX5LbaOwhGM=;
-	h=To:Cc:In-Reply-To:Date:Mime-Version:Subject:Message-Id:
-	 Content-Type:From:References; b=m4+44m6DuLwYD2vIC5B38Jw275B2Ut6CoQQiHh2QKV1+HxIMg8qVIufDFBe6YqWbbaD4ThOAqXTK3YsMlLfjeI+Xig//FKl0G85wNSmkYL6uFFIsvi8ypi33hpLVydy0DLwtb3gI69J4rh/y/ylJ+7HYqhnhWl7uKvdyZcMaOto=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=PljXSkhS; arc=none smtp.client-ip=209.127.231.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1789713569; c=relaxed/simple;
+	bh=HOhlQQesEuaYkItbWW89rLui6aWKecLLBTrWPnorjYw=;
+	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=piGIaQhWJ5zuBo9d9gP4cupxFuUPzRKl/8vhdciq92fMHt5/2k4cvWl7b6DmP+iaceBd+3E2g4ziXQNiaiQvJzfhnm6YRUQx1VC181joASQFIZGq7tqJkkl7SdjmcOO/Loo0wlOf4LEvoQoBwy29LTot+Y04owHWt3durwNLo+Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=CVUcNyHp; arc=none smtp.client-ip=113.46.200.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="PljXSkhS"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1789713030;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=9bK7s9Q61gh0ennZPV7Mzwx3gXArYbvqbX5LbaOwhGM=;
- b=PljXSkhSfub+VnaeqJRvQLL4UCWcO7ji+0e/Wum7M0dNHd9VPefvoWBtQmimRMYcShsHkg
- HLHSeqGtUb1zZfE2v+nN00cGrB2LwsxWYHxU1DbPRWlIeRPN/i0gUSLEaUbb2DnYRBqdUj
- SKSnNEJKDH7thcIauiVvMwAcN0DbcZ1Qis36veVdMUQWOfHJBM+KZqOYajiHwShotBqoev
- 5AUCg8sZeXywID8nrTWskRvWGx6KZiWyAmySq55h6uQ3frSa8PhW2fPhjT961G7ADOszFR
- KQVwXRwSBdhfM9au/ieErsEyYGiLxtzUBRx6dJOzIHL8B16T9lk+4G88TH2GZg==
-To: "Zhihao Cheng" <chengzhihao1@huawei.com>, <song@kernel.org>, 
-	<xiao@kernel.org>, <magiclinan@didiglobal.com>, <eadavis@sina.com>, 
-	<abd.masalkhi@gmail.com>, "yu kuai" <yukuai@fygo.io>
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="CVUcNyHp"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=FAdoaLO1tE/u4uqo8rpm5ynOPlWe0f9h04kVn9hHuDY=;
+	b=CVUcNyHpyEFMHDR9Kp/hlncI/4RniTDY442Diym2Jx9WzB10duQrl4PVwD+qc2ghAkAohYOs/
+	khtd8huvqnmVLtpd67DzxrNp0jKZaokQpJ9d2yZcXDChunlyXswbbyDhCgEYJcDDWPvo770GwE8
+	1C9ZXrcTH3TlC70NevC6tYk=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4hmN3n0rMTzmVX8;
+	Fri, 18 Sep 2026 14:28:21 +0800 (CST)
+Received: from whupemo200011.china.huawei.com (unknown [7.152.185.179])
+	by mail.maildlp.com (Postfix) with ESMTPS id 21E7640563;
+	Fri, 18 Sep 2026 14:39:21 +0800 (CST)
+Received: from [10.174.178.46] (10.174.178.46) by
+ whupemo200011.china.huawei.com (7.152.185.179) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Fri, 18 Sep 2026 14:39:19 +0800
+Subject: Re: [PATCH v2] md: Fix the null-ptr-deref of 'mddev->private' while
+ submitting IO
+To: <yukuai@fygo.io>, <song@kernel.org>, <xiao@kernel.org>,
+	<magiclinan@didiglobal.com>, <eadavis@sina.com>, <abd.masalkhi@gmail.com>
+CC: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<yangerkun@huawei.com>, <yi.zhang@huawei.com>
-Content-Transfer-Encoding: base64
-In-Reply-To: <a353585b-7cf8-c26c-8f55-84354ce10bd8@huawei.com>
-Reply-To: yukuai@fygo.io
-Date: Fri, 18 Sep 2026 14:30:25 +0800
+References: <20260917024205.2331019-1-chengzhihao1@huawei.com>
+ <d896d273-ac1b-484c-9a71-cb60a85d389b@fygo.io>
+ <a353585b-7cf8-c26c-8f55-84354ce10bd8@huawei.com>
+ <92fd9c95-23db-4bb3-a489-eccc51189bb4@fygo.io>
+From: Zhihao Cheng <chengzhihao1@huawei.com>
+Message-ID: <86f05755-0864-2b7c-9a98-830a453f2b62@huawei.com>
+Date: Fri, 18 Sep 2026 14:39:14 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Original-From: yu kuai <yukuai@fygo.io>
-Subject: Re: [PATCH v2] md: Fix the null-ptr-deref of 'mddev->private' while submitting IO
-Message-Id: <92fd9c95-23db-4bb3-a489-eccc51189bb4@fygo.io>
-User-Agent: Mozilla Thunderbird
-Content-Type: text/plain; charset=UTF-8
-Received: from [192.168.1.104] ([39.182.0.142]) by smtp.larksuite.com with ESMTPS; Fri, 18 Sep 2026 06:30:29 +0000
-From: "yu kuai" <yukuai@fygo.io>
-References: <20260917024205.2331019-1-chengzhihao1@huawei.com> <d896d273-ac1b-484c-9a71-cb60a85d389b@fygo.io> <a353585b-7cf8-c26c-8f55-84354ce10bd8@huawei.com>
-X-Lms-Return-Path: <lba+26aacda85+c4a2a8+vger.kernel.org+yukuai@fygo.io>
+MIME-Version: 1.0
+In-Reply-To: <92fd9c95-23db-4bb3-a489-eccc51189bb4@fygo.io>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
+ whupemo200011.china.huawei.com (7.152.185.179)
 
-SGksDQoNCuWcqCAyMDI2LzkvMTggMTQ6MTksIFpoaWhhbyBDaGVuZyDlhpnpgZM6DQo+IOWcqCAy
-MDI2LzkvMTggMTQ6MDYsIHl1IGt1YWkg5YaZ6YGTOg0KPj4gSGksDQo+Pg0KPj4g5ZyoIDIwMjYv
-OS8xNyAxMDo0MiwgWmhpaGFvIENoZW5nIOWGmemBkzoNCj4+PiBDb25jdXJyZW50IHByb2Nlc3Nl
-cyBtZF9zdG9wIGFuZCBJTyBzdWJtaXR0aW5nIGNvdWxkIHRyaWdnZXIgYQ0KPj4+IG51bGwtcHRy
-LWRlcmVmIG9mICdtZGRldi0+cHJpdmF0ZSc6DQo+Pj4NCj4+PiDCoMKgIEJVRzoga2VybmVsIE5V
-TEwgcG9pbnRlciBkZXJlZmVyZW5jZSwgYWRkcmVzczogMDAwMDAwMDAwMDAwMDA3MA0KPj4+IMKg
-wqAgUklQOiAwMDEwOl93YWl0X2JhcnJpZXIrMHgyZi8weDI1MA0KPj4+IMKgwqAgQ2FsbCBUcmFj
-ZToNCj4+PiDCoMKgwqAgcmFpZDFfbWFrZV9yZXF1ZXN0KzB4MTUwLzB4ZjUwDQo+Pj4gwqDCoMKg
-IG1kX2hhbmRsZV9yZXF1ZXN0KzB4MTA0LzB4NTMwDQo+Pj4gwqDCoMKgIG1kX3N1Ym1pdF9iaW8r
-MHg3Ni8weDEzMA0KPj4+IMKgwqDCoCBzdWJtaXRfYmlvKzB4ZGQvMHgyNTANCj4+PiDCoMKgwqAg
-c3VibWl0X2Jpb193YWl0KzB4MWYvMHg0MA0KPj4+IMKgwqDCoCBfX2Jsa2Rldl9kaXJlY3RfSU9f
-c2ltcGxlKzB4MWY2LzB4MzcwDQo+Pj4gwqDCoMKgIGJsa2Rldl93cml0ZV9pdGVyKzB4M2IyLzB4
-NTIwDQo+Pj4gwqDCoMKgIGtzeXNfd3JpdGUrMHg3ZC8weDE5MA0KPj4+DQo+Pj4gwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgIFAxDQo+Pj4gwqDCoMKgIGZkID0gb3BlbigvZGV2L21kMCwg
-T19SRFdSKQ0KPj4+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgIFAyIChmb3JrZWQgZnJvbSBQMSwgZmQnIDw9IGZkKQ0KPj4+IMKgwqDCoCB3cml0ZShm
-ZCkNCj4+PiDCoMKgwqDCoCBzdWJtaXRfYmlvDQo+Pj4gwqDCoMKgwqDCoCBtZF9oYW5kbGVfcmVx
-dWVzdA0KPj4+IMKgwqDCoMKgwqDCoCByYWlkMV9tYWtlX3JlcXVlc3QNCj4+PiDCoMKgwqDCoMKg
-wqDCoCByYWlkMV93cml0ZV9yZXF1ZXN0DQo+Pj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBpb2N0bChmZCwgU1RP
-UF9BUlJBWSkNCj4+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgIG1kZGV2X3NldF9jbG9zaW5nX2FuZF9zeW5jX2Jsb2NrZGV2DQo+Pj4gwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIC8vIGNoZWNrIHBhc3NlZCwgbWRkZXYtPm9w
-ZW5lcnMgPSAxLA0KPj4+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAvLyBi
-ZWNhdXNlIG1kX29wZW4oKSBpcyBvbmx5IGNhbGxlZA0KPj4+IMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoCAvLyBvbmNlIGluIFAxLT5vcGVuDQo+Pj4gwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgIGRvX21kX3N0b3ANCj4+PiDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoCBfX21kX3N0b3ANCj4+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgIG1kZGV2LT5wcml2YXRlID0gTlVMTA0KPj4+DQo+Pj4gwqDCoMKg
-wqDCoMKgwqDCoCBjb25mID0gbWRkZXYtPnByaXZhdGUgLy8gTlVMTA0KPj4+IMKgwqDCoMKgwqDC
-oMKgwqDCoCB3YWl0X2JhcnJpZXIoY29uZiwgc2VjdG9yKSAvLyBudWxsLXB0ci1kZXJlZiAhDQo+
-Pj4NCj4+PiBJdCBpcyBhIGNvbW1vbiBwcm9ibGVtIGZvciByYWlkMC8xLzEwLzUsIGFuZCBfX21k
-X3N0b3AgY291bGQgYmUNCj4+PiB0cmlnZ2VyZWQgYnkgc2V2ZXJhbCBwYXRocyhlZy4gaW9jdGws
-IHN5c2ZzLCAtPmR0cikuIEZpeCBpdCBieQ0KPj4+IHJlcGxhY2luZyBtZGRldl9sb2NrKCkgd2l0
-aCBtZGRldl9zdXNwZW5kX2FuZF9sb2NrKCkgZm9yIGFsbA0KPj4+IF9fbWRfc3RvcCgpIGNhbGxl
-cnMuIFRoZSBjYWxsZXIgZG1fdGFibGVfZGVzdHJveSgpIGlzIGd1YXJhbnRlZWQNCj4+PiBiZWlu
-ZyBpbnZva2VkIHdpdGggZGV2aWNlIHN1c3BlbmRlZCwgc28gcmFpZF9kdHIoKSBjb3VsZCBrZWVw
-DQo+Pj4gdXNpbmcgbWRkZXZfbG9ja19ub2ludHIoKS4gQmVzaWRlcywgZmFpbCB0aGUgc3VibWl0
-dGluZyBJTyBpbg0KPj4+IG1kX2hhbmRsZV9yZXF1ZXN0KCkgaWYgdGhlICdtZGRldi0+cGVycycg
-YmVjb21lcyBOVUxMLg0KPj4+DQo+Pj4gRmV0Y2ggYSByZXByb2R1Y2VyIGluIA0KPj4+IGh0dHBz
-Oi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9MjIyMDIwDQo+Pj4NCj4+PiBG
-aXhlczogMWRhMTc3ZTRjM2Y0ICgiTGludXgtMi42LjEyLXJjMiIpDQo+Pj4gUmVwb3J0ZWQtYnk6
-IHN5emJvdCszZmU4OTJlYTVmYzI5MmUxMzUzZkBzeXprYWxsZXIuYXBwc3BvdG1haWwuY29tDQo+
-Pj4gQ2xvc2VzOiBodHRwczovL3N5emthbGxlci5hcHBzcG90LmNvbS9idWc/ZXh0aWQ9M2ZlODky
-ZWE1ZmMyOTJlMTM1M2YNCj4+PiBTaWduZWQtb2ZmLWJ5OiBaaGloYW8gQ2hlbmcgPGNoZW5nemhp
-aGFvMUBodWF3ZWkuY29tPg0KPj4+IC0tLQ0KPj4+IMKgwqAgdjEtPnYyOg0KPj4+IMKgwqDCoCAx
-LiBBZGQgJ21kZGV2LT5wZXJzICE9IE5VTEwnIGNoZWNrIGJlZm9yZSBtYWtlX3JlcXVlc3QNCj4+
-PiDCoMKgwqAgMi4gRGVsZXRlIGRtLXJhaWQgY2FsbGVyKC0+ZHRyKSBtb2RpZmljYXRpb25zDQo+
-Pj4gwqDCoMKgIDMuIE1vdmUgbWVtYWxsb2Nfbm9pb19yZXN0b3JlIGFmdGVyIG1kZGV2X3VubG9j
-a19hbmRfcmVzdW1lDQo+Pj4gwqDCoCBkcml2ZXJzL21kL21kLmMgfCAzMiArKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKy0tLQ0KPj4+IMKgwqAgMSBmaWxlIGNoYW5nZWQsIDI5IGluc2VydGlv
-bnMoKyksIDMgZGVsZXRpb25zKC0pDQo+Pj4NCj4+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9t
-ZC5jIGIvZHJpdmVycy9tZC9tZC5jDQo+Pj4gaW5kZXggNjgwYjM0YTYzY2IzLi4zZGZjMzRjYWEy
-ZGMgMTAwNjQ0DQo+Pj4gLS0tIGEvZHJpdmVycy9tZC9tZC5jDQo+Pj4gKysrIGIvZHJpdmVycy9t
-ZC9tZC5jDQo+Pj4gQEAgLTQxNCw2ICs0MTQsMjAgQEAgYm9vbCBtZF9oYW5kbGVfcmVxdWVzdChz
-dHJ1Y3QgbWRkZXYgKm1kZGV2LCANCj4+PiBzdHJ1Y3QgYmlvICpiaW8pDQo+Pj4gwqDCoMKgwqDC
-oMKgwqDCoMKgwqAgaWYgKCFwZXJjcHVfcmVmX3RyeWdldF9saXZlKCZtZGRldi0+YWN0aXZlX2lv
-KSkNCj4+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGdvdG8gY2hlY2tfc3VzcGVuZGVk
-Ow0KPj4+IMKgwqDCoMKgwqDCoCB9DQo+Pj4gK8KgwqDCoCBpZiAoIW1kZGV2LT5wZXJzKSB7DQo+
-Pj4gK8KgwqDCoMKgwqDCoMKgIC8qDQo+Pj4gK8KgwqDCoMKgwqDCoMKgwqAgKiBUaGUgX19tZF9z
-dG9wKCkgc2V0cyAnbWRkZXYtPnByaXZhdGUnIHRvIE5VTEwgZHVyaW5nDQo+Pj4gK8KgwqDCoMKg
-wqDCoMKgwqAgKiB0aGUgSU8gc3VibWl0dGluZywgY2hlY2sgJ21kZGV2LT5wZXJzJyBiZWZvcmUg
-dGhlIElPDQo+Pj4gK8KgwqDCoMKgwqDCoMKgwqAgKiBiZWluZyBwcm9jZXNzZWQgYnkgc3BlY2lm
-aWMgZHJpdmVyIHRvIGF2b2lkIHRoZQ0KPj4+ICvCoMKgwqDCoMKgwqDCoMKgICogbnVsbC1wdHIt
-ZGVyZWYgb2YgJ21kZGV2LT48bWVtYmVyPicuIFRoZSBjaGVjayBpcw0KPj4+ICvCoMKgwqDCoMKg
-wqDCoMKgICogc2FmZSBiZWNhdXNlIHRoZSBJTyBoYXMgZ290IHRoZSAnbWRkZXYtPmFjdGl2ZV9p
-bycNCj4+PiArwqDCoMKgwqDCoMKgwqDCoCAqIHJlZmVyZW5jZSwgYW5kIGFsbCBfX21kX3N0b3Ao
-KSBjYWxsZXJzIHdpbGwgd2FpdCBmb3INCj4+PiArwqDCoMKgwqDCoMKgwqDCoCAqIHRoZSByZWZl
-cmVuY2UgdG8gYmUgemVyby4NCj4+PiArwqDCoMKgwqDCoMKgwqDCoCAqLw0KPj4+ICvCoMKgwqDC
-oMKgwqDCoCBiaW9faW9fZXJyb3IoYmlvKTsNCj4+PiArwqDCoMKgwqDCoMKgwqAgcGVyY3B1X3Jl
-Zl9wdXQoJm1kZGV2LT5hY3RpdmVfaW8pOw0KPj4+ICvCoMKgwqDCoMKgwqDCoCByZXR1cm4gdHJ1
-ZTsNCj4+PiArwqDCoMKgIH0NCj4+PiDCoMKgwqDCoMKgwqAgaWYgKCFtZGRldi0+cGVycy0+bWFr
-ZV9yZXF1ZXN0KG1kZGV2LCBiaW8pKSB7DQo+Pj4gwqDCoMKgwqDCoMKgwqDCoMKgwqAgcGVyY3B1
-X3JlZl9wdXQoJm1kZGV2LT5hY3RpdmVfaW8pOw0KPj4+IMKgwqDCoMKgwqDCoMKgwqDCoMKgIGlm
-IChtZGRldl9pc19kbShtZGRldikgJiYgbWRkZXYtPnBlcnMtPnByZXBhcmVfc3VzcGVuZCkNCj4+
-PiBAQCAtNDY1Nyw2ICs0NjcxLDggQEAgYXJyYXlfc3RhdGVfc3RvcmUoc3RydWN0IG1kZGV2ICpt
-ZGRldiwgY29uc3QgDQo+Pj4gY2hhciAqYnVmLCBzaXplX3QgbGVuKQ0KPj4+IMKgwqAgew0KPj4+
-IMKgwqDCoMKgwqDCoCBpbnQgZXJyID0gMDsNCj4+PiDCoMKgwqDCoMKgwqAgZW51bSBhcnJheV9z
-dGF0ZSBzdCA9IG1hdGNoX3dvcmQoYnVmLCBhcnJheV9zdGF0ZXMpOw0KPj4+ICvCoMKgwqAgdW5z
-aWduZWQgaW50IG5vaW9fZmxhZ3MgPSAwOw0KPj4+ICvCoMKgwqAgYm9vbCBzdXNwZW5kID0gZmFs
-c2U7DQo+Pj4gwqDCoCDCoMKgwqDCoMKgwqAgLyogTm8gbG9jayBkZXBlbmRlbnQgYWN0aW9ucyAq
-Lw0KPj4+IMKgwqDCoMKgwqDCoCBzd2l0Y2ggKHN0KSB7DQo+Pj4gQEAgLTQ2NjYsOSArNDY4Miwx
-MSBAQCBhcnJheV9zdGF0ZV9zdG9yZShzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBjb25zdCANCj4+PiBj
-aGFyICpidWYsIHNpemVfdCBsZW4pDQo+Pj4gwqDCoMKgwqDCoMKgIGNhc2UgYnJva2VuOsKgwqDC
-oMKgwqDCoMKgIC8qIGNhbm5vdCBiZSBzZXQgKi8NCj4+PiDCoMKgwqDCoMKgwqAgY2FzZSBiYWRf
-d29yZDoNCj4+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoCByZXR1cm4gLUVJTlZBTDsNCj4+PiArwqDC
-oMKgIGNhc2UgaW5hY3RpdmU6DQo+Pj4gwqDCoMKgwqDCoMKgIGNhc2UgY2xlYXI6DQo+Pj4gK8Kg
-wqDCoMKgwqDCoMKgIHN1c3BlbmQgPSB0cnVlOw0KPj4+ICvCoMKgwqDCoMKgwqDCoCBmYWxsdGhy
-b3VnaDsNCj4+PiDCoMKgwqDCoMKgwqAgY2FzZSByZWFkb25seToNCj4+PiAtwqDCoMKgIGNhc2Ug
-aW5hY3RpdmU6DQo+Pj4gwqDCoMKgwqDCoMKgIGNhc2UgcmVhZF9hdXRvOg0KPj4+IMKgwqDCoMKg
-wqDCoMKgwqDCoMKgIGlmICghbWRkZXYtPnBlcnMgfHwgIW1kX2lzX3Jkd3IobWRkZXYpKQ0KPj4+
-IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgYnJlYWs7DQo+Pj4gQEAgLTQ3MDIsOSArNDcy
-MCwxMSBAQCBhcnJheV9zdGF0ZV9zdG9yZShzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBjb25zdCANCj4+
-PiBjaGFyICpidWYsIHNpemVfdCBsZW4pDQo+Pj4gwqDCoMKgwqDCoMKgwqDCoMKgwqAgc3Bpbl91
-bmxvY2soJm1kZGV2LT5sb2NrKTsNCj4+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoCByZXR1cm4gZXJy
-ID86IGxlbjsNCj4+PiDCoMKgwqDCoMKgwqAgfQ0KPj4+IC3CoMKgwqAgZXJyID0gbWRkZXZfbG9j
-ayhtZGRldik7DQo+Pj4gK8KgwqDCoCBlcnIgPSBzdXNwZW5kID8gbWRkZXZfc3VzcGVuZF9hbmRf
-bG9jayhtZGRldikgOiBtZGRldl9sb2NrKG1kZGV2KTsNCj4+DQo+PiBVbmxpa2UgaW9jdGwgcGF0
-aCwgd2hlcmUgdGhlIGNoZWNraW5nIG9mIG9wZW5lciBpcyBqdXN0IDEsIA0KPj4gbWRkZXZfc2V0
-X2Nsb3NpbmdfYW5kX3N5bmNfYmxvY2tkZXYoKSBoZXJlDQo+PiBhbHJlYWR5IGNoZWNrIHRoZXJl
-IGlzIG5vIG9wZW5lciwgc28gdGhlcmUgY2FuJ3QgYmUgYW55IElPIGluZmxpZ2h0Lg0KPg0KPiBI
-aSwgeXVrdWFpDQo+IEkgdGhvdWdodCBvZiBhIHNjZW5lLiBJZiBzb21lb25lIG9wZW4gJy9kZXYv
-bWQwLCB3cml0ZShidWZmZXIpIDRLLCBhbmQgDQo+IGNsb3NlIHRoZSBjb3JyZXNwb25kaW5nIGZk
-LiBUaGVuIHdyaXRlYmFjayBrd29ya2VyIHN1Ym1pdCBJTywgDQo+IGFycmF5X3N0YXRlX3N0b3Jl
-IHdpbGwgcGFzcyB0aGUgbWRkZXZfc2V0X2Nsb3NpbmdfYW5kX3N5bmNfYmxvY2tkZXYoKSANCj4g
-Y2hlY2ssIHdoaWNoIGNvdWxkIGxlYWQgdG8gdGhlIHNpbWlsYXIgcHJvYmxlbS4NClRoaXMgc2hv
-dWxkIG5vdCBoYXBwZW4sIHRoYXQgbGFzdCBvbmUgdG8gY2xvc2UgL2Rldi9tZDAgd2lsbCB3YWl0
-IGZvciANCmZ1bGwgZGlzayBmbHVzaCB0byBiZSBkb25lLg0KPj4NCj4+PiDCoMKgwqDCoMKgwqAg
-aWYgKGVycikNCj4+PiDCoMKgwqDCoMKgwqDCoMKgwqDCoCByZXR1cm4gZXJyOw0KPj4+ICvCoMKg
-wqAgaWYgKHN1c3BlbmQpDQo+Pj4gK8KgwqDCoMKgwqDCoMKgIG5vaW9fZmxhZ3MgPSBtZW1hbGxv
-Y19ub2lvX3NhdmUoKTsNCj4+PiDCoMKgIMKgwqDCoMKgwqDCoCBzd2l0Y2ggKHN0KSB7DQo+Pj4g
-wqDCoMKgwqDCoMKgIGNhc2UgaW5hY3RpdmU6DQo+Pj4gQEAgLTQ3NzUsNyArNDc5NSwxMiBAQCBh
-cnJheV9zdGF0ZV9zdG9yZShzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBjb25zdCANCj4+PiBjaGFyICpi
-dWYsIHNpemVfdCBsZW4pDQo+Pj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBtZGRldi0+
-aG9sZF9hY3RpdmUgPSAwOw0KPj4+IMKgwqDCoMKgwqDCoMKgwqDCoMKgIHN5c2ZzX25vdGlmeV9k
-aXJlbnRfc2FmZShtZGRldi0+c3lzZnNfc3RhdGUpOw0KPj4+IMKgwqDCoMKgwqDCoCB9DQo+Pj4g
-LcKgwqDCoCBtZGRldl91bmxvY2sobWRkZXYpOw0KPj4+ICvCoMKgwqAgaWYgKHN1c3BlbmQpIHsN
-Cj4+PiArwqDCoMKgwqDCoMKgwqAgbWRkZXZfdW5sb2NrX2FuZF9yZXN1bWUobWRkZXYpOw0KPj4+
-ICvCoMKgwqDCoMKgwqDCoCBtZW1hbGxvY19ub2lvX3Jlc3RvcmUobm9pb19mbGFncyk7DQo+Pj4g
-K8KgwqDCoCB9IGVsc2Ugew0KPj4+ICvCoMKgwqDCoMKgwqDCoCBtZGRldl91bmxvY2sobWRkZXYp
-Ow0KPj4+ICvCoMKgwqAgfQ0KPj4+IMKgwqAgwqDCoMKgwqDCoMKgIGlmIChzdCA9PSByZWFkb25s
-eSB8fCBzdCA9PSByZWFkX2F1dG8gfHwgc3QgPT0gaW5hY3RpdmUgfHwNCj4+PiDCoMKgwqDCoMKg
-wqDCoMKgwqDCoCAoZXJyICYmIHN0ID09IGNsZWFyKSkNCj4+PiBAQCAtODI5OSw2ICs4MzI0LDcg
-QEAgc3RhdGljIGJvb2wgbWRfaW9jdGxfbmVlZF9zdXNwZW5kKHVuc2lnbmVkIGludCANCj4+PiBj
-bWQpDQo+Pj4gwqDCoMKgwqDCoMKgIGNhc2UgSE9UX1JFTU9WRV9ESVNLOg0KPj4+IMKgwqDCoMKg
-wqDCoCBjYXNlIFNFVF9CSVRNQVBfRklMRToNCj4+PiDCoMKgwqDCoMKgwqAgY2FzZSBTRVRfQVJS
-QVlfSU5GTzoNCj4+PiArwqDCoMKgIGNhc2UgU1RPUF9BUlJBWToNCj4+PiDCoMKgwqDCoMKgwqDC
-oMKgwqDCoCByZXR1cm4gdHJ1ZTsNCj4+PiDCoMKgwqDCoMKgwqAgZGVmYXVsdDoNCj4+PiDCoMKg
-wqDCoMKgwqDCoMKgwqDCoCByZXR1cm4gZmFsc2U7DQo+Pg0KPg0KLS0gDQpUaGFua3MsDQpLdWFp
+在 2026/9/18 14:30, yu kuai 写道:
+> Hi,
+> 
+> 在 2026/9/18 14:19, Zhihao Cheng 写道:
+>> 在 2026/9/18 14:06, yu kuai 写道:
+>>> Hi,
+>>>
+>>> 在 2026/9/17 10:42, Zhihao Cheng 写道:
+>>>> Concurrent processes md_stop and IO submitting could trigger a
+>>>> null-ptr-deref of 'mddev->private':
+>>>>
+>>>>     BUG: kernel NULL pointer dereference, address: 0000000000000070
+>>>>     RIP: 0010:_wait_barrier+0x2f/0x250
+>>>>     Call Trace:
+>>>>      raid1_make_request+0x150/0xf50
+>>>>      md_handle_request+0x104/0x530
+>>>>      md_submit_bio+0x76/0x130
+>>>>      submit_bio+0xdd/0x250
+>>>>      submit_bio_wait+0x1f/0x40
+>>>>      __blkdev_direct_IO_simple+0x1f6/0x370
+>>>>      blkdev_write_iter+0x3b2/0x520
+>>>>      ksys_write+0x7d/0x190
+>>>>
+>>>>                  P1
+>>>>      fd = open(/dev/md0, O_RDWR)
+>>>>                            P2 (forked from P1, fd' <= fd)
+>>>>      write(fd)
+>>>>       submit_bio
+>>>>        md_handle_request
+>>>>         raid1_make_request
+>>>>          raid1_write_request
+>>>>                                      ioctl(fd, STOP_ARRAY)
+>>>>                             mddev_set_closing_and_sync_blockdev
+>>>>                     // check passed, mddev->openers = 1,
+>>>>                     // because md_open() is only called
+>>>>                     // once in P1->open
+>>>>                     do_md_stop
+>>>>                      __md_stop
+>>>>                       mddev->private = NULL
+>>>>
+>>>>           conf = mddev->private // NULL
+>>>>            wait_barrier(conf, sector) // null-ptr-deref !
+>>>>
+>>>> It is a common problem for raid0/1/10/5, and __md_stop could be
+>>>> triggered by several paths(eg. ioctl, sysfs, ->dtr). Fix it by
+>>>> replacing mddev_lock() with mddev_suspend_and_lock() for all
+>>>> __md_stop() callers. The caller dm_table_destroy() is guaranteed
+>>>> being invoked with device suspended, so raid_dtr() could keep
+>>>> using mddev_lock_nointr(). Besides, fail the submitting IO in
+>>>> md_handle_request() if the 'mddev->pers' becomes NULL.
+>>>>
+>>>> Fetch a reproducer in
+>>>> https://bugzilla.kernel.org/show_bug.cgi?id=222020
+>>>>
+>>>> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+>>>> Reported-by: syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
+>>>> Closes: https://syzkaller.appspot.com/bug?extid=3fe892ea5fc292e1353f
+>>>> Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
+>>>> ---
+>>>>     v1->v2:
+>>>>      1. Add 'mddev->pers != NULL' check before make_request
+>>>>      2. Delete dm-raid caller(->dtr) modifications
+>>>>      3. Move memalloc_noio_restore after mddev_unlock_and_resume
+>>>>     drivers/md/md.c | 32 +++++++++++++++++++++++++++++---
+>>>>     1 file changed, 29 insertions(+), 3 deletions(-)
+>>>>
+>>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>>> index 680b34a63cb3..3dfc34caa2dc 100644
+>>>> --- a/drivers/md/md.c
+>>>> +++ b/drivers/md/md.c
+>>>> @@ -414,6 +414,20 @@ bool md_handle_request(struct mddev *mddev,
+>>>> struct bio *bio)
+>>>>             if (!percpu_ref_tryget_live(&mddev->active_io))
+>>>>                 goto check_suspended;
+>>>>         }
+>>>> +    if (!mddev->pers) {
+>>>> +        /*
+>>>> +         * The __md_stop() sets 'mddev->private' to NULL during
+>>>> +         * the IO submitting, check 'mddev->pers' before the IO
+>>>> +         * being processed by specific driver to avoid the
+>>>> +         * null-ptr-deref of 'mddev-><member>'. The check is
+>>>> +         * safe because the IO has got the 'mddev->active_io'
+>>>> +         * reference, and all __md_stop() callers will wait for
+>>>> +         * the reference to be zero.
+>>>> +         */
+>>>> +        bio_io_error(bio);
+>>>> +        percpu_ref_put(&mddev->active_io);
+>>>> +        return true;
+>>>> +    }
+>>>>         if (!mddev->pers->make_request(mddev, bio)) {
+>>>>             percpu_ref_put(&mddev->active_io);
+>>>>             if (mddev_is_dm(mddev) && mddev->pers->prepare_suspend)
+>>>> @@ -4657,6 +4671,8 @@ array_state_store(struct mddev *mddev, const
+>>>> char *buf, size_t len)
+>>>>     {
+>>>>         int err = 0;
+>>>>         enum array_state st = match_word(buf, array_states);
+>>>> +    unsigned int noio_flags = 0;
+>>>> +    bool suspend = false;
+>>>>            /* No lock dependent actions */
+>>>>         switch (st) {
+>>>> @@ -4666,9 +4682,11 @@ array_state_store(struct mddev *mddev, const
+>>>> char *buf, size_t len)
+>>>>         case broken:        /* cannot be set */
+>>>>         case bad_word:
+>>>>             return -EINVAL;
+>>>> +    case inactive:
+>>>>         case clear:
+>>>> +        suspend = true;
+>>>> +        fallthrough;
+>>>>         case readonly:
+>>>> -    case inactive:
+>>>>         case read_auto:
+>>>>             if (!mddev->pers || !md_is_rdwr(mddev))
+>>>>                 break;
+>>>> @@ -4702,9 +4720,11 @@ array_state_store(struct mddev *mddev, const
+>>>> char *buf, size_t len)
+>>>>             spin_unlock(&mddev->lock);
+>>>>             return err ?: len;
+>>>>         }
+>>>> -    err = mddev_lock(mddev);
+>>>> +    err = suspend ? mddev_suspend_and_lock(mddev) : mddev_lock(mddev);
+>>>
+>>> Unlike ioctl path, where the checking of opener is just 1,
+>>> mddev_set_closing_and_sync_blockdev() here
+>>> already check there is no opener, so there can't be any IO inflight.
+>>
+>> Hi, yukuai
+>> I thought of a scene. If someone open '/dev/md0, write(buffer) 4K, and
+>> close the corresponding fd. Then writeback kworker submit IO,
+>> array_state_store will pass the mddev_set_closing_and_sync_blockdev()
+>> check, which could lead to the similar problem.
+> This should not happen, that last one to close /dev/md0 will wait for
+> full disk flush to be done.
+
+Makes sense, sync_blockdev will be called in close process.
+>>>
+>>>>         if (err)
+>>>>             return err;
+>>>> +    if (suspend)
+>>>> +        noio_flags = memalloc_noio_save();
+>>>>            switch (st) {
+>>>>         case inactive:
+>>>> @@ -4775,7 +4795,12 @@ array_state_store(struct mddev *mddev, const
+>>>> char *buf, size_t len)
+>>>>                 mddev->hold_active = 0;
+>>>>             sysfs_notify_dirent_safe(mddev->sysfs_state);
+>>>>         }
+>>>> -    mddev_unlock(mddev);
+>>>> +    if (suspend) {
+>>>> +        mddev_unlock_and_resume(mddev);
+>>>> +        memalloc_noio_restore(noio_flags);
+>>>> +    } else {
+>>>> +        mddev_unlock(mddev);
+>>>> +    }
+>>>>            if (st == readonly || st == read_auto || st == inactive ||
+>>>>             (err && st == clear))
+>>>> @@ -8299,6 +8324,7 @@ static bool md_ioctl_need_suspend(unsigned int
+>>>> cmd)
+>>>>         case HOT_REMOVE_DISK:
+>>>>         case SET_BITMAP_FILE:
+>>>>         case SET_ARRAY_INFO:
+>>>> +    case STOP_ARRAY:
+>>>>             return true;
+>>>>         default:
+>>>>             return false;
+>>>
+>>
+
