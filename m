@@ -1,158 +1,232 @@
-Received: from mail-oi2-f0.google.com (mail-oi2-f0.google.com [74.125.231.192])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D81E249D588
-	for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2026 19:30:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.192
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47FEB331EB0;
+	Fri, 18 Sep 2026 04:17:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789673437; cv=none; b=CGCrg8sFd4dUfRjQyg3VqbMAiTYKgYAZ4FpLMOAwye0/rVIw5vHRc1vTUNHa26acrWEPYpYxzd3q3D78WcBUguG7zqDl9XhfJhn3dGZqGcKCAJ7evEYXRd1KGQ13x2CE0hoyv8/yTEQEoraIUSNxsCOlfPQUKu36po3sJTjWbyU=
+	t=1789705078; cv=none; b=iN8NvXJwOS3njSTcVxKHPgAMvCsQl4J04/i27zzYU4kxJZECxBu80e76OK6FqfzR05xJHPbXCCLiPuegktET86NsRFIiXAxTFdofcq8xZ5FOo6JSMK8p038Cpk7vzk6busfUcu/QnGs3HrvSQxDwyvjBqlP+iFgj5/imxgTs4gE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789673437; c=relaxed/simple;
-	bh=eMaq8RLV8quYoQsiaB8eCxVRfk+jd+94+wshSktzVnQ=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=Yl2KdkmgLhU1Fi7SYP96PcWc8IWb6fqWekzUsvChPWKs8/uO2/PpqhFPLJaH1IPjtOHNmeCbiWehXUxcppLK7NrxpL2IR9xohpHr1U5F//q++K0bHx6ODDpUDhwQQC2g0Z1l9Fb0LL6JqXTeI9vvtmDN/obIj35ItqCdUyGP4Og=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=74.125.231.192
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi2-f0.google.com with SMTP id 5614622812f47-4a49b13b745so18061b6e.0
-        for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2026 12:30:34 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789673433; x=1790278233;
-        h=content-type:to:from:subject:message-id:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=QxfZm777yiB3GOiVhcaZHS4Wrc/4+22T9DdmmcwZ2XQ=;
-        b=Z/Qq+waZyY2a/BFIZIMy7plM28imglVFvGe9Xzi6WJanCno6ZNfzAeFclBGLikqwqT
-         7+s5cLXTADrmQxHOCMb+R8/AZkp0jPQhYN2OZcV2eoMwj/0MVV5w9v/8kAiKxwlthzzU
-         6Hb1rL03qjTVL6M0z/QuzkSqpcICWlVFLh/R6DIQhoBi6S01rZ0KZOizFWqmBU9QmdXK
-         ZUqIdLdE7EBxjVswK/92VmT5moUBzA0I5m7LWTN+I4LyGF3nVLPvFt8mj4FnAP5S4SIF
-         0sEUAgUQ70MKlsd4bXOMp3PQytQq9QW8qcr9mjukcKGbbMr8bQLQwPT4aw4Kc26mu+cM
-         xGEg==
-X-Forwarded-Encrypted: i=1; AKwUvBzeA4JZVnzWmn5IhERBrbUz1LtVyJEt/rQoFxv61gPWZklVjuV39oPrU4r7og0jJ0V3ZpcRUPRP9D2P@vger.kernel.org
-X-Gm-Message-State: AFuF++mngQrcwB3GzT+nrpub89H8YPxEBJSST6UQw6KWhrXsz6/bzfel
-	sZ7xZSFcM5U71xMRy+OPK8mYDtEvicqkKMCe3yLw5yAuzSV2ox06t+4+fQTp7CHtYyfbJaL9RQF
-	FGnHEelX3YLXK+8s7kYSN7K3mdBTXeQ1lDYa1NlZ1fmAYcVnPQrCfGijAYYU=
+	s=arc-20240116; t=1789705078; c=relaxed/simple;
+	bh=hAKfeURgimH+zD5v3mZSGKclYtLi5kuQXJoRur/UxdQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=M+B35J+r2cqVzhdIuSg6kwqrG9v3Mq0KdT0rSKMx6EBnXElftmnGatRpVSopnHAcG9ANu2n9/FAfX/b9wZvxk/zDXasxA2zMu2NYQwG4ie4N9g2PErWX4D43fkz3HZI74aXAdY4UQ+Qj0TT70+Nx1CbbyQCrO48lEUJs0+E7q2c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dZdUIubP; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dZdUIubP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1E811F000FF;
+	Fri, 18 Sep 2026 04:17:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789705076;
+	bh=WWxabFUVlB3kxXBm4kFTC6I3NzI8FakdyNfET9iDosQ=;
+	h=From:To:Cc:Subject:Date;
+	b=dZdUIubP7WawPPBoUISGeGIF5ET69n9vHrkUVvspPnrH7fxHweJj2pqEOElVx2vIL
+	 0gFC5UbRFw2yyrUHY8PuEWsj3Mk6WHImCplwTlI60/XUI76P7v6YKqCFuBRQ3z6vC8
+	 D4IfiDdtb9OpF9KJwyaUUmE0WCWrChqkCcnscAtjBVSlbLeT1gn8kIAGDPn7QXBRDy
+	 uyVZJ/cSvCjKvvkrk1SWqjkP71K7D2BHoKJ257aiaDDnQ+ozchaBZMGL59Cyc8YNCA
+	 cgNPGGgrw2vZkS3Mn+lrb1xgQs6YmdMPOv5u8KaDeiJ+0j1eeksXZuaT4qd7J9F0+p
+	 3erBVRFc7D2AQ==
+From: Yu Kuai <yukuai@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Coly Li <colyli@fygo.io>,
+	Kent Overstreet <kent.overstreet@linux.dev>,
+	Alasdair Kergon <agk@redhat.com>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	Benjamin Marzinski <bmarzins@redhat.com>,
+	Song Liu <song@kernel.org>,
+	Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	Andreas Gruenbacher <agruenba@redhat.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Jan Kara <jack@suse.cz>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Chris Li <chrisl@kernel.org>,
+	Kairui Song <kasong@tencent.com>,
+	Kemeng Shi <shikemeng@huaweicloud.com>,
+	Nhat Pham <nphamcs@gmail.com>,
+	Baoquan He <baoquan.he@linux.dev>,
+	Barry Song <baohua@kernel.org>,
+	Youngjun Park <youngjun.park@lge.com>,
+	Nathan Chancellor <nathan@kernel.org>,
+	Nick Desaulniers <ndesaulniers@google.com>,
+	Bill Wendling <morbo@google.com>,
+	Justin Stitt <justinstitt@google.com>
+Cc: Yu Kuai <yukuai@fygo.io>,
+	Christoph Hellwig <hch@lst.de>,
+	Nilay Shroff <nilay@linux.ibm.com>,
+	Tao Cui <cuitao@kylinos.cn>,
+	linux-block@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-bcache@vger.kernel.org,
+	dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org,
+	gfs2@lists.linux.dev,
+	linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org,
+	llvm@lists.linux.dev
+Subject: [PATCH v3 0/3] blk-cgroup: store blkcg in bio before blkcg_mutex conversion
+Date: Fri, 18 Sep 2026 12:17:41 +0800
+Message-ID: <20260918041744.1526924-1-yukuai@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:c162:b0:4c9:90bf:5f5d with SMTP id
- 5614622812f47-4ccf6e6dfe3mr329110b6e.11.1789673433779; Thu, 17 Sep 2026
- 12:30:33 -0700 (PDT)
-Date: Thu, 17 Sep 2026 12:30:33 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6aac3fd9.b398a7c9.1f86be.0022.GAE@google.com>
-Subject: [syzbot] [raid?] WARNING in ppl_init_log
-From: syzbot <syzbot+2ef75c54d0b2ac5d00ba@syzkaller.appspotmail.com>
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
-	magiclinan@didiglobal.com, song@kernel.org, syzkaller-bugs@googlegroups.com, 
-	xiao@kernel.org, yukuai@fnnas.com, yukuai@fygo.io
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Hello,
+From: Yu Kuai <yukuai@fygo.io>
 
-syzbot found the following issue on:
+This is v3 of the preparatory series for the blkcg_mutex conversion
+proposed in the related series [1]. That conversion moves queue-local
+blkg topology synchronization from q->queue_lock to q->blkcg_mutex,
+which is awkward while bios directly store queue-local blkg references.
 
-HEAD commit:    238650ef6c7c Merge tag 'powerpc-7.3-4' of git://git.kernel..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=107c7925580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=5e4e3a0e188a497e
-dashboard link: https://syzkaller.appspot.com/bug?extid=2ef75c54d0b2ac5d00ba
-compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
+Storing a blkg also ties a bio to one request_queue. A remapped bio must
+drop that reference and recreate the association for the new queue even
+when no blkcg policy needs it. Dying blkgs add another complication:
+they disappear from the per-blkcg lookup tree before all pinned bio
+references drain.
 
-Unfortunately, I don't have any reproducer for this issue yet.
+Patch 1 makes request_queue the authoritative lookup owner. A
+queue-owned rhashtable keyed by the blkcg CSS ID keeps dying blkgs
+discoverable until their references drain, while q->blkg_list remains
+available for ordered walks.
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/35551601d170/disk-238650ef.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/62ad5ac38086/vmlinux-238650ef.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/bd8d0f191876/bzImage-238650ef.xz
+Patch 2 stores and pins the queue-independent blkcg CSS in each bio.
+Queue-local blkgs are created lazily by policy users, then pinned until
+the bio changes devices or releases its cgroup state. Completion and
+accounting paths which do not create a blkg remain lookup-only.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+2ef75c54d0b2ac5d00ba@syzkaller.appspotmail.com
+Patch 3 moves async bio punt state from blkg to blkcg, so punting alone
+does not instantiate a queue-local blkg.
 
-md/raid:md0: raid level 5 active with 2 out of 2 devices, algorithm 2
-------------[ cut here ]------------
-kmem_cache of name 'ppl_io_unit' already exists
-WARNING: mm/slab_common.c:112 at kmem_cache_sanity_check mm/slab_common.c:111 [inline], CPU#1: syz.0.52/6045
-WARNING: mm/slab_common.c:112 at __kmem_cache_create_args+0xae/0x460 mm/slab_common.c:352, CPU#1: syz.0.52/6045
-Modules linked in:
-CPU: 1 UID: 0 PID: 6045 Comm: syz.0.52 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 08/05/2026
-RIP: 0010:kmem_cache_sanity_check mm/slab_common.c:111 [inline]
-RIP: 0010:__kmem_cache_create_args+0xb1/0x460 mm/slab_common.c:352
-Code: e7 8e 4d 8b 24 24 49 81 fc 68 2e e7 8e 74 20 49 8b 7c 24 f8 48 89 de e8 ad fe c8 09 85 c0 75 e2 48 8d 3d 52 cc 66 0e 48 89 de <67> 48 0f b9 3a 48 89 df be 20 00 00 00 e8 4d 00 c9 09 48 85 c0 0f
-RSP: 0018:ffffc9000555f9a0 EFLAGS: 00010246
-RAX: 0000000000000000 RBX: ffffffff8cf7a820 RCX: 0000000000000004
-RDX: 000000008cf7a803 RSI: ffffffff8cf7a820 RDI: ffffffff907ec6e0
-RBP: 0000000000000000 R08: ffffffff907a3e7f R09: 1ffffffff20f47cf
-R10: dffffc0000000000 R11: fffffbfff20f47d0 R12: ffff88801d79d2e0
-R13: 0000000000000000 R14: 00000000000002d8 R15: ffffc9000555fa80
-FS:  00007faf490c56c0(0000) GS:ffff888124dd1000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007fab21a7a010 CR3: 000000007a880000 CR4: 0000000000350ef0
-Call Trace:
- <TASK>
- ppl_init_log+0x285/0x1310 drivers/md/raid5-ppl.c:1363
- log_init drivers/md/raid5-log.h:138 [inline]
- raid5_change_consistency_policy+0x255/0x740 drivers/md/raid5.c:9141
- consistency_policy_store+0x7f/0x230 drivers/md/md.c:5883
- md_attr_store+0x3b7/0x640 drivers/md/md.c:6158
- kernfs_fop_write_iter+0x3a4/0x540 fs/kernfs/file.c:345
- new_sync_write fs/read_write.c:595 [inline]
- vfs_write+0x612/0xba0 fs/read_write.c:687
- ksys_write+0x150/0x270 fs/read_write.c:739
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7faf4819e159
-Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007faf490c5028 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-RAX: ffffffffffffffda RBX: 00007faf48425fa0 RCX: 00007faf4819e159
-RDX: 0000000000000004 RSI: 0000200000000500 RDI: 0000000000000009
-RBP: 00007faf4823506b R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007faf48426038 R14: 00007faf48425fa0 R15: 00007ffc85c60718
- </TASK>
-----------------
-Code disassembly (best guess):
-   0:	e7 8e                	out    %eax,$0x8e
-   2:	4d 8b 24 24          	mov    (%r12),%r12
-   6:	49 81 fc 68 2e e7 8e 	cmp    $0xffffffff8ee72e68,%r12
-   d:	74 20                	je     0x2f
-   f:	49 8b 7c 24 f8       	mov    -0x8(%r12),%rdi
-  14:	48 89 de             	mov    %rbx,%rsi
-  17:	e8 ad fe c8 09       	call   0x9c8fec9
-  1c:	85 c0                	test   %eax,%eax
-  1e:	75 e2                	jne    0x2
-  20:	48 8d 3d 52 cc 66 0e 	lea    0xe66cc52(%rip),%rdi        # 0xe66cc79
-  27:	48 89 de             	mov    %rbx,%rsi
-* 2a:	67 48 0f b9 3a       	ud1    (%edx),%rdi <-- trapping instruction
-  2f:	48 89 df             	mov    %rbx,%rdi
-  32:	be 20 00 00 00       	mov    $0x20,%esi
-  37:	e8 4d 00 c9 09       	call   0x9c90089
-  3c:	48 85 c0             	test   %rax,%rax
-  3f:	0f                   	.byte 0xf
+Changes since v2:
+
+  - Rebase onto the latest for-7.4/block branch.
+  - In patch 2, clarify why dm_bio_record() excludes BIO_BLKG_REF and
+    add Nilay Shroff's Reviewed-by.
+  - In patch 3, replace scoped spinlock guards with explicit
+    spin_lock()/spin_unlock(), drop the redundant teardown check, and
+    rely on zero-initialization for async_bios before publication, as
+    suggested by Nilay Shroff and Christoph Hellwig.
+
+Changes since v1:
+
+  - Rebase onto the latest block-7.3 branch.
+  - In patch 2, require every blkg rhashtable lookup to run inside an
+    explicit RCU read-side critical section. Annotate blkg_lookup_any(),
+    blkg_lookup(), and recursive wrappers with __must_hold_shared(RCU)
+    so Clang thread-safety analysis verifies the contract.
+  - In patch 2, exclude BIO_BLKG_REF from the flags saved by
+    dm_bio_record(), since restoring an ownership bit cannot recreate
+    the associated blkg reference.
+  - In patch 3, use scoped spinlock guards for async_bios and annotate
+    the list with __guarded_by().
+  - Add Nilay Shroff's Reviewed-by to patch 1.
+
+Changes since RFC v3:
+
+  - Drop the RFC prefix.
+  - Add Christoph Hellwig's Reviewed-by to patch 1.
+  - Add Tao Cui's Reviewed-by to patch 2.
+  - In patch 2, relax blkg_lookup_any()/blkg_lookup() to also allow
+    q->queue_lock as an alternative to the RCU read lock.
+
+Changes since RFC v2:
+
+  - Drop the old patch 1 and send it separately as a bugfix for 7.3 and
+    -stable, as suggested by Christoph Hellwig.
+  - Rebase onto the latest for-7.3/block branch.
+  - In the new patch 1, note that the remaining q->blkg_list walkers are
+    cgroupfs/sysfs slow paths and can move to rhashtable iteration after
+    the queue_lock-to-blkcg_mutex conversion.
+  - In the new patch 1, explain the list_empty case in blkg_release(), and
+    add an RCU lockdep assertion plus documentation that blkg_lookup_any()
+    does not acquire a reference.
+
+Changes since RFC v1:
+
+  - Add patch 1 to wait for every old blkg to leave q->blkg_list before a
+    shared request_queue is rebound, instead of treating root_blkg == NULL
+    as completion of asynchronous blkg teardown.
+  - Add patch 2 to replace the per-blkcg radix tree and lookup hint with a
+    request_queue rhashtable keyed by blkcg->css.id, as suggested by
+    Christoph Hellwig. Keep dying pinned blkgs in the hash until
+    blkg_release() so bio-owned references remain discoverable.
+  - Fold the v1 helper-only patch into patch 3, as suggested by Jan Kara
+    and Christoph Hellwig, and make bio_blkcg() naturally return NULL for
+    an unassociated bio.
+  - Rework patch 3 so blkg_lookup_create() acquires the bio-owned
+    reference, falls back to a live parent when creation or tryget fails,
+    and updates bi_blkcg when the returned blkg belongs to an ancestor.
+  - Make bio_blkg_lookup() lookup-only: it returns NULL unless BIO_BLKG_REF
+    is already set. Use bio_blkg() in the BFQ and IOCOST merge paths which
+    may need to create a blkg, while keeping blk_cgroup_bio_start() and
+    completion paths lookup-only.
+  - Move CSS online-reference handling into
+    bio_associate_blkcg_from_css(), including fallback to the root blkcg,
+    so bio_associate_blkcg() does not take a redundant reference.
+  - Keep the v1 async bio punt conversion as patch 4 and document that
+    async_bio_lock protects async_bios.
+
+Previous versions:
+  - v2: https://lore.kernel.org/r/cover.1789237876.git.yukuai@fygo.io
+  - v1: https://lore.kernel.org/r/20260823133045.970199-1-yukuai@kernel.org
+  - RFC v3:
+    https://lore.kernel.org/r/20260818070641.756747-1-yukuai@kernel.org
+  - RFC v2:
+    https://lore.kernel.org/r/20260811064744.1139446-1-yukuai@kernel.org
+  - RFC v1:
+    https://lore.kernel.org/r/20260804065313.2092022-1-yukuai@kernel.org
+
+Related series:
+  [1] RFC v2 blk-cgroup: protect blkgs with blkcg_mutex
+      https://lore.kernel.org/r/20260724123037.3004560-1-yukuai@kernel.org
+
+Yu Kuai (3):
+  blk-cgroup: use a request_queue rhashtable for blkg lookup
+  blk-cgroup: store blkcg in bio instead of blkg
+  blk-cgroup: move async bio punt state to blkcg
+
+ Documentation/admin-guide/cgroup-v2.rst |   2 +-
+ block/bfq-cgroup.c                      |  18 +-
+ block/bfq-iosched.c                     |  19 +-
+ block/bio.c                             |  22 +-
+ block/blk-cgroup-fc-appid.c             |  10 +-
+ block/blk-cgroup-rwstat.h               |   2 +-
+ block/blk-cgroup.c                      | 346 ++++++++++++++----------
+ block/blk-cgroup.h                      |  93 +++++--
+ block/blk-core.c                        |   9 +-
+ block/blk-crypto-fallback.c             |   2 +-
+ block/blk-iocost.c                      |  12 +-
+ block/blk-iolatency.c                   |  11 +-
+ block/blk-ioprio.c                      |   2 +-
+ block/blk-throttle.c                    |   3 +-
+ block/blk-throttle.h                    |   2 +-
+ drivers/md/bcache/request.c             |   2 +-
+ drivers/md/dm-bio-record.h              |   5 +-
+ drivers/md/dm.c                         |   2 +-
+ drivers/md/md.c                         |   2 +-
+ fs/gfs2/lops.c                          |   3 +-
+ include/linux/bio.h                     |  26 +-
+ include/linux/blk_types.h               |   9 +-
+ include/linux/blkdev.h                  |   2 +
+ include/linux/writeback.h               |   2 +-
+ mm/page_io.c                            |  12 +-
+ 25 files changed, 381 insertions(+), 237 deletions(-)
 
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+base-commit: af78ca007be5f63dc34b8180c8063c1113697192
+-- 
+2.51.0
