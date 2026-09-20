@@ -1,93 +1,120 @@
-Received: from va-2-50.ptr.blmpb.com (va-2-50.ptr.blmpb.com [209.127.231.50])
+Received: from va-2-54.ptr.blmpb.com (va-2-54.ptr.blmpb.com [209.127.231.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF72B3DDB03
-	for <linux-raid@vger.kernel.org>; Sun, 20 Sep 2026 11:14:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EED941A506
+	for <linux-raid@vger.kernel.org>; Sun, 20 Sep 2026 11:51:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789902851; cv=none; b=IbAA64iSyU7liSnBshhSTD7MWEa+PaU+dPGb7R6naIpmQwMmqBL6TjtJk2qAP7Mm1weUWdcYg+f5nTUaVifNP5uxvxlNhRhbXTpYyVy1Npa+tR3Bai8arvBn8n0c2uARp4udV5TMND2o8BJtGbd8Qt5Xh+Mb1F4kasO8F0NQEo4=
+	t=1789905078; cv=none; b=C6MnGR3j0pNyKSw8MHHaLYwgF3b+Gjcm2gQU2iZvFWEHV7qREuyDBqNp4H/S+lnc1+Q+tILhKFp4xZxssSegwktjy1riI1CtoDvu89u5xfe/6Ek4EnP98W3u11ocQdFVNStuvlnzdGcnpSSGOY7itePmv/dM/pi3zcuShiw5I2o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789902851; c=relaxed/simple;
-	bh=ByWLbEPeo5yVz+wJrR5ArHCuUAiyw6qjPD0MHUBGZAI=;
-	h=Cc:Message-Id:Mime-Version:To:Date:Content-Type:From:Subject:
-	 References:In-Reply-To; b=r3rMl9CAcRZux4opKLnH1CG6I5VeihjCDeoONynIGdLqI3o3I1Kmz2NfI3aJxr/HrHQ28Sl9IYmjpstB1TJ9xrbTqUAkmHnaWyXMBvB7sPFV5ztg8MjtEhWKxuhUMTSr7KMMALm9P6sOzuER9ftnknjJED4bTIFe5JbgqYtPFFw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=mkg9iU7/; arc=none smtp.client-ip=209.127.231.50
+	s=arc-20240116; t=1789905078; c=relaxed/simple;
+	bh=Bw39X9AkTUoh/aHMDqTy8Y4i1sHlfc+cuooNbm5nWgs=;
+	h=Message-Id:Content-Type:Cc:Subject:Date:References:To:From:
+	 Mime-Version:In-Reply-To; b=EZDHWPUE/ET996eO4/z97wpGqyIibkhH+43im5d5lDM/TmRxcyesOlTvZoxMPV+AYlM784Xqb006bvNipjAJ16MPza9xKysq+eEvWnG6TmeG6jbrVYjA5Wzck5GqUxt0L8sMsNgNB5aFXB3AgYSPO5lpi+sKCxTPcmqzFamZzVc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=Ihr0q8Kc; arc=none smtp.client-ip=209.127.231.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="mkg9iU7/"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="Ihr0q8Kc"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1789902844;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1789905061;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=C2a7tEQI0pWgszXv4LJTTbh0gEvtcUKxS901OP4Qa/w=;
- b=mkg9iU7/C2oXWT7Qh0k0GjEL2SKZt8vzq7/17P9ikVP/dzW8LXIOLwMMMyolg7mlguNRN4
- FGHkwoTW3SQsBPxj1Kf18JVnDjzMUZc4UA1p6O9jLrNM+JAkLq/duNeKm8gPg/LgcNZhlS
- vME3Uz120BUXMbJeelnFkSZ41Q8qWgQ7rFkbcR51Ls66Nn6uISJehiV6pK/xlykQgNXbig
- YmqfrzkYNkvgRQdM6+0I5S2a9odFceKX4rfaPry17V75ltmOe2f3EBhWOMIGCJMYGr+sMA
- 6ZzWsi5o7dSyxnAI7QGWAE64Yer6wcOq5pMKucvU1mKhBzSZWXRTgd+mdZ+TMw==
-Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, "Li Youhong" <liyouhong@kylinos.cn>
+ bh=4ohIn79VTQwaPZDLQ4bf9CpjIqYPmTtX+vxVGjEsJ6w=;
+ b=Ihr0q8KcvGDAweIWla7IkixnooUdKnVDP3ZIa7WUvcOa0B62NCyYzNo53EqFUvMk3AAXL/
+ dHZaokNaLclQPKf8uxg+AUrIkGY5oG5YEiQj3yTbcxNKwC7CEtDy5/HJ7ujTDPjsiv+Csm
+ KTy1D98wi1tpMuzZYjBlYj4oHQS/n9pYtyqI7NF39h+6QvEI2TwfTG7ITktFcvONOKshAJ
+ dBEfBrurg3Myv/rd7wMJn1JWv+x7VLhjsbnBD+pJtn4CPx8QThbwBWap9Xsh49xte+HaBx
+ WXsGEgrXWnn3um9vNlnnKnBYQOo2w7DUVjKCMWZXmIAZSlO3fbHB07RJCMyQNw==
+Message-Id: <fad92649-e362-443a-93ea-205b11247e6d@fygo.io>
+Content-Type: text/plain; charset=UTF-8
 X-Original-From: yu kuai <yukuai@fygo.io>
-Message-Id: <a0bc5679-2325-426c-8fed-3e0dcac5fbfb@fygo.io>
+Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	"NeilBrown" <neil@brown.name>, <linux-raid@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: Re: [PATCH 1/2] md: fix bblog_size-driven OOB read in super_1_load() and super_1_sync()
+Date: Sun, 20 Sep 2026 19:50:56 +0800
+Content-Transfer-Encoding: quoted-printable
+References: <20260917083820.57091-1-ndaugoing@gmail.com> <20260917083820.57091-2-ndaugoing@gmail.com>
+Received: from [192.168.1.104] ([39.182.0.142]) by smtp.larksuite.com with ESMTPS; Sun, 20 Sep 2026 11:50:59 +0000
+To: "zjamg" <ndaugoing@gmail.com>, "Song Liu" <song@kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+From: "yu kuai" <yukuai@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Lms-Return-Path: <lba+26aafbffb+85b398+vger.kernel.org+yukuai@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.142]) by smtp.larksuite.com with ESMTPS; Sun, 20 Sep 2026 11:14:02 +0000
+X-Lms-Return-Path: <lba+26aafc8a4+ef42b0+vger.kernel.org+yukuai@fygo.io>
 Reply-To: yukuai@fygo.io
-To: "Li Youhong" <dayou5941@163.com>, <song@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-Date: Sun, 20 Sep 2026 19:13:59 +0800
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH 0/3] md: raid helper cleanups
-References: <20260827075620.3599227-1-dayou5941@163.com>
-In-Reply-To: <20260827075620.3599227-1-dayou5941@163.com>
+In-Reply-To: <20260917083820.57091-2-ndaugoing@gmail.com>
 User-Agent: Mozilla Thunderbird
 
-=E5=9C=A8 2026/8/27 15:56, Li Youhong =E5=86=99=E9=81=93:
+Hi,
 
-> From: Li Youhong <liyouhong@kylinos.cn>
+=E5=9C=A8 2026/9/17 16:38, zjamg =E5=86=99=E9=81=93:
+> In super_1_load(), when the on-disk feature_map does not have the
+> MD_FEATURE_BAD_BLOCKS flag set, but sb->bblog_offset is non-zero,
+> rdev->badblocks.shift is initialized to 0 while completely bypassing
+> the sectors > (PAGE_SIZE / 512) validation check on sb->bblog_size.
+
+How can this happen? If this is just raw disk metadata inject failure,
+just add a checking in super_1_load() is enough.
+
 >
-> This series factors a few repeated md/raid patterns into small helpers.
-> There is no intentional behaviour change; each patch is a mechanical
-> extract of existing logic.
+> Subsequently, when badblocks are updated, super_1_sync() enables the
+> MD_FEATURE_BAD_BLOCKS feature flag and assigns bb->size directly from
+> sb->bblog_size without validating that bb->size fits within the single
+> allocated rdev->bb_page (which is PAGE_SIZE, or PAGE_SIZE / 512 sectors).
 >
-> Patch 1 adds rdev_record_write_error() in md.h for the
-> WriteErrorSeen + WantReplacement + MD_RECOVERY_NEEDED sequence shared by
-> raid1, raid10 and raid5.
+> When md_update_sb() later writes metadata via md_write_metadata(), an
+> unvalidated bb->size (e.g. 0xFFFF) results in a bio whose length exceeds
+> the backing page, causing out-of-bounds reads into kernel memory during
+> block I/O and leaking kernel slab/page contents to disk.
 >
-> Patches 2 and 3 move raid1/raid10-only helpers into raid1-10.c, which is
-> #included by both drivers:
+> Fix this by:
+> 1. Validating sb->bblog_size in the 'else if (sb->bblog_offset !=3D 0)'
+>     branch of super_1_load(), returning -EINVAL on oversized values.
+> 2. Clamping bb->size in super_1_sync() to PAGE_SIZE / 512 to ensure it
+>     never exceeds the backing rdev->bb_page capacity.
 >
->    - rdev_bb_block_sectors() for the badblocks-aligned block size used in
->      narrow_write_error()
->    - flush_bio_list() for the bitmap plug flush path previously duplicate=
-d
->      in raid10's flush_pending_writes() and raid10_unplug()
->
-> The helpers in raid1-10.c follow the existing static inline convention
-> used by raid1_submit_write(), check_decay_read_errors(), and others in
-> that file.
->
-> Li Youhong (3):
->        md: add rdev_record_write_error() helper
->        md/raid1-10: add rdev_bb_block_sectors() helper
->        md/raid1-10: share flush_bio_list between raid1 and raid10
+> Fixes: 2699b67223ac ("md: load/store badblock list from v1.x metadata")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: zjamg <ndaugoing@gmail.com>
 > ---
->   drivers/md/md.h       |  7 +++++++
->   drivers/md/raid1-10.c | 27 +++++++++++++++++++++++++++
->   drivers/md/raid1.c    | 42 +++++++-----------------------------------
->   drivers/md/raid10.c   | 50 +++++++-------------------------------------=
-------
->   drivers/md/raid5.c    |  5 +----
->   5 files changed, 48 insertions(+), 83 deletions(-)
-Applied to md-7.4
+>   drivers/md/md.c | 8 ++++++--
+>   1 file changed, 6 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 680b34a63cb3..d2433cf41e65 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1934,8 +1934,11 @@ static int super_1_load(struct md_rdev *rdev, stru=
+ct md_rdev *refdev, int minor_
+>   			if (!badblocks_set(&rdev->badblocks, sector, count, 1))
+>   				return -EINVAL;
+>   		}
+> -	} else if (sb->bblog_offset !=3D 0)
+> +	} else if (sb->bblog_offset !=3D 0) {
+> +		if (le16_to_cpu(sb->bblog_size) > (PAGE_SIZE / 512))
+> +			return -EINVAL;
+>   		rdev->badblocks.shift =3D 0;
+> +	}
+>  =20
+>   	if ((le32_to_cpu(sb->feature_map) &
+>   	    (MD_FEATURE_PPL | MD_FEATURE_MULTIPLE_PPLS))) {
+> @@ -2313,7 +2316,8 @@ static void super_1_sync(struct mddev *mddev, struc=
+t md_rdev *rdev)
+>  =20
+>   			bb->sector =3D (rdev->sb_start +
+>   				      (int)le32_to_cpu(sb->bblog_offset));
+> -			bb->size =3D le16_to_cpu(sb->bblog_size);
+> +			bb->size =3D min_t(sector_t, le16_to_cpu(sb->bblog_size),
+> +					 PAGE_SIZE / 512);
+>   		}
+>   	}
+>  =20
 
 --=20
 Thanks,
