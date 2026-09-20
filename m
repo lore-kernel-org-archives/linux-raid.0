@@ -1,111 +1,94 @@
-Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
+Received: from va-2-50.ptr.blmpb.com (va-2-50.ptr.blmpb.com [209.127.231.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9EA43CB2D7
-	for <linux-raid@vger.kernel.org>; Sun, 20 Sep 2026 10:37:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF72B3DDB03
+	for <linux-raid@vger.kernel.org>; Sun, 20 Sep 2026 11:14:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789900631; cv=none; b=RFsgxfCJk9+fdLhLXFeZMTa2cJr6q1cCm8R/ihJoSUgpIHMTZAgOTJy4kE/7oTGTSbfbF8EpFvgG2iZ+1KGJ7ONHL1fH/z1OZlwRoD5DYsXwEDSaklYVSLCz3af5iSeWy4ZBp1hdwFRunkB6JI65XVFXQQNdPReISK63qhghwIo=
+	t=1789902851; cv=none; b=IbAA64iSyU7liSnBshhSTD7MWEa+PaU+dPGb7R6naIpmQwMmqBL6TjtJk2qAP7Mm1weUWdcYg+f5nTUaVifNP5uxvxlNhRhbXTpYyVy1Npa+tR3Bai8arvBn8n0c2uARp4udV5TMND2o8BJtGbd8Qt5Xh+Mb1F4kasO8F0NQEo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789900631; c=relaxed/simple;
-	bh=Xr7L/LVpjL3GQFGR8E9vjXeRDSdu2y58YHZHJfhpoVI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dT0T0gA1jIpQc/tsnDN149VtL2mcWC4FE//9IYMBPY8cySy9QZo4WCLAwh17kYNLn1O1DDvTBwFeO21jvo+Y3UjY0S6w40c5VLGbc5YQuhTttSu4JzBtWp0DDp7BrHjIqceCSZvUar5w8gFLjfUM0dILTtS9GddokKd6qzE9DWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=UEr2JLQJ; arc=none smtp.client-ip=74.125.225.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
+	s=arc-20240116; t=1789902851; c=relaxed/simple;
+	bh=ByWLbEPeo5yVz+wJrR5ArHCuUAiyw6qjPD0MHUBGZAI=;
+	h=Cc:Message-Id:Mime-Version:To:Date:Content-Type:From:Subject:
+	 References:In-Reply-To; b=r3rMl9CAcRZux4opKLnH1CG6I5VeihjCDeoONynIGdLqI3o3I1Kmz2NfI3aJxr/HrHQ28Sl9IYmjpstB1TJ9xrbTqUAkmHnaWyXMBvB7sPFV5ztg8MjtEhWKxuhUMTSr7KMMALm9P6sOzuER9ftnknjJED4bTIFe5JbgqYtPFFw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=mkg9iU7/; arc=none smtp.client-ip=209.127.231.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="UEr2JLQJ"
-Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-48436686a40so199169f8f.3
-        for <linux-raid@vger.kernel.org>; Sun, 20 Sep 2026 03:37:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1789900627; x=1790505427; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=kmMG7+knsRKVkSdz7OMe2deg70Qp3sxmdG8NVLuTxqk=;
-        b=UEr2JLQJ4SCWS1JcDc9SdjX38mJxDYydJF8bfCMsh/XlUfLjfwYd7S8YAi6Yem9hxI
-         5ER7SxbA3FEuhFRezPSl+VlDyh4YYjrn3yzzQPTskdq37P6IRh3VWdPpkrFLaD7huyOw
-         L5/C0OZeFVlMtPS84n5wD9ynI4Bu9oOzNQM6zFwLMjQ/Hm1UXBNcMVeCrJoTINrAutYb
-         al0aHztRWkS+SpWWITw+LQ3oydnqGJmO5JnIF9C52QEJjcT3Z+sJYXdFlZfje6b9spW5
-         y1uyudaDZ4NyWrPQfbaUmyNqif8xeQrmpfXzI8DhxfhvDpgrpONeFeK0PImhhpX3KHL6
-         dwQg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789900627; x=1790505427;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=kmMG7+knsRKVkSdz7OMe2deg70Qp3sxmdG8NVLuTxqk=;
-        b=zb5iuthBthgLNRtpFfFTNQks9erwUaA6kbZf1vRJUorxEvIc8m5ryrSY1rJl2SSZn4
-         xdhyh5TerTnC34noQERYkQk8BE1w5F/UQSeziFmmWNm1//57nZS9+QrOZDwWtRFLeMXI
-         3uSCB4u3t30vrjoxFN7cTCIoBwSDmKxg+QGVPHN0WYeFlxLPz5TPlZEz/ZvC1KkWdLp7
-         GQcJwubCppcKMUkC650PwFaf+3aqsQMqKkt/BcdhT5nQFCKvNLzFc0PXSUtXdr1IGPSz
-         UpwFeyi5bZbV8VXu7WuItjZ+M1XadQHvdVQmFfb40YO2S0X5GUIng+WX7BEOwV4zMwA6
-         /eAw==
-X-Forwarded-Encrypted: i=1; AKwUvBwMDqNkhw2hFxRiXfDg9al9WZDRfT2i5wqDzd8iNz5K1o7lcMK65MRWzBQlQissmB2RxFd3AuIGSMRb@vger.kernel.org
-X-Gm-Message-State: AFuF++k7WSqxgF175RpLUoPZ1WkH3/ZvD6DQ4gzKkyJbPh1bexVOUQ2t
-	G83ZsYOP0ANHQ6/4eiOCp91eJNQWoFIK6eKVQ2mxYEJrynu4u3/JiYrqZYXQbvKTdwI=
-X-Gm-Gg: AYBFou1+bBpJVgmhUkcENq7jla0nnY718YxSpwiCOt9M4gF20ylUfBtF/8o7YYSFmgN
-	EsDh8rAvXvwNaC1fAwa+lIzB4XXSozTADSU+2Y7QUV3LBxEnDopbx43LlmRSd6WJFvKK+qCUtZd
-	ZGvqy0gdeenkmWgG4kPfT12N59KYixe1Ii7mLR/ZprKTGbC0R88tmzxLDKpPQPzLGcdO0R1xsTt
-	0VMth2j6I58FiXrClHkPabIbrK61p3fNOLcI+dPC4SJEO/q1zkaPDkXDF2OqbXLEcv0MbiogFOv
-	kxnMVmrB8qYWYW6zHlXvE8NCX4f7k0Lh3D9AC6iCTP7MiRBjX+V7mreEOwVfA5htDaw1FoPhPfQ
-	JIWOJjv+XBsBfd7ouCiOForjdoiyFSM6uuXrNFwRmCag6rWywok19uFmS3n9ix7wJmAJdkVKBFq
-	z3JLb2cGSH7tRTXugoOQV7ofZl47sqdRBNY/qeON6omIvCnBSUeGj+JBcfcRrhVCkozQTi/VWLT
-	1xgbtvssxz814ZAIOKFHlQiueACQ9Y=
-X-Received: by 2002:a05:600c:609b:b0:49c:f9b8:bae0 with SMTP id 5b1f17b1804b1-49fc7f2bdc8mr115621765e9.2.1789900627044;
-        Sun, 20 Sep 2026 03:37:07 -0700 (PDT)
-Received: from jwang-ThinkPad-T14-Gen-6.fritz.box ([2001:9e8:144b:bd00:675a:38f6:9365:abd6])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49fcd103325sm164915215e9.9.2026.09.20.03.37.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 20 Sep 2026 03:37:06 -0700 (PDT)
-From: Jack Wang <jinpu.wang@ionos.com>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>
-Cc: Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jack Wang <jinpu.wang@cloud.ionos.com>
-Subject: [PATCH] md: fix mddev_unlock() called without holding lock in lbs_store()
-Date: Sun, 20 Sep 2026 12:37:05 +0200
-Message-ID: <20260920103705.23191-1-jinpu.wang@ionos.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="mkg9iU7/"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1789902844;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=C2a7tEQI0pWgszXv4LJTTbh0gEvtcUKxS901OP4Qa/w=;
+ b=mkg9iU7/C2oXWT7Qh0k0GjEL2SKZt8vzq7/17P9ikVP/dzW8LXIOLwMMMyolg7mlguNRN4
+ FGHkwoTW3SQsBPxj1Kf18JVnDjzMUZc4UA1p6O9jLrNM+JAkLq/duNeKm8gPg/LgcNZhlS
+ vME3Uz120BUXMbJeelnFkSZ41Q8qWgQ7rFkbcR51Ls66Nn6uISJehiV6pK/xlykQgNXbig
+ YmqfrzkYNkvgRQdM6+0I5S2a9odFceKX4rfaPry17V75ltmOe2f3EBhWOMIGCJMYGr+sMA
+ 6ZzWsi5o7dSyxnAI7QGWAE64Yer6wcOq5pMKucvU1mKhBzSZWXRTgd+mdZ+TMw==
+Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, "Li Youhong" <liyouhong@kylinos.cn>
+X-Original-From: yu kuai <yukuai@fygo.io>
+Message-Id: <a0bc5679-2325-426c-8fed-3e0dcac5fbfb@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+X-Lms-Return-Path: <lba+26aafbffb+85b398+vger.kernel.org+yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.142]) by smtp.larksuite.com with ESMTPS; Sun, 20 Sep 2026 11:14:02 +0000
+Reply-To: yukuai@fygo.io
+To: "Li Youhong" <dayou5941@163.com>, <song@kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+Date: Sun, 20 Sep 2026 19:13:59 +0800
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH 0/3] md: raid helper cleanups
+References: <20260827075620.3599227-1-dayou5941@163.com>
+In-Reply-To: <20260827075620.3599227-1-dayou5941@163.com>
+User-Agent: Mozilla Thunderbird
 
-From: Jack Wang <jinpu.wang@cloud.ionos.com>
+=E5=9C=A8 2026/8/27 15:56, Li Youhong =E5=86=99=E9=81=93:
 
-lbs_store() jumped to the unlock label on mddev_lock() failure,
-calling mddev_unlock() on a mutex that was never acquired. Return
-directly instead.
+> From: Li Youhong <liyouhong@kylinos.cn>
+>
+> This series factors a few repeated md/raid patterns into small helpers.
+> There is no intentional behaviour change; each patch is a mechanical
+> extract of existing logic.
+>
+> Patch 1 adds rdev_record_write_error() in md.h for the
+> WriteErrorSeen + WantReplacement + MD_RECOVERY_NEEDED sequence shared by
+> raid1, raid10 and raid5.
+>
+> Patches 2 and 3 move raid1/raid10-only helpers into raid1-10.c, which is
+> #included by both drivers:
+>
+>    - rdev_bb_block_sectors() for the badblocks-aligned block size used in
+>      narrow_write_error()
+>    - flush_bio_list() for the bitmap plug flush path previously duplicate=
+d
+>      in raid10's flush_pending_writes() and raid10_unplug()
+>
+> The helpers in raid1-10.c follow the existing static inline convention
+> used by raid1_submit_write(), check_decay_read_errors(), and others in
+> that file.
+>
+> Li Youhong (3):
+>        md: add rdev_record_write_error() helper
+>        md/raid1-10: add rdev_bb_block_sectors() helper
+>        md/raid1-10: share flush_bio_list between raid1 and raid10
+> ---
+>   drivers/md/md.h       |  7 +++++++
+>   drivers/md/raid1-10.c | 27 +++++++++++++++++++++++++++
+>   drivers/md/raid1.c    | 42 +++++++-----------------------------------
+>   drivers/md/raid10.c   | 50 +++++++-------------------------------------=
+------
+>   drivers/md/raid5.c    |  5 +----
+>   5 files changed, 48 insertions(+), 83 deletions(-)
+Applied to md-7.4
 
-Fixes: 62ed1b582246 ("md: allow configuring logical block size")
-Signed-off-by: Jack Wang <jinpu.wang@cloud.ionos.com>
----
- drivers/md/md.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 680b34a63cb3..41fbe5d9961a 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6048,11 +6048,10 @@ lbs_store(struct mddev *mddev, const char *buf, size_t len)
- 
- 	err = mddev_lock(mddev);
- 	if (err)
--		goto unlock;
-+		return err;
- 
- 	err = mddev_set_logical_block_size(mddev, lbs);
- 
--unlock:
- 	mddev_unlock(mddev);
- 	return err ?: len;
- }
--- 
-2.43.0
-
+--=20
+Thanks,
+Kuai
