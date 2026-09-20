@@ -1,158 +1,164 @@
-Received: from mail-oi2-f5.google.com (mail-oi2-f5.google.com [74.125.231.197])
+Received: from va-2-56.ptr.blmpb.com (va-2-56.ptr.blmpb.com [209.127.231.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39B3A78F3A
-	for <linux-raid@vger.kernel.org>; Sun, 20 Sep 2026 01:10:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1245F36215E
+	for <linux-raid@vger.kernel.org>; Sun, 20 Sep 2026 04:44:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789866632; cv=none; b=mHgRQKR4amQx46ZJe3gE9aBQeX7JNgYMPSKPBqPoREps+a5qTJxY87wZgBe/nBv8i8XjzRDnCgNUe92ovuPYgQRbIQbFj2pqBdZhgZw2RTXE4fpl7yFqyzfs70hoNhiOkfCtrROdmR+XHC7fQTQZZ+VVqi2YAJs1xevacQJbnxM=
+	t=1789879458; cv=none; b=mZC59Bd4CRgTYEJRXXOWxbz53eLV+0kxKORtrJwTpO982j1lKk4E15BvGX1YFoYh2VNOxEit+C8W40PPgCFMqFpXGn1JPg12U0wnWESIBBjaTWJwB0GMhd7CBDzHLjBfOC7eQD960HXmaHcznbGKC+7ZzhACs+hKooRRH6VAwdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789866632; c=relaxed/simple;
-	bh=J4fGPYdbU1vyqMW4j4VL0zWFiRawM4Pn+sjLC1OmvfY=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=K/5Z3cutmom5PSxyTspuI67DZdrWhxECVvBm7WuitUEr4KFirvtA6icwwjGhBh0UJUil+ffT3ZeemKqe73ijkrqKIxpOZowb4R5A2kHCrAH5HTU1EZgONqeMj0aizCrqcY+ZxToXa1enL9WorrFj10DgTdLvB88E7ElZwsHsxEI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=74.125.231.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi2-f5.google.com with SMTP id 46e09a7af769-801706d7e6dso1001212a34.0
-        for <linux-raid@vger.kernel.org>; Sat, 19 Sep 2026 18:10:29 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789866628; x=1790471428;
-        h=content-type:to:from:subject:message-id:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=PF45CuBTojQyukx9jI6xau1zxJKpu3tO8/fDW5FRIMM=;
-        b=BGFG3whog2dT8rJKB0eOamMLRPLwS5yZ8WDMinv+mElLbizUGH/ac2p4hsbvJEOfdo
-         t79g0FXViyCSAwMrecTTYlKSDXF1gb32SqNA8mWUfX0MO3DMUaQeZvN5z/pSYY4VqkiD
-         4X/h5z3GX4A4CM6TT1nXZpKCi12laKrG/yZ1BUklPU7KnRlbjNwrvka7o7Q5E45iV0G/
-         ZjLffShce7pt08O9gYR0vQija3LngrFdtYZhw4tpo+O9G4vtxdI+Y5YXRMuVEsQztGma
-         /A4/El70CAFSQnauymtFN3YkXG0VH8xwv45NEVahcS2N8wWsPxUENT8j8bfTxUw6Len8
-         A4lA==
-X-Forwarded-Encrypted: i=1; AKwUvByJ1e3Yg8Rm8koEy+JZAS5mh3XHY0v+raSGLPVM5LscrqbJKXltkFvxe7avxlI3QDo3m8pGgo6iKnKG@vger.kernel.org
-X-Gm-Message-State: AFuF++m8UmP+k3zV1rqe1oILvOAS5cKmvmDPsm3HgjRVJw/lq49jev4D
-	8YJz9mdweTaCjFCEvk73h9NQ0eBsi0CWrEqEAMrhoLQq5NoKDOpumn0iadM8nuWXF6tliJy/TVH
-	3gNnwuWbAb1i22jZs4lhEiKMLwp7kqB0B7hpzlDUozI39QEDTHa8KpMEI5A4=
+	s=arc-20240116; t=1789879458; c=relaxed/simple;
+	bh=BqflKFAAP6AuOcEgkKxEPmOLeXcjze/O0+7WHaU7qqo=;
+	h=Date:References:To:From:Mime-Version:In-Reply-To:Cc:Subject:
+	 Content-Type:Message-Id; b=rTlmfSPwGXoV4Pt7xrDMZ9hy/NJjqcQYDqx78rT/TCExgHX3Re9bh0Og+idYlWSNXQyhG/AGTeZlsPFlM7CHk6Ld94UzomwOvNwZamH1jqpCoz4O3TfU5mfkz5AadeyhtKiNHb2FsnAY2KACxcIaoHlNs1nje0feiMZSVt/BgXQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=gsW8ml8X; arc=none smtp.client-ip=209.127.231.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="gsW8ml8X"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1789879440;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=AG9GzthLPeLuU3YNwkQS4FKboAZLYa3nsvotKpK/sTs=;
+ b=gsW8ml8XUGHygozkfVDEbffBCzXtXjQT7lgrotWQy9tVOSXly8NxuT+gHHgSQEjQuF6KXy
+ dOOv3aVQglRA8TK4XU4nQcm19oQ2IUg2TYN0WpzrF6kPRnLsaRhDFCVjoMorrOo8FNDex/
+ /GwmCQI6Jp0wAP4CiNl1IgInzm4Qn1VI7/khyd48aLpbSNDcgBT0yJPma2mwhxcorzJpEb
+ CVfAQzOihfm+izTxRengrmHoQ0aZQLhVvUUL9j3whJ/RA97TnVAMTZjE5oN5jHNxW/tzMT
+ SIno1R+SGuIThR+YvIn+P8PymK1iqFdwwZaL/BRQkemCGXw7imSYeKjoJeT/kw==
+Date: Sun, 20 Sep 2026 12:43:55 +0800
+Content-Transfer-Encoding: quoted-printable
+References: <20260918070900.1945351-1-chengzhihao1@huawei.com>
+To: "Zhihao Cheng" <chengzhihao1@huawei.com>, <song@kernel.org>, 
+	<xiao@kernel.org>, <magiclinan@didiglobal.com>, <eadavis@sina.com>, 
+	<abd.masalkhi@gmail.com>, "yu kuai" <yukuai@fygo.io>
+From: "yu kuai" <yukuai@fygo.io>
+User-Agent: Mozilla Thunderbird
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-Received: by 2002:a05:6820:7093:10b0:6cd:3ffc:ad08 with SMTP id
- 006d021491bc7-6cd3ffcb687mr2390033eaf.88.1789866628349; Sat, 19 Sep 2026
- 18:10:28 -0700 (PDT)
-Date: Sat, 19 Sep 2026 18:10:28 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6aaf3284.514bccd6.255447.0003.GAE@google.com>
-Subject: [syzbot] [raid?] WARNING: kobject bug in bind_rdev_to_array
-From: syzbot <syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com>
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
-	magiclinan@didiglobal.com, song@kernel.org, syzkaller-bugs@googlegroups.com, 
-	xiao@kernel.org, yukuai@fnnas.com, yukuai@fygo.io
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+In-Reply-To: <20260918070900.1945351-1-chengzhihao1@huawei.com>
+X-Original-From: yu kuai <yukuai@fygo.io>
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<yangerkun@huawei.com>, <yi.zhang@huawei.com>
+Subject: Re: [PATCH v3] md: Fix the null-ptr-deref of 'mddev->private' while submitting IO
+Received: from [192.168.1.104] ([39.182.0.142]) by smtp.larksuite.com with ESMTPS; Sun, 20 Sep 2026 04:43:59 +0000
+Content-Type: text/plain; charset=UTF-8
+X-Lms-Return-Path: <lba+26aaf648f+6fd1cb+vger.kernel.org+yukuai@fygo.io>
+Reply-To: yukuai@fygo.io
+Message-Id: <4d4e5f48-d65d-47e3-a143-cd0740d22d27@fygo.io>
 
-Hello,
+Hi=EF=BC=8C
 
-syzbot found the following issue on:
+=E5=9C=A8 2026/9/18 15:09, Zhihao Cheng =E5=86=99=E9=81=93:
+> Concurrent processes md_stop and IO submitting could trigger a
+> null-ptr-deref of 'mddev->private':
+>
+>   BUG: kernel NULL pointer dereference, address: 0000000000000070
+>   RIP: 0010:_wait_barrier+0x2f/0x250
+>   Call Trace:
+>    raid1_make_request+0x150/0xf50
+>    md_handle_request+0x104/0x530
+>    md_submit_bio+0x76/0x130
+>    submit_bio+0xdd/0x250
+>    submit_bio_wait+0x1f/0x40
+>    __blkdev_direct_IO_simple+0x1f6/0x370
+>    blkdev_write_iter+0x3b2/0x520
+>    ksys_write+0x7d/0x190
+>
+>                P1
+>    fd =3D open(/dev/md0, O_RDWR)
+> 	                      P2 (forked from P1, fd' <=3D fd)
+>    write(fd)
+>     submit_bio
+>      md_handle_request
+>       raid1_make_request
+>        raid1_write_request
+>                                    ioctl(fd, STOP_ARRAY)
+> 		                   mddev_set_closing_and_sync_blockdev
+> 				   // check passed, mddev->openers =3D 1,
+> 				   // because md_open() is only called
+> 				   // once in P1->open
+> 				   do_md_stop
+> 				    __md_stop
+> 				     mddev->private =3D NULL
+>
+>         conf =3D mddev->private // NULL
+>          wait_barrier(conf, sector) // null-ptr-deref !
+>
+> It is a common problem for raid0/1/10/5, and __md_stop could be triggered
+> by several paths(eg. ioctl, sysfs, ->dtr). Fix it by replacing
+> mddev_lock() with mddev_suspend_and_lock() for all __md_stop() callers.
+> The caller dm_table_destroy() is guaranteed being invoked with device
+> suspended, so raid_dtr() could keep using mddev_lock_nointr().
+> The caller array_state_store() is guaranteed by the check
+> mddev_set_closing_and_sync_blockdev(mddev, 0). For example, someone open
+> /dev/mdx, write something and close /dev/mdx, it won't trigger the
+> problem, all dirty pages can be flushed before mddev->openers decrement.
+> Besides, fail the submitting IO in md_handle_request() if the
+> 'mddev->pers' becomes NULL.
+>
+> Fetch a reproducer in https://bugzilla.kernel.org/show_bug.cgi?id=3D22202=
+0
+>
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Reported-by: syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=3D3fe892ea5fc292e1353f
+> Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
+> ---
+>   v1->v2:
+>    1. Add 'mddev->pers !=3D NULL' check before make_request
+>    2. Delete dm-raid caller(->dtr) modifications
+>    3. Move memalloc_noio_restore after mddev_unlock_and_resume
+>   v2->v3:
+>    1. Remove modifications in array_state_store()
+>    2. update commit msg
 
-HEAD commit:    518e5b794c06 Merge tag 'for-7.3-rc3-tag' of git://git.kern..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=12345ff9580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=c3bddd52b22c2498
-dashboard link: https://syzkaller.appspot.com/bug?extid=95eeb4ada2349a2170ea
-compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
+In array_state_store(), !md_is_rdwr() checking before mddev_set_closing_and=
+_sync_blockdev()
+should be removed.
 
-Unfortunately, I don't have any reproducer for this issue yet.
+>   drivers/md/md.c | 15 +++++++++++++++
+>   1 file changed, 15 insertions(+)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 680b34a63cb3..e73338c26d53 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -414,6 +414,20 @@ bool md_handle_request(struct mddev *mddev, struct b=
+io *bio)
+>   		if (!percpu_ref_tryget_live(&mddev->active_io))
+>   			goto check_suspended;
+>   	}
+> +	if (!mddev->pers) {
+> +		/*
+> +		 * The __md_stop() sets 'mddev->private' to NULL during
+> +		 * the IO submitting, check 'mddev->pers' before the IO
+> +		 * being processed by specific driver to avoid the
+> +		 * null-ptr-deref of 'mddev-><member>'. The check is
+> +		 * safe because the IO has got the 'mddev->active_io'
+> +		 * reference, and all __md_stop() callers will wait for
+> +		 * the reference to be zero.
+> +		 */
+> +		bio_io_error(bio);
+> +		percpu_ref_put(&mddev->active_io);
+> +		return true;
+> +	}
+>   	if (!mddev->pers->make_request(mddev, bio)) {
+>   		percpu_ref_put(&mddev->active_io);
+>   		if (mddev_is_dm(mddev) && mddev->pers->prepare_suspend)
+> @@ -8299,6 +8313,7 @@ static bool md_ioctl_need_suspend(unsigned int cmd)
+>   	case HOT_REMOVE_DISK:
+>   	case SET_BITMAP_FILE:
+>   	case SET_ARRAY_INFO:
+> +	case STOP_ARRAY:
+>   		return true;
+>   	default:
+>   		return false;
 
-Downloadable assets:
-disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-518e5b79.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/5307a29f916b/vmlinux-518e5b79.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/7d4c698a99b1/bzImage-518e5b79.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com
-
-------------[ cut here ]------------
-kobject: '(null)' (ffff8880120640f0): is not initialized, yet kobject_get() is being called.
-WARNING: lib/kobject.c:642 at kobject_get lib/kobject.c:640 [inline], CPU#0: syz.0.0/5330
-WARNING: lib/kobject.c:642 at kobject_add_internal+0xea/0xcd0 lib/kobject.c:225, CPU#0: syz.0.0/5330
-Modules linked in:
-CPU: 0 UID: 0 PID: 5330 Comm: syz.0.0 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-RIP: 0010:kobject_get lib/kobject.c:640 [inline]
-RIP: 0010:kobject_add_internal+0x113/0xcd0 lib/kobject.c:225
-Code: 04 4c 89 e0 48 c1 e8 03 48 b9 00 00 00 00 00 fc ff df 80 3c 08 00 74 08 4c 89 e7 e8 57 11 5b f6 49 8b 34 24 4c 89 f7 4c 89 e2 <67> 48 0f b9 3a e9 e4 00 00 00 e8 fe 6a e9 f5 b8 fe ff ff ff e9 fb
-RSP: 0018:ffffc9000f1f78a8 EFLAGS: 00010246
-RAX: 1ffff1100240c81e RBX: ffff888052836080 RCX: dffffc0000000000
-RDX: ffff8880120640f0 RSI: 0000000000000000 RDI: ffffffff908d7cc0
-RBP: 0000000000000000 R08: ffff888000b14b00 R09: 0000000000000008
-R10: 0000000000000007 R11: 0000000000000002 R12: ffff8880120640f0
-R13: dffffc0000000000 R14: ffffffff908d7cc0 R15: dffffc0000000000
-FS:  00007ffbef2886c0(0000) GS:ffff88808c2c2000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f208abad1bc CR3: 000000000e910000 CR4: 0000000000352ef0
-Call Trace:
- <TASK>
- kobject_add_varg lib/kobject.c:374 [inline]
- kobject_add+0x163/0x240 lib/kobject.c:426
- bind_rdev_to_array+0x80c/0xdd0 drivers/md/md.c:2621
- md_add_new_disk+0xe3b/0x1850 drivers/md/md.c:7684
- md_ioctl+0x200a/0x2610 drivers/md/md.c:8499
- blkdev_ioctl+0x5e3/0x740 block/ioctl.c:798
- vfs_ioctl fs/ioctl.c:51 [inline]
- __do_sys_ioctl fs/ioctl.c:597 [inline]
- __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7ffbee39e159
-Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007ffbef287fe8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 00007ffbee626090 RCX: 00007ffbee39e159
-RDX: 0000200000000420 RSI: 0000000040140921 RDI: 0000000000000004
-RBP: 00007ffbee43506b R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007ffbee626128 R14: 00007ffbee626090 R15: 00007ffe703ff368
- </TASK>
-----------------
-Code disassembly (best guess):
-   0:	04 4c                	add    $0x4c,%al
-   2:	89 e0                	mov    %esp,%eax
-   4:	48 c1 e8 03          	shr    $0x3,%rax
-   8:	48 b9 00 00 00 00 00 	movabs $0xdffffc0000000000,%rcx
-   f:	fc ff df
-  12:	80 3c 08 00          	cmpb   $0x0,(%rax,%rcx,1)
-  16:	74 08                	je     0x20
-  18:	4c 89 e7             	mov    %r12,%rdi
-  1b:	e8 57 11 5b f6       	call   0xf65b1177
-  20:	49 8b 34 24          	mov    (%r12),%rsi
-  24:	4c 89 f7             	mov    %r14,%rdi
-  27:	4c 89 e2             	mov    %r12,%rdx
-* 2a:	67 48 0f b9 3a       	ud1    (%edx),%rdi <-- trapping instruction
-  2f:	e9 e4 00 00 00       	jmp    0x118
-  34:	e8 fe 6a e9 f5       	call   0xf5e96b37
-  39:	b8 fe ff ff ff       	mov    $0xfffffffe,%eax
-  3e:	e9                   	.byte 0xe9
-  3f:	fb                   	sti
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+--=20
+Thanks,
+Kuai
