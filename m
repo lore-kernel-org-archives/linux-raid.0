@@ -1,46 +1,75 @@
-Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj2-f42.google.com (mail-pj2-f42.google.com [74.125.227.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33A953DC4B3;
-	Sun, 20 Sep 2026 06:45:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CF392C15A0
+	for <linux-raid@vger.kernel.org>; Sun, 20 Sep 2026 09:15:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789886710; cv=none; b=q0ancMBIXisu3/c/TWC3LarrSfdC8NTFXb7ySDEVS5AzCSWxSUvTJLvaBwrXmVARReGNKpuqOiE3Yh+k+UScxvmHfx6KwpTBxeEj+9Y7JXQLTHe2x87siupqYwsoQCJUO+HveHCzKXNDlLfzYCagfdmgu+nm1XMzT2WCIWOA28I=
+	t=1789895745; cv=none; b=t+41utsTpaOMjS8bOq0aySyyen7PT44tq6vIiruAitLPrJEmDZYkyxEEylKddmSqeWiyMHD0p2v92wyZY7Q2HlxFrWY9iRpUsjpLaTuwb82N7eLtZf/2YZrE0+WT9iEqwtiG0ns6e7OSFYIjOb7uF0n1Oj7vffCNnFod0Ib/H18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789886710; c=relaxed/simple;
-	bh=B8BAjswNIsS2gLDIxmLgpF2MHTyLD+ZWXR2OZH4QHGE=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=EGZdubrDZ4YhepQ/6xJ4HfHYWUTJp4KqY4rhH+Q5QJWB/KphSuYPYxJ5jfZhtglGW0kHop7Tv+DKRqHtZM3jIzjGePHd4MjZyQkFHeVNhiB/H7no8u9ZI/d815kYBFH/PuGiSWy/HZayyk+KX0y7wxUDO03IGwI87r4yIR0d94k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=ePCfXPOL; arc=none smtp.client-ip=113.46.200.222
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1789895745; c=relaxed/simple;
+	bh=o5ynmhsA1DQCi4+waIOfUB5VhWs7SgaifEiUhVbaOAs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RX73U8f5kj0ix7wHLXWIU0dqxlNk0/RtbRegUqs92yiVH/4kDTp6MUS5S4DgYphts1V2fuf9I7lAbFJEuEnRn5Rjq9vGUSK0P8RFWmFI09pTv1Fxj4ZBARhlF5/PQorWtuTYPJOQRKRepNLEORBGK5t2GUHAxGmzbAg1Q24Ei6Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nef5+YVu; arc=none smtp.client-ip=74.125.227.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="ePCfXPOL"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=HfZOyzQc0uYKBZ1L7tWk8X5vgznY3cRdXLJwGK+D0ZA=;
-	b=ePCfXPOLdKUz0P1mPkQbJuzmLRCCZPpDI9Tg8oKBvstJYFyxGIrXHgmpsAU8Rd8/vx7GAK5Dj
-	44BCIfzbaW/2Ud31lqrHE/7xC52ukWFBMW+skt1AroxfLUgWqmslsODQmQGMmjlJ3SgiXA9yt2s
-	+KIUTdO/QRL211EEeN0tyC8=
-Received: from mail.maildlp.com (unknown [172.19.162.92])
-	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4hnc5P3mTZzLlX2;
-	Sun, 20 Sep 2026 14:34:01 +0800 (CST)
-Received: from whupemo200011.china.huawei.com (unknown [7.152.185.179])
-	by mail.maildlp.com (Postfix) with ESMTPS id 926BF40586;
-	Sun, 20 Sep 2026 14:45:02 +0800 (CST)
-Received: from huawei.com (10.50.85.155) by whupemo200011.china.huawei.com
- (7.152.185.179) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Sun, 20 Sep
- 2026 14:45:01 +0800
-From: Zhihao Cheng <chengzhihao1@huawei.com>
-To: <song@kernel.org>, <yukuai@fygo.io>, <magiclinan@didiglobal.com>,
-	<xiao@kernel.org>, <eadavis@sina.com>, <abd.masalkhi@gmail.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-	<chengzhihao1@huawei.com>, <yangerkun@huawei.com>, <yi.zhang@huawei.com>
-Subject: [PATCH v4] md: Fix the null-ptr-deref of 'mddev->private' while submitting IO
-Date: Sun, 20 Sep 2026 14:37:04 +0800
-Message-ID: <20260920063704.3809608-1-chengzhihao1@huawei.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nef5+YVu"
+Received: by mail-pj2-f42.google.com with SMTP id 98e67ed59e1d1-396ccda24afso1505314a91.3
+        for <linux-raid@vger.kernel.org>; Sun, 20 Sep 2026 02:15:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789895744; x=1790500544; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=+MDlX42BAsKVk7nwm/KS5svsEQJzQqta4toefAuww8A=;
+        b=nef5+YVumb+UVxblk6PLlskZFHMRvFl1e9Uktu8h4AEw0waJvqie5qCjwDrA0HPqJZ
+         o97n/1/Tt+9g2OVeTYahMy6K6MyQmwPAVGEHKO3akRlpmhwP9hHwyjyaCJPOTkBqazK+
+         h0HNoflTybdrwv4WqrnWVm0fD41uHMmQgK6NoBb+VfNlJusyPyy6M6I0tI+t27QVEdI1
+         LN7azJ4IhIO+5QWZ5/MFLWwjw85v/a3nJ6hdVm6jSeFpXW1o6GHDSyq9kzxQnympcutJ
+         E0AdYRQcUC43iG2/yG36ehQ9zHV0L7oxDWfYdwyWtOrEhX3Hp+0eC+fEeuhBMT2750DD
+         4iYg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789895744; x=1790500544;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=+MDlX42BAsKVk7nwm/KS5svsEQJzQqta4toefAuww8A=;
+        b=eCkSRvB3XP12kNCG7m6evPVHd5ycGJJtuqwLIyD/1oO4z7b33twXywyVcogCM/JhqV
+         ua+liSC5HSRrkE3orI6UzoH/c4gRu599JteUv5bl4lVUkWRgtOg33H8mGinXwMejebmg
+         OUkxfd8ueu73RQxQyWHYRbIOP/Z8ufU8FDOOpSbPVdICukhUO0BR92VUfECyfavZSR9t
+         kHECOoPXw4YN52DPCX52bhQD2C/dnrdrycOGifXCMbHcmFg2eAMs7O1fLGXpDXNg36e0
+         xeYzhxpAsEyCU5+Q4H8BTheGWQ7T72NlytkKRbCjDoc9T1zAaPZcGKB8ta7Wa25z8QxQ
+         Ruzg==
+X-Gm-Message-State: AFuF++lzDCc00/J67VAmF1pmfQ/tQUv+0+Xxo59s5pr0GNSCqDSTlb8a
+	wTT5E28SQoUmtzat2ECC9MQnTNRE4N5TauhoRe/sj24n6fziPkVh7Fyy
+X-Gm-Gg: AYBFou0k2ZWFiUxfIW+mt9rk6Z0bdywNQlrxBmh5hBt/O8Mty1HgNVQF2sNmkRklpmi
+	cmm9b0PT7gAxYLWZPkO8e/weBF0OmXPirwMEFdd3YFsQcaWQH+MsleUQfb0+zZBDeMa4HFJH3d5
+	H+8Uux3J83awbwcAowWlylpVLvHRuxX1qlLFGm0uTNuauRgNLIDKQCWXrEB/9ucULg+vfLZswyd
+	Gt+RkN27bHkRZVgDIiqlHErjzsHk45ev2bvdR8LVeEWixVOETJuDJNG4QDmWhjsKpLB4kPUUNPI
+	e37S9eACpTFlWOUMw/P0uEufTRTtcIueX14w0t/cpuuK1o4v6fGddpp++Kgonaw246Meb/UtaA+
+	6s/XWEcVjmHmcWZtwJz+jp7FWx4ISLIjl7bl0twa/p/e3/AV2PhpVYYUAhRb6+rVbj6Txd/qiLC
+	bQDT2aTcag2wy4VM47KJy4JxyXYOs5mIIeIW8gIFRzFjyu8k0pEshKxwK2moJ+1qvz/jrAdXk9Y
+	/qck19NrldQKMSaUBHnBd4=
+X-Received: by 2002:a17:90b:1dc7:b0:39e:6c68:1553 with SMTP id 98e67ed59e1d1-39e6c68331amr7957189a91.27.1789895743725;
+        Sun, 20 Sep 2026 02:15:43 -0700 (PDT)
+Received: from LAPTOP-450UDG4J ([223.185.130.136])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39e6c379c4bsm8740003a91.7.2026.09.20.02.15.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 20 Sep 2026 02:15:43 -0700 (PDT)
+From: Yogesh Gaur <yogeshgaur.83@gmail.com>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>
+Cc: linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+	Yogesh Gaur <yogeshgaur.83@gmail.com>,
+	syzbot+2ef75c54d0b2ac5d00ba@syzkaller.appspotmail.com
+Subject: [PATCH] md/raid5: give the io_unit slab caches per-array names
+Date: Sun, 20 Sep 2026 14:45:33 +0530
+Message-ID: <20260920091533.413-1-yogeshgaur.83@gmail.com>
+X-Mailer: git-send-email 2.55.0.windows.5
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -48,120 +77,112 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
- whupemo200011.china.huawei.com (7.152.185.179)
 
-Concurrent processes md_stop and IO submitting could trigger a
-null-ptr-deref of 'mddev->private':
+Both raid5 log backends create their io_unit slab cache per array but
+name it after the struct:
 
- BUG: kernel NULL pointer dereference, address: 0000000000000070
- RIP: 0010:_wait_barrier+0x2f/0x250
- Call Trace:
-  raid1_make_request+0x150/0xf50
-  md_handle_request+0x104/0x530
-  md_submit_bio+0x76/0x130
-  submit_bio+0xdd/0x250
-  submit_bio_wait+0x1f/0x40
-  __blkdev_direct_IO_simple+0x1f6/0x370
-  blkdev_write_iter+0x3b2/0x520
-  ksys_write+0x7d/0x190
+	ppl_conf->io_kc = KMEM_CACHE(ppl_io_unit, 0);
+	log->io_kc      = KMEM_CACHE(r5l_io_unit, 0);
 
-              P1
-  fd = open(/dev/md0, O_RDWR)
-	                      P2 (forked from P1, fd' <= fd)
-  write(fd)
-   submit_bio
-    md_handle_request
-     raid1_make_request
-      raid1_write_request
-                                  ioctl(fd, STOP_ARRAY)
-		                   mddev_set_closing_and_sync_blockdev
-				   // check passed, mddev->openers = 1,
-				   // because md_open() is only called
-				   // once in P1->open
-				   do_md_stop
-				    __md_stop
-				     mddev->private = NULL
+KMEM_CACHE() passes the stringified type as the cache name, so every
+array that enables PPL or attaches a journal asks for a cache called
+"ppl_io_unit" or "r5l_io_unit".  With two such arrays live at the same
+time the second one trips kmem_cache_sanity_check():
 
-       conf = mddev->private // NULL
-        wait_barrier(conf, sector) // null-ptr-deref !
+  kmem_cache of name 'ppl_io_unit' already exists
+  WARNING: mm/slab_common.c:112 at __kmem_cache_create_args+0xae/0x460
+   ppl_init_log+0x285/0x1310 drivers/md/raid5-ppl.c:1363
+   log_init drivers/md/raid5-log.h:138 [inline]
+   raid5_change_consistency_policy+0x255/0x740 drivers/md/raid5.c:9141
+   consistency_policy_store+0x7f/0x230 drivers/md/md.c:5883
+   md_attr_store+0x3b7/0x640 drivers/md/md.c:6158
 
-It is a common problem for raid0/1/10/5, and __md_stop could be triggered
-by several paths(eg. ioctl, sysfs, ->dtr). Fix it by replacing
-mddev_lock() with mddev_suspend_and_lock() for all __md_stop() callers.
-The caller array_state_store() is guaranteed by the check
-mddev_set_closing_and_sync_blockdev(mddev, 0), we just need to remove
-the check '!md_is_rdwr'. For example, someone open /dev/mdx, write
-something and close /dev/mdx, it won't trigger the problem, all dirty
-pages can be flushed before mddev->openers decrement.
-The caller dm_table_destroy() is guaranteed being invoked with device
-suspended, so raid_dtr() could keep using mddev_lock_nointr().
-Besides, fail the submitting IO in md_handle_request() if the
-'mddev->pers' becomes NULL.
+which is reachable by any user that can write "ppl" to
+md/consistency_policy on two arrays, and equally by assembling two
+journalled arrays.  The cache is created and destroyed correctly on
+every path, so this is a name collision only - duplicate names confuse
+slabtop and /proc/slabinfo, which is what the check is there to catch.
 
-Fetch a reproducer in https://bugzilla.kernel.org/show_bug.cgi?id=222020
+Build the name from the array instead, the way grow_stripes() already
+does for the stripe_head cache in this driver, and fall back to the
+mddev pointer for dm-raid where mdname() is the constant "mdX".  The
+buffer is sized like conf->cache_name[] because mdname() can return up
+to DISK_NAME_LEN bytes.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Reported-by: syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=3fe892ea5fc292e1353f
-Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
+The explicit size/align arguments keep what KMEM_CACHE() expanded to,
+so object layout does not change.
+
+Fixes: 3418d036c81d ("raid5-ppl: Partial Parity Log write logging implementation")
+Fixes: f6bed0ef0a80 ("raid5: add basic stripe log")
+Reported-by: syzbot+2ef75c54d0b2ac5d00ba@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=2ef75c54d0b2ac5d00ba
+Assisted-by: LLM
+Signed-off-by: Yogesh Gaur <yogeshgaur.83@gmail.com>
 ---
- v1->v2:
-  1. Add 'mddev->pers != NULL' check before make_request
-  2. Delete dm-raid caller(->dtr) modifications
-  3. Move memalloc_noio_restore after mddev_unlock_and_resume
- v2->v3:
-  1. Remove modifications in array_state_store()
-  2. update commit msg
- v3->v4:
-  1. Remove '!md_is_rdwr' check from array_state_store()
-  2. update commit msg
- drivers/md/md.c | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
+ drivers/md/raid5-cache.c | 12 +++++++++++-
+ drivers/md/raid5-ppl.c   | 12 +++++++++++-
+ 2 files changed, 22 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 680b34a63cb3..d81f5bf3bffe 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -414,6 +414,20 @@ bool md_handle_request(struct mddev *mddev, struct bio *bio)
- 		if (!percpu_ref_tryget_live(&mddev->active_io))
- 			goto check_suspended;
- 	}
-+	if (!mddev->pers) {
-+		/*
-+		 * The __md_stop() sets 'mddev->private' to NULL during
-+		 * the IO submitting, check 'mddev->pers' before the IO
-+		 * being processed by specific driver to avoid the
-+		 * null-ptr-deref of 'mddev-><member>'. The check is
-+		 * safe because the IO has got the 'mddev->active_io'
-+		 * reference, and all __md_stop() callers will wait for
-+		 * the reference to be zero.
-+		 */
-+		bio_io_error(bio);
-+		percpu_ref_put(&mddev->active_io);
-+		return true;
-+	}
- 	if (!mddev->pers->make_request(mddev, bio)) {
- 		percpu_ref_put(&mddev->active_io);
- 		if (mddev_is_dm(mddev) && mddev->pers->prepare_suspend)
-@@ -4670,7 +4684,7 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 	case readonly:
- 	case inactive:
- 	case read_auto:
--		if (!mddev->pers || !md_is_rdwr(mddev))
-+		if (!mddev->pers)
- 			break;
- 		/* write sysfs will not open mddev and opener should be 0 */
- 		err = mddev_set_closing_and_sync_blockdev(mddev, 0);
-@@ -8299,6 +8313,7 @@ static bool md_ioctl_need_suspend(unsigned int cmd)
- 	case HOT_REMOVE_DISK:
- 	case SET_BITMAP_FILE:
- 	case SET_ARRAY_INFO:
-+	case STOP_ARRAY:
- 		return true;
- 	default:
- 		return false;
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 7b7546bfa21f..47458a474adf 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -3066,6 +3066,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ {
+ 	struct r5l_log *log;
+ 	struct md_thread *thread;
++	char cache_name[48];
+ 	int ret;
+ 
+ 	pr_debug("md/raid:%s: using device %pg as journal\n",
+@@ -3105,7 +3106,16 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 	INIT_LIST_HEAD(&log->flushing_ios);
+ 	INIT_LIST_HEAD(&log->finished_ios);
+ 
+-	log->io_kc = KMEM_CACHE(r5l_io_unit, 0);
++	if (mddev_is_dm(conf->mddev))
++		snprintf(cache_name, sizeof(cache_name), "r5l_io_unit-%p",
++			 conf->mddev);
++	else
++		snprintf(cache_name, sizeof(cache_name), "r5l_io_unit-%s",
++			 mdname(conf->mddev));
++
++	log->io_kc = kmem_cache_create(cache_name, sizeof(struct r5l_io_unit),
++				       __alignof__(struct r5l_io_unit),
++				       0, NULL);
+ 	if (!log->io_kc)
+ 		goto io_kc;
+ 
+diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+index 7f8a9d3fd578..0530632f9d2a 100644
+--- a/drivers/md/raid5-ppl.c
++++ b/drivers/md/raid5-ppl.c
+@@ -1318,6 +1318,7 @@ int ppl_init_log(struct r5conf *conf)
+ {
+ 	struct ppl_conf *ppl_conf;
+ 	struct mddev *mddev = conf->mddev;
++	char cache_name[48];
+ 	int ret = 0;
+ 	int max_disks;
+ 	int i;
+@@ -1360,7 +1361,16 @@ int ppl_init_log(struct r5conf *conf)
+ 
+ 	ppl_conf->mddev = mddev;
+ 
+-	ppl_conf->io_kc = KMEM_CACHE(ppl_io_unit, 0);
++	if (mddev_is_dm(mddev))
++		snprintf(cache_name, sizeof(cache_name), "ppl_io_unit-%p", mddev);
++	else
++		snprintf(cache_name, sizeof(cache_name), "ppl_io_unit-%s",
++			 mdname(mddev));
++
++	ppl_conf->io_kc = kmem_cache_create(cache_name,
++					    sizeof(struct ppl_io_unit),
++					    __alignof__(struct ppl_io_unit),
++					    0, NULL);
+ 	if (!ppl_conf->io_kc) {
+ 		ret = -ENOMEM;
+ 		goto err;
 -- 
-2.52.0
+2.55.0.windows.5
 
