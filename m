@@ -1,176 +1,149 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi2-f5.google.com (mail-oi2-f5.google.com [74.125.231.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E2E949A3DC;
-	Mon, 21 Sep 2026 09:28:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35F2F4854E9
+	for <linux-raid@vger.kernel.org>; Mon, 21 Sep 2026 11:07:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789982929; cv=none; b=acpyy6ZXnHuo/bglX5iP+YPnmBGw+2uBydQLi4Z8QCqujtaETkfJ1yeTJXShP1+UpaaQZrd0+4iMF/sigAOTEeQ0paFyiuMGqopmLIw2ILPbTQHVNOJBUFc70KpmI1k6+Dy/BBwmndUovD7A56cQEnXqzmyFs/wdQ+R3pwgkTNI=
+	t=1789988870; cv=none; b=SDjsgca5pHroOQhmMWQ/wRZWAgL1XiOVrdf3De0iKOBE+5KX0cnc4AV6B6LL9hN0dU4e92VF56egDAJJp5RV+GAW+hZj0SqZibxmgXRFESrKDCeG5rjvkQHtrM7eEI95DyMQeTqlaVnfcBYXRBS52JLdcILfdT2SQBjJbhn427g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789982929; c=relaxed/simple;
-	bh=2ja0iXhncaSOLX4279w1X4woaAq7vhERXDmpS9kJ4oI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ih8zIlNSwccfcSU66qdyvXz0L541S8A6VJreZ+HsySScI3WUuruiGq1D8ycNLCyIp06j/de3lzZL7fa0FEK4dGvYsIzN0ecZMWtPmth2wWEA1EuGgWhaFsWjOeWgj+BnhnGGJedQBMwy9aWBD+nTS96KpdnBjPQ+Kr3dUMfq0JA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=LbpNXzuF; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="LbpNXzuF"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68L7ZbnX672354;
-	Mon, 21 Sep 2026 09:27:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=G1939M
-	Elcb2kM01/7HPbHzZLx6pN/KmlSSE/eI9FBUg=; b=LbpNXzuFadRu4xefU1BRaQ
-	h06fCzfQKzfgJVO+GdlysRBuw3CYS0h9INHzdvY3mycdGE8B4aCXmajbflhXM83m
-	ptcP7kCNPw7U5yE7EQVhYZbolmvC65PE01R+sPRX1TAwDsp3zu59hoqOFt/AvSFu
-	5pqA8S4gXwqDoq7dFjtx3V6977yRg6lME+gwPDU4gqT+I3OVD5aSSVh7R8w6dn0T
-	kiKHMCbbohscsdNiKn1Zx2pPlBr3PIYgVRxD/D5LlFRG64591dn0jOnilV2QvhBv
-	bToDpdeuPAeQZrnWFVRBLnCUhYPuTDfHfi8SVj+Rm2GBZJhlYSmRWoRw9xze2Cvw
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gske17ksg-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Mon, 21 Sep 2026 09:27:30 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68L7HTui924403;
-	Mon, 21 Sep 2026 09:27:29 GMT
-Received: from smtprelay01.wdc07v.mail.ibm.com ([172.16.1.68])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gt4qq4sv7-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 21 Sep 2026 09:27:29 +0000 (GMT)
-Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
-	by smtprelay01.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68L9RTIS62783920
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 21 Sep 2026 09:27:29 GMT
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id EAD7558063;
-	Mon, 21 Sep 2026 09:27:28 +0000 (GMT)
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 2F3D55804B;
-	Mon, 21 Sep 2026 09:27:14 +0000 (GMT)
-Received: from [9.61.138.180] (unknown [9.61.138.180])
-	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 21 Sep 2026 09:27:13 +0000 (GMT)
-Message-ID: <37de70f6-67f8-466f-a267-03584973dd3a@linux.ibm.com>
-Date: Mon, 21 Sep 2026 14:57:12 +0530
+	s=arc-20240116; t=1789988870; c=relaxed/simple;
+	bh=nFA1kLxPFD6DXL7JegHDVi+dyMdIf8B9BDVi9szT22o=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=l8pXz4TE04ygt9EBmwdr1nQuQE5bE3W9BEK85Qmkf2OjLDj/eUDi/d0vB/CyQECKT1PAyUAFNvve19IGqviE4WaYyyJt1jX1fiwPHEGJKJMtgxxCi+Hv90BtST343ZZSzlNVJSSE+jTbxFqEqb6CxyBke3o3mVIaa+9Xxlh+RJY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=74.125.231.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi2-f5.google.com with SMTP id 46e09a7af769-80477cb33a7so1467487a34.0
+        for <linux-raid@vger.kernel.org>; Mon, 21 Sep 2026 04:07:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789988858; x=1790593658;
+        h=content-type:to:from:subject:message-id:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=X4NPzwFFH/PIySvIe6MuM8xYH8txyEHUbV+e+2t0RMs=;
+        b=HVLLT13Psx1BUgQ0rmDJxoq7PcvcENGzIFGbKs5pJdm/g8qoJ9Fheinzk94Jkxy9ZT
+         XpWKS7a6gGA7pNA34+fI9xCEUZlbF3GgFZW7+J42OzX/bm2xYhLPkWFSc0LTUTESr/pQ
+         bJMlKMfAv6VwIv58thLsVmWCrfAVVWe4i9LsVOajH/ZMV0nHsY8qH1jBWsnGc3X9k1FP
+         lSlk9jiI8ty4ilvom1QWz9psWxs7aI70tQQLXDyglOO58hWdnletxWYzbc1ykvtGEi8M
+         MsBXxXZiCYwXxaM9u8Mbjn8I69cCN+U5J3cPX6vMuMw87KwHxli9AJttNCLuCYaSNx9n
+         9xKg==
+X-Forwarded-Encrypted: i=1; AKwUvByA+NUuG/m5cW0Z/qa9PQnfItCxR46WmtVvrQzJuECPWn5IhmPMuMqESWhFziUtVTtUM5cr+/tmsq1a@vger.kernel.org
+X-Gm-Message-State: AFuF++lpzpQHF3/2HEjZ9hqPzj9A06lA7p2/56+uDSoDeunY+mgEr52L
+	xd7pyWEvvXMwjce2mizTPwLrBZtxcHtpavw+7LDfEQrLvX2fgdVitFXhBY6EsXBgeq5lZj7g6Hb
+	CoT6Ny7A4d83Q2uTAC7KbfHF9GnT9bBc+fHEn6gCAXH46mzjTKKYmpuIfl7I=
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 2/3] blk-cgroup: store blkcg in bio instead of blkg
-To: Yu Kuai <yukuai@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-        Josef Bacik <josef@toxicpanda.com>, Tejun Heo <tj@kernel.org>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Shuah Khan <skhan@linuxfoundation.org>,
-        Randy Dunlap
- <rdunlap@infradead.org>, Coly Li <colyli@fygo.io>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Alasdair Kergon
- <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        Benjamin Marzinski <bmarzins@redhat.com>, Song Liu <song@kernel.org>,
-        Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>,
-        Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
-        Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>,
-        Baoquan He <baoquan.he@linux.dev>, Barry Song <baohua@kernel.org>,
-        Youngjun Park <youngjun.park@lge.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Bill Wendling
- <morbo@google.com>,
-        Justin Stitt <justinstitt@google.com>
-Cc: Yu Kuai <yukuai@fygo.io>, Christoph Hellwig <hch@lst.de>,
-        Tao Cui <cuitao@kylinos.cn>, linux-block@vger.kernel.org,
-        cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org,
-        dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
-        gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, llvm@lists.linux.dev
-References: <20260920092351.2434283-1-yukuai@kernel.org>
- <20260920092351.2434283-3-yukuai@kernel.org>
-Content-Language: en-US
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <20260920092351.2434283-3-yukuai@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-ORIG-GUID: -Xd8a0RVEhrxDFm6gn4h3GOonDYckOi9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTIxMDEzMCBTYWx0ZWRfXyA4xNH3cYzqc
- l3LhAHGkDdB9wr6wJVvzkOiW0PLTrY+6N2xnfwVvAXBEgUZUUlnqQoZ9S/t2ec53rKELusYcvWT
- di0gP2G3AgYQrqIZGwv4XAk6ZTbicrvfmdi3M2UDvbThVuKLxf2bVg5EnsFXBr4KXrs6etQpgoD
- euKLu2Q+XaIsRVuhlHm+asbpr7zvK5ks3HxoZmC3tfKIKTo9gLj/L+nXXm8Qa6LpaYS6fCQWKwA
- rPtKbOsDw0UQzNsyd8H9bnPf3SqR3/y1I/PXuxjss5kLLxairvDG61ZUizIHrj9aHnJa9muRUGp
- 7oMtV5GSfddGruww+e3uDCJcaCC0OqzGH5jLo19DzokCNvtkRFr5gRuQY3TQAjpzacqfLjYt61q
- p4U3ri+iYIaoZm7NV0kKr27cQE0po2JDzt0VLOolD+KbjSIIi30aCQOJhnnHY4hngd24Su44C9I
- iTTkkhvJogiX4hApA1A==
-X-Authority-Analysis: v=2.4 cv=O/KsLx9W c=1 sm=1 tr=0 ts=6ab0f883 cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VnNF1IyMAAAA:8
- a=yt32EUx3BFOMUVNgjeUA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTIxMDEzMCBTYWx0ZWRfX5rV0t/6BeebN
- XqLIK4QGbSN4xT9UKi23paOxlW7Ykt3xnAjLGUCmr0jYvC/s6nTF8lOI7DuZlUqbCJZ4FsSaWjL
- tAtASM6ortzkp/bMC84v/5e+hKTSbak=
-X-Proofpoint-GUID: STTiMO6o3fOhik_S7E0XjsEtuaK9UoBW
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-21_03,2026-09-16_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 malwarescore=0 phishscore=0 impostorscore=0 suspectscore=0
- bulkscore=0 priorityscore=1501 lowpriorityscore=0 adultscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609210130
+X-Received: by 2002:a05:6820:3403:20b0:6cd:3fcc:96d9 with SMTP id
+ 006d021491bc7-6cd3fdbde06mr4054540eaf.87.1789988858742; Mon, 21 Sep 2026
+ 04:07:38 -0700 (PDT)
+Date: Mon, 21 Sep 2026 04:07:38 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6ab10ffa.a6af0033.177e91.0014.GAE@google.com>
+Subject: [syzbot] [raid?] WARNING in free_conf
+From: syzbot <syzbot+6a132745caefcf42cb0d@syzkaller.appspotmail.com>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
+	magiclinan@didiglobal.com, song@kernel.org, syzkaller-bugs@googlegroups.com, 
+	xiao@kernel.org, yukuai@fnnas.com, yukuai@fygo.io
+Content-Type: text/plain; charset="UTF-8"
 
-On 9/20/26 2:53 PM, Yu Kuai wrote:
-> From: Yu Kuai<yukuai@fygo.io>
-> 
-> A bio currently stores and pins a queue-local blkg. This forces bio
-> association and remap paths to look up or create a blkg even when no
-> blkcg policy will use the bio, and ties the stored state to the current
-> block device.
-> 
-> Store and reference the queue-independent blkcg in the bio instead. Add
-> helpers that lazily look up or create the queue-local blkg when a policy
-> needs it, and pin the result until the bio changes devices or releases
-> its cgroup state. Look up and pin existing blkgs under RCU, taking the
-> queue lock only when a blkg may need to be created.
-> 
-> Keep completion and accounting users lookup-only when they do not create
-> a blkg themselves. In particular, blk_cgroup_bio_start() only accounts a
-> bio when an online blkg already exists. This avoids creating a blkg
-> from the unconditional accounting hook when no policy is enabled.
-> 
-> Protect every rhashtable lookup with an RCU read-side critical section.
-> Annotate the lookup helpers and recursive wrappers with
-> __must_hold_shared(RCU) so Clang can verify that contract.
-> 
-> Before entering a bio-based driver's ->submit_bio(), drop the pinned blkg
-> after blk_cgroup_bio_start() has completed bio accounting. blk-throttle is
-> the only policy supported by bio-based queues, so no queue-local blkg
-> state needs to enter stacking drivers. The queue-independent blkcg
-> association remains attached to the bio.
-> 
-> If blkg creation fails while walking down the hierarchy, use the closest
-> available ancestor and update the bio's blkcg association before
-> recording the blkg reference. This keeps later CSS ID hash lookups
-> matched with the pinned blkg.
-> 
-> Signed-off-by: Yu Kuai<yukuai@fygo.io>
+Hello,
 
-Looks good to me.
+syzbot found the following issue on:
 
-Reviewed-by: Nilay Shroff <nilay@linux.ibm.com>
+HEAD commit:    5dd1818b15d9 Merge tag 'for-next-keys-v7.3-rc4' of git://g..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=1074e7f9580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=c3be6e434b07ebb6
+dashboard link: https://syzkaller.appspot.com/bug?extid=6a132745caefcf42cb0d
+compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
+
+Unfortunately, I don't have any reproducer for this issue yet.
+
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/ecb73b95440b/disk-5dd1818b.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/e90eba3671c9/vmlinux-5dd1818b.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/ea031fa7db3f/bzImage-5dd1818b.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+6a132745caefcf42cb0d@syzkaller.appspotmail.com
+
+-----------------------------------------------------------------------------
+Object 0xffff88808b840000 @offset=0
+Object 0xffff88808b8404d8 @offset=1240
+Object 0xffff88808b8409b0 @offset=2480
+Object 0xffff88808b840e88 @offset=3720
+Slab 0xffffea00022e1000 objects=13 used=4 fp=0xffff88808b841360 flags=0xfff00000000240(workingset|head|node=0|zone=1|lastcpupid=0x7ff)
+Disabling lock debugging due to kernel taint
+------------[ cut here ]------------
+1
+WARNING: mm/slub.c:1268 at __slab_err+0x15/0x20 mm/slub.c:1268, CPU#0: syz.5.636/7760
+Modules linked in:
+CPU: 0 UID: 0 PID: 7760 Comm: syz.5.636 Tainted: G    B               syzkaller #0 PREEMPT(full) 
+Tainted: [B]=BAD_PAGE
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 08/26/2026
+RIP: 0010:__slab_err+0x15/0x20 mm/slub.c:1268
+Code: 00 00 00 00 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 e8 2b 00 00 00 bf 05 00 00 00 be 01 00 00 00 e8 7c 0f 5f 00 90 <0f> 0b 90 e9 5e 04 e8 ff cc 66 90 90 90 90 90 90 90 90 90 90 90 90
+RSP: 0018:ffffc9000527f840 EFLAGS: 00010083
+RAX: ffffffff81874cba RBX: ffff88801f7fb280 RCX: 0000000000080000
+RDX: ffffc9000ddd2000 RSI: 000000000000eef7 RDI: 000000000000eef8
+RBP: 0000000000000000 R08: ffffffff939990a7 R09: 1ffffffff2733214
+R10: dffffc0000000000 R11: fffffbfff2733215 R12: ffffea00022e8c10
+R13: ffffea00022e1000 R14: ffffc9000527f858 R15: ffff88805445e3c0
+FS:  00007f088e6396c0(0000) GS:ffff888124cce000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007ffca4261db0 CR3: 000000003121e000 CR4: 0000000000350ef0
+Call Trace:
+ <TASK>
+ free_partial mm/slub.c:8122 [inline]
+ __kmem_cache_shutdown+0x1a5/0x2b0 mm/slub.c:8165
+ kmem_cache_destroy+0x9d/0x180 mm/slab_common.c:576
+ shrink_stripes drivers/md/raid5.c:2719 [inline]
+ free_conf+0x1fc/0x5d0 drivers/md/raid5.c:7553
+ setup_conf+0x1720/0x2ad0 drivers/md/raid5.c:7885
+ raid5_takeover_raid1 drivers/md/raid5.c:8934 [inline]
+ raid5_takeover+0x641/0x8d0 drivers/md/raid5.c:9045
+ level_store+0x83b/0x1d10 drivers/md/md.c:4134
+ md_attr_store+0x3b7/0x640 drivers/md/md.c:6158
+ kernfs_fop_write_iter+0x3a4/0x540 fs/kernfs/file.c:345
+ new_sync_write fs/read_write.c:595 [inline]
+ vfs_write+0x612/0xba0 fs/read_write.c:687
+ ksys_write+0x150/0x270 fs/read_write.c:739
+ do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+ do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f088d79e159
+Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f088e639028 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007f088da25fa0 RCX: 00007f088d79e159
+RDX: 0000000000000005 RSI: 0000200000000300 RDI: 0000000000000004
+RBP: 00007f088d83506b R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007f088da26038 R14: 00007f088da25fa0 R15: 00007ffc30f7c868
+ </TASK>
 
 
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
