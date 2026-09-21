@@ -1,70 +1,68 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-37.ptr.blmpb.com (va-2-37.ptr.blmpb.com [209.127.231.37])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0172388891;
-	Mon, 21 Sep 2026 06:56:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DEA13B3894
+	for <linux-raid@vger.kernel.org>; Mon, 21 Sep 2026 07:17:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.37
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789973821; cv=none; b=qx6jYE5hnnglCjAWGxGviE99aXxqWY9mUGasfhxA4M+shG5cDKpDu6YFDnumHh0VAmqG7qNMGLpk/JinVLTmWltybKdKvGbE7qznmGmeBeLnlqx6K9D3Vj/cGwX1175b+7cIVlLjQV1IooO2vdQUPfTMo4FlCGBEecimP267dwU=
+	t=1789975040; cv=none; b=ltKxGtFc3jmVJoY7zeEpQRW4dTm0oJjNVJd5dDNo9mEzML/hCDH1eTFbLaRH+drF/l2gHQ/BAV/Wr7Wx5lnPGqchdF0OTw8wN67QHiKMW2qLg2Ya0m+ACvd27DX+WAGi60Z5g95LvhKJkw1XHYpGb85m44diwQzHC8SUE+yKNo0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789973821; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=H3lIVPXz2wzIyRuXQ55IsKWIy5Kt/7USW7JzumHk4lhOoHvTutQCEpNtwFHMUwUSmoMyXIUxmNYysQGgAyEfrV+OnuWItArNbP1H9qYieNX63bodzR1DhlDiQ6cqRYtLG9AiQcN56iXtFPVIPKH9t8vKo45tu58ydta5CWIK4I4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id CB10D6732A; Mon, 21 Sep 2026 08:56:51 +0200 (CEST)
-Date: Mon, 21 Sep 2026 08:56:51 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Yu Kuai <yukuai@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Josef Bacik <josef@toxicpanda.com>,
-	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>, Coly Li <colyli@fygo.io>,
-	Kent Overstreet <kent.overstreet@linux.dev>,
-	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	Benjamin Marzinski <bmarzins@redhat.com>,
-	Song Liu <song@kernel.org>, Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	Andreas Gruenbacher <agruenba@redhat.com>,
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
-	Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>,
-	Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>,
-	Kemeng Shi <shikemeng@huaweicloud.com>,
-	Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>,
-	Barry Song <baohua@kernel.org>,
-	Youngjun Park <youngjun.park@lge.com>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Nick Desaulniers <ndesaulniers@google.com>,
-	Bill Wendling <morbo@google.com>,
-	Justin Stitt <justinstitt@google.com>, Yu Kuai <yukuai@fygo.io>,
-	Christoph Hellwig <hch@lst.de>, Nilay Shroff <nilay@linux.ibm.com>,
-	Tao Cui <cuitao@kylinos.cn>, linux-block@vger.kernel.org,
-	cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org,
-	dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
-	gfs2@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, llvm@lists.linux.dev
-Subject: Re: [PATCH v4 2/3] blk-cgroup: store blkcg in bio instead of blkg
-Message-ID: <20260921065651.GA13875@lst.de>
-References: <20260920092351.2434283-1-yukuai@kernel.org> <20260920092351.2434283-3-yukuai@kernel.org>
+	s=arc-20240116; t=1789975040; c=relaxed/simple;
+	bh=AdLtWh1z6QO3Ome46MxIlyBvHsFvQEEZMU/S5jcXNn0=;
+	h=Mime-Version:Subject:Date:To:From:Content-Type:Cc:Message-Id; b=X6rgMO3+4tAzgWGe5Hjh2vhFLGKK2u/L3icDDl9xws4W9QjbSCztGIgO1UufTkRFYI2Lu8ogVTKXJTlhqAOrDtCc6Vks9h3j9RZ2DMXuRpPE2oPbvT3vpnIHxG3LKjBXpqZaFEL++KqY9dDT4RY28+LDIcPROkW5zTlqPuAhnb4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=BfoNdHa4; arc=none smtp.client-ip=209.127.231.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="BfoNdHa4"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1789975026;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=0g4OXxO3C65RzGyL+t5rsMRD15HoHvHc91bAoNov68E=;
+ b=BfoNdHa4nTFTQTg5h2/zYrRT3Tdgh5F5a3u5pOcdJrvHM9nJ/t5eTU/7caA+S+zxO02Ll9
+ B5LS3rJ+gorrrtO0FjOHC7EVr3Nx2G2NJAMEZ5CH5PnkYARr6aGSucz5N52x6JlMbqoAeW
+ hb9XuSq8B2xcJkOuPMul5mM7BEH7lMLyXGx5KzGE3+VV/envJw0bo53fC5LDgMiLNreV6p
+ JyngyKgN+qtDg3+LWxS5YjvVEhKPesmBaoSgWbW4nUj9uSex6T9xU/qBVPOgUKjPc43MLl
+ /edmbc5+iXPKyMdigKJdZdJej0yFjlLd18Btrb8QY/LFyTJQY6fBybgF/2s/6w==
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260920092351.2434283-3-yukuai@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: [PATCH v2 0/2] md/raid5: validate disk count before reshape assembly
+Date: Mon, 21 Sep 2026 15:16:51 +0800
+Received: from fedora ([183.34.169.232]) by smtp.feishu.cn with ESMTPS; Mon, 21 Sep 2026 15:17:03 +0800
+X-Lms-Return-Path: <lba+26ab0d9f0+f68e7c+vger.kernel.org+chencheng@fnnas.com>
+To: <yukuai@fygo.io>, <nixiao@fygo.io>, <linux-raid@vger.kernel.org>
+From: "Chen Cheng" <chencheng@fnnas.com>
+Content-Type: text/plain; charset=UTF-8
+Cc: <chencheng@fnnas.com>
+X-Original-From: chencheng@fnnas.com
+Message-Id: <cover.1789974245.git.chencheng@fnnas.com>
+X-Mailer: git-send-email 2.55.0
 
-Looks good:
+From: Chen Cheng <chencheng@fnnas.com>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+The previous patch rejects raid4/5 arrays with too few disks in
+setup_conf(). During reshape assembly, raid5_run() still divides by the
+data-disk count before that check, so a crafted superblock can hit
+division by zero.
 
+Extract min_raid_disks() and reject invalid reshape geometries in
+raid5_run() first.
+
+v1 -> v2:
+- Added Link
+
+Chen Cheng (2):
+  md/raid5: extract min_raid_disks()
+  md/raid5: reject invalid reshape disks in raid5_run()
+
+ drivers/md/raid5.c | 28 ++++++++++++++++++----------
+ 1 file changed, 18 insertions(+), 10 deletions(-)
+
+-- 
+2.55.0
