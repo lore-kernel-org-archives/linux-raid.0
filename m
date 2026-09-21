@@ -1,184 +1,99 @@
-Received: from canpmsgout03.his.huawei.com (canpmsgout03.his.huawei.com [113.46.200.218])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-3-27.ptr.tlmpb.com (sg-3-27.ptr.tlmpb.com [101.45.255.27])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66C4C3B8D41;
-	Mon, 21 Sep 2026 07:23:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.218
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82E693EF649
+	for <linux-raid@vger.kernel.org>; Mon, 21 Sep 2026 07:29:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.45.255.27
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789975436; cv=none; b=sH6AFVwRthThNL9DRDvcS3NcD+dYyzecOaS1UJX6g5pMRx7stWCkJ5ZMFg7dab9+W0AT2IpU+hQgcLkIEmY14cCFRx0x9SSOybyfIR/vXYaQOM/Pvfm75P2vTFbdaUNNGoRW7bxhoGORBJ+GfzaBcdPjbJETR3geXua8xE/ug0Y=
+	t=1789975774; cv=none; b=BHIykaRQ+mmf8jEEcHChc09LPvLRnu+I99q+PG8s/eDDXJTCDPJfA+p9Bz2gBR02qnEzj49gfKarXQPl4FF2BfKfxoRMf+NxKUzMy9ZfyM9KBOluspAhEvNOPta/bpsP7siYB03z1WeInivdf1Qs+o/4hMO3y2MUvQ7ja5gsgmU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789975436; c=relaxed/simple;
-	bh=KEUPBL54615weRyUwbUQob5rLs7Iwbct1zpw6tsonQU=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sy5OBofGDVEUWsSPjryqkTBr0DomI8zp+/u1/JC6R3nsKseS4MgYwhsbUTEjZ4e+Oq66ARxlp7tTb/F29cAyDQfdVo+uVjQwRpRJ/OaOCypeLLxyu81Yr/w6dLw2LJAkJaEDJcZ06zdmVTenefFZ0BunVrEDr9EdRzST5F7NBvo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=4hFlw4Xt; arc=none smtp.client-ip=113.46.200.218
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1789975774; c=relaxed/simple;
+	bh=REG5VM0WoqH87NL2m7oaigwnpybarxJ6L9mxdB2DD1c=;
+	h=From:Subject:Content-Type:To:Cc:Message-Id:References:In-Reply-To:
+	 Mime-Version:Date; b=VhHqVgMjPo+EKA9mVnnGCc8+8rdKzrgF63Gj0fank3krZlTgEgmzJzzDgJMzjT4JD8Pnp9d79K/af0uEqDpQLa+uNIFRM722A/S8CRT4geQuPQLhtVSv1CEWFmdxU51sKbBzGKh96YOyJhqAv5Mp/BcUe40gCJIQuU+Q5WFOzmI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=lYvYXGKR; arc=none smtp.client-ip=101.45.255.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="4hFlw4Xt"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=oVi60O73/8T5TVpPXwgizHbL8pP8zx0+PMJEBZkQ/EI=;
-	b=4hFlw4XtRGC28C4OFPTI9z9gqgZ3xbl8Bw2XvPq/J//bO2D1Nxc7ertOJe0GyxE5AZTq2RwHq
-	m4/Or8zWvF0S3NxD9UK9nSVEoFxC4IksTI5PRDYuISSMOY9GN7E8MlHxaPWVdD7ujIkx23rFLdb
-	ralqWO4E1w5IyVDlvZ7ONuk=
-Received: from mail.maildlp.com (unknown [172.19.163.104])
-	by canpmsgout03.his.huawei.com (SkyGuard) with ESMTPS id 4hpDtW1KY3zpSy4;
-	Mon, 21 Sep 2026 15:11:47 +0800 (CST)
-Received: from whupemo200011.china.huawei.com (unknown [7.152.185.179])
-	by mail.maildlp.com (Postfix) with ESMTPS id 683424057F;
-	Mon, 21 Sep 2026 15:23:41 +0800 (CST)
-Received: from huawei.com (10.50.85.155) by whupemo200011.china.huawei.com
- (7.152.185.179) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Mon, 21 Sep
- 2026 15:23:40 +0800
-From: Zhihao Cheng <chengzhihao1@huawei.com>
-To: <song@kernel.org>, <yukuai@fygo.io>, <neil@brown.name>
-CC: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<chengzhihao1@huawei.com>, <yangerkun@huawei.com>, <yi.zhang@huawei.com>
-Subject: [PATCH 3/3] md/raid10: Don't free conf on raid10_run failure
-Date: Mon, 21 Sep 2026 15:15:36 +0800
-Message-ID: <20260921071537.2902362-4-chengzhihao1@huawei.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260921071537.2902362-1-chengzhihao1@huawei.com>
-References: <20260921071537.2902362-1-chengzhihao1@huawei.com>
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="lYvYXGKR"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1789975030;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=GjxHeUMpZWDwj+6VEZihWl8Z9HB3V7h7zjrsvBAGVAI=;
+ b=lYvYXGKRg2SuUY10xv5Bkyz++jWL0gAihk0zoN5UCv5nwyQ4749KqkhPel5m90qfJaLt4q
+ Cy0XNgr3X+Ko+qS5/PJFQNBvgUABzoCqwFD1dQ3BsYrxKDq0fAHG5DM6Aa61VGNHcernTg
+ YE9EXVoXAXdVNzN2+U6U0xJQdf4Hp6HjvEV32GsHbCVTDeR/c1mDiId5G3ZmUwMCCQw/U7
+ dBkdaI9JrozcxDIub039OCP9cpjl7OQe3ACouuRxVqW76AD8m6QBiorABLeu209Uk/XFSI
+ hnpiFpaR2e6I2h/xNtAE87b3yUdmDJ0XkLECtM+aRDYWwk6PgRzZum5axci7mQ==
+From: "Chen Cheng" <chencheng@fnnas.com>
+Subject: [PATCH v2 2/2] md/raid5: reject invalid reshape disks in raid5_run()
+X-Mailer: git-send-email 2.55.0
+Content-Type: text/plain; charset=UTF-8
+To: <yukuai@fygo.io>, <nixiao@fygo.io>, <linux-raid@vger.kernel.org>
+Cc: <chencheng@fnnas.com>, "sashiko-bot" <sashiko-bot@kernel.org>
+Message-Id: <acf8254263d4d40bd65c5b39058d4527cfb44cd9.1789974245.git.chencheng@fnnas.com>
+References: <cover.1789974245.git.chencheng@fnnas.com>
+In-Reply-To: <cover.1789974245.git.chencheng@fnnas.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
- whupemo200011.china.huawei.com (7.152.185.179)
+Mime-Version: 1.0
+X-Lms-Return-Path: <lba+26ab0d9f4+a39ab1+vger.kernel.org+chencheng@fnnas.com>
+Date: Mon, 21 Sep 2026 15:16:53 +0800
+X-Original-From: chencheng@fnnas.com
+Received: from fedora ([183.34.169.232]) by smtp.feishu.cn with ESMTPS; Mon, 21 Sep 2026 15:17:07 +0800
+Content-Transfer-Encoding: 7bit
 
-Set 'raid_disks' after raid5_run() failure will trigger an
-null-ptr-deref problem:
- BUG: kernel NULL pointer dereference, address: 00000000000000dc
- RIP: 0010:_raw_spin_lock_irq+0x3d
- Call Trace:
-  raise_barrier+0x3a
-  raid10_quiesce+0x20
-  __md_stop_writes+0x6c
-  do_md_stop+0xaa
+From: Chen Cheng <chencheng@fnnas.com>
 
-The trigger process is simple:
- mdadm --create /dev/md0 --level=0 --raid-devices=2 /dev/sda /dev/sdb
- --force --assume-clean # create raid0
- echo 10 > /sys/block/md0/md/level
-  level_store
-   mddev->pers = pers
-   mddev->private = priv
-   raid10_run
-   fail to out_free_conf (eg. enough fails)
-    raid10_free_conf(conf)
-    mddev->private = NULL
- echo inactive > /sys/block/md0/md/array_state
-  array_state_store
-   do_md_stop
-    __md_stop_writes
-     raid10_quiesce
-      raise_barrier
-       write_seqlock_irq(&conf->resync_lock) // null-ptr-deref !
+Check disk count before dividing by data disks while assembling a
+reshape, otherwise too few disks can cause division by zero.
 
-Just like commit 35f20acaa358 ("md/raid0: don't free conf on raid0_run
-failure") does, fix it by not free conf on raid10_run failure.
-
-Fixes: 245f46c2c221e ("md: add ->takeover method to support changing the personality managing an array")
-Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
+Reported-by: sashiko-bot <sashiko-bot@kernel.org>
+Link: https://lore.kernel.org/r/20260911042717.487AC1F00898@smtp.kernel.org/
+Signed-off-by: Chen Cheng <chencheng@fnnas.com>
 ---
- drivers/md/raid10.c | 22 ++++++++++------------
- 1 file changed, 10 insertions(+), 12 deletions(-)
+v1 -> v2:
+- Added Link
+---
+ drivers/md/raid5.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 1093c798d9dd..9e4d4202f35c 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -3972,7 +3972,7 @@ static int raid10_run(struct mddev *mddev)
- 		if (fc > 1 || fo > 0) {
- 			pr_err("only near layout is supported by clustered"
- 				" raid10\n");
--			goto out_free_conf;
-+			goto out_unregister_thread;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index f0390918adb3..5db096de8101 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -8053,10 +8053,11 @@ static int raid5_run(struct mddev *mddev)
+ 		 * the array in read-only mode, so we check for that.
+ 		 */
+ 		sector_t here_new, here_old;
+ 		int old_disks;
+ 		int max_degraded = (mddev->level == 6 ? 2 : 1);
++		int min_disks = min_raid_disks(mddev->level);
+ 		int chunk_sectors;
+ 		int new_data_disks;
+ 
+ 		if (journal_dev) {
+ 			pr_warn("md/raid:%s: don't support reshape with journal - aborting.\n",
+@@ -8068,10 +8069,16 @@ static int raid5_run(struct mddev *mddev)
+ 			pr_warn("md/raid:%s: unsupported reshape required - aborting.\n",
+ 				mdname(mddev));
+ 			return -EINVAL;
  		}
- 	}
- 
-@@ -3989,11 +3989,11 @@ static int raid10_run(struct mddev *mddev)
- 
- 		if (test_bit(Replacement, &rdev->flags)) {
- 			if (disk->replacement)
--				goto out_free_conf;
-+				goto out_unregister_thread;
- 			disk->replacement = rdev;
- 		} else {
- 			if (disk->rdev)
--				goto out_free_conf;
-+				goto out_unregister_thread;
- 			disk->rdev = rdev;
- 		}
- 		diff = (rdev->new_data_offset - rdev->data_offset);
-@@ -4013,7 +4013,7 @@ static int raid10_run(struct mddev *mddev)
- 
- 		if (err) {
- 			ret = err;
--			goto out_free_conf;
-+			goto out_unregister_thread;
- 		}
- 	}
- 
-@@ -4021,17 +4021,17 @@ static int raid10_run(struct mddev *mddev)
- 	if (!enough(conf, -1)) {
- 		pr_err("md/raid10:%s: not enough operational mirrors.\n",
- 		       mdname(mddev));
--		goto out_free_conf;
-+		goto out_unregister_thread;
- 	}
- 
- 	if (conf->reshape_progress != MaxSector) {
- 		/* must ensure that shape change is supported */
- 		if (conf->geo.far_copies != 1 &&
- 		    conf->geo.far_offset == 0)
--			goto out_free_conf;
-+			goto out_unregister_thread;
- 		if (conf->prev.far_copies != 1 &&
- 		    conf->prev.far_offset == 0)
--			goto out_free_conf;
-+			goto out_unregister_thread;
- 	}
- 
- 	mddev->degraded = 0;
-@@ -4081,7 +4081,7 @@ static int raid10_run(struct mddev *mddev)
- 	set_bit(MD_FAILFAST_SUPPORTED, &mddev->flags);
- 
- 	if (md_integrity_register(mddev))
--		goto out_free_conf;
-+		goto out_unregister_thread;
- 
- 	if (conf->reshape_progress != MaxSector) {
- 		unsigned long before_length, after_length;
-@@ -4094,7 +4094,7 @@ static int raid10_run(struct mddev *mddev)
- 		if (max(before_length, after_length) > min_offset_diff) {
- 			/* This cannot work */
- 			pr_warn("md/raid10: offset difference not enough to continue reshape\n");
--			goto out_free_conf;
-+			goto out_unregister_thread;
- 		}
- 		conf->offset_diff = min_offset_diff;
- 
-@@ -4106,10 +4106,8 @@ static int raid10_run(struct mddev *mddev)
- 
- 	return 0;
- 
--out_free_conf:
-+out_unregister_thread:
- 	md_unregister_thread(mddev, &mddev->thread);
--	raid10_free_conf(conf);
--	mddev->private = NULL;
- out:
- 	return ret;
- }
+ 		old_disks = mddev->raid_disks - mddev->delta_disks;
++		if (mddev->raid_disks < min_disks || old_disks < min_disks) {
++			pr_warn("md/raid:%s: invalid reshape disks (%d -> %d, min %d)\n",
++				mdname(mddev), old_disks, mddev->raid_disks,
++				min_disks);
++			return -EINVAL;
++		}
+ 		/* reshape_position must be on a new-stripe boundary, and one
+ 		 * further up in new geometry must map after here in old
+ 		 * geometry.
+ 		 * If the chunk sizes are different, then as we perform reshape
+ 		 * in units of the largest of the two, reshape_position needs
 -- 
-2.52.0
-
+2.55.0
