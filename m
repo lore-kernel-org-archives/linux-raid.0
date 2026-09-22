@@ -1,104 +1,74 @@
-Received: from va-2-20.ptr.blmpb.com (va-2-20.ptr.blmpb.com [209.127.231.20])
+Received: from va-2-46.ptr.blmpb.com (va-2-46.ptr.blmpb.com [209.127.231.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 811384CB8B7
-	for <linux-raid@vger.kernel.org>; Tue, 22 Sep 2026 07:07:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D71284CDDFC
+	for <linux-raid@vger.kernel.org>; Tue, 22 Sep 2026 07:23:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790060854; cv=none; b=kHBbhHmKhiSOOVsOY1evdD45rXxd+ZmxPnLQUhOxXRGyabXC+ygOVg8KoyKRTDD1ziYGA2FU9/6090exzC0h0mGe/RBuRUxDxSYmlQRrlOSCpv4jMViLGiwGNemZUb3dMgdB36+7CsKHjqMOJEswI2nKPFvQCufeDPsQDmdNE6A=
+	t=1790061812; cv=none; b=qpyS+5Ibc5BSW2VOkoc3KT0ICpGb3ySQfkKrsXHoSBeTG5z+euInXw0k/AHASD2tdXfBR9q24igIThvxCbEqj6Yqszma3FsF/OT1Zc5ABbLYKV8q2XDEKXkD686gdzcl6OdsMN+i3iRXIKcH8IzbSHd75X9hoLX9Bx7Pmnd6XgY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790060854; c=relaxed/simple;
-	bh=Dcr8ih5cU5LQLe0KzKSf3x2nn7WzcnwVVBHFzUh3x3g=;
-	h=Date:Mime-Version:Cc:Message-Id:Content-Type:In-Reply-To:From:
-	 Subject:To:References; b=jHQLJx+CVn6I9A0iJzA1pJeXyeO9hWX0NA/tuk2kbO7Gm7DiJj6k3am/v1Plh6i+2en5JtD93bugniBBJMlTzLn0KwVLKEJGpKWnM7Z6+CokmtNGQKcmA8JsGt9hL3uxWZYJYn3giWtIY/18xhAbB9fPpHPelA4MsWcFRqcKbME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=bP9BvABX; arc=none smtp.client-ip=209.127.231.20
+	s=arc-20240116; t=1790061812; c=relaxed/simple;
+	bh=bXDTgazGzylVCglsWlSCmG/65ewRiBClHZ2hwJst8x8=;
+	h=From:Date:To:Message-Id:Mime-Version:In-Reply-To:Subject:
+	 Content-Type:References; b=noS8ROnosfmp3f8IAnBs26qbKWmuqrMU6Wsr67jZng5c6rO3I9+T5Uy/VdNER12hhmelsK4PGnHItYgHLZqoFt92+HpDsHscGiFPgx4n6tsaazQGEDrZv/JxB3NUgCs3e0Nu0AxzYEpnY3K6jF2UiZ4QbDDGbnOlDt/VTfREU/E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=jFZFywp/; arc=none smtp.client-ip=209.127.231.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="bP9BvABX"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="jFZFywp/"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1790060844;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1790061792;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=aQE1nSzGBjOGDJk5QhoY//gOlFIvu09fD99BrdzL5k0=;
- b=bP9BvABX6djOpUDBiQy/lFpRiQiKuI1w9NOEkuk1biQmVCpdJI4XkUK8HTFU7JZRpsRzhm
- Xdem6gCB04AsyUgRMTyI59G0D5U17goNkx09qQPzxccbShoMpDfWtL+veR4sKzMtwFHnSk
- E/Q5TOLDs4HHG9cLv5/f1owDVSTElTjkvTemYQhtyPYE9oHfQebRrwP7AAhECMAGi6lXt4
- B79OdqBfpSVPXsagSPdoC96objtS48RzVMhGdMt0Sly+sBWk3p9vPb0lucW2xBecbULvdn
- CNpa9/fwdyBuctWAEWl+qe52jN2orxG1qNAFe4qJTn62UdqJZnuqWqlYNdaxvA==
-X-Lms-Return-Path: <lba+26ab2292c+759031+vger.kernel.org+yukuai@fygo.io>
-Date: Tue, 22 Sep 2026 15:07:19 +0800
+ bh=ZnxEyDvzE5OVwk3VeXY/YSIyyYtOiF/d4JbUKZdl06s=;
+ b=jFZFywp/WZJIKsoKAMDQO6vcsMfYMDpcXS2oxsfoS1EQUMcLO/abVA/A2ybQo7GA/FPhBP
+ JQyvqFW/fOIMnOhoHA4KBilOGMb1aiWkXltedMOO/wNgvItSzCaLZea3AfnQeCro53h3Jz
+ PyIXpxf9yY9Fj8/9PmIGGxpx/hx1U/lh4ngU+k0vTT1cVSS/364GaXOaBzxG8hRx0Q5byg
+ NQJMEzJFf2UImPrA5/Sgw7sWwBeghkl2yPQMW09z199PVBcRvDi1HOAwwxyIu6qJr9W1WJ
+ FWCRL3osXZZzYAQ569Yw3o1x75j+n7f0Q39pJ4DzXWdfX2EX+dn2ZNz27F7rrA==
+From: "yu kuai" <yukuai@fygo.io>
+Date: Tue, 22 Sep 2026 15:23:08 +0800
+User-Agent: Mozilla Thunderbird
+X-Original-From: yu kuai <yukuai@fygo.io>
+Content-Transfer-Encoding: quoted-printable
+Reply-To: yukuai@fygo.io
+To: "Chen Cheng" <chencheng@fnnas.com>, <nixiao@fygo.io>, 
+	<linux-raid@vger.kernel.org>, "yu kuai" <yukuai@fygo.io>
+Message-Id: <004b2d3e-73ab-4d9b-bbc8-c9f1ca800193@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Reply-To: yukuai@fygo.io
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
-	"Artur Paszkiewicz" <artur.paszkiewicz@intel.com>, 
-	<syzbot+2ef75c54d0b2ac5d00ba@syzkaller.appspotmail.com>
-Message-Id: <0c58abf7-2c23-44ad-a836-ddaa11484c9c@fygo.io>
+X-Lms-Return-Path: <lba+26ab22ce0+3b8eba+vger.kernel.org+yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.179]) by smtp.larksuite.com with ESMTPS; Tue, 22 Sep 2026 07:23:11 +0000
+In-Reply-To: <cover.1789974245.git.chencheng@fnnas.com>
+Subject: Re: [PATCH v2 0/2] md/raid5: validate disk count before reshape assembly
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Mozilla Thunderbird
-In-Reply-To: <20260920091533.413-1-yogeshgaur.83@gmail.com>
-Received: from [192.168.1.104] ([39.182.0.179]) by smtp.larksuite.com with ESMTPS; Tue, 22 Sep 2026 07:07:23 +0000
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH] md/raid5: give the io_unit slab caches per-array names
-X-Original-From: yu kuai <yukuai@fygo.io>
-To: "Yogesh Gaur" <yogeshgaur.83@gmail.com>, "Song Liu" <song@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-References: <20260920091533.413-1-yogeshgaur.83@gmail.com>
+References: <cover.1789974245.git.chencheng@fnnas.com>
 
-=E5=9C=A8 2026/9/20 17:15, Yogesh Gaur =E5=86=99=E9=81=93:
+=E5=9C=A8 2026/9/21 15:16, Chen Cheng =E5=86=99=E9=81=93:
 
-> Both raid5 log backends create their io_unit slab cache per array but
-> name it after the struct:
+> From: Chen Cheng<chencheng@fnnas.com>
 >
-> 	ppl_conf->io_kc =3D KMEM_CACHE(ppl_io_unit, 0);
-> 	log->io_kc      =3D KMEM_CACHE(r5l_io_unit, 0);
+> The previous patch rejects raid4/5 arrays with too few disks in
+> setup_conf(). During reshape assembly, raid5_run() still divides by the
+> data-disk count before that check, so a crafted superblock can hit
+> division by zero.
 >
-> KMEM_CACHE() passes the stringified type as the cache name, so every
-> array that enables PPL or attaches a journal asks for a cache called
-> "ppl_io_unit" or "r5l_io_unit".  With two such arrays live at the same
-> time the second one trips kmem_cache_sanity_check():
+> Extract min_raid_disks() and reject invalid reshape geometries in
+> raid5_run() first.
 >
->    kmem_cache of name 'ppl_io_unit' already exists
->    WARNING: mm/slab_common.c:112 at __kmem_cache_create_args+0xae/0x460
->     ppl_init_log+0x285/0x1310 drivers/md/raid5-ppl.c:1363
->     log_init drivers/md/raid5-log.h:138 [inline]
->     raid5_change_consistency_policy+0x255/0x740 drivers/md/raid5.c:9141
->     consistency_policy_store+0x7f/0x230 drivers/md/md.c:5883
->     md_attr_store+0x3b7/0x640 drivers/md/md.c:6158
+> v1 -> v2:
+> - Added Link
 >
-> which is reachable by any user that can write "ppl" to
-> md/consistency_policy on two arrays, and equally by assembling two
-> journalled arrays.  The cache is created and destroyed correctly on
-> every path, so this is a name collision only - duplicate names confuse
-> slabtop and /proc/slabinfo, which is what the check is there to catch.
+> Chen Cheng (2):
+>    md/raid5: extract min_raid_disks()
+>    md/raid5: reject invalid reshape disks in raid5_run()
 >
-> Build the name from the array instead, the way grow_stripes() already
-> does for the stripe_head cache in this driver, and fall back to the
-> mddev pointer for dm-raid where mdname() is the constant "mdX".  The
-> buffer is sized like conf->cache_name[] because mdname() can return up
-> to DISK_NAME_LEN bytes.
->
-> The explicit size/align arguments keep what KMEM_CACHE() expanded to,
-> so object layout does not change.
->
-> Fixes: 3418d036c81d ("raid5-ppl: Partial Parity Log write logging impleme=
-ntation")
-> Fixes: f6bed0ef0a80 ("raid5: add basic stripe log")
-> Reported-by:syzbot+2ef75c54d0b2ac5d00ba@syzkaller.appspotmail.com
-> Closes:https://syzkaller.appspot.com/bug?extid=3D2ef75c54d0b2ac5d00ba
-> Assisted-by: LLM
-> Signed-off-by: Yogesh Gaur<yogeshgaur.83@gmail.com>
-> ---
->   drivers/md/raid5-cache.c | 12 +++++++++++-
->   drivers/md/raid5-ppl.c   | 12 +++++++++++-
->   2 files changed, 22 insertions(+), 2 deletions(-)
+>   drivers/md/raid5.c | 28 ++++++++++++++++++----------
+>   1 file changed, 18 insertions(+), 10 deletions(-)
 Applied to md-7.4
 
 --=20
