@@ -1,175 +1,173 @@
-Received: from va-2-58.ptr.blmpb.com (va-2-58.ptr.blmpb.com [209.127.231.58])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF726388862
-	for <linux-raid@vger.kernel.org>; Tue, 22 Sep 2026 02:24:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.58
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F7E333C1B6
+	for <linux-raid@vger.kernel.org>; Tue, 22 Sep 2026 02:32:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790043861; cv=none; b=OWg9HtAICBSq0FoxdlRHutvrJWijqFgouTiTQ3eIEb/uMSL8t7W1G63+wMgZeElpMxRqQTDwtgOVqt7vHv6xCHvXgeGDgFiXRY9QGzWChxH3yDPYTpbgXpH8XT9OOPSqu7oo0UiRk+v9+GyYtR3dEhStvIJinhm3sbwT+XEYwwM=
+	t=1790044330; cv=none; b=AtFr9OACRFXfSP2GaKAMo5R2nXjRDB42BR3dQ3TEsE56sJNMNKrHm2a+tfx97gXvoEmOlEnVC0uWECzamF9kvw1UOwlxnQvMtlCaEVwRaDwrSqo8XIEyyd4iKRo1jp6MObcpuzQpcASxUDYfoanfaJHHcGRvFeZtE/MGFaHvKUo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790043861; c=relaxed/simple;
-	bh=WajXHx4nyP1bqLJhU0xpOreDBI721whriRTqIiiZAvk=;
-	h=Message-Id:Mime-Version:References:From:To:Cc:Content-Type:Date:
-	 In-Reply-To:Subject; b=VRAZ9MHAH/Nnt5MjDlrd3pnmGIZ6t8owPK+C44Ri9JHH7ftK9hpRJ80DcSTV9RzS6NUIFRWmvCTrVE+3D89oN5HkxCP+EHf/nNv/Z11jWM5MxT803rA005ENcR9ZLjca0a07YRgrvMO33tol762jHNub+FMdyeqSmFTtOUK/Yvo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=hOBZ+5ZQ; arc=none smtp.client-ip=209.127.231.58
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1790044330; c=relaxed/simple;
+	bh=PkWNbGAWx2wPMeWmIYFObjeIwzbFagwu8m9tclzFAu4=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=am5H2S2BknJf7BU+SY3/aZZptO89ZPDKhIWh4e8AqCtWTzwmihwonT63MclyzhMlWT0/D4LXbNzJSEIP2vbG5k2lefPNOZWchxI0vlKd17PAmjftIJtd3DhkQCP9GOh/ZUWuOOLgfZigLGBmXceJg97kjXcWkZl47+1Sk/UQ1Wk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z1hJ5Qm5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="hOBZ+5ZQ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1790043847;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=fw4jhSRMooq9m2/iqxv1olhkpehxFm8SKQQqYOoWwu8=;
- b=hOBZ+5ZQ4VrfZA+UK4S+MPyAquv2Ef8OvhJDP9xroHsHsAksQKg/rMcFFAlEhCKAYl6Nrt
- dOtqo0bN2hkOlBmQmT/EV1EI/sCUSHEkJhakfnJ/MRo4I+fsUSFy54yLh8LaV5cpeLshEh
- 8FAMu5R6aW6QjoisVxFh8hWHxgEvWgxl3PEW/iOuHuUkAOeLTCwspo+XWC7MmjoWMmSmbP
- Bpt7+3ACU3K7e3DG2x8j2PBoJYB/wpGmYCI22n9PxJZxakhLwc9asWqWR8D+XdOjGga1yc
- VIgk+Hh6FocAwNBKYSs8NNUswAyJZoEmB5itgQEKmw+vOTc/iGxYHxeCc9XDpw==
-Message-Id: <43d139ac-7d54-41b2-9e4c-8fba8e6ac5ee@fygo.io>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z1hJ5Qm5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA78D1F000FF;
+	Tue, 22 Sep 2026 02:32:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790044326;
+	bh=LEzlkgeUae8zQxjpikuZ3cWyTyAp4hBotqovB9eiYFE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Z1hJ5Qm5bXZw7TT2yIbSSSqBB0woG4+nDQKRLIN9+Za5qbOWZHWFcLYtLQilfybG2
+	 MFNfZiy3lvvOPt3M0jQ/ob6oNGk3wTPBsiOHgy1Kv8VSuIqdN1mpRCMCEgbpQx15UP
+	 z2AFLKclyzXXfYWncK4UVuGUGdreU9tacG60oFQj76WExAZ6ezefqigxwvfXizga1n
+	 2ajobasUoRo6TNYLk9u2YhfpOWv80+mpUobwKZDp99pxJw2zx/B5+MMrjM3a6zBNPE
+	 uccpHTAeXApiHjeT2OB//83/MIyX1ZnZt2IS8tvP5xbgdmqrLBs0jsb04sBf+M1dnJ
+	 fxwXHhs/LwE7Q==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] md: remove legacy async del_gendisk
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Li Youhong" <dayou5941@163.com>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20260922021533.2935172-1-dayou5941@163.com>
+References: <20260922021533.2935172-1-dayou5941@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 22 Sep 2026 02:32:06 +0000
+Message-Id: <20260922023206.AA78D1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260919091118.3272955-1-benquike@gmail.com> <20260919112522.3872315-1-benquike@gmail.com>
-Content-Transfer-Encoding: quoted-printable
-X-Lms-Return-Path: <lba+26ab1e6c6+52133c+vger.kernel.org+yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-To: "Hui Peng" <benquike@gmail.com>, <song@kernel.org>, 
-	<magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-X-Original-From: yu kuai <yukuai@fygo.io>
-Content-Type: text/plain; charset=UTF-8
-User-Agent: Mozilla Thunderbird
-Reply-To: yukuai@fygo.io
-Date: Tue, 22 Sep 2026 10:24:02 +0800
-In-Reply-To: <20260919112522.3872315-1-benquike@gmail.com>
-Received: from [192.168.1.104] ([39.182.0.164]) by smtp.larksuite.com with ESMTPS; Tue, 22 Sep 2026 02:24:05 +0000
-Subject: Re: [PATCH v2] md: reject raid_disks >= MD_SB_DISKS in md_set_array_info()
 
-Hi=EF=BC=8C
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [High] md: Use-After-Free in md_notify_reboot and md_exit due to unsafe l=
+ist_for_each_entry_safe
+- [High] md: Use-After-Free in md_seq_show when mddev_get fails
+- [High] md: sysfs self-deadlock in md_attr_store due to synchronous kobjec=
+t_del
+--
 
-=E5=9C=A8 2026/9/19 19:25, Hui Peng =E5=86=99=E9=81=93:
-> md_set_array_info() copies info->raid_disks straight into
-> mddev->raid_disks without any upper bound, while also setting
-> mddev->max_disks to MD_SB_DISKS for persistent arrays. The resulting
-> mddev is internally inconsistent: raid_disks can be far larger than the
-> number of devices a v0.90 superblock is able to describe.
->
-> super_90_sync() lays the device table out inside the single page that
-> holds the v0.90 superblock and picks slot numbers starting at
-> mddev->raid_disks:
->
-> 	next_spare =3D mddev->raid_disks;
-> 	...
-> 	desc_nr =3D next_spare++;
-> 	rdev2->desc_nr =3D desc_nr;
-> 	d =3D &sb->disks[rdev2->desc_nr];
->
-> sb->disks[] only has MD_SB_DISKS (27) entries, so an
-> ioctl(SET_ARRAY_INFO) with raid_disks =3D 1000 followed by any operation
-> that writes the superblock walks tens of kilobytes past the end of the
-> superblock page:
->
->   =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->   BUG: KASAN: use-after-free in super_90_sync+0x1c5e/0x20c0
->   Write of size 4 at addr 0xffff888009623c00 by task init/1
->
->   CPU: 1 UID: 0 PID: 1 Comm: init Tainted: G      D W    7.3.0-rc3-g5dd18=
-18b15d9 #3 PREEMPT(lazy)
->   Hardware name: QEMU Standard PC (i440FX + PIIX, 1996)
->   Call Trace:
->    <TASK>
->    dump_stack_lvl+0x4d/0x70
->    print_report+0x153/0x4c6
->    kasan_report+0xda/0x110
->    super_90_sync+0x1c5e/0x20c0
->    md_update_sb+0x850/0x1e90
->    new_level_store+0x11a/0x190
->    md_attr_store+0x12f/0x270
->    kernfs_fop_write_iter+0x323/0x4e0
->    vfs_write+0x54f/0xde0
->    ksys_write+0xfd/0x200
->    do_syscall_64+0xda/0x4b0
->    entry_SYSCALL_64_after_hwframe+0x77/0x7f
->    </TASK>
->   =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->
-> Reject the request before mddev is modified. Non-persistent arrays do
-> not write a v0.90 superblock, so the MD_SB_DISKS limit is only applied
-> when info->not_persistent is clear.
->
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Assisted-by: LLM
-> Signed-off-by: Hui Peng <benquike@gmail.com>
-> ---
-> v2: Add a Fixes: tag. v1 said the check predated the history I had; I
-> now have the full tree, and it really does go back to the initial git
-> import - set_array_info() in v2.6.12-rc2 already did
->
-> 	mddev->raid_disks    =3D info->raid_disks;
-> 	mddev->max_disks     =3D MD_SB_DISKS;
->
-> with no bound, and super_90_sync() already seeded next_spare from
-> mddev->raid_disks and stored into sb->disks[rdev2->desc_nr]. So
-> 1da177e4c3f4 ("Linux-2.6.12-rc2") it is. The later commits that blame
-> points at are not introducers: 7e0adbfc20c5 ("md: factor out
-> md_set_array_info") only renames set_array_info(), and 86e6ffdd243a
-> ("md: extend md sysfs support to component devices") only restructured
-> how desc_nr is chosen.
->
-> The reason the MD_SB_DISKS limit is gated on !info->not_persistent is
-> 1b3bae49fba5 ("md: don't impose the MD_SB_DISKS limit on arrays without
-> metadata"), which moved max_disks =3D MD_SB_DISKS inside
-> if (mddev->persistent). Arrays without metadata never write a v0.90
-> superblock, so the limit must not apply to them.
->
-> Reproduced on Linux 7.3.0-rc3 (5dd1818b15d9) with KASAN under QEMU:
-> create an md array over a loop device, issue
-> ioctl(fd, SET_ARRAY_INFO) with raid_disks =3D 1000, then write to
-> /sys/block/md0/md/new_level to force md_update_sb(). With this patch the
-> ioctl fails with -EINVAL and no splat is produced.
->
-> Note that raid_disks_store() has a related but weaker check: it bounds n
-> against mddev->max_disks, which is still 0 before any superblock has
-> been loaded. I have deliberately not touched it here, since an
-> unconditional MD_SB_DISKS limit there would break v1.x arrays with more
-> than MD_SB_DISKS members. It may deserve a separate fix - input from
-> the maintainers would be welcome.
+commit 882f6ccb12f02b986de958463cf3afb9ffc46b20
+Author: Li Youhong <liyouhong@kylinos.cn>
 
-v1.x array do not have this problem, and it's not acceptable to limit v1.x
-array with MD_SB_DISKS. How about following solution:
+md: remove legacy async del_gendisk
 
-If metadata is set as 0.9 before raid_disk_store, you can check max_disks i=
-n
-raid_disk_store; If metadata is not set yet, check later when metadata is s=
-elected.
+This commit removes the legacy async del_gendisk path to resolve a lockdep
+cycle between major_names_lock, md_misc_wq, and reconfig_mutex. Deletions
+are now done synchronously in mddev_unlock() and mddev_put().
 
->
->   drivers/md/md.c | 4 ++++
->   1 file changed, 4 insertions(+)
->
+Closes: https://syzkaller.appspot.com/bug?extid=3D68e1f51046d68329940f
+
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 680b34a63cb3d..5d9e76f3256be 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -7926,6 +7926,10 @@ int md_set_array_info(struct mddev *mdde
->   		mddev->ctime         =3D ktime_get_real_seconds();
->   		return 0;
->   	}
-> +	if (info->raid_disks <=3D 0 ||
-> +	    (!info->not_persistent && info->raid_disks >=3D MD_SB_DISKS))
-> +		return -EINVAL;
+[ ... ]
+>  void mddev_put(struct mddev *mddev)
+>  {
+> +	bool complete_delete;
 > +
->   	mddev->major_version =3D MD_MAJOR_VERSION;
->   	mddev->minor_version =3D MD_MINOR_VERSION;
->   	mddev->patch_version =3D MD_PATCHLEVEL_VERSION;
+>  	if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
+>  		return;
+> =20
+> -	__mddev_put(mddev);
+> +	complete_delete =3D __mddev_put(mddev);
+>  	spin_unlock(&all_mddevs_lock);
+> +	if (complete_delete)
+> +		mddev_complete_delete(mddev);
+>  }
+
+[Severity: High]
+Could synchronous kobject_del() on the active path in drivers/md/md.c:mddev=
+_put()
+cause a self-deadlock when triggered from a sysfs handler like md_attr_stor=
+e()?
+
+Writing 'stop' to /sys/block/mdX/md/array_state executes md_attr_store() un=
+der
+kernfs active protection. The handler calls do_md_stop(), marking the array=
+ as
+deleted, and then calls mddev_put().
+
+Since mddev_put() now synchronously invokes mddev_complete_delete() ->
+kobject_del(), kobject_del() will call kernfs_remove() and block in
+kernfs_drain() waiting for the active protection to drop. The calling thread
+is holding the active protection itself, causing a deadlock regression.
+
+[ ... ]
+> @@ -9041,8 +9042,13 @@ static int md_seq_show(struct seq_file *seq, void =
+*v)
+>  	}
+> =20
+>  	mddev =3D list_entry(v, struct mddev, all_mddevs);
+> -	if (!mddev_get(mddev))
+> +	if (!mddev_get(mddev)) {
+> +		md_seq_flush_delete(seq);
+>  		return 0;
+> +	}
+
+[Severity: High]
+Can this sequence in drivers/md/md.c:md_seq_show() lead to a use-after-free
+regression when mddev_get() fails?
+
+If mddev_get() fails (because MD_DELETED is set), the current iterator v is
+unpinned. The code then calls md_seq_flush_delete(seq), which temporarily
+drops all_mddevs_lock to perform delayed deletion of a previous node.
+
+During this unlocked window, the unpinned current node v could be fully
+deleted and freed by a concurrent thread. When md_seq_flush_delete() reacqu=
+ires
+the lock and md_seq_show() returns 0, seq_read() will call md_seq_next(),
+which dereferences the now-freed v pointer.
+
+[ ... ]
+> @@ -10714,10 +10721,11 @@ EXPORT_SYMBOL_GPL(rdev_clear_badblocks);
+>  static int md_notify_reboot(struct notifier_block *this,
+>  			    unsigned long code, void *x)
+>  {
+> -	struct mddev *mddev;
+> +	struct mddev *mddev, *tmp;
+> +	bool complete_delete;
+> =20
+>  	spin_lock(&all_mddevs_lock);
+> -	list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
+> +	list_for_each_entry_safe(mddev, tmp, &all_mddevs, all_mddevs) {
+>  		if (!mddev_get(mddev))
+>  			continue;
+>  		spin_unlock(&all_mddevs_lock);
+
+[Severity: High]
+Does dropping all_mddevs_lock inside list_for_each_entry_safe() in
+drivers/md/md.c:md_notify_reboot() expose tmp to concurrent deletion?
+
+Since list_for_each_entry_safe() caches the next pointer into tmp before
+executing the loop body, tmp is unpinned and unprotected during the unlocked
+window. Because mddev_put() now performs synchronous deletion, a concurrent
+array teardown could drop the last reference to tmp and free its memory. Wh=
+en
+the lock is reacquired, the loop advances by reading tmp->all_mddevs.next,
+which dereferences freed memory.
+
+[ ... ]
+> @@ -11075,20 +11088,15 @@ static __exit void md_exit(void)
+>  	remove_proc_entry("mdstat", NULL);
+> =20
+>  	spin_lock(&all_mddevs_lock);
+> -	list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
+> +	list_for_each_entry_safe(mddev, tmp, &all_mddevs, all_mddevs) {
+>  		if (!mddev_get(mddev))
+>  			continue;
+>  		spin_unlock(&all_mddevs_lock);
+
+[Severity: High]
+Similarly, does dropping the lock here in drivers/md/md.c:md_exit() while
+holding an unpinned tmp risk list corruption on module exit?
 
 --=20
-Thanks,
-Kuai
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260922021533.2935=
+172-1-dayou5941@163.com?part=3D1
