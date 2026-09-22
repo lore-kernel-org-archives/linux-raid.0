@@ -1,62 +1,67 @@
-Received: from va-2-18.ptr.blmpb.com (va-2-18.ptr.blmpb.com [209.127.231.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBA63390CB2
-	for <linux-raid@vger.kernel.org>; Tue, 22 Sep 2026 02:44:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E611937475B;
+	Tue, 22 Sep 2026 03:25:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790045084; cv=none; b=IORU/fDFRZhM8ZWFaYkvicwd91lfaoZjYdfc43D/Wp5kVYEw+QERXHqZy0Gw7WOoFgfk5apuvYg+6aTW4+tNHAiOc4qm+CrW4O2pSaWQB/mHFyn3JFP+YXqdGtkAYRxkPCyy8o/uvFX0tTeauujpEvJtrDj7vPB7kWkJqK+dY7U=
+	t=1790047543; cv=none; b=ACoMkzi2wbWfxEMYxaNddh/EPP5Mf3uT/KJxSotL/hdZ80Q61i5ci4/9nhTIP/bnYCL/XDMbSD2iNG63PA0nF/nIXAooJNFcVjiFpPbQtElqGg3hyhw/eOpiY71HcmlujQ836q6x/RRfdZvJiPJnpliOlDaCEZ0NE4E6FfO74g8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790045084; c=relaxed/simple;
-	bh=x2em5mNuONHqyIoHmfD48P3TKsKCShR/RlcK0UgL/Kw=;
-	h=To:Subject:Date:Mime-Version:Content-Type:In-Reply-To:References:
-	 Cc:From:Message-Id; b=EOcvOs2vMZYBPqLDjwHzSIQnaDQdunah5p+z8KQjrH+XDIDe8jPDaypoME9kWrgufYHfE2NOqXp7v2QSejPJ+7nx2LEKYpn2VcY3y2uycJAcoNlx3nnUw50JkqJpvUAJfw+cggpST35nbcQSX+t4Eg6/9vs5mVQ2z61k5PT4Bw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=inRv0XdG; arc=none smtp.client-ip=209.127.231.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1790047543; c=relaxed/simple;
+	bh=Z8sUfskjaLRyDMxZaKAvd99uf6A+5BV+U4CrPC6ZKNE=;
+	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=s06UH0ec84AZIh9iybhSg9Y46Lhd5qDtrzxkWEpQxyLEdfxo1fDnLOjwY/mJcRQAxMVwlE8O83I3pVDgcKmyoSuBh5xRtsBWhE+GrJSiRdVPPouOEDAbmpWeqA2OyKwqrS5iwu5GpmzZNok8h13HRVh/n9oawWSbElYywQeqyQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=Se4+BJpu; arc=none smtp.client-ip=113.46.200.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="inRv0XdG"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1790045073;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=sxewYyLjblbYVJ+I0ze1jJgD6c+hjfa2aLSRIAX5aBY=;
- b=inRv0XdGu7oAACRvXZV23IRYynkIt7VCAisDeuSnRm4X9WQWlz5Kp6ttOBWqD9yG+Ppqfj
- PWL39grR9fz0Gx7uu9pbJEcrF4cX7PY8MSKvNSbXW4c1mSqlUiZK/TG4tJOGAV608FFi8+
- 5+gF5Nv62KGk7VdXiOTVqQ16odGlznN629po4PTNvZ6+C/T0iYdgAqShxvYWRSHi2J/95R
- 8eekHtLvw/0Q+H/OupVmjWsSh7K1HpNvDNHY9m6LzVc6BjMn17eb7aySbqGrZ8DxFGvFfN
- 5o0jhChiB4vN85/PMDaSggpJFKgbooSlRpHT6wtmMEKQA61UgT4BLTZu6bZcyg==
-To: "Zhihao Cheng" <chengzhihao1@huawei.com>, <song@kernel.org>, 
-	<magiclinan@didiglobal.com>, <xiao@kernel.org>, <eadavis@sina.com>, 
-	<abd.masalkhi@gmail.com>, "yu kuai" <yukuai@fygo.io>
-X-Lms-Return-Path: <lba+26ab1eb90+326113+vger.kernel.org+yukuai@fygo.io>
-User-Agent: Mozilla Thunderbird
-Reply-To: yukuai@fygo.io
-Subject: Re: [PATCH v4] md: Fix the null-ptr-deref of 'mddev->private' while submitting IO
-Date: Tue, 22 Sep 2026 10:44:28 +0800
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="Se4+BJpu"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=EnVbmPNTtxqJpCb+m0jfFdhbF/lPOyAIIZbmLAocF1E=;
+	b=Se4+BJpuoMe9BLJZKGpcWBb47Qm5+wOgV+2fgLSexH0PfkK6GxgFmk0LkjxhBcvXpLTAOECm7
+	oNE3mY7zlvd1qdeOm5fg3DtepS6UA43CqTaIIpOWHPhk2H1foDRh7mSXZXLm2a5XY6gWBmOO+2d
+	nZlowvOASo877U9OArQgSEU=
+Received: from mail.maildlp.com (unknown [172.19.162.223])
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4hplZ930YCz12LHh;
+	Tue, 22 Sep 2026 11:14:25 +0800 (CST)
+Received: from whupemo200011.china.huawei.com (unknown [7.152.185.179])
+	by mail.maildlp.com (Postfix) with ESMTPS id 442E040561;
+	Tue, 22 Sep 2026 11:25:30 +0800 (CST)
+Received: from [10.174.178.46] (10.174.178.46) by
+ whupemo200011.china.huawei.com (7.152.185.179) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Tue, 22 Sep 2026 11:25:28 +0800
+Subject: Re: [PATCH v5] md: Fix the null-ptr-deref of 'mddev->private' while
+ submitting IO
+To: <song@kernel.org>, <yukuai@fygo.io>, <magiclinan@didiglobal.com>,
+	<xiao@kernel.org>, <eadavis@sina.com>, <abd.masalkhi@gmail.com>
+CC: <linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>,
+	<yi.zhang@huawei.com>, <linux-raid@vger.kernel.org>
+References: <20260922030538.1634904-1-chengzhihao1@huawei.com>
+From: Zhihao Cheng <chengzhihao1@huawei.com>
+Message-ID: <64d7d286-4c2d-ebd1-7faa-4abb5eec997c@huawei.com>
+Date: Tue, 22 Sep 2026 11:25:21 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-In-Reply-To: <20260920063704.3809608-1-chengzhihao1@huawei.com>
-Received: from [192.168.1.104] ([39.182.0.164]) by smtp.larksuite.com with ESMTPS; Tue, 22 Sep 2026 02:44:32 +0000
-References: <20260920063704.3809608-1-chengzhihao1@huawei.com>
-Cc: <linux-kernel@vger.kernel.org>, <linux-raid@vger.kernel.org>, 
-	<yangerkun@huawei.com>, <yi.zhang@huawei.com>
-From: "yu kuai" <yukuai@fygo.io>
-Message-Id: <22bd8d07-fefb-48ec-bc22-2617c4162c02@fygo.io>
-X-Original-From: yu kuai <yukuai@fygo.io>
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+In-Reply-To: <20260922030538.1634904-1-chengzhihao1@huawei.com>
+Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
+ whupemo200011.china.huawei.com (7.152.185.179)
 
-Hi,
-
-=E5=9C=A8 2026/9/20 14:37, Zhihao Cheng =E5=86=99=E9=81=93:
+ÔÚ 2026/9/22 11:05, Zhihao Cheng Ð´µÀ:
+Cc linux-raid@vger.kernel.org
 > Concurrent processes md_stop and IO submitting could trigger a
 > null-ptr-deref of 'mddev->private':
->
+> 
 >   BUG: kernel NULL pointer dereference, address: 0000000000000070
 >   RIP: 0010:_wait_barrier+0x2f/0x250
 >   Call Trace:
@@ -68,10 +73,10 @@ Hi,
 >    __blkdev_direct_IO_simple+0x1f6/0x370
 >    blkdev_write_iter+0x3b2/0x520
 >    ksys_write+0x7d/0x190
->
+> 
 >                P1
->    fd =3D open(/dev/md0, O_RDWR)
-> 	                      P2 (forked from P1, fd' <=3D fd)
+>    fd = open(/dev/md0, O_RDWR)
+> 	                      P2 (forked from P1, fd' <= fd)
 >    write(fd)
 >     submit_bio
 >      md_handle_request
@@ -79,16 +84,16 @@ Hi,
 >        raid1_write_request
 >                                    ioctl(fd, STOP_ARRAY)
 > 		                   mddev_set_closing_and_sync_blockdev
-> 				   // check passed, mddev->openers =3D 1,
+> 				   // check passed, mddev->openers = 1,
 > 				   // because md_open() is only called
 > 				   // once in P1->open
 > 				   do_md_stop
 > 				    __md_stop
-> 				     mddev->private =3D NULL
->
->         conf =3D mddev->private // NULL
+> 				     mddev->private = NULL
+> 
+>         conf = mddev->private // NULL
 >          wait_barrier(conf, sector) // null-ptr-deref !
->
+> 
 > It is a common problem for raid0/1/10/5, and __md_stop could be triggered
 > by several paths(eg. ioctl, sysfs, ->dtr). Fix it by replacing
 > mddev_lock() with mddev_suspend_and_lock() for all __md_stop() callers.
@@ -101,17 +106,16 @@ Hi,
 > suspended, so raid_dtr() could keep using mddev_lock_nointr().
 > Besides, fail the submitting IO in md_handle_request() if the
 > 'mddev->pers' becomes NULL.
->
-> Fetch a reproducer in https://bugzilla.kernel.org/show_bug.cgi?id=3D22202=
-0
->
+> 
+> Fetch a reproducer in https://bugzilla.kernel.org/show_bug.cgi?id=222020
+> 
 > Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 > Reported-by: syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3D3fe892ea5fc292e1353f
+> Closes: https://syzkaller.appspot.com/bug?extid=3fe892ea5fc292e1353f
 > Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
 > ---
 >   v1->v2:
->    1. Add 'mddev->pers !=3D NULL' check before make_request
+>    1. Add 'mddev->pers != NULL' check before make_request
 >    2. Delete dm-raid caller(->dtr) modifications
 >    3. Move memalloc_noio_restore after mddev_unlock_and_resume
 >   v2->v3:
@@ -120,15 +124,16 @@ Hi,
 >   v3->v4:
 >    1. Remove '!md_is_rdwr' check from array_state_store()
 >    2. update commit msg
+>   v4->v5:
+>    1. Skip checking '!md_is_rdwr' only for inactive case
 >   drivers/md/md.c | 17 ++++++++++++++++-
 >   1 file changed, 16 insertions(+), 1 deletion(-)
->
+> 
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 680b34a63cb3..d81f5bf3bffe 100644
+> index 680b34a63cb3..02798f2dbf0e 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -414,6 +414,20 @@ bool md_handle_request(struct mddev *mddev, struct b=
-io *bio)
+> @@ -414,6 +414,20 @@ bool md_handle_request(struct mddev *mddev, struct bio *bio)
 >   		if (!percpu_ref_tryget_live(&mddev->active_io))
 >   			goto check_suspended;
 >   	}
@@ -149,21 +154,15 @@ io *bio)
 >   	if (!mddev->pers->make_request(mddev, bio)) {
 >   		percpu_ref_put(&mddev->active_io);
 >   		if (mddev_is_dm(mddev) && mddev->pers->prepare_suspend)
-> @@ -4670,7 +4684,7 @@ array_state_store(struct mddev *mddev, const char *=
-buf, size_t len)
+> @@ -4670,7 +4684,7 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
 >   	case readonly:
 >   	case inactive:
 >   	case read_auto:
 > -		if (!mddev->pers || !md_is_rdwr(mddev))
-> +		if (!mddev->pers)
-
-This is not really what I mean, the checking should only be removed for the=
- case inactive,
-not that changing the array to read_only.
-
+> +		if (!mddev->pers || (st != inactive && !md_is_rdwr(mddev)))
 >   			break;
 >   		/* write sysfs will not open mddev and opener should be 0 */
->   		err =3D mddev_set_closing_and_sync_blockdev(mddev, 0);
+>   		err = mddev_set_closing_and_sync_blockdev(mddev, 0);
 > @@ -8299,6 +8313,7 @@ static bool md_ioctl_need_suspend(unsigned int cmd)
 >   	case HOT_REMOVE_DISK:
 >   	case SET_BITMAP_FILE:
@@ -172,7 +171,5 @@ not that changing the array to read_only.
 >   		return true;
 >   	default:
 >   		return false;
+> 
 
---=20
-Thanks,
-Kuai
