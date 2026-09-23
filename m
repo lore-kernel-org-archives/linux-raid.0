@@ -1,99 +1,85 @@
-Received: from va-2-58.ptr.blmpb.com (va-2-58.ptr.blmpb.com [209.127.231.58])
+Received: from va-2-16.ptr.blmpb.com (va-2-16.ptr.blmpb.com [209.127.231.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CB0A48124D
-	for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2026 11:16:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.58
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A08F49AA4A
+	for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2026 11:16:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790162163; cv=none; b=i2hDhoYoWi5oTob24/xK+wGGJsRDWsqkxar8q3ShAfB8LBJx+8HAVKoIQtqTsUsZP56Q3Pqs8UYEhBrvuAAZb/QWfRwTr+uFAwNjbvSUnyyARBDpleFz3AXoH4LFnQasRwUCtaxeK3CEO/HTrHwO8MSphFD3iaysKuHIdlFd2Gs=
+	t=1790162205; cv=none; b=h65/ugjbKCy0OqPehoTMd2y2qF1VXc2YyLeuTsFXygmnfw5hVa7W2gl4Up30/1237DQR10zVUJdKNz0ZSJPvP7fCwEOfaZpX0RmUw9kY3HsHd9dQDbPkSXzePCugCSTVJPY9MTQpcQBwEjHOlOloRN9+xeWxHVfaRssLP/Bhg+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790162163; c=relaxed/simple;
-	bh=jitZB8F9F1v+1W/BfCoAkSqOsagliyLwkW9wj0NiVOA=;
-	h=References:Cc:From:To:Mime-Version:In-Reply-To:Subject:Message-Id:
-	 Date:Content-Type; b=kPubgEsuqQUO1fkwaKdLJ69nXWJ2WwzPvRvn4Wk9wS6IJWOkgHGf3m2bKcQkSGMPcVHFrM/S5KgFPEXCn8WeEqJiEXYIFn+wucwysvmvuUgYMdiDOMGA3CJv24VHKI5bu6fvfssPBlotJWvHTCoqchczUCaRVlLvb/NMjb+LRt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=jgGTrKD0; arc=none smtp.client-ip=209.127.231.58
+	s=arc-20240116; t=1790162205; c=relaxed/simple;
+	bh=F6zebwNMl89BNoq0+FV33PsXigZ7rkkhvOE9bJ9HCI4=;
+	h=Cc:Subject:Date:In-Reply-To:To:Message-Id:References:From:
+	 Content-Type:Mime-Version; b=F96QBVC7bXt/zoyQzZnEcQTnP7rXEArEbHncVdMDrl5yPTqba99OrdZZvpYy6vfam40LQCiQGHEKOJCF/SwikmrXHSCdWfmYtwoK3oeQ4+SudAB8VDNym3l1uXCauD1Djf1jy9GaA66c+1xsRuwL67tGGmLQkexHegwNUGuaIvU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=XaexBR0I; arc=none smtp.client-ip=209.127.231.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="jgGTrKD0"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="XaexBR0I"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1790162147;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1790162193;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=vTXwUoG0YrOP5+/xSMF7ok6KIOTZTTi+Llnc0nIw16w=;
- b=jgGTrKD0Q75EsnzTWpuyxo4oEqVskfVSFEyhkxXw9Z5DMLSGWpdPt23v07N7Kk2OvXCZFa
- HtL3NidZ86VU9MvRNS0YvrBCOnr7HWgm8EvfO2bQL1/noU4TF2RRgdhi2uL3Rl0vtRkES4
- b+UB1Rv2ER09Uwtc7PT5gDXb51I7LhUV44l7VCowZXZr9MFTGqJRyQ2lcGsgMzIexOl4sm
- uQ1O6KDDQTmvCAszaNiaUa+JBFSUsQnu5VB72KpbN1sbhOgupjqSO/WG6qJmrBBuVfvEWb
- s9K/13R4+t+3VJVlzjg1QI0YM6lqfmtW5sRJECuWrZ+ulKuxXxYNDrfTXzFd5w==
-References: <20260921081009.278532-1-peng.fan@oss.nxp.com> <20260921081009.278532-2-peng.fan@oss.nxp.com>
+ bh=w8ycr9qCq0aWsRIBEU7Iu3sVBwaUmmFgt5+GrXlxml4=;
+ b=XaexBR0ItyHO+3LWzGwD8xJMfNI2aXymmVyZ1Qn1o0KrhnIdVOhTY5ZJX2/NmyqvmPHQQ2
+ FcItkNmdnwyZuR8V6vX+Qjlq3IlR9o5YAZ6XlXdw6nLD0YjC3r0ARuD00088f8qjhjyznH
+ fCwzmnJTeDPPhaF/rDgU8bfp53lYRx+dIozVfBA4YfgV6/G+Od4VejmaG7zO3GtrlqNye3
+ LaMGTFz+yVKgXVV8ytBBWx0B5e71MQcZZJwroLsrQNR1n2fGEFVa7aapEi3jypxYyEvT9z
+ ho3Loo4KnPL9aNqhSQISCXvsQFQuUyAKo2LEdY/SZiqHJU0tkkyOP7QSUJwOAw==
+Cc: "Xiao Ni" <xni@redhat.com>, "NeilBrown" <neilb@suse.de>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<stable@vger.kernel.org>
+Subject: Re: [PATCH v2] md: validate bblog_size when loading v1.x badblocks metadata
+Date: Wed, 23 Sep 2026 19:16:29 +0800
 X-Original-From: yu kuai <yukuai@fygo.io>
-Cc: <linux-kernel@vger.kernel.org>, "Peng Fan" <peng.fan@nxp.com>, 
-	<linux-raid@vger.kernel.org>
-From: "yu kuai" <yukuai@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.179]) by smtp.larksuite.com with ESMTPS; Wed, 23 Sep 2026 11:15:46 +0000
-Content-Transfer-Encoding: quoted-printable
-To: "Peng Fan (OSS)" <peng.fan@oss.nxp.com>, "Song Liu" <song@kernel.org>, 
-	"Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+In-Reply-To: <20260922044606.30774-1-ndaugoing@gmail.com>
+To: "Yuchao Zhang" <ndaugoing@gmail.com>, "Song Liu" <song@kernel.org>, 
 	"yu kuai" <yukuai@fygo.io>
+Message-Id: <a7464a07-22c3-41c7-b1b8-c8534001ce67@fygo.io>
+X-Lms-Return-Path: <lba+26ab3b511+c0749c+vger.kernel.org+yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.179]) by smtp.larksuite.com with ESMTPS; Wed, 23 Sep 2026 11:16:32 +0000
+References: <fad92649-e362-443a-93ea-205b11247e6d@fygo.io> <20260922044606.30774-1-ndaugoing@gmail.com>
+Reply-To: yukuai@fygo.io
+From: "yu kuai" <yukuai@fygo.io>
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 User-Agent: Mozilla Thunderbird
-In-Reply-To: <20260921081009.278532-2-peng.fan@oss.nxp.com>
-Reply-To: yukuai@fygo.io
-Subject: Re: [Patch V2] md/raid: use assign_bit() where applicable
-Message-Id: <f46a226a-6c7b-4a50-99f7-40400fb377db@fygo.io>
-X-Lms-Return-Path: <lba+26ab3b4e3+7b2038+vger.kernel.org+yukuai@fygo.io>
-Date: Wed, 23 Sep 2026 19:15:43 +0800
-Content-Type: text/plain; charset=UTF-8
 
-=E5=9C=A8 2026/9/21 16:10, Peng Fan (OSS) =E5=86=99=E9=81=93:
+=E5=9C=A8 2026/9/22 12:46, Yuchao Zhang =E5=86=99=E9=81=93:
 
-> From: Peng Fan<peng.fan@nxp.com>
+> In super_1_load(), when the on-disk feature_map does not have
+> MD_FEATURE_BAD_BLOCKS set but sb->bblog_offset is non-zero,
+> rdev->badblocks.shift is initialized to 0 without validating
+> sb->bblog_size.  The same field is validated in the
+> MD_FEATURE_BAD_BLOCKS branch ("sectors > (PAGE_SIZE / 512)"), but this
+> branch bypasses that check.
 >
-> Convert open-coded if/else with set_bit/clear_bit to the assign_bit API.
+> A forged on-disk superblock (malicious storage device or crafted
+> image) can therefore carry an oversized sb->bblog_size.  When bad
+> blocks are later recorded, super_1_sync() sets bb->size from
+> sb->bblog_size and md_write_metadata() issues a bio larger than the
+> single rdev->bb_page, reading beyond the page and leaking kernel
+> memory contents to disk.
 >
-> Done with Coccinelle semantic patch:
->      // set_bit -> clear_bit =3D> assign_bit
+> sb->bblog_size is never modified by the kernel between load and sync,
+> and the MD_FEATURE_BAD_BLOCKS branch already validates it, so checking
+> it in this branch is sufficient to cover both paths.
 >
->      @@
->      expression cond, bit, addr;
->      @@
+> Fix this by rejecting an oversized sb->bblog_size with -EINVAL,
+> matching the existing check in the MD_FEATURE_BAD_BLOCKS branch.
 >
->      -if (cond)
->      -        set_bit(bit, addr);
->      -else
->      -        clear_bit(bit, addr);
->      +assign_bit(bit, addr, cond);
->
->      // clear_bit -> set_bit =3D> assign_bit
->
->      @@
->      expression cond, bit, addr;
->      @@
->
->      -if (cond)
->      -        clear_bit(bit, addr);
->      -else
->      -        set_bit(bit, addr);
->      +assign_bit(bit, addr, !cond);
->
-> Signed-off-by: Peng Fan<peng.fan@nxp.com>
+> Fixes: 2699b67223ac ("md: load/store badblock list from v1.x metadata")
+> Cc:stable@vger.kernel.org
+> Signed-off-by: Yuchao Zhang<ndaugoing@gmail.com>
 > ---
->
-> V2:
->   Separate device-mapper and mraid
->   https://lore.kernel.org/all/20260918141737.3023011-1-peng.fan@oss.nxp.c=
-om/
->
->   drivers/md/md.c          | 22 ++++++----------------
->   drivers/md/raid5-cache.c |  6 ++----
->   drivers/md/raid5.c       |  6 ++----
->   3 files changed, 10 insertions(+), 24 deletions(-)
+>   drivers/md/md.c | 5 ++++-
+>   1 file changed, 4 insertions(+), 1 deletion(-)
 Applied to md-7.4
 
 --=20
