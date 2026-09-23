@@ -1,90 +1,74 @@
-Received: from va-2-60.ptr.blmpb.com (va-2-60.ptr.blmpb.com [209.127.231.60])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E0513B14B1
-	for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2026 11:23:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.60
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9BB349E5DC;
+	Wed, 23 Sep 2026 11:30:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790162636; cv=none; b=sNg5+ZKDvwu2WMLMS4WcRgmTsmSfj9FNppudoupl1PQoNgJTMHD1QuNS1WhlHvVkMaBVFNUMwk3+9v19TP/iWz/XdzVwtr0uJ6Q6qER+qk6aMzhLxwIVZQIEI8pOl0CoXMOe8Zbvnh0htQ9qO0a7YZwzNuMQpuDyDffsp4Ap1N8=
+	t=1790163023; cv=none; b=qepsuvlLqwNUDPKIeZCsK+/aV5HkqZeOMzCUu3X0omCM5oqlr5qcnX1C8T7H2kiTP9ZbfpJA6qiaz4n8rIhTb4MsVHXTAA7cYq6kXtasLHcIrkGHH/BhxzMvYQD7IKd5IqWp3cpvubDINVbj2v1dDk24mldsQCxQkIcDz0OHWi0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790162636; c=relaxed/simple;
-	bh=jWa+1IFgCZrNjNXiwQnuLWYI46HHUEwvbGXCyk9jkcw=;
-	h=To:From:Date:Message-Id:Mime-Version:References:Subject:
-	 Content-Type:In-Reply-To:Cc; b=lgPYkpsHTXzu4pK781XyccN9fGGh+LjJWPkFotp4znrQbDPG649SZgxoFZyFKiX8ysuv+9J0/+cs+YdEhwMUVRGO+ZTD2RcxEI6HZjTXJw7whRrij6R6rAWQfGVpETnhkwkwfYn4rkMbTUF/IlSjK2/5oVDZCSR98MOuuNOnsOM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=grzHRcGG; arc=none smtp.client-ip=209.127.231.60
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	s=arc-20240116; t=1790163023; c=relaxed/simple;
+	bh=nfxT/kp9OqY+fVwhfAedYeGKscZDGmU72il7hEm8qDA=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ltGMEm+IPLn0F98KFvRhsF9/81kAmrlwB9sf/FFTPbUHcFBT7MCRQh6MW70qS3gNl5FHopg4bZ0EiMVwuAXDcytF8FFq8IW++PEXGMil5DGv70CncSEID8AEzP6GjvDYBA46maK/uZpxxi7cj+SVjbuzi49PDOwW/Rack3pEJj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=MqyUEkoS; arc=none smtp.client-ip=113.46.200.222
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="grzHRcGG"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1790162629;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=bC0/fN7waNqoJr2je2YuDDBCo+ld0k0RwfKkIsE8pEM=;
- b=grzHRcGG3//3TzDCrnfvIsPw7uoKVhw2740OVWgCCQUymFfc/73pCw83alD3gCxcugkhgu
- Cg3QV6bJhC+dpwXmjj0y4A7cl/1Zktcq+/olai/XmMPyKgtKjIgQS3aeTRUCa7YTaMHK5r
- mVevLk2t2Vt4Bg+0qIrylY3Q7FwCUHkqSD+5QEzfWXIgNbu05rLhPzMWmWEtacg7QmOZYy
- PISQlP2lp077Pykji+yGeCdIaqMjrLfao1FTawU89Q2QzapTrTSzgiHha0pbchlquRgel1
- CrAg07pDliKUG1S5G4Ch9IFmtTZrix0Zzlzz8XnUNwjp7EGhqcXQHMAMsi3fcA==
-Received: from [192.168.1.104] ([39.182.0.179]) by smtp.larksuite.com with ESMTPS; Wed, 23 Sep 2026 11:23:48 +0000
-To: "Svyatoslav Nikolenko" <nsvatoslav515@gmail.com>, <song@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Date: Wed, 23 Sep 2026 19:23:45 +0800
-Message-Id: <314ed63c-e29b-4fa0-9f24-57b5f868fab6@fygo.io>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="MqyUEkoS"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=7znhjJwFSioVpfSs+gFzAxzxqWM6d2MLE9U5F19qE5w=;
+	b=MqyUEkoSThhhRdSMSOIzEKY+xz9QosGM75MvOAy7gmS6T3QysON7DWi9qwuBh1gU9emkCbZy0
+	ZrRq4OcLw8t3ZTVkIws0sVmfr6WOIzfdo2l2T7D43g9iAhiLmR+jIBjqW0snRtMqh4C7LVnizXv
+	JBKwqTmWyinHn3QrcbZdl9s=
+Received: from mail.maildlp.com (unknown [172.19.163.15])
+	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4hqZFk3xBVzLlSh;
+	Wed, 23 Sep 2026 19:18:02 +0800 (CST)
+Received: from whupemo200011.china.huawei.com (unknown [7.152.185.179])
+	by mail.maildlp.com (Postfix) with ESMTPS id 01A1840578;
+	Wed, 23 Sep 2026 19:30:08 +0800 (CST)
+Received: from huawei.com (10.50.85.155) by whupemo200011.china.huawei.com
+ (7.152.185.179) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Wed, 23 Sep
+ 2026 19:30:06 +0800
+From: Zhihao Cheng <chengzhihao1@huawei.com>
+To: <song@kernel.org>, <yukuai@fygo.io>, <shli@kernel.org>, <neil@brown.name>
+CC: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<chengzhihao1@huawei.com>, <yangerkun@huawei.com>, <yi.zhang@huawei.com>
+Subject: [PATCH v3 0/4] md: Fix two raid5/raid10 bugs
+Date: Wed, 23 Sep 2026 19:21:54 +0800
+Message-ID: <20260923112159.94175-1-chengzhihao1@huawei.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Original-From: yu kuai <yukuai@fygo.io>
-References: <20260922125418.2715-1-nsvatoslav515@gmail.com>
-X-Lms-Return-Path: <lba+26ab3b6c5+f27c93+vger.kernel.org+yukuai@fygo.io>
-Reply-To: yukuai@fygo.io
-Subject: Re: [PATCH] md/raid5: fix NULL pointer dereference in raid5_has_ppl
-Content-Type: text/plain; charset=UTF-8
-In-Reply-To: <20260922125418.2715-1-nsvatoslav515@gmail.com>
-Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<syzbot+270624bb31d478afe62e@syzkaller.appspotmail.com>
-User-Agent: Mozilla Thunderbird
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ whupemo200011.china.huawei.com (7.152.185.179)
 
-Hi,
+Fix two raid5/raid10 bugs in error injection case.
 
-=E5=9C=A8 2026/9/22 20:54, Svyatoslav Nikolenko =E5=86=99=E9=81=93:
-> Check if conf->mddev is non-NULL in raid5_has_ppl() before testing flags =
-to
-> prevent a KASAN null-ptr-deref during free_conf() cleanup paths.
->
-> Reported-by: syzbot+270624bb31d478afe62e@syzkaller.appspotmail.com
-> Tested-by: syzbot+270624bb31d478afe62e@syzkaller.appspotmail.com
-> Signed-off-by: Svyatoslav Nikolenko <nsvatoslav515@gmail.com>
-> ---
->   drivers/md/raid5-log.h | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+v1->v2:
+ Handle pers->run failure in level_store
+v2->v3:
+ Patch 2: Release sysfs group in 'pers->run' error handling path
 
-Looks like this is already fixed by:
+Zhihao Cheng (4):
+  md/raid5: Hide the origin mddev->thread before takeover
+  md: Handle pers->run failure in level_store
+  md/raid5: Don't free conf on raid5_run failure
+  md/raid10: Don't free conf on raid10_run failure
 
-https://patch.msgid.link/20260915081731.122933-1-chengzhihao1@huawei.com
+ drivers/md/md.c     | 29 ++++++++++++++++++++++++++++-
+ drivers/md/raid10.c | 22 ++++++++++------------
+ drivers/md/raid5.c  | 39 ++++++++++++++++++++++++++++-----------
+ 3 files changed, 66 insertions(+), 24 deletions(-)
 
->
-> diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
-> index c8332502669e..5a144051b142 100644
-> --- a/drivers/md/raid5-log.h
-> +++ b/drivers/md/raid5-log.h
-> @@ -51,7 +51,7 @@ static inline bool raid5_has_log(struct r5conf *conf)
->  =20
->   static inline bool raid5_has_ppl(struct r5conf *conf)
->   {
-> -	return test_bit(MD_HAS_PPL, &conf->mddev->flags);
-> +	return conf->mddev && test_bit(MD_HAS_PPL, &conf->mddev->flags);
->   }
->  =20
->   static inline int log_stripe(struct stripe_head *sh, struct stripe_head=
-_state *s)
+-- 
+2.52.0
 
---=20
-Thanks,
-Kuai
