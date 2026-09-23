@@ -1,129 +1,111 @@
-Received: from mail-pj2-f43.google.com (mail-pj2-f43.google.com [74.125.227.171])
+Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62C9D445AFA
-	for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2026 07:10:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D488F382292
+	for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2026 08:29:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790147435; cv=none; b=J97RuZHjAeX2/ntwEa2D1XmcQbEpyGKceJ9DdToWsz0HuL59of+4sCGdM2NP7vD0uRPHknPDVzDVLczu7loJHM7yP4/D9IDoDGLUMjjm7xCWowPjbgDEnJ46ximQZ+Ib/63kH3gwdcUysCoRBVWkGMxc2w+fF2OhF+NJcEedzc8=
+	t=1790152151; cv=none; b=XXIwVsXutywLrgUJDm/zM0m3JFfUdbcpU6U+ya1+wCZEfiEXx02FddHhsqNZiTo9eMpwRMx6em4LmdEX695S7EXcJ0FDckbk+e9alTUScMN/qtQSjVXmMfXI+JS3x/vHTDJzyZlvNnnFexWzSQFuA6B5MQtfrffqJaqpIUKP3y0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790147435; c=relaxed/simple;
-	bh=9dg2MuEApLd5vJbGRfjxXvMwVsMiU9DcZ4Ug20VxgO4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UvF9lm8gyFGjg5yHOeB8VO6EKeMoHoLTDAk4wCUisZYwQZvtmIMPBxK1rtaCQF9QNGwp0I2VO6mQiBq7ucBDP9enIDjcQtQmYY8xwkx4oDu06x2jpzjp1FLVgU+b8UU2yVsdtZiNrN04o6/JZls1gnZ8fquzf6m5FwxU4fEA9eE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cRSyL2xK; arc=none smtp.client-ip=74.125.227.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790152151; c=relaxed/simple;
+	bh=tUacAQlkKVSQfQjUzaLm2lm7YcF6fCoS64CLbnNXJP0=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=SzK6sgPPdyQyevYHuSWPLXKoN+Ewb6tS1Jizcat8L9NtOuv1ZL/hvzdx+CqhJfJhGGBS+6NxgG6jy+a/1ObUaRgITRxm5qD3H7mPe9zWEbGidpKS2Z8qiiRuatNBMURtyiehTT0u/ymx27CqxgUmtNNtmiiyHJhuVpNtg7pVfsc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=C/w3JtkO; arc=none smtp.client-ip=209.85.221.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cRSyL2xK"
-Received: by mail-pj2-f43.google.com with SMTP id 98e67ed59e1d1-39b31b4281eso435029a91.2
-        for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2026 00:10:30 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="C/w3JtkO"
+Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-48442ea8f59so812165f8f.1
+        for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2026 01:29:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790147429; x=1790752229; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=J9uoLJc0EMzZ+qvudAuQdqIiTluJpwC41BwKPw8x2Pg=;
-        b=cRSyL2xKghH2ToPmdWZcQvBifz4Sea1PqiAqCHEY51O7UTADgrRPRxeljmO53IkIsQ
-         BkhwaiJRjihbA8JxWsQEJOQbQGF7tuzgKcXiLhZfOV0+XCQHiK5EYMpczMhtX1+bpUim
-         q5BZcDRK8rNDYZeMGSBXmM0O6gQYq4sKLx4hpDrAaJ87SPuWzssDQp2eB4Kxso5tJNsW
-         yIdt5Rbu8s9fIgp30C0ECYPeZ7z93Dg3vA1v0k6HiwWqdcksi6vhl7vPyFMjrJ7CMot0
-         DQMAGmeegmxNRdRiTYaph/KkN4EKYpiiScYmw+fxPjADJMjgxlFIMjUvQUmIIx8kV8Nj
-         13xQ==
+        d=suse.com; s=google; t=1790152148; x=1790756948; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=tUacAQlkKVSQfQjUzaLm2lm7YcF6fCoS64CLbnNXJP0=;
+        b=C/w3JtkObuzwpZouop36oa9BGFBg9n/apU+pq2LsrtiMUhjLNCKAHGU2fT6IyL2qrm
+         JUHWhJa4202fdwY/OXkRH5xacZtlAqtefIL+vN3uK5EYj9gqSXl7am2KKBJyKD53DZmW
+         0QKtostJVFw8JAFAzDBWslXU8Uo26D28pnr0DeRweBcmxIvHnJHVnA73DW4DSL9ZocZz
+         8M/EXNY2afwbvlMRPVnp0XjZxPS1Zok1nNGldkj30h23+ANPlaJQ4Vz6PaCAV9uZZi5l
+         MaiUJXni3JW3Aaihtftm6/Oojr7s6pKGPF2RlmiXCinH2zrisO0DowZZHhRGqSi1ddQK
+         U5Sw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790147429; x=1790752229;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=J9uoLJc0EMzZ+qvudAuQdqIiTluJpwC41BwKPw8x2Pg=;
-        b=UD4/sVIJlLDG/a9vHAhAG2hRpLRdYR+Y59BwEmVLGEbPB71B2intk7SFcMPjXMJHQu
-         RP4Bh1H9vEuUYrc9dZ5TZ9/l16Zf7jBTX++A1CwqJQa78Ke/KpxOS8At4Cz0AIljcnmH
-         2SJdGdu59/PQVouxMoWHEbDQYut2AZOCIgs4YI7ZjpgSDSYigHRLPJ8D2T4oS0oe9IGo
-         D1htmC77D+sZYkqLd5iIrd9MyiLmm4eZvvgtR+VWGyaFpOW2lm7tY3cNT4RbDQlIZwHA
-         V+C4KRpeAn7At62om2XePt27uF11EGpBXAT1fnNnXnqSRb2/VLqv08Wim/dbP/9nA4PW
-         29NQ==
-X-Forwarded-Encrypted: i=1; AKwUvByM+dHotFcxGTnk8fET7vQNaX9zADRcv9YUrl0D/LVVJ1fqf30oRBzuA230/rLktn4Mshv3izk4jezK@vger.kernel.org
-X-Gm-Message-State: AFuF++m3OYHaPPA0yveA66VOAzeh+u5bAkmpg9K9mdknknHS8/gYK8KM
-	KBaYd80lTFKHYsRjoBINB4EEsgNJC+tt2ztMhTszX1sscge5iR8FLKucV1NBeoqZnOk=
-X-Gm-Gg: AYBFou24akRXvW3bE9aALj93nwMW/5taBVNR8Qd6Kjo/AfZyz83I+bsosojFNs895F+
-	4nZsjW2VvyFmHhWhLhJxd2PxV1iKGMLmwAp/cV/f48h5Gex0FY0H8jsR3mqHYzJoSa8tMIXdkFF
-	UvV2YdHGMgGpAYDCS1zi/N+wfhWC2LlINj90iEeNgc2ygEw8A+uida2lWmcPJy8Hl4/EdnaK66w
-	Uay/ufgRAxoLUmncnX2r/69W4kOi6I9IEIzkcdFXOdoetUBTvotRmvGA9Y5OygHqh04Vtkrzi/8
-	LW1hCSorVa4Mkq/ZpcUMkfGRGkoIlb/ws4KpcAaNmLwutsDiWwNfk8WB6yv+z/6B7CLR4HGLkLF
-	bYPf+G9uVO5K6Vl2zg7kfYX0o5TWSj0Hiqu9cZBcex1m1uyzujzwxQI57S2novmCkZaEgnFfeD3
-	5C2y+mSR6+Lo83bOHPB5aUv7lI9lY/6JN5BzhQouszfs7JjGO9+rrGYSUS7R1qoKFrskVGP1PAj
-	75+mh+hu+UznG0hKG0lQQJkALjlP6wrHg+R
-X-Received: by 2002:a17:90b:2fce:b0:3a0:42a9:9c73 with SMTP id 98e67ed59e1d1-3a07e654220mr1493254a91.38.1790147429128;
-        Wed, 23 Sep 2026 00:10:29 -0700 (PDT)
-Received: from flow.bytedance.net ([203.208.167.150])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc75f3bae00sm643835a12.10.2026.09.23.00.10.26
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 23 Sep 2026 00:10:28 -0700 (PDT)
-From: By <xiaobai050@gmail.com>
-To: song@kernel.org,
-	yukuai@fygo.io
-Cc: magiclinan@didiglobal.com,
-	xiao@kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	By <xiaobai050@gmail.com>,
-	syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com
-Subject: [PATCH] md: prevent opening an array before its sysfs kobject is ready
-Date: Wed, 23 Sep 2026 15:10:17 +0800
-Message-ID: <20260923071017.23563-1-xiaobai050@gmail.com>
-X-Mailer: git-send-email 2.55.0
+        d=1e100.net; s=20260707; t=1790152148; x=1790756948;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=tUacAQlkKVSQfQjUzaLm2lm7YcF6fCoS64CLbnNXJP0=;
+        b=xmF9+iI38ksd3sNj8wt/eVuCdwlRubV5LS8f+i9HXXROlqKE3/vZUrws2ATNNyn3JD
+         h7aK3jAl/P8rQVE5ci7lI9TPKzeMyVtjg2jF8lzfBY37keTDTTcjDe4t3JOmCqIbz/4L
+         sbYU8QjfSbRcXn8DEi0ox+Lx8OknDUWMp1HDHEBdm869REFt7y+6L+yr5KWPe/mFfeUW
+         MMcgIqA21qEDR856oYZY1cz+V8EYmQDUOtekVJZjkVpCr5v2RkIwqKODzceJolCSInHL
+         LHtHRur7/ZlRZYHDcmZrNCkug8oOgNfKTwppio7M5VkKFaekZdvWAtG/XCx+DWfqY/qd
+         9mxg==
+X-Gm-Message-State: AFuF++mst/XdNthvg5/q/Pbum5beCwKX7dd3lqDJt5aV1A9J87k46Vl3
+	ts2QKUc3WE7VgJRpJsYtfCqk8RuSS0frORvu/M0kr3FoAS9uZSV3NVfPO539+YKtm0o=
+X-Gm-Gg: AYBFou0X69BdamGyhsttm0OH3lY7kcov2w6kKoc0IYptcYb5aWuXxGBXgODG/EZ9Lsn
+	Ju+KRqWd7A9l2GofJhjnsbfjk2YmD7sJ1TlAvL+kZxgcekuqXr54lnUv+A25/7KgnlKkWzBv1XB
+	Wwo4+YJms/G313107bGjK8LfFS9D62DskpP+90yQ54TkvADP4OiO46cDNNGchPJHqzEWSaZy4XE
+	Q8ceQEsNto9PKZ7JQjuaqS3qpUq5MQyttgO6jS2beh2uL2yLS/uGbVEvKHwPM3CpymYdUfWmzTs
+	ndjWAV8yzrt6jXJruxiWl0YfLPO1IBU7CjMERHABY8BS7hZN8IXOVpS1WaLdAAPm7R9PNH+9OhX
+	EW6D5knMT4DQ0KJrSxlse39lfkSdedJgo+SQJi8ku4v1y0aUm5w5yhsuEZok4LlY4WxtimJVKgP
+	ZzNX+eV8D70ZDhTc7tNk2hHe1FhOnJS1ycv8FtiTgMD/nDCNesO0wBsFr0VV8OAZ2usxmEB1/vz
+	N0Iz3ZkH4Plf2ZKfiwpjPFZqYd6w7l0Lg9NVRohTLY6K1qsEip2PDgqBueSEuDzCzGvynrdfqY7
+	PCd0E4pnlt0ufMp7P3nwW5y8y1ZYoRY0iy1SVwvK/Dxg1w==
+X-Received: by 2002:a05:6000:27ce:b0:488:654a:981f with SMTP id ffacd0b85a97d-488654a984dmr3676033f8f.10.1790152147758;
+        Wed, 23 Sep 2026 01:29:07 -0700 (PDT)
+Received: from p200300de37172700e7f885d729fa4be7.dip0.t-ipconnect.de (p200300de37172700e7f885d729fa4be7.dip0.t-ipconnect.de. [2003:de:3717:2700:e7f8:85d7:29fa:4be7])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48868486461sm5136850f8f.8.2026.09.23.01.29.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 23 Sep 2026 01:29:07 -0700 (PDT)
+Message-ID: <adf11fcf1435728f98b4f94c1821d86b83866c14.camel@suse.com>
+Subject: Re: [PATCH v6 1/2] md: Don't set MD_BROKEN for RAID1 and RAID10
+ when using FailFast
+From: Martin Wilck <martin.wilck@suse.com>
+To: Kenta Akagi <k@mgml.me>, Xiao Ni <xiao@kernel.org>, Li Nan
+	 <magiclinan@didiglobal.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ song@kernel.org, 	yukuai@fnnas.com, shli@fb.com, mtkaczyk@kernel.org
+Date: Wed, 23 Sep 2026 10:29:06 +0200
+In-Reply-To: <010601a0cc7347e3-ff9a517e-b03b-4de5-bd38-93b664f3425c-000000@ap-northeast-1.amazonses.com>
+References: 
+	<010601a0cc7347e3-ff9a517e-b03b-4de5-bd38-93b664f3425c-000000@ap-northeast-1.amazonses.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-md_alloc() publishes the gendisk with add_disk() before it initializes
-and registers mddev->kobj. A concurrent open can issue ADD_NEW_DISK in
-this window, causing bind_rdev_to_array() to pass the uninitialized
-mddev kobject as a parent to kobject_add(). This triggers a kobject
-warning.
+Hi Kenta,
 
-Set MD_CLOSING before publishing the disk so md_open() rejects opens
-until the kobject and sysfs attributes are ready. Clear the bit under
-open_mutex, which md_open() holds while checking it.
+On Wed, 2026-09-23 at 04:08 +0000, Kenta Akagi wrote:
+>=20
+>=20
+> Hi Martin,
+>=20
+> I have not given up on it, but I have not managed to post v7 yet.
+> I still think failfast should be usable even in setups like that.
+>=20
+> It has been a while, but I intend to resume work on it.
 
-Compile-tested with ARCH=arm64 defconfig and drivers/md/md.o. The
-upstream syzbot report has no reproducer, so this race was not tested
-at runtime.
+My thinking is that, in the fastfail case, code to prevent total
+failure could be placed in the end-IO code code path, e.g. by
+attempting a retry directly from the md layer when the last rdev fails,
+instead of setting failing the device. But I haven't thought it
+through.
 
-Fixes: 7df835a32a8b ("md: fix a lock order reversal in md_alloc")
-Reported-by: syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=95eeb4ada2349a2170ea
-Assisted-by: LLM
-Signed-off-by: By <xiaobai050@gmail.com>
----
- drivers/md/md.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Thanks
+Martin
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 680b34a63..11b0b6b13 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6385,6 +6385,8 @@ struct mddev *md_alloc(dev_t dev, char *name)
- 
- 	disk->events |= DISK_EVENT_MEDIA_CHANGE;
- 	mddev->gendisk = disk;
-+	/* add_disk() exposes the device before its md kobject is registered. */
-+	set_bit(MD_CLOSING, &mddev->flags);
- 	error = add_disk(disk);
- 	if (error)
- 		goto out_put_disk;
-@@ -6406,6 +6408,9 @@ struct mddev *md_alloc(dev_t dev, char *name)
- 	kobject_uevent(&mddev->kobj, KOBJ_ADD);
- 	mddev->sysfs_state = sysfs_get_dirent_safe(mddev->kobj.sd, "array_state");
- 	mddev->sysfs_level = sysfs_get_dirent_safe(mddev->kobj.sd, "level");
-+	mutex_lock(&mddev->open_mutex);
-+	clear_bit(MD_CLOSING, &mddev->flags);
-+	mutex_unlock(&mddev->open_mutex);
- 	mutex_unlock(&disks_mutex);
- 	return mddev;
- 
--- 
-2.55.0
-
+--=20
+Dr. Martin Wilck <mwilck@suse.com>
+SUSE Software Solutions Germany GmbH, Frankenstr. 146, 90461 N=C3=BCrnberg,
+Germany
+Gesch=C3=A4ftsf=C3=BChrer: Stefan Gaiser, Jochen Jaser, Abhinav Puri (HRB
+36809,AG N=C3=BCrnberg)
