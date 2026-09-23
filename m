@@ -1,160 +1,236 @@
-Received: from mail-oi2-f9.google.com (mail-oi2-f9.google.com [74.125.231.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E30A039A4A4
-	for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2026 17:49:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BF3A364EBF
+	for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2026 18:42:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790185773; cv=none; b=Im25NzD46ekoNmRq86epnYTegA0/FYdmOyZZ4AH5AVf5ZEzz9Ly8vrXz2T1XZJT3ZIeQD/RlP2XGOx3Qu1awkCcNQuAUe69+bhfQvio7cJI8cdP2NV0b0umkmaoe9Nf/iKL4+8mBj/EEXOcx7EzWcA7trqplyTlw6lKfSxkI8jk=
+	t=1790188954; cv=none; b=q+squgV/hAlt1A2LrtLBFfUYk3hH4QfDtiBZyoXQ9TUtt/sKTOkO3z+fpdDowHgBue1MdkbKGWqJ+QNC4pn/S+dJbSFh2OsxM3eBnxwC/unNiGrrfNHKh71j2MJW6KmMc+nN5KjTCRZfwIAWFz6qKm5WHIjUnpTEA04HiArMyRE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790185773; c=relaxed/simple;
-	bh=P1+tvHw1slpxwuQOyiakKqWUipAkZFzNjGyxkQPASA8=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=FbxtagzGubj+bPqrpa0OrSLklbO/5IscKoYqpKmksu+fT2nvp33ipPC+yaWj69s36ZypCTsgRSKDdOPO3OtuwCH1+tUcC0EgBcJqxcDh1cVLrxfmRHwFG9pQ3OalD4rZohOPGINLhgidukZuD0DBMF2OhBS14lb/axF/593hCO0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=74.125.231.201
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi2-f9.google.com with SMTP id 46e09a7af769-7f4e9ec63a7so439405a34.1
-        for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2026 10:49:30 -0700 (PDT)
+	s=arc-20240116; t=1790188954; c=relaxed/simple;
+	bh=6vSr8iHLVTCdGCuBykWORp6fuGHRtdK34+k0mRKUABE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=T0/I/EkVHP17ZftWhsWM7GowE5yAu6FdL9c0YH8WaRwMn8YZOtlT7AZOc7wVIuC8sJxpRS+5sxd26EMY0+AUOwhfPFeVTmEOSp5KGBqxpPaOK0uXQEf2CgqWMmFQP1brAWhDre3E/thVxsEccIUF4OiILTiCDgfvYJjFkeCY3e4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JVw9Voy5; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=l8srrI7T; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JVw9Voy5";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="l8srrI7T"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790188950;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Y5icEL/yh2v8hZ+Ai3DhoLE6wiyYETJEd/KmVs15zCY=;
+	b=JVw9Voy5g8YZU57rvsBMuMBhijg4r/U1w9viL6kXWWH9XV6qGJKJwSKStYBBTWAYl/bnNn
+	yzN7MyjPVtCuG4NMMlemsLqFGlcgcxXc7CJxwS//dr90qEujsoy5kig/mJ8K8ULw7CZTWY
+	hH/iDKdMqlynzqQpmZAebxv4F8wFw6M=
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
+ [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-664-NUlJlqX7O824cOBSVleThg-1; Wed, 23 Sep 2026 14:42:29 -0400
+X-MC-Unique: NUlJlqX7O824cOBSVleThg-1
+X-Mimecast-MFC-AGG-ID: NUlJlqX7O824cOBSVleThg_1790188949
+Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-93a0b66ecd9so152407285a.2
+        for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2026 11:42:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1790188949; x=1790793749; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Y5icEL/yh2v8hZ+Ai3DhoLE6wiyYETJEd/KmVs15zCY=;
+        b=l8srrI7TUjjsLtIzUHqG+cW+2j/jcmlwJuI1VFDwVOYC9c8w/XoDLSZ8SMHlEv5e+4
+         eN5TfEXiJ1ZST9P61xYYf122WY15yUdFQ7+v/pM5WUvJ7/rZimyzCaR3KA++Prce6mxV
+         poF1hBCeOVY5ii1Y+bNSZ2qsgOZp4Vhx5RPGYh0TR0PgLWHi2YScf65CNqXfCmrstMtu
+         rrk29akFnuTAoPlxJjj+BAtUUAh1UahUXhldoAwtDh64d40TuQoQMn14+Q2zXLv9KBUT
+         hzWVi/hlV/0fWe1zMStcz7CXSC9g0+oQygnOnjJTr06wLV13GeSnRE3TI0+Q4daCSuDd
+         TKaQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790185769; x=1790790569;
-        h=content-type:to:from:subject:message-id:date:mime-version
+        d=1e100.net; s=20260707; t=1790188949; x=1790793749;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=BIoxU7LRZ4puv9TjF5uCcIKvwIgsp8NZRHhDg/lp2NQ=;
-        b=p6EteU/Q4JF+woI8OnAnmKOAOFlNn0RxT64CVfVoYplH082Egioj91lewYWstCN08H
-         FuNl6oMuf4dRBToAChwm3T1/9eSKyXI976bDi4/tqSw4PgGudGlrrOBMdPE/bzIBo0BR
-         R9HMwX6I798vmrxUEGQL4nMut1T6+5ThcCOIGQipxAuiSyJdnKNNh8hrkJ99CJN02+gJ
-         TNp37v7PJDhmBmRk8dEHdDRcfzXCUcWFdaI3dYi6GmJvOGoggEymczJCypK8+WjLaGSO
-         F22cNaYAP3niKTFK6zs+BcYCJLoeZKHL0ayI7aUeA8snv8rqXujf5sW1j5yk0PTcbGZw
-         qkXA==
-X-Forwarded-Encrypted: i=1; AKwUvBy9FFjJGJVn2S8u3eO46wOfkNyj4zDSouVbEkWEDhVTVVxDC+tJH1MbwJeJTtTNtrPMcxXxwGIuGMFw@vger.kernel.org
-X-Gm-Message-State: AFuF++lsa8s7PO169aU4NuNaABM/JznzhI8+qc09dr3UmeE42m9Cb84d
-	X2OgNpWTSLhJhSJ3s6hEuvn/KSyrFvw2q1JAGHag5OT3+08P5d3BvnK4GkpUxCf7YFMuQmDn0sz
-	0MNd04jr4YqC4VUso8TTfm4YVBUIi9qCk5IiNuwstdjCVxXbyAGZ7bmh9T88=
+        bh=Y5icEL/yh2v8hZ+Ai3DhoLE6wiyYETJEd/KmVs15zCY=;
+        b=r7Ft/k+jWC5NgqWGEcKLDkYwdnxaUGCfLeBGWB9tdFGP/Og07QFqXjzHCcoaTJT9iB
+         BUJbSxXmPuTQCIIv3eXl+g+SJrzvJkMictDcKB4uV2WjwVRBPtY0u0lzFh6Z5+Tl66qc
+         fgO1d+qmgxkZnUy8faorIaXSfx/50B48BaRX9hOcKiawI4MIEoFEyZRwhluknnH6wGyS
+         IIajTh/fZvuxBBevh5eTz4lQ9n6aeQ9XuoCxuHXCFbcx8nfuDs7FVoOk+F41dGZTAeZS
+         rcY04FqbO0t5QRnFyy+ya38R6Si6grK3o0mDmxbn/LJBcPP7yFJI7FU5PJhpN52AqQ6A
+         F1FA==
+X-Gm-Message-State: AFuF++loPqGUa/glOViTB198biVK/ogqBzp4qe7cMtP9bGJIonG63qfO
+	ghXeusAunnmeFM7ykkbG+LSCPc1NgFaXWs7mhBNSKuo2NayyuGBl4grjDStSNvOIDnUpVT/CkrH
+	EpK4q0kkyLpRkScCivt/Lv60Hgky6isvDVo95NL+9ROPdU3I9CCvPyq3Swq+a+kM+UDesuGY=
+X-Gm-Gg: AYBFou3DlKiHlQfx0GUbA3rV3jHrpBtndyrpsmLahNx9DWdisMGP/OQ1DL2LpWO5sI5
+	fv/xxxX5zpd8G746QvBZhVuSGa7zhTBFdveIQfbOo/l6xaUctGJOErfWceLpv/Q/4UhYkQOP0i0
+	P9VWWS31WjkhtLMDfxwuw09wsyTXw9jvhtWzn42NyPSJvnSTG+tJfzyICzVgjsA8s/cs6YgA/1B
+	bGYgbNMueb5d+kz9G2ecQyPaVuTs3poWrOO89itus8mIUmdtW1zSHJwsXLK623zmT8Ap46elO29
+	DDz89ISoNVavLEJ9Mn4oYzdS1emr+E6x7TWVVIFplXXtoz1WGPvDsh/QoipPLv4XtO9GHj8PT+o
+	U3etlhTSCTB9SbSsPisGYrjjWuqSorQWmFam87jFzxKPBw0h4StYwcTy3Iw==
+X-Received: by 2002:a05:620a:4145:b0:93b:d79a:c465 with SMTP id af79cd13be357-93c3480db85mr688885a.61.1790188948556;
+        Wed, 23 Sep 2026 11:42:28 -0700 (PDT)
+X-Received: by 2002:a05:620a:4145:b0:93b:d79a:c465 with SMTP id af79cd13be357-93c3480db85mr686085a.61.1790188948022;
+        Wed, 23 Sep 2026 11:42:28 -0700 (PDT)
+Received: from vdo-obuilder-bjohnston.permabit.com (nat-pool-rdu-t.redhat.com. [66.187.233.202])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-93c248765fcsm284801285a.26.2026.09.23.11.42.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 23 Sep 2026 11:42:27 -0700 (PDT)
+Date: Wed, 23 Sep 2026 14:42:25 -0400
+From: Bruce Johnston <bjohnsto@redhat.com>
+To: Zhihao Cheng <chengzhihao1@huawei.com>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: [PATCH v3 2/4] md: Handle pers->run failure in level_store
+Message-ID: <arQdkcalhtK5ySUz@vdo-obuilder-bjohnston.permabit.com>
+References: <20260923112159.94175-1-chengzhihao1@huawei.com>
+ <20260923112159.94175-3-chengzhihao1@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6820:1849:b0:6be:7d9:b14 with SMTP id
- 006d021491bc7-6d2cf845d8dmr3207973eaf.4.1790185769616; Wed, 23 Sep 2026
- 10:49:29 -0700 (PDT)
-Date: Wed, 23 Sep 2026 10:49:29 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6ab41129.e548f532.1ca396.001f.GAE@google.com>
-Subject: [syzbot] [raid?] general protection fault in ppl_write_stripe_run
-From: syzbot <syzbot+75d7e96ad03ac2dbbd9f@syzkaller.appspotmail.com>
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
-	magiclinan@didiglobal.com, song@kernel.org, syzkaller-bugs@googlegroups.com, 
-	xiao@kernel.org, yukuai@fnnas.com, yukuai@fygo.io
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260923112159.94175-3-chengzhihao1@huawei.com>
 
-Hello,
+Hi. I've been looking into takeover for a little while as well. I was
+planning to write up something to post into the mailing list about it
+but say your submission and figured I would mention it here. I believe
+just handling a failure in pers->run is insufficient to fixing takeover
+errors.
 
-syzbot found the following issue on:
+IMO the contract for level_store should be that if something fails, we
+end up where we were before the function was called. So if we try to go
+from 1->5 and something fails, we are back at a working valid level 1.
 
-HEAD commit:    50d05c7c76c9 Merge tag 'landlock-7.3-rc3' of git://git.ker..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=17cfb4c9580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=85bc5cc2fc7394d9
-dashboard link: https://syzkaller.appspot.com/bug?extid=75d7e96ad03ac2dbbd9f
-compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
-userspace arch: i386
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=11849405580000
+The current level_store function roughly does the following:
+1. Suspend & Validate: Suspends the mddev device and performs initial
+   validation checks.
+2. Takeover: Invokes pers->takeover().
+3. Swap Personality: Swaps the array to the new RAID personality.
+4. Free Old State: Frees the old personality configuration and internal
+   information.
+5. Update sysfs fields from old to new
+6. Run Personality: Calls pers->run to initialize the new RAID
+   personality.
+7. Resume Device: Resumes the mddev device.
 
-Downloadable assets:
-disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-50d05c7c.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/303a0ade8f9e/vmlinux-50d05c7c.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/70b8ca71442b/bzImage-50d05c7c.xz
+By the time we get to run, we have swapped and free'd the old
+personality.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+75d7e96ad03ac2dbbd9f@syzkaller.appspotmail.com
+The code in md_run around pers->run cleanup is reasonable because if
+something fails, the array isn't started. You can't really do anything
+after that. But in takeover, on a failed run, we're now in a state where
+we have a half swapped personality. How do we recover from that? Are we
+just going to stop the array? 
 
-Oops: general protection fault, probably for non-canonical address 0xdffffc0000000002: 0000 [#1] SMP KASAN NOPTI
-KASAN: null-ptr-deref in range [0x0000000000000010-0x0000000000000017]
-CPU: 1 UID: 0 PID: 6845 Comm: md0_raid5 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-RIP: 0010:ppl_write_stripe_run+0x60/0x1320 drivers/md/raid5-ppl.c:538
-Code: 3c 02 00 0f 85 01 11 00 00 4c 8b 8b 48 09 00 00 49 8d 41 10 48 89 c2 48 89 44 24 60 48 b8 00 00 00 00 00 fc ff df 48 c1 ea 03 <0f> b6 04 02 84 c0 74 08 3c 03 0f 8e b9 10 00 00 41 8b 59 10 31 ff
-RSP: 0018:ffffc900077e7938 EFLAGS: 00010202
-RAX: dffffc0000000000 RBX: ffff888013c2c000 RCX: 0000000000000000
-RDX: 0000000000000002 RSI: ffffffff888aae3d RDI: ffff888013c2c948
-RBP: 0000000000000001 R08: 0000000000000001 R09: 0000000000000000
-R10: 0000000000000001 R11: 0000000000000000 R12: ffff888022c26000
-R13: dffffc0000000000 R14: ffff888013c2c2b8 R15: ffff888013c2c000
-FS:  0000000000000000(0000) GS:ffff888096a60000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00000000fff8cec0 CR3: 000000006b079000 CR4: 0000000000352ef0
-Call Trace:
- <TASK>
- log_flush_stripe_to_raid drivers/md/raid5-log.h:101 [inline]
- handle_active_stripes.isra.0+0x11e4/0x1540 drivers/md/raid5.c:6851
- raid5d+0xe00/0x17b0 drivers/md/raid5.c:6985
- md_thread+0x505/0x580 drivers/md/md.c:8706
- kthread+0x373/0x450 kernel/kthread.c:436
- ret_from_fork+0x730/0xd60 arch/x86/kernel/process.c:158
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
- </TASK>
-Modules linked in:
----[ end trace 0000000000000000 ]---
-RIP: 0010:ppl_write_stripe_run+0x60/0x1320 drivers/md/raid5-ppl.c:538
-Code: 3c 02 00 0f 85 01 11 00 00 4c 8b 8b 48 09 00 00 49 8d 41 10 48 89 c2 48 89 44 24 60 48 b8 00 00 00 00 00 fc ff df 48 c1 ea 03 <0f> b6 04 02 84 c0 74 08 3c 03 0f 8e b9 10 00 00 41 8b 59 10 31 ff
-RSP: 0018:ffffc900077e7938 EFLAGS: 00010202
-RAX: dffffc0000000000 RBX: ffff888013c2c000 RCX: 0000000000000000
-RDX: 0000000000000002 RSI: ffffffff888aae3d RDI: ffff888013c2c948
-RBP: 0000000000000001 R08: 0000000000000001 R09: 0000000000000000
-R10: 0000000000000001 R11: 0000000000000000 R12: ffff888022c26000
-R13: dffffc0000000000 R14: ffff888013c2c2b8 R15: ffff888013c2c000
-FS:  0000000000000000(0000) GS:ffff888096a60000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00000000fff8cec0 CR3: 000000006b079000 CR4: 0000000000352ef0
-----------------
-Code disassembly (best guess):
-   0:	3c 02                	cmp    $0x2,%al
-   2:	00 0f                	add    %cl,(%rdi)
-   4:	85 01                	test   %eax,(%rcx)
-   6:	11 00                	adc    %eax,(%rax)
-   8:	00 4c 8b 8b          	add    %cl,-0x75(%rbx,%rcx,4)
-   c:	48 09 00             	or     %rax,(%rax)
-   f:	00 49 8d             	add    %cl,-0x73(%rcx)
-  12:	41 10 48 89          	adc    %cl,-0x77(%r8)
-  16:	c2 48 89             	ret    $0x8948
-  19:	44 24 60             	rex.R and $0x60,%al
-  1c:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
-  23:	fc ff df
-  26:	48 c1 ea 03          	shr    $0x3,%rdx
-* 2a:	0f b6 04 02          	movzbl (%rdx,%rax,1),%eax <-- trapping instruction
-  2e:	84 c0                	test   %al,%al
-  30:	74 08                	je     0x3a
-  32:	3c 03                	cmp    $0x3,%al
-  34:	0f 8e b9 10 00 00    	jle    0x10f3
-  3a:	41 8b 59 10          	mov    0x10(%r9),%ebx
-  3e:	31 ff                	xor    %edi,%edi
+There are also additional issues in level_store where the personality
+functions like pers->takeover do things like remove unsupported flags
+from the mddev based on the new personality but never repair them on
+failures.
 
+I've been investigating possible takeover failure solutions but none of
+them are easy. For example, we could try creating a new mddev at the
+start of level_store and using that for the pers->foo calls but there
+are a lot of shared resources so it becomes tricky. We could try
+something like an undo log (each change tell how to undo itself) but
+that would need to be passed into the personality functions or attached
+to the mddev.
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+Should we have a discussion on this issue? I feel like we have
+some holes here that need fixing.
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+On Wed, Sep 23, 2026 at 07:21:56PM +0800, Zhihao Cheng wrote:
+> Set 'raid_disks' after raid5_run() failure will trigger an
+> null-ptr-deref problem:
+>  BUG: kernel NULL pointer dereference, address: 0000000000000038
+>  RIP: 0010:raid5_check_reshape+0xad
+>  Call Trace:
+>   update_raid_disks+0x124
+>   raid_disks_store+0x145
+>   md_attr_store+0xd7
+>   sysfs_kf_write+0x7c
+> 
+> The trigger process is simple:
+>  mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sda /dev/sdb
+>  --force --assume-clean # create raid1
+>  echo 5 > /sys/block/md0/md/level
+>   level_store
+>    mddev->pers = pers
+>    mddev->private = priv
+>    raid5_run
+>     fail to abort (eg. raid5_create_ctx_pool fails)
+>     mddev->private = NULL
+>  echo 10 > /sys/block/md0/md/raid_disks
+>   raid_disks_store
+>    if (mddev->pers) // true
+>     update_raid_disks
+>      raid5_check_reshape
+>       conf = mddev->private
+>        conf->algorithm = mddev->new_layout // null-ptr-deref !
+> 
+> Similar process exists in do_md_stop->__md_stop_writes->raid5_quiesce.
+> Similar process exists in raid10 too.
+> 
+> Fix it by handling the error from pers->run, next active-type order will
+> restart the mddev.
+> 
+> Fixes: 245f46c2c221e ("md: add ->takeover method to support changing the personality managing an array")
+> Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
+> ---
+>  drivers/md/md.c | 29 ++++++++++++++++++++++++++++-
+>  1 file changed, 28 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 02798f2dbf0e..ff78bf8656ff 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -97,6 +97,7 @@ static struct workqueue_struct *md_misc_wq;
+>  static int remove_and_add_spares(struct mddev *mddev,
+>  				 struct md_rdev *this);
+>  static void mddev_detach(struct mddev *mddev);
+> +static void __md_stop(struct mddev *mddev);
+>  static void export_rdev(struct md_rdev *rdev);
+>  static void md_wakeup_thread_directly(struct md_thread __rcu **thread);
+>  
+> @@ -4243,7 +4244,33 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
+>  		mddev->in_sync = 1;
+>  		timer_delete_sync(&mddev->safemode_timer);
+>  	}
+> -	pers->run(mddev);
+> +	rv = pers->run(mddev);
+> +	if (rv) {
+> +		/*
+> +		 * ->run() has released the private data of the new personality,
+> +		 * while the old one has already been released as well. There is
+> +		 * nothing to fall back to, so stop the array to avoid leaving
+> +		 * 'mddev->pers' pointing to a personality which has no private
+> +		 * data, and reminds user to try to active the mddev again.
+> +		 */
+> +		pr_warn("md: %s: failed to run %s after takeover, please try to active\n",
+> +			mdname(mddev), pers->head.name);
+> +		if (mddev->pers->sync_request && mddev->to_remove == NULL)
+> +			mddev->to_remove = &md_redundancy_group;
+> +		if (md_bitmap_enabled(mddev, true))
+> +			mddev->bitmap_ops->flush(mddev);
+> +		clear_bit(MD_SERIALIZE_POLICY, &mddev->flags);
+> +		mddev_destroy_serial_pool(mddev, NULL);
+> +		__md_stop(mddev);
+> +		rdev_for_each(rdev, mddev)
+> +			if (rdev->raid_disk >= 0)
+> +				sysfs_unlink_rdev(mddev, rdev);
+> +		set_capacity_and_notify(mddev->gendisk, 0);
+> +		mddev->changed = 1;
+> +		md_new_event();
+> +		sysfs_notify_dirent_safe(mddev->sysfs_state);
+> +		goto out_unlock;
+> +	}
+>  	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+>  	if (!mddev->thread)
+>  		md_update_sb(mddev, 1);
+> -- 
+> 2.52.0
+> 
+> 
 
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
