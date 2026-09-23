@@ -1,141 +1,227 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from e234-57.smtp-out.ap-northeast-1.amazonses.com (e234-57.smtp-out.ap-northeast-1.amazonses.com [23.251.234.57])
+	(using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EDC548641A;
-	Tue, 22 Sep 2026 18:37:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93F2E39890A;
+	Wed, 23 Sep 2026 04:08:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=23.251.234.57
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790102249; cv=none; b=PkDlx6kcM4V7Zw0Zx9C5fMekebKXJQiL2fTVMPTqm8mJ2ooly6ulJnyiep62PY7g9rt03CRxZv5GceNeSpCOOMIKk2BCyW8hy54VPe/rp1nFoqnASepyxZpoqjAn3y4o7uWaWYEO62IEGh0UeTgyN1RGsJ+eGWT5RPYgXGoZYbc=
+	t=1790136505; cv=none; b=WLVMN3n+Hz33APirSrH5KDbLSg/my1O5tPcOrY58d2kMD+hE/i6h7j0Zd8of2jTP4vU8hcIdaZJyLRO3grgywfQRkc8wYGUhRlEPBCOcgwvFO7gODXicR8tMKOV8yRcUtWuUiImoYi2SgqjHGy51gOyQRITgegZ0PAgVF3hR/aI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790102249; c=relaxed/simple;
-	bh=7IXylYYC6NtBWuEo6ztvLpDOlLWUcaXehhTMZiJRh8A=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=UdCrevbDkVfnu0NRIC5ivusdl2pzis0gWbAKcuaNageeoWZ4uOswSK9SHKvic5MrPFf7Smf+iOtUEu5iUTiqmgArALuKPTtzuSW2PkjiI9l0q78UEhqgDEIIBA8+TIHdPz+9nZ8sWwQpwludYS2e6K9OQ1g0t+F2oq0OHoVoD6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=Sv0bq229; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790136505; c=relaxed/simple;
+	bh=oCgfmvH6rMSIRzC1+/rGnvNMhMMQckafrufxciJ2m7U=;
+	h=In-Reply-To:From:To:Cc:Subject:Message-ID:Date:MIME-Version:
+	 Content-Type; b=dMbsbhRZAO9I0LjnNu9wiSt8j21Va/sQHu8tfo3w0nN2ERsZvfV8vS8hicjVSs08WL+RMV/KqRNkb7GqNmgxs+QuIysXJ+B/mzHwlcsaf27EaiTO3eOY2b4imDeoLvMsTM2r0a5P+m5NCQCKnMQhqS5Qm0K+JYXlTBzKqkPnnvE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=send.mgml.me; dkim=pass (1024-bit key) header.d=mgml.me header.i=@mgml.me header.b=V9L/aZaL; dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b=hxzhJZpK; arc=none smtp.client-ip=23.251.234.57
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=send.mgml.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="Sv0bq229"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F8531F000FF;
-	Tue, 22 Sep 2026 18:37:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1790102247;
-	bh=Mu0Q0Us5oqehuvN1MkgAhz++2hs8x498+OX/TvKYCac=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=Sv0bq2298nj6nPGBCihQSrJ0oYpmkFOyU8RxLXjYLyR4MWXYdp5+9SXKP6oXeLg5X
-	 4w9gJru9toJU7XoWCRQn9a9mh8l6m8j74t230LFHTNJ2VrTW7sQYwDoj5xpnUEjYbv
-	 oU/Yf+ziI7SHrOng48chSTms77tGwE6O0hB57S+k=
-Date: Tue, 22 Sep 2026 11:37:26 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: syzbot <syzbot+75f49ec552cc74d9d69b@syzkaller.appspotmail.com>
-Cc: apopple@nvidia.com, byungchul@sk.com, david@kernel.org,
- gourry@gourry.net, joshua.hahnjy@gmail.com, linux-kernel@vger.kernel.org,
- linux-mm@kvack.org, linux-raid@vger.kernel.org, magiclinan@didiglobal.com,
- matthew.brost@intel.com, rakie.kim@sk.com, song@kernel.org,
- syzkaller-bugs@googlegroups.com, xiao@kernel.org,
- ying.huang@linux.alibaba.com, yukuai@fygo.io, ziy@nvidia.com
-Subject: Re: [syzbot] [mm?] WARNING in setup_conf
-Message-Id: <20260922113726.0436e8d4e9e04c79b632f086@linux-foundation.org>
-In-Reply-To: <6ab28beb.a6af0033.177e91.0020.GAE@google.com>
-References: <6a8cdbd6.dbb3a75c.7844.0013.GAE@google.com>
-	<6ab28beb.a6af0033.177e91.0020.GAE@google.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=mgml.me header.i=@mgml.me header.b="V9L/aZaL";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="hxzhJZpK"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple; s=resend;
+	d=mgml.me; t=1790136502;
+	h=In-Reply-To:From:To:Cc:Subject:Message-ID:Content-Transfer-Encoding:Date:MIME-Version:Content-Type;
+	bh=oCgfmvH6rMSIRzC1+/rGnvNMhMMQckafrufxciJ2m7U=;
+	b=V9L/aZaL0OYKe4hiE7bG4izv3k82Sh0BY6B5J8+mBGHRYDYuDe13Lzv1btu9e/Xt
+	P5efHSIv+77jm2XaG+gR6c5AY9sGEOZ+r9xdwF3dkrI6TxS3VFwvWBoG2p5Xc0ypZGj
+	nzXZbvCchW8FgORFiZVvuzl5MaVKg8nu0yZ8qcdI=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=zh4gjftm6etwoq6afzugpky45synznly; d=amazonses.com; t=1790136502;
+	h=In-Reply-To:From:To:Cc:Subject:Message-ID:Content-Transfer-Encoding:Date:MIME-Version:Content-Type:Feedback-ID;
+	bh=oCgfmvH6rMSIRzC1+/rGnvNMhMMQckafrufxciJ2m7U=;
+	b=hxzhJZpKknFvT+cKKW1RKVNLaAWwX1fmjHioQIwga0wJyDiSZsReyAUuUXxVa3Tt
+	0DQiQlfAmlxhrYMoM9IkSISoIm/g3CK0ZXsqNMpnnFQDVTcQtk5qXL/WjaxZFSr+n+g
+	5bJEUTRGPHPKzDjWAqdvs4yKzuamUr0jRR/iMvoQ=
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+In-Reply-To: <0cce3ff7dc782ef2f2618212b6b87889aea8e653.camel@suse.com>
+From: Kenta Akagi <k@mgml.me>
+To: martin.wilck@suse.com, xni@redhat.com, linan666@huaweicloud.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	song@kernel.org, yukuai@fnnas.com, shli@fb.com, mtkaczyk@kernel.org
+Subject: Re: [PATCH v6 1/2] md: Don't set MD_BROKEN for RAID1 and RAID10
+ when using FailFast
+Message-ID: <010601a0cc7347e3-ff9a517e-b03b-4de5-bd38-93b664f3425c-000000@ap-northeast-1.amazonses.com>
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 23 Sep 2026 04:08:22 +0000
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Feedback-ID: :1.ap-northeast-1.SskAFE1oaJ7KCjyyJFCV37nkSRmUZttpeGoevLE2CszduPSq19CK0OWqrkMmPMemkYWmFvQfvS6+lCR9ETv8vDWvEFaQZtUQ69n4DuGGNbGH4U7i+CnKWCHWm/HpilUFxPcCpCRFiQTHPHnKlfimqanQj7AjyJ2y8XQuaQGs83Sl+MS5tJ/lS6+Uh2zwyhRo:1.ap-northeast-1.TOS0vxEE3Ar6ai29fkp2i/jb+l2iigajCGeLfF7S3sk=:AmazonSES
+X-SES-Outgoing: 2026.09.23-23.251.234.57
 
 
-tl;dr: a raid issue.
 
-more below:
+On 2026/09/17 22:58, Martin Wilck wrote:
+> Hello Kenta, all,
+>=20
+> On Fri, 2026-01-16 at 11:04 +0900, Kenta Akagi wrote:
+>>
+>>
+>> On 2026/01/07 12:35, Xiao Ni wrote:
+>>> On Tue, Jan 6, 2026 at =
+8:30=E2=80=AFPM Kenta Akagi <k@mgml.me> wrote:
+>>>>
+>>>> Hi,
+>>>> Thank you for reviewing.
+>>>>
+>>>> On 2026/01/06 11:57, Li Nan wrote:
+>>>>>
+>>>>>
+>>>>> =E5=9C=A8 2026/1/5 22:40, Kenta Akagi =E5=86=99=E9=81=93:
+>>>>>> After commit 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and
+>>>>>> RAID10"),
+>>>>>> if the error handler is called on the last rdev in =
+RAID1 or
+>>>>>> RAID10,
+>>>>>> the MD_BROKEN flag will be set on that mddev=
+.
+>>>>>> When MD_BROKEN is set, write bios to the md will result in an
+>>>>>> I/O error.
+>>>>>>
+>>>>>> This causes a problem when using FailFast.
+>>>>>> The current implementation of FailFast expects the array to
+>>>>>> continue
+>>>>>> functioning without issues even after calling =
+md_error for
+>>>>>> the last
+>>>>>> rdev.=C2=A0 Furthermore, due to the =
+nature of its functionality,
+>>>>>> FailFast may
+>>>>>> call md_error on =
+all rdevs of the md. Even if retrying I/O on
+>>>>>> an rdev
+>>>>>> would succeed, it first calls md_error before retrying.
+>>>>>>
+>>>>>> To fix this issue, this commit ensures that for RAID1 and
+>>>>>> RAID10, if the
+>>>>>> last In_sync rdev has the FailFast flag set =
+and the mddev's
+>>>>>> fail_last_dev
+>>>>>> is off, the MD_BROKEN flag will=
+ not be set on that mddev.
+>>>>>>
+>>>>>> This change impacts userspace. =
+After this commit, If the rdev
+>>>>>> has the
+>>>>>> FailFast flag, the =
+mddev never broken even if the failing bio
+>>>>>> is not
+>>>>>> FailFast. However, it's unlikely that any setup using
+>>>>>> FailFast expects
+>>>>>> the array to halt when md_error is called on=
+ the last rdev.
+>>>>>>
+>>>>>
+>>>>> In the current RAID design, when an IO =
+error occurs, RAID
+>>>>> ensures faulty
+>>>>> data is not read via the =
+following actions:
+>>>>> 1. Mark the badblocks (no FailFast flag); if this =
+fails,
+>>>>> 2. Mark the disk as Faulty.
+>>>>>
+>>>>> If neither action is =
+taken, and BROKEN is not set to prevent
+>>>>> continued RAID
+>>>>> use, errors on the last remaining disk will be ignored.
+>>>>> Subsequent reads
+>>>>> may return incorrect data. This seems like a =
+more serious issue
+>>>>> in my opinion.
+>>>>
+>>>> I agree that data =
+inconsistency can certainly occur in this
+>>>> scenario.
+>>>>
+>>>> However, a RAID1 with only one remaining rdev can considered the
+>>>> same as a plain
+>>>> disk. From that perspective, I do not believe it =
+is the mandatory
+>>>> responsibility
+>>>> of md raid to block subsequent =
+writes nor prevent data
+>>>> inconsistency in this situation.
+>>>>
+>>>> The commit 9631abdbf406 ("md: Set MD_BROKEN for RAID1 and
+>>>> RAID10") that introduced
+>>>> BROKEN for RAID1/10 also does not seem =
+to have done so for that
+>>>> responsibility.
+>>>>
+>>>>>
+>>>>> In scenarios with a large number of transient IO errors, is
+>>>>> FailFast not a
+>>>>> suitable configuration? As you mentioned: =
+"retrying I/O on an
+>>>>> rdev would
+>>>>
+>>>> It seems be right about that=
+. Using FailFast with unstable
+>>>> underlayer is not good.
+>>>> However, as md raid, which is issuer of FailFast bios,
+>>>> I believe it is incorrect to shutdown the array due to the
+>>>> failure of a FailFast bio.
+>>>
+>>> Hi all
+>>>
+>>> I understand @Li Nan=
+ 's point now. The badblock can't be recorded
+>>> in
+>>> this situation and the last working device is not set to faulty. To
+>>> be
+>>> frank, I think consistency of data is more important. Users =
+don't
+>>> think it's a single disk, they must think raid1 should guarantee
+>>> the
+>>> consistency. But the write request should return an error when
+>>> calling
+>>> raid1_error for the last working device, right? So there is=
+ no
+>>> consistency problem?
+>>
+>> Hi all,
+>>
+>> I understand that when =
+md_error is issued for the last remaining
+>> rdev,=20
+>> the array should be stopped except in the failfast case, also,=20
+>> it is no longer appropriate to treat an RAID1 array that has lost=20
+>> redundancy as "just a normal single drive" [1].
+>>
+>> I will post an PATCH v7 based on v5.
+>=20
+> I wonder what became of this=
+ v7 series. Have you given up on this?
+> If yes, what is the bottom line - =
+simply not using failfast in setups
+> like the one you described?
 
-On Tue, 22 Sep 2026 07:08:43 -0700 syzbot <syzbot+75f49ec552cc74d9d69b@syzkaller.appspotmail.com> wrote:
+Hi Martin,
 
-> syzbot has found a reproducer for the following issue on:
-> 
-> HEAD commit:    f0100363d8c3 Merge tag 'xfs-fixes-7.3-rc5' of gitolite.ker..
-> git tree:       upstream
-> console output: https://syzkaller.appspot.com/x/log.txt?x=17971805580000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=2b924f079099ba6e
-> dashboard link: https://syzkaller.appspot.com/bug?extid=75f49ec552cc74d9d69b
-> compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=17b20c5e580000
-> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=10720c5e580000
-> 
-> Downloadable assets:
-> disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-f0100363.raw.xz
-> vmlinux: https://storage.googleapis.com/syzbot-assets/18fb2734cddb/vmlinux-f0100363.xz
-> kernel image: https://storage.googleapis.com/syzbot-assets/5737b586e7bc/bzImage-f0100363.xz
-> 
-> IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> Reported-by: syzbot+75f49ec552cc74d9d69b@syzkaller.appspotmail.com
-> 
-> md: async del_gendisk mode will be removed in future, please upgrade to mdadm-4.5+
-> syz.0.17 uses obsolete (PF_INET,SOCK_PACKET)
-> ------------[ cut here ]------------
-> 1
-> WARNING: mm/page_alloc.c:5340 at alloc_order_allowed mm/page_alloc.c:5340 [inline], CPU#0: syz.0.17/5462
-> WARNING: mm/page_alloc.c:5340 at __alloc_frozen_pages_noprof+0x425/0x5a0 mm/page_alloc.c:5397, CPU#0: syz.0.17/5462
-> Modules linked in:
-> CPU: 0 UID: 0 PID: 5462 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(full) 
-> Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-> RIP: 0010:alloc_order_allowed mm/page_alloc.c:5340 [inline]
-> RIP: 0010:__alloc_frozen_pages_noprof+0x425/0x5a0 mm/page_alloc.c:5397
+I have not given up on it, but I have not managed to post v7 =
+yet.
+I still think failfast should be usable even in setups like that.
 
-Here, core MM is warning that it was asked to allocate a crazy amount
-of memory.  By drivers/md/raid10.c:setup_conf().
+It has been a while, but I intend to resume work on it.
 
-It's root-only so "don't do that" is a respectable response.  But
-adding some sanity check into setup_conf() would make the fuzzer emails
-go away so we can concentrate on real stuff.
+Thanks,
+Akagi
 
+>=20
+> Martin
+>=20
+> --=20
+> Dr. Martin Wilck <mwilck@suse.com>
+> SUSE Software Solutions Germany GmbH, Frankenstr. 146, 90461 =
+N=C3=BCrnberg,
+> Germany
+> Gesch=C3=A4ftsf=C3=BChrer: Stefan Gaiser, Jochen=
+ Jaser, Abhinav Puri (HRB
+> 36809,AG N=C3=BCrnberg)
+>=20
 
-> Code: 90 e9 76 fe ff ff 41 81 e6 3f ff ff ff 44 89 f1 41 83 e6 f7 a9 00 00 00 10 44 0f 44 f1 e9 45 fd ff ff c6 05 2c 98 38 0e 01 90 <0f> 0b 90 e9 8b fe ff ff 48 8d 3d ac 09 54 0e 67 48 0f b9 3a e9 68
-> RSP: 0018:ffffc90003b87520 EFLAGS: 00010246
-> RAX: ffffc90003b87500 RBX: 1ffff92000770ea8 RCX: 0000000000000000
-> RDX: 0000000000000000 RSI: 000000000000000e RDI: ffffc90003b87588
-> RBP: ffffc90003b87618 R08: ffffc90003b87587 R09: 0000000000000000
-> R10: ffffc90003b87560 R11: fffff52000770eb1 R12: 0000000000000000
-> R13: 0000000000000000 R14: 0000000000040dc0 R15: 0000000000000000
-> FS:  00005555836a7500(0000) GS:ffff88808c2c0000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 00007f4a2c07ae9c CR3: 000000003bff7000 CR4: 0000000000352ef0
-> Call Trace:
->  <TASK>
->  alloc_pages_mpol+0x21e/0x390 mm/mempolicy.c:2486
->  ___kmalloc_large_node+0x4f/0x120 mm/slub.c:5353
->  __kmalloc_large_node_noprof+0x18/0x90 mm/slub.c:5385
->  __do_kmalloc_node mm/slub.c:5402 [inline]
->  __kmalloc_noprof+0x3fb/0x720 mm/slub.c:5439
->  _kmalloc_noprof include/linux/slab.h:995 [inline]
->  _kzalloc_noprof include/linux/slab.h:1312 [inline]
->  setup_conf+0x28b/0xd30 drivers/md/raid10.c:3855
->  raid10_run+0x1d2/0x16c0 drivers/md/raid10.c:3955
->  md_run+0xc3d/0x1cd0 drivers/md/md.c:6779
->  do_md_run+0x35/0x720 drivers/md/md.c:6880
->  md_ioctl+0x1e2b/0x2610 drivers/md/md.c:8515
->  blkdev_ioctl+0x5e3/0x740 block/ioctl.c:798
->  vfs_ioctl fs/ioctl.c:51 [inline]
->  __do_sys_ioctl fs/ioctl.c:597 [inline]
->  __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
->  do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
->  do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
->  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-> RIP: 0033:0x7efcb939e159
-> Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-> RSP: 002b:00007ffd8c37e488 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-> RAX: ffffffffffffffda RBX: 00007efcb9625fa0 RCX: 00007efcb939e159
-> RDX: 0000000000000000 RSI: 00000000400c0930 RDI: 0000000000000004
-> RBP: 00007efcb943506b R08: 0000000000000000 R09: 0000000000000000
-> R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-> R13: 00007efcb9625fac R14: 00007efcb9625fa0 R15: 00007efcb9625fa0
->  </TASK>
-> 
-> 
-> ---
-> If you want syzbot to run the reproducer, reply with:
-> #syz test: git://repo/address.git branch-or-commit-hash
-> If you attach or paste a git patch, syzbot will apply it before testing.
