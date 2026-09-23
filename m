@@ -1,45 +1,45 @@
-Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
+Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0AEE49DBB0;
-	Wed, 23 Sep 2026 11:30:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2151149F122;
+	Wed, 23 Sep 2026 11:30:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790163027; cv=none; b=G9Q/WaM0RhgZcVMN/wCUZubceG/4GpVsP3uIIiqW5GVdk1Oy6/Wvxv9oxXJAQ2IoZ3yWs81/Sro9dhMBwfQ5huNU21lZojY7d95iswermVVM3M02/ZS3f9Jue8wKQyuBjY/YVZXee5LGH/aMbYqR+6Y38s3GfiyNZc23rpDKuDM=
+	t=1790163031; cv=none; b=YmTss+AUArR66Hrk1cX6oDV6H2jHEz2yucmNVcO2UdkUQbeehGc1iAsXcHqmS1tZEMHvGK97a06U7VsrW3PDXLNg+zaMs/UGniZdnSHfbRDWJ4xRYTITHZVjX6cAwOzAEoh3b0CtvfYJOiYDBx5BQl/2wcz9P3Zbu84LkVLjWA0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790163027; c=relaxed/simple;
-	bh=m/FcvP9JTRB7MSj1gfb0AyIu76xSDhcIvTkTDEh7nag=;
+	s=arc-20240116; t=1790163031; c=relaxed/simple;
+	bh=f4ZuN7YIVBmjIlvAV+syE5QTTYZbpG8kweTNE3cGB7M=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=S88EPwJwqMaZzo0TEq1yzozEICDPp0MWf/D1Y5djiSAetg48XcxkayjeCbQZ3sAO4+4oJkcp8pqM4vdYjX0akWBT41oRVQ+z9++Ro1yCNf3NMbXH81dp8vhOqtuoin6CE/36wmQ0iNZEX80EZc2uIU4wZjLdkIOT/3fNvJobYU4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=cVDgg1pP; arc=none smtp.client-ip=113.46.200.217
+	 MIME-Version:Content-Type; b=evGWH1vvXYsQd+TKIvgWYvEtMWM/wRWhsbJf7XZe9KaqdfdLFOfZJoKoCSTiztr0IGInuIYijb/AfpH90HBp0F5t739vgylYqTUuqdFpXkGnqsjdwXVqHbRYl9EwQtyxVLMTX9jA3qASuj8Og8o86kaDmht7SqIibj4lnPAebKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=Ky2GfRSW; arc=none smtp.client-ip=113.46.200.216
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="cVDgg1pP"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="Ky2GfRSW"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=GMeiLnjxKDXYCAdv/zIJZmZQqDB7+UsCszXD9zntC8k=;
-	b=cVDgg1pPAyj1xw+zz99To8tIJMf6JiIPt3HBsmGbEw8y6CClXKFN+a0eRfcU7KZrGfTF7kKtj
-	fqGBonkqUcA/AQ6tGPwqd3sG7X7tP5fOzH1tfLCNZx6IETFAPIkWJA+F7dJDDwQva9GLAuMGqy6
-	49BZcK056rT8a1LDk0au1oQ=
+	bh=fWxJnnxB42hu8FmbVxkpGBN6x581Psd4IIki4Vpp8BE=;
+	b=Ky2GfRSWQQuEFSYRPyL7Wm/V0cJm4HJjpWW00uEcUg91TjNp9wJY26r1vVf7v42C1MdBbCJyJ
+	FN8Ts+Tat9qb+US1opkG+HRaj7JoALSTBY5q7coDDpfXdKJh9tfqCwQ51DddZPx7EHftSGKvpnD
+	Mnh7gofgDY8DX0qGIxJITiA=
 Received: from mail.maildlp.com (unknown [172.19.162.140])
-	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4hqZGX2zpQzcbMk;
-	Wed, 23 Sep 2026 19:18:44 +0800 (CST)
+	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4hqZG36r0Vz1T4Fq;
+	Wed, 23 Sep 2026 19:18:19 +0800 (CST)
 Received: from whupemo200011.china.huawei.com (unknown [7.152.185.179])
-	by mail.maildlp.com (Postfix) with ESMTPS id CF906203C1;
-	Wed, 23 Sep 2026 19:30:08 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 84959203C1;
+	Wed, 23 Sep 2026 19:30:11 +0800 (CST)
 Received: from huawei.com (10.50.85.155) by whupemo200011.china.huawei.com
  (7.152.185.179) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Wed, 23 Sep
- 2026 19:30:07 +0800
+ 2026 19:30:10 +0800
 From: Zhihao Cheng <chengzhihao1@huawei.com>
 To: <song@kernel.org>, <yukuai@fygo.io>, <shli@kernel.org>, <neil@brown.name>
 CC: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<chengzhihao1@huawei.com>, <yangerkun@huawei.com>, <yi.zhang@huawei.com>
-Subject: [PATCH v3 1/4] md/raid5: Hide the origin mddev->thread before takeover
-Date: Wed, 23 Sep 2026 19:21:55 +0800
-Message-ID: <20260923112159.94175-2-chengzhihao1@huawei.com>
+Subject: [PATCH v3 4/4] md/raid10: Don't free conf on raid10_run failure
+Date: Wed, 23 Sep 2026 19:21:58 +0800
+Message-ID: <20260923112159.94175-5-chengzhihao1@huawei.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260923112159.94175-1-chengzhihao1@huawei.com>
 References: <20260923112159.94175-1-chengzhihao1@huawei.com>
@@ -54,108 +54,101 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
  whupemo200011.china.huawei.com (7.152.185.179)
 
-The raid5 takeover invokes setup_conf and allocates strip heads, but
-it wakes up the wrong thread, which lefts strip heads in the list
-'conf->released_stripes' and not being processed. If raid5_run fails,
-the strip heads won't be released, which triggers the following slab
-warnings (CONFIG_SLUB_DEBUG):
- BUG raid5-md0 (Not tainted): Objects remaining on __kmem_cache_shutdown()
- Object 0x0000000062fad548 @offset=3968
- Object 0x000000007f74683c @offset=4960
- WARNING: mm/slub.c:1268 at __slab_err+0x31/0x40, CPU#0: bash/865
- RIP: 0010:__slab_err+0x31
- Call Trace:
-  __kmem_cache_shutdown.cold+0x15b
-  kmem_cache_destroy+0x71
-  free_conf+0xf8
-  raid5_run.cold+0x463
-  level_store+0x64e
-  md_attr_store+0xd7
+Since all pers->run() callers handle the error case, no need to free
+conf when raid10_run() fails.
 
-The detailed triggering process is as follows:
- mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sda /dev/sdb
- --force --assume-clean # create raid1, mddev->thread is raid1d
- echo 5 > /sys/block/md0/md/level
-  level_store
-   raid5_takeover_raid1
-     setup_conf
-      grow_stripes
-       grow_one_stripe
-        sh = alloc_stripe
-        raid5_release_stripe
-          md_wakeup_thread(conf->mddev->thread) // wakeup raid1d
-     raid5_run
-      ENOMEM = raid5_create_ctx_pool
-      free_conf
-       shrink_stripes
-        drop_one_stripe // no strips found from the conf->inactive_list
-        kmem_cache_destroy(conf->slab_cache)
-	 __kmem_cache_shutdown
-	  free_partial
-	   list_slab_objects // some entries are not released !
-
-Fix it by hiding the origin mddev->thread before takeover, so that
-new allocating strip heads can be put into 'conf->inactive_list',
-which can be found by drop_one_stripe().
-
-Fixes: 773ca82fa1ee ("raid5: make release_stripe lockless")
 Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
 ---
- drivers/md/raid5.c | 37 ++++++++++++++++++++++++++++---------
- 1 file changed, 28 insertions(+), 9 deletions(-)
+ drivers/md/raid10.c | 22 ++++++++++------------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index c091bba95c31..7e87e8a60f5f 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -9039,19 +9039,38 @@ static void *raid5_takeover(struct mddev *mddev)
- 	 *  raid4 - trivial - just use a raid4 layout.
- 	 *  raid6 - Providing it is a *_6 layout
- 	 */
--	if (mddev->level == 0)
--		return raid45_takeover_raid0(mddev, 5);
--	if (mddev->level == 1)
--		return raid5_takeover_raid1(mddev);
--	if (mddev->level == 4) {
-+	void *ret = ERR_PTR(-EINVAL);
-+	struct md_thread *thread;
-+
-+	thread = rcu_dereference_protected(mddev->thread,
-+				lockdep_is_held(&mddev->reconfig_mutex));
-+	/*
-+	 * Set mddev->thread to NULL before setup_conf() to avoid waking up
-+	 * wrong thread(eg. raid1), which can prevent the strips from being
-+	 * left unreleased in the error handling path(free_conf) of raid5_run.
-+	 */
-+	rcu_assign_pointer(mddev->thread, NULL);
-+
-+	switch (mddev->level) {
-+	case 0:
-+		ret = raid45_takeover_raid0(mddev, 5);
-+		break;
-+	case 1:
-+		ret = raid5_takeover_raid1(mddev);
-+		break;
-+	case 4:
- 		mddev->new_layout = ALGORITHM_PARITY_N;
- 		mddev->new_level = 5;
--		return setup_conf(mddev);
-+		ret = setup_conf(mddev);
-+		break;
-+	case 6:
-+		ret = raid5_takeover_raid6(mddev);
-+		break;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 1093c798d9dd..9e4d4202f35c 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3972,7 +3972,7 @@ static int raid10_run(struct mddev *mddev)
+ 		if (fc > 1 || fo > 0) {
+ 			pr_err("only near layout is supported by clustered"
+ 				" raid10\n");
+-			goto out_free_conf;
++			goto out_unregister_thread;
+ 		}
  	}
--	if (mddev->level == 6)
--		return raid5_takeover_raid6(mddev);
  
--	return ERR_PTR(-EINVAL);
-+	rcu_assign_pointer(mddev->thread, thread);
-+
-+	return ret;
+@@ -3989,11 +3989,11 @@ static int raid10_run(struct mddev *mddev)
+ 
+ 		if (test_bit(Replacement, &rdev->flags)) {
+ 			if (disk->replacement)
+-				goto out_free_conf;
++				goto out_unregister_thread;
+ 			disk->replacement = rdev;
+ 		} else {
+ 			if (disk->rdev)
+-				goto out_free_conf;
++				goto out_unregister_thread;
+ 			disk->rdev = rdev;
+ 		}
+ 		diff = (rdev->new_data_offset - rdev->data_offset);
+@@ -4013,7 +4013,7 @@ static int raid10_run(struct mddev *mddev)
+ 
+ 		if (err) {
+ 			ret = err;
+-			goto out_free_conf;
++			goto out_unregister_thread;
+ 		}
+ 	}
+ 
+@@ -4021,17 +4021,17 @@ static int raid10_run(struct mddev *mddev)
+ 	if (!enough(conf, -1)) {
+ 		pr_err("md/raid10:%s: not enough operational mirrors.\n",
+ 		       mdname(mddev));
+-		goto out_free_conf;
++		goto out_unregister_thread;
+ 	}
+ 
+ 	if (conf->reshape_progress != MaxSector) {
+ 		/* must ensure that shape change is supported */
+ 		if (conf->geo.far_copies != 1 &&
+ 		    conf->geo.far_offset == 0)
+-			goto out_free_conf;
++			goto out_unregister_thread;
+ 		if (conf->prev.far_copies != 1 &&
+ 		    conf->prev.far_offset == 0)
+-			goto out_free_conf;
++			goto out_unregister_thread;
+ 	}
+ 
+ 	mddev->degraded = 0;
+@@ -4081,7 +4081,7 @@ static int raid10_run(struct mddev *mddev)
+ 	set_bit(MD_FAILFAST_SUPPORTED, &mddev->flags);
+ 
+ 	if (md_integrity_register(mddev))
+-		goto out_free_conf;
++		goto out_unregister_thread;
+ 
+ 	if (conf->reshape_progress != MaxSector) {
+ 		unsigned long before_length, after_length;
+@@ -4094,7 +4094,7 @@ static int raid10_run(struct mddev *mddev)
+ 		if (max(before_length, after_length) > min_offset_diff) {
+ 			/* This cannot work */
+ 			pr_warn("md/raid10: offset difference not enough to continue reshape\n");
+-			goto out_free_conf;
++			goto out_unregister_thread;
+ 		}
+ 		conf->offset_diff = min_offset_diff;
+ 
+@@ -4106,10 +4106,8 @@ static int raid10_run(struct mddev *mddev)
+ 
+ 	return 0;
+ 
+-out_free_conf:
++out_unregister_thread:
+ 	md_unregister_thread(mddev, &mddev->thread);
+-	raid10_free_conf(conf);
+-	mddev->private = NULL;
+ out:
+ 	return ret;
  }
- 
- static void *raid4_takeover(struct mddev *mddev)
 -- 
 2.52.0
 
