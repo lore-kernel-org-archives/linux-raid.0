@@ -1,86 +1,102 @@
-Received: from va-2-16.ptr.blmpb.com (va-2-16.ptr.blmpb.com [209.127.231.16])
+Received: from va-2-53.ptr.blmpb.com (va-2-53.ptr.blmpb.com [209.127.231.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A08F49AA4A
-	for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2026 11:16:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9471544CF59
+	for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2026 11:23:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790162205; cv=none; b=h65/ugjbKCy0OqPehoTMd2y2qF1VXc2YyLeuTsFXygmnfw5hVa7W2gl4Up30/1237DQR10zVUJdKNz0ZSJPvP7fCwEOfaZpX0RmUw9kY3HsHd9dQDbPkSXzePCugCSTVJPY9MTQpcQBwEjHOlOloRN9+xeWxHVfaRssLP/Bhg+w=
+	t=1790162588; cv=none; b=lCjpZHk/MlNK5J6A+59wIawN9N97GCSVbP1DtJR/qMzarkd/B7QuT0/zLgU2qN3cf5NuHUuNigblu0Y64s4001VpzO9BV8W+QoXpyl/1s2qnALv+OsrSWtjpdbP60HH4zjVdeSRh1fBtnwPj9RqmvVP0+kKlGvaxAn4DOAxa9Fc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790162205; c=relaxed/simple;
-	bh=F6zebwNMl89BNoq0+FV33PsXigZ7rkkhvOE9bJ9HCI4=;
-	h=Cc:Subject:Date:In-Reply-To:To:Message-Id:References:From:
-	 Content-Type:Mime-Version; b=F96QBVC7bXt/zoyQzZnEcQTnP7rXEArEbHncVdMDrl5yPTqba99OrdZZvpYy6vfam40LQCiQGHEKOJCF/SwikmrXHSCdWfmYtwoK3oeQ4+SudAB8VDNym3l1uXCauD1Djf1jy9GaA66c+1xsRuwL67tGGmLQkexHegwNUGuaIvU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=XaexBR0I; arc=none smtp.client-ip=209.127.231.16
+	s=arc-20240116; t=1790162588; c=relaxed/simple;
+	bh=yeTvWsNEIJPMDykQxD+0xlnCBmg8UnMA+VCs/frk33k=;
+	h=From:Subject:Message-Id:Mime-Version:Content-Type:References:To:
+	 Cc:Date:In-Reply-To; b=bG1+J7J0PTS+Q4fkyfX3yEop+3Ro3q9pfMDuv2fexDgK/tNM8x2nUEUCnvrsOY+bwdgUHnUq7Eyg3X0FW29v+kPP98XX9cxIJ7uF8+60TXp3mEbjG46bKpDEVOY0tu9arBn6YxZ3kNxezjlPiICqeY70AluiP9M85M0LvGvoyC4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=f/WRtr7v; arc=none smtp.client-ip=209.127.231.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="XaexBR0I"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="f/WRtr7v"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1790162193;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1790162573;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=w8ycr9qCq0aWsRIBEU7Iu3sVBwaUmmFgt5+GrXlxml4=;
- b=XaexBR0ItyHO+3LWzGwD8xJMfNI2aXymmVyZ1Qn1o0KrhnIdVOhTY5ZJX2/NmyqvmPHQQ2
- FcItkNmdnwyZuR8V6vX+Qjlq3IlR9o5YAZ6XlXdw6nLD0YjC3r0ARuD00088f8qjhjyznH
- fCwzmnJTeDPPhaF/rDgU8bfp53lYRx+dIozVfBA4YfgV6/G+Od4VejmaG7zO3GtrlqNye3
- LaMGTFz+yVKgXVV8ytBBWx0B5e71MQcZZJwroLsrQNR1n2fGEFVa7aapEi3jypxYyEvT9z
- ho3Loo4KnPL9aNqhSQISCXvsQFQuUyAKo2LEdY/SZiqHJU0tkkyOP7QSUJwOAw==
-Cc: "Xiao Ni" <xni@redhat.com>, "NeilBrown" <neilb@suse.de>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<stable@vger.kernel.org>
-Subject: Re: [PATCH v2] md: validate bblog_size when loading v1.x badblocks metadata
-Date: Wed, 23 Sep 2026 19:16:29 +0800
-X-Original-From: yu kuai <yukuai@fygo.io>
-In-Reply-To: <20260922044606.30774-1-ndaugoing@gmail.com>
-To: "Yuchao Zhang" <ndaugoing@gmail.com>, "Song Liu" <song@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-Message-Id: <a7464a07-22c3-41c7-b1b8-c8534001ce67@fygo.io>
-X-Lms-Return-Path: <lba+26ab3b511+c0749c+vger.kernel.org+yukuai@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.179]) by smtp.larksuite.com with ESMTPS; Wed, 23 Sep 2026 11:16:32 +0000
-References: <fad92649-e362-443a-93ea-205b11247e6d@fygo.io> <20260922044606.30774-1-ndaugoing@gmail.com>
+ bh=wBh0zfsJL9m1PN7Sc0m23yvDyRKsSbnbllarqg1mzbo=;
+ b=f/WRtr7vav054xQTUcE3FeqVjAL9FjL/ba52t6UVHhfM/DbVTO7tkKzvKl4Kw2XCZS2+/o
+ Qm+ddyaLMzdEuk1xejPucLSH0HxGLw81xQ+9Rcq6Vtnc8itvrFMtpC6uJaTcFvOImjkfXp
+ NacHYG0rLLlq5qaPolVJbFyqvIHoyOKMCr8JENxYpiZKQkLqooVZmOjb7fkCvvaeSHPE9c
+ Z+kmeMB+Li4jaC9dLGeZEEynO90LBOx08LaAThSVk8HOCzMt0PKgm/xfQ+/FYBhQKFI4OC
+ vR30sh3ltsK8fwNd35B/rl0CQahcoMDKjtF/j/3MxacQPxuuaE0ZdLLmYoCFQw==
+X-Lms-Return-Path: <lba+26ab3b68c+f91d8a+vger.kernel.org+yukuai@fygo.io>
 Reply-To: yukuai@fygo.io
 From: "yu kuai" <yukuai@fygo.io>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH 2/2] md: add defensive bounds check for bio in md_write_metadata()
+Message-Id: <763fbafc-8cf2-42dc-8a60-ab3ce2895342@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
+X-Original-From: yu kuai <yukuai@fygo.io>
+References: <20260917083820.57091-1-ndaugoing@gmail.com> <20260917083820.57091-3-ndaugoing@gmail.com>
+Received: from [192.168.1.104] ([39.182.0.179]) by smtp.larksuite.com with ESMTPS; Wed, 23 Sep 2026 11:22:52 +0000
+To: "zjamg" <ndaugoing@gmail.com>, "Song Liu" <song@kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	"NeilBrown" <neil@brown.name>, <linux-raid@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>
+Date: Wed, 23 Sep 2026 19:22:48 +0800
+In-Reply-To: <20260917083820.57091-3-ndaugoing@gmail.com>
 User-Agent: Mozilla Thunderbird
 
-=E5=9C=A8 2026/9/22 12:46, Yuchao Zhang =E5=86=99=E9=81=93:
+Hi,
 
-> In super_1_load(), when the on-disk feature_map does not have
-> MD_FEATURE_BAD_BLOCKS set but sb->bblog_offset is non-zero,
-> rdev->badblocks.shift is initialized to 0 without validating
-> sb->bblog_size.  The same field is validated in the
-> MD_FEATURE_BAD_BLOCKS branch ("sectors > (PAGE_SIZE / 512)"), but this
-> branch bypasses that check.
+=E5=9C=A8 2026/9/17 16:38, zjamg =E5=86=99=E9=81=93:
+> md_write_metadata() allocates a single-bvec bio via bio_alloc_bioset()
+> with nr_vecs =3D 1 and attaches a single page 'page' (either rdev->sb_pag=
+e
+> or rdev->bb_page) via __bio_add_page(bio, page, size, offset).
 >
-> A forged on-disk superblock (malicious storage device or crafted
-> image) can therefore carry an oversized sb->bblog_size.  When bad
-> blocks are later recorded, super_1_sync() sets bb->size from
-> sb->bblog_size and md_write_metadata() issues a bio larger than the
-> single rdev->bb_page, reading beyond the page and leaking kernel
-> memory contents to disk.
+> Because the bio can only ever represent a single backing page, passing
+> a non-positive size or a length where offset + size > PAGE_SIZE is invali=
+d
+> and can lead to out-of-bounds reads during I/O submission.
 >
-> sb->bblog_size is never modified by the kernel between load and sync,
-> and the MD_FEATURE_BAD_BLOCKS branch already validates it, so checking
-> it in this branch is sufficient to cover both paths.
+> Add a defensive check in md_write_metadata() so that any oversized or
+> invalid request triggers WARN_ON_ONCE() and aborts before constructing
+> the bio.
 >
-> Fix this by rejecting an oversized sb->bblog_size with -EINVAL,
-> matching the existing check in the MD_FEATURE_BAD_BLOCKS branch.
->
-> Fixes: 2699b67223ac ("md: load/store badblock list from v1.x metadata")
-> Cc:stable@vger.kernel.org
-> Signed-off-by: Yuchao Zhang<ndaugoing@gmail.com>
+> Signed-off-by: zjamg <ndaugoing@gmail.com>
 > ---
->   drivers/md/md.c | 5 ++++-
->   1 file changed, 4 insertions(+), 1 deletion(-)
-Applied to md-7.4
+>   drivers/md/md.c | 3 +++
+>   1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index d2433cf41e65..3fda2965c631 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1142,6 +1142,9 @@ void md_write_metadata(struct mddev *mddev, struct =
+md_rdev *rdev,
+>   	if (test_bit(Faulty, &rdev->flags))
+>   		return;
+>  =20
+> +	if (WARN_ON_ONCE(size <=3D 0 || offset + size > PAGE_SIZE))
+> +		return;
+
+This is not a proper checking, as there is no error handler here. A better =
+solution should
+either make the rdev faulty or retry the metadata. But I don't think this i=
+s necessary, as
+there isn't any path to trigger this error other than raw disk metadata inj=
+ect.
+
+> +
+>   	bio =3D bio_alloc_bioset(rdev->meta_bdev ? rdev->meta_bdev : rdev->bde=
+v,
+>   			      1,
+>   			      REQ_OP_WRITE | REQ_SYNC | REQ_IDLE | REQ_META
 
 --=20
 Thanks,
