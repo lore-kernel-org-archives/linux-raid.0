@@ -1,118 +1,93 @@
-Received: from mail-ed2-f34.google.com (mail-ed2-f34.google.com [74.125.228.98])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from e234-54.smtp-out.ap-northeast-1.amazonses.com (e234-54.smtp-out.ap-northeast-1.amazonses.com [23.251.234.54])
+	(using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 778F240F72B
-	for <linux-raid@vger.kernel.org>; Thu, 24 Sep 2026 16:26:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3BE9423EA4;
+	Thu, 24 Sep 2026 16:27:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=23.251.234.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790267204; cv=none; b=pwR6vCcs8czVJ2dEq8yU0Gjjo6Ri/f8/rVwOz8rGsjgynyBGsvlM131HwOPYHgaIqvC53DUNC6YDZdCEEvo0oNyOY+MtoAHIbMsZHrc6+u7Oa4wxJy0GvSdTtL6iDcWOqrtEixz8hXhIyLXvbdG9nvagRSRVF8sKY9Gr2qU6nLA=
+	t=1790267256; cv=none; b=gkS75wRoZocrJWeHZJhxENe+als4+WpaYszJJQrMVzX6e7t7SrqXkThtCKTIQyWs8r/J72/+WqE2M5L9MmuUu8Nwo2VLFfXbMHXNORQXr3RaRuibER5cWiGJiteer3Vnpwnt1bzUXcytUsyUguBXccBdFCXp1n97D0zyUw77lA4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790267204; c=relaxed/simple;
-	bh=0hae1Dy1qPgAAn48he+OQyElqT4viRMRexAgzDHsvDg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YWsE759+6NMyaddhnqmb01JIbuG7TdtWFvCunSn+H9dd5he7cRJIs5QaTQvDFP5nuN6GM//l7HBUOEVlvkBgS8Mi+2iAciDr49geofauOtOO08PCgJKO/g4jO7VrW40nEFv5f6dwFWTXf/I7hGzzBwrpk01PW4osqsw04ygYw/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lUNpWuLt; arc=none smtp.client-ip=74.125.228.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790267256; c=relaxed/simple;
+	bh=D5fmlYHgu6bInzKbO/gT2e4guhDZrEjqQ5ws5YwiuzQ=;
+	h=In-Reply-To:From:To:Cc:Subject:Message-ID:Date:MIME-Version:
+	 Content-Type; b=siyq656o8cmncd3y31qtePqcJa9ofJhnfi9aXTEUxT1vFe5tNSNSssV9f542Uv50Z6TIpo8fl92WXwsBAEpgb8EPxFxoJbw3Y6A7owjQ8RfJWncUavQbLsts2nQVZkrnU7KSjNBC51bEnrEDiqP6N6BpSDw8ZZ7PqjsSPJIyrfw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me; spf=pass smtp.mailfrom=send.mgml.me; dkim=pass (1024-bit key) header.d=mgml.me header.i=@mgml.me header.b=d46EQSOk; dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b=FI6i9qFX; arc=none smtp.client-ip=23.251.234.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mgml.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=send.mgml.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lUNpWuLt"
-Received: by mail-ed2-f34.google.com with SMTP id 4fb4d7f45d1cf-6aae359e2c0so41861a12.3
-        for <linux-raid@vger.kernel.org>; Thu, 24 Sep 2026 09:26:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790267201; x=1790872001; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=xceFEZdQPKnCO9ajfrPlU5eXhjLvd87vwHrqSGkOcL8=;
-        b=lUNpWuLtg2h7Je+6HVFTFtJDgGMYRP1OtbqME9c28nBuJBOjzbIqWGwZsOmKkOO9iK
-         ttwsNCu6L0lVC8IoNV95zPQyHZ9gZi+rT294W5TWQ2xcSho/eKfMb4tPMfwaTV4DY2D4
-         QHAWrdOGIbjSEwA3Mq3hWKK2q/S+60iHk8ebInNqfhX1aaqgHOH1KOs8wISEz9tc8gel
-         6u2m8NQdfNx/tpdNfN66plk0/RBCW0ltOpc2WTkEusbjLfPCvZg9tUysfemDO68dcrIJ
-         cT69yydVc49z0DZwf8OSpEOjMiFpr3q8yWyyZ1c9c0zCQBGmj/DGpKoLTzAWpZwz4A99
-         yYCQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790267201; x=1790872001;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=xceFEZdQPKnCO9ajfrPlU5eXhjLvd87vwHrqSGkOcL8=;
-        b=hFy5F7rSL0JPprTRZIwYswXbTivw1ssjKXFPuQ48hymoD9Xk+hKWSkWfG4huxrbHMv
-         mYqggcHMhENxFZuEadzrL8QGe4D6EW/IxGhaT7cL4PoDa6rok0yWdYJYQ2NbjKbLWEfZ
-         Rd3R5m3IlDwRiZAERVuES8AKQYzpKOWiwF4jWfyAp1UDIqtkF8yyO8bExch/mSeMdu8C
-         S4zIb+ZOOugIBuddF7rBeV6wnuwQG67sx1by2SkAL851y4xCfgX6E7LEwC8UHFAG00xP
-         EEjflkI2omu9mxxC1I29jAY28XWbW9fqyEcULZJeyyHr5Efhvbtmoh21tfXkOSE34jn8
-         fVcg==
-X-Forwarded-Encrypted: i=1; AKwUvBzQ/3oKdlQYA4dMtE4gI/haK7fxAq8yi821/zj/FgKX3G2EJSzBccz6YjDUZy7hF8g1j19E4z9NYfeE@vger.kernel.org
-X-Gm-Message-State: AFuF++kfvcH5oJBZ2RJ5U1krOXqiIiHuFSJJu1rkCU6jlAwpcnuHrhDk
-	cEeifEBvnMK4sGxxzjNtpRhsiY9bhK+3o75uKaRltaxQFmmyTZ4zsZyO
-X-Gm-Gg: AYBFou2NqyvdCAiWguYRNqzUwtbak877l1UvOnDSA2WC6cD8Ugmk2sQLwO3Gsyy1S1T
-	utgbGQ3pr7mjDqpv/nT9V5TbUS+PwGThmNOaWsgN2YhE6b6K7tII3c2S6HdRSrlSlJ2TOjVPFXq
-	v4juIs1E4bJmiiPvoYNvOee52U9JNTyIR5sbs/zSVqdUlbhi+3UKWXK2igW/3etSg2K93WVO0gM
-	XaT+wXib2ycaGZ0xYYcgyFE6B55qx/xD20M9UNhgjSBrbdTwxdHI7P9orfUlTERnd5mgHb5DYWv
-	1Ge1yfmWu85PqIJcxs0IKrIgdMVULew8SVbwA2kL1afZIe161DPGVuoZOb+rCxcEtdclA62S+v2
-	dMVfsGKwctMPsX5DhUB581kEm0roYIjzjMI/L0gbgU5nUmp8Q42R1NtltNlNCqKqoTJYW4vx4Jb
-	Y0TOOLZjKnLKKoyJxkKz9D0ExrLR6VCbBcvnBrtJwnGwYh8KD0BcT3GgyooXVphBE6e+jac1Zth
-	NZNGa0fd6Ds8QtA
-X-Received: by 2002:a05:6402:518d:b0:6aa:b226:e69a with SMTP id 4fb4d7f45d1cf-6aac9106dfbmr2938246a12.36.1790267200508;
-        Thu, 24 Sep 2026 09:26:40 -0700 (PDT)
-Received: from localhost.localdomain ([94.240.182.136])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6aab386e7c8sm3932223a12.5.2026.09.24.09.26.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Sep 2026 09:26:40 -0700 (PDT)
-From: Svyatoslav Nikolenko <nsvatoslav515@gmail.com>
-To: song@kernel.org,
-	yukuai@fygo.io
-Cc: magiclinan@didiglobal.com,
-	xiao@kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Svyatoslav Nikolenko <nsvatoslav515@gmail.com>,
-	syzbot+75d7e96ad03ac2dbbd9f@syzkaller.appspotmail.com
-Subject: [PATCH] md/raid5-ppl: check for NULL ppl_conf in ppl_write_stripe_run()
-Date: Thu, 24 Sep 2026 19:26:10 +0300
-Message-ID: <20260924162610.10056-1-nsvatoslav515@gmail.com>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (1024-bit key) header.d=mgml.me header.i=@mgml.me header.b="d46EQSOk";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="FI6i9qFX"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple; s=resend;
+	d=mgml.me; t=1790267253;
+	h=In-Reply-To:From:To:Cc:Subject:Message-ID:Content-Transfer-Encoding:Date:MIME-Version:Content-Type;
+	bh=D5fmlYHgu6bInzKbO/gT2e4guhDZrEjqQ5ws5YwiuzQ=;
+	b=d46EQSOkGGx9bamR4JwefsJBQ1eKwA28KIMAPAzZ573Krqd9e8NU1NvrQjmW9v8c
+	yf2Nuj1GkHVwQfDfN4XU1BTb+Te2R3fH2IoCSGKj1PX95Co+GZ7veiEYJ3civAA83sc
+	k3hrRoLUkPL/EvFO+hTNgqJXaOwjQnasME6Rw6L0=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=zh4gjftm6etwoq6afzugpky45synznly; d=amazonses.com; t=1790267253;
+	h=In-Reply-To:From:To:Cc:Subject:Message-ID:Content-Transfer-Encoding:Date:MIME-Version:Content-Type:Feedback-ID;
+	bh=D5fmlYHgu6bInzKbO/gT2e4guhDZrEjqQ5ws5YwiuzQ=;
+	b=FI6i9qFXHUW1ISg1dabWpEU2S7cUPbDCMVFAfZEZbdKudrVecA4s26O15AVwygbT
+	iFcauHii9NyRYlL+vDuy7I5/r+Zcm4rRWkRystW2rAt/oFlhdhy2NhqXt4+UCaEbx6q
+	unlWliEb1dETSBkt4/gq9sPCFxcf9Wf3D/vBqkjE=
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+In-Reply-To: <adf11fcf1435728f98b4f94c1821d86b83866c14.camel@suse.com>
+From: Kenta Akagi <k@mgml.me>
+To: martin.wilck@suse.com, xiao@kernel.org, magiclinan@didiglobal.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	song@kernel.org, yukuai@fnnas.com, shli@fb.com, mtkaczyk@kernel.org
+Subject: Re: [PATCH v6 1/2] md: Don't set MD_BROKEN for RAID1 and RAID10
+ when using FailFast
+Message-ID: <010601a0d43e61ad-9dfd0eee-a057-45eb-b5cd-dfe9d892d4cf-000000@ap-northeast-1.amazonses.com>
+Content-Transfer-Encoding: 7bit
+Date: Thu, 24 Sep 2026 16:27:33 +0000
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Feedback-ID: :1.ap-northeast-1.SskAFE1oaJ7KCjyyJFCV37nkSRmUZttpeGoevLE2CszduPSq19CK0OWqrkMmPMemkYWmFvQfvS6+lCR9ETv8vDWvEFaQZtUQ69n4DuGGNbGH4U7i+CnKWCHWm/HpilUFxPcCpCRFiQTHPHnKlfimqanQj7AjyJ2y8XQuaQGs83Sl+MS5tJ/lS6+Uh2zwyhRo:1.ap-northeast-1.TOS0vxEE3Ar6ai29fkp2i/jb+l2iigajCGeLfF7S3sk=:AmazonSES
+X-SES-Outgoing: 2026.09.24-23.251.234.54
 
-Syzbot reported a general protection fault
-due to a NULL pointer dereference in ppl_write_stripe_run().
 
-When a RAID 5 array operates without Partial Parity Log (PPL) enabled or
-before its initialization, conf->log_private remains NULL.
-ppl_write_stripe_run() assigns ppl_conf = conf->log_private and
-immediately attempts to access ppl_conf->count in the loop header.
-This triggers a NULL pointer dereference.
 
-Fix this by returning early
-from ppl_write_stripe_run() if ppl_conf is NULL.
+On 2026/09/23 17:29, Martin Wilck wrote:
+> Hi Kenta,
+> 
+> On Wed, 2026-09-23 at 04:08 +0000, Kenta Akagi wrote:
+>>
+>>
+>> Hi Martin,
+>>
+>> I have not given up on it, but I have not managed to post v7 yet.
+>> I still think failfast should be usable even in setups like that.
+>>
+>> It has been a while, but I intend to resume work on it.
+> 
+> My thinking is that, in the fastfail case, code to prevent total
+> failure could be placed in the end-IO code code path, e.g. by
+> attempting a retry directly from the md layer when the last rdev fails,
+> instead of setting failing the device. But I haven't thought it
+> through.
 
-Tested-by: syzbot+75d7e96ad03ac2dbbd9f@syzkaller.appspotmail.com
-Reported-by: syzbot+75d7e96ad03ac2dbbd9f@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=75d7e96ad03ac2dbbd9f
-Fixes: 3418d036c81d ("raid5-ppl: Partial Parity Log write logging implementation")
-Signed-off-by: Svyatoslav Nikolenko <nsvatoslav515@gmail.com>
----
- drivers/md/raid5-ppl.c | 3 +++
- 1 file changed, 3 insertions(+)
+Hi Martin,
 
-diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-index 7f8a9d3fd578..e54ed4e44b0f 100644
---- a/drivers/md/raid5-ppl.c
-+++ b/drivers/md/raid5-ppl.c
-@@ -535,6 +535,9 @@ void ppl_write_stripe_run(struct r5conf *conf)
- 	struct ppl_log *log;
- 	int i;
- 
-+	if (!ppl_conf)
-+		return;
-+
- 	for (i = 0; i < ppl_conf->count; i++) {
- 		log = &ppl_conf->child_logs[i];
- 
--- 
-2.47.3
+I may be misunderstanding your suggestion, but Neil's original failfast 
+implementation already retries a failed failfast I/O to the last rdev. 
+But a later change introduced a regression, which I intend to fix.
+
+So the sequence should be:
+
+1. The failfast bios to all mirrored rdevs fail.
+2. The first rdev is marked faulty because its bio failed.
+3. The other rdev is now the last, so it is not marked faulty.
+4. Since the last rdev remains usable, its bio error handler 
+   retries the I/O without failfast.
+
+Thanks,
+Akagi
 
