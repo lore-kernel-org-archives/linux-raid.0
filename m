@@ -1,62 +1,64 @@
-Received: from mail-wm2-f13.google.com (mail-wm2-f13.google.com [74.125.225.141])
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 054034D7D32
-	for <linux-raid@vger.kernel.org>; Mon, 28 Sep 2026 20:12:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7353B4F85B2
+	for <linux-raid@vger.kernel.org>; Mon, 28 Sep 2026 20:12:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790626370; cv=none; b=rD1EMDQjqKMw49wDpYM+rUbsBzOAbOU4rWMVhVNWtdJcyXK7AtkjYw4z9Qd5iXeW+btY5TYfkTP+IoGSDS6x+Pi9twfYf2HPHT9Zf4xbhu+KM9rzCmCLK2piC3TTLxYY4ADg4kULbBpp609IM5xQyGcjs3cNmDwsbep9yAvwryw=
+	t=1790626379; cv=none; b=pLvfcUOSoHbm7xJMmLXJPsd80O0vZuN5ZPUfUq4PQjR0urhGSJ6Z7FiRAe9Tf/7iJj+8gCRYXbvaH2kFFN43YqaT/TWz+Ez0r8s1cXnZxVSnZqUc8g3ZsVciHmtO0PT+t4rKejKC1+SyEVq0awgXBrmcYDEsbKUeScBEFzzRtt4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790626370; c=relaxed/simple;
-	bh=6Dp/hhMzy2cZom8NGxLWZtptCrgvBGm+SG+vfodARZE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=M8mCBc6cfPKY9JQNlMeLEsE+a6kF3fh7oWfgz/HNyQJShGMm6cXqPP+EsbNjGeOe2jEirX8zn21I897BcpvknRmabBlck8rU/Kl9lUhS+8W78M0632zGZDxWanA/Y0nV0AOAJ9WzVtmB4M7YvFsRwdDEp6FDdE/94aZ/eG1HW04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fnfjTAeU; arc=none smtp.client-ip=74.125.225.141
+	s=arc-20240116; t=1790626379; c=relaxed/simple;
+	bh=hkFas3mZaox8RRokWKn/qKR6LDkDCnnmsggr842lS18=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=O/+PfyjAkXL65dveCGmE7eFWRgCkojbY5eoLZag2qAigwGIiwc2Al8Y6cAbQBSRuyMUF+RRiJuZVZTJdT95IzG+EpWKUe4/PFXdmRJGeT+4It0qrzWSUlyMzgnIzkt7xk3PXA69g1KnaW/viqMPf3UGoxFQJ5TqPx4/7QeLjf50=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WRGOlCyw; arc=none smtp.client-ip=74.125.225.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fnfjTAeU"
-Received: by mail-wm2-f13.google.com with SMTP id 5b1f17b1804b1-49e8185e037so19262175e9.3
-        for <linux-raid@vger.kernel.org>; Mon, 28 Sep 2026 13:12:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WRGOlCyw"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49e66390995so19408285e9.2
+        for <linux-raid@vger.kernel.org>; Mon, 28 Sep 2026 13:12:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790626365; x=1791231165; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=xiagLwmOxbDGI/iupLudQ2PVS19f/NOJ4+VSuZuRNvA=;
-        b=fnfjTAeUr0sih+Q+h4T7gNb9C6Qh2A+2JNjWMlRhwwrmJ8E1jJ7pY/A7y424ajVIaz
-         zQDdoA66nP1wEq57kaQr83zO2AKMvvCv7OQ0uAO9/MjMLD4uz0HPECc6ZTn+TpkkpbR8
-         QPNfMes/OD+wRQVkN+5SLIEOhn+wDs3YAsT+UdP8XtlcM6jQtazEIrmC5i2pZgjPMn2F
-         7YJHUAf+DDWGfukWFtqomxk1awtC1Tuo75svR95VUKAB/Ynsowl1No6KGdbCyTLGe9Tr
-         G+YbnbolqKhtTI2jDK6dEBOnnWsjGJZrr/8E1yxVwrC7MaVfUnEKpBO16+trlaWtlWWH
-         RShA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790626365; x=1791231165;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1790626373; x=1791231173; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=xiagLwmOxbDGI/iupLudQ2PVS19f/NOJ4+VSuZuRNvA=;
-        b=LDL6yeR+7gIvNXI+INOoxGZ9saS/BrzuEX33/dGy+qXnfwvg/7glZ/7nmB1WdLQALl
-         H82CAtTU9L3tWn2/AzRmd2c75cT3zgu91Q+EhzJWZZ9H3fr7V0+GrzoQvk3AEKpHicAK
-         dMkAHAH3USdRL4IvhHLUKB9N7jFYI+tBRO/piN7S/mkH6VU5mOA6MbJ0Z5ZXcIFxCwju
-         D8cDwaKD914AnStNZBLF0weoRF0GndpaEZCgABnlugm4LpZ3hhcfT9fx66xnmxOMulcH
-         1xnYk4voZtG48mjYioHUqCHh1P9Ukiu2Tn80AfdK97AMKknGun8MPMyNNYIfunz52gP8
-         ochQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwZIeQJXD75sTb72jlhklmk49ZF/eCwSV401ZEH7o8uvjowjXOHX8s+zj3AKjOK5yBx96xRHcGcueI4@vger.kernel.org
-X-Gm-Message-State: AFuF++mg2OaM0ABdw47EsZWlhXGKlAGWbSctxxIpni5RuTL67aauRIsm
-	n4xTaFes4aPrzau/STMFZGANbUu+p/pUZoNTVyrzTGmirpX8epy5MruN
-X-Gm-Gg: AYBFou2UG9VHM1cCS09ZnmdOlrRYNGyibqd7BWAeLdokyso+k2anIFJQ42FwMzakv6z
-	+qEjofAPmJ31kO1l9Mc5Lz0uttfkVkRVRgbrtP0bxDUo9wA+DXwsuvnJFpq+Ix4l1T65KLIekCd
-	HHe9/YwZcDnedlL4bAozsWV0MI1/kWwsKcVbCPTIgPEVOT8sxuju4LkQu8ytnZpq5v6uNDNM1Za
-	7+d7w5mEM8jxNI3cbOHJ0ZLvcmY1lc2cU7Hj7j1HP5wvq53U1sHOhfdrKlDFrcE6OGoAajzMITZ
-	jDfI6BSypEglGqhnRACQIrAORQ2Mk9q/uIrnmNoyBumo8BEzOUGTwS3iB3B9YLvB01zQnxc8Rq7
-	IDTeOQ/4g35mShR27S7pQzyWskxCNbV5mydwvEG6FWStjEnr0b4upT5EEu9+n23pN3gq5/Lh/Fd
-	LfhLBHIWd9CGP2oMQvFB5u/FRTbN6G6K3uSN26qaLtZtTTw2mu120IeH52FZd1xRZv1UbYb6bm4
-	LPOy1t5MEFZ6NPnrf8BFq+JQOigdt9BuO+2DfeuRUMcVow7VWz3HoWRTg==
-X-Received: by 2002:a05:600c:348e:b0:49e:8191:e5cb with SMTP id 5b1f17b1804b1-49ff06b2ef6mr188592985e9.5.1790626364553;
-        Mon, 28 Sep 2026 13:12:44 -0700 (PDT)
+        bh=FHrR5kgcHvLjH9hD8wdXc7t8x0CJmGRPaHyyxceDiaM=;
+        b=WRGOlCywfqX9s2nGO4sY0NlTuu61x22RvCACOKaO8LbMRIx2pOp7GfBNKu5m90KOKW
+         20QPGEHbjKHNsaOl2vIgcyqZEmd/Fc/BUBqNNJPi7/YAf5nvsX0s/Y89T+r334uHa+fM
+         S7aUpzzSEIvd36Y6n5LQ/t4cPOsPw/nLIdnRsS7pxJ9Em2g/BuVDk2xTB5ahas93qLA/
+         V7qJq4f/jaj0h9IX7kEAIPMmNZZMICJ4AFpdrPx5oyn+Z+W7BiyRMZoNUvwLLHLAFwTn
+         wQUdQM6qb51rZYyqkk5vKqeoFnXpWLlc4uNWdYvkjtrevddTzkvU0I+3OvNr8+uE6Ikk
+         j4hA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790626373; x=1791231173;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=FHrR5kgcHvLjH9hD8wdXc7t8x0CJmGRPaHyyxceDiaM=;
+        b=gsgZHwylCs3GspDGlikB1EY/zgrqCdU7DFd0if0yP4e+bcoB4Ypx56T4jCMi/XAYXc
+         M1xEYObTGH7xELpE+GJqDoHr3N2SetJ9NJ5RZ1MkRU08HRiCVpsuTNoAzosz2DdYzkZP
+         uoZwsSDAeUc+DaOnbOrEFURhr/v5AIj8pces2uP+HCbpvOPX7Z7V/mCameVlv+Iz8oo1
+         H95SP2PL+DPFi2K4VP3ZxHKO1rrMDDIWqO7x8Ly7ewnqaGBBDmnaymVdYKqd1mv2/wPD
+         VSwtHYnAMmEApr7/fHcyAV9bC960dIZf1jyPiuHEmKLUZBPrQ3vchgcTF7Zk6XrijISm
+         JA4A==
+X-Forwarded-Encrypted: i=1; AKwUvBxreLgfue0Nxwaj11Oprxkv2BI5NEI2NvaIEoU0AZh+rqgeeGFjSBqowhjfkTyxgkiebFNb6j9ItZCI@vger.kernel.org
+X-Gm-Message-State: AFuF++m5U3Do0Pw9PHuQg4Ot7iMK9HeHY7yMi6JX77DNmXRBak2JomC6
+	e85kE8yCVcbNQnMMPpfQ7YEfTiqaVUZBv/nf+LMVecykZHhWvGEScmND
+X-Gm-Gg: AYBFou1UwYOnkYfkU8BGvvkIQJlo18M6Y3yRsTJL31XZfd8s4TcLur+IUJjCv358KcK
+	iNVfLzlmkbnzFW/U80Hfc3POoFEQdeQxaaQXzqtcMH2YVbgUBkjt0va/jLF9OZgEv+DC9CXnBun
+	KdFeGfrpvvpG2Hkrybj+W+4ve1jn0ryslDNKXP9zF7p+frZOFyc0iwcbxLwQQu6rzuvrLYVgq8x
+	qB6hIs6KMMzedHRBSmNcuwcIBvFPHFLMov55ibDSoYXUblsUYndyFapAZy33bkdvwlf1OE+Zvxo
+	MzFW3L2cJjJoBItYaUcEZO8HvKotXoA2TXTASL+R+rnnTPF5acjW2mpHMSmspPdMRCpYEd3Bwk1
+	aCb6W7GXMX0hbg8lfpqqYqB7uZdhi6NSccD3gcTP6Euhld+GF2hrSL5BPEviRr09kLJKZcgCI6+
+	eZIhIHOXSf1PA2+2dqQHVjSzQWKILjakcbFKqVRMSdHi0A07LUEPk+8SiYU/V38wyIWa+9Q8AcM
+	XyScI7B8vhV9lXpokY9odOxu4tXewj3DhcoqjgPrrhBncuZ3nbVuh/QNw==
+X-Received: by 2002:a05:600c:3550:b0:49f:fd40:80fa with SMTP id 5b1f17b1804b1-49ffd408357mr111818575e9.34.1790626373146;
+        Mon, 28 Sep 2026 13:12:53 -0700 (PDT)
 Received: from env.. (dynamic-176-003-100-011.176.3.pool.telefonica.de. [176.3.100.11])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a00c11a9d2sm30457755e9.3.2026.09.28.13.12.42
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a00c11a9d2sm30457755e9.3.2026.09.28.13.12.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Sep 2026 13:12:43 -0700 (PDT)
+        Mon, 28 Sep 2026 13:12:52 -0700 (PDT)
 From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 To: song@kernel.org,
 	yukuai@fygo.io,
@@ -73,10 +75,12 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-raid@vger.kernel.org,
 	dm-devel@lists.linux.dev,
 	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-Subject: [PATCH 0/2] md: add a control device for array management
-Date: Mon, 28 Sep 2026 20:12:22 +0000
-Message-ID: <20260928201224.3602262-1-abd.masalkhi@gmail.com>
+Subject: [PATCH 1/2] md: make mddev lookup and ioctl helpers non-static
+Date: Mon, 28 Sep 2026 20:12:23 +0000
+Message-ID: <20260928201224.3602262-2-abd.masalkhi@gmail.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260928201224.3602262-1-abd.masalkhi@gmail.com>
+References: <20260928201224.3602262-1-abd.masalkhi@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -85,59 +89,82 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-All md management ioctls (SET_ARRAY_INFO, ADD_NEW_DISK, RUN_ARRAY,
-STOP_ARRAY, ...) are issued on the md block device itself, so the
-caller must hold the array open while it configures or stops it.
+A following patch adds an md misc control device, so that arrays can
+be managed without opening the md block device. Its code lives in a
+separate file and needs to look up arrays and reuse existing ioctl
+helpers.
 
-This is a problem for STOP_ARRAY and STOP_ARRAY_RO. Before the array is
-stopped, the page cache must be flushed, and no other task may have the
-device open or be writing to it. The issue arises when several tasks
-share the same file descriptor table, as they count as a single opener.
-Consequently, one task may still be writing while another task flushes
-the page cache and stops the array. A write within this window can race
-with the stop operation.
-
-Add a misc character device, /dev/md-control, with a fixed minor
-MD_CTRL_MINOR. The control device is not tied to any md device, each
-request specifies the array in the payload, either by name, by UUID or
-by device number, without the need to open the md block device.
-
-The new ioctls use the existing MD_MAJOR ioctl type, starting at 0x40,
-with an MD_ prefix. Every request structure has a flags field. Unknown
-flags are rejected with -EINVAL.
-
-Each new command matches an existing block device ioctl with only one
-exception. The STOP_ARRAY_RO has no separate command, it is handled
-via MD_STOP_ARRAY with the MD_RO_FLAG set.
-
-New 64-bit structures, including mdu_ioctl, are introduced
-(mdu_array_info64, mdu_disk_info64, mdu_param64, mdu_bitmap_file64,
-and mdu_version64) to resolve padding and overflow issues in fields
-such as size, ctime, and utime.
-
-The existing ioctl on the md block device is unchanged, but a
-warning message will be printed to recommend upgrading mdadm.
-
-The mdadm tool has been updated accordingly, and the mdadm patches will
-be posted to the linux-raid mailing list shortly.
-
-Suggested-by: Yu Kuai <yukuai@fygo.io>
-Suggested-by: Zhihao Cheng <chengzhihao1@huawei.com>
 Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+---
+ drivers/md/md.c | 10 +++++-----
+ drivers/md/md.h |  5 +++++
+ 2 files changed, 10 insertions(+), 5 deletions(-)
 
-Abd-Alrhman Masalkhi (2):
-  md: make mddev lookup and ioctl helpers non-static
-  md: add a control device for array management
-
- drivers/md/Makefile            |   2 +-
- drivers/md/md-ctl.c            | 597 +++++++++++++++++++++++++++++++++
- drivers/md/md.c                |  41 ++-
- drivers/md/md.h                |  10 +
- include/linux/miscdevice.h     |   1 +
- include/uapi/linux/raid/md_u.h | 119 +++++++
- 6 files changed, 758 insertions(+), 12 deletions(-)
- create mode 100644 drivers/md/md-ctl.c
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 680b34a63cb3..b5027d65c6d8 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -364,8 +364,8 @@ EXPORT_SYMBOL_GPL(md_new_event);
+  * Enables to iterate over all existing md arrays
+  * all_mddevs_lock protects this list.
+  */
+-static LIST_HEAD(all_mddevs);
+-static DEFINE_SPINLOCK(all_mddevs_lock);
++LIST_HEAD(all_mddevs);
++DEFINE_SPINLOCK(all_mddevs_lock);
+ 
+ static bool is_md_suspended(struct mddev *mddev)
+ {
+@@ -623,7 +623,7 @@ bool md_flush_request(struct mddev *mddev, struct bio *bio)
+ }
+ EXPORT_SYMBOL(md_flush_request);
+ 
+-static inline struct mddev *mddev_get(struct mddev *mddev)
++struct mddev *mddev_get(struct mddev *mddev)
+ {
+ 	lockdep_assert_held(&all_mddevs_lock);
+ 
+@@ -8101,7 +8101,7 @@ static void put_cluster_ops(struct mddev *mddev)
+  * Any differences that cannot be handled will cause an error.
+  * Normally, only one change can be managed at a time.
+  */
+-static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
++int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ {
+ 	int rv = 0;
+ 	int cnt = 0;
+@@ -8227,7 +8227,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 	return rv;
+ }
+ 
+-static int set_disk_faulty(struct mddev *mddev, dev_t dev)
++int set_disk_faulty(struct mddev *mddev, dev_t dev)
+ {
+ 	struct md_rdev *rdev;
+ 	int err = 0;
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index b6d2e8929a0f..cb8760521764 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -953,6 +953,7 @@ extern int mddev_init(struct mddev *mddev);
+ extern void mddev_destroy(struct mddev *mddev);
+ void md_init_stacking_limits(struct queue_limits *lim);
+ struct mddev *md_alloc(dev_t dev, char *name);
++extern struct mddev *mddev_get(struct mddev *mddev);
+ void mddev_put(struct mddev *mddev);
+ extern int md_run(struct mddev *mddev);
+ extern int md_start(struct mddev *mddev);
+@@ -974,6 +975,10 @@ extern void mddev_destroy_serial_pool(struct mddev *mddev,
+ 				      struct md_rdev *rdev);
+ struct md_rdev *md_find_rdev_nr_rcu(struct mddev *mddev, int nr);
+ struct md_rdev *md_find_rdev_rcu(struct mddev *mddev, dev_t dev);
++int update_array_info(struct mddev *mddev, mdu_array_info_t *info);
++
++extern struct list_head all_mddevs;
++extern spinlock_t all_mddevs_lock;
+ 
+ static inline bool is_rdev_broken(struct md_rdev *rdev)
+ {
 -- 
 2.43.0
 
