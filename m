@@ -1,108 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E17394F7CDA
-	for <linux-raid@vger.kernel.org>; Mon, 28 Sep 2026 20:26:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B5394FC357
+	for <linux-raid@vger.kernel.org>; Mon, 28 Sep 2026 21:24:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790627205; cv=none; b=hsxXqFxaspWa7arOVzfJmO5nPQZD+pkC2T+X7zs5t3oj7dagDi2zbvxRmforG0dREh0XPLgHyoad7+HcON0X0lKfCYgvuD88Sdtp+78i4i9O7OWFPoWdMQOdd2FBDEZiZSnWlXzeoAIIIM87Ww0IKjMKbdZ1fK3+3ZE92kNH/6c=
+	t=1790630679; cv=none; b=bd5wlhyD1sni7XH7TOijTXps/DNAn5jkMKc0bZ7ABH7Q4BFZwkYvDBd38jzTDMAzqanqoWpfVUfUIpSeJT3dye9s7Wwxj4WpAT5qh8icKX5lTuEO+he0EZOQ6Q9iRu4S+KklFyTD07z+8WxQx9oBjSHcpTWzJIq0UgHkUKbR64U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790627205; c=relaxed/simple;
-	bh=oeAnS1iHS6uEHRUzWTpfPEm3QPJSldsU3klZaBH3EyA=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=O5EjA1f1f/X7YrACb1ah5Bx1w2AE8vjz68E+acBlLC7VqZbn9mZafktpc80ARVmgbMGA3lJpAp7MfF/vPHVhDEX06af2QRnxvko8r1WPAdaB/PWJ30bPv/MZIrNaQWviOdQ4tiR3MC/ujKAea7G4/gwJUZ1QRY+8XG0MjoVleFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mutMuPgh; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790630679; c=relaxed/simple;
+	bh=J3+JakjEmegRUseVuPPSH83zT3KL/r/60QIHY4T/JdA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bNtZoHNghBh/J72P3azL896EjpwvfmHID+visDhEeQzfuQkOX+2LubI2nED7D75luGyIgewVPuwDSJ7cEH0nTXUv4G6rbLHuSzc6A7LU0uOvFETnU6B27NDkvdrYy5eu9I7Q3duhnilMMSPUQwTxRO/bnTA1YNDkpXAyz7ad9kw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jvhHGSxY; arc=none smtp.client-ip=74.125.225.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mutMuPgh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84D281F000FF;
-	Mon, 28 Sep 2026 20:26:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790627203;
-	bh=hzLmj0MQB5U39/h5t8TPjWfFPs/rSrARNZWWe6FRkMY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=mutMuPghJyBsrfu59tYXkYV6ELZAOG/af7rD3h8IeEDTACg3e9z6gGG0wEvzn9+eS
-	 ah41NhB2/+HdhenhAWwEhIJcWzYFcaIBk/zyopAqwrqRj3KYRXRvxY8DMBgc/K8sdg
-	 wcRy5GdDbF+pbfgHup4uZEMD/F8ki+QaghQ6rdyikLNeqKjt2JKt+8g8a8uXzVM50b
-	 Re/Dg7RKCwzSaWEFcL4mNEnfBZOr1lHrkKt61h2JbsFqnoObu5G+t/t8u2vqlWlr6c
-	 BguWLluLNWkNP/sOH3Pcg91raebFnlWzzeElqSfj7cRrJOWwJwtUOZGxSBk5P1x4vA
-	 iY2oyEYDnFPUA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] md: make mddev lookup and ioctl helpers non-static
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20260928201224.3602262-2-abd.masalkhi@gmail.com>
-References: <20260928201224.3602262-1-abd.masalkhi@gmail.com>
- <20260928201224.3602262-2-abd.masalkhi@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 28 Sep 2026 20:26:43 +0000
-Message-Id: <20260928202643.84D281F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jvhHGSxY"
+Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-4843378fb37so2107504f8f.3
+        for <linux-raid@vger.kernel.org>; Mon, 28 Sep 2026 14:24:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790630672; x=1791235472; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Tfhdvxck6e/VGBLhH1y3Pr8xpk9G1Mao9iti+MUyAGY=;
+        b=jvhHGSxYlrvQDcoTYbHECl20bEHznZzWMq+HqGRJnF6UG6q0BAT6/h/9DjPFE9Ecv0
+         oeYbTSIHca4VX+P2OYKVOApR6nseHbBmTRy3kZHjtMBM0dWGM3PfChKiaDi4HffRg1cD
+         E5lHALW5QuBkg3BvZBrIpTR8jWZA3gsLAcvhRnm+drhTmaQ2BGuyt7j4NRZ/U7QQCk7f
+         qARnnpzZdtOggk3cDnP9uSI1E9Puc41lujBDWQqHYkocGyiBVs474DRgCPjBK7QLOzqu
+         M1LP4CL0J3HSCx/LgOtnfz1zg/K7te2TWFhS18s9ychy2YzLCRWg966vp6nD47bx8ur1
+         KeNg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790630672; x=1791235472;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Tfhdvxck6e/VGBLhH1y3Pr8xpk9G1Mao9iti+MUyAGY=;
+        b=S/sA2k0zr5iOXIvTUY9TjA0Ynk3EO4BzUs8MLP8PE/cLaAHjxRo2BePk2Eu1B3D5M3
+         60K0TtmIRg9DYXgaU8IArNCBSs/vvJ4qPcL7sbgNDY971kpZEPYhD4/JT5QrLPxglsZB
+         r4OIMatPYgYJJ2T9ZCiMt1l94+Y8l6OvhUo4WZA+kVhjhbQ4qu/2f+9eyE4HgrAUgQnE
+         84OdxsJZW500NAjwa1M1Rip5qQTVnx+qRzlL8YGsXBiaTDrykA8zd3MGupzlDHKgyPRt
+         jiYtLAtf/l+hBkI603yfb3JPZPTg6Xvts/Dx/3PXu+fUXaKmyWtK0MnNNynn6iBvQ8gn
+         l7LA==
+X-Gm-Message-State: AFq9FYJyPjnbDzKp6BH2SZYnv2UwvQMz2WaOVI6MdgvLj/fTIo6BJTrM
+	X0m276URM2Il+ALxV+TpkbIYTt4B01GOlc+8LeDmHCNDNP6f7UplFFns
+X-Gm-Gg: AYBFou0kuYKzegfpBCYSU07Kym8jjqHfUMAePNnJHBWRO38UWeGmxmlKkGXVQn3c//i
+	2Yde+ko+FsblPmZcjKZ/ioO7951X3VAP+3mXtY5Fn0s4w/HFxre6bDb0dC27yK6Gl+WtvcKAQUT
+	8P3J5P+sAbNqifUPQF83W6o/wIYcR1+YJ2uMnIa/ZbL65iFH6p0PT3h9HPZQWXMVDlQHS43GIYg
+	LjQEb81zS69kHtarOK8D2jLdc7N0EyAosVbCtEcBpbOffriw+MUVPJkph9JclwdFvPA8IYqx6gt
+	+qOwZWpfUMOQ3lHGaTeq/U1sbdwZUGrYqYmfHO5qnofEb28tNHHX6Qz/2uKTZUiDRMe9MxAN3rN
+	Und78KdQNtvdfLWaBx7ynK/8OmJ5JqMZ9xKFzy/fORaLlN/u1yhijLEnMoQsdHyiMH6Q3XmGcPW
+	9oxtTZyQ4sqPcm+8g703rK6grAZSPxxnvDDoZ7z4jh6abDA4z0S2ZXGNAstdsuPYdYmc66zWrKd
+	53M/8DyJpkYW+GdIHkDJ8HYcqtrxt5gTSxG9vyhbSiP1ul9
+X-Received: by 2002:adf:e19e:0:b0:488:8132:1429 with SMTP id ffacd0b85a97d-4888132168fmr17401129f8f.20.1790630672012;
+        Mon, 28 Sep 2026 14:24:32 -0700 (PDT)
+Received: from env.. (dynamic-176-003-100-011.176.3.pool.telefonica.de. [176.3.100.11])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4887a34a314sm30869895f8f.6.2026.09.28.14.24.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 28 Sep 2026 14:24:31 -0700 (PDT)
+From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+To: yukuai@fygo.io,
+	chengzhihao1@huawei.com,
+	blazej.kucman@graidtech.com,
+	mtkaczyk@kernel.org,
+	ncroxon@redhat.com,
+	xni@redhat.com,
+	song@kernel.org
+Cc: linux-raid@vger.kernel.org,
+	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+Subject: [PATCH 0/2] mdadm: switch management ioctls to /dev/md-control
+Date: Mon, 28 Sep 2026 21:18:47 +0000
+Message-ID: <20260928211849.3602414-1-abd.masalkhi@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] md: generic update_array_info() and set_disk_faulty() lack subsyste=
-m prefix
---
+This series updates mdadm to use the kernel's new /dev/md-control
+interface for md management ioctls.
 
-commit 471cd6c3e9c36553c5976e00c65220dac80b2aea
-Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+The first patch adds the md_ioctl() helper and imports the new UAPI
+definitions from the kernel. The helper sends management commands to
+/dev/md-control and identifies the target array by name.
 
-md: make mddev lookup and ioctl helpers non-static
+The second patch switches mdadm's existing management ioctl users to
+md_ioctl() and the new 64-bit ioctl structures.
 
-This commit exposes several internal md array lookup and ioctl helper funct=
-ions
-by removing their static declarations. This change is intended to allow a n=
-ew md
-misc control device to reuse these helpers without opening the md block dev=
-ice.
+The kernel-side implementation of the control node can be found here:
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 680b34a63cb3d..b5027d65c6d8d 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-[ ... ]
-> @@ -8101,7 +8101,7 @@ static void put_cluster_ops(struct mddev *mddev)
->   * Any differences that cannot be handled will cause an error.
->   * Normally, only one change can be managed at a time.
->   */
-> -static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
-> +int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+https://lore.kernel.org/linux-raid/20260928201224.3602262-1-abd.masalkhi@gmail.com
 
-[Severity: Low]
-By removing the static keyword, update_array_info() is now added to the glo=
-bal
-kernel namespace. Since this name is quite generic, should it be given an "=
-md_"
-prefix to avoid potential symbol collisions with other subsystems?
+Abd-Alrhman Masalkhi (2):
+  mdadm: add md_ioctl() for the md control device
+  mdadm: switch management ioctls to md_ioctl()
 
->  {
->  	int rv =3D 0;
->  	int cnt =3D 0;
-[ ... ]
-> @@ -8227,7 +8227,7 @@ static int update_array_info(struct mddev *mddev, m=
-du_array_info_t *info)
->  	return rv;
->  }
-> =20
-> -static int set_disk_faulty(struct mddev *mddev, dev_t dev)
-> +int set_disk_faulty(struct mddev *mddev, dev_t dev)
+ Assemble.c    |   4 +-
+ Build.c       |  12 +++---
+ Create.c      |  19 ++++----
+ Detail.c      |  22 +++++-----
+ Grow.c        |  30 ++++++-------
+ Incremental.c |   6 +--
+ Manage.c      |  44 +++++++++----------
+ Query.c       |   4 +-
+ managemon.c   |   4 +-
+ md_u.h        | 117 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ mdadm.c       |   2 +-
+ mdadm.h       |  24 +++++++----
+ mdmonitor.c   |   8 ++--
+ super-ddf.c   |  22 +++++-----
+ super-intel.c |  14 +++---
+ super0.c      |   6 +--
+ super1.c      |   6 +--
+ util.c        |  52 ++++++++++++++++------
+ 18 files changed, 273 insertions(+), 123 deletions(-)
 
-[Severity: Low]
-Similar to update_array_info(), set_disk_faulty() is now globally visible.
-Would it be safer to rename this to md_set_disk_faulty() to prevent namespa=
-ce
-pollution and potential collisions?
+-- 
+2.43.0
 
->  {
->  	struct md_rdev *rdev;
->  	int err =3D 0;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260928201224.3602=
-262-1-abd.masalkhi@gmail.com?part=3D1
