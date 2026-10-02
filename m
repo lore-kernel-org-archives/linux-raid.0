@@ -1,124 +1,174 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f199.google.com (mail-oi1-f199.google.com [209.85.167.199])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 750DB481AAE
-	for <linux-raid@vger.kernel.org>; Fri,  2 Oct 2026 09:14:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 119B13911CD
+	for <linux-raid@vger.kernel.org>; Fri,  2 Oct 2026 23:25:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790932477; cv=none; b=gmRRnAgFUwVAAkUKqiKH3b4NczDvfva9ibrZl4vM/FMq7C0NJ2WhN9ChJpvMrQtGj83P1LztC4yCJEA/G8ebv1fMpJOTXfT5v4CtBqlDgCvDNbyvTNaiYWKk0+lol87gDtnRs3u40U0NyzA4AuU3ElqyjxerFi/9hvV/XvzTML0=
+	t=1790983527; cv=none; b=XRoMe2FlvkrfBDmAvkSKkuNGSFSNC0/fg7hs8GOH40+OxXufurE7ussPtgysj1Kf9NqMKKwgreuUzC6hGb8H9GGUYTmEztIVLigDAwDmr6iAIsqdqV2VAm6ovXsJ1NU1hilsf9urPaNwCZUA9mceIcpOHcImfd1S0aALmge3Rz4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790932477; c=relaxed/simple;
-	bh=Zo7hEj4SiSSSNxFAP/Eop/MaND/4w9m/a9Ren7VGPfU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=g8RUm3ofbYg9eeMTI0G9znc3CDQhQUb3VTgXVQJslcJ021S7c2KKvzjihMd/UEhKv3h8iIG74ikMH3QM1aHaCPa3vwsqI3Sn98g6xxC8ReuhuG4tEw3p52izvtT79hGQebuZCoL9zzTs3if6fxmiVfh7XdbsOpTboaklXYiksj0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h+RxuMIl; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h+RxuMIl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28E5A1F000FF;
-	Fri,  2 Oct 2026 09:14:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790932476;
-	bh=WsndlHNiXdzg0jV6aL1IheGhxBjTGkeNW5/pjoZP0lg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=h+RxuMIli+9Fk8X5s0J8iv4FJMiefpVo7cvRecAJc8i2bmXaKm3/50erJb/0dWUsa
-	 2kP9nT/575c1DcZvDEow1NMmSHTrziWO1DeDwQsGKt2AvRptPS/oEvPI6vVzkFnjlM
-	 SnACt6KwuKmGd6sFXJyHv1W5qvUKyTx1DusVZSkTvO5bfFebtU2mIXu7OaCTIWrcmw
-	 gbXof1hrwdgSGe/VlJEmX80VtuSquKBvMKGPQnRaYsRYdWS/tOs33uc3FSf2+KAU/m
-	 DsadET6Xk5dyn8atjE7ZepcgoyJrDdvIKBu5srUubn1qx24RkFzqtGYCmdK8kGXRmP
-	 jPzaCwBA3JpGw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4] md: remove legacy async del_gendisk
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Li Youhong" <dayou5941@163.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20261002065642.1726950-1-dayou5941@163.com>
-References: <20261002065642.1726950-1-dayou5941@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 02 Oct 2026 09:14:35 +0000
-Message-Id: <20261002091436.28E5A1F000FF@smtp.kernel.org>
+	s=arc-20240116; t=1790983527; c=relaxed/simple;
+	bh=u2KMLv+tlXITwimzd/Ty9/jX3M9EHu28LToNoV9H398=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=WVewBqoEiZDDXp1XuJ6Rl3ouVR5L52wdxzhHN8+Rg38+/oLr1ST9E/PioAr0NL+C/b9TFJzDI8IcWLpmMHRLLyvLmE63gObd04WJL7Nh/G7k5cv7DwYRNpCykz/R3junIJ3MzLdsRCYRlE3vof3S8VWQ/rMN8wCFsKaiw5zWjEE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi1-f199.google.com with SMTP id 5614622812f47-4b37620eb73so683486b6e.1
+        for <linux-raid@vger.kernel.org>; Fri, 02 Oct 2026 16:25:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790983525; x=1791588325;
+        h=content-type:to:from:subject:message-id:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=dIjf4HqhU53sGKU8lTmxHgeawGfnk4d9WAw94g/v+Sw=;
+        b=DByvdDOMwoUKMA52keF+zdSFzPLJI3/o+T1nAKc5hGExsHdkFCNpmdoeo+tnxb9LCW
+         hFdDToL4K4nFV7KGc1gZDS2HgjZ0Xk+8Mw8WOrXD769xnDwtdI9GcFhwQwcC+K455Tqb
+         lPMz0xhjX2vhAnVly08PJakSfHcIOf74d2yT96eiBs9gAXCPiX0A24YDrAElYnYrCCCr
+         tBBgIW7t7QXHh+TrrlKriQz5LuH3YSi79p6MOP02AKUCOjSemrtz74cpDa0cPaSD1aOp
+         2tIxC3gL9w9zUV4YF9YLRZ4t3amcohr6Ud3EJ0lEa/FqIY58HOcTmKacJWTHVw6z9/il
+         fkhA==
+X-Forwarded-Encrypted: i=1; AKwUvBzVmfOPMGrfpsVY/raRrhTDD9Yavx/ZvTzocCbEDqVu1ahpAt781TA6MSa0XRV629PfXcPbp3Ye0K5H@vger.kernel.org
+X-Gm-Message-State: AFuF++ld01j+4JM+Dxt1vD6rMfpnTEePo1Mk5wAtL6Ct3rT94xgTRw5+
+	MKT9/nI5ZNQ8kBxudhRCH3+OFYDcvSWBOs0OYAltr0ABxhrB5RvelP69uTT7Zxuwn7g5KrqTK6+
+	B2x+g1Sh6o6+WmC4eaJ5ukxvxtaBtlE0cUhlISQu5168+x93WSmykrkx9994=
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-Received: by 2002:a05:6808:6d91:b0:4cb:f21b:6f90 with SMTP id
+ 5614622812f47-4f529d37106mr3399532b6e.35.1790983525067; Fri, 02 Oct 2026
+ 16:25:25 -0700 (PDT)
+Date: Fri, 02 Oct 2026 16:25:25 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6ac03d65.81dddff3.363068.0002.GAE@google.com>
+Subject: [syzbot] [raid?] general protection fault in md_handle_request
+From: syzbot <syzbot+89a9ab2a134d092fffae@syzkaller.appspotmail.com>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, 
+	syzkaller-bugs@googlegroups.com, yukuai@fnnas.com
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] md: race between md_alloc and mddev_put causes duplicate sysfs war=
-nings
---
+Hello,
 
-commit 6f4e37981f391fc56de7da8a4b3ba68d6d5786d3
-Author: Li Youhong <liyouhong@kylinos.cn>
-Subject: md: remove legacy async del_gendisk
+syzbot found the following issue on:
 
-This patch removes the legacy async gendisk deletion path, making
-del_gendisk() synchronous from mddev_unlock() and the final
-kobject_put(). It also removes del_work and the flush_workqueue()
-in md_alloc().
+HEAD commit:    6474fa070f2b Add linux-next specific files for 20260929
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+console output: https://syzkaller.appspot.com/x/log.txt?x=14dfe035580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=3477d5a04d788556
+dashboard link: https://syzkaller.appspot.com/bug?extid=89a9ab2a134d092fffae
+compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=10d876c9580000
 
-Closes: https://syzkaller.appspot.com/bug?extid=3D68e1f51046d68329940f
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+89a9ab2a134d092fffae@syzkaller.appspotmail.com
 
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
+Oops: general protection fault, probably for non-canonical address 0xdffffc0000000003: 0000 [#1] SMP KASAN PTI
+KASAN: null-ptr-deref in range [0x0000000000000018-0x000000000000001f]
+CPU: 1 UID: 0 PID: 6372 Comm: syz-executor143 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/16/2026
+RIP: 0010:md_handle_request+0xadd/0xe60 drivers/md/md.c:417
+Code: 24 90 00 00 00 48 8b 84 24 a8 00 00 00 42 80 3c 20 00 74 08 48 89 df e8 f1 b2 93 f9 48 8b 1b 48 83 c3 18 48 89 d8 48 c1 e8 03 <42> 80 3c 20 00 74 08 48 89 df e8 d4 b2 93 f9 4c 8b 1b 48 8b bc 24
+RSP: 0018:ffffc9000415f5c0 EFLAGS: 00010206
+RAX: 0000000000000003 RBX: 0000000000000018 RCX: ffff88802b29ddc0
+RDX: 0000000000000000 RSI: ffffffff8e9dafe5 RDI: ffff88802b29ddc0
+RBP: ffffc9000415f778 R08: ffffffff88a749bc R09: 0000000000000000
+R10: 0000000000000009 R11: 0000000000000000 R12: dffffc0000000000
+R13: 1ffff9200082bf70 R14: ffff88807e3680c8 R15: ffff88807e368238
+FS:  000055556ca3c400(0000) GS:ffff888124723000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f8a7dc59000 CR3: 000000007831e000 CR4: 00000000003526f0
+Call Trace:
+ <TASK>
+ __submit_bio+0x27f/0x340 block/blk-core.c:681
+ __submit_bio_noacct block/blk-core.c:724 [inline]
+ submit_bio_noacct_nocheck+0x4e8/0xa40 block/blk-core.c:792
+ bio_await block/bio.c:1506 [inline]
+ submit_bio_wait+0x12a/0x250 block/bio.c:1524
+ __blkdev_direct_IO_simple block/fops.c:115 [inline]
+ blkdev_direct_IO+0x1167/0x18e0 block/fops.c:451
+ blkdev_read_iter+0x223/0x420 block/fops.c:849
+ new_sync_read fs/read_write.c:493 [inline]
+ vfs_read+0x595/0xa80 fs/read_write.c:574
+ ksys_pread64 fs/read_write.c:764 [inline]
+ __do_sys_pread64 fs/read_write.c:772 [inline]
+ __se_sys_pread64 fs/read_write.c:769 [inline]
+ __x64_sys_pread64+0x196/0x220 fs/read_write.c:769
+ do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+ do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f8a7dca9077
+Code: 48 89 fa 4c 89 df e8 98 1e 00 00 8b 93 08 03 00 00 59 5e 48 83 f8 fc 74 1a 5b c3 0f 1f 84 00 00 00 00 00 48 8b 44 24 10 0f 05 <5b> c3 0f 1f 80 00 00 00 00 83 e2 39 83 fa 08 75 de e8 23 ff ff ff
+RSP: 002b:00007ffc5a7b78d0 EFLAGS: 00000202 ORIG_RAX: 0000000000000011
+RAX: ffffffffffffffda RBX: 000055556ca3c400 RCX: 00007f8a7dca9077
+RDX: 0000000000001000 RSI: 000055556ca3e000 RDI: 0000000000000009
+RBP: 0000000000000096 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000202 R12: 00007ffc5a7b79e0
+R13: 00007ffc5a7b79d4 R14: 00007ffc5a7b7954 R15: 00007f8a7dc59000
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:md_handle_request+0xadd/0xe60 drivers/md/md.c:417
+Code: 24 90 00 00 00 48 8b 84 24 a8 00 00 00 42 80 3c 20 00 74 08 48 89 df e8 f1 b2 93 f9 48 8b 1b 48 83 c3 18 48 89 d8 48 c1 e8 03 <42> 80 3c 20 00 74 08 48 89 df e8 d4 b2 93 f9 4c 8b 1b 48 8b bc 24
+RSP: 0018:ffffc9000415f5c0 EFLAGS: 00010206
+RAX: 0000000000000003 RBX: 0000000000000018 RCX: ffff88802b29ddc0
+RDX: 0000000000000000 RSI: ffffffff8e9dafe5 RDI: ffff88802b29ddc0
+RBP: ffffc9000415f778 R08: ffffffff88a749bc R09: 0000000000000000
+R10: 0000000000000009 R11: 0000000000000000 R12: dffffc0000000000
+R13: 1ffff9200082bf70 R14: ffff88807e3680c8 R15: ffff88807e368238
+FS:  000055556ca3c400(0000) GS:ffff888124623000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f8a7dd14100 CR3: 000000007831e000 CR4: 00000000003526f0
+----------------
+Code disassembly (best guess):
+   0:	24 90                	and    $0x90,%al
+   2:	00 00                	add    %al,(%rax)
+   4:	00 48 8b             	add    %cl,-0x75(%rax)
+   7:	84 24 a8             	test   %ah,(%rax,%rbp,4)
+   a:	00 00                	add    %al,(%rax)
+   c:	00 42 80             	add    %al,-0x80(%rdx)
+   f:	3c 20                	cmp    $0x20,%al
+  11:	00 74 08 48          	add    %dh,0x48(%rax,%rcx,1)
+  15:	89 df                	mov    %ebx,%edi
+  17:	e8 f1 b2 93 f9       	call   0xf993b30d
+  1c:	48 8b 1b             	mov    (%rbx),%rbx
+  1f:	48 83 c3 18          	add    $0x18,%rbx
+  23:	48 89 d8             	mov    %rbx,%rax
+  26:	48 c1 e8 03          	shr    $0x3,%rax
+* 2a:	42 80 3c 20 00       	cmpb   $0x0,(%rax,%r12,1) <-- trapping instruction
+  2f:	74 08                	je     0x39
+  31:	48 89 df             	mov    %rbx,%rdi
+  34:	e8 d4 b2 93 f9       	call   0xf993b30d
+  39:	4c 8b 1b             	mov    (%rbx),%r11
+  3c:	48                   	rex.W
+  3d:	8b                   	.byte 0x8b
+  3e:	bc                   	.byte 0xbc
+  3f:	24                   	.byte 0x24
 
-[ ... ]
 
->  void mddev_put(struct mddev *mddev)
->  {
-> +	bool complete_delete;
-> +
->  	if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
->  		return;
-> =20
-> -	__mddev_put(mddev);
-> +	complete_delete =3D __mddev_put(mddev);
-> +	if (complete_delete)
-> +		mddev_unlist(mddev);
->  	spin_unlock(&all_mddevs_lock);
-> +	if (complete_delete)
-> +		mddev_complete_delete(mddev);
->  }
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-[Severity: High]
-Does unlisting the dying mddev from all_mddevs before its gendisk is fully
-deleted make the old name prematurely invisible to a concurrent md_alloc()?
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
-If a process triggers mddev_put() (e.g. by closing an unconfigured /dev/mdX=
-X),
-the array is removed from all_mddevs before the synchronous del_gendisk()
-is called.
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
 
-[ ... ]
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
 
-> @@ -6327,12 +6334,6 @@ struct mddev *md_alloc(dev_t dev, char *name)
->  	int unit;
->  	int error;
-> =20
-> -	/*
-> -	 * Wait for any previous instance of this device to be completely
-> -	 * removed (mddev_delayed_delete).
-> -	 */
-> -	flush_workqueue(md_misc_wq);
-> -
->  	mutex_lock(&disks_mutex);
->  	mddev =3D mddev_alloc(dev);
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
 
-[Severity: High]
-Since flush_workqueue(md_misc_wq) is removed, could a concurrent md_alloc()
-proceed and fail to find the unlisted mddev?
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
 
-If md_alloc() starts while mddev_put() is deleting a gendisk with the same
-name, it won't find the old array in all_mddevs.
-
-It would then allocate a new gendisk with the same name and call add_disk(),
-which collides with the dying gendisk.
-
-This leads to a -EEXIST failure in add_disk() and a kernel warning
-for duplicate sysfs filenames. On systems with panic_on_warn set, this could
-cause a crash.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261002065642.1726=
-950-1-dayou5941@163.com?part=3D1
+If you want to undo deduplication, reply with:
+#syz undup
