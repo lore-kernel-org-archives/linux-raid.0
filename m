@@ -1,562 +1,180 @@
-Received: from sg-3-41.ptr.tlmpb.com (sg-3-41.ptr.tlmpb.com [101.45.255.41])
+Received: from va-2-55.ptr.blmpb.com (va-2-55.ptr.blmpb.com [209.127.231.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C3BA36606B
-	for <linux-raid@vger.kernel.org>; Sun,  4 Oct 2026 15:40:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.45.255.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EA933C1983
+	for <linux-raid@vger.kernel.org>; Sun,  4 Oct 2026 15:51:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791128414; cv=none; b=q3qnMppMd9WiT/qRSs0QtUZYgAb/TpbR62+tLOmBxK1KZLVAvtwmO+01NRx/GmuyCQa+JCkmVEC7mp3r0sv28i3KMqubhLM2a+4yDwhIHsLC48fv9yrdC3hOZMMs73pbI/vdHtu0cdTaM2LIEnJyig3ulIEt80eGLVuqscMOU5A=
+	t=1791129103; cv=none; b=r7l2Xi96if0YFd9w0WbskN2O4rHljmq3LXktcaal9TL11w7vdY7CBkAtQvnsCdKYXlMwLH3vfaXEJfFjPVJzzkLM7RU20BIJ6XFJnyYVIwBq15+6bRaEWNZwnqjRqcxp9MCVN9IOwgrnddd2L0/6Sx8tvvRUvo5fVj13AM1fWdQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791128414; c=relaxed/simple;
-	bh=6P2oKRzYsvf6B2KQAoajwmPX7cFBM9tvUALms8jkt2U=;
-	h=Cc:Date:Message-Id:In-Reply-To:Mime-Version:References:To:From:
-	 Subject:Content-Type; b=VJIzFWi0R54z+ik9VzDUDHnHqnvHJ9jSEZwXcuPU89H4Am5A3x1BkGskPv0G9LL8D3IdTcorg6sl+1ZDJ5FxWI3lmxizvbRLgBhti6xKulwI4shOA15NlrIAb1l55n289z9pQ8n1w+kjqBp4Wz7rryLS+SoU4B4+9H78wGsZjkw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=VOJwCxqk; arc=none smtp.client-ip=101.45.255.41
+	s=arc-20240116; t=1791129103; c=relaxed/simple;
+	bh=JYfSDbevSyklrFpxJ/wTrpgYy/neyqm9a6uWSluHa+U=;
+	h=Content-Type:Subject:To:Cc:From:Mime-Version:References:Date:
+	 Message-Id:In-Reply-To; b=F6m8C5QFwOh9ohImW7hx8PT4FyKBjZEWJW6uumsEj3RZbRyqxsTL6eHyGOjrA5sqToGN1OEurdtpoR2aVfLxt2LtMQjCibU1y72DfnmV+UnXs+LxAiM3nUWP/MiogZkEPVqf8ZWcfoB0Ah/skqPAAZ/BUrLQGu7HJpG80+NMTsI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=L3Ao1wLJ; arc=none smtp.client-ip=209.127.231.55
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="VOJwCxqk"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="L3Ao1wLJ"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1791128363;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1791129083;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=vEF98Eyd0YqynZgeuWq2IQxAnde4pwBEnQ3eL2iGu/Y=;
- b=VOJwCxqkSPiRK2sWSsk9OKnSTlkqI4BqvilIFGAucY83cP6Ah8noA6wuTqS0RTtiURTv0M
- P9uPazo0CoV5qLXrFedVS18iirGu+C2P7EE+w6xxc4qS4fyi3tV0WpRGwWFSnghM2LRj3E
- ppfKITFvhjoWjnccRCCKYloZiPDHdlM6RWwRrhB6uueAenRwfoEcKFlEnhk6GdOBLay4fl
- 9u7avi8OIgpLOIIhsQkVMj2OBqsXTRAxJolLJlRdwlh90Wd3WzYIj7F5gWd4MfCtlD7swN
- XpXAymVD98iiGaXSiWu4Yn5ZqJAy5nVJaYruWY3v/Rz6HVB3aOzDbdeCzq5wKg==
-Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"Li Youhong" <liyouhong@kylinos.cn>, 
-	<syzbot+68e1f51046d68329940f@syzkaller.appspotmail.com>, 
-	"Yu Kuai" <yukuai3@huawei.com>
-Date: Sun, 4 Oct 2026 23:39:18 +0800
-Message-Id: <e2021b06-898b-45f3-ac89-32c4de57f966@fygo.io>
-In-Reply-To: <20261002065642.1726950-1-dayou5941@163.com>
+ bh=N0IBTDh9NOUscIgRtt+2unFn8HLJ72nJ0CB0mU61Q9Q=;
+ b=L3Ao1wLJioIMwWdagYezGOv0RneyqwjZ6HcbRdW7BH26SPOTD8YYQmD2iC9Te2Fm7ZZtOt
+ EQCtIz6Nt0drrbBZ7bCSD3Z+y1R4se8Hb6B7HPdYZuX5z5TythzmgYVZO6+QGyn0lbuMQ9
+ fRJ9MWqYeqg+UUZN1WzzvwhuDJw2IEs0xxWU/HLJfp5rh2vJQ8fM4muwO5ZlEY0VToSwaj
+ SBfSWVOv9OYRGUmMM+oeIyrtY0C1ATPga3LOVKfmpC2K7ywj7GuH2o1fYIqY/uHr9gW/uR
+ v4g5lbCMfo/mQsaujV8lupc/wRsuhrCQPcrYT2Zs2GTUQhZbWbqj8pUIVVCeFA==
+Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH v5] md: Fix the null-ptr-deref of 'mddev->private' while submitting IO
+Content-Transfer-Encoding: quoted-printable
 User-Agent: Mozilla Thunderbird
+To: "Zhihao Cheng" <chengzhihao1@huawei.com>, <song@kernel.org>, 
+	<magiclinan@didiglobal.com>, <xiao@kernel.org>, <eadavis@sina.com>, 
+	<abd.masalkhi@gmail.com>, "yu kuai" <yukuai@fygo.io>
+Cc: <linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>, 
+	<yi.zhang@huawei.com>, 
+	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+From: "yu kuai" <yukuai@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-References: <20261002065642.1726950-1-dayou5941@163.com>
-X-Lms-Return-Path: <lba+26ac2732a+4e980e+vger.kernel.org+yukuai@fygo.io>
-To: "Li Youhong" <dayou5941@163.com>, <song@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.177]) by smtp.larksuite.com with ESMTPS; Sun, 04 Oct 2026 15:39:22 +0000
-X-Original-From: yu kuai <yukuai@fygo.io>
+References: <20260922030538.1634904-1-chengzhihao1@huawei.com>
+Received: from [192.168.1.104] ([39.182.0.177]) by smtp.larksuite.com with ESMTPS; Sun, 04 Oct 2026 15:51:22 +0000
 Reply-To: yukuai@fygo.io
-Subject: Re: [PATCH v4] md: remove legacy async del_gendisk
-Content-Type: text/plain; charset=UTF-8
+Date: Sun, 4 Oct 2026 23:51:18 +0800
+Message-Id: <f02cbef7-4a8b-440b-894d-af91df7bdf76@fygo.io>
+In-Reply-To: <20260922030538.1634904-1-chengzhihao1@huawei.com>
+X-Lms-Return-Path: <lba+26ac275fa+7e1b2c+vger.kernel.org+yukuai@fygo.io>
+X-Original-From: yu kuai <yukuai@fygo.io>
 
 Hi,
 
-=E5=9C=A8 2026/10/2 14:56, Li Youhong =E5=86=99=E9=81=93:
-> From: Li Youhong <liyouhong@kylinos.cn>
+=E5=9C=A8 2026/9/22 11:05, Zhihao Cheng =E5=86=99=E9=81=93:
+> Concurrent processes md_stop and IO submitting could trigger a
+> null-ptr-deref of 'mddev->private':
 >
-> md_alloc() is called from md_probe() while blk_probe_dev() still holds
-> major_names_lock. It flushes md_misc_wq only to wait for the previous
-> mddev_delayed_delete() to finish.
+>   BUG: kernel NULL pointer dereference, address: 0000000000000070
+>   RIP: 0010:_wait_barrier+0x2f/0x250
+>   Call Trace:
+>    raid1_make_request+0x150/0xf50
+>    md_handle_request+0x104/0x530
+>    md_submit_bio+0x76/0x130
+>    submit_bio+0xdd/0x250
+>    submit_bio_wait+0x1f/0x40
+>    __blkdev_direct_IO_simple+0x1f6/0x370
+>    blkdev_write_iter+0x3b2/0x520
+>    ksys_write+0x7d/0x190
 >
-> md_misc_wq also runs sync_work (md_start_sync), which takes
-> reconfig_mutex. On the other path, md_ioctl() already holds
-> reconfig_mutex when md_import_device() opens a bdev and takes
-> major_names_lock.
+>                P1
+>    fd =3D open(/dev/md0, O_RDWR)
+> 	                      P2 (forked from P1, fd' <=3D fd)
+>    write(fd)
+>     submit_bio
+>      md_handle_request
+>       raid1_make_request
+>        raid1_write_request
+>                                    ioctl(fd, STOP_ARRAY)
+> 		                   mddev_set_closing_and_sync_blockdev
+> 				   // check passed, mddev->openers =3D 1,
+> 				   // because md_open() is only called
+> 				   // once in P1->open
+> 				   do_md_stop
+> 				    __md_stop
+> 				     mddev->private =3D NULL
 >
-> Flushing md_misc_wq under major_names_lock therefore creates a lockdep
-> cycle:
+>         conf =3D mddev->private // NULL
+>          wait_barrier(conf, sector) // null-ptr-deref !
 >
->    major_names_lock -> md_misc_wq -> reconfig_mutex -> major_names_lock
+> It is a common problem for raid0/1/10/5, and __md_stop could be triggered
+> by several paths(eg. ioctl, sysfs, ->dtr). Fix it by replacing
+> mddev_lock() with mddev_suspend_and_lock() for all __md_stop() callers.
+> The caller array_state_store() is guaranteed by the check
+> mddev_set_closing_and_sync_blockdev(mddev, 0), we just need to remove
+> the check '!md_is_rdwr'. For example, someone open /dev/mdx, write
+> something and close /dev/mdx, it won't trigger the problem, all dirty
+> pages can be flushed before mddev->openers decrement.
+> The caller dm_table_destroy() is guaranteed being invoked with device
+> suspended, so raid_dtr() could keep using mddev_lock_nointr().
+> Besides, fail the submitting IO in md_handle_request() if the
+> 'mddev->pers' becomes NULL.
 >
-> legacy_async_del_gendisk has been in tree long enough that the async
-> path can be removed. del_gendisk is done synchronously from
-> mddev_unlock() after dropping reconfig_mutex, and the last kobject_put()
-> runs from mddev_put() after dropping all_mddevs_lock. del_work and the
-> flush in md_alloc() are then unnecessary.
+> Fetch a reproducer in https://bugzilla.kernel.org/show_bug.cgi?id=3D22202=
+0
 >
-> mdadm 4.5+ is required.
->
-> Reported-by: syzbot+68e1f51046d68329940f@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3D68e1f51046d68329940f
-> Fixes: e804ac780e2f ("md: fix and update workqueue usage")
-> Suggested-by: Yu Kuai <yukuai3@huawei.com>
-> Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Reported-by: syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=3D3fe892ea5fc292e1353f
+> Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
 > ---
-> v4:
-> - Unlink a dying mddev from all_mddevs before dropping all_mddevs_lock,
->    so a concurrent md_alloc() does not match it and return -EEXIST.
->    Iterators still leave the current node linked until the next node is
->    pinned, then unlink the previous one.
-> - v3: link: https://lore.kernel.org/linux-raid/20260924081552.2564214-1-d=
-ayou5941@163.com/
->
-> v3:
-> - md_seq_show() returns without flushing when mddev_get() fails. v is
->    still the iterator, and dropping all_mddevs_lock there lets a
->    concurrent last put free it before seq_next().
-> - md_notify_reboot() and md_exit() defer complete_delete until the
->    iterator has moved on. list_for_each_entry_safe() caches the next
->    mddev before the unlock, and a concurrent last put can free it.
-> - v2: link: https://lore.kernel.org/linux-raid/20260922021533.2935172-1-d=
-ayou5941@163.com/
->
-> v2:
-> - Drop legacy_async_del_gendisk, del_work, mddev_delayed_delete(),
->    and the flush in md_alloc().
-> - del_gendisk is synchronous: mddev_unlock() after dropping reconfig_mute=
-x,
->    and the last kobject_put() from mddev_put() after dropping all_mddevs_=
-lock.
-> - __mddev_put() returns whether the caller must complete_delete after
->    dropping all_mddevs_lock. md_seq_show() stashes last-put mddev in
->    seq->private and complete_delete after the iterator has moved on.
->    md_notify_reboot() does the same with a local pending pointer.
->    md_exit() does the same with a local pending pointer.
-> - v1: link: https://lore.kernel.org/linux-raid/20260915083354.1603416-1-d=
-ayou5941@163.com/
->
-> ---
->   drivers/md/md.c | 204 +++++++++++++++++++++++++++++-------------------
->   drivers/md/md.h |   2 -
->   2 files changed, 122 insertions(+), 84 deletions(-)
+>   v1->v2:
+>    1. Add 'mddev->pers !=3D NULL' check before make_request
+>    2. Delete dm-raid caller(->dtr) modifications
+>    3. Move memalloc_noio_restore after mddev_unlock_and_resume
+>   v2->v3:
+>    1. Remove modifications in array_state_store()
+>    2. update commit msg
+>   v3->v4:
+>    1. Remove '!md_is_rdwr' check from array_state_store()
+>    2. update commit msg
+>   v4->v5:
+>    1. Skip checking '!md_is_rdwr' only for inactive case
+>   drivers/md/md.c | 17 ++++++++++++++++-
+>   1 file changed, 16 insertions(+), 1 deletion(-)
+
+This patch is missed because it's not in patchwork. :(
+
+Applied to md-7.4
+
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 680b34a63cb3..a03e2354e800 100644
+> index 680b34a63cb3..02798f2dbf0e 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -87,7 +87,7 @@ static DECLARE_WAIT_QUEUE_HEAD(resync_wait);
->  =20
->   /*
->    * This workqueue is used for sync_work to register new sync_thread, an=
-d for
-> - * del_work to remove rdev, and for event_work that is only set by dm-ra=
-id.
-> + * event_work that is only set by dm-raid.
->    *
->    * Noted that sync_work will grab reconfig_mutex, hence never flush thi=
-s
->    * workqueue whith reconfig_mutex grabbed.
-> @@ -338,7 +338,6 @@ static int start_readonly;
->    * so all the races disappear.
->    */
->   static bool create_on_open =3D true;
-> -static bool legacy_async_del_gendisk =3D true;
->   static bool check_new_feature =3D true;
->  =20
->   /*
-> @@ -633,40 +632,73 @@ static inline struct mddev *mddev_get(struct mddev =
-*mddev)
->   	return mddev;
->   }
->  =20
-> -static void mddev_delayed_delete(struct work_struct *ws);
-> +static void mddev_delete_gendisk(struct mddev *mddev)
-> +{
-> +	/*
-> +	 * Call del_gendisk after releasing reconfig_mutex to avoid
-> +	 * deadlock (e.g. del_gendisk under the lock while a sysfs
-> +	 * access waits for the lock).
-> +	 * MD_DELETED is only used for md raid, set in do_md_stop().
-> +	 * dm-raid uses md_stop and does not need MD_DELETED.
-> +	 */
-> +	if (!test_bit(MD_DELETED, &mddev->flags) ||
-> +	    test_and_set_bit(MD_DO_DELETE, &mddev->flags))
-> +		return;
-> +
-> +	kobject_del(&mddev->kobj);
-> +	del_gendisk(mddev->gendisk);
-> +}
-> +
-> +static void mddev_complete_delete(struct mddev *mddev)
-> +{
-> +	mddev_delete_gendisk(mddev);
-> +	kobject_put(&mddev->kobj);
-> +}
-> +
-> +/* all_mddevs_lock held. Drop the mddev before releasing the lock. */
-> +static void mddev_unlist(struct mddev *mddev)
-> +{
-> +	lockdep_assert_held(&all_mddevs_lock);
-> +
-> +	if (!list_empty(&mddev->all_mddevs))
-> +		list_del_init(&mddev->all_mddevs);
-> +}
->  =20
-> -static void __mddev_put(struct mddev *mddev)
-> +static bool __mddev_put(struct mddev *mddev)
->   {
->   	if (mddev->raid_disks || !list_empty(&mddev->disks) ||
->   	    mddev->ctime || mddev->hold_active)
-> -		return;
-> +		return false;
->  =20
->   	/*
->   	 * If array is freed by stopping array, MD_DELETED is set by
-> -	 * do_md_stop(), MD_DELETED is still set here in case mddev is freed
-> +	 * do_md_stop(). Still set it here in case mddev is freed
->   	 * directly by closing a mddev that is created by create_on_open.
->   	 */
->   	set_bit(MD_DELETED, &mddev->flags);
-> -	/*
-> -	 * Call queue_work inside the spinlock so that flush_workqueue() after
-> -	 * mddev_find will succeed in waiting for the work to be done.
-> -	 */
-> -	queue_work(md_misc_wq, &mddev->del_work);
-> +	return true;
->   }
->  =20
-> -static void mddev_put_locked(struct mddev *mddev)
-> +static bool mddev_put_locked(struct mddev *mddev)
->   {
->   	if (atomic_dec_and_test(&mddev->active))
-> -		__mddev_put(mddev);
-> +		return __mddev_put(mddev);
-> +	return false;
->   }
->  =20
->   void mddev_put(struct mddev *mddev)
->   {
-> +	bool complete_delete;
-> +
->   	if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
->   		return;
->  =20
-> -	__mddev_put(mddev);
-> +	complete_delete =3D __mddev_put(mddev);
-> +	if (complete_delete)
-> +		mddev_unlist(mddev);
->   	spin_unlock(&all_mddevs_lock);
-> +	if (complete_delete)
-> +		mddev_complete_delete(mddev);
->   }
->  =20
->   static void md_safemode_timeout(struct timer_list *t);
-> @@ -794,7 +826,6 @@ int mddev_init(struct mddev *mddev)
->   	mddev->level =3D LEVEL_NONE;
->  =20
->   	INIT_WORK(&mddev->sync_work, md_start_sync);
-> -	INIT_WORK(&mddev->del_work, mddev_delayed_delete);
->  =20
->   	return 0;
->  =20
-> @@ -903,7 +934,7 @@ static struct mddev *mddev_alloc(dev_t unit)
->   static void mddev_free(struct mddev *mddev)
->   {
->   	spin_lock(&all_mddevs_lock);
-> -	list_del(&mddev->all_mddevs);
-> +	mddev_unlist(mddev);
->   	spin_unlock(&all_mddevs_lock);
->  =20
->   	mddev_destroy(mddev);
-> @@ -969,21 +1000,7 @@ void mddev_unlock(struct mddev *mddev)
->   		export_rdev(rdev);
+> @@ -414,6 +414,20 @@ bool md_handle_request(struct mddev *mddev, struct b=
+io *bio)
+>   		if (!percpu_ref_tryget_live(&mddev->active_io))
+>   			goto check_suspended;
 >   	}
->  =20
-> -	if (!legacy_async_del_gendisk) {
-> -		/*
-> -		 * Call del_gendisk after release reconfig_mutex to avoid
-> -		 * deadlock (e.g. call del_gendisk under the lock and an
-> -		 * access to sysfs files waits the lock)
-> -		 * And MD_DELETED is only used for md raid which is set in
-> -		 * do_md_stop. dm raid only uses md_stop to stop. So dm raid
-> -		 * doesn't need to check MD_DELETED when getting reconfig lock
-> -		 */
-> -		if (test_bit(MD_DELETED, &mddev->flags) &&
-> -		    !test_and_set_bit(MD_DO_DELETE, &mddev->flags)) {
-> -			kobject_del(&mddev->kobj);
-> -			del_gendisk(mddev->gendisk);
-> -		}
-> -	}
-> +	mddev_delete_gendisk(mddev);
-
-I think this should be the only place to do del_gendisk(), and mddev should=
- be
-removed from the global list after del_gendisk immediately. I do see why yo=
-u're
-doing this separately when all mddev reference is dropped.
-
->   }
->   EXPORT_SYMBOL_GPL(mddev_unlock);
->  =20
-> @@ -6174,13 +6191,10 @@ static void md_kobj_release(struct kobject *ko)
->   {
->   	struct mddev *mddev =3D container_of(ko, struct mddev, kobj);
->  =20
-> -	if (legacy_async_del_gendisk) {
-> -		if (mddev->sysfs_state)
-> -			sysfs_put(mddev->sysfs_state);
-> -		if (mddev->sysfs_level)
-> -			sysfs_put(mddev->sysfs_level);
-> -		del_gendisk(mddev->gendisk);
-> -	}
-> +	if (mddev->sysfs_state)
-> +		sysfs_put(mddev->sysfs_state);
-> +	if (mddev->sysfs_level)
-> +		sysfs_put(mddev->sysfs_level);
->   	put_disk(mddev->gendisk);
->   }
->  =20
-> @@ -6293,13 +6307,6 @@ void mddev_update_io_opt(struct mddev *mddev, unsi=
-gned int nr_stripes)
->   }
->   EXPORT_SYMBOL_GPL(mddev_update_io_opt);
->  =20
-> -static void mddev_delayed_delete(struct work_struct *ws)
-> -{
-> -	struct mddev *mddev =3D container_of(ws, struct mddev, del_work);
-> -
-> -	kobject_put(&mddev->kobj);
-> -}
-> -
->   void md_init_stacking_limits(struct queue_limits *lim)
->   {
->   	blk_set_stacking_limits(lim);
-> @@ -6327,12 +6334,6 @@ struct mddev *md_alloc(dev_t dev, char *name)
->   	int unit;
->   	int error;
->  =20
-> -	/*
-> -	 * Wait for any previous instance of this device to be completely
-> -	 * removed (mddev_delayed_delete).
-> -	 */
-> -	flush_workqueue(md_misc_wq);
-> -
->   	mutex_lock(&disks_mutex);
->   	mddev =3D mddev_alloc(dev);
->   	if (IS_ERR(mddev)) {
-> @@ -6422,9 +6423,6 @@ static int md_alloc_and_put(dev_t dev, char *name)
->   {
->   	struct mddev *mddev =3D md_alloc(dev, name);
->  =20
-> -	if (legacy_async_del_gendisk)
-> -		pr_warn("md: async del_gendisk mode will be removed in future, please =
-upgrade to mdadm-4.5+\n");
-> -
->   	if (IS_ERR(mddev))
->   		return PTR_ERR(mddev);
->   	mddev_put(mddev);
-> @@ -6979,21 +6977,10 @@ static void md_clean(struct mddev *mddev)
->   	mddev->level =3D LEVEL_NONE;
->   	mddev->clevel[0] =3D 0;
->  =20
-> -	/*
-> -	 * For legacy_async_del_gendisk mode, it can stop the array in the
-> -	 * middle of assembling it, then it still can access the array. So
-> -	 * it needs to clear MD_CLOSING. If not legacy_async_del_gendisk,
-> -	 * it can't open the array again after stopping it. So it doesn't
-> -	 * clear MD_CLOSING.
-> -	 */
-> -	if (legacy_async_del_gendisk && mddev->hold_active) {
-> -		clear_bit(MD_CLOSING, &mddev->flags);
-> -	} else {
-> -		/* if UNTIL_STOP is set, it's cleared here */
-> -		mddev->hold_active =3D 0;
-> -		/* Don't clear MD_CLOSING, or mddev can be opened again. */
-> -		mddev->flags &=3D BIT_ULL_MASK(MD_CLOSING);
-> -	}
-> +	/* if UNTIL_STOP is set, it's cleared here */
-> +	mddev->hold_active =3D 0;
-> +	/* Don't clear MD_CLOSING, or mddev can be opened again. */
-> +	mddev->flags &=3D BIT_ULL_MASK(MD_CLOSING);
->   	mddev->sb_flags =3D 0;
->   	mddev->ro =3D MD_RDWR;
->   	mddev->metadata_type[0] =3D 0;
-> @@ -7222,8 +7209,7 @@ static int do_md_stop(struct mddev *mddev, int mode=
-)
->  =20
->   		export_array(mddev);
->   		md_clean(mddev);
-> -		if (!legacy_async_del_gendisk)
-> -			set_bit(MD_DELETED, &mddev->flags);
-> +		set_bit(MD_DELETED, &mddev->flags);
->   	}
->   	md_new_event();
->   	sysfs_notify_dirent_safe(mddev->sysfs_state);
-> @@ -8977,10 +8963,32 @@ static int status_resync(struct seq_file *seq, st=
-ruct mddev *mddev)
->   	return 1;
->   }
->  =20
-> +/*
-> + * seq_file walks all_mddevs with the lock held across next().  Last put
-> + * cannot complete_delete in show() or the current list node is freed
-> + * before next().  Stash it in seq->private and delete after the iterato=
-r
-> + * has moved on: the next show() pins the new current first, stop()
-> + * handles the last one.
-> + */
-> +static void md_seq_flush_delete(struct seq_file *seq)
-> +{
-> +	struct mddev *mddev =3D seq->private;
-> +
-> +	if (!mddev)
-> +		return;
-> +
-> +	seq->private =3D NULL;
-> +	mddev_unlist(mddev);
-> +	spin_unlock(&all_mddevs_lock);
-> +	mddev_complete_delete(mddev);
-> +	spin_lock(&all_mddevs_lock);
-> +}
-> +
->   static void *md_seq_start(struct seq_file *seq, loff_t *pos)
->   	__acquires(&all_mddevs_lock)
->   {
->   	seq->poll_event =3D atomic_read(&md_event_count);
-> +	seq->private =3D NULL;
->   	spin_lock(&all_mddevs_lock);
->  =20
->   	return seq_list_start_head(&all_mddevs, *pos);
-> @@ -8994,7 +9002,14 @@ static void *md_seq_next(struct seq_file *seq, voi=
-d *v, loff_t *pos)
->   static void md_seq_stop(struct seq_file *seq, void *v)
->   	__releases(&all_mddevs_lock)
->   {
-> +	struct mddev *mddev =3D seq->private;
-> +
-> +	seq->private =3D NULL;
-> +	if (mddev)
-> +		mddev_unlist(mddev);
->   	spin_unlock(&all_mddevs_lock);
-> +	if (mddev)
-> +		mddev_complete_delete(mddev);
->   }
->  =20
->   static void md_bitmap_status(struct seq_file *seq, struct mddev *mddev)
-> @@ -9044,6 +9059,9 @@ static int md_seq_show(struct seq_file *seq, void *=
-v)
->   	if (!mddev_get(mddev))
->   		return 0;
->  =20
-> +	/* Previous node is no longer the iterator; delete it if we last-put it=
-. */
-> +	md_seq_flush_delete(seq);
-> +
->   	spin_unlock(&all_mddevs_lock);
->  =20
->   	/* prevent bitmap to be freed after checking */
-> @@ -9130,7 +9148,8 @@ static int md_seq_show(struct seq_file *seq, void *=
-v)
->   	if (mddev =3D=3D list_last_entry(&all_mddevs, struct mddev, all_mddevs=
-))
->   		status_unused(seq);
->  =20
-> -	mddev_put_locked(mddev);
-> +	if (mddev_put_locked(mddev))
-> +		seq->private =3D mddev;
->   	return 0;
->   }
->  =20
-> @@ -10714,13 +10733,21 @@ EXPORT_SYMBOL_GPL(rdev_clear_badblocks);
->   static int md_notify_reboot(struct notifier_block *this,
->   			    unsigned long code, void *x)
->   {
-> -	struct mddev *mddev;
-> +	struct mddev *mddev, *pending =3D NULL;
-> +	bool complete_delete;
->  =20
->   	spin_lock(&all_mddevs_lock);
->   	list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
->   		if (!mddev_get(mddev))
->   			continue;
-> +
-> +		if (pending)
-> +			mddev_unlist(pending);
->   		spin_unlock(&all_mddevs_lock);
-> +		if (pending) {
-> +			mddev_complete_delete(pending);
-> +			pending =3D NULL;
-> +		}
->   		if (mddev_trylock(mddev)) {
->   			if (mddev->pers)
->   				__md_stop_writes(mddev);
-> @@ -10729,9 +10756,15 @@ static int md_notify_reboot(struct notifier_bloc=
-k *this,
->   			mddev_unlock(mddev);
->   		}
->   		spin_lock(&all_mddevs_lock);
-> -		mddev_put_locked(mddev);
-> +		complete_delete =3D mddev_put_locked(mddev);
-> +		if (complete_delete)
-> +			pending =3D mddev;
->   	}
-> +	if (pending)
-> +		mddev_unlist(pending);
->   	spin_unlock(&all_mddevs_lock);
-> +	if (pending)
-> +		mddev_complete_delete(pending);
->  =20
->   	return NOTIFY_DONE;
->   }
-> @@ -11054,7 +11087,8 @@ void md_autostart_arrays(int part)
->  =20
->   static __exit void md_exit(void)
->   {
-> -	struct mddev *mddev;
-> +	struct mddev *mddev, *pending =3D NULL;
-> +	bool complete_delete;
->   	int delay =3D 1;
->  =20
->   	unregister_blkdev(MD_MAJOR,"md");
-> @@ -11078,19 +11112,26 @@ static __exit void md_exit(void)
->   	list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
->   		if (!mddev_get(mddev))
->   			continue;
-> +		if (pending)
-> +			mddev_unlist(pending);
->   		spin_unlock(&all_mddevs_lock);
-> +		if (pending) {
-> +			mddev_complete_delete(pending);
-> +			pending =3D NULL;
-> +		}
->   		export_array(mddev);
->   		mddev->ctime =3D 0;
->   		mddev->hold_active =3D 0;
-> -		/*
-> -		 * As the mddev is now fully clear, mddev_put will schedule
-> -		 * the mddev for destruction by a workqueue, and the
-> -		 * destroy_workqueue() below will wait for that to complete.
-> -		 */
->   		spin_lock(&all_mddevs_lock);
-> -		mddev_put_locked(mddev);
-> +		complete_delete =3D mddev_put_locked(mddev);
-> +		if (complete_delete)
-> +			pending =3D mddev;
->   	}
-> +	if (pending)
-> +		mddev_unlist(pending);
->   	spin_unlock(&all_mddevs_lock);
-> +	if (pending)
-> +		mddev_complete_delete(pending);
->  =20
->   	destroy_workqueue(md_misc_wq);
->   	md_bitmap_exit();
-> @@ -11112,7 +11153,6 @@ module_param_call(start_ro, set_ro, get_ro, NULL,=
- S_IRUSR|S_IWUSR);
->   module_param(start_dirty_degraded, int, S_IRUGO|S_IWUSR);
->   module_param_call(new_array, add_named_array, NULL, NULL, S_IWUSR);
->   module_param(create_on_open, bool, S_IRUSR|S_IWUSR);
-> -module_param(legacy_async_del_gendisk, bool, 0600);
->   module_param(check_new_feature, bool, 0600);
->  =20
->   MODULE_LICENSE("GPL");
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index b6d2e8929a0f..16a236bd37ce 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -549,8 +549,6 @@ struct mddev {
->   	struct kernfs_node		*sysfs_degraded;	/*handle for 'degraded' */
->   	struct kernfs_node		*sysfs_level;		/*handle for 'level' */
->  =20
-> -	/* used for delayed sysfs removal */
-> -	struct work_struct del_work;
->   	/* used for register new sync thread */
->   	struct work_struct sync_work;
->  =20
+> +	if (!mddev->pers) {
+> +		/*
+> +		 * The __md_stop() sets 'mddev->private' to NULL during
+> +		 * the IO submitting, check 'mddev->pers' before the IO
+> +		 * being processed by specific driver to avoid the
+> +		 * null-ptr-deref of 'mddev-><member>'. The check is
+> +		 * safe because the IO has got the 'mddev->active_io'
+> +		 * reference, and all __md_stop() callers will wait for
+> +		 * the reference to be zero.
+> +		 */
+> +		bio_io_error(bio);
+> +		percpu_ref_put(&mddev->active_io);
+> +		return true;
+> +	}
+>   	if (!mddev->pers->make_request(mddev, bio)) {
+>   		percpu_ref_put(&mddev->active_io);
+>   		if (mddev_is_dm(mddev) && mddev->pers->prepare_suspend)
+> @@ -4670,7 +4684,7 @@ array_state_store(struct mddev *mddev, const char *=
+buf, size_t len)
+>   	case readonly:
+>   	case inactive:
+>   	case read_auto:
+> -		if (!mddev->pers || !md_is_rdwr(mddev))
+> +		if (!mddev->pers || (st !=3D inactive && !md_is_rdwr(mddev)))
+>   			break;
+>   		/* write sysfs will not open mddev and opener should be 0 */
+>   		err =3D mddev_set_closing_and_sync_blockdev(mddev, 0);
+> @@ -8299,6 +8313,7 @@ static bool md_ioctl_need_suspend(unsigned int cmd)
+>   	case HOT_REMOVE_DISK:
+>   	case SET_BITMAP_FILE:
+>   	case SET_ARRAY_INFO:
+> +	case STOP_ARRAY:
+>   		return true;
+>   	default:
+>   		return false;
 
 --=20
 Thanks,
