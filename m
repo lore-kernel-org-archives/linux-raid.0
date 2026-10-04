@@ -1,180 +1,250 @@
-Received: from va-2-55.ptr.blmpb.com (va-2-55.ptr.blmpb.com [209.127.231.55])
+Received: from va-2-58.ptr.blmpb.com (va-2-58.ptr.blmpb.com [209.127.231.58])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EA933C1983
-	for <linux-raid@vger.kernel.org>; Sun,  4 Oct 2026 15:51:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64DBE346E64
+	for <linux-raid@vger.kernel.org>; Sun,  4 Oct 2026 15:55:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.58
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791129103; cv=none; b=r7l2Xi96if0YFd9w0WbskN2O4rHljmq3LXktcaal9TL11w7vdY7CBkAtQvnsCdKYXlMwLH3vfaXEJfFjPVJzzkLM7RU20BIJ6XFJnyYVIwBq15+6bRaEWNZwnqjRqcxp9MCVN9IOwgrnddd2L0/6Sx8tvvRUvo5fVj13AM1fWdQ=
+	t=1791129303; cv=none; b=Qe/JbPdW5Gc6xGko6Cin0ksJPY3Sh/GFsxw9Nj9BC9tBFRSRAGS5xdqwdeHAk3c6MNuGJ8Qy4Q7Cq86TrmFq98SFgnrxYjssg+h6nrkPeHp2BVQr1W9Ft/ngmaGvbOPuSmJqqKpEPqM7GKOqPmLtx1itCxGoPz7wpUWSzqOBxgw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791129103; c=relaxed/simple;
-	bh=JYfSDbevSyklrFpxJ/wTrpgYy/neyqm9a6uWSluHa+U=;
-	h=Content-Type:Subject:To:Cc:From:Mime-Version:References:Date:
-	 Message-Id:In-Reply-To; b=F6m8C5QFwOh9ohImW7hx8PT4FyKBjZEWJW6uumsEj3RZbRyqxsTL6eHyGOjrA5sqToGN1OEurdtpoR2aVfLxt2LtMQjCibU1y72DfnmV+UnXs+LxAiM3nUWP/MiogZkEPVqf8ZWcfoB0Ah/skqPAAZ/BUrLQGu7HJpG80+NMTsI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=L3Ao1wLJ; arc=none smtp.client-ip=209.127.231.55
+	s=arc-20240116; t=1791129303; c=relaxed/simple;
+	bh=rtPD//bWwu393dOBBUWZx/CheiAozL89AO3KCZYdFBA=;
+	h=References:Cc:From:In-Reply-To:Subject:Message-Id:Date:
+	 Mime-Version:Content-Type:To; b=q5yI+2Z8uKrxEm4c0e0iJ2j362ZvtRBLae5hly4BllBNVxG4ZCc7MZIS6sTzVelzl9+9P7QnRymGVrEzVmXPsogZb1S0wQj/duqqnNIs+3N0kL4r8uxCyE/u+tWgtiy2SZb7bB2WlkIyLDq94vLxJFXE4gkIKsJSlGlrvGLluWU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=VxkqIgNd; arc=none smtp.client-ip=209.127.231.58
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="L3Ao1wLJ"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="VxkqIgNd"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1791129083;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1791129290;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=N0IBTDh9NOUscIgRtt+2unFn8HLJ72nJ0CB0mU61Q9Q=;
- b=L3Ao1wLJioIMwWdagYezGOv0RneyqwjZ6HcbRdW7BH26SPOTD8YYQmD2iC9Te2Fm7ZZtOt
- EQCtIz6Nt0drrbBZ7bCSD3Z+y1R4se8Hb6B7HPdYZuX5z5TythzmgYVZO6+QGyn0lbuMQ9
- fRJ9MWqYeqg+UUZN1WzzvwhuDJw2IEs0xxWU/HLJfp5rh2vJQ8fM4muwO5ZlEY0VToSwaj
- SBfSWVOv9OYRGUmMM+oeIyrtY0C1ATPga3LOVKfmpC2K7ywj7GuH2o1fYIqY/uHr9gW/uR
- v4g5lbCMfo/mQsaujV8lupc/wRsuhrCQPcrYT2Zs2GTUQhZbWbqj8pUIVVCeFA==
-Content-Type: text/plain; charset=UTF-8
-Subject: Re: [PATCH v5] md: Fix the null-ptr-deref of 'mddev->private' while submitting IO
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Mozilla Thunderbird
-To: "Zhihao Cheng" <chengzhihao1@huawei.com>, <song@kernel.org>, 
-	<magiclinan@didiglobal.com>, <xiao@kernel.org>, <eadavis@sina.com>, 
-	<abd.masalkhi@gmail.com>, "yu kuai" <yukuai@fygo.io>
-Cc: <linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>, 
-	<yi.zhang@huawei.com>, 
-	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+ bh=4vryk1DEKogU2H6y67+W/lTNTWEftQjvJaN1iwXNBN0=;
+ b=VxkqIgNdFSXgDlEg4vTk0Ru7sakLFC9itHcH++xpFjUIEbeHx+t0T9M3cCP/CVEuC/oEkp
+ 07dOkEF/URi3GdYk34iNCzwaK00A/ymN+9k3qm+VMtGxeNTNEVVP6D4pNw5+gg0lnr8aKI
+ suwUEfvs0ee0FXSdpbPvS/U5GUZPTdEaBSdE5Ul0sSklPw2LugrLwyyoUTavxGiFaCVKRC
+ Qz80P8uxN5tRCf1DMvbh91T0GbyyLTs2+pPloQ3avehuU/woYAPkJ8p02vSxKw08i/sWnF
+ uQOH10Lw4QMFGuYUQQdxyPtQx2NwTr8hT/6Lw/N7dm6Dh/pGM7ZS2WIW9gcqtA==
+References: <20261003101948.1690687-1-dayou5941@163.com>
+Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	"Li Youhong" <liyouhong@kylinos.cn>, 
+	<syzbot+89a9ab2a134d092fffae@syzkaller.appspotmail.com>
 From: "yu kuai" <yukuai@fygo.io>
+In-Reply-To: <20261003101948.1690687-1-dayou5941@163.com>
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH] md: drain active_io before clearing pers on stop
+Message-Id: <44ca54b6-9012-4d25-93ff-743c34231c2b@fygo.io>
+X-Lms-Return-Path: <lba+26ac276c9+f57c47+vger.kernel.org+yukuai@fygo.io>
+X-Original-From: yu kuai <yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.177]) by smtp.larksuite.com with ESMTPS; Sun, 04 Oct 2026 15:54:48 +0000
+Reply-To: yukuai@fygo.io
+Date: Sun, 4 Oct 2026 23:54:45 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-References: <20260922030538.1634904-1-chengzhihao1@huawei.com>
-Received: from [192.168.1.104] ([39.182.0.177]) by smtp.larksuite.com with ESMTPS; Sun, 04 Oct 2026 15:51:22 +0000
-Reply-To: yukuai@fygo.io
-Date: Sun, 4 Oct 2026 23:51:18 +0800
-Message-Id: <f02cbef7-4a8b-440b-894d-af91df7bdf76@fygo.io>
-In-Reply-To: <20260922030538.1634904-1-chengzhihao1@huawei.com>
-X-Lms-Return-Path: <lba+26ac275fa+7e1b2c+vger.kernel.org+yukuai@fygo.io>
-X-Original-From: yu kuai <yukuai@fygo.io>
+Content-Type: text/plain; charset=UTF-8
+To: "Li Youhong" <dayou5941@163.com>, <song@kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+User-Agent: Mozilla Thunderbird
 
 Hi,
 
-=E5=9C=A8 2026/9/22 11:05, Zhihao Cheng =E5=86=99=E9=81=93:
-> Concurrent processes md_stop and IO submitting could trigger a
-> null-ptr-deref of 'mddev->private':
+=E5=9C=A8 2026/10/3 18:19, Li Youhong =E5=86=99=E9=81=93:
+> From: Li Youhong <liyouhong@kylinos.cn>
 >
->   BUG: kernel NULL pointer dereference, address: 0000000000000070
->   RIP: 0010:_wait_barrier+0x2f/0x250
->   Call Trace:
->    raid1_make_request+0x150/0xf50
->    md_handle_request+0x104/0x530
->    md_submit_bio+0x76/0x130
->    submit_bio+0xdd/0x250
->    submit_bio_wait+0x1f/0x40
->    __blkdev_direct_IO_simple+0x1f6/0x370
->    blkdev_write_iter+0x3b2/0x520
->    ksys_write+0x7d/0x190
+> STOP_ARRAY clears mddev->pers while a direct bio can already be in
+> md_handle_request(). fork() shares the block-device file, so openers
+> stays 1 and the stop is allowed, and sync_blockdev() does not wait for
+> O_DIRECT. The bio passes the pers check in md_submit_bio(), then pers
+> is cleared and md_handle_request() dereferences pers->make_request.
 >
->                P1
->    fd =3D open(/dev/md0, O_RDWR)
-> 	                      P2 (forked from P1, fd' <=3D fd)
->    write(fd)
->     submit_bio
->      md_handle_request
->       raid1_make_request
->        raid1_write_request
->                                    ioctl(fd, STOP_ARRAY)
-> 		                   mddev_set_closing_and_sync_blockdev
-> 				   // check passed, mddev->openers =3D 1,
-> 				   // because md_open() is only called
-> 				   // once in P1->open
-> 				   do_md_stop
-> 				    __md_stop
-> 				     mddev->private =3D NULL
+> Suspend the array before __md_stop() so percpu_ref_kill(active_io) makes
+> later tryget_live fail and the wait runs until every make_request holder
+> has dropped the ref. The suspend taken here is resumed after pers is
+> cleared, which wakes bios blocked in md_handle_request(). They see
+> pers =3D=3D NULL and complete with bio_io_error(). dm-raid already holds
+> its own suspend across md_stop() and that path is unchanged.
 >
->         conf =3D mddev->private // NULL
->          wait_barrier(conf, sector) // null-ptr-deref !
+> reconfig_mutex is dropped around mddev_suspend() and mddev_resume().
+> stop_draining is set across that window so mddev_lock() returns
+> -EBUSY.
 >
-> It is a common problem for raid0/1/10/5, and __md_stop could be triggered
-> by several paths(eg. ioctl, sysfs, ->dtr). Fix it by replacing
-> mddev_lock() with mddev_suspend_and_lock() for all __md_stop() callers.
-> The caller array_state_store() is guaranteed by the check
-> mddev_set_closing_and_sync_blockdev(mddev, 0), we just need to remove
-> the check '!md_is_rdwr'. For example, someone open /dev/mdx, write
-> something and close /dev/mdx, it won't trigger the problem, all dirty
-> pages can be flushed before mddev->openers decrement.
-> The caller dm_table_destroy() is guaranteed being invoked with device
-> suspended, so raid_dtr() could keep using mddev_lock_nointr().
-> Besides, fail the submitting IO in md_handle_request() if the
-> 'mddev->pers' becomes NULL.
->
-> Fetch a reproducer in https://bugzilla.kernel.org/show_bug.cgi?id=3D22202=
-0
->
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Reported-by: syzbot+3fe892ea5fc292e1353f@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3D3fe892ea5fc292e1353f
-> Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
+> Reported-by: syzbot+89a9ab2a134d092fffae@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=3D89a9ab2a134d092fffae
+> Fixes: 409c57f38017 ("md: enable suspend/resume of md devices.")
+> Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
 > ---
->   v1->v2:
->    1. Add 'mddev->pers !=3D NULL' check before make_request
->    2. Delete dm-raid caller(->dtr) modifications
->    3. Move memalloc_noio_restore after mddev_unlock_and_resume
->   v2->v3:
->    1. Remove modifications in array_state_store()
->    2. update commit msg
->   v3->v4:
->    1. Remove '!md_is_rdwr' check from array_state_store()
->    2. update commit msg
->   v4->v5:
->    1. Skip checking '!md_is_rdwr' only for inactive case
->   drivers/md/md.c | 17 ++++++++++++++++-
->   1 file changed, 16 insertions(+), 1 deletion(-)
-
-This patch is missed because it's not in patchwork. :(
-
-Applied to md-7.4
-
+>   drivers/md/md.c | 62 ++++++++++++++++++++++++++++++++++++++++++++++---
+>   drivers/md/md.h |  7 ++++++
+>   2 files changed, 66 insertions(+), 3 deletions(-)
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 680b34a63cb3..02798f2dbf0e 100644
+> index 680b34a63cb3..85158a99277f 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -414,6 +414,20 @@ bool md_handle_request(struct mddev *mddev, struct b=
+> @@ -395,6 +395,8 @@ static bool is_suspended(struct mddev *mddev, struct =
+bio *bio)
+>  =20
+>   bool md_handle_request(struct mddev *mddev, struct bio *bio)
+>   {
+> +	struct md_personality *pers;
+> +
+>   check_suspended:
+>   	if (unlikely(md_cloned_bio(mddev, bio))) {
+>   		/*
+> @@ -402,6 +404,12 @@ bool md_handle_request(struct mddev *mddev, struct b=
 io *bio)
+>   		 * active_io reference, so percpu_ref_get() is safe here.
+>   		 */
+>   		percpu_ref_get(&mddev->active_io);
+> +		pers =3D READ_ONCE(mddev->pers);
+> +		if (!pers) {
+> +			percpu_ref_put(&mddev->active_io);
+> +			bio_io_error(bio);
+> +			return true;
+> +		}
+>   	} else {
+>   		if (is_suspended(mddev, bio)) {
+>   			/* Bail out if REQ_NOWAIT is set for the bio */
+> @@ -409,14 +417,20 @@ bool md_handle_request(struct mddev *mddev, struct =
+bio *bio)
+>   				bio_wouldblock_error(bio);
+>   				return true;
+>   			}
+> -			wait_event(mddev->sb_wait, !is_suspended(mddev, bio));
+> +			wait_event(mddev->sb_wait, !is_suspended(mddev, bio) ||
+> +				   !READ_ONCE(mddev->pers));
+> +		}
+> +		pers =3D READ_ONCE(mddev->pers);
+> +		if (!pers) {
+> +			bio_io_error(bio);
+> +			return true;
+>   		}
 >   		if (!percpu_ref_tryget_live(&mddev->active_io))
 >   			goto check_suspended;
 >   	}
-> +	if (!mddev->pers) {
-> +		/*
-> +		 * The __md_stop() sets 'mddev->private' to NULL during
-> +		 * the IO submitting, check 'mddev->pers' before the IO
-> +		 * being processed by specific driver to avoid the
-> +		 * null-ptr-deref of 'mddev-><member>'. The check is
-> +		 * safe because the IO has got the 'mddev->active_io'
-> +		 * reference, and all __md_stop() callers will wait for
-> +		 * the reference to be zero.
-> +		 */
-> +		bio_io_error(bio);
-> +		percpu_ref_put(&mddev->active_io);
-> +		return true;
-> +	}
->   	if (!mddev->pers->make_request(mddev, bio)) {
+> -	if (!mddev->pers->make_request(mddev, bio)) {
+> +	if (!pers->make_request(mddev, bio)) {
 >   		percpu_ref_put(&mddev->active_io);
->   		if (mddev_is_dm(mddev) && mddev->pers->prepare_suspend)
-> @@ -4670,7 +4684,7 @@ array_state_store(struct mddev *mddev, const char *=
-buf, size_t len)
->   	case readonly:
->   	case inactive:
->   	case read_auto:
-> -		if (!mddev->pers || !md_is_rdwr(mddev))
-> +		if (!mddev->pers || (st !=3D inactive && !md_is_rdwr(mddev)))
->   			break;
->   		/* write sysfs will not open mddev and opener should be 0 */
->   		err =3D mddev_set_closing_and_sync_blockdev(mddev, 0);
-> @@ -8299,6 +8313,7 @@ static bool md_ioctl_need_suspend(unsigned int cmd)
->   	case HOT_REMOVE_DISK:
->   	case SET_BITMAP_FILE:
->   	case SET_ARRAY_INFO:
-> +	case STOP_ARRAY:
->   		return true;
->   	default:
->   		return false;
+> -		if (mddev_is_dm(mddev) && mddev->pers->prepare_suspend)
+> +		if (mddev_is_dm(mddev) && pers->prepare_suspend)
+>   			return false;
+>   		goto check_suspended;
+>   	}
+> @@ -7097,6 +7111,32 @@ static void __md_stop(struct mddev *mddev)
+>   	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+>   }
+>  =20
+> +/* Drop reconfig_mutex around suspend so in-flight IO can update the sup=
+erblock. */
+> +static int md_suspend_for_stop(struct mddev *mddev, bool interruptible)
+> +{
+> +	int err;
+> +
+> +	lockdep_assert_held(&mddev->reconfig_mutex);
+> +
+> +	WRITE_ONCE(mddev->stop_draining, 1);
+> +	mutex_unlock(&mddev->reconfig_mutex);
+
+Creating a new wheel will just make code more complicated. Check following =
+patch for the
+correct fix:
+
+[PATCH v5] md: Fix the null-ptr-deref of 'mddev->private' while=20
+submitting IO - Zhihao Cheng <https://lore.kernel.org/all/20260922030538.16=
+34904-1-chengzhihao1@huawei.com/>
+
+> +	err =3D mddev_suspend(mddev, interruptible);
+> +	mddev_lock_nointr(mddev);
+> +	WRITE_ONCE(mddev->stop_draining, 0);
+> +	return err;
+> +}
+> +
+> +static void md_resume_for_stop(struct mddev *mddev)
+> +{
+> +	lockdep_assert_held(&mddev->reconfig_mutex);
+> +
+> +	WRITE_ONCE(mddev->stop_draining, 1);
+> +	mutex_unlock(&mddev->reconfig_mutex);
+> +	__mddev_resume(mddev, false);
+> +	mddev_lock_nointr(mddev);
+> +	WRITE_ONCE(mddev->stop_draining, 0);
+> +}
+> +
+>   void md_stop(struct mddev *mddev)
+>   {
+>   	lockdep_assert_held(&mddev->reconfig_mutex);
+> @@ -7164,6 +7204,8 @@ static int do_md_stop(struct mddev *mddev, int mode=
+)
+>   	struct gendisk *disk =3D mddev->gendisk;
+>   	struct md_rdev *rdev;
+>   	int did_freeze =3D 0;
+> +	int err =3D 0;
+> +	int resume =3D 0;
+>  =20
+>   	if (!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
+>   		did_freeze =3D 1;
+> @@ -7181,6 +7223,18 @@ static int do_md_stop(struct mddev *mddev, int mod=
+e)
+>   		}
+>   		return -EBUSY;
+>   	}
+> +
+> +	if (mddev->pers) {
+> +		err =3D md_suspend_for_stop(mddev, true);
+> +		if (err) {
+> +			if (did_freeze) {
+> +				clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+> +				set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> +			}
+> +			return err;
+> +		}
+> +		resume =3D 1;
+> +	}
+>   	if (mddev->pers) {
+>   		if (!md_is_rdwr(mddev))
+>   			set_disk_ro(disk, 0);
+> @@ -7205,6 +7259,8 @@ static int do_md_stop(struct mddev *mddev, int mode=
+)
+>   		if (!md_is_rdwr(mddev))
+>   			mddev->ro =3D MD_RDWR;
+>   	}
+> +	if (resume)
+> +		md_resume_for_stop(mddev);
+>   	/*
+>   	 * Free resources if final stop
+>   	 */
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index b6d2e8929a0f..745f0c57f669 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -414,6 +414,8 @@ struct mddev {
+>   	unsigned long			sb_flags;
+>  =20
+>   	int				suspended;
+> +	/* Set while do_md_stop() has dropped reconfig_mutex to drain IO. */
+> +	int				stop_draining;
+>   	struct mutex			suspend_mutex;
+>   	struct percpu_ref		active_io;
+>   	int				ro;
+> @@ -719,6 +721,11 @@ static inline int __must_check mddev_lock(struct mdd=
+ev *mddev)
+>   		ret =3D -ENODEV;
+>   		mutex_unlock(&mddev->reconfig_mutex);
+>   	}
+> +	/* do_md_stop() is waiting for active_io with the mutex dropped. */
+> +	if (!ret && READ_ONCE(mddev->stop_draining)) {
+> +		ret =3D -EBUSY;
+> +		mutex_unlock(&mddev->reconfig_mutex);
+> +	}
+>  =20
+>   	return ret;
+>   }
 
 --=20
 Thanks,
