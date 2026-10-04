@@ -1,116 +1,102 @@
-Received: from sg-3-41.ptr.tlmpb.com (sg-3-41.ptr.tlmpb.com [101.45.255.41])
+Received: from va-2-41.ptr.blmpb.com (va-2-41.ptr.blmpb.com [209.127.231.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 181F01A6839
-	for <linux-raid@vger.kernel.org>; Sun,  4 Oct 2026 03:53:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.45.255.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17CCC3E2777
+	for <linux-raid@vger.kernel.org>; Sun,  4 Oct 2026 03:54:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791086000; cv=none; b=jDARDyy6QQEQg0wH2z0uzNmnyCT9HnAqt5bQR6rIo7uq71qq/ZEOqXyqBeljVBH88oLj2NGX60FSzjVAXjPOaF8qEgK6xHzOsIe7ClPfcyH4IpV+2sUgCwSMZzLzYYeOXnagTTdTX2Exe9+3mq1U+OR7VLKI0nTxBR+evx3WJ9E=
+	t=1791086043; cv=none; b=fDzFTwOPpPGB4iLTr9K6chNfZ0lzl8sxuNJ396xIyZ2dBGqwjDsnUileu2/6sr6KTCdo0ILCWCzBH4JuviX2qahrOPAdnIHdAgtb80v7h5XBtYRwoNBV0xVNR5l/ezqf8p8Owae0TQ8CwwHENrBeDM28mh8akWoNPhnG/Dh8h10=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791086000; c=relaxed/simple;
-	bh=Ep7IT0ck+xBa0P5klyVmk1emoi8mxIzON6nalVuIwYs=;
-	h=In-Reply-To:Cc:From:Message-Id:References:Date:To:Subject:
-	 Mime-Version:Content-Type; b=GWneb3ozEfuX8CxwFskXY2/OWryJRAO13Jbspl6H+Eqz/0xCmuzeOrSzP9PN8AMv9AaWoDtBo6lKZ+BYRvrON1Hmfh5h6Mdz7fbepv90NTEOTo4hRD3C/FRAyffWtO3AQiiZX3aZJXsJ99UhrXSZ12voH0Z3uxO04TMZ7fIJFb4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=oIt9bvdP; arc=none smtp.client-ip=101.45.255.41
+	s=arc-20240116; t=1791086043; c=relaxed/simple;
+	bh=Kjz23xee0EkCTSKLH7Jr2MiDr3Ha+F7EK9SH+wKIMoU=;
+	h=References:To:Cc:Mime-Version:Content-Type:In-Reply-To:From:
+	 Subject:Date:Message-Id; b=PC4I4ny/eorANCuD+NxAQYjpb0zna4ZGJJ+JKDZES25sY+P2kAza3Rc45LjI2vzmCiLkojEj8ALS8+VstKcqbsZaJR1o275BgVinYFKsYb5UZfuLGrzlYoLh6yF85YPDCuTuu2fF3qe5dqny5sg29wGvMV6m4RZMoM88AQHri18=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=OvrM1k/M; arc=none smtp.client-ip=209.127.231.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="oIt9bvdP"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="OvrM1k/M"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1791085944;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1791086027;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=iYuotfuky80by1yRYN0ON0JErjNwp79Y3Ap8BM7muK0=;
- b=oIt9bvdPnThgpn+eRS+M3eHgdDl78wGqEiL9RuSUNMTdHvpu5AlD46Pz6KsGadW1QzWbsr
- XHnlnuPadx9kouDwrzZIrZFmRyqZvbWPqIOyw138Nx9f5c7WUkdZagc3dde5gZ9CQrZ85a
- itvNwax7D4TXcwuYWrAX1oTzwEWWPw9Gn+U4DuGXXcWhfI9/AKYUYZYvoYFp3mv6fW63Mf
- IOsIGQa4L/4sLd0Soph8vbnag5ueJXvhz9/dEI+VTb6Yd4qtOKg5qkGApc7yOxryFQ42hF
- 3lODlbFbSSK81wqWKDv5c9Rcpue4EhcV3hCNbcc8bFRg0RgieHQsJZWyPRBw6w==
+ bh=O8QbCgYQZlOQXUSpEPn47jxAv6RL0ZTxjvVmh8r/Vg0=;
+ b=OvrM1k/MiFm/VMA+Gy4BBDktkK5HyzcS3DwBU4Q7RLzWOxSDa89EeDu+X7+U/EF0I5C2Pw
+ ILhmZUZJJEIt18kAKE0HDJThGvlswae4gryl5zlraMlPGAHaXK+nH3CCAjvSSzL2n2/nwR
+ 5NWt/Ncsv2v7kWW85v3EP5R9VjfolKjcjPKc3/STeoWINfRS4daKt00RfW2NYaVKGoJoD3
+ qBO+5sxxrsIerkFcFFM7yYh8rKVuPo6nqzwC5fZ4bELEPlbIYWtOVdMWaJwkdJvEw/6g1W
+ FyLqIehVMfmY8dIKfHaCWjMx/JZPompF3wuWdkYtnjJ84VnFeaOPZYSIDW72sw==
+References: <20260924162610.10056-1-nsvatoslav515@gmail.com>
 Reply-To: yukuai@fygo.io
-User-Agent: Mozilla Thunderbird
-In-Reply-To: <20260924171345.75894-1-ngocthang2710.1999@gmail.com>
-Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
-	"Artur Paszkiewicz" <artur.paszkiewicz@intel.com>, 
+To: "Svyatoslav Nikolenko" <nsvatoslav515@gmail.com>, <song@kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
 	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
 	<syzbot+75d7e96ad03ac2dbbd9f@syzkaller.appspotmail.com>
-From: "yu kuai" <yukuai@fygo.io>
-Message-Id: <7a163544-d165-4d1a-9161-df82bced61b7@fygo.io>
-References: <20260924171345.75894-1-ngocthang2710.1999@gmail.com>
-Received: from [192.168.1.104] ([39.182.0.177]) by smtp.larksuite.com with ESMTPS; Sun, 04 Oct 2026 03:52:23 +0000
-Date: Sun, 4 Oct 2026 11:52:20 +0800
-X-Lms-Return-Path: <lba+26ac1cd78+97bcf1+vger.kernel.org+yukuai@fygo.io>
 X-Original-From: yu kuai <yukuai@fygo.io>
-To: "Nguyen Ngoc Thang" <ngocthang2710.1999@gmail.com>, 
-	"Song Liu" <song@kernel.org>, "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH] md: take reconfig_mutex when enabling PPL on an inactive array
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+X-Lms-Return-Path: <lba+26ac1cdcb+0c656b+vger.kernel.org+yukuai@fygo.io>
 Content-Type: text/plain; charset=UTF-8
+Received: from [192.168.1.104] ([39.182.0.177]) by smtp.larksuite.com with ESMTPS; Sun, 04 Oct 2026 03:53:46 +0000
+In-Reply-To: <20260924162610.10056-1-nsvatoslav515@gmail.com>
 Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH] md/raid5-ppl: check for NULL ppl_conf in ppl_write_stripe_run()
+Date: Sun, 4 Oct 2026 11:53:43 +0800
+Message-Id: <a61c9d13-4c8f-44ac-96e5-6387f4ae6765@fygo.io>
 
-=E5=9C=A8 2026/9/25 1:13, Nguyen Ngoc Thang =E5=86=99=E9=81=93:
+Hi,
 
-> consistency_policy_store() sets MD_HAS_PPL for an external-metadata array
-> that is not running yet, without holding reconfig_mutex.  But ->pers is
-> only assigned after pers->run() returns, so "not running" also covers an
-> md_run() that is in progress under the lock.
+=E5=9C=A8 2026/9/25 0:26, Svyatoslav Nikolenko =E5=86=99=E9=81=93:
+> Syzbot reported a general protection fault
+> due to a NULL pointer dereference in ppl_write_stripe_run().
 >
-> If the write lands inside raid5_run() after log_init() has decided not to
-> set up PPL, or after a failed ppl_init_log() has cleared the flag, the
-> flag ends up set with conf->log_private still NULL.  The next idle pass
-> of raid5d() then does:
+> When a RAID 5 array operates without Partial Parity Log (PPL) enabled or
+> before its initialization, conf->log_private remains NULL.
+> ppl_write_stripe_run() assigns ppl_conf =3D conf->log_private and
+> immediately attempts to access ppl_conf->count in the loop header.
+> This triggers a NULL pointer dereference.
 >
->    raid5d() -> handle_active_stripes() -> log_flush_stripe_to_raid()
->      -> ppl_write_stripe_run()
+> Fix this by returning early
+> from ppl_write_stripe_run() if ppl_conf is NULL.
 >
-> and dereferences the NULL ppl_conf:
->
->    Oops: general protection fault, probably for non-canonical address 0xd=
-ffffc0000000002
->    KASAN: null-ptr-deref in range [0x0000000000000010-0x0000000000000017]
->    RIP: 0010:ppl_write_stripe_run+0x60/0x1320 drivers/md/raid5-ppl.c:538
->
-> Take reconfig_mutex around the update and refuse it with -EBUSY once the
-> array is running, in which case ->change_consistency_policy() is the
-> right interface.
->
-> Fixes: 664aed04446c ("md: add sysfs entries for PPL")
-> Reported-by:syzbot+75d7e96ad03ac2dbbd9f@syzkaller.appspotmail.com
-> Closes:https://syzkaller.appspot.com/bug?extid=3D75d7e96ad03ac2dbbd9f
-> Signed-off-by: Nguyen Ngoc Thang<ngocthang2710.1999@gmail.com>
+> Tested-by: syzbot+75d7e96ad03ac2dbbd9f@syzkaller.appspotmail.com
+> Reported-by: syzbot+75d7e96ad03ac2dbbd9f@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=3D75d7e96ad03ac2dbbd9f
+> Fixes: 3418d036c81d ("raid5-ppl: Partial Parity Log write logging impleme=
+ntation")
+> Signed-off-by: Svyatoslav Nikolenko <nsvatoslav515@gmail.com>
 > ---
-> Notes:
+>   drivers/md/raid5-ppl.c | 3 +++
+>   1 file changed, 3 insertions(+)
+
+Another patch is applied for this problem, you can check the notes:
+
+[PATCH] md: take reconfig_mutex when enabling PPL on an inactive array -=20
+Nguyen Ngoc Thang <https://lore.kernel.org/linux-raid/20260924171345.75894-=
+1-ngocthang2710.1999@gmail.com/>
+
 >
-> This differs from the NULL check in ppl_write_stripe_run() that is being
-> patch-tested on the syzbot page: that hides the symptom but leaves
-> MD_HAS_PPL inconsistent with conf->log_private for the other PPL entry
-> points.  md_attr_store() has not taken reconfig_mutex for every store sin=
-ce
-> 6791875e2e53, so the store has to take it itself.
->
-> Testing (QEMU, KASAN, x86_64): one loop assembles raid5/external/ram0 whi=
-le
-> a second loop keeps writing "ppl" to consistency_policy.  Without a delay=
- the
-> window is only a few microseconds, so I used a debug-only patch in
-> raid5_run() (clear MD_HAS_PPL and mdelay(50) before log_init()) that is n=
-ot
-> part of this submission.
->    - without the fix: the syzbot oops on the first assembly,
->      ppl_write_stripe_run+0x5d in md0_raid5;
->    - with the fix and the same delay: 100/100 assemblies, no KASAN report=
-.
-> The unmodified syz repro only ended with -ENOSPC ("PPL space too small") =
-in
-> my setup.
->
->   drivers/md/md.c | 10 +++++++++-
->   1 file changed, 9 insertions(+), 1 deletion(-)
-Applied to md-7.4
+> diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+> index 7f8a9d3fd578..e54ed4e44b0f 100644
+> --- a/drivers/md/raid5-ppl.c
+> +++ b/drivers/md/raid5-ppl.c
+> @@ -535,6 +535,9 @@ void ppl_write_stripe_run(struct r5conf *conf)
+>   	struct ppl_log *log;
+>   	int i;
+>  =20
+> +	if (!ppl_conf)
+> +		return;
+> +
+>   	for (i =3D 0; i < ppl_conf->count; i++) {
+>   		log =3D &ppl_conf->child_logs[i];
+>  =20
 
 --=20
 Thanks,
