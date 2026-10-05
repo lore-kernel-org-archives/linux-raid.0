@@ -1,38 +1,38 @@
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91B524CEE65;
-	Mon,  5 Oct 2026 15:47:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72A22490BF8;
+	Mon,  5 Oct 2026 15:53:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791215256; cv=none; b=MpkQth62uLsaMzShhqNK3iSL6//lwlnxWBAnYAudq7gddUZtOuDluH9/BzHeCvqNO42ZcltiYimL0ClPcwUxLtOspdBJl+anNn7hU8UF4pC98XwV58HGjaZDPQ+Zw3Jknp3UiVcQ5bcKHj3zw6vkYvxt54Lz2hTLhdOduT/AKH8=
+	t=1791215639; cv=none; b=XDVkzSb+8tYf2gOGWv4RqgMA50htJSj7HNDlRtmTvzwd1TslknBpmIKRwsyqBQrBgzm9CZacTP76Ib9NUhI8fqGi4n5iacIcdFvcI3XJ7CCZGPI2tZaZ8TabWyrNwiH0f5k1I6gtg+oi0oYkuSP7Ehf+j46zZXxxsynaVtdBpY0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791215256; c=relaxed/simple;
-	bh=dP8UEyU9wzQweZL2mPytgGZw1csTDnAAGHb9lQ1/CRo=;
+	s=arc-20240116; t=1791215639; c=relaxed/simple;
+	bh=yIKo1AJ1FszovPUPiumxVNTmhCJq3pJkyQuQoYy800c=;
 	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=IGRWWRbg+AbXx4Gk9KXmonFINdd4Mqb5SB7jvuusOVu72KSzmvrqGMLpxgtLFdxbHItJI4SQOkw4Qv11pUg1pMOLuO9zv/ztbjMTT32gpFnQWOfYzKjcGla7wDGaffe4AKcJ+cTsN4rcO7vVEnTnhjg7PlpSILYPxVXDUfNiLMk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=TNTPjRrO; arc=none smtp.client-ip=204.191.154.188
+	 Content-Type:Subject; b=h2cm3HbpEj+Uil6CGkBMsinS+l3m+9MFtvdCzidQA49SskFmSWjsXT3xodRKIMLGBBx0t6sY63dgpyjSywPHkWEevRFdjnAoZhPpPj5lmaRp/Qzqpb+241IoQGHs8SightaIJoWboa4bXYzQJ0PnMXrvNGf7oXEg9BNxOrdZelc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=As/Kjo2w; arc=none smtp.client-ip=204.191.154.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="TNTPjRrO"
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="As/Kjo2w"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
 	MIME-Version:Date:Message-ID:content-disposition;
-	bh=dd2geTHNEiljsufazF3WqhIB0SzJSJCWXKsYxd8T1sI=; b=TNTPjRrOyWfCVBBFnhnRO7By7f
-	iSxv2IUwqaQf3LyU2GmRjv0R9ySEm04j7MiCupHpfiYbCstAADg9/9OzYLVGuag8V3trKI56MtH7h
-	M30LrMtzJnGhBy02hW3f563qKFKdk3A9+nA4PSqSe2YWx2feVIJ6WXQmaRUxzgmqaJTxsF2c9Vk0y
-	LFOzZTC7FzCCMhxJAfgVqktdHsFwBagjKj6FxYv8pRvM53YTr6/KwdMxzN/0cw1SMsMWozSEFa5b/
-	LbHfB+iI5DE8bpWuQFN1xAOBUsFwwEg8d3Xu/GbtMVXcBlAp4LQBqkRNnlwbGwJquSgjuxr02BsNS
-	EOuOYbjA==;
+	bh=3G9qvE89+Iie4JuZVMlOcEW2PUizhApfcs7A9V3YHG4=; b=As/Kjo2w8lMyhEul8Bo6YgiaPU
+	ACUyBUha7TFju+SoNlkImh6iZSpT3YdHi7IvR039tEBRvO8cYDtmLtZk6wtu5+syBzdx2RpR9b3F3
+	8UUkssfm1GtkanW3Jc8bqlnlk0N2PpoTh0fxHbE3nHqCvLBjSdyQ2Yw4VXOoABdX4PprHLri0QF71
+	a+pDIpZ0NZfMG1dKMbOqcGGXER+1H1cvzNe2qKCCy/AL8rE8AOUt//bgWMogdERqQrivmuRYYzW1m
+	3xwqsq/2hYzmq111uO7CfanQa65xXLogBrzwy28WFtY42EKVimIlEXrVt7jeyWC35Urbrn8VP00Sh
+	9iveQgBQ==;
 Received: from guinness.priv.deltatee.com ([172.16.1.162])
 	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
 	(Exim 4.98.2)
 	(envelope-from <logang@deltatee.com>)
-	id 1xDkuK-00000002ItV-0kt6;
-	Mon, 05 Oct 2026 09:47:20 -0600
-Message-ID: <4a7bdf58-1981-4ab8-b021-cfbf20044be7@deltatee.com>
-Date: Mon, 5 Oct 2026 09:47:08 -0600
+	id 1xDl0g-00000002IxF-08qV;
+	Mon, 05 Oct 2026 09:53:50 -0600
+Message-ID: <1005631a-5234-4a3a-9edd-a4ec299c168a@deltatee.com>
+Date: Mon, 5 Oct 2026 09:53:48 -0600
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -45,77 +45,79 @@ To: Yogesh Gaur <yogeshgaur.83@gmail.com>, Song Liu <song@kernel.org>,
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
  Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
  Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
- syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com, stable@vger.kernel.org
-References: <20261004055712.1293-1-yogeshgaur.83@gmail.com>
+ syzbot+270624bb31d478afe62e@syzkaller.appspotmail.com, stable@vger.kernel.org
+References: <20261004060203.1379-1-yogeshgaur.83@gmail.com>
 Content-Language: en-CA
 From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20261004055712.1293-1-yogeshgaur.83@gmail.com>
+In-Reply-To: <20261004060203.1379-1-yogeshgaur.83@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: yogeshgaur.83@gmail.com, song@kernel.org, yukuai@fygo.io, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, magiclinan@didiglobal.com, xiao@kernel.org, hch@lst.de, hare@suse.de, syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com, stable@vger.kernel.org
+X-SA-Exim-Rcpt-To: yogeshgaur.83@gmail.com, song@kernel.org, yukuai@fygo.io, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, magiclinan@didiglobal.com, xiao@kernel.org, hch@lst.de, hare@suse.de, syzbot+270624bb31d478afe62e@syzkaller.appspotmail.com, stable@vger.kernel.org
 X-SA-Exim-Mail-From: logang@deltatee.com
 X-Spam-Level: 
-Subject: Re: [PATCH] md: don't hand out the array before md_alloc() has added
- mddev->kobj
+Subject: Re: [PATCH] md/raid5: set conf->mddev before the first setup_conf()
+ error path
 X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
 
 
-On 2026-10-03 23:57, Yogesh Gaur wrote:
-> md_alloc() publishes the gendisk before it is done setting the mddev up:
+On 2026-10-04 00:02, Yogesh Gaur wrote:
+> free_conf() starts with log_exit(), which falls through to
+> raid5_has_ppl() when conf->log is NULL:
 > 
-> 	disk->private_data = mddev;
-> 	...
-> 	error = add_disk(disk);
-> 	if (error)
-> 		goto out_put_disk;
+> 	static inline void log_exit(struct r5conf *conf)
+> 	{
+> 		if (conf->log)
+> 			r5l_exit_log(conf);
+> 		else if (raid5_has_ppl(conf))
+> 			ppl_exit_log(conf);
+> 	}
 > 
-> 	kobject_init(&mddev->kobj, &md_ktype);
-> 	error = kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "md");
+> raid5_has_ppl() reads conf->mddev->flags. setup_conf() only assigns
+> conf->mddev after bioset_init(), but five of its error paths -- the
+> pending_data, alloc_thread_groups(), conf->disks, extra_page and
+> bioset_init() failures -- jump to "abort:" before that, and abort: calls
+> free_conf(). conf comes from kzalloc, so conf->mddev is still NULL and
+> free_conf() dereferences it:
 > 
-> add_disk() makes /dev/mdN openable, and md_open() only refuses the open
-> when MD_CLOSING is set.  mddev comes from mddev_alloc() and is zeroed,
-> so anything that gets in between add_disk() and kobject_add() sees an
-> mddev->kobj that has never been through kobject_init() - no ktype, no
-> kref, state_initialized clear.
+> 	BUG: KASAN: null-ptr-deref in raid5_has_ppl drivers/md/raid5-log.h:54 [inline]
+> 	BUG: KASAN: null-ptr-deref in log_exit drivers/md/raid5-log.h:128 [inline]
+> 	BUG: KASAN: null-ptr-deref in free_conf+0x81/0x5d0 drivers/md/raid5.c:7549
+> 	Read of size 8 at addr 0000000000000028 by task syz.3.20/5681
+> 	Call Trace:
+> 	 <TASK>
+> 	 free_conf+0x81/0x5d0 drivers/md/raid5.c:7549
+> 	 setup_conf+0x1720/0x2ad0 drivers/md/raid5.c:7885
+> 	 raid5_run+0x8cc/0x2560 drivers/md/raid5.c:8129
+> 	 md_run+0xc3d/0x1cd0 drivers/md/md.c:6779
+> 	 do_md_run+0x35/0x720 drivers/md/md.c:6880
+> 	 array_state_store+0x958/0xe90 drivers/md/md.c:-1
+> 	 </TASK>
 > 
-> syzbot opens the array in that window and issues ADD_NEW_DISK:
+> The faulting address is offsetof(struct mddev, flags).
 > 
->   kobject: '(null)' (ffff8880120640f0): is not initialized, yet kobject_get() is being called.
->   WARNING: lib/kobject.c:642 at kobject_add_internal+0xea/0xcd0 lib/kobject.c:225
->    kobject_add_varg lib/kobject.c:374 [inline]
->    kobject_add+0x163/0x240 lib/kobject.c:426
->    bind_rdev_to_array+0x80c/0xdd0 drivers/md/md.c:2621
->    md_add_new_disk+0xe3b/0x1850 drivers/md/md.c:7684
->    md_ioctl+0x200a/0x2610 drivers/md/md.c:8499
+> conf->mddev is a back pointer that is constant for the lifetime of the
+> conf and does not depend on anything computed in between, so assign it
+> as soon as the conf is allocated. Nothing between the allocation and the
+> old assignment reads conf->mddev -- alloc_thread_groups() takes the conf
+> but never looks at its mddev, and the rdev_for_each() loop walks the
+> mddev argument directly.
 > 
-> bind_rdev_to_array() is not the only way in.  md_run() calls
-> sysfs_create_group(&mddev->kobj, &md_redundancy_group), and
-> internal_create_group() has its own WARN_ON(!kobj->sd), so RUN_ARRAY in
-> the same window warns too.  Guarding the individual callers would mean
-> finding all of them; the window itself is what should not be reachable.
+> All five paths are allocation failures, so this needs memory pressure or
+> fault injection to hit, which is how syzbot found it.
 > 
-> Refuse the open until md_alloc() has added the kobject.  mddev->kobj.sd
-> is NULL until kobject_add() creates the directory, and stays set for the
-> rest of the mddev's life: commit ca39f7502425 ("md: fix mddev->kobj
-> lifetime") dropped the explicit kobject_del() and lets the final put do
-> the removal.  md.c already tests mddev->kobj.sd for "is this array
-> published yet" in mddev_unlock() and md_run().
-> 
-> This cannot deadlock against add_disk() itself: device_add_disk() only
-> opens the disk to scan partitions when get_capacity(disk) is non-zero,
-> and md_alloc() does not set the capacity - md_run() does, long after.
-> 
-> Fixes: ca39f7502425 ("md: fix mddev->kobj lifetime")
-> Reported-by: syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=95eeb4ada2349a2170ea
+> Reported-by: syzbot+270624bb31d478afe62e@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=270624bb31d478afe62e
+> Fixes: ff875738edd4 ("raid5: separate header for log functions")
 > Cc: stable@vger.kernel.org
 > Assisted-by: LLM
+> Signed-off-by: Yogesh Gaur <yogeshgaur.83@gmail.com>
 
-This makes sense to me, thanks.
+Looks good to me, thanks!
 
-Reviewed by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 
 Logan
+
