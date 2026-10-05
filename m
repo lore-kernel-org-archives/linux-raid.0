@@ -1,72 +1,65 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-3-41.ptr.tlmpb.com (sg-3-41.ptr.tlmpb.com [101.45.255.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72A22490BF8;
-	Mon,  5 Oct 2026 15:53:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE51F30594E
+	for <linux-raid@vger.kernel.org>; Mon,  5 Oct 2026 17:03:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.45.255.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791215639; cv=none; b=XDVkzSb+8tYf2gOGWv4RqgMA50htJSj7HNDlRtmTvzwd1TslknBpmIKRwsyqBQrBgzm9CZacTP76Ib9NUhI8fqGi4n5iacIcdFvcI3XJ7CCZGPI2tZaZ8TabWyrNwiH0f5k1I6gtg+oi0oYkuSP7Ehf+j46zZXxxsynaVtdBpY0=
+	t=1791219796; cv=none; b=NeWZmbYNtF61jrsAwUIOihFomNvK0Jftba6gN4YQb0TIn5MBlEpM86TZAAQUbabiIKrEvKeWYE3o9EODGY4JKHwS/4p3EUQbkKPZeJ1zbpGVQhfi+cyFuMKgL+4DNPfhks0RlajE38VTJENZwJ5iO/6NleM4f4G6vw8Q2wx1HUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791215639; c=relaxed/simple;
-	bh=yIKo1AJ1FszovPUPiumxVNTmhCJq3pJkyQuQoYy800c=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=h2cm3HbpEj+Uil6CGkBMsinS+l3m+9MFtvdCzidQA49SskFmSWjsXT3xodRKIMLGBBx0t6sY63dgpyjSywPHkWEevRFdjnAoZhPpPj5lmaRp/Qzqpb+241IoQGHs8SightaIJoWboa4bXYzQJ0PnMXrvNGf7oXEg9BNxOrdZelc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=As/Kjo2w; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1791219796; c=relaxed/simple;
+	bh=Fbzv8yDM0VkFzJyVWmyQ4yf3QgaTqALVYscqe7fJ0zA=;
+	h=Subject:Message-Id:References:In-Reply-To:To:Cc:Mime-Version:
+	 Content-Type:From:Date; b=KpWtZTCnUOd7/6Vfwnfd8Yg43+dlkb2X5V+GedWOTSQm5jZRFpSjxpcfx/71OWHyaxkMXQUaQ3x9maZI88+b91Z3sP+wv21OrLbCRMJ/D+62bLu4z5oWfm2eZFneroVrxGyBsrRSusGJFgmhCAZHfO9PRrYzRUmukW/ZY7g9WRM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=lI0sZV5r; arc=none smtp.client-ip=101.45.255.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="As/Kjo2w"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="lI0sZV5r"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=3G9qvE89+Iie4JuZVMlOcEW2PUizhApfcs7A9V3YHG4=; b=As/Kjo2w8lMyhEul8Bo6YgiaPU
-	ACUyBUha7TFju+SoNlkImh6iZSpT3YdHi7IvR039tEBRvO8cYDtmLtZk6wtu5+syBzdx2RpR9b3F3
-	8UUkssfm1GtkanW3Jc8bqlnlk0N2PpoTh0fxHbE3nHqCvLBjSdyQ2Yw4VXOoABdX4PprHLri0QF71
-	a+pDIpZ0NZfMG1dKMbOqcGGXER+1H1cvzNe2qKCCy/AL8rE8AOUt//bgWMogdERqQrivmuRYYzW1m
-	3xwqsq/2hYzmq111uO7CfanQa65xXLogBrzwy28WFtY42EKVimIlEXrVt7jeyWC35Urbrn8VP00Sh
-	9iveQgBQ==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1xDl0g-00000002IxF-08qV;
-	Mon, 05 Oct 2026 09:53:50 -0600
-Message-ID: <1005631a-5234-4a3a-9edd-a4ec299c168a@deltatee.com>
-Date: Mon, 5 Oct 2026 09:53:48 -0600
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1791219740;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=X4Gvcf+R5aAfrJIPwztiC9I1x6Y02SwTPFLotN7X9mI=;
+ b=lI0sZV5rx2953+OuAqKN1eFTaSZE8fCihyzU9Pg1TH8IPZzeAIxDd7pvys0hQkjXVmqcf7
+ Ndaw21CYgkeIL4P7uFD/V+Iyp37FJwk5+QInMcQqZiGJq9JcE0ZCNjdsB6wJPIsl58DOqA
+ DIM3R24ihie0SU/ZKOMnl30aLwE97aENNqcKl1CvTeF61a2kt3cecCJB2WoaZ4YbK78PNX
+ sZKZgs6+dvtSHuQXwfSDGM69DG4cRW2jVFCT2VzpTwBxByZbXqZWdXJbX83WXAwNIwIyB6
+ mRcKhjzQXnoiNpJgi+AXD0K1K8pleKnwOV1tyzLlZl6akOK37Lrk8MGtAQU08Q==
+Subject: Re: [PATCH] md/raid5: set conf->mddev before the first setup_conf() error path
+Message-Id: <4dd02c5d-a1c5-463d-a678-b06c7f9d2f45@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.177]) by smtp.larksuite.com with ESMTPS; Mon, 05 Oct 2026 17:02:19 +0000
+References: <20261004060203.1379-1-yogeshgaur.83@gmail.com>
+In-Reply-To: <20261004060203.1379-1-yogeshgaur.83@gmail.com>
+Content-Transfer-Encoding: quoted-printable
+Reply-To: yukuai@fygo.io
+To: "Yogesh Gaur" <yogeshgaur.83@gmail.com>, "Song Liu" <song@kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	"Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	"Christoph Hellwig" <hch@lst.de>, "Hannes Reinecke" <hare@suse.de>, 
+	"Logan Gunthorpe" <logang@deltatee.com>, 
+	<syzbot+270624bb31d478afe62e@syzkaller.appspotmail.com>, 
+	<stable@vger.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Yogesh Gaur <yogeshgaur.83@gmail.com>, Song Liu <song@kernel.org>,
- Yu Kuai <yukuai@fygo.io>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
- Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
- Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
- syzbot+270624bb31d478afe62e@syzkaller.appspotmail.com, stable@vger.kernel.org
-References: <20261004060203.1379-1-yogeshgaur.83@gmail.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20261004060203.1379-1-yogeshgaur.83@gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: yogeshgaur.83@gmail.com, song@kernel.org, yukuai@fygo.io, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, magiclinan@didiglobal.com, xiao@kernel.org, hch@lst.de, hare@suse.de, syzbot+270624bb31d478afe62e@syzkaller.appspotmail.com, stable@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH] md/raid5: set conf->mddev before the first setup_conf()
- error path
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+X-Lms-Return-Path: <lba+26ac3d81b+b33c75+vger.kernel.org+yukuai@fygo.io>
+From: "yu kuai" <yukuai@fygo.io>
+Date: Tue, 6 Oct 2026 01:02:15 +0800
+X-Original-From: yu kuai <yukuai@fygo.io>
+User-Agent: Mozilla Thunderbird
 
+Hi,
 
-
-On 2026-10-04 00:02, Yogesh Gaur wrote:
+=E5=9C=A8 2026/10/4 14:02, Yogesh Gaur =E5=86=99=E9=81=93:
 > free_conf() starts with log_exit(), which falls through to
 > raid5_has_ppl() when conf->log is NULL:
-> 
+>
 > 	static inline void log_exit(struct r5conf *conf)
 > 	{
 > 		if (conf->log)
@@ -74,17 +67,20 @@ On 2026-10-04 00:02, Yogesh Gaur wrote:
 > 		else if (raid5_has_ppl(conf))
 > 			ppl_exit_log(conf);
 > 	}
-> 
+>
 > raid5_has_ppl() reads conf->mddev->flags. setup_conf() only assigns
 > conf->mddev after bioset_init(), but five of its error paths -- the
 > pending_data, alloc_thread_groups(), conf->disks, extra_page and
 > bioset_init() failures -- jump to "abort:" before that, and abort: calls
 > free_conf(). conf comes from kzalloc, so conf->mddev is still NULL and
 > free_conf() dereferences it:
-> 
-> 	BUG: KASAN: null-ptr-deref in raid5_has_ppl drivers/md/raid5-log.h:54 [inline]
-> 	BUG: KASAN: null-ptr-deref in log_exit drivers/md/raid5-log.h:128 [inline]
-> 	BUG: KASAN: null-ptr-deref in free_conf+0x81/0x5d0 drivers/md/raid5.c:7549
+>
+> 	BUG: KASAN: null-ptr-deref in raid5_has_ppl drivers/md/raid5-log.h:54 [i=
+nline]
+> 	BUG: KASAN: null-ptr-deref in log_exit drivers/md/raid5-log.h:128 [inlin=
+e]
+> 	BUG: KASAN: null-ptr-deref in free_conf+0x81/0x5d0 drivers/md/raid5.c:75=
+49
 > 	Read of size 8 at addr 0000000000000028 by task syz.3.20/5681
 > 	Call Trace:
 > 	 <TASK>
@@ -95,29 +91,58 @@ On 2026-10-04 00:02, Yogesh Gaur wrote:
 > 	 do_md_run+0x35/0x720 drivers/md/md.c:6880
 > 	 array_state_store+0x958/0xe90 drivers/md/md.c:-1
 > 	 </TASK>
-> 
+>
 > The faulting address is offsetof(struct mddev, flags).
-> 
+>
 > conf->mddev is a back pointer that is constant for the lifetime of the
 > conf and does not depend on anything computed in between, so assign it
 > as soon as the conf is allocated. Nothing between the allocation and the
 > old assignment reads conf->mddev -- alloc_thread_groups() takes the conf
 > but never looks at its mddev, and the rdev_for_each() loop walks the
 > mddev argument directly.
-> 
+>
 > All five paths are allocation failures, so this needs memory pressure or
 > fault injection to hit, which is how syzbot found it.
-> 
+>
 > Reported-by: syzbot+270624bb31d478afe62e@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=270624bb31d478afe62e
+> Closes: https://syzkaller.appspot.com/bug?extid=3D270624bb31d478afe62e
 > Fixes: ff875738edd4 ("raid5: separate header for log functions")
 > Cc: stable@vger.kernel.org
 > Assisted-by: LLM
 > Signed-off-by: Yogesh Gaur <yogeshgaur.83@gmail.com>
+> ---
+>   drivers/md/raid5.c | 4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index b91545ce090d..f98d3bdd3484 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -7675,6 +7675,9 @@ static struct r5conf *setup_conf(struct mddev *mdde=
+v)
+>   	if (conf =3D=3D NULL)
+>   		goto abort;
+>  =20
+> +	/* free_conf() dereferences this, so set it before the first goto */
+> +	conf->mddev =3D mddev;
+> +
+>   #if PAGE_SIZE !=3D DEFAULT_STRIPE_SIZE
+>   	conf->stripe_size =3D DEFAULT_STRIPE_SIZE;
+>   	conf->stripe_shift =3D ilog2(DEFAULT_STRIPE_SIZE) - 9;
+> @@ -7743,7 +7746,6 @@ static struct r5conf *setup_conf(struct mddev *mdde=
+v)
+>   	ret =3D bioset_init(&conf->bio_split, BIO_POOL_SIZE, 0, 0);
+>   	if (ret)
+>   		goto abort;
+> -	conf->mddev =3D mddev;
+>  =20
+>   	ret =3D -ENOMEM;
+>   	conf->stripe_hashtbl =3D kzalloc(PAGE_SIZE, GFP_KERNEL);
 
-Looks good to me, thanks!
+The same patch is already applied.
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+https://patch.msgid.link/20260915081731.122933-1-chengzhihao1@huawei.com
 
-Logan
-
+--=20
+Thanks,
+Kuai
