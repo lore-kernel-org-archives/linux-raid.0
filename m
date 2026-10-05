@@ -1,251 +1,135 @@
-Received: from va-2-58.ptr.blmpb.com (va-2-58.ptr.blmpb.com [209.127.231.58])
+Received: from mail-ej2-f40.google.com (mail-ej2-f40.google.com [74.125.228.168])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64DBE346E64
-	for <linux-raid@vger.kernel.org>; Sun,  4 Oct 2026 15:55:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.58
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791129303; cv=none; b=Qe/JbPdW5Gc6xGko6Cin0ksJPY3Sh/GFsxw9Nj9BC9tBFRSRAGS5xdqwdeHAk3c6MNuGJ8Qy4Q7Cq86TrmFq98SFgnrxYjssg+h6nrkPeHp2BVQr1W9Ft/ngmaGvbOPuSmJqqKpEPqM7GKOqPmLtx1itCxGoPz7wpUWSzqOBxgw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791129303; c=relaxed/simple;
-	bh=rtPD//bWwu393dOBBUWZx/CheiAozL89AO3KCZYdFBA=;
-	h=References:Cc:From:In-Reply-To:Subject:Message-Id:Date:
-	 Mime-Version:Content-Type:To; b=q5yI+2Z8uKrxEm4c0e0iJ2j362ZvtRBLae5hly4BllBNVxG4ZCc7MZIS6sTzVelzl9+9P7QnRymGVrEzVmXPsogZb1S0wQj/duqqnNIs+3N0kL4r8uxCyE/u+tWgtiy2SZb7bB2WlkIyLDq94vLxJFXE4gkIKsJSlGlrvGLluWU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=VxkqIgNd; arc=none smtp.client-ip=209.127.231.58
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2B14274658
+	for <linux-raid@vger.kernel.org>; Mon,  5 Oct 2026 04:58:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.168
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791176291; cv=pass; b=Ew9f+EUeTHfdB//zIj5x2qCpGv7BEL897cQ3cqb4P6Yfnc9bk8cgtDBfB7kWKft1RxAIq7Xl5RNDqPq8/7o6D7PJ+kLWiipRX92Wze/0L0TA/IiHgW98uwM9SyUrY8LABbI4lmL5dsNkzy5nowvnR7PoUuxM+Arz6frOLocpaQM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791176291; c=relaxed/simple;
+	bh=k8QhU0CgxteoVSnG2ChBJ+4Z+ni9b7jo7/wYqwD+m1A=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=tu4bWHXq2YhHoGNyeUu1WCK2zZKYmyilz6JtscY8Lp5N2uAYZuXww39BPd4JRWAtZPb/QjTG4Ibxv9dU01JiMTrADZL2A10JH7XwfXmrdafP82KdrzF+E09yQmb3xUoYolslZRRi8qNmu7vjK7rTT1xlQDMMgjp4eYSgaai3jrA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b=HfmeeVb+; arc=pass smtp.client-ip=74.125.228.168
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="VxkqIgNd"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1791129290;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=4vryk1DEKogU2H6y67+W/lTNTWEftQjvJaN1iwXNBN0=;
- b=VxkqIgNdFSXgDlEg4vTk0Ru7sakLFC9itHcH++xpFjUIEbeHx+t0T9M3cCP/CVEuC/oEkp
- 07dOkEF/URi3GdYk34iNCzwaK00A/ymN+9k3qm+VMtGxeNTNEVVP6D4pNw5+gg0lnr8aKI
- suwUEfvs0ee0FXSdpbPvS/U5GUZPTdEaBSdE5Ul0sSklPw2LugrLwyyoUTavxGiFaCVKRC
- Qz80P8uxN5tRCf1DMvbh91T0GbyyLTs2+pPloQ3avehuU/woYAPkJ8p02vSxKw08i/sWnF
- uQOH10Lw4QMFGuYUQQdxyPtQx2NwTr8hT/6Lw/N7dm6Dh/pGM7ZS2WIW9gcqtA==
-References: <20261003101948.1690687-1-dayou5941@163.com>
-Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"Li Youhong" <liyouhong@kylinos.cn>, 
-	<syzbot+89a9ab2a134d092fffae@syzkaller.appspotmail.com>
-From: "yu kuai" <yukuai@fygo.io>
-In-Reply-To: <20261003101948.1690687-1-dayou5941@163.com>
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH] md: drain active_io before clearing pers on stop
-Message-Id: <44ca54b6-9012-4d25-93ff-743c34231c2b@fygo.io>
-X-Lms-Return-Path: <lba+26ac276c9+f57c47+vger.kernel.org+yukuai@fygo.io>
-X-Original-From: yu kuai <yukuai@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.177]) by smtp.larksuite.com with ESMTPS; Sun, 04 Oct 2026 15:54:48 +0000
-Reply-To: yukuai@fygo.io
-Date: Sun, 4 Oct 2026 23:54:45 +0800
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="HfmeeVb+"
+Received: by mail-ej2-f40.google.com with SMTP id a640c23a62f3a-c2e412bc301so8259666b.3
+        for <linux-raid@vger.kernel.org>; Sun, 04 Oct 2026 21:58:09 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791176288; cv=none;
+        d=google.com; s=arc-20260327;
+        b=sACl2mgjummUQBYgflUPa8EfVFWvSBIFqDXAfwNUJNV69kpSoI5ionm43gcsmmdExr
+         R5OoD00MVDbZ7it3NyXXrqTwFyjWZwgbBtunbKcwWyAKWtbMi+FE5Bbf5vkNNz0X8uP6
+         UAvtVxjgHS2haJoiQzp+Qd/3zX08KeEdsbxHSWfSOcAxrE+nzQ1i03lH7qwFHn8/o3dz
+         gv/VrZZcmNgPL1lyobUqPq+EdDrkoHHeHFI6SH7Vto578kcCSYOBEZtc8hFfdVWKZ1Wz
+         ssf4NA4dMULx6Y5sm+vKnOaorMtReSNewwLsMWaSVlPM42bPTRvcaanIadhii55KfOQj
+         e7CA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=Yb8J5ooNOneYN3yeLjRDUS+cu9SC1W2gX1QlAxi98Ro=;
+        fh=hrnHRiAmW1TCGuTRJTiJXDBQa5WhqX3OjIW0R+n+eCM=;
+        b=Cn70/RmOBM1Zs4oRjuas1WBSYw+FIxPHegBPYPeEsgBQvy60eGeMkECtqxWAhxg/sx
+         sGep5/TvG2mwEwKTn4J/2C7OfwW/OS3C+YjogQwwXxMHQLUJpfajRb+Qhv6iMNlN1whT
+         QAP5bYMdZO7Soic4u5qGCsmQgiGECPbqjyOt83kTWGnnc2BgE5vnCEDjNdLbV9fYvk+w
+         IfSG1PXBzJkMWZuryyr3oERpIsd0Hp55FdyvZVRayAmb/tTQTVqf2grnhyW9NXb/eOjM
+         Ou3kLCXWtw99TVoMYWaM7uyRKAzQ15B/cCviMctRtRXw3N0crSIfsnj/inycbT+eVmeX
+         7Elg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google; t=1791176288; x=1791781088; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Yb8J5ooNOneYN3yeLjRDUS+cu9SC1W2gX1QlAxi98Ro=;
+        b=HfmeeVb+gRHEJT/vobjNzTnfPqgXprm0Qg0J9QuoBDR3Pi0XGT/ff1ZcQT4pe8Zj5B
+         sl54pjARAZMooXepwOU1gNjFAKfyWrjZJEas2k7GVxK7jU2j7/4pNrQZ+xaGPrFLqtyP
+         baMKr+RNwdZh460yQGNKRO07zOXWptDnUrnexNLl/bwbCpRV0hxuSqWm8JxfWf03rc1s
+         XlZLIcRzK0sOuSoW/af7v2R1umZymuw3VD47gA66weSVmsU0Du+huHY9yRX5YMVSoMHc
+         a1BxfGWzvgZ0BwNs4W5kZ9ia4giqqMx+lSO255WRvAA6K495WJiRjTQtzVce8LedRL2f
+         M9yw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791176288; x=1791781088;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Yb8J5ooNOneYN3yeLjRDUS+cu9SC1W2gX1QlAxi98Ro=;
+        b=DanH0xiCBsQmT4m33Nf3/3pplsDBe33lbphjVUDYWy3miqV6iE0PcWIYC1FoIIYob3
+         HQBKjduULFDTacRED2BD+yPwOnQfHdy+TPRHt5xMhqgIC5GiY7BCjfa5tzLBRxzFTuhh
+         GV8MsbnNBXoMBRKPiq73NCBfSAoPBYgjMs+F2gtv80vLzMN0S2rvXPMIc6WIHLH91eAZ
+         T26TRrQak98Or8LaOMF7RFP2nHufpc+WmYn95RB9TWBFdROU+ncnk4Kf0jqZSDd3H/Wr
+         3zHfBBUv+jnzu//toKYAhrjKubbzm5B1bQk5q81j9C4Yvq8UFBFoSHJ1ZRE8fnd5o+28
+         S0Lg==
+X-Forwarded-Encrypted: i=1; AKwUvBwCJGd1mVYrezeF+8ywCw2wnc4GZrwb4fiv0om2OlwfJJvtsh7ONsziRThAsIVZoIPJgpvjJsNB7La4@vger.kernel.org
+X-Gm-Message-State: AFuF++lTAypM9PBn4rFXg/CX7VrxfqMyyCbwqN8Ki+1z2YM+37gw+6BC
+	qVnsEiVfvVxfbC24DC0pcL25VuBmCnzDsD5oIlxe9GGn8IdbyF2sDT3pNSCp9p6/FpdcC6kgomU
+	aUOVDuiZJG5fG2toM35JQ0P7siUd4hmO3uqbqxZjEHA==
+X-Gm-Gg: AYBFou1XoQiXss36H8JqDYrRNocjwTpEQ79WxJdwNj/LQFfHBO0PYG0V861q/cNAPEI
+	udd7fEfKZNgbjg6i/gawjgI6yeoWvjdRNyxK7gEFshtsLb4WV7xU9k1A/C+9ElaU6k7ioUubujA
+	0oDNFAWHdvFTl8A8wSumdKKX8l8EJudYSWJRxK0fDCRBN0sAMUMD03LELECprBGkBRdT1QYyvBB
+	YEZ1rXZQrN/YmVAWWyb3sYU3fJb7B2n2PUVInQ4MVOFN4sD6tKTtrgjdOtqTUF+wkqz6hjm8vkS
+	TVfMgzCpX4r3J2I1s0ZK+mebC5mI6E80IqFV9uHp7rv8US1/Q4I6WNU=
+X-Received: by 2002:a17:907:1ca4:b0:c25:3ec4:9e43 with SMTP id
+ a640c23a62f3a-c2e4a7f48b0mr805405466b.0.1791176287731; Sun, 04 Oct 2026
+ 21:58:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-To: "Li Youhong" <dayou5941@163.com>, <song@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-User-Agent: Mozilla Thunderbird
+MIME-Version: 1.0
+References: <20260920103705.23191-1-jinpu.wang@ionos.com>
+In-Reply-To: <20260920103705.23191-1-jinpu.wang@ionos.com>
+From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Date: Mon, 5 Oct 2026 06:57:55 +0200
+X-Gm-Features: AclHuK9F6bDW0nS2vy3QRjl6tjhB0B-9YTim3Rc-1xgPDX9Z9hWewK_66u3Qn2w
+Message-ID: <CAMGffE=Vz19wLqdECCc3G47oZVRkQ=RuYFzZt8A1m7jxHUeV7A@mail.gmail.com>
+Subject: Re: [PATCH] md: fix mddev_unlock() called without holding lock in lbs_store()
+To: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>, 
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Sun, Sep 20, 2026 at 12:37=E2=80=AFPM Jack Wang <jinpu.wang@ionos.com> w=
+rote:
+>
+> From: Jack Wang <jinpu.wang@cloud.ionos.com>
+>
+> lbs_store() jumped to the unlock label on mddev_lock() failure,
+> calling mddev_unlock() on a mutex that was never acquired. Return
+> directly instead.
+>
+> Fixes: 62ed1b582246 ("md: allow configuring logical block size")
+> Signed-off-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 
-=E5=9C=A8 2026/10/3 18:19, Li Youhong =E5=86=99=E9=81=93:
-> From: Li Youhong <liyouhong@kylinos.cn>
->
-> STOP_ARRAY clears mddev->pers while a direct bio can already be in
-> md_handle_request(). fork() shares the block-device file, so openers
-> stays 1 and the stop is allowed, and sync_blockdev() does not wait for
-> O_DIRECT. The bio passes the pers check in md_submit_bio(), then pers
-> is cleared and md_handle_request() dereferences pers->make_request.
->
-> Suspend the array before __md_stop() so percpu_ref_kill(active_io) makes
-> later tryget_live fail and the wait runs until every make_request holder
-> has dropped the ref. The suspend taken here is resumed after pers is
-> cleared, which wakes bios blocked in md_handle_request(). They see
-> pers =3D=3D NULL and complete with bio_io_error(). dm-raid already holds
-> its own suspend across md_stop() and that path is unchanged.
->
-> reconfig_mutex is dropped around mddev_suspend() and mddev_resume().
-> stop_draining is set across that window so mddev_lock() returns
-> -EBUSY.
->
-> Reported-by: syzbot+89a9ab2a134d092fffae@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3D89a9ab2a134d092fffae
-> Fixes: 409c57f38017 ("md: enable suspend/resume of md devices.")
-> Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
+ping?
 > ---
->   drivers/md/md.c | 62 ++++++++++++++++++++++++++++++++++++++++++++++---
->   drivers/md/md.h |  7 ++++++
->   2 files changed, 66 insertions(+), 3 deletions(-)
+>  drivers/md/md.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 680b34a63cb3..85158a99277f 100644
+> index 680b34a63cb3..41fbe5d9961a 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -395,6 +395,8 @@ static bool is_suspended(struct mddev *mddev, struct =
-bio *bio)
->  =20
->   bool md_handle_request(struct mddev *mddev, struct bio *bio)
->   {
-> +	struct md_personality *pers;
-> +
->   check_suspended:
->   	if (unlikely(md_cloned_bio(mddev, bio))) {
->   		/*
-> @@ -402,6 +404,12 @@ bool md_handle_request(struct mddev *mddev, struct b=
-io *bio)
->   		 * active_io reference, so percpu_ref_get() is safe here.
->   		 */
->   		percpu_ref_get(&mddev->active_io);
-> +		pers =3D READ_ONCE(mddev->pers);
-> +		if (!pers) {
-> +			percpu_ref_put(&mddev->active_io);
-> +			bio_io_error(bio);
-> +			return true;
-> +		}
->   	} else {
->   		if (is_suspended(mddev, bio)) {
->   			/* Bail out if REQ_NOWAIT is set for the bio */
-> @@ -409,14 +417,20 @@ bool md_handle_request(struct mddev *mddev, struct =
-bio *bio)
->   				bio_wouldblock_error(bio);
->   				return true;
->   			}
-> -			wait_event(mddev->sb_wait, !is_suspended(mddev, bio));
-> +			wait_event(mddev->sb_wait, !is_suspended(mddev, bio) ||
-> +				   !READ_ONCE(mddev->pers));
-> +		}
-> +		pers =3D READ_ONCE(mddev->pers);
-> +		if (!pers) {
-> +			bio_io_error(bio);
-> +			return true;
->   		}
->   		if (!percpu_ref_tryget_live(&mddev->active_io))
->   			goto check_suspended;
->   	}
-> -	if (!mddev->pers->make_request(mddev, bio)) {
-> +	if (!pers->make_request(mddev, bio)) {
->   		percpu_ref_put(&mddev->active_io);
-> -		if (mddev_is_dm(mddev) && mddev->pers->prepare_suspend)
-> +		if (mddev_is_dm(mddev) && pers->prepare_suspend)
->   			return false;
->   		goto check_suspended;
->   	}
-> @@ -7097,6 +7111,32 @@ static void __md_stop(struct mddev *mddev)
->   	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->   }
->  =20
-> +/* Drop reconfig_mutex around suspend so in-flight IO can update the sup=
-erblock. */
-> +static int md_suspend_for_stop(struct mddev *mddev, bool interruptible)
-> +{
-> +	int err;
-> +
-> +	lockdep_assert_held(&mddev->reconfig_mutex);
-> +
-> +	WRITE_ONCE(mddev->stop_draining, 1);
-> +	mutex_unlock(&mddev->reconfig_mutex);
-
-Creating a new wheel will just make code more complicated. Check following =
-patch for the
-correct fix:
-
-[PATCH v5] md: Fix the null-ptr-deref of 'mddev->private' while=20
-submitting IO - Zhihao Cheng <https://lore.kernel.org/all/20260922030538.16=
-34904-1-chengzhihao1@huawei.com/>
-
-> +	err =3D mddev_suspend(mddev, interruptible);
-> +	mddev_lock_nointr(mddev);
-> +	WRITE_ONCE(mddev->stop_draining, 0);
-> +	return err;
-> +}
-> +
-> +static void md_resume_for_stop(struct mddev *mddev)
-> +{
-> +	lockdep_assert_held(&mddev->reconfig_mutex);
-> +
-> +	WRITE_ONCE(mddev->stop_draining, 1);
-> +	mutex_unlock(&mddev->reconfig_mutex);
-> +	__mddev_resume(mddev, false);
-> +	mddev_lock_nointr(mddev);
-> +	WRITE_ONCE(mddev->stop_draining, 0);
-> +}
-> +
->   void md_stop(struct mddev *mddev)
->   {
->   	lockdep_assert_held(&mddev->reconfig_mutex);
-> @@ -7164,6 +7204,8 @@ static int do_md_stop(struct mddev *mddev, int mode=
-)
->   	struct gendisk *disk =3D mddev->gendisk;
->   	struct md_rdev *rdev;
->   	int did_freeze =3D 0;
-> +	int err =3D 0;
-> +	int resume =3D 0;
->  =20
->   	if (!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
->   		did_freeze =3D 1;
-> @@ -7181,6 +7223,18 @@ static int do_md_stop(struct mddev *mddev, int mod=
-e)
->   		}
->   		return -EBUSY;
->   	}
-> +
-> +	if (mddev->pers) {
-> +		err =3D md_suspend_for_stop(mddev, true);
-> +		if (err) {
-> +			if (did_freeze) {
-> +				clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> +				set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> +			}
-> +			return err;
-> +		}
-> +		resume =3D 1;
-> +	}
->   	if (mddev->pers) {
->   		if (!md_is_rdwr(mddev))
->   			set_disk_ro(disk, 0);
-> @@ -7205,6 +7259,8 @@ static int do_md_stop(struct mddev *mddev, int mode=
-)
->   		if (!md_is_rdwr(mddev))
->   			mddev->ro =3D MD_RDWR;
->   	}
-> +	if (resume)
-> +		md_resume_for_stop(mddev);
->   	/*
->   	 * Free resources if final stop
->   	 */
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index b6d2e8929a0f..745f0c57f669 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -414,6 +414,8 @@ struct mddev {
->   	unsigned long			sb_flags;
->  =20
->   	int				suspended;
-> +	/* Set while do_md_stop() has dropped reconfig_mutex to drain IO. */
-> +	int				stop_draining;
->   	struct mutex			suspend_mutex;
->   	struct percpu_ref		active_io;
->   	int				ro;
-> @@ -719,6 +721,11 @@ static inline int __must_check mddev_lock(struct mdd=
-ev *mddev)
->   		ret =3D -ENODEV;
->   		mutex_unlock(&mddev->reconfig_mutex);
->   	}
-> +	/* do_md_stop() is waiting for active_io with the mutex dropped. */
-> +	if (!ret && READ_ONCE(mddev->stop_draining)) {
-> +		ret =3D -EBUSY;
-> +		mutex_unlock(&mddev->reconfig_mutex);
-> +	}
->  =20
->   	return ret;
->   }
-
---=20
-Thanks,
-Kuai
+> @@ -6048,11 +6048,10 @@ lbs_store(struct mddev *mddev, const char *buf, s=
+ize_t len)
+>
+>         err =3D mddev_lock(mddev);
+>         if (err)
+> -               goto unlock;
+> +               return err;
+>
+>         err =3D mddev_set_logical_block_size(mddev, lbs);
+>
+> -unlock:
+>         mddev_unlock(mddev);
+>         return err ?: len;
+>  }
+> --
+> 2.43.0
+>
