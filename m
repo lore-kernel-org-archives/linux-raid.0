@@ -1,135 +1,121 @@
-Received: from mail-ej2-f40.google.com (mail-ej2-f40.google.com [74.125.228.168])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2B14274658
-	for <linux-raid@vger.kernel.org>; Mon,  5 Oct 2026 04:58:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.168
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791176291; cv=pass; b=Ew9f+EUeTHfdB//zIj5x2qCpGv7BEL897cQ3cqb4P6Yfnc9bk8cgtDBfB7kWKft1RxAIq7Xl5RNDqPq8/7o6D7PJ+kLWiipRX92Wze/0L0TA/IiHgW98uwM9SyUrY8LABbI4lmL5dsNkzy5nowvnR7PoUuxM+Arz6frOLocpaQM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791176291; c=relaxed/simple;
-	bh=k8QhU0CgxteoVSnG2ChBJ+4Z+ni9b7jo7/wYqwD+m1A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=tu4bWHXq2YhHoGNyeUu1WCK2zZKYmyilz6JtscY8Lp5N2uAYZuXww39BPd4JRWAtZPb/QjTG4Ibxv9dU01JiMTrADZL2A10JH7XwfXmrdafP82KdrzF+E09yQmb3xUoYolslZRRi8qNmu7vjK7rTT1xlQDMMgjp4eYSgaai3jrA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b=HfmeeVb+; arc=pass smtp.client-ip=74.125.228.168
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91B524CEE65;
+	Mon,  5 Oct 2026 15:47:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791215256; cv=none; b=MpkQth62uLsaMzShhqNK3iSL6//lwlnxWBAnYAudq7gddUZtOuDluH9/BzHeCvqNO42ZcltiYimL0ClPcwUxLtOspdBJl+anNn7hU8UF4pC98XwV58HGjaZDPQ+Zw3Jknp3UiVcQ5bcKHj3zw6vkYvxt54Lz2hTLhdOduT/AKH8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791215256; c=relaxed/simple;
+	bh=dP8UEyU9wzQweZL2mPytgGZw1csTDnAAGHb9lQ1/CRo=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=IGRWWRbg+AbXx4Gk9KXmonFINdd4Mqb5SB7jvuusOVu72KSzmvrqGMLpxgtLFdxbHItJI4SQOkw4Qv11pUg1pMOLuO9zv/ztbjMTT32gpFnQWOfYzKjcGla7wDGaffe4AKcJ+cTsN4rcO7vVEnTnhjg7PlpSILYPxVXDUfNiLMk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=TNTPjRrO; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="HfmeeVb+"
-Received: by mail-ej2-f40.google.com with SMTP id a640c23a62f3a-c2e412bc301so8259666b.3
-        for <linux-raid@vger.kernel.org>; Sun, 04 Oct 2026 21:58:09 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791176288; cv=none;
-        d=google.com; s=arc-20260327;
-        b=sACl2mgjummUQBYgflUPa8EfVFWvSBIFqDXAfwNUJNV69kpSoI5ionm43gcsmmdExr
-         R5OoD00MVDbZ7it3NyXXrqTwFyjWZwgbBtunbKcwWyAKWtbMi+FE5Bbf5vkNNz0X8uP6
-         UAvtVxjgHS2haJoiQzp+Qd/3zX08KeEdsbxHSWfSOcAxrE+nzQ1i03lH7qwFHn8/o3dz
-         gv/VrZZcmNgPL1lyobUqPq+EdDrkoHHeHFI6SH7Vto578kcCSYOBEZtc8hFfdVWKZ1Wz
-         ssf4NA4dMULx6Y5sm+vKnOaorMtReSNewwLsMWaSVlPM42bPTRvcaanIadhii55KfOQj
-         e7CA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Yb8J5ooNOneYN3yeLjRDUS+cu9SC1W2gX1QlAxi98Ro=;
-        fh=hrnHRiAmW1TCGuTRJTiJXDBQa5WhqX3OjIW0R+n+eCM=;
-        b=Cn70/RmOBM1Zs4oRjuas1WBSYw+FIxPHegBPYPeEsgBQvy60eGeMkECtqxWAhxg/sx
-         sGep5/TvG2mwEwKTn4J/2C7OfwW/OS3C+YjogQwwXxMHQLUJpfajRb+Qhv6iMNlN1whT
-         QAP5bYMdZO7Soic4u5qGCsmQgiGECPbqjyOt83kTWGnnc2BgE5vnCEDjNdLbV9fYvk+w
-         IfSG1PXBzJkMWZuryyr3oERpIsd0Hp55FdyvZVRayAmb/tTQTVqf2grnhyW9NXb/eOjM
-         Ou3kLCXWtw99TVoMYWaM7uyRKAzQ15B/cCviMctRtRXw3N0crSIfsnj/inycbT+eVmeX
-         7Elg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google; t=1791176288; x=1791781088; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Yb8J5ooNOneYN3yeLjRDUS+cu9SC1W2gX1QlAxi98Ro=;
-        b=HfmeeVb+gRHEJT/vobjNzTnfPqgXprm0Qg0J9QuoBDR3Pi0XGT/ff1ZcQT4pe8Zj5B
-         sl54pjARAZMooXepwOU1gNjFAKfyWrjZJEas2k7GVxK7jU2j7/4pNrQZ+xaGPrFLqtyP
-         baMKr+RNwdZh460yQGNKRO07zOXWptDnUrnexNLl/bwbCpRV0hxuSqWm8JxfWf03rc1s
-         XlZLIcRzK0sOuSoW/af7v2R1umZymuw3VD47gA66weSVmsU0Du+huHY9yRX5YMVSoMHc
-         a1BxfGWzvgZ0BwNs4W5kZ9ia4giqqMx+lSO255WRvAA6K495WJiRjTQtzVce8LedRL2f
-         M9yw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791176288; x=1791781088;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Yb8J5ooNOneYN3yeLjRDUS+cu9SC1W2gX1QlAxi98Ro=;
-        b=DanH0xiCBsQmT4m33Nf3/3pplsDBe33lbphjVUDYWy3miqV6iE0PcWIYC1FoIIYob3
-         HQBKjduULFDTacRED2BD+yPwOnQfHdy+TPRHt5xMhqgIC5GiY7BCjfa5tzLBRxzFTuhh
-         GV8MsbnNBXoMBRKPiq73NCBfSAoPBYgjMs+F2gtv80vLzMN0S2rvXPMIc6WIHLH91eAZ
-         T26TRrQak98Or8LaOMF7RFP2nHufpc+WmYn95RB9TWBFdROU+ncnk4Kf0jqZSDd3H/Wr
-         3zHfBBUv+jnzu//toKYAhrjKubbzm5B1bQk5q81j9C4Yvq8UFBFoSHJ1ZRE8fnd5o+28
-         S0Lg==
-X-Forwarded-Encrypted: i=1; AKwUvBwCJGd1mVYrezeF+8ywCw2wnc4GZrwb4fiv0om2OlwfJJvtsh7ONsziRThAsIVZoIPJgpvjJsNB7La4@vger.kernel.org
-X-Gm-Message-State: AFuF++lTAypM9PBn4rFXg/CX7VrxfqMyyCbwqN8Ki+1z2YM+37gw+6BC
-	qVnsEiVfvVxfbC24DC0pcL25VuBmCnzDsD5oIlxe9GGn8IdbyF2sDT3pNSCp9p6/FpdcC6kgomU
-	aUOVDuiZJG5fG2toM35JQ0P7siUd4hmO3uqbqxZjEHA==
-X-Gm-Gg: AYBFou1XoQiXss36H8JqDYrRNocjwTpEQ79WxJdwNj/LQFfHBO0PYG0V861q/cNAPEI
-	udd7fEfKZNgbjg6i/gawjgI6yeoWvjdRNyxK7gEFshtsLb4WV7xU9k1A/C+9ElaU6k7ioUubujA
-	0oDNFAWHdvFTl8A8wSumdKKX8l8EJudYSWJRxK0fDCRBN0sAMUMD03LELECprBGkBRdT1QYyvBB
-	YEZ1rXZQrN/YmVAWWyb3sYU3fJb7B2n2PUVInQ4MVOFN4sD6tKTtrgjdOtqTUF+wkqz6hjm8vkS
-	TVfMgzCpX4r3J2I1s0ZK+mebC5mI6E80IqFV9uHp7rv8US1/Q4I6WNU=
-X-Received: by 2002:a17:907:1ca4:b0:c25:3ec4:9e43 with SMTP id
- a640c23a62f3a-c2e4a7f48b0mr805405466b.0.1791176287731; Sun, 04 Oct 2026
- 21:58:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="TNTPjRrO"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=dd2geTHNEiljsufazF3WqhIB0SzJSJCWXKsYxd8T1sI=; b=TNTPjRrOyWfCVBBFnhnRO7By7f
+	iSxv2IUwqaQf3LyU2GmRjv0R9ySEm04j7MiCupHpfiYbCstAADg9/9OzYLVGuag8V3trKI56MtH7h
+	M30LrMtzJnGhBy02hW3f563qKFKdk3A9+nA4PSqSe2YWx2feVIJ6WXQmaRUxzgmqaJTxsF2c9Vk0y
+	LFOzZTC7FzCCMhxJAfgVqktdHsFwBagjKj6FxYv8pRvM53YTr6/KwdMxzN/0cw1SMsMWozSEFa5b/
+	LbHfB+iI5DE8bpWuQFN1xAOBUsFwwEg8d3Xu/GbtMVXcBlAp4LQBqkRNnlwbGwJquSgjuxr02BsNS
+	EOuOYbjA==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1xDkuK-00000002ItV-0kt6;
+	Mon, 05 Oct 2026 09:47:20 -0600
+Message-ID: <4a7bdf58-1981-4ab8-b021-cfbf20044be7@deltatee.com>
+Date: Mon, 5 Oct 2026 09:47:08 -0600
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260920103705.23191-1-jinpu.wang@ionos.com>
-In-Reply-To: <20260920103705.23191-1-jinpu.wang@ionos.com>
-From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date: Mon, 5 Oct 2026 06:57:55 +0200
-X-Gm-Features: AclHuK9F6bDW0nS2vy3QRjl6tjhB0B-9YTim3Rc-1xgPDX9Z9hWewK_66u3Qn2w
-Message-ID: <CAMGffE=Vz19wLqdECCc3G47oZVRkQ=RuYFzZt8A1m7jxHUeV7A@mail.gmail.com>
-Subject: Re: [PATCH] md: fix mddev_unlock() called without holding lock in lbs_store()
-To: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>
-Cc: Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>, 
-	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+To: Yogesh Gaur <yogeshgaur.83@gmail.com>, Song Liu <song@kernel.org>,
+ Yu Kuai <yukuai@fygo.io>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+ syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com, stable@vger.kernel.org
+References: <20261004055712.1293-1-yogeshgaur.83@gmail.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <20261004055712.1293-1-yogeshgaur.83@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: yogeshgaur.83@gmail.com, song@kernel.org, yukuai@fygo.io, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, magiclinan@didiglobal.com, xiao@kernel.org, hch@lst.de, hare@suse.de, syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com, stable@vger.kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [PATCH] md: don't hand out the array before md_alloc() has added
+ mddev->kobj
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On Sun, Sep 20, 2026 at 12:37=E2=80=AFPM Jack Wang <jinpu.wang@ionos.com> w=
-rote:
->
-> From: Jack Wang <jinpu.wang@cloud.ionos.com>
->
-> lbs_store() jumped to the unlock label on mddev_lock() failure,
-> calling mddev_unlock() on a mutex that was never acquired. Return
-> directly instead.
->
-> Fixes: 62ed1b582246 ("md: allow configuring logical block size")
-> Signed-off-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 
-ping?
-> ---
->  drivers/md/md.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 680b34a63cb3..41fbe5d9961a 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6048,11 +6048,10 @@ lbs_store(struct mddev *mddev, const char *buf, s=
-ize_t len)
->
->         err =3D mddev_lock(mddev);
->         if (err)
-> -               goto unlock;
-> +               return err;
->
->         err =3D mddev_set_logical_block_size(mddev, lbs);
->
-> -unlock:
->         mddev_unlock(mddev);
->         return err ?: len;
->  }
-> --
-> 2.43.0
->
+
+On 2026-10-03 23:57, Yogesh Gaur wrote:
+> md_alloc() publishes the gendisk before it is done setting the mddev up:
+> 
+> 	disk->private_data = mddev;
+> 	...
+> 	error = add_disk(disk);
+> 	if (error)
+> 		goto out_put_disk;
+> 
+> 	kobject_init(&mddev->kobj, &md_ktype);
+> 	error = kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "md");
+> 
+> add_disk() makes /dev/mdN openable, and md_open() only refuses the open
+> when MD_CLOSING is set.  mddev comes from mddev_alloc() and is zeroed,
+> so anything that gets in between add_disk() and kobject_add() sees an
+> mddev->kobj that has never been through kobject_init() - no ktype, no
+> kref, state_initialized clear.
+> 
+> syzbot opens the array in that window and issues ADD_NEW_DISK:
+> 
+>   kobject: '(null)' (ffff8880120640f0): is not initialized, yet kobject_get() is being called.
+>   WARNING: lib/kobject.c:642 at kobject_add_internal+0xea/0xcd0 lib/kobject.c:225
+>    kobject_add_varg lib/kobject.c:374 [inline]
+>    kobject_add+0x163/0x240 lib/kobject.c:426
+>    bind_rdev_to_array+0x80c/0xdd0 drivers/md/md.c:2621
+>    md_add_new_disk+0xe3b/0x1850 drivers/md/md.c:7684
+>    md_ioctl+0x200a/0x2610 drivers/md/md.c:8499
+> 
+> bind_rdev_to_array() is not the only way in.  md_run() calls
+> sysfs_create_group(&mddev->kobj, &md_redundancy_group), and
+> internal_create_group() has its own WARN_ON(!kobj->sd), so RUN_ARRAY in
+> the same window warns too.  Guarding the individual callers would mean
+> finding all of them; the window itself is what should not be reachable.
+> 
+> Refuse the open until md_alloc() has added the kobject.  mddev->kobj.sd
+> is NULL until kobject_add() creates the directory, and stays set for the
+> rest of the mddev's life: commit ca39f7502425 ("md: fix mddev->kobj
+> lifetime") dropped the explicit kobject_del() and lets the final put do
+> the removal.  md.c already tests mddev->kobj.sd for "is this array
+> published yet" in mddev_unlock() and md_run().
+> 
+> This cannot deadlock against add_disk() itself: device_add_disk() only
+> opens the disk to scan partitions when get_capacity(disk) is non-zero,
+> and md_alloc() does not set the capacity - md_run() does, long after.
+> 
+> Fixes: ca39f7502425 ("md: fix mddev->kobj lifetime")
+> Reported-by: syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=95eeb4ada2349a2170ea
+> Cc: stable@vger.kernel.org
+> Assisted-by: LLM
+
+This makes sense to me, thanks.
+
+Reviewed by: Logan Gunthorpe <logang@deltatee.com>
+
+Logan
