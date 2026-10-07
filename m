@@ -1,178 +1,184 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11021119.outbound.protection.outlook.com [40.107.208.119])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62E8F3E558C
-	for <linux-raid@vger.kernel.org>; Tue,  6 Oct 2026 12:29:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791289765; cv=none; b=ZI8JQR8H3K23ZfI5eo01BvK+jHihLWACIUpfyKFzcG083j9SJmIMg27uAadmXLCQClKHqf5AuEchcop/bgDroWdmWcU2fi9Jl+eNRQanEfgsOuFLw3IVqfTzEZ/3dZ3N30kznqwidLGU/OySykKwqI7J2B0dJV8e7qpEZCJcGjI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791289765; c=relaxed/simple;
-	bh=lthPC1Aid3RzMwkXHABVJupMtn6Oz9nfXWocpfXLG6E=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NguEa7CiB1BaTRLq9LAK7bTzmyHnA6N2lSpiZpGktsZ/4IL0A9y7NkX18CM9KOI2dsJoBZEe3UqU5vxhqODlHT0Xl5h7v+FixuUIm7aRp4CHYJF3Zl/8MhDFm3AXxrcgdM8ryeHt43l/ZQ+ijJai5r4VNejDdExvLytsBOH7Djc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dLmfm469; arc=none smtp.client-ip=209.85.210.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EEA7361964
+	for <linux-raid@vger.kernel.org>; Wed,  7 Oct 2026 10:41:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.119
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791369742; cv=fail; b=EhitFSSOk0vUJQxA68bu2JQKiHyHNYJdp2QUdC8VLLqIVzQOjaw3vWeDdnRrxpet0XkSN7VQAAohd4chlbfnHAsxTH9pmP2kWcKx2WuVDCfOpoBTJm5fIPY8Ajt/GYo8iyO+orWe9jsrb80NudwpR5AOpwGHcBNLHC+f5+fdusA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791369742; c=relaxed/simple;
+	bh=vRGlMjpVf9beO41MQGDbzAf1daBX/en7Q4OPj4BmpIg=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=idKcMdADxVzHfpQrKtB9tCwZ65VpK8apfidOaB7ovnTVp0aVfDZ7fLxXKFf9pjLnsSJNKZ8Ao2IWzeFnq4TAbIT/mJUDVmIaqsvAJAfCT3bbt+4kUX+9kRVFLewOFDYHqMitNqG3T8uUnzvs3uItPHO8bM8GJffmkJDe4UUJF54=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=gatech.edu; spf=pass smtp.mailfrom=gatech.edu; dkim=pass (2048-bit key) header.d=gatech.edu header.i=@gatech.edu header.b=CJ9GiAqn; arc=fail smtp.client-ip=40.107.208.119
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=gatech.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gatech.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dLmfm469"
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-88bda150550so362869b3a.2
-        for <linux-raid@vger.kernel.org>; Tue, 06 Oct 2026 05:29:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791289763; x=1791894563; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=UBXDjxHdeZnn0EE9oAZG0kH7xmYbT9bOqu8043JSOZo=;
-        b=dLmfm469wfkY2FSQWsUOZQhiEeKazJlefm23rKBSNdpucKHj+mL8yieV/v1s8tbFOX
-         O0baBUY1QjIEi9LhWYZY7YWjty4rBjuxL+buE30zmdcUf8R9hB1QH4lTWkQeomnRPmMD
-         Vjz6Ax0Nd8j7OE7Z4l60nYKXC1sxG5crZ8pyuQsgtV8XlBgFMnGlC+5nMORgfkXzbo7h
-         vNEHw3sizjmxQ2BWc09viMSKxVRfLEUNpH7e0Hqky5BVn90E9K0UV9EbppgPyffDfmpT
-         vLfFS4gQA7ZuDW1fXkjr/zGLzfbSHk454IljA2lUcwHaSDjFJJcBDwwzgVx9sEI1uRJb
-         mJew==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791289763; x=1791894563;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=UBXDjxHdeZnn0EE9oAZG0kH7xmYbT9bOqu8043JSOZo=;
-        b=oNZ2fS7nnStQGJHuQxu8aQuU2GgVt47cxLUZGRcbfIgleE8/Ji23lFnB1zkM2YPKPc
-         he/pyMidvv6rjuootFHaE5FkmsYQovAPbr5JllfeQTVfDlfK5F9D08U9E7bI3d75hA1S
-         4MXGWZPFI2Cg5iwTmA9uz+axpGmO2gqavnrMecIYuFuzkNtxfAAdKxO+IZK7vyRuSwmt
-         WDjw8gOK9C2bTNvrRi3/PPtyGgqGohZXPy9j8Osb62Ra/VUFXW/hELyD9yC/VN5EcUQy
-         Qvr7bfeIeoG/ae7rlY0KKPS/ELXk6TAtfXJ7lnDM1c7wXbjJ+uXRA3+dIAkC9iy+VU0Y
-         mA9A==
-X-Gm-Message-State: AFuF++kuxzmfRxXtNC5C459Eps1WXD8N8SGMpwXNgT/vIuEwrgeQPYk/
-	D8gRh9n/6zk2EfIMg8KwCiaTWm33ectcfLKPsxtCdPbKdoGf7ExEkTKw
-X-Gm-Gg: AYBFou2BaE8veOwuAR7UythNHShOcBN7aQior7HttxD2lqsxVeJB24jf3l3m/8UNmTi
-	TLJNRxe0Gv0xzJ6IYzbs7EROV/dcrPT2cvPnOq+pE0NEnaBiglj2lAUOEKIKBr8k2GaHh9jfoD/
-	916+yXVY2TlRz4nCt0fDrdi1hgt+SQ6YyvEVSmNXyaRn3gkggpdzBL3nfVZX5h6xbEq9+khl18V
-	glSyKEDNcgcOpf6z4KpVGnFCxdZJVelnIlM5P3/cxPJxiUQhTeQewWYtm3XD76TPx1nVkJJvdnn
-	rgFGfdv5P6ylR0M6qj31NTENFZIWJQkBVcDTZvogU6eq1/Skr1dTDAZLLY/Inr9C2KVFmyen5O7
-	mMlnnP4DcMK4qcruttqY9zir01ICApyt13EbZeUzmbZlah91XMpeOomL6nenTKewYegFX8sgX1m
-	DArF77WoGRXaTGXipQDwmwX9GXIwLQzF3VMRH2xG+LURoiU3JidWA2RmkfNb35Da3yeLycsKMjV
-	IjaDVPskU5SRKCS
-X-Received: by 2002:a05:6a00:1792:b0:869:9298:ba59 with SMTP id d2e1a72fcca58-890d8a4ec77mr1125260b3a.0.1791289762603;
-        Tue, 06 Oct 2026 05:29:22 -0700 (PDT)
-Received: from LAPTOP-450UDG4J ([2401:4900:6310:b8da:d139:f8fd:7043:7eb2])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-88b0c88a815sm4679332b3a.42.2026.10.06.05.29.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Oct 2026 05:29:21 -0700 (PDT)
-From: Yogesh Gaur <yogeshgaur.83@gmail.com>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Hannes Reinecke <hare@suse.de>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Yogesh Gaur <yogeshgaur.83@gmail.com>,
-	syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com,
-	stable@vger.kernel.org
-Subject: [PATCH v2] md: don't hand out the array before md_alloc() has added mddev->kobj
-Date: Tue,  6 Oct 2026 17:59:04 +0530
-Message-ID: <20261006122904.1538-1-yogeshgaur.83@gmail.com>
-X-Mailer: git-send-email 2.55.0.windows.5
-In-Reply-To: <20261004055712.1293-1-yogeshgaur.83@gmail.com/>
-References: <20261004055712.1293-1-yogeshgaur.83@gmail.com/>
+	dkim=pass (2048-bit key) header.d=gatech.edu header.i=@gatech.edu header.b="CJ9GiAqn"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=nGbzUxzgxaknBzFTSTVPk5z6m3wqkxBZh9qFe19RGgMeY1+z5MA+rGefJ7yA7Z0mvc+qEDGyscGN28d/PRSO6iMhF86l9P+oMz6bpB/WsCGfRGcvmvwCg8d1nBQDfmNVIyQEo9ZiTCKn+nxkCSHMWw1zekP8Hc+9k8QTOkzs3xsd4ouUjnSjx8sz0XzzS4BSgbq+ewFaiH0So1NHXzAI+eH638IfnP62w4ucziPa8Y8Bk2ZOz3oJhe6Dkm1/571CKDr575NYxDkK3WqQ8x8AvzPMh+N6s1gLFmhNj6A+S+5VrG6dGbQjjjmUfwdWmjSAtFkPCJXNl1fO8jOolirfJw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=vRGlMjpVf9beO41MQGDbzAf1daBX/en7Q4OPj4BmpIg=;
+ b=gJYZD4uBkgV5CD2PQsvA3ILPqjMYanBt4Uoxkh0uW7OjfYAhVh2qnuym0b8Ef3NAJ6kEJ5el7PLnnanPkzOTCiTHkTySIL7Ab84CztqmCdpSZI60SMilH9aZu1h3c0epQPqfgM2bvGRriAubQpfaFzfcxo48Iqhqm9KzOImRVc6s5c16zt5FY1mmnoHgCWPzWvZBgkybyY9dxgRanbSEjpk2XgE5AqW1OV8+EBLs8pJ0BYXa2DhviupkfKysWHxGkuCXelBweHKAdsMWbLfqcwz5rAOE2meHUKM27+eOy5vjWcagRD3HC1bO0CZbayQhlSXchiWqENrkxMxTLzpz/Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=gatech.edu; dmarc=pass action=none header.from=gatech.edu;
+ dkim=pass header.d=gatech.edu; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gatech.edu;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=vRGlMjpVf9beO41MQGDbzAf1daBX/en7Q4OPj4BmpIg=;
+ b=CJ9GiAqnzvysf521+AHJ2Ke5V616dtEbT3eF6Dbp6e56GHGMjbWw/VE+Z7LCIpGxZciYFxJrvLLu3M4W92za/3fSumIILHNyMrqkOWKrxYGLV2RCoFcDsVJKzqPA8hfz8QIm94Q2iihCJAtFMNO9XjlvKxD0ypX/Pgk7Q67huNL68vynlRa2Hz+Yo+FmO6hfvc1Lo8MTmNpoUKMNT7GZNErBA4BtyAr7WoxQXNFKv9+ZqRNdOmqRmkxU327FtxDBj/v3pVRoVDAaXYMYRYYPffs85koa9daxY8fswEcfnEE43YLaQQ2t3H3AKW2naex3QsYPUZo66gdLB27J0A3g+A==
+Received: from CH3PR07MB9958.namprd07.prod.outlook.com (2603:10b6:610:1ae::19)
+ by LV3PR07MB10137.namprd07.prod.outlook.com (2603:10b6:408:23c::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.20; Wed, 7 Oct
+ 2026 10:41:49 +0000
+Received: from CH3PR07MB9958.namprd07.prod.outlook.com
+ ([fe80::d6b8:e067:4377:97da]) by CH3PR07MB9958.namprd07.prod.outlook.com
+ ([fe80::d6b8:e067:4377:97da%4]) with mapi id 15.21.0496.010; Wed, 7 Oct 2026
+ 10:41:49 +0000
+From: "Masalkhi, Abd Alrhman" <abd.masalkhi@gatech.edu>
+To: "sashiko-reviews@lists.linux.dev" <sashiko-reviews@lists.linux.dev>
+CC: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+	"yukuai@fygo.io" <yukuai@fygo.io>
+Subject: Re: [RFC PATCH v2 4/4] md: add a control device for array management
+Thread-Topic: [RFC PATCH v2 4/4] md: add a control device for array management
+Thread-Index: AQHdVkh0HTAb3CbfckCSZKnmeGGVSQ==
+Date: Wed, 7 Oct 2026 10:41:49 +0000
+Message-ID: <m2jyntbxn8.fsf@gmail.com>
+References: <20261001125611.943731-1-abd.masalkhi@gmail.com>
+ <20261001125611.943731-5-abd.masalkhi@gmail.com>
+ <20261001131958.E1E6C1F000FF@smtp.kernel.org>
+In-Reply-To: <20261001131958.E1E6C1F000FF@smtp.kernel.org>
+Accept-Language: en-US, en-GB
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=gatech.edu;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: CH3PR07MB9958:EE_|LV3PR07MB10137:EE_
+x-ms-office365-filtering-correlation-id: 57606ad2-829f-4aa1-8585-08df245f9774
+x-gt-tenant: 042d12d7-75fe-4547-b5b6-0573f80f829d
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|23010399003|786006|1800799024|376014|366016|6133799003|18002099003|10067099003|22082099003|38070700021|4143699003|260925022911599003|260925021311599003|260925021911599003|56012099006|11063799006;
+x-microsoft-antispam-message-info:
+ q1rlNj7C50j+2jFxmkaPvC4OfSJMRJGXYAlQMSp625wYtALpMEeMxBJl1LLuMahsaFn9gElItQyj605uLuDsdv00eyqlgePHmYP+6c6hAlzZ0WT8lrjGnCz9sH7CelEjY9HPK+XHYiRCA46cI2D+7QMPcyVLbgMmOlN0vEDXnKpfatH0uu7HN4k3EdJF/OviNG+IgHID3gAK6y2DlUgC/ORHTihUbMIDceXmhXZP8WZh33FiNwtZPKlIJRfNgcB1U8RjvJEAkpg/NKyBmia+R0paJThAvD4jL6cuFckIu5JZwSAVf65pTOdoJ/y2lU4OJlO3oXC8XweW58GSD+lFD7F4BL7hAZBYOalHauInspSZihhE5pfFe5yzDpUOK/VbnCO2mAnWrSzdKwPIdYRDXspONX61Uu1eBxpYORdNpqPnmQwN4ry5DSUXyDCdA6wLL4lvLt/C65E4s/3fja/x7kleKJh/KPIfwgoACC2RNob/yPUNelR18f7YvipFDIFPOJD7Tli+wCyl8oBP6qpXT0UPn/mNniaF7txn4hPadx8q63EMbIxWBDfC4nbKYhxmAQDphHhM3LqZsgCF1ZguzHLmi8eDUo0wLc181W0s+Ir7FBMXaGBc+8syM/LkKyd6Jm+akaLbqfmrBYI1huvWkGoHJzebTmDUut9ssQJ8Jl4=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR07MB9958.namprd07.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(786006)(1800799024)(376014)(366016)(6133799003)(18002099003)(10067099003)(22082099003)(38070700021)(4143699003)(260925022911599003)(260925021311599003)(260925021911599003)(56012099006)(11063799006);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?RFRqWE9rK0xidlVKOVhYYnluNk1PeG5Ia0pzcEYzeEVlaHd3RWNnV0J2eExY?=
+ =?utf-8?B?ZmR5ZXkyd1NrOUljdTd6OW9aaU5XalRVZUVxb0pDbTh0Z1RPblZZbnJTMUZa?=
+ =?utf-8?B?eVREQ1dRSlR6SFRabU5PSk0xcGZ4UHpZNCtESVRoREVLK29MczV5RXJWZHZv?=
+ =?utf-8?B?K2hkankxbmpHRUQxUkh5eVIxM08rd1FBWmFHenBqQmJyV29zYkNTbkcwL2x5?=
+ =?utf-8?B?eHF6SlpFc2JubERRTk5YU1ZBcE5xaDB0eXZBUFowRy9VSCtVcUNJTStQQlhF?=
+ =?utf-8?B?ckhMTkMwdFptcExmUTN0aHY2ZExibnp0cnBicXlOSUtBdEl2SWJBV2lXaU12?=
+ =?utf-8?B?bmFPblNDd0ZMSEkrV2ROcm51WDRzUVRSNS9iRDY0ejdSdlVxbHRvZ2hkdWVl?=
+ =?utf-8?B?VklycTZIbUIwSHVlSzVzMmYxbzUzTGpKVnFlTmtJdG15dDREYm9nRjNndktW?=
+ =?utf-8?B?TmRxVWJMME1vTmp5aTFQRXcxUnJBeWpGZW41dGt1WGM1SFdjejBqMEtrTzBp?=
+ =?utf-8?B?UzFBVXdZM1Z4cEpnTkE1SW4ydDRHZmN1YzlRblNrM2hQNmMreUU2eWtuTkcv?=
+ =?utf-8?B?cjBNdmdUV2JnMEdzTTNhQVVWQVpHZnFselkvU1FWK21rMHZwNTNUeE80Ym1X?=
+ =?utf-8?B?bzhkYTVHWUJ6Q3pINmlmRXIxVTNoN1V1Z2J2c2N0b3NJZ1BxSGxKeFVINWZy?=
+ =?utf-8?B?T0JWK2wxb1BhK3MyQVJtSXZncnQrSVVyRHdJMXhmNW0xOUxKdElUMDU2UjVh?=
+ =?utf-8?B?Y1pBR1JqK0lRMWRkQWd5blYreklWNUxvTTNTVWVDdzArTXFiRi9TUXZvVjQx?=
+ =?utf-8?B?Q0NOODVFWlY3OEw4VXdsSHdESkNORCtSVkxESzhNYUEyZ0dlUkRDbVlSdlZD?=
+ =?utf-8?B?TVQrQUpMTkQ0RWlZNVZxZ0Z0MWc1WFFFOXk2a2lHellNaFVVaUYxbVZ0SHQy?=
+ =?utf-8?B?bnBTbkdKNFlNeFlIYVRncEJma0tFWTI0amQybE9SNlhYWURIa1hoc0I5Zyt4?=
+ =?utf-8?B?MnVtMERpK0twbEtlNThTdEhIOGdZY1ZnekZjR1hNMDJTTllQcmNkVU5mZElG?=
+ =?utf-8?B?SEF4WGgwNTQ5WDlqaTY2Z0xLY3FueE56NFR1K3BjdWIxZmdNcjd4N0hRRVBs?=
+ =?utf-8?B?SUJBN3VmdUFhTWZkUHFBb0VRcmhDYlZqaWpvME5ER2Q4a1d0dksxVDFIOHFm?=
+ =?utf-8?B?M1BYOS9Oc0hQZkpCNXRiTUs0OEs0eU1GVWU0Y3dCK3hCWkhoOHp2WHV3eUdh?=
+ =?utf-8?B?T1JJOTJzMEYydk1ZcDhaK0ozUGkrdTlVdDgzQ3pmUjMrWWdTaTdYUDlSbzZs?=
+ =?utf-8?B?Z092Zm5pbG85RXVkajFhRVJBMVkxL1hvbHBmMitNeFF1RkxsQ1FDT3pPeXVu?=
+ =?utf-8?B?emZBR1dwWnhhU0ZnY0dJTnU0b2lNQk1WUDRSY2pKVWs0L2N3aTlGdHVJQzhC?=
+ =?utf-8?B?aVVHMHVjY0RVRjVmZEJVSCs0cjFJcmxWaVhaSUxBQUpveXdSSTZLZHppS1ox?=
+ =?utf-8?B?ZDBUY3dBRVBYOFBvdTRYREVabG0vL2NPK0NvQjNUbnV2Q2hveFowRWFQUXQv?=
+ =?utf-8?B?c3BHY04zYjg1aWRrWWhtZXQ4NGVsVXkvWjdlYlcrcmRidlZ6Z05jeG9WUi8y?=
+ =?utf-8?B?Y2c4T1hvZEpiM2tNRXd0eWdNdHROUis0RE9YbVJGeDBFSWFTVWgrY1ZjaGx6?=
+ =?utf-8?B?RmY0YVAvVmxYRXRxQzJ0dnRnWm54bmEvb3ZaVjljUmtzR2hlUXF1YjN5MUhh?=
+ =?utf-8?B?ZEY3YTZGb3RrZ3FNNnZCNS84NkV6MWlsUE1FZ1N1a1Z0THg4eW82WFVYaFQ5?=
+ =?utf-8?B?YWFWSHZHeFNaYzNRZkQxOUF1R0pzMDJYM09WZHZ6OHhkWlpkRkhHSnlwNHVN?=
+ =?utf-8?B?UXg2aldSaC9hQ1pLYUJkaUkvYlVsV1VUTk4rNnFKV0QwRHJKOVQxNSszQkt5?=
+ =?utf-8?B?eTcxV1hmY0loL2R6cTRQZW5qVGRUZ1lnbTgyenU0ZHlIRFJTeW1NY05QbytY?=
+ =?utf-8?B?TFBKaEZwSFYzY2EwejRDYzEwUWN2dnIwWDliODE5VlRNbW96Y1ZSdHdGbm1T?=
+ =?utf-8?B?TVAvR3BGSTYwNk9kbEtQLzFYN0ZpbDhObzhVVXk5ZXlsSkZQREJucFRhNndJ?=
+ =?utf-8?B?YzY4Wm83Yk9UQ0tYN2pqemJvY1gxTGZ1aGpBa0ZKZGJYc1BMSEVybWw4OVB6?=
+ =?utf-8?B?cnBTdmZiRk00SHBXTmtFb2pCNWVLQzVUTVFTRXlSRTltQS9adTJ4bjJseEN4?=
+ =?utf-8?B?bEtqTUpZVGFaTzR0RkxJUnBiVmM0dnkvTSt1VzZHSHVrbCtCN1N6enVPaUtH?=
+ =?utf-8?Q?YBvl8FCdxdJsWH7ADH?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <504F50684106B04A880C59E6808FCD8C@namprd07.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: gatech.edu
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CH3PR07MB9958.namprd07.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 57606ad2-829f-4aa1-8585-08df245f9774
+X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Oct 2026 10:41:49.1133
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 482198bb-ae7b-4b25-8b7a-6d7f32faa083
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: nZ//bCtDsSahUJE0GWIOa93n2Uzr62IaNIBbbWtVdroOFVO97DmqtAY9UsBt6JIPsvRCj0AVFj3/eHdFag8uqw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR07MB10137
 
-md_alloc() publishes the gendisk before it is done setting the mddev up:
-
-	disk->private_data = mddev;
-	...
-	error = add_disk(disk);
-	if (error)
-		goto out_put_disk;
-
-	kobject_init(&mddev->kobj, &md_ktype);
-	error = kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "md");
-
-add_disk() makes /dev/mdN openable.  mddev comes from mddev_alloc() and
-is zeroed, so anything that gets in between add_disk() and kobject_add()
-sees an mddev->kobj that has never been through kobject_init() - no
-ktype, no kref, state_initialized clear.
-
-syzbot opens the array in that window and issues ADD_NEW_DISK:
-
-  kobject: '(null)' (ffff8880120640f0): is not initialized, yet kobject_get() is being called.
-  WARNING: lib/kobject.c:642 at kobject_add_internal+0xea/0xcd0 lib/kobject.c:225
-   kobject_add_varg lib/kobject.c:374 [inline]
-   kobject_add+0x163/0x240 lib/kobject.c:426
-   bind_rdev_to_array+0x80c/0xdd0 drivers/md/md.c:2621
-   md_add_new_disk+0xe3b/0x1850 drivers/md/md.c:7684
-   md_ioctl+0x200a/0x2610 drivers/md/md.c:8499
-
-bind_rdev_to_array() is not the only way in.  md_run() calls
-sysfs_create_group(&mddev->kobj, &md_redundancy_group), and
-internal_create_group() has its own WARN_ON(!kobj->sd), so RUN_ARRAY in
-the same window warns too.
-
-Every ioctl that can reach mddev->kobj runs under reconfig_mutex, so
-hold it across add_disk() and kobject_add().  An ioctl issued in the
-window now waits for md_alloc() to finish instead of seeing a
-half-built mddev, and opening the array still succeeds.  The ioctls
-md_ioctl() serves without the mutex only read array state and return
--ENODEV on an array with no disks.
-
-Hoisting kobject_init() above add_disk() is not an option: commit
-ca39f7502425 ("md: fix mddev->kobj lifetime") moved it below add_disk()
-so that md_alloc()'s error paths, which free the mddev directly, never
-see an initialised kobject.
-
-Fixes: ca39f7502425 ("md: fix mddev->kobj lifetime")
-Reported-by: syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com
-Suggested-by: Yu Kuai <yukuai@fygo.io>
-Cc: stable@vger.kernel.org
-Assisted-by: LLM
-Signed-off-by: Yogesh Gaur <yogeshgaur.83@gmail.com>
----
-v2: Hold reconfig_mutex across add_disk() and kobject_add() instead of
-    refusing the open in md_open(), per Yu Kuai's review: v1 made an
-    open that raced with md_alloc() fail.
-v1: https://lore.kernel.org/all/20261004055712.1293-1-yogeshgaur.83@gmail.com/
-
-Built with W=1 only, fix has not been runtime-tested.
-
- drivers/md/md.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 67108c397c5a..85439f27d943 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5906,12 +5906,22 @@ struct mddev *md_alloc(dev_t dev, char *name)
- 
- 	disk->events |= DISK_EVENT_MEDIA_CHANGE;
- 	mddev->gendisk = disk;
-+
-+	/*
-+	 * add_disk() makes the array openable before mddev->kobj exists.
-+	 * Hold reconfig_mutex until kobject_add() is done so that ioctls
-+	 * issued in between wait instead of using an uninitialised kobj.
-+	 */
-+	mddev_lock_nointr(mddev);
- 	error = add_disk(disk);
--	if (error)
-+	if (error) {
-+		mddev_unlock(mddev);
- 		goto out_put_disk;
-+	}
- 
- 	kobject_init(&mddev->kobj, &md_ktype);
- 	error = kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "md");
-+	mddev_unlock(mddev);
- 	if (error) {
- 		/*
- 		 * The disk is already live at this point.  Clear the hold flag
--- 
-2.55.0.windows.5
-
+SGkgS3VhaSwKCk9uIFRodSwgT2N0IDAxLCAyMDI2IGF0IDEzOjE5ICswMDAwLCBzYXNoaWtvLWJv
+dEBrZXJuZWwub3JnIHdyb3RlOgo+IFRoYW5rIHlvdSBmb3IgeW91ciBjb250cmlidXRpb24hIFNh
+c2hpa28gQUkgcmV2aWV3IGZvdW5kIDIgcG90ZW50aWFsIGlzc3U9KHMpIHRvIGNvbnNpZGVyOgo+
+IC0gW0hpZ2hdIG1kOiBNRF9DTE9TSU5HIGZsYWcgaXMgbm90IGNsZWFyZWQgb24gZXJyb3Igb3Ig
+Uk8gdHJhbnNpdGlvbgo+IC0gW01lZGl1bV0gbWQ6IHN0cmljdCBib3VuZGFyeSBjaGVjayBvbiBV
+QVBJIG5hbWUgZmllbGQgcmVqZWN0cyB2YWxpZAo+IGlucHV0cwpJIHdpbGwgZml4IHRob3NlIGlu
+IHYzLgoKPiAtLQo+Cj4gY29tbWl0IGMyZDYzNTFiZjc1YmJlMjVhNTczNGIxNzYzOGQxNDMxNzEz
+NDg4NmMKPiBBdXRob3I6IEFiZC1BbHJobWFuIE1hc2Fsa2hpIDxhYmQubWFzYWxraGlAZ21haWwu
+Y29tPgo+Cj4gbWQ6IGFkZCBhIGNvbnRyb2wgZGV2aWNlIGZvciBhcnJheSBtYW5hZ2VtZW50Cj4K
+PiBUaGlzIGNvbW1pdCBpbnRyb2R1Y2VzIGEgbmV3IG1pc2MgY2hhcmFjdGVyIGRldmljZSwgL2Rl
+di9tZC1jb250cm9sLCB0byBoPW5kbGUKPiBtZCBtYW5hZ2VtZW50IGlvY3RscyB3aXRob3V0IHJl
+cXVpcmluZyBhbiBvcGVuIGZpbGUgZGVzY3JpcHRvciB0byB0aGUgbWQgPWxvY2sKPiBkZXZpY2Ug
+aXRzZWxmLiBUaGlzIHByZXZlbnRzIHJhY2VzIGR1cmluZyBhcnJheSBzdG9wIGFuZCByZWNvbmZp
+Z3VyYXRpb24gPWhlbgo+IG11bHRpcGxlIHRhc2tzIHNoYXJlIHRoZSBzYW1lIGZpbGUgZGVzY3Jp
+cHRvciB0YWJsZS4gVGhlIGV4aXN0aW5nIGJsb2NrIGQ9dmljZQo+IGlvY3RscyBhcmUgcHJlc2Vy
+dmVkIGZvciBjb21wYXRpYmlsaXR5IGJ1dCB0cmlnZ2VyIGEgd2FybmluZyByZWNvbW1lbmRpbmc9
+bgo+IHVwZ3JhZGUgdG8gbWRhZG0uCj4KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvbWQuYyBi
+L2RyaXZlcnMvbWQvbWQuYwo+PiAtLS0gYS9kcml2ZXJzL21kL21kLmMKPj4gKysrIGIvZHJpdmVy
+cy9tZC9tZC5jCj4gWyAuLi4gXQo+PiBAQCAtODYwMiw2ICs4NjA4LDYyMyBAQCBzdGF0aWMgaW50
+IG1kX2NvbXBhdF9pb2N0bChzdHJ1Y3QgYmxvY2tfZGV2aWNlICo9ZGV2LCBibGtfbW9kZV90IG1v
+ZGUsCj4gWyAuLi4gXQo+PiArc3RhdGljIHN0cnVjdCBtZGRldiAqbWRjdGxfZ2V0X21kZGV2X25h
+bWUoY29uc3QgY2hhciAqbmFtZSkKPj4gK3sKPj4gKwl1bnNpZ25lZCBsb25nIG1pbm9yOwo+PiAr
+CXN0cnVjdCBtZGRldiAqbWRkZXYsICpyZXQgPSBFUlJfUFRSKC1FSU5WQUwpOwo+PiArCj4+ICsJ
+aWYgKHN0cm5jbXAobmFtZSwgIm1kIiwgMikgfHwgbmFtZVtNRF9OQU1FX0xFTiAtIDFdKQo+PiAr
+CQlyZXR1cm4gcmV0Owo+Cj4gW1NldmVyaXR5OiBNZWRpdW1dCj4gV2lsbCB0aGlzIHN0cmljdCBi
+b3VuZGFyeSBjaGVjayByZWplY3QgdmFsaWQgdXNlciBpbnB1dD8gSWYgYSB1c2Vyc3BhY2UKPiBw
+cm9ncmFtIHBvcHVsYXRlcyB0aGUgbmFtZSBmaWVsZCB3aXRoIGEgc2hvcnQsIHByb3Blcmx5IG51
+bGwtdGVybWluYXRlZAo+IHN0cmluZyBidXQgbGVhdmVzIHRoZSB0cmFpbGluZyBwYWRkaW5nIGJ5
+dGVzIHVuaW5pdGlhbGl6ZWQgb24gdGhlIHN0YWNrLAo+IHRoaXMgY2hlY2sgd2lsbCBmYWlsIGJl
+Y2F1c2UgdGhlIGFic29sdXRlIGxhc3QgYnl0ZSBpc24ndCB6ZXJvLiBDb3VsZAo+IHRoaXMgYmUg
+cmVsYXhlZCB0byBlbnN1cmUgdGhlIHN0cmluZyBpcyBudWxsLXRlcm1pbmF0ZWQgYW55d2hlcmUg
+d2l0aGluCj4gdGhlIGJ1ZmZlciBpbnN0ZWFkPwo+Cj4gWyAuLi4gXQo+PiArc3RhdGljIGxvbmcg
+bWRjdGxfaW9jdGwoc3RydWN0IGZpbGUgKmZpbHAsIHVpbnQgY21kLCB1bG9uZyB1KQo+PiArewo+
+IFsgLi4uIF0KPj4gKwlpZiAoY21kID09IE1EX1NUT1BfQVJSQVkpIHsKPj4gKwkJLyogTmVlZCB0
+byBmbHVzaCBwYWdlIGNhY2hlLCBhbmQgZW5zdXJlIG5vIG9wZW5lcnMgKi8KPj4gKwkJZXJyID0g
+bWRkZXZfc2V0X2Nsb3NpbmdfYW5kX3N5bmNfYmxvY2tkZXYobWRkZXYsIDApOwo+PiArCQlpZiAo
+ZXJyKQo+PiArCQkJZ290byBvdXQ7Cj4+ICsJfQo+IFsgLi4uIF0KPj4gK291dDoKPj4gKwltZGRl
+dl9wdXQobWRkZXYpOwo+PiArCXJldHVybiBlcnI7Cj4+ICt9Cj4KPiBbU2V2ZXJpdHk6IEhpZ2hd
+Cj4gRG9lcyB0aGlzIGV4aXQgcGF0aCBuZWVkIHRvIGNsZWFyIHRoZSBNRF9DTE9TSU5HIGZsYWcg
+aWYgaXQgd2FzIHNldAo+IGVhcmxpZXI/IFdoZW4gYSBwcml2aWxlZ2VkIHVzZXIgY2FsbHMgTURf
+U1RPUF9BUlJBWSBhbmQgdGhlIGFycmF5IGlzCj4gYnVzeSBvciB0cmFuc2l0aW9ucyB0byByZWFk
+LW9ubHksIE1EX0NMT1NJTkcgaXMgc3VjY2Vzc2Z1bGx5IHNldCwgYnV0Cj4gdGhlIGlvY3RsIG1h
+eSBsYXRlciBqdW1wIHRvIG91dCBvciByZXR1cm4gYW4gZXJyb3IuIFNpbmNlIHRoZSBmbGFnIGlz
+Cj4gbmV2ZXIgY2xlYXJlZCBvbiB0aGVzZSBwYXRocyBpbiBtZGN0bF9pb2N0bCgpLCB3b3VsZCB0
+aGlzIGxlYXZlIHRoZQo+IGJsb2NrIGRldmljZSBwZXJtYW5lbnRseSBsb2NrZWQgb3V0IGZyb20g
+ZnV0dXJlIG9wZW5zIHVudGlsIHJlYm9vdD8KPgo+IC0tIAo+IFNhc2hpa28gQUkgcmV2aWV3IMK3
+IGh0dHBzOi8vc2FzaGlrby5kZXYvIy9wYXRjaHNldC8yMDI2MTAwMTEyNTYxMS45ND03MzEtMS1h
+YmQubWFzYWxraGlAZ21haWwuY29tP3BhcnQ9NAoKLS0gCkJlc3QgUmVnYXJkcywKQWJkLUFscmht
+YW4K
