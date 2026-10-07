@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11226231829
-	for <linux-raid@vger.kernel.org>; Wed,  7 Oct 2026 12:08:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 220C64825D7
+	for <linux-raid@vger.kernel.org>; Wed,  7 Oct 2026 12:09:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791374921; cv=none; b=meAh2Z7MjbPyYSn7pfT1Lfs47sedlq+87196KEsZQluuQ5dtGIPdsJU/3ZrE8YSLVxa4vGViAdfIsVPm+ixsBQKZxevmi2q8fNcq1zUqRjPVl+0yfqTUB9xvODdk8AcZyP8q9YOHRravLehOJn+YrGpniG0dbzXPX1O8ZiFl680=
+	t=1791374992; cv=none; b=o70PdXZ2cq7bCMoPSGNCeLwmiKw/T+4Pazd5EtRmrJvTOp1J79j8bTAGRjauc2pOZblGCBpu+rlgilEsYCNluHd7CbFVVhrOBOqD72xzmM3Lq1Z3r6qTvYd70GF7+cxmZPcoWdpCu0cR7y3c6uoWcz+p8xHvDkeLPPiq8DqmW4o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791374921; c=relaxed/simple;
-	bh=DFVP56J+DOknrwfQLMn4qW04kmPqx5zwLlTRlPGcoL8=;
+	s=arc-20240116; t=1791374992; c=relaxed/simple;
+	bh=mkB2EH1bAc5FvSABOlVwILjxZ+e/ThyAq889+vHMxRw=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=iXOkuaaJ1XgX1XZnEw56xeCXE3R0B73JLUa5yfcur3uzvB1xlOzgxyFnqcAP0TWyuXNDKki3lMgUdmRSt0UQ+FsajtGliot12nww16PTt33ba0cc8fxU99t5oFp3HjmGDla1kdEVjDTxDTSo29XrJ2R55IvS0ZBF9akTiE08nRw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g9x65bZq; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=RnOB8t7DcUOrgo+ohFIquxL1ONT4TVeUvgM+RxcPxhCq2nqdxwnanWVXqqyTv6Y08OisySAbhp47TCgTjIRmmafVVcPOLjcvfZyBBk9a3HXSjyAHKJDWtZSo05NgFqCX2V62pBeItCEtHEcBRWPUIXgrPArPUuztj/jpaXraLKo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ajFjenWt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g9x65bZq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AD211F0089B;
-	Wed,  7 Oct 2026 12:08:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ajFjenWt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 827AC1F0089B;
+	Wed,  7 Oct 2026 12:09:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791374910;
-	bh=wgRVjb+At6q7uN7Ioeo19K0UvWpz93u2oILSoZqjVYE=;
+	s=k20260515; t=1791374981;
+	bh=nDbcDn23kRsjmdNi501cu7OxiqZ60MBQJ2mdxI7mTjI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=g9x65bZqhon35/KGTX8G6ZG6EvHhvEZR5w4M3J8TtY9SN7lZ9xwHU9t+pSXyVQElj
-	 8QH7clnIhhWdnhnAbY9EBv/3CJv/Dn9lWgwA0rlHdMqmUS8Q89hZ6suTRNMfSQoJso
-	 o1nmS/t9r4u2v+/0hmp1tK9m1q6AtduthMsnGGTeT0lDDJ7/UzGuYV31DAyn1Bd0QT
-	 jRfRWgSMoOBeCXpFk8rE5x6bmP+gSsrrdF2H3R1apzOKOY8OAsSO5O3euh3VNycRlG
-	 YrLb7a5c1Nd8YDZVPovWg4xcoWHdWhaC0TTswp6VAEXRW4m7kZO5LJgDEQoHfjokVT
-	 5Wh70dbaNeeKg==
-Message-ID: <sashiko-outbox-162974@kernel.org>
+	b=ajFjenWtkbwV5/Jw8egStZ+gdhD0mpgIwfOSrHsjCnWR2y3KeSRtymqIhweSRUm5G
+	 Ow5lMdyQvJe0usOW7yoRS1wXwYTSIsozxLgkfCGs0PVOIIWb8hOL1b+ZzXDvea05dg
+	 1OVyVKIfclHvMg8p2yh/pxfYEjhp6QnMPuy1SMW0B7IaAdhfJXh1WlD095uyzR16HR
+	 /zdJcjYr9gwHVvXMTyPgNvRPLYdwnfXEgA5qC3kzeIO2OBVqAyYOaG1pwkPoDFQ7Il
+	 pWQkp+YwIG0Pom64sd48saEnZbqKirtYLPR2jTbiufEAgiI4ywNN3A1o/a3yme1I6a
+	 Fow7BTEEFD8Bw==
+Message-ID: <sashiko-outbox-162977@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v3 2/4] md: pass struct mdu_disk_info64 to
- md_add_new_disk()
+Subject: Re: [RFC PATCH v3 4/4] md: add a control device for array
+ management
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?TWFzYWxraGksIEFiZCBBbHJobWFu?= <abd.masalkhi@gatech.edu>
 Cc: yukuai@fygo.io, linux-raid@vger.kernel.org
-In-Reply-To: <20261007115104.13884-3-abd.masalkhi@gatech.edu>
+In-Reply-To: <20261007115104.13884-5-abd.masalkhi@gatech.edu>
 References: <20261007115104.13884-1-abd.masalkhi@gatech.edu>
- <20261007115104.13884-3-abd.masalkhi@gatech.edu>
+ <20261007115104.13884-5-abd.masalkhi@gatech.edu>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 07 Oct 2026 12:08:29 +0000
+Date: Wed, 07 Oct 2026 12:09:41 +0000
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -47,62 +47,61 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] md: uninitialized info->raid_disk evaluation outside MD_DISK_SYN=
-C flag gate
+- [High] md: MD_CLOSING mutual exclusion broken in mdctl_ioctl
 --
 
-commit 2e047f45700e04ece53e9f9cfd19bd6bb0bd587c
+commit fe7502eb38662870e8ecf28880f3055a33951d2a
 Author: Abd-Alrhman Masalkhi <abd.masalkhi@gatech.edu>
 
-md: pass struct mdu_disk_info64 to md_add_new_disk()
+md: add a control device for array management
 
-The md control device passes disk information as struct mdu_disk_info64.
-Make md_add_new_disk() take this structure, so that the control device
-and the old ADD_NEW_DISK ioctl can share it.
+This commit adds a misc character device, /dev/md-control, to handle md
+management ioctls without opening the md block device. This aims to resolve
+an issue where STOP_ARRAY races with concurrent writes from tasks sharing
+the same file descriptor table.
 
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 154ee5a65cb79..be1634ae1d09c 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -8305,6 +8305,16 @@ static bool md_ioctl_need_suspend(unsigned int cmd)
->  	}
->  }
-> =20
-> +static void convert_to_disk_info64(struct mdu_disk_info64 *info64,
-> +				   mdu_disk_info_t *info)
+[ ... ]
+> +static long mdctl_ioctl(struct file *filp, uint cmd, ulong u)
 > +{
-> +	info64->number =3D info->number;
-> +	info64->major =3D info->major;
-> +	info64->minor =3D info->minor;
-> +	info64->raid_disk =3D info->raid_disk;
-
-[Severity: Medium]
-If the ADD_NEW_DISK ioctl is called to add a hot spare without the
-MD_DISK_SYNC flag set, is it guaranteed that userspace has initialized
-info->raid_disk?
-
-Userspace is not required to initialize the raid_disk field if the
-MD_DISK_SYNC flag is absent, meaning it may contain arbitrary garbage.
-The convert_to_disk_info64() helper copies this unconditionally.
-
-When md_add_new_disk() proceeds to evaluate it:
-
-	if (info->raid_disk < mddev->raid_disks)
-		rdev->raid_disk =3D info->raid_disk;
-	else
-		rdev->raid_disk =3D -1;
-
-could this evaluation outside of the MD_DISK_SYNC flag gate cause array
-role corruption?
-
-If the uninitialized garbage happens to be a positive integer less than
-mddev->raid_disks, rdev->raid_disk might be mistakenly assigned this
-garbage value instead of the expected -1 for a spare, potentially
-breaking rebuilding logic.
-
-> +	info64->state =3D info->state;
+[ ... ]
+> +	if (cmd =3D=3D MD_STOP_ARRAY) {
+> +		/* Need to flush page cache, and ensure no openers */
+> +		err =3D mddev_set_closing_and_sync_blockdev(mddev, 0);
+> +		if (err)
+> +			goto out;
+> +	}
+[ ... ]
+> +out:
+> +	if (cmd =3D=3D MD_STOP_ARRAY)
+> +		clear_bit(MD_CLOSING, &mddev->flags);
+> +
+> +	mddev_put(mddev);
+> +	return err;
 > +}
+
+[Severity: High]
+Does this unconditional clearance of MD_CLOSING destroy mutual exclusion for
+concurrent stop attempts?
+
+If two tasks call mdctl_ioctl() with MD_STOP_ARRAY concurrently:
+
+Task A succeeds in mddev_set_closing_and_sync_blockdev(), which sets
+MD_CLOSING.
+
+Task B fails in mddev_set_closing_and_sync_blockdev() because MD_CLOSING is
+already set, returning -EBUSY and jumping to out.
+
+Task B then unconditionally clears MD_CLOSING at the out label.
+
+This clears the flag while Task A is still relying on it to prevent
+concurrent openers or operations, potentially circumventing the protections
+this patch aims to provide. Should this bit only be cleared if the task
+actually set it, or removed entirely if the old md_ioctl() didn't need to
+clear it here?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261007115104.1388=
-4-1-abd.masalkhi@gatech.edu?part=3D2
+4-1-abd.masalkhi@gatech.edu?part=3D4
