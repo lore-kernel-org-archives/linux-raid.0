@@ -1,205 +1,163 @@
-Received: from va-2-56.ptr.blmpb.com (va-2-56.ptr.blmpb.com [209.127.231.56])
+Received: from va-2-51.ptr.blmpb.com (va-2-51.ptr.blmpb.com [209.127.231.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7E173451A6
-	for <linux-raid@vger.kernel.org>; Fri,  9 Oct 2026 03:12:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C844E3612ED
+	for <linux-raid@vger.kernel.org>; Fri,  9 Oct 2026 03:59:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791515573; cv=none; b=qAgf/N86KTx65mPeAlI8j7OZV1WlJTYT/iw8hFCj4f01ySA9bJpL1byoJBGS+MZ6qYbz/ojNRwj0tSp/cbu/Dr9XY3aqIAolSNxnC3VF57LvW7zdj0Sy1VaTX8xwzbsQ1qEPw2Q0kadC5EHKqOXPehNr4STYvjwQNTrLbrc7ZL8=
+	t=1791518351; cv=none; b=dleQLr6gn7zPRZ2r6PJZEKKSri+yBe7TwtpfrwcPs/TAcacJHOfAMobZPqFmQoy+tVFCpVIEbYMmj4B/HvA9bTxw74clIgtPzli40Cs/V3kjVb8xAnvBrUGy8vEcOZSIxAlAIA7SQjLGrr7pWp9cORM1+37yskrF/tKAKlyeKWA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791515573; c=relaxed/simple;
-	bh=/zRbQ4G2JIzgNGW0NdOCTn3fDkacZ/12Bf/PAEdG3J0=;
-	h=Subject:References:To:Cc:Content-Type:Date:Mime-Version:
-	 Message-Id:In-Reply-To:From; b=PLSjVKRfWDY0RhuDZmNnwYnhcx9OhpL3ak2lbpLfl3pal5trOJkhicMTbfEH1G5ILjQy3GgKqwJAbjubFR7D6qOe+Psy64dRrUguhaEWop53cv+I+3C+gNYv1wxJxj6u9uYOA06PkUYeVZrhCcpDu3Pl1mQK1CVV0ZLhwk96HEM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=XbAZQNiq; arc=none smtp.client-ip=209.127.231.56
+	s=arc-20240116; t=1791518351; c=relaxed/simple;
+	bh=S3YX/IofUpGzMaHVjbZ3i/7v3orPrOdkbg+atX82QFM=;
+	h=To:From:Subject:Message-Id:Cc:Date:Mime-Version:In-Reply-To:
+	 References:Content-Type; b=epRnbMVet2SA6MNXTRMTEminTNFeRAAaA6z0WN6BHuNVQ37wBsaDeRkHf3w83gdYkCIre3c/t7LYiLVwwPqZ/UJOypy/LVKsVD+y3bFbxTmIVe5f2neRcq4P+8dR2RLr6Zp7EaBn70cvCZXRXs0A3xZD1A1PASmlSYuadQgJ3gw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=JiMSmTTs; arc=none smtp.client-ip=209.127.231.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="XbAZQNiq"
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="JiMSmTTs"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1791515558;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1791518337;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=cnjFrYqnLgXOVQZ2ilR00iyrNd4zwdoaGYzKoAoPYcM=;
- b=XbAZQNiq3/ZPRAU5/m9tVdP8bbEtF7ZA5t03HfIyMCltyV19mNpKRpQrUT+vA3Jala+aRB
- yvhhv+mJEloy+6QLiaz2yCemMuCfh8b4ITQtGodBbEgfQeOd80zio1r6b3eM+/i8avNwe/
- qexy+HkZ/KQ8qV7dUbTQeJF2DWUDy9/7m6qrUtIvg5XlHIG8lLlzDnEz5yL6ULX5z25mhI
- HuplLQHkvXIRQSpMYOXskvdvSRSGfks90GQUGrRis3cXm4u87xCsO7/xxKKGeMdTJ/iYws
- TIezbjSz58zPWxGZo6BYAnlRm9zcN9WXKVz5IyxL/HbUzhVNx4wUAc741u8G4g==
-Subject: Re: [PATCH v2] md/raid5: use dedicated llist for stripe plug
-References: <20260922060928.3486799-1-dayou5941@163.com>
-To: "Li Youhong" <dayou5941@163.com>, <song@kernel.org>, 
+ bh=9ioF2CxfmybnWpl7CBEF+vseKEEUSR0omAyejznNhFM=;
+ b=JiMSmTTsiLz4bKcLryrud0k5yHd0SBd6BN5HdJLAVuu1J1YGfJt3UwtP9LuCc3T1rsUM6n
+ RDWw/VutWjmTb84UJHGEcXLQthsC6deD68S0A/6S+0b6LKiMcS1xlqzShTf/4YCGVGnh1B
+ g4D2rCQ/tYRFb5PnFceJBzFmFdeRmyoUgtQh0CO2TMKuPThoA0r+MvR9pshD8IpwqIRJmD
+ EZGCq/gr8pdrfyet7wXZFEVjFn0FXDJNDHYOwIjwViUeyXMYd3hXhYCSyhEf5ergGncLDL
+ a18+wMBEF1A2C7LBqNqgM6oAy0/DBsMIS0N5N2GlfEFF5XYQaPE0s+yAcM/SmQ==
+To: "Yogesh Gaur" <yogeshgaur.83@gmail.com>, "Song Liu" <song@kernel.org>, 
 	"yu kuai" <yukuai@fygo.io>
-Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"Li Youhong" <liyouhong@kylinos.cn>, <stable@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 9 Oct 2026 11:12:33 +0800
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH v2] md: don't hand out the array before md_alloc() has added mddev->kobj
+Message-Id: <ef73044f-592d-4bcb-9f0a-f1b45fd8b3cf@fygo.io>
+X-Lms-Return-Path: <lba+26ac86680+8e4a9c+vger.kernel.org+yukuai@fygo.io>
+Cc: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	"Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	"Christoph Hellwig" <hch@lst.de>, "Hannes Reinecke" <hare@suse.de>, 
+	"Logan Gunthorpe" <logang@deltatee.com>, 
+	<syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com>, 
+	<stable@vger.kernel.org>
+Date: Fri, 9 Oct 2026 11:58:52 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Lms-Return-Path: <lba+26ac85ba6+64aba2+vger.kernel.org+yukuai@fygo.io>
 X-Original-From: yu kuai <yukuai@fygo.io>
-Message-Id: <fb8edfb3-ce4c-4b3d-87f8-70552626311f@fygo.io>
-User-Agent: Mozilla Thunderbird
-Received: from [192.168.1.104] ([39.182.0.35]) by smtp.larksuite.com with ESMTPS; Fri, 09 Oct 2026 03:12:37 +0000
-In-Reply-To: <20260922060928.3486799-1-dayou5941@163.com>
+In-Reply-To: <20261006122904.1538-1-yogeshgaur.83@gmail.com>
+Received: from [192.168.1.104] ([39.182.0.35]) by smtp.larksuite.com with ESMTPS; Fri, 09 Oct 2026 03:58:56 +0000
+Content-Transfer-Encoding: quoted-printable
+References: <20261004055712.1293-1-yogeshgaur.83@gmail.com/> <20261006122904.1538-1-yogeshgaur.83@gmail.com>
 Reply-To: yukuai@fygo.io
-From: "yu kuai" <yukuai@fygo.io>
+User-Agent: Mozilla Thunderbird
+Content-Type: text/plain; charset=UTF-8
 
 Hi,
 
-=E5=9C=A8 2026/9/22 14:09, Li Youhong =E5=86=99=E9=81=93:
-> From: Li Youhong <liyouhong@kylinos.cn>
+=E5=9C=A8 2026/10/6 20:29, Yogesh Gaur =E5=86=99=E9=81=93:
+> md_alloc() publishes the gendisk before it is done setting the mddev up:
 >
-> release_stripe_plug() and do_release_stripe() share sh->lru.
-> release_stripe_plug() sets STRIPE_ON_UNPLUG_LIST and
-> list_add_tail()s sh->lru onto raid5_plug_cb.list without
-> device_lock. do_release_stripe() holds device_lock and, when the
-> last reference drops, list_add()s the same lru onto a handle or
-> inactive list.
+> 	disk->private_data =3D mddev;
+> 	...
+> 	error =3D add_disk(disk);
+> 	if (error)
+> 		goto out_put_disk;
 >
-> Two list_add()s on one node corrupt it. sh->lru can be
-> reinitialized into a self-loop while raid5_plug_cb.list still
-> points at that stripe. raid5_unplug() then walks the list under
-> device_lock with IRQs disabled and never finishes. Other CPUs
-> waiting for the same lock hard-lockup.
+> 	kobject_init(&mddev->kobj, &md_ktype);
+> 	error =3D kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "md"=
+);
 >
-> Add a dedicated llist_node, unplug_list, to stripe_head, as
-> release_list is used for released_stripes.
+> add_disk() makes /dev/mdN openable.  mddev comes from mddev_alloc() and
+> is zeroed, so anything that gets in between add_disk() and kobject_add()
+> sees an mddev->kobj that has never been through kobject_init() - no
+> ktype, no kref, state_initialized clear.
 >
-> Fixes: 8811b5968f62 ("raid5: make_request use batch stripe release")
+> syzbot opens the array in that window and issues ADD_NEW_DISK:
+>
+>    kobject: '(null)' (ffff8880120640f0): is not initialized, yet kobject_=
+get() is being called.
+>    WARNING: lib/kobject.c:642 at kobject_add_internal+0xea/0xcd0 lib/kobj=
+ect.c:225
+>     kobject_add_varg lib/kobject.c:374 [inline]
+>     kobject_add+0x163/0x240 lib/kobject.c:426
+>     bind_rdev_to_array+0x80c/0xdd0 drivers/md/md.c:2621
+>     md_add_new_disk+0xe3b/0x1850 drivers/md/md.c:7684
+>     md_ioctl+0x200a/0x2610 drivers/md/md.c:8499
+>
+> bind_rdev_to_array() is not the only way in.  md_run() calls
+> sysfs_create_group(&mddev->kobj, &md_redundancy_group), and
+> internal_create_group() has its own WARN_ON(!kobj->sd), so RUN_ARRAY in
+> the same window warns too.
+>
+> Every ioctl that can reach mddev->kobj runs under reconfig_mutex, so
+> hold it across add_disk() and kobject_add().  An ioctl issued in the
+> window now waits for md_alloc() to finish instead of seeing a
+> half-built mddev, and opening the array still succeeds.  The ioctls
+> md_ioctl() serves without the mutex only read array state and return
+> -ENODEV on an array with no disks.
+>
+> Hoisting kobject_init() above add_disk() is not an option: commit
+> ca39f7502425 ("md: fix mddev->kobj lifetime") moved it below add_disk()
+> so that md_alloc()'s error paths, which free the mddev directly, never
+> see an initialised kobject.
+>
+> Fixes: ca39f7502425 ("md: fix mddev->kobj lifetime")
+> Reported-by: syzbot+95eeb4ada2349a2170ea@syzkaller.appspotmail.com
+
+Reported-by should always follow with a link to the report, and the followi=
+ng
+tag and applied:
+
+Closes: https://lore.kernel.org/all/6aaf3284.514bccd6.255447.0003.GAE@googl=
+e.com/
+
 > Suggested-by: Yu Kuai <yukuai@fygo.io>
 > Cc: stable@vger.kernel.org
-> Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
+> Assisted-by: LLM
+> Signed-off-by: Yogesh Gaur <yogeshgaur.83@gmail.com>
 > ---
-> v2:
-> - Drop taking device_lock in release_stripe_plug(). Add a dedicated
->    unplug_list.
-> - v1: link: https://lore.kernel.org/linux-raid/20260902095307.358569-1-da=
-you5941@163.com/
+> v2: Hold reconfig_mutex across add_disk() and kobject_add() instead of
+>      refusing the open in md_open(), per Yu Kuai's review: v1 made an
+>      open that raced with md_alloc() fail.
+> v1: https://lore.kernel.org/all/20261004055712.1293-1-yogeshgaur.83@gmail=
+.com/
 >
-> ---
->   drivers/md/raid5.c | 52 ++++++++++++++++++++++++++---------------------=
------
->   drivers/md/raid5.h |  1 +
->   2 files changed, 27 insertions(+), 26 deletions(-)
+> Built with W=3D1 only, fix has not been runtime-tested.
 >
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index b91545ce090d..9dabbf9743d7 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -5710,7 +5710,7 @@ static struct stripe_head *__get_priority_stripe(st=
-ruct r5conf *conf, int group)
+>   drivers/md/md.c | 12 +++++++++++-
+>   1 file changed, 11 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 67108c397c5a..85439f27d943 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -5906,12 +5906,22 @@ struct mddev *md_alloc(dev_t dev, char *name)
 >  =20
->   struct raid5_plug_cb {
->   	struct blk_plug_cb	cb;
-> -	struct list_head	list;
-> +	struct llist_head	unplug_list;
->   	struct list_head	temp_inactive_list[NR_STRIPE_HASH_LOCKS];
->   };
->  =20
-> @@ -5718,34 +5718,33 @@ static void raid5_unplug(struct blk_plug_cb *blk_=
-cb, bool from_schedule)
->   {
->   	struct raid5_plug_cb *cb =3D container_of(
->   		blk_cb, struct raid5_plug_cb, cb);
-> -	struct stripe_head *sh;
-> +	struct stripe_head *sh, *tmp;
->   	struct mddev *mddev =3D cb->cb.data;
->   	struct r5conf *conf =3D mddev->private;
-> +	struct llist_node *head;
->   	int cnt =3D 0;
->   	int hash;
->  =20
-> -	if (cb->list.next && !list_empty(&cb->list)) {
-> -		spin_lock_irq(&conf->device_lock);
-> -		while (!list_empty(&cb->list)) {
-> -			sh =3D list_first_entry(&cb->list, struct stripe_head, lru);
-> -			list_del_init(&sh->lru);
-> -			/*
-> -			 * avoid race release_stripe_plug() sees
-> -			 * STRIPE_ON_UNPLUG_LIST clear but the stripe
-> -			 * is still in our list
-> -			 */
-> -			smp_mb__before_atomic();
-> -			clear_bit(STRIPE_ON_UNPLUG_LIST, &sh->state);
-> -			/*
-> -			 * STRIPE_ON_RELEASE_LIST could be set here. In that
-> -			 * case, the count is always > 1 here
-> -			 */
-> -			hash =3D sh->hash_lock_index;
-> -			__release_stripe(conf, sh, &cb->temp_inactive_list[hash]);
-> -			cnt++;
-> -		}
-> -		spin_unlock_irq(&conf->device_lock);
-> +	head =3D llist_del_all(&cb->unplug_list);
-
-Is it possible that registered plug from task A can be flushed concurrent b=
-y unplug from
-another task, and later unplug_list is empty for task A's unplug. If so, a =
-NULL check for
-head is needed here.
-
-> +	head =3D llist_reverse_order(head);
-> +	spin_lock_irq(&conf->device_lock);
-> +	llist_for_each_entry_safe(sh, tmp, head, unplug_list) {
-> +		/*
-> +		 * avoid race release_stripe_plug() sees
-> +		 * STRIPE_ON_UNPLUG_LIST clear but the stripe
-> +		 * is still in our list
-> +		 */
-> +		smp_mb__before_atomic();
-> +		clear_bit(STRIPE_ON_UNPLUG_LIST, &sh->state);
-> +		/*
-> +		 * STRIPE_ON_RELEASE_LIST could be set here. In that
-> +		 * case, the count is always > 1 here
-> +		 */
-> +		hash =3D sh->hash_lock_index;
-> +		__release_stripe(conf, sh, &cb->temp_inactive_list[hash]);
-> +		cnt++;
->   	}
-> +	spin_unlock_irq(&conf->device_lock);
->   	release_inactive_stripe_list(conf, cb->temp_inactive_list,
->   				     NR_STRIPE_HASH_LOCKS);
->   	if (!mddev_is_dm(mddev))
-> @@ -5768,15 +5767,16 @@ static void release_stripe_plug(struct mddev *mdd=
-ev,
->  =20
->   	cb =3D container_of(blk_cb, struct raid5_plug_cb, cb);
->  =20
-> -	if (cb->list.next =3D=3D NULL) {
-> +	if (!cb->temp_inactive_list[0].next) {
->   		int i;
-> -		INIT_LIST_HEAD(&cb->list);
+>   	disk->events |=3D DISK_EVENT_MEDIA_CHANGE;
+>   	mddev->gendisk =3D disk;
 > +
-> +		init_llist_head(&cb->unplug_list);
->   		for (i =3D 0; i < NR_STRIPE_HASH_LOCKS; i++)
->   			INIT_LIST_HEAD(cb->temp_inactive_list + i);
->   	}
+> +	/*
+> +	 * add_disk() makes the array openable before mddev->kobj exists.
+> +	 * Hold reconfig_mutex until kobject_add() is done so that ioctls
+> +	 * issued in between wait instead of using an uninitialised kobj.
+> +	 */
+> +	mddev_lock_nointr(mddev);
+>   	error =3D add_disk(disk);
+> -	if (error)
+> +	if (error) {
+> +		mddev_unlock(mddev);
+>   		goto out_put_disk;
+> +	}
 >  =20
->   	if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state))
-> -		list_add_tail(&sh->lru, &cb->list);
-> +		llist_add(&sh->unplug_list, &cb->unplug_list);
->   	else
->   		raid5_release_stripe(sh);
->   }
-> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> index cb5feae04db2..e314f17eb949 100644
-> --- a/drivers/md/raid5.h
-> +++ b/drivers/md/raid5.h
-> @@ -201,6 +201,7 @@ struct stripe_head {
->   	struct hlist_node	hash;
->   	struct list_head	lru;	      /* inactive_list or handle_list */
->   	struct llist_node	release_list;
-> +	struct llist_node	unplug_list;
->   	struct r5conf		*raid_conf;
->   	short			generation;	/* increments with every
->   						 * reshape */
+>   	kobject_init(&mddev->kobj, &md_ktype);
+>   	error =3D kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "m=
+d");
+> +	mddev_unlock(mddev);
+>   	if (error) {
+>   		/*
+>   		 * The disk is already live at this point.  Clear the hold flag
 
 --=20
 Thanks,
