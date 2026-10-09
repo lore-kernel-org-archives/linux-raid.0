@@ -1,179 +1,162 @@
-Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31C67473C68;
-	Fri,  9 Oct 2026 07:12:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 671EA3E9C3C;
+	Fri,  9 Oct 2026 07:25:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791529972; cv=none; b=dsMNo+mI/Vbs9aiLdyUIHDZ7Wi37/MpJw34C4E2OoHcFtNKpb6PAaAgDI4ieXxhdnU6W5ynLLPd/w1tSdp5Kf5MiBq9X2XaOtM6olqiwvYYcCG7vgPmZTxzZ3jALe0iCtB5m7C9maGZPfi+2mXoTxUoDfnfh8ScJdNQsOxeEoCo=
+	t=1791530729; cv=none; b=pz2RheWobMpX2stCAdLZfrIw3pk88aKZzqUBBUlqyibt5rlCnDwsmbBCFCNVNmDBq2jR0KyjDbpeo6n2rbuCw38QQCK7Zwu1sHVTy3Fsgc0u5z5QD1TseS3enpvqrqn7lvnudOBaGj3t7n1TY5d6QKldPL8Esy9M2zGb3pDYE3E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791529972; c=relaxed/simple;
-	bh=OHPHriyd9zE5R00jtBUeLegaMtPjxjMeS3xqgij/AL0=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=R5/EHgucuaPPZkWjedBQXIY5WrzCwNBCJA96o9VdkuBxq2OUOkRpG7LDr0FgFbGtdII6EzWdqVG2Fo5+PSabQAYCpBavuR5VuEOxja6IusgY8JID5adDGF5pQy5tkuh+zvO5gjbJL89/rN8oLW9Eb1ykl6aHrnu1RP8Ts9QzR9E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=w2lnFrXz; arc=none smtp.client-ip=113.46.200.219
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1791530729; c=relaxed/simple;
+	bh=nRfx4PEdAVe/tiZSwV6KOad6Jk8ggOZNrdSFq/iADUM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=U+Z2AtgDFk4edE0SVEbYI/loh3yw4/9gpPN60Z1jZwdnLhj2HSz4CyNZPpZUY7DJBQH5+3uPIEHdRHA9TwLvtnkfJ2c4CPOtf3maN48+NEwpldG9z0CtWyqOSkWPE7DXEngS8ZYsSqQWtCUu6N1yBBcVA+MKz/yaxe6cg4jqfTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=lGW/rDza; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="w2lnFrXz"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=7FME7jd+jauy53NyaIyzwYuM5cz0oA7QkLeyMHGBT/8=;
-	b=w2lnFrXzCYmX+JKEtVl4rBHYzY2RLFvEISHaQ7LZqSO1JxQk6iLF96FuSH2t6p+uujcHEKePK
-	sOqk6hBAPaKpPCYzszr2QeVN8ShDE+izuSAKhZh5mw03fCMXJ1IOk6CLoim4coX8BJoi2UOpXL5
-	S7THvSvrieQFhJ/wGLsoK2A=
-Received: from mail.maildlp.com (unknown [172.19.163.0])
-	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4j1Hmy0J1Pz1prLV;
-	Fri,  9 Oct 2026 15:00:18 +0800 (CST)
-Received: from whupemo200011.china.huawei.com (unknown [7.152.185.179])
-	by mail.maildlp.com (Postfix) with ESMTPS id ABA6440561;
-	Fri,  9 Oct 2026 15:12:34 +0800 (CST)
-Received: from [10.174.178.46] (10.174.178.46) by
- whupemo200011.china.huawei.com (7.152.185.179) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Fri, 9 Oct 2026 15:12:33 +0800
-Subject: Re: [PATCH v3 1/4] md/raid5: Hide the origin mddev->thread before
- takeover
-To: <yukuai@fygo.io>, <song@kernel.org>, <shli@kernel.org>, <neil@brown.name>
-CC: <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<yangerkun@huawei.com>, <yi.zhang@huawei.com>
-References: <20260923112159.94175-1-chengzhihao1@huawei.com>
- <20260923112159.94175-2-chengzhihao1@huawei.com>
- <1194977a-ef25-4ad3-9bec-df27b6adc4b4@fygo.io>
-From: Zhihao Cheng <chengzhihao1@huawei.com>
-Message-ID: <aaa9d0ee-99ca-55d9-ced4-953d25190d97@huawei.com>
-Date: Fri, 9 Oct 2026 15:12:32 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="lGW/rDza"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
+	Message-ID; bh=nRfx4PEdAVe/tiZSwV6KOad6Jk8ggOZNrdSFq/iADUM=; b=l
+	GW/rDzaUYhdsjZvnIcmA9fXB9SYhjkaJjpz9qqewItq0wee5khus3pLgVoPcJbGT
+	gEV//OXXyCtqgzXtF5bFg1XcNUvUuzPIN2Q+LDuWnS0EEeYBoI90AUi8sU+ntUKH
+	q2I0/vgTnVxpT/W17HjQPe/rDdOapIw+vomcthFWbc=
+Date: Fri, 9 Oct 2026 15:24:51 +0800 (CST)
+From: =?GBK?B?wO7T07roIA==?= <dayou5941@163.com>
+To: yukuai@fygo.io
+Cc: song@kernel.org, magiclinan@didiglobal.com, xiao@kernel.org,
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Li Youhong" <liyouhong@kylinos.cn>, stable@vger.kernel.org
+Subject: Re:Re: [PATCH v2] md/raid5: use dedicated llist for stripe plug
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
+ 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 163com
+In-Reply-To: <fb8edfb3-ce4c-4b3d-87f8-70552626311f@fygo.io>
+References: <20260922060928.3486799-1-dayou5941@163.com>
+ <fb8edfb3-ce4c-4b3d-87f8-70552626311f@fygo.io>
+X-NTES-SC: AL_Qu2SA/mYv04i5ySbYekckk4Wjug8Wcexufwj34NTc94Fgyr94yIvQXFsLUbb/M2PAC6lmjK1fR1K4892frFac2SVp/XePkOKoniBVM+sQw==
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1194977a-ef25-4ad3-9bec-df27b6adc4b4@fygo.io>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
- whupemo200011.china.huawei.com (7.152.185.179)
+Message-ID: <59377ab5.6b99.1a11f8ceb72.Coremail.dayou5941@163.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:jCgvCgDXD2jElshqWKVUAA--.5592W
+X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC+QSjUmrIlsSunwAA3N
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 
-在 2026/10/9 12:31, yu kuai 写道:
-> Hi,
-> 
-> 在 2026/9/23 19:21, Zhihao Cheng 写道:
->> The raid5 takeover invokes setup_conf and allocates strip heads, but
->> it wakes up the wrong thread, which lefts strip heads in the list
->> 'conf->released_stripes' and not being processed. If raid5_run fails,
->> the strip heads won't be released, which triggers the following slab
->> warnings (CONFIG_SLUB_DEBUG):
->>    BUG raid5-md0 (Not tainted): Objects remaining on __kmem_cache_shutdown()
->>    Object 0x0000000062fad548 @offset=3968
->>    Object 0x000000007f74683c @offset=4960
->>    WARNING: mm/slub.c:1268 at __slab_err+0x31/0x40, CPU#0: bash/865
->>    RIP: 0010:__slab_err+0x31
->>    Call Trace:
->>     __kmem_cache_shutdown.cold+0x15b
->>     kmem_cache_destroy+0x71
->>     free_conf+0xf8
->>     raid5_run.cold+0x463
->>     level_store+0x64e
->>     md_attr_store+0xd7
-> 
-> Is this still a problem with following patch?
-> 
-> [PATCH] md/raid5: drain released_stripes before destroying the cache -
-> Li Youhong
-> <https://lore.kernel.org/all/20260929083916.50620-1-dayou5941@163.com/>
-Hi,
-
-Youhong's patch could fix the problem, please take it, his solution is 
-better.
-> 
->>
->> The detailed triggering process is as follows:
->>    mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sda /dev/sdb
->>    --force --assume-clean # create raid1, mddev->thread is raid1d
->>    echo 5 > /sys/block/md0/md/level
->>     level_store
->>      raid5_takeover_raid1
->>        setup_conf
->>         grow_stripes
->>          grow_one_stripe
->>           sh = alloc_stripe
->>           raid5_release_stripe
->>             md_wakeup_thread(conf->mddev->thread) // wakeup raid1d
->>        raid5_run
->>         ENOMEM = raid5_create_ctx_pool
->>         free_conf
->>          shrink_stripes
->>           drop_one_stripe // no strips found from the conf->inactive_list
->>           kmem_cache_destroy(conf->slab_cache)
->> 	 __kmem_cache_shutdown
->> 	  free_partial
->> 	   list_slab_objects // some entries are not released !
->>
->> Fix it by hiding the origin mddev->thread before takeover, so that
->> new allocating strip heads can be put into 'conf->inactive_list',
->> which can be found by drop_one_stripe().
->>
->> Fixes: 773ca82fa1ee ("raid5: make release_stripe lockless")
->> Signed-off-by: Zhihao Cheng <chengzhihao1@huawei.com>
->> ---
->>    drivers/md/raid5.c | 37 ++++++++++++++++++++++++++++---------
->>    1 file changed, 28 insertions(+), 9 deletions(-)
->>
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index c091bba95c31..7e87e8a60f5f 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -9039,19 +9039,38 @@ static void *raid5_takeover(struct mddev *mddev)
->>    	 *  raid4 - trivial - just use a raid4 layout.
->>    	 *  raid6 - Providing it is a *_6 layout
->>    	 */
->> -	if (mddev->level == 0)
->> -		return raid45_takeover_raid0(mddev, 5);
->> -	if (mddev->level == 1)
->> -		return raid5_takeover_raid1(mddev);
->> -	if (mddev->level == 4) {
->> +	void *ret = ERR_PTR(-EINVAL);
->> +	struct md_thread *thread;
->> +
->> +	thread = rcu_dereference_protected(mddev->thread,
->> +				lockdep_is_held(&mddev->reconfig_mutex));
->> +	/*
->> +	 * Set mddev->thread to NULL before setup_conf() to avoid waking up
->> +	 * wrong thread(eg. raid1), which can prevent the strips from being
->> +	 * left unreleased in the error handling path(free_conf) of raid5_run.
->> +	 */
->> +	rcu_assign_pointer(mddev->thread, NULL);
->> +
->> +	switch (mddev->level) {
->> +	case 0:
->> +		ret = raid45_takeover_raid0(mddev, 5);
->> +		break;
->> +	case 1:
->> +		ret = raid5_takeover_raid1(mddev);
->> +		break;
->> +	case 4:
->>    		mddev->new_layout = ALGORITHM_PARITY_N;
->>    		mddev->new_level = 5;
->> -		return setup_conf(mddev);
->> +		ret = setup_conf(mddev);
->> +		break;
->> +	case 6:
->> +		ret = raid5_takeover_raid6(mddev);
->> +		break;
->>    	}
->> -	if (mddev->level == 6)
->> -		return raid5_takeover_raid6(mddev);
->>    
->> -	return ERR_PTR(-EINVAL);
->> +	rcu_assign_pointer(mddev->thread, thread);
->> +
->> +	return ret;
->>    }
->>    
->>    static void *raid4_takeover(struct mddev *mddev)
-> 
-
+CgoKCgoKCgoKCgoKCgoKCgpBdCAyMDI2LTEwLTA5IDExOjEyOjMzLCAieXUga3VhaSIgPHl1a3Vh
+aUBmeWdvLmlvPiB3cm90ZToKPkhpLAo+Cj7U2iAyMDI2LzkvMjIgMTQ6MDksIExpIFlvdWhvbmcg
+0LS1wDoKPj4gRnJvbTogTGkgWW91aG9uZyA8bGl5b3Vob25nQGt5bGlub3MuY24+Cj4+Cj4+IHJl
+bGVhc2Vfc3RyaXBlX3BsdWcoKSBhbmQgZG9fcmVsZWFzZV9zdHJpcGUoKSBzaGFyZSBzaC0+bHJ1
+Lgo+PiByZWxlYXNlX3N0cmlwZV9wbHVnKCkgc2V0cyBTVFJJUEVfT05fVU5QTFVHX0xJU1QgYW5k
+Cj4+IGxpc3RfYWRkX3RhaWwoKXMgc2gtPmxydSBvbnRvIHJhaWQ1X3BsdWdfY2IubGlzdCB3aXRo
+b3V0Cj4+IGRldmljZV9sb2NrLiBkb19yZWxlYXNlX3N0cmlwZSgpIGhvbGRzIGRldmljZV9sb2Nr
+IGFuZCwgd2hlbiB0aGUKPj4gbGFzdCByZWZlcmVuY2UgZHJvcHMsIGxpc3RfYWRkKClzIHRoZSBz
+YW1lIGxydSBvbnRvIGEgaGFuZGxlIG9yCj4+IGluYWN0aXZlIGxpc3QuCj4+Cj4+IFR3byBsaXN0
+X2FkZCgpcyBvbiBvbmUgbm9kZSBjb3JydXB0IGl0LiBzaC0+bHJ1IGNhbiBiZQo+PiByZWluaXRp
+YWxpemVkIGludG8gYSBzZWxmLWxvb3Agd2hpbGUgcmFpZDVfcGx1Z19jYi5saXN0IHN0aWxsCj4+
+IHBvaW50cyBhdCB0aGF0IHN0cmlwZS4gcmFpZDVfdW5wbHVnKCkgdGhlbiB3YWxrcyB0aGUgbGlz
+dCB1bmRlcgo+PiBkZXZpY2VfbG9jayB3aXRoIElSUXMgZGlzYWJsZWQgYW5kIG5ldmVyIGZpbmlz
+aGVzLiBPdGhlciBDUFVzCj4+IHdhaXRpbmcgZm9yIHRoZSBzYW1lIGxvY2sgaGFyZC1sb2NrdXAu
+Cj4+Cj4+IEFkZCBhIGRlZGljYXRlZCBsbGlzdF9ub2RlLCB1bnBsdWdfbGlzdCwgdG8gc3RyaXBl
+X2hlYWQsIGFzCj4+IHJlbGVhc2VfbGlzdCBpcyB1c2VkIGZvciByZWxlYXNlZF9zdHJpcGVzLgo+
+Pgo+PiBGaXhlczogODgxMWI1OTY4ZjYyICgicmFpZDU6IG1ha2VfcmVxdWVzdCB1c2UgYmF0Y2gg
+c3RyaXBlIHJlbGVhc2UiKQo+PiBTdWdnZXN0ZWQtYnk6IFl1IEt1YWkgPHl1a3VhaUBmeWdvLmlv
+Pgo+PiBDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZwo+PiBTaWduZWQtb2ZmLWJ5OiBMaSBZb3Vo
+b25nIDxsaXlvdWhvbmdAa3lsaW5vcy5jbj4KPj4gLS0tCj4+IHYyOgo+PiAtIERyb3AgdGFraW5n
+IGRldmljZV9sb2NrIGluIHJlbGVhc2Vfc3RyaXBlX3BsdWcoKS4gQWRkIGEgZGVkaWNhdGVkCj4+
+ICAgIHVucGx1Z19saXN0Lgo+PiAtIHYxOiBsaW5rOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9s
+aW51eC1yYWlkLzIwMjYwOTAyMDk1MzA3LjM1ODU2OS0xLWRheW91NTk0MUAxNjMuY29tLwo+Pgo+
+PiAtLS0KPj4gICBkcml2ZXJzL21kL3JhaWQ1LmMgfCA1MiArKysrKysrKysrKysrKysrKysrKysr
+KysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCj4+ICAgZHJpdmVycy9tZC9yYWlkNS5oIHwg
+IDEgKwo+PiAgIDIgZmlsZXMgY2hhbmdlZCwgMjcgaW5zZXJ0aW9ucygrKSwgMjYgZGVsZXRpb25z
+KC0pCj4+Cj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmMgYi9kcml2ZXJzL21kL3Jh
+aWQ1LmMKPj4gaW5kZXggYjkxNTQ1Y2UwOTBkLi45ZGFiYmY5NzQzZDcgMTAwNjQ0Cj4+IC0tLSBh
+L2RyaXZlcnMvbWQvcmFpZDUuYwo+PiArKysgYi9kcml2ZXJzL21kL3JhaWQ1LmMKPj4gQEAgLTU3
+MTAsNyArNTcxMCw3IEBAIHN0YXRpYyBzdHJ1Y3Qgc3RyaXBlX2hlYWQgKl9fZ2V0X3ByaW9yaXR5
+X3N0cmlwZShzdHJ1Y3QgcjVjb25mICpjb25mLCBpbnQgZ3JvdXApCj4+ICAgCj4+ICAgc3RydWN0
+IHJhaWQ1X3BsdWdfY2Igewo+PiAgIAlzdHJ1Y3QgYmxrX3BsdWdfY2IJY2I7Cj4+IC0Jc3RydWN0
+IGxpc3RfaGVhZAlsaXN0Owo+PiArCXN0cnVjdCBsbGlzdF9oZWFkCXVucGx1Z19saXN0Owo+PiAg
+IAlzdHJ1Y3QgbGlzdF9oZWFkCXRlbXBfaW5hY3RpdmVfbGlzdFtOUl9TVFJJUEVfSEFTSF9MT0NL
+U107Cj4+ICAgfTsKPj4gICAKPj4gQEAgLTU3MTgsMzQgKzU3MTgsMzMgQEAgc3RhdGljIHZvaWQg
+cmFpZDVfdW5wbHVnKHN0cnVjdCBibGtfcGx1Z19jYiAqYmxrX2NiLCBib29sIGZyb21fc2NoZWR1
+bGUpCj4+ICAgewo+PiAgIAlzdHJ1Y3QgcmFpZDVfcGx1Z19jYiAqY2IgPSBjb250YWluZXJfb2Yo
+Cj4+ICAgCQlibGtfY2IsIHN0cnVjdCByYWlkNV9wbHVnX2NiLCBjYik7Cj4+IC0Jc3RydWN0IHN0
+cmlwZV9oZWFkICpzaDsKPj4gKwlzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoLCAqdG1wOwo+PiAgIAlz
+dHJ1Y3QgbWRkZXYgKm1kZGV2ID0gY2ItPmNiLmRhdGE7Cj4+ICAgCXN0cnVjdCByNWNvbmYgKmNv
+bmYgPSBtZGRldi0+cHJpdmF0ZTsKPj4gKwlzdHJ1Y3QgbGxpc3Rfbm9kZSAqaGVhZDsKPj4gICAJ
+aW50IGNudCA9IDA7Cj4+ICAgCWludCBoYXNoOwo+PiAgIAo+PiAtCWlmIChjYi0+bGlzdC5uZXh0
+ICYmICFsaXN0X2VtcHR5KCZjYi0+bGlzdCkpIHsKPj4gLQkJc3Bpbl9sb2NrX2lycSgmY29uZi0+
+ZGV2aWNlX2xvY2spOwo+PiAtCQl3aGlsZSAoIWxpc3RfZW1wdHkoJmNiLT5saXN0KSkgewo+PiAt
+CQkJc2ggPSBsaXN0X2ZpcnN0X2VudHJ5KCZjYi0+bGlzdCwgc3RydWN0IHN0cmlwZV9oZWFkLCBs
+cnUpOwo+PiAtCQkJbGlzdF9kZWxfaW5pdCgmc2gtPmxydSk7Cj4+IC0JCQkvKgo+PiAtCQkJICog
+YXZvaWQgcmFjZSByZWxlYXNlX3N0cmlwZV9wbHVnKCkgc2Vlcwo+PiAtCQkJICogU1RSSVBFX09O
+X1VOUExVR19MSVNUIGNsZWFyIGJ1dCB0aGUgc3RyaXBlCj4+IC0JCQkgKiBpcyBzdGlsbCBpbiBv
+dXIgbGlzdAo+PiAtCQkJICovCj4+IC0JCQlzbXBfbWJfX2JlZm9yZV9hdG9taWMoKTsKPj4gLQkJ
+CWNsZWFyX2JpdChTVFJJUEVfT05fVU5QTFVHX0xJU1QsICZzaC0+c3RhdGUpOwo+PiAtCQkJLyoK
+Pj4gLQkJCSAqIFNUUklQRV9PTl9SRUxFQVNFX0xJU1QgY291bGQgYmUgc2V0IGhlcmUuIEluIHRo
+YXQKPj4gLQkJCSAqIGNhc2UsIHRoZSBjb3VudCBpcyBhbHdheXMgPiAxIGhlcmUKPj4gLQkJCSAq
+Lwo+PiAtCQkJaGFzaCA9IHNoLT5oYXNoX2xvY2tfaW5kZXg7Cj4+IC0JCQlfX3JlbGVhc2Vfc3Ry
+aXBlKGNvbmYsIHNoLCAmY2ItPnRlbXBfaW5hY3RpdmVfbGlzdFtoYXNoXSk7Cj4+IC0JCQljbnQr
+KzsKPj4gLQkJfQo+PiAtCQlzcGluX3VubG9ja19pcnEoJmNvbmYtPmRldmljZV9sb2NrKTsKPj4g
+KwloZWFkID0gbGxpc3RfZGVsX2FsbCgmY2ItPnVucGx1Z19saXN0KTsKPgo+SXMgaXQgcG9zc2li
+bGUgdGhhdCByZWdpc3RlcmVkIHBsdWcgZnJvbSB0YXNrIEEgY2FuIGJlIGZsdXNoZWQgY29uY3Vy
+cmVudCBieSB1bnBsdWcgZnJvbQo+YW5vdGhlciB0YXNrLCBhbmQgbGF0ZXIgdW5wbHVnX2xpc3Qg
+aXMgZW1wdHkgZm9yIHRhc2sgQSdzIHVucGx1Zy4gSWYgc28sIGEgTlVMTCBjaGVjayBmb3IKCj5o
+ZWFkIGlzIG5lZWRlZCBoZXJlLgoKCkhpIEt1YWksCgoKQSBwbHVnIGJlbG9uZ3MgdG8gb25lIHRh
+c2ssIGluIGN1cnJlbnQtPnBsdWcuIGJsa19jaGVja19wbHVnZ2VkKCkKc2VhcmNoZXMgdGhhdCBw
+bHVnJ3MgY2JfbGlzdCBieSBjYWxsYmFjayBhbmQgZGF0YSAodGhlIG1kZGV2KSwgc28gZWFjaAp0
+YXNrIG9ubHkgZmx1c2hlcyBpdHMgb3duIGNicy4gZmx1c2hfcGx1Z19jYWxsYmFja3MoKSBhbHNv
+IGRyb3BzIHRoZSBjYgpmcm9tIGNiX2xpc3QgYmVmb3JlIHJhaWQ1X3VucGx1ZygpLCBhbmQgcmFp
+ZDVfdW5wbHVnKCkgZnJlZXMgaXQuIFNvCmFub3RoZXIgdGFzayBzaG91bGQgbm90IGJlIGFibGUg
+dG8gZmx1c2ggdGhpcyB1bnBsdWdfbGlzdC4KCgpBbiBlbXB0eSB1bnBsdWdfbGlzdCBjYW4gc3Rp
+bGwgaGFwcGVuLCBqdXN0IG5vdCBmcm9tIHRoYXQgcmFjZS4KYmxrX2NoZWNrX3BsdWdnZWQoKSBw
+dXRzIHRoZSBuZXcgY2Igb24gY2JfbGlzdCBiZWZvcmUgdGhlIHN0cmlwZSBpcwphZGRlZC4gSWYg
+U1RSSVBFX09OX1VOUExVR19MSVNUIGlzIGFscmVhZHkgc2V0LCB0ZXN0X2FuZF9zZXRfYml0KCkg
+ZmFpbHMKYW5kIHdlIGNhbGwgcmFpZDVfcmVsZWFzZV9zdHJpcGUoKSBpbnN0ZWFkIG9mIGxsaXN0
+X2FkZCgpLiBUaGUgc3RyaXBlIGlzCmFscmVhZHkgcXVldWVkIG9uIHNvbWUgb3RoZXIgdGFzaydz
+IHVucGx1Z19saXN0LCBhbmQgdGhpcyBjYiBzdGF5cwpyZWdpc3RlcmVkIHdpdGggbm90aGluZyBv
+biBpdC4gbGxpc3RfZGVsX2FsbCgpIHRoZW4gcmV0dXJucyBOVUxMLgpsbGlzdF9yZXZlcnNlX29y
+ZGVyKE5VTEwpIHJldHVybnMgTlVMTCwgYW5kIGxsaXN0X2Zvcl9lYWNoX2VudHJ5X3NhZmUoKQpk
+b2VzIG5vdCB3YWxrIGEgTlVMTCBub2RlLCBzbyBJIHRoaW5rIGFuIGV4dHJhIE5VTEwgY2hlY2sg
+aXMgbm90Cm5lY2Vzc2FyeS4KCgpUaGFua3MsCkxpIFlvdWhvbmcKCj4KPj4gKwloZWFkID0gbGxp
+c3RfcmV2ZXJzZV9vcmRlcihoZWFkKTsKPj4gKwlzcGluX2xvY2tfaXJxKCZjb25mLT5kZXZpY2Vf
+bG9jayk7Cj4+ICsJbGxpc3RfZm9yX2VhY2hfZW50cnlfc2FmZShzaCwgdG1wLCBoZWFkLCB1bnBs
+dWdfbGlzdCkgewo+PiArCQkvKgo+PiArCQkgKiBhdm9pZCByYWNlIHJlbGVhc2Vfc3RyaXBlX3Bs
+dWcoKSBzZWVzCj4+ICsJCSAqIFNUUklQRV9PTl9VTlBMVUdfTElTVCBjbGVhciBidXQgdGhlIHN0
+cmlwZQo+PiArCQkgKiBpcyBzdGlsbCBpbiBvdXIgbGlzdAo+PiArCQkgKi8KPj4gKwkJc21wX21i
+X19iZWZvcmVfYXRvbWljKCk7Cj4+ICsJCWNsZWFyX2JpdChTVFJJUEVfT05fVU5QTFVHX0xJU1Qs
+ICZzaC0+c3RhdGUpOwo+PiArCQkvKgo+PiArCQkgKiBTVFJJUEVfT05fUkVMRUFTRV9MSVNUIGNv
+dWxkIGJlIHNldCBoZXJlLiBJbiB0aGF0Cj4+ICsJCSAqIGNhc2UsIHRoZSBjb3VudCBpcyBhbHdh
+eXMgPiAxIGhlcmUKPj4gKwkJICovCj4+ICsJCWhhc2ggPSBzaC0+aGFzaF9sb2NrX2luZGV4Owo+
+PiArCQlfX3JlbGVhc2Vfc3RyaXBlKGNvbmYsIHNoLCAmY2ItPnRlbXBfaW5hY3RpdmVfbGlzdFto
+YXNoXSk7Cj4+ICsJCWNudCsrOwo+PiAgIAl9Cj4+ICsJc3Bpbl91bmxvY2tfaXJxKCZjb25mLT5k
+ZXZpY2VfbG9jayk7Cj4+ICAgCXJlbGVhc2VfaW5hY3RpdmVfc3RyaXBlX2xpc3QoY29uZiwgY2It
+PnRlbXBfaW5hY3RpdmVfbGlzdCwKPj4gICAJCQkJICAgICBOUl9TVFJJUEVfSEFTSF9MT0NLUyk7
+Cj4+ICAgCWlmICghbWRkZXZfaXNfZG0obWRkZXYpKQo+PiBAQCAtNTc2OCwxNSArNTc2NywxNiBA
+QCBzdGF0aWMgdm9pZCByZWxlYXNlX3N0cmlwZV9wbHVnKHN0cnVjdCBtZGRldiAqbWRkZXYsCj4+
+ICAgCj4+ICAgCWNiID0gY29udGFpbmVyX29mKGJsa19jYiwgc3RydWN0IHJhaWQ1X3BsdWdfY2Is
+IGNiKTsKPj4gICAKPj4gLQlpZiAoY2ItPmxpc3QubmV4dCA9PSBOVUxMKSB7Cj4+ICsJaWYgKCFj
+Yi0+dGVtcF9pbmFjdGl2ZV9saXN0WzBdLm5leHQpIHsKPj4gICAJCWludCBpOwo+PiAtCQlJTklU
+X0xJU1RfSEVBRCgmY2ItPmxpc3QpOwo+PiArCj4+ICsJCWluaXRfbGxpc3RfaGVhZCgmY2ItPnVu
+cGx1Z19saXN0KTsKPj4gICAJCWZvciAoaSA9IDA7IGkgPCBOUl9TVFJJUEVfSEFTSF9MT0NLUzsg
+aSsrKQo+PiAgIAkJCUlOSVRfTElTVF9IRUFEKGNiLT50ZW1wX2luYWN0aXZlX2xpc3QgKyBpKTsK
+Pj4gICAJfQo+PiAgIAo+PiAgIAlpZiAoIXRlc3RfYW5kX3NldF9iaXQoU1RSSVBFX09OX1VOUExV
+R19MSVNULCAmc2gtPnN0YXRlKSkKPj4gLQkJbGlzdF9hZGRfdGFpbCgmc2gtPmxydSwgJmNiLT5s
+aXN0KTsKPj4gKwkJbGxpc3RfYWRkKCZzaC0+dW5wbHVnX2xpc3QsICZjYi0+dW5wbHVnX2xpc3Qp
+Owo+PiAgIAllbHNlCj4+ICAgCQlyYWlkNV9yZWxlYXNlX3N0cmlwZShzaCk7Cj4+ICAgfQo+PiBk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5oIGIvZHJpdmVycy9tZC9yYWlkNS5oCj4+IGlu
+ZGV4IGNiNWZlYWUwNGRiMi4uZTMxNGYxN2ViOTQ5IDEwMDY0NAo+PiAtLS0gYS9kcml2ZXJzL21k
+L3JhaWQ1LmgKPj4gKysrIGIvZHJpdmVycy9tZC9yYWlkNS5oCj4+IEBAIC0yMDEsNiArMjAxLDcg
+QEAgc3RydWN0IHN0cmlwZV9oZWFkIHsKPj4gICAJc3RydWN0IGhsaXN0X25vZGUJaGFzaDsKPj4g
+ICAJc3RydWN0IGxpc3RfaGVhZAlscnU7CSAgICAgIC8qIGluYWN0aXZlX2xpc3Qgb3IgaGFuZGxl
+X2xpc3QgKi8KPj4gICAJc3RydWN0IGxsaXN0X25vZGUJcmVsZWFzZV9saXN0Owo+PiArCXN0cnVj
+dCBsbGlzdF9ub2RlCXVucGx1Z19saXN0Owo+PiAgIAlzdHJ1Y3QgcjVjb25mCQkqcmFpZF9jb25m
+Owo+PiAgIAlzaG9ydAkJCWdlbmVyYXRpb247CS8qIGluY3JlbWVudHMgd2l0aCBldmVyeQo+PiAg
+IAkJCQkJCSAqIHJlc2hhcGUgKi8KPgo+LS0gCj5UaGFua3MsCj5LdWFpCg==
