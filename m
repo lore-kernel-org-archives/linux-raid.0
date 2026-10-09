@@ -1,174 +1,206 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11021139.outbound.protection.outlook.com [40.107.208.139])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-56.ptr.blmpb.com (va-2-56.ptr.blmpb.com [209.127.231.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A4121A9B46
-	for <linux-raid@vger.kernel.org>; Wed,  7 Oct 2026 18:09:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.139
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791396567; cv=fail; b=kRQ+eIjBBZgQ3LYE95t7wg3Pxrd+6Gw9UMXb9rnE7OS9HAJnpqvhTfvey03x5hmbpYYdbkHhFrmI45j6Tapq4FIqTWJy9R2DJMQCrXsr6Td/RBKnJwMtcV7ti1cM7LPI2x7D5QToC1pz2x/e0gCZPUnoH9aOBHRzaOgxUPC5V2g=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791396567; c=relaxed/simple;
-	bh=NrCYAwdj7SoA2J9plihDMXdxnYmqo3RvPopiMkLNDWg=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=kWv/wM+ChspAQoWOhllED9L1h4NSNLS1fReIa9MIfVgeW2CrUOyBbVCYg7Xgh7lX8d5Q/dLGssIFUgn+AAGxc1ZZD1XbJl+rXZzQtNuFFoNCBhdeQxbdKa1xmbANJ/awAxExcusW8Yri3vl5VeGMS9AWVb5+8G893YjQ7gjURq0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=gatech.edu; spf=pass smtp.mailfrom=gatech.edu; dkim=pass (2048-bit key) header.d=gatech.edu header.i=@gatech.edu header.b=U3dUVwBL; arc=fail smtp.client-ip=40.107.208.139
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=gatech.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gatech.edu
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7E173451A6
+	for <linux-raid@vger.kernel.org>; Fri,  9 Oct 2026 03:12:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.56
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791515573; cv=none; b=qAgf/N86KTx65mPeAlI8j7OZV1WlJTYT/iw8hFCj4f01ySA9bJpL1byoJBGS+MZ6qYbz/ojNRwj0tSp/cbu/Dr9XY3aqIAolSNxnC3VF57LvW7zdj0Sy1VaTX8xwzbsQ1qEPw2Q0kadC5EHKqOXPehNr4STYvjwQNTrLbrc7ZL8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791515573; c=relaxed/simple;
+	bh=/zRbQ4G2JIzgNGW0NdOCTn3fDkacZ/12Bf/PAEdG3J0=;
+	h=Subject:References:To:Cc:Content-Type:Date:Mime-Version:
+	 Message-Id:In-Reply-To:From; b=PLSjVKRfWDY0RhuDZmNnwYnhcx9OhpL3ak2lbpLfl3pal5trOJkhicMTbfEH1G5ILjQy3GgKqwJAbjubFR7D6qOe+Psy64dRrUguhaEWop53cv+I+3C+gNYv1wxJxj6u9uYOA06PkUYeVZrhCcpDu3Pl1mQK1CVV0ZLhwk96HEM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=XbAZQNiq; arc=none smtp.client-ip=209.127.231.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gatech.edu header.i=@gatech.edu header.b="U3dUVwBL"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=B28QZSwi8fNOjUw7nW7Te+qh5gFxjOcFNmRiob1bHlXp4oBIr3oXPwM91aCbaLwYhcr7hypjJnavFzKz9A42PCfW0MFjWiD4btalFLUKiogbTTGm0PDfFqbocy8Oy7wZweWYlgwnLKdLG4EMk37aZ3PZogjf0qWDhwZnrmTPBgnG7mq/pcVJZmkDuu7i57OYjCsWPG/RUps/ZnQ9iUXSSEy+wK6U+P0aYg5OQfU7+t0ebC5C5s0RYEwd1okluSaemsdYBko5eA2Yl3cLvqt1Bxt0Df4NzeTU83bCbmFkrJn2DZpWAlJsZGuIWU9x3kYfjSk0o3jQPf2avs5LqnrSDA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=NrCYAwdj7SoA2J9plihDMXdxnYmqo3RvPopiMkLNDWg=;
- b=Y5jOPpNP8Skh33uF6SQW18JTY8HUkGORB4p5JM7JYGcPQMFpgGItDixHWfaScrwBYDoWl/VyBBD+UEpaRD6OjUXcQ4vthL8l5XS2GIeQo0k2vy/z4v5qoPLedTZB498eVVcQGixUGXWV74zIfIko4tQgselZ5JqPHp1XMwNP9LAb+ehJkqmCuxpzGJE65Wc1XIkgLxwz4mrZTWE6PuN35LFzVYCYnbHjwEPKZsDWaGNvYGu8tfOPFfr1RFMaxA2DMKa+EBNwogHZerQLu5ni/5jVji3O+Vl4EJOmZjRBpHGvNl6zz9ztDiRVvDx8EmgGkKLafecfogbABzMpLqMMRg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=gatech.edu; dmarc=pass action=none header.from=gatech.edu;
- dkim=pass header.d=gatech.edu; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gatech.edu;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NrCYAwdj7SoA2J9plihDMXdxnYmqo3RvPopiMkLNDWg=;
- b=U3dUVwBLSZ5j06VYsI9qsPDgyhcx9eSXYWWVHOi22q77atfcXntEtexApEMFGzQw64+oAjEIGr+Up255qNbB1l1EkZgR/DkBgABUIynPWAywCM6uubr8nRN1qSIDvg2cO66tayjQBD2pFQ3oCYhiDV6iXmrv0FKS3x0L8zjsDSj1Mn0cCjnBktdj4RVlCFd48AeOIvZPx4sH6hPr2YrCsomKKpimedzsULXU3R8fiumXK/uWUALny8Oqq5ofcPWBgearSFtB1o4/xwXWHv1fXwYN9hry+MWRf+WlbihLWJeORJhTHjl2uMXPRB2WGRNlP+WBsD0TJPZnBAAqqcdBkw==
-Received: from CH3PR07MB9958.namprd07.prod.outlook.com (2603:10b6:610:1ae::19)
- by MN7PR07MB629411.namprd07.prod.outlook.com (2603:10b6:208:632::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.496.16; Wed, 7 Oct
- 2026 18:09:23 +0000
-Received: from CH3PR07MB9958.namprd07.prod.outlook.com
- ([fe80::d6b8:e067:4377:97da]) by CH3PR07MB9958.namprd07.prod.outlook.com
- ([fe80::d6b8:e067:4377:97da%4]) with mapi id 15.21.0496.010; Wed, 7 Oct 2026
- 18:09:22 +0000
-From: "Masalkhi, Abd Alrhman" <abd.masalkhi@gatech.edu>
-To: "sashiko-reviews@lists.linux.dev" <sashiko-reviews@lists.linux.dev>
-CC: "yukuai@fygo.io" <yukuai@fygo.io>, "linux-raid@vger.kernel.org"
-	<linux-raid@vger.kernel.org>
-Subject: Re: [RFC PATCH v3 4/4] md: add a control device for array management
-Thread-Topic: [RFC PATCH v3 4/4] md: add a control device for array management
-Thread-Index: AQHdVlJIcjwKT2hWx0a13yUeO9vukLbx/NGAgABkfoA=
-Date: Wed, 7 Oct 2026 18:09:22 +0000
-Message-ID: <m2h5ixbcxa.fsf@gmail.com>
-References: <20261007115104.13884-1-abd.masalkhi@gatech.edu>
- <20261007115104.13884-5-abd.masalkhi@gatech.edu>
- <sashiko-outbox-162977@kernel.org>
-In-Reply-To: <sashiko-outbox-162977@kernel.org>
-Accept-Language: en-US, en-GB
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=gatech.edu;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: CH3PR07MB9958:EE_|MN7PR07MB629411:EE_
-x-ms-office365-filtering-correlation-id: f1aa77e1-613d-4b98-035d-08df249e1d86
-x-gt-tenant: 042d12d7-75fe-4547-b5b6-0573f80f829d
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|786006|1800799024|23010399003|376014|366016|10067099003|56012099006|5023799004|11063799006|4143699003|3023799007|18002099003|22082099003|38070700021;
-x-microsoft-antispam-message-info:
- e0ebtobx0RQaRMr12IMT6vGLB/fX3Tvmf2vjYYt6kaFAPEK904YuJT0Dk1OQ1ya6X0pyltiGd2Z06x4iKG8DJy2ahAxSe6Ek7b32c7+BFdA1Hdz+2Oi5I+ApvgAmsSOVnyKiXvWapj+7hsYpj9ER9Xlo2umfv4UDDSH2DzN2ZzdCu1uglpaisrtOfUEHRFEAYZLUG9vvK1ImImBQQFYSEAVfKQ7IoVHieO2/sZYgnV9V19p2+bdTEI7LXoddYHqOl87FgE/FJNAybYIoK1Or6pexjDwt7u/9hHaLMQhOkMlVfl96QI0LpwgCFdogoN15bPj5/WwdHhGRgim09QJn165HKHITc7fdG0LWVTc7YNOfN5OmFlS17ymAshKOn8lUSUl/NPwbVx0kdHBqrwIwgkHMeTNwyYGyxdIBxB7SvGycAsxdBUULhNobMc5SZh8lKW6+32nGOAG7WuDJqnDEBBB6sqfia5Zuo83mVhDRH6VVEPP2k00aYgxhmPyK+8v4md3tCaMPurMzyYnul8IRhD34eGwp9HA2XG3JMpQeqeq4gfyfxEtRgpAIb1rguYq5Jamlu/5nGzOvAWwiE/7V/5TS/srjZZG3A0FgjEu3y5oagbJ9Ta2lVEwrYIth9SLTfyWr6VqVADfbpUwEamMstnOIvuy/R1fRIoXjrJpAdus=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR07MB9958.namprd07.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(786006)(1800799024)(23010399003)(376014)(366016)(10067099003)(56012099006)(5023799004)(11063799006)(4143699003)(3023799007)(18002099003)(22082099003)(38070700021);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?S1dQN3BLckVmR2QwaEVVY25VSXI4YmdQU2ZoUnpCWkx3RDJqd0h4V0xCWDFQ?=
- =?utf-8?B?eGhQVE0vemNTdVFYcWJ4R3QzRkZlL1RPbjJ0QmNOaVNYajdQMVN1U1kwT2hO?=
- =?utf-8?B?Ykl1TmdEcHV2NEFsb213NTJVOE8rVjhsZHcrNDB1UEFxTVJ4WVVDZzVlRWJn?=
- =?utf-8?B?YVFUbDJYbitFS1owZEtNTkd3YjdXVGp6bnVQMmxWUk1BTFN4QnRxbHo1QlZu?=
- =?utf-8?B?YUhvdldRMVdWZHE3WkxqRjVRS3M1anlnbUlNVGFOWGFNbCtqeHphYWJUUkJZ?=
- =?utf-8?B?S1BBVWxlWWp5SXdPQ0JHeGxWa0lWN2RlSE85UW9md0FkMlk1K3JGNFNwZnU5?=
- =?utf-8?B?Y2cydHFIQUhaWmlZRm9XVlJzT0tRV0lORGU2K2RZbWtGSWJQTFFSdWNvUkh2?=
- =?utf-8?B?dnhHbThaTlFPc1BtNnJwUlhxb2JrdWhGbjZIT3lDUW9Obmd3emtvUEtZeFRo?=
- =?utf-8?B?bEZvR09YUi8rK21KeCtnbHYycThuamVSWkV5R2pWVllHeDlFRkRDbjFFa1ZB?=
- =?utf-8?B?NVVJazJEN25vM2c0eHZHb2MvS1NHS3ZJTFMrL21TTmVKdHJ5Qi9KWThaVEZh?=
- =?utf-8?B?NXllREhmb0NrNGJEbjh4ZFBMT1loMGh0NEZzK3ZYWXlORmlsQ0Q2eGtnb0xQ?=
- =?utf-8?B?M3pRVHNUZlNYQXZHeVBNcHA1V25vbStlNXdlMllRSFVMaFZMYlhML3U4OFBw?=
- =?utf-8?B?eTdKd3VwWTJaUzVQeVhXbHNlMlc1WC93bnd3cHJIKy92ekVCV1JzL3NGMFFK?=
- =?utf-8?B?czAxc1cvRHdObmJPR1FTUkczRVZWSVVFQ2ZKdXcwVjBZL1RES3J1WjNVLzg3?=
- =?utf-8?B?K2NmaS9PWXlma3FQcWI2cElZZVpKcXdWb0xXNnN4N3pmeEVMdXpybkU0cXFy?=
- =?utf-8?B?Tjd5bCt5elVvSGtRNWFlUHI3bXNxL2hBdVAzeEFzZ08zMkZvaEFjR0Vya296?=
- =?utf-8?B?WGxQOVQ2M2YybUQ1L3dRKzc0cE9Mc2hOSVdNcDMxMXRCNFpKRHBpZHNpd3Jp?=
- =?utf-8?B?VGpSVTUwd0tDYk5lRm5Yb1VyR0JnWEVMZGRnNkswSnJTNWM3OERwdFk0T0M3?=
- =?utf-8?B?UEhxNUlkTloveG9YVkEwSnRyZXB0L0xuUzVHOUpEd3l1cDZKQlVHSnh6ZzFX?=
- =?utf-8?B?YVkzVndhQ3BpRVFZWTZKcENjbkpEeHhBcXFDa0hneTRqUG1GWHNrTnd3bHUv?=
- =?utf-8?B?a1Z1eWRoU2pqSnNiNHBDeG9VQVJyemM3Y3YreTdlVjlQS3Y4WjNPamhINTNz?=
- =?utf-8?B?aGIzOTJNNlNLN01pYm5zNThYdTFsaWxwVDdnTDVHQ2dKeks5T3hGZVM0Q3Vu?=
- =?utf-8?B?anloaGJkc3NEUGhUdGRrV1FuaG1VdWo3NkQvdVcrNWlhc0MxM0dqMlNCNEU5?=
- =?utf-8?B?cngvZHlCRkNpRUk5ZS9wTzE1VHQvQ3dBbmRmQTRiam8ySTVpRVRpWnFKNHhr?=
- =?utf-8?B?eWlzUm92VHpFblladmpPY1ZNNG4xMWI5V3JJMy9IUnl2NXFQOTJwOEZVd0dy?=
- =?utf-8?B?RGNaN1ExeEU4cXFnbU9JVDd1Y3ptM05EY3pKMUc4eXRCdXJFLzZSL083VnVh?=
- =?utf-8?B?TC85eVJiUmdkd0s3M2gyc0o1MU4xM3BkbHMvaU1OS09kM1E3a0JCN3pxM3ZT?=
- =?utf-8?B?ZlFDZHFVamQ3R3pVUTU2UUl3d3d3cEtpSTh3VnFYV0dRbnJ0M2FyVmZNWUpu?=
- =?utf-8?B?ZERlMWcvYUpvM3FweDNaL3h1OWltWDAvNVd1emNYK0dSOFF5MTE1bWVYdDhu?=
- =?utf-8?B?ZUdsOWN3MFpxSlcxNUUzRW11Z0NnWEkxNlNvT2JITjlHU3g2R210SjEvODdX?=
- =?utf-8?B?dENIalVSaVZaTVBTYmp2bnNGVEtid3lRSnovdlNrZFZQc25GNHFuaFo2NXBY?=
- =?utf-8?B?L2RUZU43azlmR3NiamZHZ2l5Q2Fiem40dTBRRGl6eGt2clpvYmxOWFhCd1N0?=
- =?utf-8?B?YkVPVTNneHhBV2dpMTFtU2puMVJ5Zk9ENGJKckFwRTcrUVZXeWdSblY5TERV?=
- =?utf-8?B?ZUNTQXh6YnNhSUYycTJkdy80dXRBNExGODB6WURIRnlsT0xGTnZ2ZnlKSVFa?=
- =?utf-8?B?K2UvcGhkL2pmVHp3a0xrU29iWE4wdktxSDEvL3VyOTByRW4vMWNGbm1rYzZh?=
- =?utf-8?B?Qnp1THZGb0czNmcxNStTNkRoZFJJRkJ0aDQ0K21tU2VUNzNDdUo3NjlVTzBZ?=
- =?utf-8?B?TGswS2hLKzJYZVh0Sk5ITW16TitUbzBWNDFMakN3eFJ6SDdqV0hpVy9hVjFi?=
- =?utf-8?B?N254NTI2VFdmWWNocURXbFlWVUtFSXlTdERHdEFLNjBKVnpRSVpyU0k4NUZ2?=
- =?utf-8?B?d1J1a1dqTm9DNU5Gc3h4aW0xZjkvVUY5YkNXT0gzb3c1NVdOZGZRUT09?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <9F5B488BCB74A440A557E11D402F30DF@namprd07.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="XbAZQNiq"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1791515558;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=cnjFrYqnLgXOVQZ2ilR00iyrNd4zwdoaGYzKoAoPYcM=;
+ b=XbAZQNiq3/ZPRAU5/m9tVdP8bbEtF7ZA5t03HfIyMCltyV19mNpKRpQrUT+vA3Jala+aRB
+ yvhhv+mJEloy+6QLiaz2yCemMuCfh8b4ITQtGodBbEgfQeOd80zio1r6b3eM+/i8avNwe/
+ qexy+HkZ/KQ8qV7dUbTQeJF2DWUDy9/7m6qrUtIvg5XlHIG8lLlzDnEz5yL6ULX5z25mhI
+ HuplLQHkvXIRQSpMYOXskvdvSRSGfks90GQUGrRis3cXm4u87xCsO7/xxKKGeMdTJ/iYws
+ TIezbjSz58zPWxGZo6BYAnlRm9zcN9WXKVz5IyxL/HbUzhVNx4wUAc741u8G4g==
+Subject: Re: [PATCH v2] md/raid5: use dedicated llist for stripe plug
+References: <20260922060928.3486799-1-dayou5941@163.com>
+To: "Li Youhong" <dayou5941@163.com>, <song@kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	"Li Youhong" <liyouhong@kylinos.cn>, <stable@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 9 Oct 2026 11:12:33 +0800
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-OriginatorOrg: gatech.edu
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CH3PR07MB9958.namprd07.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f1aa77e1-613d-4b98-035d-08df249e1d86
-X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Oct 2026 18:09:22.8036
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 482198bb-ae7b-4b25-8b7a-6d7f32faa083
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: RPG8g84hMn82bvd2bsSZx2NYk+UP8wON4dAyufmYDPJHTyJr0SrlRV+kgc2KZeTHbkR+51XDixCoCxEvqVhmAA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN7PR07MB629411
+Mime-Version: 1.0
+X-Lms-Return-Path: <lba+26ac85ba6+64aba2+vger.kernel.org+yukuai@fygo.io>
+X-Original-From: yu kuai <yukuai@fygo.io>
+Message-Id: <fb8edfb3-ce4c-4b3d-87f8-70552626311f@fygo.io>
+User-Agent: Mozilla Thunderbird
+Received: from [192.168.1.104] ([39.182.0.35]) by smtp.larksuite.com with ESMTPS; Fri, 09 Oct 2026 03:12:37 +0000
+In-Reply-To: <20260922060928.3486799-1-dayou5941@163.com>
+Reply-To: yukuai@fygo.io
+From: "yu kuai" <yukuai@fygo.io>
 
-SGkgS3VhaSwKCk9uIFdlZCwgT2N0IDA3LCAyMDI2IGF0IDEyOjA5ICswMDAwLCBzYXNoaWtvLWJv
-dEBrZXJuZWwub3JnIHdyb3RlOgo+IFRoYW5rIHlvdSBmb3IgeW91ciBjb250cmlidXRpb24hIFNh
-c2hpa28gQUkgcmV2aWV3IGZvdW5kIDEgcG90ZW50aWFsIGlzc3U9KHMpIHRvIGNvbnNpZGVyOgo+
-IC0gW0hpZ2hdIG1kOiBNRF9DTE9TSU5HIG11dHVhbCBleGNsdXNpb24gYnJva2VuIGluIG1kY3Rs
-X2lvY3RsCj4gLS0KPgo+IGNvbW1pdCBmZTc1MDJlYjM4NjYyODcwZThlY2YyODg4MGYzMDU1YTMz
-OTUxZDJhCj4gQXV0aG9yOiBBYmQtQWxyaG1hbiBNYXNhbGtoaSA8YWJkLm1hc2Fsa2hpQGdhdGVj
-aC5lZHU+Cj4KPiBtZDogYWRkIGEgY29udHJvbCBkZXZpY2UgZm9yIGFycmF5IG1hbmFnZW1lbnQK
-Pgo+IFRoaXMgY29tbWl0IGFkZHMgYSBtaXNjIGNoYXJhY3RlciBkZXZpY2UsIC9kZXYvbWQtY29u
-dHJvbCwgdG8gaGFuZGxlIG1kCj4gbWFuYWdlbWVudCBpb2N0bHMgd2l0aG91dCBvcGVuaW5nIHRo
-ZSBtZCBibG9jayBkZXZpY2UuIFRoaXMgYWltcyB0byByZXNvbD1lCj4gYW4gaXNzdWUgd2hlcmUg
-U1RPUF9BUlJBWSByYWNlcyB3aXRoIGNvbmN1cnJlbnQgd3JpdGVzIGZyb20gdGFza3Mgc2hhcmlu
-Zwo+IHRoZSBzYW1lIGZpbGUgZGVzY3JpcHRvciB0YWJsZS4KPgo+PiBkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9tZC9tZC5jIGIvZHJpdmVycy9tZC9tZC5jCj4+IC0tLSBhL2RyaXZlcnMvbWQvbWQuYwo+
-PiArKysgYi9kcml2ZXJzL21kL21kLmMKPiBbIC4uLiBdCj4+ICtzdGF0aWMgbG9uZyBtZGN0bF9p
-b2N0bChzdHJ1Y3QgZmlsZSAqZmlscCwgdWludCBjbWQsIHVsb25nIHUpCj4+ICt7Cj4gWyAuLi4g
-XQo+PiArCWlmIChjbWQgPT0gTURfU1RPUF9BUlJBWSkgewo+PiArCQkvKiBOZWVkIHRvIGZsdXNo
-IHBhZ2UgY2FjaGUsIGFuZCBlbnN1cmUgbm8gb3BlbmVycyAqLwo+PiArCQllcnIgPSBtZGRldl9z
-ZXRfY2xvc2luZ19hbmRfc3luY19ibG9ja2RldihtZGRldiwgMCk7Cj4+ICsJCWlmIChlcnIpCj4+
-ICsJCQlnb3RvIG91dDsKPj4gKwl9Cj4gWyAuLi4gXQo+PiArb3V0Ogo+PiArCWlmIChjbWQgPT0g
-TURfU1RPUF9BUlJBWSkKClNvcnJ5IEkgZG8gbm90IGZpeCBpdCBjb3JyZWN0bHkuIEknbGwgZml4
-IGl0IGluIHRoZSBuZXh0IHZlcnNpb24uCgo+PiArCQljbGVhcl9iaXQoTURfQ0xPU0lORywgJm1k
-ZGV2LT5mbGFncyk7Cj4+ICsKPj4gKwltZGRldl9wdXQobWRkZXYpOwo+PiArCXJldHVybiBlcnI7
-Cj4+ICt9Cj4KPiBbU2V2ZXJpdHk6IEhpZ2hdCj4gRG9lcyB0aGlzIHVuY29uZGl0aW9uYWwgY2xl
-YXJhbmNlIG9mIE1EX0NMT1NJTkcgZGVzdHJveSBtdXR1YWwgZXhjbHVzaW9uID1vcgo+IGNvbmN1
-cnJlbnQgc3RvcCBhdHRlbXB0cz8KPgo+IElmIHR3byB0YXNrcyBjYWxsIG1kY3RsX2lvY3RsKCkg
-d2l0aCBNRF9TVE9QX0FSUkFZIGNvbmN1cnJlbnRseToKPgo+IFRhc2sgQSBzdWNjZWVkcyBpbiBt
-ZGRldl9zZXRfY2xvc2luZ19hbmRfc3luY19ibG9ja2RldigpLCB3aGljaCBzZXRzCj4gTURfQ0xP
-U0lORy4KPgo+IFRhc2sgQiBmYWlscyBpbiBtZGRldl9zZXRfY2xvc2luZ19hbmRfc3luY19ibG9j
-a2RldigpIGJlY2F1c2UgTURfQ0xPU0lORyA9cwo+IGFscmVhZHkgc2V0LCByZXR1cm5pbmcgLUVC
-VVNZIGFuZCBqdW1waW5nIHRvIG91dC4KPgo+IFRhc2sgQiB0aGVuIHVuY29uZGl0aW9uYWxseSBj
-bGVhcnMgTURfQ0xPU0lORyBhdCB0aGUgb3V0IGxhYmVsLgo+Cj4gVGhpcyBjbGVhcnMgdGhlIGZs
-YWcgd2hpbGUgVGFzayBBIGlzIHN0aWxsIHJlbHlpbmcgb24gaXQgdG8gcHJldmVudAo+IGNvbmN1
-cnJlbnQgb3BlbmVycyBvciBvcGVyYXRpb25zLCBwb3RlbnRpYWxseSBjaXJjdW12ZW50aW5nIHRo
-ZSBwcm90ZWN0aW89cwo+IHRoaXMgcGF0Y2ggYWltcyB0byBwcm92aWRlLiBTaG91bGQgdGhpcyBi
-aXQgb25seSBiZSBjbGVhcmVkIGlmIHRoZSB0YXNrCj4gYWN0dWFsbHkgc2V0IGl0LCBvciByZW1v
-dmVkIGVudGlyZWx5IGlmIHRoZSBvbGQgbWRfaW9jdGwoKSBkaWRuJ3QgbmVlZCB0bwo+IGNsZWFy
-IGl0IGhlcmU/Cj4KPiAtLSAKPiBTYXNoaWtvIEFJIHJldmlldyDCtyBodHRwczovL3Nhc2hpa28u
-ZGV2LyMvcGF0Y2hzZXQvMjAyNjEwMDcxMTUxMDQuMTM9ODQtMS1hYmQubWFzYWxraGlAZ2F0ZWNo
-LmVkdT9wYXJ0PTQKPgoKLS0gCkJlc3QgUmVnYXJkcywKQWJkLUFscmhtYW4K
+Hi,
+
+=E5=9C=A8 2026/9/22 14:09, Li Youhong =E5=86=99=E9=81=93:
+> From: Li Youhong <liyouhong@kylinos.cn>
+>
+> release_stripe_plug() and do_release_stripe() share sh->lru.
+> release_stripe_plug() sets STRIPE_ON_UNPLUG_LIST and
+> list_add_tail()s sh->lru onto raid5_plug_cb.list without
+> device_lock. do_release_stripe() holds device_lock and, when the
+> last reference drops, list_add()s the same lru onto a handle or
+> inactive list.
+>
+> Two list_add()s on one node corrupt it. sh->lru can be
+> reinitialized into a self-loop while raid5_plug_cb.list still
+> points at that stripe. raid5_unplug() then walks the list under
+> device_lock with IRQs disabled and never finishes. Other CPUs
+> waiting for the same lock hard-lockup.
+>
+> Add a dedicated llist_node, unplug_list, to stripe_head, as
+> release_list is used for released_stripes.
+>
+> Fixes: 8811b5968f62 ("raid5: make_request use batch stripe release")
+> Suggested-by: Yu Kuai <yukuai@fygo.io>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
+> ---
+> v2:
+> - Drop taking device_lock in release_stripe_plug(). Add a dedicated
+>    unplug_list.
+> - v1: link: https://lore.kernel.org/linux-raid/20260902095307.358569-1-da=
+you5941@163.com/
+>
+> ---
+>   drivers/md/raid5.c | 52 ++++++++++++++++++++++++++---------------------=
+-----
+>   drivers/md/raid5.h |  1 +
+>   2 files changed, 27 insertions(+), 26 deletions(-)
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index b91545ce090d..9dabbf9743d7 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -5710,7 +5710,7 @@ static struct stripe_head *__get_priority_stripe(st=
+ruct r5conf *conf, int group)
+>  =20
+>   struct raid5_plug_cb {
+>   	struct blk_plug_cb	cb;
+> -	struct list_head	list;
+> +	struct llist_head	unplug_list;
+>   	struct list_head	temp_inactive_list[NR_STRIPE_HASH_LOCKS];
+>   };
+>  =20
+> @@ -5718,34 +5718,33 @@ static void raid5_unplug(struct blk_plug_cb *blk_=
+cb, bool from_schedule)
+>   {
+>   	struct raid5_plug_cb *cb =3D container_of(
+>   		blk_cb, struct raid5_plug_cb, cb);
+> -	struct stripe_head *sh;
+> +	struct stripe_head *sh, *tmp;
+>   	struct mddev *mddev =3D cb->cb.data;
+>   	struct r5conf *conf =3D mddev->private;
+> +	struct llist_node *head;
+>   	int cnt =3D 0;
+>   	int hash;
+>  =20
+> -	if (cb->list.next && !list_empty(&cb->list)) {
+> -		spin_lock_irq(&conf->device_lock);
+> -		while (!list_empty(&cb->list)) {
+> -			sh =3D list_first_entry(&cb->list, struct stripe_head, lru);
+> -			list_del_init(&sh->lru);
+> -			/*
+> -			 * avoid race release_stripe_plug() sees
+> -			 * STRIPE_ON_UNPLUG_LIST clear but the stripe
+> -			 * is still in our list
+> -			 */
+> -			smp_mb__before_atomic();
+> -			clear_bit(STRIPE_ON_UNPLUG_LIST, &sh->state);
+> -			/*
+> -			 * STRIPE_ON_RELEASE_LIST could be set here. In that
+> -			 * case, the count is always > 1 here
+> -			 */
+> -			hash =3D sh->hash_lock_index;
+> -			__release_stripe(conf, sh, &cb->temp_inactive_list[hash]);
+> -			cnt++;
+> -		}
+> -		spin_unlock_irq(&conf->device_lock);
+> +	head =3D llist_del_all(&cb->unplug_list);
+
+Is it possible that registered plug from task A can be flushed concurrent b=
+y unplug from
+another task, and later unplug_list is empty for task A's unplug. If so, a =
+NULL check for
+head is needed here.
+
+> +	head =3D llist_reverse_order(head);
+> +	spin_lock_irq(&conf->device_lock);
+> +	llist_for_each_entry_safe(sh, tmp, head, unplug_list) {
+> +		/*
+> +		 * avoid race release_stripe_plug() sees
+> +		 * STRIPE_ON_UNPLUG_LIST clear but the stripe
+> +		 * is still in our list
+> +		 */
+> +		smp_mb__before_atomic();
+> +		clear_bit(STRIPE_ON_UNPLUG_LIST, &sh->state);
+> +		/*
+> +		 * STRIPE_ON_RELEASE_LIST could be set here. In that
+> +		 * case, the count is always > 1 here
+> +		 */
+> +		hash =3D sh->hash_lock_index;
+> +		__release_stripe(conf, sh, &cb->temp_inactive_list[hash]);
+> +		cnt++;
+>   	}
+> +	spin_unlock_irq(&conf->device_lock);
+>   	release_inactive_stripe_list(conf, cb->temp_inactive_list,
+>   				     NR_STRIPE_HASH_LOCKS);
+>   	if (!mddev_is_dm(mddev))
+> @@ -5768,15 +5767,16 @@ static void release_stripe_plug(struct mddev *mdd=
+ev,
+>  =20
+>   	cb =3D container_of(blk_cb, struct raid5_plug_cb, cb);
+>  =20
+> -	if (cb->list.next =3D=3D NULL) {
+> +	if (!cb->temp_inactive_list[0].next) {
+>   		int i;
+> -		INIT_LIST_HEAD(&cb->list);
+> +
+> +		init_llist_head(&cb->unplug_list);
+>   		for (i =3D 0; i < NR_STRIPE_HASH_LOCKS; i++)
+>   			INIT_LIST_HEAD(cb->temp_inactive_list + i);
+>   	}
+>  =20
+>   	if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state))
+> -		list_add_tail(&sh->lru, &cb->list);
+> +		llist_add(&sh->unplug_list, &cb->unplug_list);
+>   	else
+>   		raid5_release_stripe(sh);
+>   }
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index cb5feae04db2..e314f17eb949 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -201,6 +201,7 @@ struct stripe_head {
+>   	struct hlist_node	hash;
+>   	struct list_head	lru;	      /* inactive_list or handle_list */
+>   	struct llist_node	release_list;
+> +	struct llist_node	unplug_list;
+>   	struct r5conf		*raid_conf;
+>   	short			generation;	/* increments with every
+>   						 * reshape */
+
+--=20
+Thanks,
+Kuai
