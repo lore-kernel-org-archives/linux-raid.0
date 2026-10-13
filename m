@@ -1,122 +1,108 @@
-Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 655C05038E6
-	for <linux-raid@vger.kernel.org>; Tue, 13 Oct 2026 13:32:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.119
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7060502762
+	for <linux-raid@vger.kernel.org>; Tue, 13 Oct 2026 13:44:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791898374; cv=none; b=QaKjn3tJl5mgMkQoFdk7Dv0CVbJC/YdQ0TiyVk32mbXGArkApqGmAnGLPGQxppzUbRo58bFVophf4FDAQOZobIbZlx/g7m2BdpRbJ4VsTtZmpx2pD12Wgw4ceXnHt/u87IO7PpUjNLY1ZdMwTfAlWHe3rf3lGbIK7p8xGkXtTTg=
+	t=1791899053; cv=none; b=juoGD3z0AgMBpmz6/m91r6u2n3Z4ZKLpwenQ7bA+AQK8Wh4IHxLpFLhmaJCDJXjvozNglBPBjrZlnyM/YXiAnVQZsInMzdcarrAzrGBkZc8VXNasC+Z9rgbSZQAyj8GROOtHI7oic8NX1LKOGyoKP4UXQeh25EAjYYwFvV+fYpY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791898374; c=relaxed/simple;
-	bh=LB++yc/5BtuetnM9xpDImPRRhclepzJMUkNKdzsXMrw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=O4HQOiO3Dkr8al+PizJ9AZliqSylcQ31FlonSMeLrX2j1V8SIXnl0Bp4fkDUPlndNhhnE73REk3ugEBimvY6xPwfX43mQd1WxLW4VTS41OU1fKJOodAM3oyC4Llsgj4LuMEo+0PRTwxw3PHtmXO7/Vpb5mH9myNrgFR6HwOQBOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=p1+3GmmR; arc=none smtp.client-ip=115.124.30.119
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1791899053; c=relaxed/simple;
+	bh=MgrzalUmbGC26c05zod6EpsljsaAM91BcdbZGoCbj24=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=FUENoAZE2ZLvbBzek2UsTinD17VSBEkZkeLPe/TSSifEotO92YaXv5op2oTfFHA1+mU7jKWQ5LrM5XsbfCScol8shhp9BqqA08OgGD2J1NFDAtL8XdD81WSznosq5VLEF0IfPo5okI4hulYoPxrB5F9mIYIU11oPdqA4wNRXjcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jh3WAr/Z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="p1+3GmmR"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1791898364; h=From:To:Subject:Date:Message-Id:MIME-Version;
-	bh=/b4XIg87XIFrnRGN6R8nO45dFyE+E5QQf6iUZ75askI=;
-	b=p1+3GmmRX+nvK7RNx/A6ON9OJmvbdyUVcU0IDnO+RiXajbJ0pSUuioA48a7HJxVkGwKhzNmFcz+6pbkEGcuppaSPBwA0g/JsBDd2xV6HsW4YHDEKfj1LcFddNqbttwjqeJHub06kE6vgmG1VGwuZDTfB8uYY7z38LTEahrb9t1w=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033032089153;MF=yunye.zhao@linux.alibaba.com;NM=1;PH=DS;RN=9;SR=0;TI=SMTPD_---0XClyIFH_1791898363;
-Received: from j66c13357.sqa.eu95.tbsite.net(mailfrom:yunye.zhao@linux.alibaba.com fp:SMTPD_---0XClyIFH_1791898363 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 13 Oct 2026 21:32:43 +0800
-From: Yunye Zhao <yunye.zhao@linux.alibaba.com>
-To: linux-raid@vger.kernel.org
-Cc: Yu Kuai <yukuai@fygo.io>,
-	Song Liu <song@kernel.org>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	John Garry <john.g.garry@oracle.com>,
-	Joseph Qi <joseph.qi@linux.alibaba.com>,
-	YunyeZhao <yunye.zhao@linux.alibaba.com>
-Subject: [PATCH 6.6.y] md/raid0: fix data corruption when chunk size is below PAGE_SIZE
-Date: Tue, 13 Oct 2026 21:32:43 +0800
-Message-Id: <20261013133243.42145-1-yunye.zhao@linux.alibaba.com>
-X-Mailer: git-send-email 2.19.1.6.gb485710b
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jh3WAr/Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50ACD1F000FF;
+	Tue, 13 Oct 2026 13:44:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791899052;
+	bh=VPE2wXVSQkeVyaRfAIWeHJvIihqBn1MPPb0wtYz0OA0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Jh3WAr/Z2KVWcD7sOrz5ZP2LQSRvSHRS39Uj0lJ0XarisFzgTUcXez+ONcy5F+F6i
+	 s+N+oR2Oy990WdPI8RqSTbRpeTbs09PxWw8Hqxiiq99cILoCEptZYugZ6+LSzNWGmY
+	 txZEKjk4o4er9TIUlZPeiCBsqVL+D0f07Ov4d+7rs9Eb6STbEvVoVtItLH2VxtRC/6
+	 3cJp0Ly20nSdNuYvzv5TZ9OAgJ1JLtiBjPgflZGExDSOAwX99PZep4wsQBBCZgL/As
+	 rvpc+BQSb/eZe49eZtoRN0tLCvBpTcn0QoJOUZO/iAvWVRxuwYEa+PCA/+P1CBfwxO
+	 kAFez/b2UNmqg==
+Message-ID: <sashiko-outbox-169850@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 6.6.y] md/raid0: fix data corruption when chunk size is
+ below PAGE_SIZE
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yunye Zhao" <yunye.zhao@linux.alibaba.com>, linux-raid@vger.kernel.org
+Cc: yukuai@fygo.io
+In-Reply-To: <20261013133243.42145-1-yunye.zhao@linux.alibaba.com>
+References: <20261013133243.42145-1-yunye.zhao@linux.alibaba.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 13 Oct 2026 13:44:11 +0000
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-From: YunyeZhao <yunye.zhao@linux.alibaba.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] md: missing queue freeze before blk_queue_chunk_sectors()
+--
 
-Commit 319ff40a5427 ("md/raid0: Fix performance regression for large sequential writes")
-assumes that bios reaching RAID0 are no larger than the chunk size.
+commit b6776719727e7cf128eed60b1bbe45a3b0836f15
+Author: YunyeZhao <yunye.zhao@linux.alibaba.com>
 
-However, blk_queue_max_hw_sectors() raises limits smaller than
-PAGE_SIZE to one page. With 64 KiB pages and a 16 KiB RAID0 chunk, a
-bio can therefore span several chunks. raid0_make_request() splits it
-only once and maps the multi-chunk remainder to one member device,
-causing silent data corruption.
+md/raid0: fix data corruption when chunk size is below PAGE_SIZE
 
-Set the queue chunk boundary after stacking the member limits, combined
-with any inherited boundary using gcd(). This makes the block layer
-split bios at chunk boundaries before they reach RAID0. Only install a
-boundary aligned to the logical block size so that bio splitting
-always makes progress.
+Fixes silent data corruption that occurs when bios spanning multiple RAID0
+chunks are not split properly by the block layer. Sets the chunk boundary
+after stacking member limits to ensure block-layer bio splitting respects
+the RAID0 chunk size.
 
-Setting the boundary after disk_stack_limits() is required because
-stacking may clear or reduce a boundary installed earlier. This adapts
-the mechanism introduced by upstream commit 4b8beba60d32
-("md/raid0: set chunk_sectors limit") to the queue limits API used by
-6.6.y.
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index c50a7abda744a..5a57e327c6ba4 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+[ ... ]
+> @@ -413,6 +415,18 @@ static int raid0_run(struct mddev *mddev)
+>  			disk_stack_limits(mddev->gendisk, rdev->bdev,
+>  					  rdev->data_offset << 9);
+>  		}
+> +
+> +		/*
+> +		 * Set the chunk boundary after stacking member limits, which
+> +		 * may clear or reduce it. Without it a bio may span several
+> +		 * chunks when chunk size < PAGE_SIZE. Keep it a multiple of
+> +		 * the logical block size so the block layer can split at it.
+> +		 */
+> +		chunk_limit =3D gcd(mddev->queue->limits.chunk_sectors,
+> +				  mddev->chunk_sectors);
+> +		if (!(chunk_limit %
+> +		      (mddev->queue->limits.logical_block_size >> SECTOR_SHIFT)))
+> +			blk_queue_chunk_sectors(mddev->queue, chunk_limit);
 
-The corruption was reproduced on arm64 with 64 KiB pages and a 16 KiB
-chunk. A 64 KiB chunk configuration is unaffected.
+[Severity: High]
+Could modifying the block queue limits here without freezing the queue expo=
+se
+the block layer to torn limit reads?
 
-Fixes: 319ff40a5427 ("md/raid0: Fix performance regression for large sequential writes")
-Signed-off-by: YunyeZhao <yunye.zhao@linux.alibaba.com>
----
- drivers/md/raid0.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+When an array is reconfigured, raid0_run() is invoked to update limits. Whi=
+le
+mddev_suspend() is used during reconfiguration, it only drains
+mddev->active_io, which pauses bios deep in the MD stack at
+md_handle_request().
 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index c50a7abda744..5a57e327c6ba 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -11,6 +11,7 @@
- */
- 
- #include <linux/blkdev.h>
-+#include <linux/gcd.h>
- #include <linux/seq_file.h>
- #include <linux/module.h>
- #include <linux/slab.h>
-@@ -382,6 +383,7 @@ static void raid0_free(struct mddev *mddev, void *priv)
- static int raid0_run(struct mddev *mddev)
- {
- 	struct r0conf *conf;
-+	unsigned int chunk_limit;
- 	int ret;
- 
- 	if (mddev->chunk_sectors == 0) {
-@@ -413,6 +415,18 @@ static int raid0_run(struct mddev *mddev)
- 			disk_stack_limits(mddev->gendisk, rdev->bdev,
- 					  rdev->data_offset << 9);
- 		}
-+
-+		/*
-+		 * Set the chunk boundary after stacking member limits, which
-+		 * may clear or reduce it. Without it a bio may span several
-+		 * chunks when chunk size < PAGE_SIZE. Keep it a multiple of
-+		 * the logical block size so the block layer can split at it.
-+		 */
-+		chunk_limit = gcd(mddev->queue->limits.chunk_sectors,
-+				  mddev->chunk_sectors);
-+		if (!(chunk_limit %
-+		      (mddev->queue->limits.logical_block_size >> SECTOR_SHIFT)))
-+			blk_queue_chunk_sectors(mddev->queue, chunk_limit);
- 	}
- 
- 	/* calculate array device size */
--- 
-2.19.1.6.gb485710b
+It does not prevent new bios from entering the generic block layer via
+submit_bio_noacct() and executing blk_queue_split(). Because the queue is n=
+ot
+frozen via blk_mq_freeze_queue(), these concurrent bios might read torn
+values of q->limits.chunk_sectors while raid0_run() modifies it, potentially
+leading to inconsistent splitting and silent data corruption.
 
+>  	}
+> =20
+>  	/* calculate array device size */
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013133243.4214=
+5-1-yunye.zhao@linux.alibaba.com?part=3D1
