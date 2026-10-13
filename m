@@ -1,41 +1,43 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 235053DCD8D;
-	Tue, 13 Oct 2026 09:32:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 655C05038E6
+	for <linux-raid@vger.kernel.org>; Tue, 13 Oct 2026 13:32:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.119
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791883962; cv=none; b=hQTVJFVHwxG7dLAt5yzIvg+otMAeSZhU09G8nGKHW5jaMH2l8saAFUxiDgjbspJYynhu9UGV9D6xX8q2tqxZNEY8C0IXVp0PQinhvB1z0pvebdClvGWAd3cHPRkRjGJlEHAQ0kklTEFTrKJjP4gwX6SlLEoCsPCoGDeuCbCp22o=
+	t=1791898374; cv=none; b=QaKjn3tJl5mgMkQoFdk7Dv0CVbJC/YdQ0TiyVk32mbXGArkApqGmAnGLPGQxppzUbRo58bFVophf4FDAQOZobIbZlx/g7m2BdpRbJ4VsTtZmpx2pD12Wgw4ceXnHt/u87IO7PpUjNLY1ZdMwTfAlWHe3rf3lGbIK7p8xGkXtTTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791883962; c=relaxed/simple;
-	bh=fwURzNl9cH1aK4rmVIu01X1molsNK9DXMme9H5CmUgA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ImL5aT2rnR2p+PrvHk6+xW+zn78ZM4XZ1M5k6dPIesAxz7FGUcRFAko9w66eqKI3TS+T1kEZyXszeIF8aXbiFrZ2HMibh2kzkIieFKSFr1z1QEMfUlUFiSHy9Roe/TFNXsrq4NHlMNAkICt0xUf5pLSK+vT9yfADW1qez14v3a0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4j3pxl4hxHzYQw1D;
-	Tue, 13 Oct 2026 17:31:39 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A59B34056D;
-	Tue, 13 Oct 2026 17:32:30 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.50.85.155])
-	by APP4 (Coremail) with UTF8SMTPSA id gCh0CgB3tfSt+s1qsMQbAQ--.2543S4;
-	Tue, 13 Oct 2026 17:32:30 +0800 (CST)
-From: Zizhi Wo <wozizhi@huaweicloud.com>
-To: song@kernel.org,
-	yukuai@fygo.io,
-	magiclinan@didiglobal.com,
-	xiao@kernel.org,
-	linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	yangerkun@huawei.com,
-	chengzhihao1@huawei.com,
-	wozizhi@huawei.com
-Subject: [PATCH] md/raid5: reject raid4/5 with fewer than 2 devices
-Date: Tue, 13 Oct 2026 17:25:38 +0800
-Message-ID: <20261013092538.636212-1-wozizhi@huaweicloud.com>
-X-Mailer: git-send-email 2.52.0
+	s=arc-20240116; t=1791898374; c=relaxed/simple;
+	bh=LB++yc/5BtuetnM9xpDImPRRhclepzJMUkNKdzsXMrw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=O4HQOiO3Dkr8al+PizJ9AZliqSylcQ31FlonSMeLrX2j1V8SIXnl0Bp4fkDUPlndNhhnE73REk3ugEBimvY6xPwfX43mQd1WxLW4VTS41OU1fKJOodAM3oyC4Llsgj4LuMEo+0PRTwxw3PHtmXO7/Vpb5mH9myNrgFR6HwOQBOk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=p1+3GmmR; arc=none smtp.client-ip=115.124.30.119
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="p1+3GmmR"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1791898364; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=/b4XIg87XIFrnRGN6R8nO45dFyE+E5QQf6iUZ75askI=;
+	b=p1+3GmmRX+nvK7RNx/A6ON9OJmvbdyUVcU0IDnO+RiXajbJ0pSUuioA48a7HJxVkGwKhzNmFcz+6pbkEGcuppaSPBwA0g/JsBDd2xV6HsW4YHDEKfj1LcFddNqbttwjqeJHub06kE6vgmG1VGwuZDTfB8uYY7z38LTEahrb9t1w=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033032089153;MF=yunye.zhao@linux.alibaba.com;NM=1;PH=DS;RN=9;SR=0;TI=SMTPD_---0XClyIFH_1791898363;
+Received: from j66c13357.sqa.eu95.tbsite.net(mailfrom:yunye.zhao@linux.alibaba.com fp:SMTPD_---0XClyIFH_1791898363 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Tue, 13 Oct 2026 21:32:43 +0800
+From: Yunye Zhao <yunye.zhao@linux.alibaba.com>
+To: linux-raid@vger.kernel.org
+Cc: Yu Kuai <yukuai@fygo.io>,
+	Song Liu <song@kernel.org>,
+	Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	John Garry <john.g.garry@oracle.com>,
+	Joseph Qi <joseph.qi@linux.alibaba.com>,
+	YunyeZhao <yunye.zhao@linux.alibaba.com>
+Subject: [PATCH 6.6.y] md/raid0: fix data corruption when chunk size is below PAGE_SIZE
+Date: Tue, 13 Oct 2026 21:32:43 +0800
+Message-Id: <20261013133243.42145-1-yunye.zhao@linux.alibaba.com>
+X-Mailer: git-send-email 2.19.1.6.gb485710b
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -43,78 +45,78 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3tfSt+s1qsMQbAQ--.2543S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7CF1kXw1kCr47uF18Zr48Crg_yoW8tFWUp3
-	9akF90vwn5Gr1ayrWkJa4vga4Yqr4xA3ykKrZ3XrZ7Xr15ZF4Uu3y7WFy8Xr10y398Aay5
-	Ja4UKrWUCa40grDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyCb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_JFI_Gr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij
-	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE
-	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
-	xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
-	7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UAwIDUUUUU=
-X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
 
-From: Zizhi Wo <wozizhi@huawei.com>
+From: YunyeZhao <yunye.zhao@linux.alibaba.com>
 
-A raid4/5 array assembled with a single device has data_disks == 0, which
-is then used throughout the mapping math:
- 1) as a divisor in raid5_compute_sector() (division-by-zero splat);
- 2) as a multiplier in roundup_pow_of_two(data_disks * ...) in
-    raid5_set_limits(), which makes roundup_pow_of_two(0) shift by 64,
-    yielding a shift-out-of-bounds splat.
- ......
+Commit 319ff40a5427 ("md/raid0: Fix performance regression for large sequential writes")
+assumes that bios reaching RAID0 are no larger than the chunk size.
 
-I reproduced this issue in my environment as well:
+However, blk_queue_max_hw_sectors() raises limits smaller than
+PAGE_SIZE to one page. With 64 KiB pages and a 16 KiB RAID0 chunk, a
+bio can therefore span several chunks. raid0_make_request() splits it
+only once and maps the multi-chunk remainder to one member device,
+causing silent data corruption.
 
-[  294.891435] UBSAN: shift-out-of-bounds in include/linux/log2.h:57:13
-[  294.891446] shift exponent 64 is too large for 64-bit type 'long unsigned int'
-[  294.891457] CPU: 21 UID: 0 PID: 1351 Comm: sh Not tainted 7.3.0-rc7 #112 PREEMPT(full)
-[  294.891477] Call Trace:
-[  294.891481]  <TASK>
-[  294.891486]  dump_stack_lvl+0x5d/0x80
-[  294.891525]  ubsan_epilogue+0x5/0x2b
-[  294.891538]  __ubsan_handle_shift_out_of_bounds.cold+0x5e/0x113
-[  294.891568]  raid5_set_limits+0x2da/0x497
-[  294.891618]  raid5_run.cold+0x635/0xd6e
+Set the queue chunk boundary after stacking the member limits, combined
+with any inherited boundary using gcd(). This makes the block layer
+split bios at chunk boundaries before they reach RAID0. Only install a
+boundary aligned to the logical block size so that bio splitting
+always makes progress.
 
-setup_conf() already rejects raid6 with fewer than 4 devices; only the
-initial raid4/5 assembly path never had the check. Add it so a degenerate
-single-device raid4/5 is refused before data_disks is used.
+Setting the boundary after disk_stack_limits() is required because
+stacking may clear or reduce a boundary installed earlier. This adapts
+the mechanism introduced by upstream commit 4b8beba60d32
+("md/raid0: set chunk_sectors limit") to the queue limits API used by
+6.6.y.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
+The corruption was reproduced on arm64 with 64 KiB pages and a 16 KiB
+chunk. A 64 KiB chunk configuration is unaffected.
+
+Fixes: 319ff40a5427 ("md/raid0: Fix performance regression for large sequential writes")
+Signed-off-by: YunyeZhao <yunye.zhao@linux.alibaba.com>
 ---
- drivers/md/raid5.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/md/raid0.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b91545ce090d..5a7839542e24 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7660,10 +7660,16 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	if (mddev->new_level == 6 && mddev->raid_disks < 4) {
- 		pr_warn("md/raid:%s: not enough configured devices (%d, minimum 4)\n",
- 			mdname(mddev), mddev->raid_disks);
- 		return ERR_PTR(-EINVAL);
- 	}
-+	if ((mddev->new_level == 4 || mddev->new_level == 5) &&
-+	    mddev->raid_disks < 2) {
-+		pr_warn("md/raid:%s: not enough configured devices (%d, minimum 2)\n",
-+			mdname(mddev), mddev->raid_disks);
-+		return ERR_PTR(-EINVAL);
-+	}
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index c50a7abda744..5a57e327c6ba 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -11,6 +11,7 @@
+ */
  
- 	if (!mddev->new_chunk_sectors ||
- 	    (mddev->new_chunk_sectors << 9) % PAGE_SIZE ||
- 	    !is_power_of_2(mddev->new_chunk_sectors)) {
- 		pr_warn("md/raid:%s: invalid chunk size %d\n",
+ #include <linux/blkdev.h>
++#include <linux/gcd.h>
+ #include <linux/seq_file.h>
+ #include <linux/module.h>
+ #include <linux/slab.h>
+@@ -382,6 +383,7 @@ static void raid0_free(struct mddev *mddev, void *priv)
+ static int raid0_run(struct mddev *mddev)
+ {
+ 	struct r0conf *conf;
++	unsigned int chunk_limit;
+ 	int ret;
+ 
+ 	if (mddev->chunk_sectors == 0) {
+@@ -413,6 +415,18 @@ static int raid0_run(struct mddev *mddev)
+ 			disk_stack_limits(mddev->gendisk, rdev->bdev,
+ 					  rdev->data_offset << 9);
+ 		}
++
++		/*
++		 * Set the chunk boundary after stacking member limits, which
++		 * may clear or reduce it. Without it a bio may span several
++		 * chunks when chunk size < PAGE_SIZE. Keep it a multiple of
++		 * the logical block size so the block layer can split at it.
++		 */
++		chunk_limit = gcd(mddev->queue->limits.chunk_sectors,
++				  mddev->chunk_sectors);
++		if (!(chunk_limit %
++		      (mddev->queue->limits.logical_block_size >> SECTOR_SHIFT)))
++			blk_queue_chunk_sectors(mddev->queue, chunk_limit);
+ 	}
+ 
+ 	/* calculate array device size */
 -- 
-2.52.0
+2.19.1.6.gb485710b
 
