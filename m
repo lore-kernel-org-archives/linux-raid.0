@@ -1,108 +1,191 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7060502762
-	for <linux-raid@vger.kernel.org>; Tue, 13 Oct 2026 13:44:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD3D032B112;
+	Tue, 13 Oct 2026 14:12:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791899053; cv=none; b=juoGD3z0AgMBpmz6/m91r6u2n3Z4ZKLpwenQ7bA+AQK8Wh4IHxLpFLhmaJCDJXjvozNglBPBjrZlnyM/YXiAnVQZsInMzdcarrAzrGBkZc8VXNasC+Z9rgbSZQAyj8GROOtHI7oic8NX1LKOGyoKP4UXQeh25EAjYYwFvV+fYpY=
+	t=1791900769; cv=none; b=BMBNatej3J/1+4wyQtVGsQ5v014UhD+X33I5oxMvvMo7baqUA5JOnAYjjc2nrsESTobjjGbSliauJNgs3IdWrRr+V0dhrxsje3vRdx4mCrDustsESdjGYWeUsgML9TtHq2cxmCLdMbwlqenF4cfgSn9SyN+fqA4gfWTG9j8yRU0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791899053; c=relaxed/simple;
-	bh=MgrzalUmbGC26c05zod6EpsljsaAM91BcdbZGoCbj24=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=FUENoAZE2ZLvbBzek2UsTinD17VSBEkZkeLPe/TSSifEotO92YaXv5op2oTfFHA1+mU7jKWQ5LrM5XsbfCScol8shhp9BqqA08OgGD2J1NFDAtL8XdD81WSznosq5VLEF0IfPo5okI4hulYoPxrB5F9mIYIU11oPdqA4wNRXjcE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jh3WAr/Z; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791900769; c=relaxed/simple;
+	bh=qNV404DIR1Mqc4aDJKQovNWTl8kRtkJTp00vwZaFr9A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=CZS7bWnHMeeBLNy+gJDR4KseLX7Mjc2QpM+6xyw3RZAfXLZQC1q8ju6SJguCL2A3wB5m2a0RUgbV2gc42ZPdgmmYQm6a3A6rVsidz3n1G2CeQo4A1OLQCznrwEYSxCw4f3KxJ3bCIoOUYJ8F5LdzmQJShyGReYGltN8CbSOGHg4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CZHecW7z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jh3WAr/Z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50ACD1F000FF;
-	Tue, 13 Oct 2026 13:44:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CZHecW7z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C60381F000FF;
+	Tue, 13 Oct 2026 14:12:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791899052;
-	bh=VPE2wXVSQkeVyaRfAIWeHJvIihqBn1MPPb0wtYz0OA0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Jh3WAr/Z2KVWcD7sOrz5ZP2LQSRvSHRS39Uj0lJ0XarisFzgTUcXez+ONcy5F+F6i
-	 s+N+oR2Oy990WdPI8RqSTbRpeTbs09PxWw8Hqxiiq99cILoCEptZYugZ6+LSzNWGmY
-	 txZEKjk4o4er9TIUlZPeiCBsqVL+D0f07Ov4d+7rs9Eb6STbEvVoVtItLH2VxtRC/6
-	 3cJp0Ly20nSdNuYvzv5TZ9OAgJ1JLtiBjPgflZGExDSOAwX99PZep4wsQBBCZgL/As
-	 rvpc+BQSb/eZe49eZtoRN0tLCvBpTcn0QoJOUZO/iAvWVRxuwYEa+PCA/+P1CBfwxO
-	 kAFez/b2UNmqg==
-Message-ID: <sashiko-outbox-169850@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 6.6.y] md/raid0: fix data corruption when chunk size is
- below PAGE_SIZE
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yunye Zhao" <yunye.zhao@linux.alibaba.com>, linux-raid@vger.kernel.org
-Cc: yukuai@fygo.io
-In-Reply-To: <20261013133243.42145-1-yunye.zhao@linux.alibaba.com>
-References: <20261013133243.42145-1-yunye.zhao@linux.alibaba.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 13 Oct 2026 13:44:11 +0000
+	s=k20260515; t=1791900768;
+	bh=myQTlTquP0TOZa5/pEIgkOOy5zhZTL0OynJmo/yIUhQ=;
+	h=From:To:Cc:Subject:Date;
+	b=CZHecW7zJN+KgruOlNRI+VYpLQHUcfdpdmfQ/SCdb4mBdu761OaNU1UilW2Nzobbg
+	 S7Wk6KxetWrLybqIJWl8B3/J+Igd2qNSiqWObYY6TV1LFeXvxTNA6X1p1VHqanKj4K
+	 Ea1VV0UyBHD6UIjD5rkDrHV69mJ0wVUqoy0WvW1TYxZA8Fh2kHIZZTw4tVIlepnlgD
+	 fQ8oCv6tTyUfjuw3Cz+QbvkHhETQL/CJRuC7rcqDCMRXUlpgnRlRzcLJgNYRtaCaA6
+	 PjCcCf2+nQRbaGnKeTQP9WGvjajBrvgZfbfrIiQEBGyMTbjS10PRfLsLbYH9ioafLi
+	 sTKtiYrjE4Ylw==
+From: Yu Kuai <yukuai@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Yu Kuai <yukuai@fygo.io>,
+	linux-raid@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	Cao Guanghui <caoguanghui@kylinos.cn>,
+	Chandradhar Kumar <chandradhar.2003@gmail.com>,
+	Chen Cheng <chencheng@fnnas.com>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	=?UTF-8?q?J=C3=A9r=C3=A9my=20Jean?= <Jeremy.Jean@oss.cyber.gouv.fr>,
+	Li Youhong <liyouhong@kylinos.cn>,
+	Martin Wilck <martin.wilck@suse.com>,
+	Nguyen Ngoc Thang <ngocthang2710.1999@gmail.com>,
+	Peng Fan <peng.fan@nxp.com>,
+	Sang-Hoon Choi <csh0052@gmail.com>,
+	Yogesh Gaur <yogeshgaur.83@gmail.com>,
+	Yuchao Zhang <ndaugoing@gmail.com>,
+	Zhihao Cheng <chengzhihao1@huawei.com>,
+	Zizhi Wo <wozizhi@huawei.com>
+Subject: [GIT PULL] md-7.4-20261013
+Date: Tue, 13 Oct 2026 22:12:39 +0800
+Message-ID: <20261013141241.2257621-1-yukuai@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] md: missing queue freeze before blk_queue_chunk_sectors()
---
+Hi Jens,
 
-commit b6776719727e7cf128eed60b1bbe45a3b0836f15
-Author: YunyeZhao <yunye.zhao@linux.alibaba.com>
+Please consider pulling the following changes into your for-7.4/block
+branch.
 
-md/raid0: fix data corruption when chunk size is below PAGE_SIZE
+This pull request contains:
 
-Fixes silent data corruption that occurs when bios spanning multiple RAID0
-chunks are not split properly by the block layer. Sets the chunk boundary
-after stacking member limits to ensure block-layer bio splitting respects
-the RAID0 chunk size.
+Bug Fixes:
+- Wake RAID10 barrier waiters when a pending-count rollback satisfies
+  an active array freeze. (Zizhi Wo)
+- Reject v0.90 superblocks whose device count cannot fit the metadata
+  format, preventing out-of-bounds access. (Jérémy Jean)
+- Track RAID5 disk-array allocation size and avoid removing an
+  unregistered CPU hotplug instance on setup or resize failure.
+  (Cao Guanghui)
+- Validate the RAID0 device count before allocating its device list.
+  (Chandradhar Kumar)
+- Validate RAID5 journal payload header, size, and checksum bounds
+  before accessing them. (Martin Wilck)
+- Reject inconsistent RAID5 reshape metadata instead of triggering a
+  kernel BUG. (Yogesh Gaur)
+- Reject invalid RAID4/5 disk counts before setup and invalid reshape
+  disk counts in raid5_run. (Chen Cheng)
+- Fix a NULL-pointer dereference in RAID5 setup error handling.
+  (Zhihao Cheng)
+- Reject RAID5 per-device sizes smaller than one chunk. (Zizhi Wo)
+- Fix mddev_unlock() on an unacquired mutex in lbs_store().
+  (Jack Wang)
+- Give RAID5 io_unit slab caches per-array names to avoid duplicate
+  cache names. (Yogesh Gaur)
+- Validate v1.x bad-block log size when loading superblocks.
+  (Yuchao Zhang)
+- Take reconfig_mutex while enabling PPL on an inactive array to
+  prevent a NULL PPL configuration. (Nguyen Ngoc Thang)
+- Drain released RAID5 stripes before destroying the stripe cache on
+  takeover setup failure. (Li Youhong)
+- Protect RAID5 big_stripe_tree lookup with RCU. (Sang-Hoon Choi)
+- Prevent a NULL mddev->private dereference when stopping an array
+  while I/O is being submitted. (Zhihao Cheng)
+- Don't publish an md array before md_alloc() finishes initializing
+  mddev->kobj. (Yogesh Gaur)
 
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index c50a7abda744a..5a57e327c6ba4 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-[ ... ]
-> @@ -413,6 +415,18 @@ static int raid0_run(struct mddev *mddev)
->  			disk_stack_limits(mddev->gendisk, rdev->bdev,
->  					  rdev->data_offset << 9);
->  		}
-> +
-> +		/*
-> +		 * Set the chunk boundary after stacking member limits, which
-> +		 * may clear or reduce it. Without it a bio may span several
-> +		 * chunks when chunk size < PAGE_SIZE. Keep it a multiple of
-> +		 * the logical block size so the block layer can split at it.
-> +		 */
-> +		chunk_limit =3D gcd(mddev->queue->limits.chunk_sectors,
-> +				  mddev->chunk_sectors);
-> +		if (!(chunk_limit %
-> +		      (mddev->queue->limits.logical_block_size >> SECTOR_SHIFT)))
-> +			blk_queue_chunk_sectors(mddev->queue, chunk_limit);
+Cleanups:
+- Annotate intentional lockless RAID10 freeze-state accesses.
+  (Zizhi Wo)
+- Add shared RAID write-error and bad-block-sector helpers, and share
+  flush_bio_list between RAID1 and RAID10. (Li Youhong)
+- Extract RAID5 min_raid_disks() helper. (Chen Cheng)
+- Use assign_bit() where applicable in MD/RAID. (Peng Fan)
 
-[Severity: High]
-Could modifying the block queue limits here without freezing the queue expo=
-se
-the block layer to torn limit reads?
+Thanks,
+Kuai
 
-When an array is reconfigured, raid0_run() is invoked to update limits. Whi=
-le
-mddev_suspend() is used during reconfiguration, it only drains
-mddev->active_io, which pauses bios deep in the MD stack at
-md_handle_request().
+---
 
-It does not prevent new bios from entering the generic block layer via
-submit_bio_noacct() and executing blk_queue_split(). Because the queue is n=
-ot
-frozen via blk_mq_freeze_queue(), these concurrent bios might read torn
-values of q->limits.chunk_sectors while raid0_run() modifies it, potentially
-leading to inconsistent splitting and silent data corruption.
+The following changes since commit 85bffad4d2fea373a72d68bed8012e8cbccb8ee7:
 
->  	}
-> =20
->  	/* calculate array device size */
+  block: simplify disk_zone_set_cond() (2026-09-15 06:53:06 -0600)
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013133243.4214=
-5-1-yunye.zhao@linux.alibaba.com?part=3D1
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/mdraid/linux.git tags/md-7.4-20261013
+
+for you to fetch changes up to d1472ca2ca5de8ecd2b358411eb14c031404ecf0:
+
+  md: don't hand out the array before md_alloc() has added mddev->kobj (2026-10-09 11:52:58 +0800)
+
+----------------------------------------------------------------
+Cao Guanghui (2):
+      md/raid5: track disks array size to fix extra_page leak on error paths
+      md/raid5: fix NULL pointer dereference in raid5_free_percpu
+
+Chandradhar Kumar (1):
+      md/raid0: validate device count before allocating devlist
+
+Chen Cheng (3):
+      md/raid5: reject raid4/5 arrays with too few disks
+      md/raid5: extract min_raid_disks()
+      md/raid5: reject invalid reshape disks in raid5_run()
+
+Jack Wang (1):
+      md: fix mddev_unlock() called without holding lock in lbs_store()
+
+Jérémy Jean (1):
+      md: reject v0.90 arrays with too many devices
+
+Li Youhong (4):
+      md: add rdev_record_write_error() helper
+      md/raid1-10: add rdev_bb_block_sectors() helper
+      md/raid1-10: share flush_bio_list between raid1 and raid10
+      md/raid5: drain released_stripes before destroying the cache
+
+Martin Wilck (1):
+      md/raid5: validate payload size before calculating payload_len
+
+Nguyen Ngoc Thang (1):
+      md: take reconfig_mutex when enabling PPL on an inactive array
+
+Peng Fan (1):
+      md/raid: use assign_bit() where applicable
+
+Sang-Hoon Choi (1):
+      md/raid5: protect big_stripe_tree lookup with RCU
+
+Yogesh Gaur (3):
+      md/raid5: don't BUG() on an inconsistent reshape state from the superblock
+      md/raid5: give the io_unit slab caches per-array names
+      md: don't hand out the array before md_alloc() has added mddev->kobj
+
+Yuchao Zhang (1):
+      md: validate bblog_size when loading v1.x badblocks metadata
+
+Zhihao Cheng (2):
+      md/raid5: setup_conf: Fix null-ptr-def in error handling path
+      md: Fix the null-ptr-deref of 'mddev->private' while submitting IO
+
+Zizhi Wo (3):
+      md/raid10: annotate lockless access to array_freeze_pending
+      md/raid10: fix missing wakeup in wait_barrier_nolock
+      md/raid5: reject a per-device size smaller than one chunk
+
+ drivers/md/md.c          |  72 ++++++++++++++++++++++----------
+ drivers/md/md.h          |   7 ++++
+ drivers/md/raid0.c       |  16 ++++---
+ drivers/md/raid1-10.c    |  27 ++++++++++++
+ drivers/md/raid1.c       |  42 +++----------------
+ drivers/md/raid10.c      |  59 ++++++--------------------
+ drivers/md/raid5-cache.c |  54 ++++++++++++++++++------
+ drivers/md/raid5-ppl.c   |  12 +++++-
+ drivers/md/raid5.c       | 106 +++++++++++++++++++++++++++++++++++------------
+ drivers/md/raid5.h       |   1 +
+ 10 files changed, 244 insertions(+), 152 deletions(-)
