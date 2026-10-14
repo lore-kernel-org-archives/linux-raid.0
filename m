@@ -1,196 +1,218 @@
-Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
+Received: from mail-oa1-f71.google.com (mail-oa1-f71.google.com [209.85.160.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31FEA3C1D57
-	for <linux-raid@vger.kernel.org>; Wed, 14 Oct 2026 12:33:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.43
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791981230; cv=pass; b=TBXIkg+ME1tEHM7yx4cLZaRktLRTvOJoJBtl2v477wmcoU8GbyZZKLxEifpoauz4oMllk855mUPzqytO31IOP0OCZmgi2sCDv1ErSPpOP4kEr9ECobgTL0DVdCu0b1mlQJyjWHfIGz/cGP+f/UetCzMa+pnnIHJsCCb0vGjW31A=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791981230; c=relaxed/simple;
-	bh=5LQu2scU6Wzy7H+0+F4mLdz9KrGpX5VTW+VuvPiHq2A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=TL4ng3He4vEBLOIotgDvPEK2DaH/HJndsbEA/3V+FBDwmmTGa3cQNyEDOYgwhYmPkf/FeYCKLOMqiwTXx5t7INh5vxM5fAIM4l78AO8pyL7hClQg+tNn37HFHbfZiQzreAlio4wjKqTnFktPBMsUjMCy3C87QHVMMBT0uJBWyfE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b=fV7z8XkS; arc=pass smtp.client-ip=209.85.218.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="fV7z8XkS"
-Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-c329dc7e0f5so60224966b.1
-        for <linux-raid@vger.kernel.org>; Wed, 14 Oct 2026 05:33:46 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791981225; cv=none;
-        d=google.com; s=arc-20260327;
-        b=Dn63mX3RIdzuezfsi5Aw4eRUzV7PoVa9ca9FR3yi3ntpzWZ4XfZWdirPwnMfX4g2Tu
-         VWIoVKoi65EXn8tMAn8dUpqfOPuytZfDpqPVPDebwrpyWWfew5rKLQBSlhlbc3Eyn7Jb
-         1ObE2AfsIke7Rc5rn9AIuEcQgVQjvyomjoOwapKPkrPx8QzEIlHvWddvwE7VUKbqfFOr
-         kYY8DfdcJSNgxsXeP29YHya8JH6KzgGQS+Lh/ZKXN2k5+OSig5Yi4aE8k6LYamFfJQKS
-         nvnXKfP1+EkZKfyb4KRHVp5lWiUBAS7nTBT8CMZsjZKNzU+0nHvubULb6+57P/3XZzTe
-         lr9g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=xc6OYIsIblBkxyIfP1OcMrgJAKJXZ0gf3E+YejrIirI=;
-        fh=mTP6TkWV1IhQRgyhsEpYqIpiXvhDlZKdHAfNRdOTDjk=;
-        b=Vt5Qf7xYao3C8ZyqpAmccehC3ATBjE6g1w592dDnXwlKuU8dm1v74XfO0oN4IRSrbR
-         LxKoa1o8BOaczuY9AaMBhkXliNz/nE7hgfWmXi4rS4h0YmFJo5KsRX8nCbBLtSd943bI
-         PNez0ooxQlw/ATrFYEWvcFcMji6sJLnbKv3PrkmC7VAM4UNSitN1Ir/TMKuE/oq3aKpx
-         LBajUJB0QYti2z5Df7SQ3QAXRy9YKxT38TAw1Wt3ptKa7KA8WCKtOvUhXh4LAvgQNcNz
-         tIfG7wLnm1ywfJpJKdcD7KNzXCYbjmihWQRVvkzwtF1bCedLaplIUO7YwCpLLG3wgT0R
-         CLBg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google; t=1791981225; x=1792586025; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=xc6OYIsIblBkxyIfP1OcMrgJAKJXZ0gf3E+YejrIirI=;
-        b=fV7z8XkSVk5LFJ98KHvdR4wygqZXawwoxxC5oJ8IUq+CiQyYqNr/QRhE9rxQAdsD5I
-         pPS8LBeUZAyu75NrZtxFw/aojX8tuGCvxS/iSesc/m92bjI8JLMMlpJ8F+nD7aUk/3j1
-         0MHKQcZQEtIGxgb/yncEL54NUArQsc8ifPmmCBS+Gjb2wbyN67gcH/HJqGSS9dtr8KYl
-         hpWgIbXIP6Ibe6K3cP8V7EeTTZbf7i8+WlkRl7zJmFXd5b+rCsqkl2+aEh192qz7doJI
-         RdEGQdYUhjP4Qb+F5Hh6EFatqSOsxVr/grggO8Z3vE5RtzrH8hZOaMn6nsG/cVbOK+Zk
-         QPxA==
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AD1954EED4
+	for <linux-raid@vger.kernel.org>; Wed, 14 Oct 2026 16:19:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.71
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791994778; cv=none; b=A/Sv0H6prOBP7dmtgfo2lJhtnVf5vD6MtVmFRhuMacaox52QjHS9tUm0HEfhVoyfSLilEtscB4ySJbl2Z3N26i7Yf/OFVRWIbUOzIrcAs2JgYE9+A/TTWpAZ7ynCejbyIW4o5NAgJb7HnsQJkUi/m7WEP4Vr3q/S8tPx2kJtsJ8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791994778; c=relaxed/simple;
+	bh=orUkk4GCp5EFHVnAmkbvBc1CnnBk7UmhzsNlrDdy0xQ=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=Ujpv8EHVaGW/X1IRM1g8Ur6rfUA1i3tcZxRT4M9trEa8u4ZDtIV89FVMkTTMutII72Xn09B56WfwqvbZ6TUWWuqqRMJ12SaQo2VNLVY1ocm/e4bATHJ4vCLy4OFn3to4AD4F3X3GmGpcc9dQkqNznm3W3C7KNLtoVPQsl4jm47w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.160.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oa1-f71.google.com with SMTP id 586e51a60fabf-45952ce9ee0so5843898fac.1
+        for <linux-raid@vger.kernel.org>; Wed, 14 Oct 2026 09:19:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791981225; x=1792586025;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=xc6OYIsIblBkxyIfP1OcMrgJAKJXZ0gf3E+YejrIirI=;
-        b=OqdvswgBrGjtoCdOVB4k/UivXCdNR3k6SVmj8x5/M3fWzzEFvC4Ck6rA+7cpQH18Ny
-         HImBjKR9e/qqmKhtbkRUl+1Mb5WxRJ4jQNi0/em3cDbD5qx7+qCuZdAFRkmY6J7kcWal
-         qaHe/GTPM3ln5kv22mSvkQDnbsg8Q9x6zQ51t66fcxXCsV6LDznOaKkJ4JWhNwVaDpz7
-         2Gbq6elFmY/tif9EPDZkUnXIa8hacW/BZ6a7cESz2ulf9L8DJ6YTG8mbpH4E6XVbh5wB
-         5eJzBbymL0Gc94eSR42k7LrRyeQjoX+f9WCZ57C6/dMbq2goljDd0HhL5idqURgMa+0R
-         ocfA==
-X-Gm-Message-State: AFq9FYJClpgesLO0Q7PU5pB42gSZnYcGQcL3SV6Nfa2+u2yCAmZCANad
-	lxjsTIgj/LFVhjzbKs5eNx/Ha7AX1PVi71Yn4Yg9WeRsFtS6/6bsDGn+wfA808T/6BS1Zf84siU
-	BRqEEa5x97lcKdXCiCk3X4s2BP6zHrgF3D2/1yONYKkiapZJ3QkGcuPZ4jw==
-X-Gm-Gg: AYBFou2VA2DWQiT13Wl2P0+c0dUNcONIpn6VXZLkzkQ/zIAS/Ys+rzAUpQSexwpDQbf
-	i0Xjlo813p9+M0DO8gv3Q2fJmcCuwHF43aiKQjmHfWWO91kfPJk42besHeaqGyqeWXgrtBZM4Ls
-	E+UvHGGL6lBkdYk6ZOCQYE+beNk21FN8weFPuu71LOLWdOdL0bPkuAgxQ4Isz9A4cTivJjRl6fY
-	u+GpWQOcU7OIZ3C6YOClpCPr/XVE89N8XWpKBYjA6TAKPN9+EpF+8gXQrLe27IypktBzbYh5Feb
-	Y8hZxoceqmx6eUuGmt3XskhiumEZWB+roEzmflD+iJS1APZlDJFrIBj3MRqwNR+oag==
-X-Received: by 2002:a17:906:c10b:b0:c29:5172:c532 with SMTP id
- a640c23a62f3a-c31a9f90cf0mr1591771666b.4.1791981225241; Wed, 14 Oct 2026
- 05:33:45 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1791994773; x=1792599573;
+        h=content-type:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=xXsYfHP7hwkUSYb50Vz8rNkytsVjYuskiuIUuuS/w8A=;
+        b=M2Q4LUEFi1JWAUgo/y3E2LWqT8UsQunEfMg/xTE+MSHkTtH6q3VD8yuR2LRWpw5ysf
+         o02FEEx+dpwIspitMLFTl9jzn4I3FezaLw9QOu0K6Fz4InncapiVxgN9qxIjOCQfrNs9
+         Ojilvbyb1Xv+qYjIpugQWsn7jTNxu8jfHXQ8MprjOTdg9Wnf88xdksCwJj8tD69XXYIV
+         XX4gd1DK+ZLUiF6SHtxDWImNJ5ilU0fxVu0xtDN++d6xE0lB4TkmAeap5R/O5vbli5KG
+         tO6URw6a9inOI1RmnLsLyQKog6qp1lH5MdYf8Md/tQ5qiGmdvULlfM8ni3zXSXeOwnDs
+         hb3g==
+X-Forwarded-Encrypted: i=1; AKwUvBwtNuhylMgZ00bKhy6y/fkmAvQ1smskpsktayMgws4bpZXp8+44uTA0YBq8NNtp31IjmE3UzvbYgQ9m@vger.kernel.org
+X-Gm-Message-State: AFq9FYJ6Q/9kCOd8jdYj12V0nZXbfYp5NYkOyfX0L97ZOD5sSb4neYa3
+	kz39/0X1o9k1ylLLZVIwdBYWfytwG/qNNqMYLny2SbMxPb8F5fiGmzAfHflsVcvXXSVdAF4qZNz
+	+chsK8lRTRJVuth4ft0/KLWro5wPA7XyDoVTyzprDVf9Xn33sTyQzoj2r55o=
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20261014114830.615589-1-jinpu.wang@ionos.com> <sashiko-outbox-171234@kernel.org>
-In-Reply-To: <sashiko-outbox-171234@kernel.org>
-From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date: Wed, 14 Oct 2026 14:33:34 +0200
-X-Gm-Features: AclHuK-VUY2tO56miFi14QNouGTHw5CYl_-Mcn4FjH6FftaHezCVW9gFtUZ8ChM
-Message-ID: <CAMGffEk1GDMquLszFvDC-KPn1827QjA-J9rVoKoHQm_H3Su3FA@mail.gmail.com>
-Subject: Re: [PATCH] md: allow growing logical_block_size on a running array
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+X-Received: by 2002:a05:6808:2211:b0:4f6:5279:5c6e with SMTP id
+ 5614622812f47-50c42170b8amr14110237b6e.8.1791994772986; Wed, 14 Oct 2026
+ 09:19:32 -0700 (PDT)
+Date: Wed, 14 Oct 2026 09:19:32 -0700
+In-Reply-To: <6a6e88a1.13bfb6d0.1ecdd5.0261.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6acfab94.38256f13.2006af.0129.GAE@google.com>
+Subject: Re: [syzbot] [kernel?] possible deadlock in md_start_sync
+From: syzbot <syzbot+13eb8132f7693fe21d7d@syzkaller.appspotmail.com>
+To: bp@alien8.de, dave.hansen@linux.intel.com, hpa@zytor.com, 
+	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
+	magiclinan@didiglobal.com, mingo@redhat.com, song@kernel.org, 
+	syzkaller-bugs@googlegroups.com, tglx@kernel.org, x86@kernel.org, 
+	xiao@kernel.org, yukuai@fnnas.com, yukuai@fygo.io
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Oct 14, 2026 at 2:00=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
->
-> Thank you for your contribution! Sashiko AI review found 2 potential issu=
-e(s) to consider:
-> - [High] md: Unbalanced mutex unlock on mddev_lock() failure in lbs_store=
-()
-This one is fixed in
-https://lore.kernel.org/linux-raid/20261013141241.2257621-1-yukuai@kernel.o=
-rg/T/#u
-> - [High] md: TOCTOU race in lbs_store() bypasses opener check and deadloc=
-ks via queue freeze
-Second is valid, seems no simple solution, safer to lbs change when
-array is inactive. I will drop the patch
-> --
->
-> commit 4267b7426d911d22ecfdc4aa203d879ce4f9a759
-> Author: Jack Wang <jinpu.wang@cloud.ionos.com>
->
->     md: allow growing logical_block_size on a running array
->
->     Growing logical_block_size on a running array required stopping it
->     first. Handle it directly in lbs_store(), similar to
->     mddev_set_closing_and_sync_blockdev(): under open_mutex, refuse with
->     -EBUSY if the array is closing or has openers, otherwise apply the
->     bigger LBS.
->
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index 680b34a63cb3d..c885d405bf466 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
->
-> [ ... ]
->
-> > @@ -6026,8 +6026,36 @@ lbs_store(struct mddev *mddev, const char *buf, =
-size_t len)
-> >       if (mddev->pers) {
->
-> [Severity: High]
-> Since this check of mddev->pers is performed locklessly, can a concurrent
-> thread starting the array race with it?
->
-> If mddev->pers is null, we fall through to the bottom path and block on
-> mddev_lock(mddev). Concurrently, another thread executing do_md_run() cou=
-ld
-> acquire reconfig_mutex, set mddev->pers to non-null, start the array, and
-> release the lock.
->
-> When lbs_store() wakes up and acquires reconfig_mutex, it does not re-ver=
-ify
-> mddev->pers or check atomic_read(&mddev->openers) > 0 before calling
-> mddev_set_logical_block_size():
->
-> drivers/md/md.c:lbs_store() {
->     ...
->         if (mddev->pers) {
->         ...
->                 return len;
->         }
->
->         err =3D mddev_lock(mddev);
->         if (err)
->                 goto unlock;
->
->         err =3D mddev_set_logical_block_size(mddev, lbs);
->     ...
-> }
->
-> Does this blindly apply a new logical block size to a running array with
-> active openers? Furthermore, since mddev_set_logical_block_size() invokes
-> queue_limits_commit_update_frozen() which waits for all active I/O to dra=
-in
-> while holding reconfig_mutex, could this deadlock if active I/O completio=
-n
-> requires reconfig_mutex?
->
-> [Severity: High]
-> If mddev_lock() fails (e.g., interrupted by a signal, returning -EINTR),
-> does it jump to an unbalanced unlock?
->
-> drivers/md/md.c:lbs_store() {
->     ...
->         err =3D mddev_lock(mddev);
->         if (err)
->                 goto unlock;
->
->         err =3D mddev_set_logical_block_size(mddev, lbs);
->
-> unlock:
->         mddev_unlock(mddev);
->         return err ?: len;
-> }
->
-> Because mddev_lock() failed, reconfig_mutex was not acquired, but the unl=
-ock
-> label unconditionally calls mddev_unlock(mddev) to release it. Could this
-> attempt to unlock an unheld mutex and trigger a lockdep splat or kernel
-> panic?
->
-> --
-> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261014114830.61=
-5589-1-jinpu.wang@ionos.com?part=3D1
+syzbot has found a reproducer for the following issue on:
+
+HEAD commit:    4056b3c9d3c9 Merge tag 'nios2_update_for_v7.4' of git://gi..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=15334e8e580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=7d1b274ca9837366
+dashboard link: https://syzkaller.appspot.com/bug?extid=13eb8132f7693fe21d7d
+compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=175a6999580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=10da6999580000
+
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-4056b3c9.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/811a43c89106/vmlinux-4056b3c9.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/2bb4f3abea76/bzImage-4056b3c9.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+13eb8132f7693fe21d7d@syzkaller.appspotmail.com
+
+======================================================
+WARNING: possible circular locking dependency detected
+syzkaller #0 Not tainted
+------------------------------------------------------
+kworker/0:5/5422 is trying to acquire lock:
+ffff8880133d8358 (&mddev->reconfig_mutex){+.+.}-{4:4}, at: mddev_lock_nointr drivers/md/md.h:734 [inline]
+ffff8880133d8358 (&mddev->reconfig_mutex){+.+.}-{4:4}, at: md_start_sync+0x179/0x1010 drivers/md/md.c:10275
+
+but task is already holding lock:
+ffffc9000293fc40 ((work_completion)(&mddev->sync_work)){+.+.}-{0:0}, at: rcu_lock_acquire include/linux/rcupdate.h:309 [inline]
+ffffc9000293fc40 ((work_completion)(&mddev->sync_work)){+.+.}-{0:0}, at: rcu_read_lock include/linux/rcupdate.h:849 [inline]
+ffffc9000293fc40 ((work_completion)(&mddev->sync_work)){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3361 [inline]
+ffffc9000293fc40 ((work_completion)(&mddev->sync_work)){+.+.}-{0:0}, at: process_scheduled_works+0x97a/0x1630 kernel/workqueue.c:3479
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #3 ((work_completion)(&mddev->sync_work)){+.+.}-{0:0}:
+       process_one_work kernel/workqueue.c:3372 [inline]
+       process_scheduled_works+0xc03/0x1630 kernel/workqueue.c:3479
+       worker_thread+0xa47/0xfb0 kernel/workqueue.c:3560
+       kthread+0x38b/0x480 kernel/kthread.c:436
+       ret_from_fork+0x514/0xb70 arch/x86/kernel/process.c:158
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+-> #2 ((wq_completion)md_misc){+.+.}-{0:0}:
+       touch_wq_lockdep_map+0xcb/0x180 kernel/workqueue.c:4111
+       __flush_workqueue+0x148/0x1470 kernel/workqueue.c:4153
+       md_alloc+0x32/0xf20 drivers/md/md.c:6334
+       md_alloc_and_put+0x1a/0x1f0 drivers/md/md.c:6423
+       blk_probe_dev block/genhd.c:888 [inline]
+       blk_request_module+0x27d/0x2a0 block/genhd.c:-1
+       blkdev_get_no_open+0x3f/0xe0 block/bdev.c:870
+       blkdev_open+0x1d7/0x600 block/fops.c:670
+       do_dentry_open+0x816/0x1380 fs/open.c:996
+       vfs_open+0x3b/0x340 fs/open.c:1101
+       do_open fs/namei.c:4866 [inline]
+       path_openat+0x1443/0x1d60 fs/namei.c:5029
+       do_file_open+0x23e/0x4a0 fs/namei.c:5058
+       do_sys_openat2+0x115/0x200 fs/open.c:1417
+       do_sys_open fs/open.c:1423 [inline]
+       __do_sys_openat fs/open.c:1439 [inline]
+       __se_sys_openat fs/open.c:1434 [inline]
+       __x64_sys_openat+0x138/0x170 fs/open.c:1434
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+-> #1 (major_names_lock){+.+.}-{4:4}:
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x19d/0x1550 kernel/locking/mutex.c:821
+       blk_probe_dev block/genhd.c:885 [inline]
+       blk_request_module+0x35/0x2a0 block/genhd.c:901
+       blkdev_get_no_open+0x3f/0xe0 block/bdev.c:870
+       bdev_file_open_by_dev+0xa0/0x240 block/bdev.c:1091
+       md_import_device+0x2e9/0x650 drivers/md/md.c:3847
+       md_add_new_disk+0x280/0x1850 drivers/md/md.c:7546
+       md_ioctl+0x200a/0x2610 drivers/md/md.c:8499
+       blkdev_ioctl+0x5e3/0x740 block/ioctl.c:798
+       vfs_ioctl fs/ioctl.c:51 [inline]
+       __do_sys_ioctl fs/ioctl.c:597 [inline]
+       __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+-> #0 (&mddev->reconfig_mutex){+.+.}-{4:4}:
+       check_prev_add kernel/locking/lockdep.c:3209 [inline]
+       check_prevs_add kernel/locking/lockdep.c:3328 [inline]
+       validate_chain kernel/locking/lockdep.c:3952 [inline]
+       __lock_acquire+0x164c/0x2de0 kernel/locking/lockdep.c:5288
+       lock_acquire+0x115/0x350 kernel/locking/lockdep.c:5942
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x19d/0x1550 kernel/locking/mutex.c:821
+       mddev_lock_nointr drivers/md/md.h:734 [inline]
+       md_start_sync+0x179/0x1010 drivers/md/md.c:10275
+       process_one_work kernel/workqueue.c:3396 [inline]
+       process_scheduled_works+0xc3d/0x1630 kernel/workqueue.c:3479
+       worker_thread+0xa47/0xfb0 kernel/workqueue.c:3560
+       kthread+0x38b/0x480 kernel/kthread.c:436
+       ret_from_fork+0x514/0xb70 arch/x86/kernel/process.c:158
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+other info that might help us debug this:
+
+Chain exists of:
+  &mddev->reconfig_mutex --> (wq_completion)md_misc --> (work_completion)(&mddev->sync_work)
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock((work_completion)(&mddev->sync_work));
+                               lock((wq_completion)md_misc);
+                               lock((work_completion)(&mddev->sync_work));
+  lock(&mddev->reconfig_mutex);
+
+ *** DEADLOCK ***
+
+locks held by kworker/0:5/5422: 2, last CPU#0:
+ #0: ffff888031699d40 ((wq_completion)md_misc){+.+.}-{0:0}, at: rcu_lock_acquire include/linux/rcupdate.h:309 [inline]
+ #0: ffff888031699d40 ((wq_completion)md_misc){+.+.}-{0:0}, at: rcu_read_lock include/linux/rcupdate.h:849 [inline]
+ #0: ffff888031699d40 ((wq_completion)md_misc){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3361 [inline]
+ #0: ffff888031699d40 ((wq_completion)md_misc){+.+.}-{0:0}, at: process_scheduled_works+0x97a/0x1630 kernel/workqueue.c:3479
+ #1: ffffc9000293fc40 ((work_completion)(&mddev->sync_work)){+.+.}-{0:0}, at: rcu_lock_acquire include/linux/rcupdate.h:309 [inline]
+ #1: ffffc9000293fc40 ((work_completion)(&mddev->sync_work)){+.+.}-{0:0}, at: rcu_read_lock include/linux/rcupdate.h:849 [inline]
+ #1: ffffc9000293fc40 ((work_completion)(&mddev->sync_work)){+.+.}-{0:0}, at: process_one_work kernel/workqueue.c:3361 [inline]
+ #1: ffffc9000293fc40 ((work_completion)(&mddev->sync_work)){+.+.}-{0:0}, at: process_scheduled_works+0x97a/0x1630 kernel/workqueue.c:3479
+
+stack backtrace:
+CPU: 0 UID: 0 PID: 5422 Comm: kworker/0:5 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+Workqueue: md_misc md_start_sync
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xe8/0x150 lib/dump_stack.c:120
+ print_circular_bug+0x2e2/0x300 kernel/locking/lockdep.c:2087
+ check_noncircular+0x12f/0x150 kernel/locking/lockdep.c:2219
+ check_prev_add kernel/locking/lockdep.c:3209 [inline]
+ check_prevs_add kernel/locking/lockdep.c:3328 [inline]
+ validate_chain kernel/locking/lockdep.c:3952 [inline]
+ __lock_acquire+0x164c/0x2de0 kernel/locking/lockdep.c:5288
+ lock_acquire+0x115/0x350 kernel/locking/lockdep.c:5942
+ __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+ __mutex_lock+0x19d/0x1550 kernel/locking/mutex.c:821
+ mddev_lock_nointr drivers/md/md.h:734 [inline]
+ md_start_sync+0x179/0x1010 drivers/md/md.c:10275
+ process_one_work kernel/workqueue.c:3396 [inline]
+ process_scheduled_works+0xc3d/0x1630 kernel/workqueue.c:3479
+ worker_thread+0xa47/0xfb0 kernel/workqueue.c:3560
+ kthread+0x38b/0x480 kernel/kthread.c:436
+ ret_from_fork+0x514/0xb70 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+ </TASK>
+
+
+---
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
