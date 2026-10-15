@@ -1,109 +1,219 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com [209.85.167.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A630A43C7C2;
-	Thu, 15 Oct 2026 19:51:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6E2647C11A
+	for <linux-raid@vger.kernel.org>; Thu, 15 Oct 2026 20:08:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792093880; cv=none; b=McZ8U4C33jHO+R3sIr6u0Ue7Q1FNcT0NbG/PfnyofdeSupzHDdfgkGpx5B/5hgMqkOUUFQ416ZH4HK67eCOSgBGOmNNmENFwmboDuXx8CsWa0mCMAJaXfE3xdCSA1qp/LzWR4q7uQmjXQ2Gc6cAwLkoFWVH5c4sCaxa89qehoBs=
+	t=1792094907; cv=none; b=pYcToYwgIoPM+3UGfVzvV4L3SKYj14PJ77RaCjm0dG8LrsYEdGulehnZTflFNt1Yoq5h6DzOzW/ezTRIGiqACZDJgsmq/hdpnSoAf37+Ue+LFn6OlwF2qtCqyQHlQslohA4QrFOWyXLQqlgYyI6EW0r1/2xJjgDE7SPCjt9BuLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792093880; c=relaxed/simple;
-	bh=ga6JYYLzzscZKA6V9O1XfWF5Uf0DD39/Nn3cQ8QDo/s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KkmelGwybMyiPyE0pdsJipQZQEvG21LXSoO7Zf+6c1vqgcOTeA6PX2qM/93vfUnEFaqxxuTbYLauS3OMf8ld2TWdZPbFKNYfJ1CMRGMFq1qPlwtEuTLLEjltEUmhI6adipSVWOlt8ZOiKKcTbQtwbWzIwrKZuyeMxnoOD/XNY0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FAfpDwii; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FAfpDwii"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EBD61F000C4;
-	Thu, 15 Oct 2026 19:51:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792093879;
-	bh=jIGO386Z+1/YyIE6BOFStksGPSpSiXsQ9RgmeE/zm1Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FAfpDwiimyOYzZ5JcENHIs5Vi+2y6MQ9waCDCqjQ5+IsJfkUSeldpuMERPh/ju+9C
-	 AmLFsYRx4ss/RQjY/bWbRusizOO22JZJyVNL7y9OrfXKArSLmo2eEK9R+IRfaM4DuI
-	 zy/7m5tTu5LXC9BM3BCyuvZ5W7IcKf7K9Pg6mLifvUxZHSedzm26VdWYvbvixTcnuf
-	 rwr/4AsRtD7ujDYGbxhGrNTq8Gp9V5d5z3AjS+c4MEV2RnQ8EhPHaqIMi6lzgKjf2l
-	 mCnpem+7WCa6NI6q4/DEoE/J0Ed0EUSU/S5PHY14wTr8pGPA7si/H/ns0p1C0yzx1i
-	 9bUpKICgHIs3g==
-Date: Thu, 15 Oct 2026 19:51:17 +0000
-From: Eric Biggers <ebiggers@kernel.org>
-To: Frank.Li@oss.nxp.com
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	Benjamin Marzinski <bmarzins@redhat.com>,
-	Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
-	Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
-	Dan Williams <djbw@kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>, dm-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-	linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org,
-	Anatolij Gustschin <agust@denx.de>,
-	Saeed Bishara <saeed@marvell.com>,
-	Rameshwar Prasad Sahu <rsahu@apm.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Anup Patel <anup.patel@broadcom.com>, Frank Li <Frank.Li@nxp.com>
-Subject: Re: [PATCH RFC 0/4] async_tx/md: Remove async_tx framework
-Message-ID: <20261015195117.GI2170687@google.com>
-References: <20261015-asycn_tx_remove-v1-0-056a7085e0a1@nxp.com>
+	s=arc-20240116; t=1792094907; c=relaxed/simple;
+	bh=ED1gm+c2yjRgo3ZjglC07WWj28Qok/A2UygBtfgJDUk=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=GLxRvFluA2z3EfvCHbVEfXTdh33hGkHBCn968e4+u6gJYsCDZvudOaxZ0EB9jMcjzLzsKAvvaLs4SQGs5+ADoux24WZAzckpWpgnQkbcl3LgtV1keNubaqwpQzABZGYzsSNlz1x25rRIeFYLSqqxTZUIvRsDBHa1XYhA3iOLU+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-4e937c5bd4fso6357485b6e.2
+        for <linux-raid@vger.kernel.org>; Thu, 15 Oct 2026 13:08:24 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792094904; x=1792699704;
+        h=content-type:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=qm71JmZWxtpXYyHUlS66VKW1M7sAeUMO5tdhCY0EqIg=;
+        b=Gewmo1QUF8ZkmLsY17iKgl48zzUbVrjoBdWsSW+rmaUvrRUu0ZwRUZEhYPq2alLaLU
+         2MNyAPezxK9Gr7F4VjmGaFOyyXedz505jutYgWwe8Rh0fN5QJm3n0DwEGNXHnRMbw1KN
+         ub3ExiafodhKgSIJ+vKTlZU6fflGw4WwgxGHHegE9WJbIS06C+4CjI9rTc/PjTZnhFZ9
+         /Mnx9Ly4fCGhFS+DIVCfWZNP8GdcOHBJuEJwX5W+ozCB4FXtMG+VDZuW6NvamPaHAQSc
+         r9bUFlt0DJ6mWSYF0kxJsHpP40gQf7Vq+CTb+N1Ogp2mQO3jm4xp6rX9QeA9QD/OPGh4
+         rYAQ==
+X-Forwarded-Encrypted: i=1; AKwUvBw5UWN6T/4Fq9MQeRktawFRpW6xfhIIUjO1U9n3j19vJ2sl+Tycl60cG7I1M7lUXVCnM3TzVvSOo8wq@vger.kernel.org
+X-Gm-Message-State: AFq9FYJe3FdtRvoS0W6rHptbN+6/bf/Nv17qDG9vUowar8eNqm9pIXxr
+	zNUr1pWfdNcI68sglY/hBBivfmuqr0OF0I4pPgsJLOGMNT3yseJPkC5jp+jeMLy/19plVjfWOr7
+	wlfkLVlxF4pn9UjgFZbmRdai/5gZVP8itDbmNB+OOYfbZCPK0y0bjmlLtpPU=
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261015-asycn_tx_remove-v1-0-056a7085e0a1@nxp.com>
+X-Received: by 2002:a05:6808:10c7:b0:4f1:5068:b95a with SMTP id
+ 5614622812f47-50c4ed40b02mr19529086b6e.23.1792094903787; Thu, 15 Oct 2026
+ 13:08:23 -0700 (PDT)
+Date: Thu, 15 Oct 2026 13:08:23 -0700
+In-Reply-To: <6a14aff8.050a0220.2385e8.0019.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6ad132b7.7952420f.283480.00dc.GAE@google.com>
+Subject: Re: [syzbot] [raid?] [block?] possible deadlock in blk_request_module (2)
+From: syzbot <syzbot+fb0ff9bfe34ad282ebd4@syzkaller.appspotmail.com>
+To: axboe@kernel.dk, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-raid@vger.kernel.org, song@kernel.org, syzkaller-bugs@googlegroups.com, 
+	yukuai@fnnas.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Oct 15, 2026 at 03:22:24PM -0400, Frank.Li@oss.nxp.com wrote:
-> This RFC is collecting more feedbacks to device when is good time to remove
-> whole async_tx framework and how to remove it safely. And is overall
-> direction correction.
-> 
-> Little to no real hardware acceleration usage:
->   Most systems run RAID5/6 parity calculations on the CPU using optimized
->   XOR/PQ implementations, while DMAEngine-backed async_tx acceleration is
->   rarely present or exercised.
-> 
-> Added abstraction and maintenance cost:
->   async_tx introduces an extra layer between MD RAID and parity operations,
->   making the code harder to understand, debug, and maintain.
-> 
-> Modern CPUs outperform DMA offload:
->   SIMD implementations (SSE/AVX/NEON and architecture-specific RAID
->   routines) often provide better performance than DMA descriptor setup and
->   completion handling overhead.
-> 
-> Obsolete hardware dependencies:
->   Many async_tx acceleration backends were designed for older DMA/XOR
->   engines that are no longer common in contemporary systems.
-> 
-> Complex asynchronous execution model:
->   Dependency chains, callback handling, and DMA transaction management
->   increase code complexity without corresponding performance benefits on
->   typical deployments.Simplifies RAID code paths: Removing async_tx allows
->   direct use of synchronous XOR/PQ helpers, reducing indirection in raid5.c
->   source code [linux/drivers/md/raid5.c].
-> 
-> Reduces testing burden:
->   Eliminates rarely used code paths that are difficult to validate and more
->   likely to accumulate latent bugs.
-> 
-> Aligns implementation with actual usage:
->   The vast majority of MD RAID deployments already rely on software parity
->   generation rather than DMA offload.
-[..]
->  17 files changed, 281 insertions(+), 2843 deletions(-)
+syzbot has found a reproducer for the following issue on:
 
-I haven't been paying much attention to the crypto/async_tx/ directory,
-but this makes sense to me.  This mirrors similar trends that we've seen
-with the crypto and CRC algorithms.  For these types of algorithms, just
-using the CPU is faster and much simpler than trying to offload the
-operation to some external hardware engine (which rarely even exist).
+HEAD commit:    b810335a0699 Add linux-next specific files for 20261015
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+console output: https://syzkaller.appspot.com/x/log.txt?x=1605ffd1580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=1b8bbfb3c8b8bab9
+dashboard link: https://syzkaller.appspot.com/bug?extid=fb0ff9bfe34ad282ebd4
+compiler:       Debian clang version 22.1.8 (1~deb13u4), Debian LLD 22.1.8
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1505ffd1580000
 
-- Eric
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+fb0ff9bfe34ad282ebd4@syzkaller.appspotmail.com
+
+md/raid1:md125: active with 1 out of 1 mirrors
+md125: detected capacity change from 0 to 8192
+======================================================
+WARNING: possible circular locking dependency detected
+syzkaller #0 Not tainted
+------------------------------------------------------
+syz-executor123/5954 is trying to acquire lock:
+ffffffff90960c40 (major_names_lock){+.+.}-{4:4}, at: blk_probe_dev block/genhd.c:885 [inline]
+ffffffff90960c40 (major_names_lock){+.+.}-{4:4}, at: blk_request_module+0x35/0x2a0 block/genhd.c:901
+
+but task is already holding lock:
+ffff8880236d8358 (&mddev->reconfig_mutex){+.+.}-{4:4}, at: mddev_lock drivers/md/md.h:713 [inline]
+ffff8880236d8358 (&mddev->reconfig_mutex){+.+.}-{4:4}, at: mddev_suspend_and_lock+0x48/0xf0 drivers/md/md.h:1019
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #3 (&mddev->reconfig_mutex){+.+.}-{4:4}:
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x197/0x15a0 kernel/locking/mutex.c:821
+       mddev_lock_nointr drivers/md/md.h:734 [inline]
+       md_start_sync+0x179/0x1010 drivers/md/md.c:10275
+       process_one_work kernel/workqueue.c:3495 [inline]
+       process_scheduled_works+0xc3d/0x1630 kernel/workqueue.c:3578
+       worker_thread+0xa47/0xfb0 kernel/workqueue.c:3659
+       kthread+0x38b/0x480 kernel/kthread.c:436
+       ret_from_fork+0x514/0xb70 arch/x86/kernel/process.c:158
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+-> #2 ((work_completion)(&mddev->sync_work)){+.+.}-{0:0}:
+       process_one_work kernel/workqueue.c:3471 [inline]
+       process_scheduled_works+0xc03/0x1630 kernel/workqueue.c:3578
+       worker_thread+0xa47/0xfb0 kernel/workqueue.c:3659
+       kthread+0x38b/0x480 kernel/kthread.c:436
+       ret_from_fork+0x514/0xb70 arch/x86/kernel/process.c:158
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+-> #1 ((wq_completion)md_misc){+.+.}-{0:0}:
+       touch_wq_lockdep_map+0xcb/0x180 kernel/workqueue.c:4272
+       __flush_workqueue+0x148/0x10b0 kernel/workqueue.c:4314
+       md_alloc+0x32/0xf20 drivers/md/md.c:6334
+       md_alloc_and_put+0x1a/0x1f0 drivers/md/md.c:6423
+       blk_probe_dev block/genhd.c:888 [inline]
+       blk_request_module+0x27d/0x2a0 block/genhd.c:-1
+       blkdev_get_no_open+0x3f/0xe0 block/bdev.c:870
+       blkdev_open+0x1d7/0x600 block/fops.c:677
+       do_dentry_open+0x80e/0x1360 fs/open.c:1000
+       vfs_open_consume+0x4a/0x350 fs/open.c:1131
+       do_open fs/namei.c:4892 [inline]
+       path_openat+0x16fc/0x20f0 fs/namei.c:5057
+       do_file_open+0x23e/0x4a0 fs/namei.c:5086
+       do_sys_openat2+0x115/0x200 fs/open.c:1442
+       do_sys_open fs/open.c:1448 [inline]
+       __do_sys_openat fs/open.c:1788 [inline]
+       __se_sys_openat fs/open.c:1783 [inline]
+       __x64_sys_openat+0x138/0x170 fs/open.c:1783
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+-> #0 (major_names_lock){+.+.}-{4:4}:
+       check_prev_add kernel/locking/lockdep.c:3209 [inline]
+       check_prevs_add kernel/locking/lockdep.c:3328 [inline]
+       validate_chain kernel/locking/lockdep.c:3952 [inline]
+       __lock_acquire+0x164c/0x2de0 kernel/locking/lockdep.c:5288
+       lock_acquire+0x115/0x350 kernel/locking/lockdep.c:5942
+       __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+       __mutex_lock+0x197/0x15a0 kernel/locking/mutex.c:821
+       blk_probe_dev block/genhd.c:885 [inline]
+       blk_request_module+0x35/0x2a0 block/genhd.c:901
+       blkdev_get_no_open+0x3f/0xe0 block/bdev.c:870
+       bdev_file_open_by_dev+0xa0/0x240 block/bdev.c:1091
+       md_import_device+0x2e9/0x650 drivers/md/md.c:3847
+       md_add_new_disk+0x669/0x1850 drivers/md/md.c:7549
+       md_ioctl+0x2005/0x2610 drivers/md/md.c:8499
+       blkdev_ioctl+0x5e3/0x740 block/ioctl.c:798
+       vfs_ioctl fs/ioctl.c:51 [inline]
+       __do_sys_ioctl fs/ioctl.c:597 [inline]
+       __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
+       do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+       do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+other info that might help us debug this:
+
+Chain exists of:
+  major_names_lock --> (work_completion)(&mddev->sync_work) --> &mddev->reconfig_mutex
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(&mddev->reconfig_mutex);
+                               lock((work_completion)(&mddev->sync_work));
+                               lock(&mddev->reconfig_mutex);
+  lock(major_names_lock);
+
+ *** DEADLOCK ***
+
+locks held by syz-executor123/5954: 1, last CPU#0:
+ #0: ffff8880236d8358 (&mddev->reconfig_mutex){+.+.}-{4:4}, at: mddev_lock drivers/md/md.h:713 [inline]
+ #0: ffff8880236d8358 (&mddev->reconfig_mutex){+.+.}-{4:4}, at: mddev_suspend_and_lock+0x48/0xf0 drivers/md/md.h:1019
+
+stack backtrace:
+CPU: 0 UID: 0 PID: 5954 Comm: syz-executor123 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/07/2026
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xe8/0x150 lib/dump_stack.c:120
+ print_circular_bug+0x2e2/0x300 kernel/locking/lockdep.c:2087
+ check_noncircular+0x12f/0x150 kernel/locking/lockdep.c:2219
+ check_prev_add kernel/locking/lockdep.c:3209 [inline]
+ check_prevs_add kernel/locking/lockdep.c:3328 [inline]
+ validate_chain kernel/locking/lockdep.c:3952 [inline]
+ __lock_acquire+0x164c/0x2de0 kernel/locking/lockdep.c:5288
+ lock_acquire+0x115/0x350 kernel/locking/lockdep.c:5942
+ __mutex_lock_common kernel/locking/mutex.c:646 [inline]
+ __mutex_lock+0x197/0x15a0 kernel/locking/mutex.c:821
+ blk_probe_dev block/genhd.c:885 [inline]
+ blk_request_module+0x35/0x2a0 block/genhd.c:901
+ blkdev_get_no_open+0x3f/0xe0 block/bdev.c:870
+ bdev_file_open_by_dev+0xa0/0x240 block/bdev.c:1091
+ md_import_device+0x2e9/0x650 drivers/md/md.c:3847
+ md_add_new_disk+0x669/0x1850 drivers/md/md.c:7549
+ md_ioctl+0x2005/0x2610 drivers/md/md.c:8499
+ blkdev_ioctl+0x5e3/0x740 block/ioctl.c:798
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:597 [inline]
+ __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
+ do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+ do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f4e137daefb
+Code: 00 48 89 44 24 18 31 c0 48 8d 44 24 60 c7 04 24 10 00 00 00 48 89 44 24 08 48 8d 44 24 20 48 89 44 24 10 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 1c 48 8b 44 24 18 64 48 2b 04 25 28 00 00
+RSP: 002b:00007ffea3973750 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f4e137daefb
+RDX: 00007ffea39737d0 RSI: 0000000040140921 RDI: 0000000000000005
+RBP: 0000000000000005 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000007
+R13: 00007ffea3973830 R14: 00007f4e1385fcc0 R15: 0000000000000002
+ </TASK>
+md: could not open device unknown-block(0,0).
+md: md_import_device returned -6
+
+
+---
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
