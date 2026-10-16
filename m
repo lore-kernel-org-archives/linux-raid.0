@@ -1,49 +1,49 @@
 Received: from a27-24.smtp-out.us-west-2.amazonses.com (a27-24.smtp-out.us-west-2.amazonses.com [54.240.27.24])
 	(using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C74DC38331D;
-	Fri, 16 Oct 2026 04:25:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5481A38423D;
+	Fri, 16 Oct 2026 04:25:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.240.27.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792124750; cv=none; b=ZoffD5lwk8+/hytNLy9+5bNgKg0VhnT4vAXgGTi9U1IZRCu2toglswhzhiQMoUUu/Cx5GpeJmsDePbkKyTG6AdahfZ+KGk2y5jFiekgFSMQSGHRO+qRaeXbCvH9OxAIFzAREIxZ58L5gZ348tWZGQrcqQrdDr3i//QSi5pzohU8=
+	t=1792124751; cv=none; b=NQWkNeYeD2bnJ43WXEcXa7SkmnYza3aXVSFt2ixWA9FaOxmCsIAbxOcyMVdo0Im2I/A7h8GvDG2X7fVntcL2RyV/eXsubeKgz/PKnR8wiNP784GQIj/BS0Zq8ON6eNVvrt9VjYJgb0e9oNiDnoFzmm1y5opHWQPs2dUe7YCR7CY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792124750; c=relaxed/simple;
-	bh=IbfsF2Ybe2vF5JrZ+/4TjXZcmnPDjk+npkYcfCPhi+4=;
+	s=arc-20240116; t=1792124751; c=relaxed/simple;
+	bh=fhTPlTuxhWyAUi0BlB7l5x8jVd7gI8ACauyF8TedkAY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=j8X9UABwL74s4f+iRpKgQSyRIUL1Xqgf7F5xSw+/R44mcqpbS4bXOe77xEtvT3B+2SNy0xsvv+HkL6wA+ydg5lMou+NxRbvDuN35bkkUzOVU41QpPib6Q3BsqiwZizc38xsz0wKYoyMSbIcB7JBFmMaCWBHiIIoRSONUkQ8I+yQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=dougvj.me; spf=pass smtp.mailfrom=bounce.dougvj.me; dkim=pass (2048-bit key) header.d=dougvj.me header.i=@dougvj.me header.b=huFs1gf+; dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b=KTPIJKY5; arc=none smtp.client-ip=54.240.27.24
+	 MIME-Version; b=p3a9PnQXSMl+3L3ogMvnAtM5ngQLRkP85aF/cLmCPMd6QrYam/FLLnDAKglDZObUntwBHONxXqs35QsJ7PzzaG5SpkRsUVROoV5H+Bqc+A/JQk+rdls9BwY6StQSr2ctpJKX9D1bzfiPzY3a1b3fwl9o2H2bjr1FIGBKBITBbyE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=dougvj.me; spf=pass smtp.mailfrom=bounce.dougvj.me; dkim=pass (2048-bit key) header.d=dougvj.me header.i=@dougvj.me header.b=tVjhaQj5; dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b=OqTr6I1V; arc=none smtp.client-ip=54.240.27.24
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=dougvj.me
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bounce.dougvj.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dougvj.me header.i=@dougvj.me header.b="huFs1gf+";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="KTPIJKY5"
+	dkim=pass (2048-bit key) header.d=dougvj.me header.i=@dougvj.me header.b="tVjhaQj5";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="OqTr6I1V"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
 	s=75cpmoop2pyf56gdndy2e364ijbokrge; d=dougvj.me; t=1792124748;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=IbfsF2Ybe2vF5JrZ+/4TjXZcmnPDjk+npkYcfCPhi+4=;
-	b=huFs1gf+ndtdQ8ZeP1BN27YG3H+jtoPCEQ62oei1vOKuQv6yFJ0KwVI3+HhWKJSg
-	dww8VSS3lSUE3Cf42H/2GV78Df65/5eJU6GV+Cl48JJmilMMsQXe/FqNePodTn9cfQs
-	UhRSphJe5+L4y4FtD/z/2PGKvPLA+sej1sIhhjxl6tNxgxJjFI9YJGVS6s47o/9uKRM
-	ulwuVQbJ9ooEHR1QxaBXhawEhexl6CuGUrScd/bmVlQGUYTH2nVTF1PuDjGr7qjRtwu
-	BfcwCYd4csE+PUEQpeSolKm+CjtgBSIjCKnMxYhGGijWoZf8M9NhZGdgibWQnA45ywM
-	bafoyvvrSg==
+	bh=fhTPlTuxhWyAUi0BlB7l5x8jVd7gI8ACauyF8TedkAY=;
+	b=tVjhaQj5RWtkMVxoYLn579Ey1hDe31yXy7aPZxZZpVzXFstgs/lzuBDCv6AHFyHb
+	kcVtNnoqAu6q0pGG1MrzMZEPVXUTcbiDRhZuje6b8EMgHbiSBNpT71nYimEW0h0T1+2
+	DhLy3j5GeDaKum9RgTY/XmyKkCAfTfYXJgvRdOCVsZdQcItdJoY33+QwsxqQ3yoSIcO
+	KnJsSAqeceOp1xS0bpzFy3mASubKvGbuhkWnpkyYqpNc70JTuEOZ1N3ePmDyGOurLXK
+	tWcyEptf82D+GHFb6VKpN7uMFGUOPa1D8Xzy7kJ8yVl02E2JNfhHd2gbPCEV1hfZHzJ
+	fpnxOQEWYQ==
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
 	s=hsbnp7p3ensaochzwyq5wwmceodymuwv; d=amazonses.com; t=1792124748;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Feedback-ID;
-	bh=IbfsF2Ybe2vF5JrZ+/4TjXZcmnPDjk+npkYcfCPhi+4=;
-	b=KTPIJKY5WpWPXTsVwGxA2gJ1dl4tIWy86W2GQn5l1k2BB6sgo+a6j5Ll+jKnZvrZ
-	SbLn6Klh4+SuklhNzmKjbVLLbUbHQeLKyklrs9BsA/IxZvdv4Z1iQOiuPT3355SjynU
-	xGYfjeF3YIzx6X5HvlhWFozfXJa0JbhuA9W5yeb0=
+	bh=fhTPlTuxhWyAUi0BlB7l5x8jVd7gI8ACauyF8TedkAY=;
+	b=OqTr6I1VaWXqCNIR83q4/p0cIPPe9iXUlAY8QNKnrmyM4oKmPyd/UpwTdYOpmhwY
+	EabmnqmLPPxwcYwLfKyKBs1bhOgKCDrIcKipAHInnnci6mRPX6ymjTnhutwBy4FiGRQ
+	ofPRWmEH31lB9aWqAYDSmXqF+dkTscU56Zot5CxI=
 From: Doug V Johnson <me@dougvj.me>
 Authentication-Results: mail.bonnevilleinformatics.com;
 	auth=pass smtp.mailfrom=me@dougvj.me
 To: linux-raid@vger.kernel.org
 Cc: song@kernel.org, yukuai@fygo.io, magiclinan@didiglobal.com, 
 	xiao@kernel.org, chencheng@fnnas.com, linux-kernel@vger.kernel.org, 
-	Doug V Johnson <me@dougvj.me>, Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH v4 2/3] md/raid5: do not reshape if overlapping rdev bad block ranges prevent it
+	Doug V Johnson <me@dougvj.me>
+Subject: [PATCH v4 3/3] md/raid5: warn when a read fails due in some part to bad-block metadata
 Date: Fri, 16 Oct 2026 04:25:48 +0000
-Message-ID: <010101a142f581e5-36ad5604-721c-4ad0-86f3-62ca283b6133-000000@us-west-2.amazonses.com>
+Message-ID: <010101a142f583eb-3d8069c0-51c1-4db5-a301-d62f9c2937fa-000000@us-west-2.amazonses.com>
 In-Reply-To: <20261016042537.277516-1-me@dougvj.me>
 References: <20261016042537.277516-1-me@dougvj.me>
 Precedence: bulk
@@ -53,140 +53,75 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Spamd-Bar: --
+X-Spamd-Bar: -----
 Feedback-ID: ::1.us-west-2.yIAaOWcA3P0r3CWRzBxY2mlnWgm/DtEO6k5/iZ9ogRk=:AmazonSES
 X-SES-Outgoing: 2026.10.16-54.240.27.24
 
-Ensure that a reshape is not started if there are more than max_degraded
-devices in the array that are either out of sync, faulty, missing,
-or have overlapping bad blocks such that a read is not recoverable.
+Report that bad block metadata contributed to a read failure on the
+array so that it's clear that the failure may not be directly due to
+an immediate underlying device read failure.
 
-Cheaply verify that the number of bad or unavailable devices exceeds
-the max number of degraded drives and if so sweep the bad block lists
-on each device for overlaps using a new function array_has_badblock().
+There has been a documented case of bad block metadata being erroneously
+copied around contributing to mystery read failures with no underlying
+device failure.  This warning will help users understand why the
+failure exists and may lead to the discovery of this condition sooner.
 
-Invoke this function in raid5_start_reshape() and if the array has
-unreadable blocks, return -EIO to report it to userspace.
-
-Leave in place the existing functionality to handle a failed reshape
-in progress because it's possible for bad blocks to be discovered or
-placed in metadata after a reshape has already been initiated.
-
-Link: https://lore.kernel.org/r/21f250f9-04b5-76f6-84c9-1fd245b748c6@huaweicloud.com
-Link: https://lore.kernel.org/r/a9119707-4fa1-58cb-377c-63df67f88957@huaweicloud.com
-Suggested-by: Yu Kuai <yukuai1@huaweicloud.com>
+Link: https://lore.kernel.org/r/20250224090209.2077-2-dougvj@dougvj.net
+Link: https://lkml.iu.edu/2501.3/01088.html
 Assisted-by: LLM
 Signed-off-by: Doug V Johnson <me@dougvj.me>
 ---
- drivers/md/raid5.c | 88 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 88 insertions(+)
+ drivers/md/raid5.c | 16 ++++++++++++++++
+ drivers/md/raid5.h |  2 +-
+ 2 files changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 86ea65559576..23ff549fa363 100644
+index 23ff549fa363..f721eb97f655 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -8636,6 +8636,89 @@ static int check_reshape(struct mddev *mddev)
- 				     + mddev->delta_disks));
- }
- 
-+static int rdev_is_unavailable(struct md_rdev *rdev)
-+{
-+	return !rdev || test_bit(Faulty, &rdev->flags) ||
-+	       !test_bit(In_sync, &rdev->flags);
-+}
-+
-+static int array_has_badblock(struct r5conf *conf)
-+{
-+	sector_t dev_sectors = conf->mddev->dev_sectors;
-+	sector_t stripe_sectors = RAID5_STRIPE_SECTORS(conf);
-+	sector_t max_sectors = round_down((sector_t)INT_MAX, stripe_sectors);
-+	sector_t offset = 0;
-+	int num_bad_devs = 0;
-+	int i;
-+
-+	/* Check if there are even enough bad disks for a bad block condition */
-+	for (i = 0; i < conf->raid_disks; i++) {
-+		struct md_rdev *rdev = conf->disks[i].rdev;
-+
-+		if (rdev_is_unavailable(rdev) || rdev->badblocks.count)
-+			num_bad_devs++;
-+	}
-+	if (num_bad_devs <= conf->max_degraded)
-+		return 0;
-+
-+	/*
-+	 * Sweep the sectors of the array for bad blocks in constituent devices.
-+	 * Within a stripe if there are more bad disks than can be recoverable
-+	 * (max degraded) then the array has bad blocks.
-+	 *
-+	 * The offset tracks the sweep. We advance to the first bad stripe
-+	 * boundary found in any device.
-+	 */
-+	while (offset < dev_sectors) {
-+		sector_t len = min(dev_sectors - offset, max_sectors);
-+		int bad_disks = 0;
-+
-+		for (i = 0; i < conf->raid_disks; i++) {
-+			struct md_rdev *rdev = conf->disks[i].rdev;
-+			sector_t first_bad, bad_sectors, end;
-+
-+			if (rdev_is_unavailable(rdev)) {
-+				bad_disks++;
-+				continue;
-+			}
-+			if (!rdev->badblocks.count)
-+				continue;
-+			if (!badblocks_check(&rdev->badblocks,
-+					     rdev->data_offset + offset, len,
-+					     &first_bad, &bad_sectors))
-+				continue;
-+
+@@ -3672,6 +3672,16 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 				wake_up_bit(&sh->dev[i].flags, R5_Overlap);
+ 			if (bi)
+ 				s->to_read--;
 +			/*
-+			 * Rebase the bad blocks start and end to the device's data
-+			 * offset for consistent comparision
++			 * If we recorded bad blocks from the metadata
++			 * on any of the devices then report this to
++			 * userspace in case anyone might suspect
++			 * something more fundamental instead
 +			 */
-+			end = first_bad + bad_sectors - rdev->data_offset;
-+			first_bad = max(first_bad, rdev->data_offset) -
-+				    rdev->data_offset;
-+
-+			/* Snap the range to the stripe boundary extent */
-+			first_bad = round_down(first_bad, stripe_sectors);
-+			end = round_up(end, stripe_sectors);
-+
-+			/*
-+			 * This device has a bad block at or overlapping the current
-+			 * sweep position, so it's a bad disk
-+			 */
-+			if (first_bad <= offset) {
-+				len = min(len, end - offset);
-+				bad_disks++;
-+			} else {
-+				len = min(len, first_bad - offset);
++			if (bi && s->bad_blocks)
++				pr_warn_ratelimited("%s: read encountered block in device bad block list at %llu\n",
++						    mdname(conf->mddev),
++						    (unsigned long long)sh->sector);
+ 			while (bi && bi->bi_iter.bi_sector <
+ 			       sh->dev[i].sector + RAID5_STRIPE_SECTORS(conf)) {
+ 				struct bio *nextbi =
+@@ -4764,6 +4774,12 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
+ 		if (rdev) {
+ 			is_bad = rdev_has_badblock(rdev, sh->sector,
+ 						   RAID5_STRIPE_SECTORS(conf));
++			if (is_bad) {
++				s->bad_blocks++;
++				pr_debug("bad blocks encountered dev %i sector %llu %lu\n",
++					 i, (unsigned long long)sh->sector,
++					 (unsigned long)RAID5_STRIPE_SECTORS(conf));
 +			}
-+		}
-+		if (bad_disks > conf->max_degraded)
-+			return 1;
-+		offset += len;
-+		cond_resched();
-+	}
-+	return 0;
-+}
-+
- static int raid5_start_reshape(struct mddev *mddev)
- {
- 	struct r5conf *conf = mddev->private;
-@@ -8685,6 +8768,11 @@ static int raid5_start_reshape(struct mddev *mddev)
- 			mdname(mddev));
- 		return -EINVAL;
- 	}
-+	if (array_has_badblock(conf)) {
-+		pr_warn("md/raid:%s: reshape not possible due to bad block list\n",
-+			mdname(mddev));
-+		return -EIO;
-+	}
- 	if (md_bitmap_enabled(mddev, false) &&
- 	    mddev->bitmap_id == ID_LLBITMAP) {
- 		i = mddev->bitmap_ops->resize(mddev, mddev->dev_sectors, 0);
+ 			if (s->blocked_rdev == NULL) {
+ 				if (is_bad < 0)
+ 					set_bit(BlockedBadBlocks, &rdev->flags);
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index cb5feae04db2..6b90c9565ec0 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -282,7 +282,7 @@ struct stripe_head_state {
+ 	 * read all devices, just the replacement targets.
+ 	 */
+ 	int syncing, expanding, expanded, replacing;
+-	int locked, uptodate, to_read, to_write, failed, written;
++	int locked, uptodate, to_read, to_write, failed, written, bad_blocks;
+ 	int to_fill, compute, req_compute, non_overwrite;
+ 	int injournal, just_cached;
+ 	int failed_num[2];
 -- 
 2.54.0
 
