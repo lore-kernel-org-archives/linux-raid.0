@@ -1,111 +1,101 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-3-44.ptr.tlmpb.com (sg-3-44.ptr.tlmpb.com [101.45.255.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE2743BBA03;
-	Sat, 17 Oct 2026 08:38:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78875331EAE
+	for <linux-raid@vger.kernel.org>; Sun, 18 Oct 2026 06:10:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.45.255.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792226288; cv=none; b=bQ2Gfs7VcWv5jrhaDn5hSDY4rxfl82+r61/okbfwviTqFktl0iA3bNLY1m23ppTonHUFG+bDQo80extM0UuMlL3kzlIBnzwbilVTynTnPn4GfqvoIQEwzgAs3ZY4HWa1UlIKNPrgQ+qI6T38l5f16cfIMaiYwlPklAt3ph7pYZA=
+	t=1792303830; cv=none; b=M5YfgMFK4DpGU8YwFyoXYTvJWb+iIisw+qkXjT2g/BhFISM+Far/4pVrA561FWAGT/cl9WtubOQmHzgapWq6R2DE7ERKG2h5ayoEzu/DHiXirRpWUm4ugHpA/n4zXEKUFw5/hBWo1qjZflASL56SIlYB+v8nzqem+u6N74hBd18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792226288; c=relaxed/simple;
-	bh=8YhiKmF1Nm93yWV2XKJvhfAd/B3334WjIgcUP7SRcaQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KX+QhY3B8qd50A44KSHVCdYdVlColcMGPgE6/HQpBhUOEHpXbPEYsaKV1gJ1qOumOBesT3qlZK7s4ojujrNlDlwBaxM/4ZmvD1OGNaIzMalls1v9ShwuQwXSp5b+238f3tsMdKi5EWQW9lQalK/b3a1Bms0u0XA0VHfKxVM4nwU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=X1ZHIuhh; arc=none smtp.client-ip=117.135.210.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1792303830; c=relaxed/simple;
+	bh=goqEBU/3PR4aWWXtr1HXI+1I7UX5mf/orgIJFMWeXMw=;
+	h=From:Subject:Date:In-Reply-To:Message-Id:Mime-Version:
+	 Content-Type:References:To:Cc; b=WWtfbUWea2xs4iPiFwogxhibJoRsoYqkTqJ6cNSZFt0/PHkqyj/W8TuolEw+9uVzeFlOQrT1yNpJ5d+mmSmgbb9bL6GPBFFz92gnIHCiauP0Md0Ti4hVxhlvj7K8UAx3h2cEaoCNY+VWzWTQrAyOlp4hjIvyu3KWppMhuJ9CJlY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io; spf=pass smtp.mailfrom=fygo.io; dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b=b2PklnFv; arc=none smtp.client-ip=101.45.255.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="X1ZHIuhh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=+w
-	ZQYfDXyigfN8u2pCrU2sG1bVZ6QjVFy8zUjVHhfsY=; b=X1ZHIuhhOKOWoH74ny
-	gIYS2cldnMdfcWbePoic9z3qdZCZ+xt1seYfPzGCMlKWSQ3IGE4Re7xVY/a5jGfA
-	ot8zu2By9yLX9m4IYUT1viRCQM0rXrl+sbQ8EaegkY0qaVzm9LicoSkj/YkAqA6r
-	ctGOIi1Go175zTQ4D5NCXY5p4=
-Received: from 163.com (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wD33xHVM9Nq65H_Ag--.52920S2;
-	Sat, 17 Oct 2026 16:37:42 +0800 (CST)
-From: zhanghao <zh_exit@163.com>
-To: song@kernel.org,
-	yukuai@fygo.io
-Cc: magiclinan@didiglobal.com,
-	xiao@kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	zhanghao <zh_exit@163.com>
-Subject: [PATCH v2] md/raid5: fix inverted condition in rdev_set_badblocks call
-Date: Sat, 17 Oct 2026 16:37:37 +0800
-Message-ID: <20261017083737.61793-1-zh_exit@163.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261017074343.59513-1-zh_exit@163.com>
-References: <20261017074343.59513-1-zh_exit@163.com>
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.b="b2PklnFv"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1792302922;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=xN6LXlieOAnUNyOALUMJdRkH7TWXP1XauLMuC0smiB8=;
+ b=b2PklnFvmmS9Hw1dg2YaQ2r54vjqXH469eHyBgRPdza+PQgWSCAgc+MjabjZGNf7rxJicc
+ PlC/7Or33u9dDU0OXhTmj+HObXnarWdu2GgwQDwFu/K37q1tmA542StRBF78DKwELaN3U7
+ RYKuoEThLg3at86QSzyEvN5GfKn/FGPkdpz/vi8A5x6U7a3GVc82+liSJJJjhdtQDuQ5QE
+ iWqu6a5ltvVOV0sVjk4Kp9Ew4z12A8Wtzb6SN6IfNxz/xIOwc7kH6tJyOjE7p1tMGy2+zY
+ O9WgFCDeAaoXajl2MnpTylIMWN0/GsmszGSg18+FOfzy5M7A9iksxlXmD69nGg==
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [RFC PATCH 0/5] md/raid1: improve choose_best_rdev read balance
+Date: Sun, 18 Oct 2026 13:55:18 +0800
+X-Original-From: yu kuai <yukuai@fygo.io>
+In-Reply-To: <20260818070646.1029149-1-chencheng@fnnas.com>
+Message-Id: <3247ba55-ce22-4345-86f4-99d2769efd34@fygo.io>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD33xHVM9Nq65H_Ag--.52920S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxJrWfXw1xKry3Xw1rGrWDCFg_yoW8uw1rpr
-	s8Gas0y34DWr95A3WDZaykAFy8Ww47tayqga1fJ3Wa9as0qFWSqF4rXryjgFyUWr4ft3W0
-	qr9IgrZ8ZF98CFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pEAhLUUUUUU=
-X-CM-SenderInfo: p2kbv5llw6il2tof0z/xtbC9RaR+WrTM9Y95wAA3N
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Reply-To: yukuai@fygo.io
+User-Agent: Mozilla Thunderbird
+References: <20260818070646.1029149-1-chencheng@fnnas.com>
+To: "Chen Cheng" <chencheng@fnnas.com>, <linux-raid@vger.kernel.org>, 
+	<xiaon@kernel.org>, "yu kuai" <yukuai@fygo.io>
+Cc: <linux-kernel@vger.kernel.org>
+Received: from [192.168.1.104] ([39.182.0.21]) by smtp.larksuite.com with ESMTPS; Sun, 18 Oct 2026 05:55:20 +0000
+X-Lms-Return-Path: <lba+26ad45f49+908595+vger.kernel.org+yukuai@fygo.io>
 
-Commit fd4d44c14ff6 ("md: mark rdev Faulty when badblocks setting fails")
-attempted to unify badblock handling but introduced a logic inversion in
-raid5_end_read_request().
+Hi,
 
-The original check was:
+=E5=9C=A8 2026/8/18 15:06, Chen Cheng =E5=86=99=E9=81=93:
+> From: Chen Cheng <chencheng@fnnas.com>
+>
+> Prefer a nonrot disk when one can take the read. When pending is
+> the same, use a real round-robin among the disks we may pick.
 
-    if (!(set_bad && In_sync && rdev_set_badblocks(...)))
-            md_error(...);
+Please note that adding new atomic operations per IO is not acceptable, fut=
+ure
+solutions should also try to kill all existed atomic operations as well.
 
-which records badblocks when `set_bad && In_sync`, and calls md_error()
-either when recording fails or when the rdev is not In_sync. The new
-condition `if (!(set_bad && In_sync))` skips rdev_set_badblocks() exactly
-during recovery/reshape (In_sync is set), so failed badblock updates no
-longer trigger md_error() and the rdev is not marked Faulty. This allows
-reconstruction to continue on a disk with a saturated badblock table,
-potentially propagating corrupted data to the replacement disk.
+And your solution seems break an important case that if small sequence IO a=
+re
+issued to the same disk, they can be merged by blk plug. I don't see test r=
+esult
+for this case.
 
-Restore the intended behavior by recording badblocks when `set_bad &&
-In_sync`, and calling md_error() in the else branch so that non-In_sync
-rdevs, replacement devices, and the too-many-read-errors path are still
-marked Faulty.
+In fact, I'll prefer a simple solution, keep the sequence IO to same disk u=
+ntil
+they can't be merged(by io_opt or hw_sectors), and choose next simply by rr=
+. IO
+work flow can be complicated, and I'll prefer the simplest solution with mi=
+nimal
+overhead.
 
-Fixes: fd4d44c14ff6 ("md: mark rdev Faulty when badblocks setting fails")
-Cc: stable@vger.kernel.org
-Signed-off-by: zhanghao <zh_exit@163.com>
----
-v2:
-- Add the else branch calling md_error() for the !(set_bad && In_sync)
-  cases, as pointed out by Sashiko: replacement device read errors,
-  the too-many-read-errors path, and non-In_sync uncorrectable reads
-  would otherwise no longer mark the rdev Faulty.
-
- drivers/md/raid5.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index d52adf81065a..25395a9c996a 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2866,9 +2866,11 @@ static void raid5_end_read_request(struct bio * bi)
- 		else {
- 			clear_bit(R5_ReadError, &sh->dev[i].flags);
- 			clear_bit(R5_ReWrite, &sh->dev[i].flags);
--			if (!(set_bad && test_bit(In_sync, &rdev->flags)))
-+			if (set_bad && test_bit(In_sync, &rdev->flags))
- 				rdev_set_badblocks(rdev, sh->sector,
- 						   RAID5_STRIPE_SECTORS(conf), 0);
-+			else
-+				md_error(conf->mddev, rdev);
- 		}
- 	}
- 	rdev_dec_pending(rdev, conf->mddev);
--- 
-2.43.0
-
+>
+> fio libaio direct=3D1, NVMe none, SATA mq-deadline (stock -> this):
+>
+> - 2x GM9000: 1M QD16 j1 7.031 -> 13.886 GB/s, 50/50; 4k QD1 50/50
+> - 2x/3x HDWG740: 0.294 -> 0.514 / 0.630 GB/s
+> - GM9000+HDD seq: 2.468 or 0.280 -> 7.112 GB/s, 100/0 NVMe
+> - Fanxiang+HDD seq, HDD first: 0.278 -> 0.562 GB/s
+> - GM9000+HDD 4k QD8/16: clat -47% / -45%
+>
+>
+> Chen Cheng (5):
+>    md/raid1: balance reads across non-rotational disks
+>    md/raid1: do not move nonrot reads onto a rot disk
+>    md/raid1: do not send random reads to a rot disk
+>    md/raid1: use rot policy when no nonrot disk is readable
+>    md/raid1: clarify choose_best_rdev comments
+>
+>   drivers/md/raid1.c | 122 ++++++++++++++++++++++++++++++++++++++-------
+>   drivers/md/raid1.h |   1 +
+>   2 files changed, 104 insertions(+), 19 deletions(-)
+>
+--=20
+Thanks,
+Kuai
