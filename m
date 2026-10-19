@@ -1,187 +1,378 @@
-Received: from mail-oi1-f199.google.com (mail-oi1-f199.google.com [209.85.167.199])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FC5C3F23BD
-	for <linux-raid@vger.kernel.org>; Mon, 19 Oct 2026 05:11:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9231549FC4;
+	Mon, 19 Oct 2026 13:56:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792386693; cv=none; b=tKGpE+RD4wDS78SeTnH4BS6P8IxOry11Ql2YOisV5YddQp4/R3Qf2kjAuAkbnlRCsBXlZ3lIdJboj/P6ffTP2BNBWs0SdUikktAaO7P1mGb5KaU0qqwI/QTEOMt2Z5UPNGGApCBVBE9vRdl7sxN3/oQDxXVlrOauOzcRuojcS+A=
+	t=1792418209; cv=none; b=D/jbhxi3iYweMHKHXNbtkEc3MaXXNnV5pJcMmiOnPSyUJX0CWFMkN9qsA0PJDKlQhHnU9s1CRo4CEUOtHgaoEyEaWn1AXuwjNdzGAmxeDRXwQFv0EGXuMsDja/gcLgI9TlrMfkvKU1knvebaBGlkT7NonQf06InXHF3f7Ny5Q4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792386693; c=relaxed/simple;
-	bh=nVj/bgdC1Ohyocal4Il0FqAeW/5QWOV4GQ6Q+DQv2f0=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=a0FUyLtjfb2LLyKrsqVdQ50VBK0fOb2jeUXX070t2k00vHm6jtgacG+e72dE4TDCKKQAlyOaTLQoH9ZBFDm7eMXSzaJZcJBXNSAalTobq4Dy5CGCr1NRbnPMc/JccDc/gNJrF0VihMa0pMionAkl14w6K9tGiNvxjeFlBSEPSqM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f199.google.com with SMTP id 5614622812f47-5384e381fbbso1741394b6e.2
-        for <linux-raid@vger.kernel.org>; Sun, 18 Oct 2026 22:11:28 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792386687; x=1792991487;
-        h=content-type:to:from:subject:message-id:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=0+8zT4mGy6dcRx9KTjqk/ppPsWRxCzDh9ncX9YEziZE=;
-        b=piUVZsmL36NXaHOXWHdgorSxdfJ6FGdQmeHaMTFN5b/NxyK35jQLdYpNhk4HVfD0KF
-         gjF8s+ZKXEpabGVA7PldQfR550VNJV/1VHEES3A9BOV3dHnLT6cD+39mnodxT1K4h6oh
-         qkJvpZSet12CFlus0+WAq6s37JbvMI5fjxPlJgqHz/1Ve0EPaixmg83ECDbDLh8TMyza
-         nHR1HhitXKeu5Y9bx5zV0PmiGQpij2PoRvNZs/5bWrBfD9U2/pCk2OODyTk3udg38aCe
-         ojvEKMaBn5xzw7qbDnxSHuOM7IZQTvRi1lurDkkLom4J1Z9FeRHV3Le4fL1NDNyGP/Fk
-         cepw==
-X-Forwarded-Encrypted: i=1; AKwUvBwqnkrICMCnw+VYKi/G8FuGj/ZG5H7s5tbvhLaeQDaY+vywUWUaddk6J7b2VuozCiBXBFQWFzQwwiT8@vger.kernel.org
-X-Gm-Message-State: AFq9FYInzfnuA1bUwzIDHQjQn5sWwAQeTre+xkdwFc7WIESlTeQd5/Qe
-	l3uY/0xpV0BT7A78M2Zt+FlG73Y5P5ih8tz0M5Pc60aPT69T40egEl4mCKma/hiJCfVE3NY8wbN
-	pqs83Myxd3eYdVnemoFhC9Oh5hYkOGMA/jG4hNWV8T7lfvnPWJr39NdY/DIQ=
+	s=arc-20240116; t=1792418209; c=relaxed/simple;
+	bh=LoGHjCg9Sdcxom0ypPmWIaigurbig5u9/msoRi9pe9E=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Ar5PNBgxhMQa1CNJ02DoiJPdnXlv5W/dox1+7ccNa6qHoHiHkXd9CHXCtIcm3OfU6dNffayr/+K0BXzgb8lgQ9ZeWH1A/uQlkt42fr1Q+s9WbpE0XB1kJmIv3P0DdbzsKyLSGhU7CgbyEZEPg7Eh64i6qSkDDytdb5x14AJEHFg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JsCneYY1; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JsCneYY1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E17B11F000C6;
+	Mon, 19 Oct 2026 13:56:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792418206;
+	bh=uG5gA47gOYSyqqgUu8gf686568I17wT33QCswzzSEF4=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=JsCneYY1MgmhpCzfm5O6CLs+yIAv4q2PBtazRARbHJ9HgADn+ghuia+eMWDfdhWml
+	 Ku5WaPzOfXwTUtPvHtp1MSW9IvDyHt3gKfBvUXMeTOGhUHyaR9qD9ms+JL7R0xYqKw
+	 b6Db/cAj0tNvnop5pvodQFE3EDBc1AJi4u6oM2RhXVH3JD0PiTQ6pVvjnGQOlLQ8xR
+	 CQWJlX5pcVB/EQC43PvQwfJGUzH15fUPm1gcBgvgqG39y1sJ3pUZORd0dqBxRSbckk
+	 oQXlat4+gOjHOLa60WRMJ8GkD8/oDy5b463bQljwUy8e2DMqpj1Ut2peKXjxYJ963t
+	 K9xjUwk0I6cVA==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
+	stable@vger.kernel.org
+Cc: Yunye Zhao <yunye.zhao@linux.alibaba.com>,
+	Yu Kuai <yukuai@fygo.io>,
+	Sasha Levin <sashal@kernel.org>,
+	song@kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18-5.10] md: add cond_resched() to md_do_sync()'s skip path
+Date: Mon, 19 Oct 2026 09:46:19 -0400
+Message-ID: <20261019135441.1420968-88-sashal@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
+References: <20261019135441.1420968-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:4e82:b0:53f:4cb6:cdc1 with SMTP id
- 5614622812f47-53f4cb6d286mr3228740b6e.34.1792386687530; Sun, 18 Oct 2026
- 22:11:27 -0700 (PDT)
-Date: Sun, 18 Oct 2026 22:11:27 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6ad5a67f.6814cce4.34c49f.0162.GAE@google.com>
-Subject: [syzbot] [raid?] general protection fault in raid5_quiesce
-From: syzbot <syzbot+0b672810a475890d3636@syzkaller.appspotmail.com>
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, 
-	syzkaller-bugs@googlegroups.com, yukuai@fnnas.com
-Content-Type: text/plain; charset="UTF-8"
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.18.57
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hello,
+From: Yunye Zhao <yunye.zhao@linux.alibaba.com>
 
-syzbot found the following issue on:
+[ Upstream commit 162eb5ba791f6260fdaabae75fa2df20134f67d8 ]
 
-HEAD commit:    f909e534f5e3 Merge tag 'scsi-fixes' of git://git.kernel.or..
-git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-console output: https://syzkaller.appspot.com/x/log.txt?x=1307b13e580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=b38d39c45202f4fa
-dashboard link: https://syzkaller.appspot.com/bug?extid=0b672810a475890d3636
-compiler:       Debian clang version 22.1.8 (1~deb13u4), Debian LLD 22.1.8
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1707b13e580000
+When sync_request() reports a skipped region (*skipped == 1),
+md_do_sync()'s main loop advances the cursor and takes an early
+continue:
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+0b672810a475890d3636@syzkaller.appspotmail.com
+	j += sectors;
+	...
+	if (last_check + window > io_sectors || j == max_sectors)
+		continue;
 
-md/raid:md0: not enough operational devices (1/3 failed)
-md/raid:md0: failed to run raid set.
-Oops: general protection fault, probably for non-canonical address 0xdffffc000000000c: 0000 [#1] SMP KASAN PTI
-KASAN: null-ptr-deref in range [0x0000000000000060-0x0000000000000067]
-CPU: 0 UID: 0 PID: 5902 Comm: syz-executor169 Not tainted syzkaller #0 PREEMPT_{RT,(full)} 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/07/2026
-RIP: 0010:kasan_byte_accessible+0x12/0x30 mm/kasan/generic.c:210
-Code: 79 ff ff ff 0f 1f 40 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 0f 1f 40 d6 48 c1 ef 03 48 b8 00 00 00 00 00 fc ff df <0f> b6 04 07 3c 08 0f 92 c0 e9 90 e7 2a 09 cc 66 66 66 66 66 66 2e
-RSP: 0018:ffffc9000544f708 EFLAGS: 00010206
-RAX: dffffc0000000000 RBX: ffffffff8b5cf203 RCX: 8000000000000001
-RDX: 0000000000000000 RSI: ffffffff8b5cf203 RDI: 000000000000000c
-RBP: ffffc9000544f870 R08: 0000000000000001 R09: 0000000000000000
-R10: dffffc0000000000 R11: ffffffff87ff0a50 R12: 0000000000000060
-R13: 0000000000000000 R14: 0000000000000060 R15: 0000000000000001
-FS:  000055556c882400(0000) GS:ffff8881249b9000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 000055d585e02cd0 CR3: 0000000044162000 CR4: 00000000003526f0
-Call Trace:
- <TASK>
- __kasan_check_byte+0x12/0x40 mm/kasan/common.c:584
- kasan_check_byte include/linux/kasan.h:402 [inline]
- lock_acquire+0x7d/0x350 kernel/locking/lockdep.c:5916
- rt_spin_lock+0x83/0x400 kernel/locking/spinlock_rt.c:56
- spin_lock_irq include/linux/spinlock_rt.h:96 [inline]
- lock_all_device_hash_locks_irq drivers/md/raid5.c:107 [inline]
- raid5_quiesce+0xc2/0x8a0 drivers/md/raid5.c:-1
- __md_stop_writes+0xeb/0x4b0 drivers/md/md.c:7038
- md_set_readonly+0x330/0x560 drivers/md/md.c:7138
- array_state_store+0x584/0xe90 drivers/md/md.c:4720
- md_attr_store+0x3b7/0x640 drivers/md/md.c:6158
- kernfs_fop_write_iter+0x3a5/0x540 fs/kernfs/file.c:345
- new_sync_write fs/read_write.c:595 [inline]
- vfs_write+0x61e/0xbb0 fs/read_write.c:687
- ksys_write+0x156/0x270 fs/read_write.c:739
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7fb4d4570f77
-Code: 48 89 fa 4c 89 df e8 98 1d 00 00 8b 93 08 03 00 00 59 5e 48 83 f8 fc 74 1a 5b c3 0f 1f 84 00 00 00 00 00 48 8b 44 24 10 0f 05 <5b> c3 0f 1f 80 00 00 00 00 83 e2 39 83 fa 08 75 de e8 23 ff ff ff
-RSP: 002b:00007ffcae126a10 EFLAGS: 00000202 ORIG_RAX: 0000000000000001
-RAX: ffffffffffffffda RBX: 000055556c882400 RCX: 00007fb4d4570f77
-RDX: 0000000000000008 RSI: 00007fb4d45aa11f RDI: 0000000000000005
-RBP: 000055556c8823d8 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000202 R12: 0000000000000006
-R13: ffffffffffffffff R14: 0000000000000005 R15: 00000000ffffffff
- </TASK>
-Modules linked in:
----[ end trace 0000000000000000 ]---
-RIP: 0010:kasan_byte_accessible+0x12/0x30 mm/kasan/generic.c:210
-Code: 79 ff ff ff 0f 1f 40 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 0f 1f 40 d6 48 c1 ef 03 48 b8 00 00 00 00 00 fc ff df <0f> b6 04 07 3c 08 0f 92 c0 e9 90 e7 2a 09 cc 66 66 66 66 66 66 2e
-RSP: 0018:ffffc9000544f708 EFLAGS: 00010206
-RAX: dffffc0000000000 RBX: ffffffff8b5cf203 RCX: 8000000000000001
-RDX: 0000000000000000 RSI: ffffffff8b5cf203 RDI: 000000000000000c
-RBP: ffffc9000544f870 R08: 0000000000000001 R09: 0000000000000000
-R10: dffffc0000000000 R11: ffffffff87ff0a50 R12: 0000000000000060
-R13: 0000000000000000 R14: 0000000000000060 R15: 0000000000000001
-FS:  000055556c882400(0000) GS:ffff8881249b9000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 000055d585e02cd0 CR3: 0000000044162000 CR4: 00000000003526f0
-----------------
-Code disassembly (best guess), 4 bytes skipped:
-   0:	0f 1f 40 00          	nopl   0x0(%rax)
-   4:	90                   	nop
-   5:	90                   	nop
-   6:	90                   	nop
-   7:	90                   	nop
-   8:	90                   	nop
-   9:	90                   	nop
-   a:	90                   	nop
-   b:	90                   	nop
-   c:	90                   	nop
-   d:	90                   	nop
-   e:	90                   	nop
-   f:	90                   	nop
-  10:	90                   	nop
-  11:	90                   	nop
-  12:	90                   	nop
-  13:	90                   	nop
-  14:	0f 1f 40 d6          	nopl   -0x2a(%rax)
-  18:	48 c1 ef 03          	shr    $0x3,%rdi
-  1c:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
-  23:	fc ff df
-* 26:	0f b6 04 07          	movzbl (%rdi,%rax,1),%eax <-- trapping instruction
-  2a:	3c 08                	cmp    $0x8,%al
-  2c:	0f 92 c0             	setb   %al
-  2f:	e9 90 e7 2a 09       	jmp    0x92ae7c4
-  34:	cc                   	int3
-  35:	66                   	data16
-  36:	66                   	data16
-  37:	66                   	data16
-  38:	66                   	data16
-  39:	66                   	data16
-  3a:	66                   	data16
-  3b:	2e                   	cs
+If the personality returns a small span per call (raid10 recovery
+returns only 128 sectors), syncing a large, mostly clean array iterates
+this branch an enormous number of times without ever yielding the CPU.
+On a non-preemptive kernel the resync thread then trips the soft-lockup
+watchdog:
 
+  watchdog: BUG: soft lockup - CPU#149 stuck for 313s! [mdX_resync]
+   md_bitmap_start_sync+0x6f/0xe0
+   raid10_sync_request+0x2c9/0x1530 [raid10]
+   md_do_sync+0x810/0x1030
+   md_thread+0xa7/0x150
 
+Add a cond_resched().  This does not reduce the wasted iterations; the
+excessive iteration count is a raid10 problem addressed separately.
+
+Signed-off-by: Yunye Zhao <yunye.zhao@linux.alibaba.com>
+Link: https://patch.msgid.link/20260723135535.101995-3-yunye.zhao@linux.alibaba.com
+Signed-off-by: Yu Kuai <yukuai@fygo.io>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+LLM Generated explanations, may be completely bogus:
 
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
+The checked-out tree is **6.18.53** (`pending-6.18`). The skip path in
+`md_do_sync()` is present, has no yield, and matches this patch. That is
+a real soft-lockup fix.
 
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+## Phase 1: Commit message forensics
 
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
+**Step 1.1 — Subject**
+- Record: `[md] [add] add cond_resched() to md_do_sync()'s skip path`
+- Subsystem: MD RAID core. Verb “add” here is a yield on an existing
+  loop, not a feature.
 
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
+**Step 1.2 — Tags**
+- Record:
+  - `Signed-off-by: Yunye Zhao <yunye.zhao@linux.alibaba.com>` (author)
+  - `Link: https://patch.msgid.link/20260723135535.101995-3-
+    yunye.zhao@linux.alibaba.com`
+  - `Signed-off-by: Yu Kuai <yukuai@fygo.io>` (md maintainer; applied)
+  - No `Fixes:` / `Reported-by:` / `Tested-by:` in the committed text
+  - Original v2 submission **did** include `Cc: stable@vger.kernel.org`;
+    Yu Kuai dropped it when applying (“Remove the cc stable as there is
+    no fixtag”). That is process, not a technical NAK.
+  - Pipeline `Signed-off-by: Sasha Levin` / `[Upstream commit …]`
+    ignored as instructed.
 
-If you want to undo deduplication, reply with:
-#syz undup
+**Step 1.3 — Body**
+- Record:
+  - **Bug:** when `sync_request()` returns `*skipped == 1` with a small
+    span (RAID10 recovery: 128 sectors), `md_do_sync()` takes `continue`
+    and never reaches the existing `cond_resched()`.
+  - **Symptom:** `watchdog: BUG: soft lockup - CPU#149 stuck for 313s!
+    [mdX_resync]` with `md_bitmap_start_sync` → `raid10_sync_request` →
+    `md_do_sync` → `md_thread`.
+  - **Trigger:** large, mostly-clean RAID10 recovery (author:
+    2^40-sector device → ~2^33 iterations).
+  - **Root cause of CPU burn:** RAID10 recovery discards the bitmap’s
+    large clean span and returns 128; that is patch 3/3. This commit
+    only yields.
+  - Author tested on 6.6.102 and mainline.
+
+**Step 1.4 — Hidden bug fix?**
+- Record: Not hidden. Explicit soft-lockup fix. Series cover letter
+  calls it a “safety net, any personality/layout.”
+
+## Phase 2: Diff analysis
+
+**Step 2.1 — Inventory**
+- Record: `drivers/md/md.c` only; ~3 insertions / 1 deletion in
+  `md_do_sync()`. Surgical, single-function.
+
+**Step 2.2 — Flow**
+- Record: **Before:** skip/early-continue path never yields. **After:**
+  `cond_resched()` then `continue`. Normal I/O path still uses the later
+  `cond_resched()` at the speed-limit check.
+
+**Step 2.3 — Bug mechanism**
+- Record: **Hang / soft-lockup** (non-preemptive). Skip path bypasses
+  the yield that already exists later in the same loop.
+
+Verified in this tree:
+
+```9751:9753:drivers/md/md.c
+                if (last_check + window > io_sectors || j ==
+max_sectors)
+                        continue;
+```
+
+```9779:9779:drivers/md/md.c
+                cond_resched();
+```
+
+Skip `continue` never reaches line 9779. `window` is `32 * (PAGE_SIZE /
+512)` (256 sectors). If `skipped`, `io_sectors` does not increase, so
+`last_check + window > io_sectors` stays true.
+
+RAID10 recovery still does `max_sync = RESYNC_PAGES << (PAGE_SHIFT-9)`
+(128 sectors). On a clean bitmap, `biolist == NULL` → `giveup` clamps to
+`max_sync` and, because `max_sector` is a parameter (not reset at
+`skipped:`), the call returns 128 to `md_do_sync()`.
+
+**Step 2.4 — Fix quality**
+- Record: Obviously correct. Same primitive already used in this
+  function. Process context (`md_thread`). No new API/locks. Regression
+  risk very low. Might slightly slow tight skip loops; that is the goal.
+
+## Phase 3: Git history
+
+**Step 3.1 — Blame**
+- Record: Skip `continue` dates to early MD (`57afd89f98a99` / 2.6 era).
+  Long-standing. RAID10 128-sector recovery cap is equally old
+  (`RESYNC_BLOCK_SIZE` 64KiB).
+
+**Step 3.2 — Fixes: tag**
+- Record: None. Not a regression from a single later commit; interaction
+  of skip-continue and RAID10 recovery skip size.
+
+**Step 3.3 — Related commits**
+- Record: Patch 2/3 of “md/raid10: fix recovery corruption and soft
+  lockup on large arrays”.
+  - 1/3 `md/raid10: fix still_degraded being inverted` — **already in
+    this tree** (`0efabe6229dc6`). Independent.
+  - 3/3 `md/raid10: skip clean regions in bulk` — **not** in this tree.
+    Independent; this yield still needed for far/offset layouts and
+    other personalities.
+- No `cond_resched` on this skip path in `HEAD`.
+
+**Step 3.4 — Author**
+- Record: Yunye Zhao (Alibaba). Applied by Yu Kuai (md maintainer).
+
+**Step 3.5 — Dependencies**
+- Record: Standalone. Uses existing `cond_resched()`. 6.18
+  `md_do_sync()` already has `update:`, `MD_RESYNC_ACTIVE`, and 4-arg
+  `sync_request()` — same context as the patch. Clean apply.
+
+## Phase 4: Mailing list
+
+**Step 4.1 — Discussion**
+- Record: https://lore.kernel.org/linux-
+  raid/20260723135535.101995-3-yunye.zhao@linux.alibaba.com/ (also
+  openwall mirrors).
+- v1: single `cond_resched` patch. Yu Kuai initially thought it was a
+  dead loop.
+- v2: 3 patches; this one retitled; v1 “io_sectors never increases”
+  claim corrected.
+- Yu Kuai on v1 follow-up: “This patch is still valuable, even a 5s
+  lockup is not acceptable.”
+- Applied to md-7.3. No NAK on the yield itself.
+
+**Step 4.2 — Recipients**
+- Record: Song Liu, Yu Kuai; Cc Li Nan, Xiao Ni, linux-raid, linux-
+  kernel.
+
+**Step 4.3 — Bug report**
+- Record: Author stack trace; 2^40-sector array; ~8.6e9 iterations;
+  313s. Cover letter: before patch 3, 37.2s 100% CPU on 8T-per-disk
+  sparse recovery; `softlockup_panic=1`.
+
+**Step 4.4 — Series**
+- Record: 2/3 is the md-core safety net. Does not depend on 1/3 or 3/3.
+
+**Step 4.5 — stable@**
+- Record: No useful stable-list thread found (lore.kernel.org/stable
+  403). Maintainer dropped `Cc: stable` only for missing `Fixes:`.
+
+## Phase 5: Semantics
+
+**Step 5.1 — Functions**
+- Record: `md_do_sync()`.
+
+**Step 5.2 — Callers**
+- Record: Registered as the MD resync thread
+  (`md_register_thread(md_do_sync, …)`). Kernel thread, not IRQ.
+  Userspace triggers via array recovery/resync/check (`mdadm`).
+
+**Step 5.3 — Callees**
+- Record: `pers->sync_request()`, bitmap start/end, `cond_resched()`,
+  speed-limit waits.
+
+**Step 5.4 — Reachability**
+- Record: Yes. Disk replace / rebuild / `--syncaction` on RAID10 with
+  internal bitmap. Production path.
+
+**Step 5.5 — Similar patterns**
+- Record: Same file already yields on the I/O path. RAID1/5/10 use
+  `cond_resched()` in other loops. Skip path was the hole.
+
+## Phase 6: This tree (6.18.53)
+
+**Step 6.1 — Buggy code present?**
+- Record: **Yes.** `drivers/md/md.c` ~9752 skip `continue` with no
+  yield. RAID10 `giveup` still advances by `max_sync` (128). `git
+  describe HEAD`: `p-6.18-1-g03b85e06ca9bf`. `make kernelversion`:
+  `6.18.53`.
+
+**Step 6.2 — Backport difficulty**
+- Record: **Clean apply.** Local hunk matches the submitted diff
+  (`MD_RESYNC_ACTIVE`, `update:`).
+
+**Step 6.3 — Already fixed?**
+- Record: No. 1/3 is in tree; 2/3 and 3/3 are not. Older `71e8e4f288e74`
+  (bitmap size vs array size) is a different lockup.
+
+## Phase 7: Subsystem
+
+**Step 7.1**
+- Record: `drivers/md` — **IMPORTANT** (enterprise RAID, dm-raid). Not
+  staging.
+
+**Step 7.2**
+- Record: Active; recent RAID10/md fixes on this branch.
+
+## Phase 8: Impact and risk
+
+**Step 8.1 — Who**
+- Record: MD/RAID users, especially RAID10 recovery of large mostly-
+  clean arrays. Distro/enterprise kernels often `PREEMPT_NONE` /
+  `PREEMPT_VOLUNTARY`.
+
+**Step 8.2 — Trigger**
+- Record: Recovery/resync of a large sparse array. Not unprivileged
+  syscall; rebuild is a privileged/admin path. Common after disk
+  replace. Timing-independent tight loop.
+
+**Step 8.3 — Failure mode**
+- Record: Soft lockup (313s in the report). With `softlockup_panic=1`,
+  panic. **CRITICAL**.
+
+**Step 8.4 — Risk vs benefit**
+- Record: Benefit high (stops watchdog/panic). Risk very low (3 lines,
+  existing helper). Ratio strongly in favor. Remaining CPU spin is patch
+  3; this still prevents the BUG.
+
+## Phase 9: Synthesis
+
+**For backporting**
+- Real, reproduced soft lockup with stack trace.
+- Hole is in this tree; patch matches.
+- Tiny, obviously correct; maintainer applied it and called it valuable.
+- Independent of 3/3; still needed after 1/3.
+- Classic stable pattern: `cond_resched()` to stop a lockup.
+
+**Against**
+- Does not cut the 128-sector crawl (author is explicit).
+- No `Fixes:` (maintainer dropped `Cc: stable` for that).
+- Pre-existing `md_new_event()` spam on `last_check == 0` (not
+  introduced here).
+
+**Unresolved:** none that change the verdict. Could not fetch
+lore.kernel.org/stable (403); discussion from the patch mbox is enough.
+
+**Stable rules**
+1. Obviously correct and tested — **PASS** (mainline + QEMU tests;
+   maintainer applied).
+2. Real user-visible bug — **PASS** (soft lockup on RAID10 recovery).
+3. Important (crash/hang) — **PASS** (soft lockup / possible panic).
+4. Small and contained — **PASS** (~3 lines, one function).
+5. No new features/APIs — **PASS**.
+6. Applies to this tree — **PASS** (clean).
+
+**Exception category:** none required; it is a hang fix.
+
+This matters on 6.18 because RAID rebuild of large arrays is normal
+operations, and a 5–313s lockup (or panic) is exactly what stable is
+for. The yield is the same one the I/O path already uses.
+
+## Verification
+- [Phase 1] Tags: author SOB, Yu Kuai SOB, msgid link; v2 had `Cc:
+  stable`, dropped on apply for missing Fixes.
+- [Phase 2] Diff: 3 lines in `md_do_sync()` skip `continue`; 6.18 code
+  at 9752–9753 / 9779 matches.
+- [Phase 2] RAID10: `max_sync = RESYNC_PAGES << (PAGE_SHIFT-9)` = 128;
+  `biolist == NULL` → `giveup`.
+- [Phase 3] `git describe HEAD` / `make kernelversion`: 6.18.53, branch
+  `pending-6.18`.
+- [Phase 3] 1/3 already ancestor (`0efabe6229dc6`); this commit is not
+  in HEAD.
+- [Phase 4] `b4 mbox` 21-message thread; Yu Kuai: yield still valuable;
+  applied to md-7.3.
+- [Phase 5] Caller: `md_register_thread(md_do_sync)` resync thread.
+- [Phase 6] Skip path present; context matches; expected clean apply.
+- [Phase 8] Failure: soft lockup 313s; severity CRITICAL.
+- UNVERIFIED: lore.kernel.org/stable search (HTTP 403). Does not change
+  the verdict.
+
+**YES**
+
+ drivers/md/md.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index ce3bd127e3bb3..44f44219ed7fe 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9751,8 +9751,10 @@ void md_do_sync(struct md_thread *thread)
+ 			 */
+ 			md_new_event();
+ 
+-		if (last_check + window > io_sectors || j == max_sectors)
++		if (last_check + window > io_sectors || j == max_sectors) {
++			cond_resched();
+ 			continue;
++		}
+ 
+ 		last_check = io_sectors;
+ 	repeat:
+-- 
+2.53.0
+
