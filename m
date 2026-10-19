@@ -1,96 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.217.51
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792438625;
-	b=Q8Ky7FgigFPdQVlCtqRwHxB8QtCeTP1+pUXX7DUNLxkimM/2JaadBpnkTmel9j60/SaL
-	 vp7mcgEUb7kUX4VL1bhli2pm2duKxS1MRl+PKvm+po8J4oNL5LXGAKQ7yVqjZhaQLfuHM
-	 lFkmg9zlpSpNHCi8dkCol9d5p5kk8QtL8hhDrpHs6XdhyJrjWuU4VZ6d4Db/N6RBTb30U
-	 PXHAajxYblOiczPJrB1a6Mm/tscrYEb16mA0G96u8dhzHAKEQzsV+rqDfVfr7wBp22IVR
-	 XQmchZKPBBCv400hjbIIJkYiPKicaFskmMYDVWEN5zJIyAjXATX45I0VSldSz38kWFQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792438625;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=FvmBdp1Dmbv2yJxDADj49tSTGQ/TMgCg8VxwxHkXYlo=;
-	b=RFaVWo1mL9BUumV/70QOTtOm/2cAtgaPgQn7wsoEc0EIvljC9PN4OEwTsHqXp87aw8iL
-	 ShttOthg0O8Wt9wsCDfPqTydFl7vHSIDyjuqDQIN4ELcpBddNfdAFVJIbH8YsjtUddwUx
-	 MpR6mkwT1ABzW0cbKfnS03Uw5ILab331tSFZ3csMu4i/zQveqJKu+p9VdNFFx/gcMKwMZ
-	 RafJve7SWs1gPEOP/H1Kb352G9AwXlvE6XhFRzLE7/FpR5esvY3TSdMBWsCrFZTPJTqUt
-	 Ol1fbyWkpGr48awGB0KEOWlDJfWEPg9NJ3VcamhNCkOh4AwZRscAGLBu/vabMCSgM4w==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=jw5RywPK;
-	arc=none smtp.remote-ip=209.85.217.51
-Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.84.55
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792443493;
+	b=qZ6shI3uSgHy+5iT571FrpCFF0iDUYryrdUg6IAAITKZzk48PZF9CIOAynQOKoWcv+ot
+	 I7oxP2mqCknOmrUsmBwtTF3KLzvFA2NHl6BCkYS9OzI4fGyovhqiIB+U4f8hdvph2OTIA
+	 aR/bmib0DqgcP8acb4dbp3jq1f0DOggT4zxdTtoOlMJcuY3JUgbgh9T2MY622hksaoZWn
+	 fuiyUJ4/gox0YiZatGo3OFi/Rgl+yKEzux3T3B6nleDI+XreuD27+q7fmvvNy2Xwl97UT
+	 vhgC1an00plivyyEA1uFKxt4qgEv8Eu/R2605O7e+oWtZXK5pQMjyA/iA8UUGuZe4GQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792443493;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:Content-Type:Content-Disposition:
+	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=k2R+Je0C36oBOsBfU18LA+tQ8KzwFdRaccPAtISp5to=;
+	b=duWGlT0BAYPZMuEd2LqSrz3c42ETZb7ZICxOpXmFIzMVjRG7LlfKXCEUsJNmbZoHwf3S
+	 TTY2LTMRVzbHAXbqrh15kvlSMOFjwVjowshy8yxReTxyLjzPLQ8bUDOEy8f8JMwaOh6ti
+	 4ZywwfmntAaR67jJO2k+tjOrD92GuTKW3W92tGH3BPkFytH/baPzM8yeIbL95BM1BZA84
+	 MG+QarizuXDZcG5na+cXE+cVZirIr9M47rnPFahiOFdtuBNKdBXpt3EnmBA4Tk1IpJxBT
+	 rURaakz7wF2mQ0UBcz4v4+7CywMfSEMpQKIO2VL+kZFv32dzF91/3TRnjzt3QWt5bCA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.nxp.com;
+	spf=pass smtp.mailfrom=oss.nxp.com;
+	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=CUD5J2Oa;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.84.55
+Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010055.outbound.protection.outlook.com [52.101.84.55])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB381606A31D
-	for <linux-raid@vger.kernel.org>; Mon, 19 Oct 2026 19:37:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EB381606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35A66606A319
+	for <linux-raid@vger.kernel.org>; Mon, 19 Oct 2026 20:58:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 35A66606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=jw5RywPK
-Received: by mail-vs1-f51.google.com with SMTP id ada2fe7eead31-7cc0fb88c90so70553137.3
-        for <linux-raid@vger.kernel.org>; Mon, 19 Oct 2026 12:37:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792438624; x=1793043424; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=FvmBdp1Dmbv2yJxDADj49tSTGQ/TMgCg8VxwxHkXYlo=;
-        b=jw5RywPKPKu5GRuRcgskbWzYFCcD0g5ucpK/qpfpLuQnp1pSH1ynMYoeytWy48VM4k
-         suzFSX1RFLmCUJgW99Iynkwr4NE5nZtOuGbuBZ1GGdBE/QAsaWm4C8v1WVfTMeTEISFf
-         xqlXdHqwHYInPfjieQqVTCq2gdk4mlEqNuEiPo8oZLqmvY3sZiumaBaqNK3ZbeEPDeAa
-         vgVsgV4hVrmK4EL2oE64PxVWLGFXBTNcSNiLsQjX8OrL5PhKfpOKbzS93DG/nlvJx1RQ
-         UQ7E841Ph1Nv377dSka7PzCTVAM1Ib3FDg6lUs1St2SkzifXXjNFjEVEf4emzEtnEino
-         F2bA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792438624; x=1793043424;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=FvmBdp1Dmbv2yJxDADj49tSTGQ/TMgCg8VxwxHkXYlo=;
-        b=rq6b1xFmY86AvUJ3j2yM5syuylILnMjRLEURhSOAG5gaB2/Y4oklaplFpQytrH4nd+
-         CyfVEsvcYRmxRLcuBvsTM5npHb6e0LMkyUOiO+GaoZP4spSMlcPsnd9LskYHnbRSyl9j
-         8MHG0QB3ivo40CMpdg7OzUEbMgLEwPHJQFnvO4useYKuZ9wfXjLqI2ArV7oM/LdtNb2b
-         pwTWfspambWXE1GmJJK/cSKtuLNHnW3dRRAm9bXYKLiOLObD/wHAxeW8NVBkj9O9ylvb
-         sqarqk+ZOFWq69ZraYavUOq758RxwhmqT/xgg75+vHIg/nhx9DkRbRC6dPKwUeHGqJfA
-         v3jg==
-X-Forwarded-Encrypted: i=1; AKwUvBzM28cJ8a1G8QqxtDMnqRdjHt8uKbiMuq0uBjt/PKXzK6kyzDhMnpseZT2S4r0/TUNh19cE1SCsDxDl@vger.kernel.org
-X-Gm-Message-State: AFq9FYLSrMvT0AZEs85LNtbo0x2MgkIIW0K1vs3zU181LhRjnf/Ut0+x
-	hP2PvwwRCYNtBJOuzJQdWJcjRSryoXGsjKp1+LmhOeT5AHKGnlAGMuIr
-X-Gm-Gg: AYBFou3xrhfsiQsKcqrtPLhSYNM7Coarq8ePwwSM8PgiKcfkvIxdjnYD/tlqs5KQDgA
-	mHqjw79TdqxmnvS9n0wDxY8bMBJETAktgva7xoQch0cK2CrF8itsUbKh+TqRZoCLVNkj7Pg7Cwf
-	mYih8keKxaW4aG3lohykoaWYqJpEo4asH/CsQlU4rTazNBhSZatSgaZBsmxOd1DZr4HW7RtTykM
-	ZH2VExuNyXHR1J/8OuQgvZ3CZtNcHyoG7G3JjuKl1fbv04vgKgaSKlGSyXRDHAIorjeXOuh97AB
-	UaVkxV6NcxOrMuP9q8WQEr7Rulc1nP3e5hGSKrcP7cDBFl01ejouxvucaprSj97v55KR1UaP2ro
-	RwLRyWNjRHHYL9uF9YSeBkMQ/duQ1y4osjNEeLCO9TVzJ8ZhdUC+7/rORk5UwIcN1Y07qvbBccD
-	/Ralxjq+OTtTrBm9UbU3k4YxGzXghC3xYJYveGe7hV/AQQr6hAk0q7xjsf2Gq7k0m9Bz1Nf4WWZ
-	JTuGN5u7vGLW0VsnYqJINsAtvM3xuzTWt70IMo2p8GldiXcvJ5n7eWurInMVpBLMBSereLJy/sp
-	4FYSZDHdOmDYSuCo/Uk=
-X-Received: by 2002:a05:6102:1624:b0:7c3:99a3:314e with SMTP id ada2fe7eead31-7cc364a294amr1425709137.0.1792438623550;
-        Mon, 19 Oct 2026 12:37:03 -0700 (PDT)
-Received: from localhost.localdomain ([132.170.205.109])
-        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-990bb335be9sm1057850241.3.2026.10.19.12.37.02
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Mon, 19 Oct 2026 12:37:03 -0700 (PDT)
-From: Sanan Hasanov <sanan.hasanou@gmail.com>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>
-Cc: Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	syzbot+0b672810a475890d3636@syzkaller.appspotmail.com,
-	Sanan Hasanov <sanan.hasanov@ucf.edu>,
-	stable@vger.kernel.org
-Subject: [PATCH] md: don't allow changing the personality of a failed array
-Date: Mon, 19 Oct 2026 15:36:59 -0400
-Message-ID: <20261019193659.31381-1-sanan.hasanou@gmail.com>
-X-Mailer: git-send-email 2.48.1
+	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=CUD5J2Oa
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=F8YT4I/j5R+2yj22pP4vSH/NhazNlxg9YowZ4DcGDHsTqdE3wKotoO9aAbbK8fVXL2T+v4HHShweuwT6+cmI9YnJPjJwSPJgLf5qJfkFyhYqXcWBLl1DXE6YhbCFCj4liSzi6QiH8ZTE/rN4sKtL3ljh327HYmUv9CcYou+m0ksIz9J7JgTmxBrgUT0wwHhXQo//AfhavVBS7hj9tPS/K36qTVGLGwZygqmpkJS+8SNqaO/HgjShg6HKHi+b6JE6M09lHfVBmydTmhMAihjckQ13UBolynHQI5lqlRYTe12+DuGyHWgX++wT0974F9PMbU39xBe5L6Bsj7hk9Dudyw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=k2R+Je0C36oBOsBfU18LA+tQ8KzwFdRaccPAtISp5to=;
+ b=swq/P2mWd9RhQuVTVD2RYz529fd5jp3UsaC+5/1O/jw0e/9WrdgtRNscCD1Z2qqPZqmRjwrw7VyN9FDGcOoeikRHOp+TQyDYZ9C0vH12WsMCFkTdY15Di0PXZ2hkxdAopGpZJDQpbAG+bMYQewotPJ6otdc2WLUlyKrmemvAWegADVBoHKYNb1Osn0afMTiMiY3CIvj0+O8O6x63Njn5eAPrLpM7xOFRfldfdAH2qWMrFdFpS4JZD4VrQh5OP0DOaUPyzMv7IWTWW+2bTiN9e4q4B66+PJX5VrHkpZBfmrstgpMVNOaeunQK6EQbem7Q7MGh8GjdrI9jRyaye6Xj5w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=k2R+Je0C36oBOsBfU18LA+tQ8KzwFdRaccPAtISp5to=;
+ b=CUD5J2Oav7NLMosEoOyPAQjp3b2raP/OnANkbc/6/bmIrhexE5hg8sHpz/bC1r48EfIZLiOfJxiq6jM7DlPNIKt24wrxRwUp30ZBIVSgmf3VD7pqFZuuKrtx5h18AHrj4gFcjlmqzjcfD1wtDqT2VpNbYktYLPxdtCs9RF+4Ez9tTZZadnjMxstQ4S13yXDJPPacnLkj+EDKxkeLgL0nkv1xgUOzMfE04Py1f4iGfPFs9QsILY5mbzq7RDZuI5+ohdmBe9i11P6+pHG6MBPVEaSsH8SzW93HNHw2h4roJJJY9rZ7gAWjvAPJ8Mp5hUQFs/5DMOtSA1xhX09kzYNZXA==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from MI3PR04MB12438.eurprd04.prod.outlook.com (2603:10a6:290:76::14)
+ by DBAPR04MB7302.eurprd04.prod.outlook.com (2603:10a6:10:1a5::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.18; Mon, 19 Oct
+ 2026 20:58:08 +0000
+Received: from MI3PR04MB12438.eurprd04.prod.outlook.com
+ ([fe80::c715:c32:8bb1:b70b]) by MI3PR04MB12438.eurprd04.prod.outlook.com
+ ([fe80::c715:c32:8bb1:b70b%6]) with mapi id 15.21.0522.017; Mon, 19 Oct 2026
+ 20:58:07 +0000
+Date: Mon, 19 Oct 2026 15:58:00 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+To: Alex Naylor <alex.r.naylor@gmail.com>
+Cc: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>,
+	Dan Williams <djbw@kernel.org>, linux-raid@vger.kernel.org
+Subject: Re: [PATCH RFC 2/4] md/raid5-ppl: replace async_tx with synchronous
+ xor
+Message-ID: <ataEWMqQ0xpa2RFi@SMW015318>
+References: <20261015-asycn_tx_remove-v1-0-056a7085e0a1@nxp.com>
+ <20261015-asycn_tx_remove-v1-2-056a7085e0a1@nxp.com>
+ <ab359253-846e-4a8b-944e-06718b17a315@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ab359253-846e-4a8b-944e-06718b17a315@gmail.com>
+X-ClientProxiedBy: PH8PR02CA0048.namprd02.prod.outlook.com
+ (2603:10b6:510:2da::16) To MI3PR04MB12438.eurprd04.prod.outlook.com
+ (2603:10a6:290:76::14)
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -100,72 +98,102 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MI3PR04MB12438:EE_|DBAPR04MB7302:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4169c315-16b6-42d6-7273-08df2e23ad3a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|376014|19092799006|366016|23010399003|11063799006|56012099006|4143699003|261009223027099003|10067099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	/Cz/+lGSGP8Xx/fx+g0WCNOcJEzSK+7dInwG7ZVSuTowQg8+PGD1DZv/tVab1yUMzp4inB9SsP4675IsaNjm+RsVBP/Y8DouWa9nfImj5hnl7uknZ5A6qcEjhtqYKk2Z8Eijko4DoDxmxrdLtZJvvqZAYU2tVrtISPv90jjQ2Gsy5fyNmoT9QdI3WN4g4Up+HIrGNMUS4PTejXBW++5RrWCHptlDC78oK7pXahK0kbgU8ij2PlYaHINfF56n1vV7DNnPHwPambcRGa9JYlN+Tx6oQDOP3qGf4wHnfuX72AYlp0RgM/B7KmyP7I/oRHtqSp/BTxgTh0UWxN7lUmmQ1SF2tuzMdF2WSs5w18nzrRW/H5j8vD/it36Ldcibf49H52kuk1pJIn0edPQAmhGSMY6/4FTkRPa8r4uxT16o41pwSgQM1+Opyd6kvlRHTRmuRUlxongN93GA9n8d/4Ly4l0DIdZMTiefgWmTyIl6srIIZmVDENxJuuS21OMFbgJ9d0iac+wcZXTCYM6s10Ckw3IgjT4YNjZxBojWo8ykUTPl94dLV2agA3oCOU1elme1PO9OMDe8hsANV7k2+mgPTzqW9xle9x7Ste2CKTRBpOx+FLygDQYomxm2qH7PCaehOle0O6ffVgqn5kBR8RsLl2rLv/WlwD8Lsxqe+V3neNg=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MI3PR04MB12438.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(19092799006)(366016)(23010399003)(11063799006)(56012099006)(4143699003)(261009223027099003)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?ZRL3YhgZaDVzI1wbEXSjPWDSFyXh73EiEr+COKjpzk1m2mS4sZPjeKOZKZM/?=
+ =?us-ascii?Q?ewhdtrl+TjxqhWBgtJC/zE7ovu8t+ft0+iIjvWK6Tdboe2QjefhsoOqPaC1/?=
+ =?us-ascii?Q?c04tg8R59zByD9wEMsDQtLQbzodY8938GJ+sTyQJTCJqReYOlXWL0uYom5Eb?=
+ =?us-ascii?Q?KYlhI0I1gcCvGhOEZNeIZtpcZSm+Nho7tBViIgifmlJrpc5zAlORInoQMpKX?=
+ =?us-ascii?Q?9BS9xkCTmTR0o3d4r44TshTkmiJqrZoOw9nL4ljf7DtzDBHZE96SB/ZT6Q1v?=
+ =?us-ascii?Q?Pt2PkNXXmgXzpL54qy6ZNFUBuxCJKVt3Lqu10GY8YuB4x/r8uQHnwkf2yA19?=
+ =?us-ascii?Q?4NOV4ZV65UGCcsskExKS9NAhBSqofmfaYLRNubDrZ7V4ymrsg5szmD16lYJU?=
+ =?us-ascii?Q?uDKEXSh7yvSHaO9+jQP7r9j15Y6EyDLOqvuQfK/tAzN3GCsoMVjsw+CrvRuv?=
+ =?us-ascii?Q?E/0Maz2amle5FVgicC3Hu+EqAFQ9bS6QrEyIfNSJbPNxw/eMlrLWHsNhAvgD?=
+ =?us-ascii?Q?tJjJ1kCIbYMba5hzQFZ5UkzaB/1xrRWOqm30q2VDtM2rvqrC/Sl+PXekvjhp?=
+ =?us-ascii?Q?21JAOw7YBjCmZkdee8ddiEh0EloD+von2212pGvD78fHbKUs1Y3DlqxnAHVU?=
+ =?us-ascii?Q?CMn/SHUc4R+AGmhXJw1zydjZACxZ2DNqYT1bli4U8ooGiOFQQCGv55MJnSRM?=
+ =?us-ascii?Q?iG8Lz8W19nttzVhvDJXCFoxrxfh2NLbY6dzZkFI197V8m4GEEUGDIfjJLpOe?=
+ =?us-ascii?Q?fKCI3HY/PRNfMGyKjDMdSQlM/SOwCAmIkbG5L42cU/oqxJsK7BIF7Rv4eKe+?=
+ =?us-ascii?Q?pphqcUqvdUF+Jj3J+TZYiifWZL0GzrJOJGRwHONbqu/ko32p1ZpQ0AukpQc9?=
+ =?us-ascii?Q?5kFsh9ChCJwlxyUyT5kXDDBejOZR3pqGVcCKr67CKxYzwXzmn8ARxEELeh/e?=
+ =?us-ascii?Q?VkDsuA5f/9WKoIltsKQTZ9lbV//3N4qpF+VpZtf/W4EUNVlBSwBxQqpHJcuE?=
+ =?us-ascii?Q?lw/1IiKuCcR34IcQOBqr0PYLAfmZcgUzyRu7g5O9nXO6ATE1kdGGACrDfHQ0?=
+ =?us-ascii?Q?3OrFlkLNp+hbP9iIYFShgtNKaJ5qBpJq8mDINqgKECdHrb0YFNRdaeJ2hlav?=
+ =?us-ascii?Q?7mywV9YoIBKZliYOkwos+DVb0GB3U22v78b7duCaWAxvPTho6yOFwKn5X656?=
+ =?us-ascii?Q?ZCYswL/B1FbTcSkjLrr7UXdaPpZcchqyHFahxGMXNpOPaE0xFBTgpEibFkVj?=
+ =?us-ascii?Q?LMTvb+Y2atSQSlZxGMF/ck7SlOtPsliFlIHVRD0N+vHkXULfqeOjRkFuH/Nn?=
+ =?us-ascii?Q?AKBQJ1iEyG5f+49p27SyG+BSj3Edrshev36UPRdIC1p/HZvPOopTQJIIVoYO?=
+ =?us-ascii?Q?+GFt3CSc0vqFHldJwRmxMt55UVdHjKd67k08uLFLclAnE3DZByR6jzaBBlEX?=
+ =?us-ascii?Q?MfLcuCa8h9EK2x17TL1aHK3VX4yvGWpipY7+o7+pzfOxTfZqFZKrHRVExXsg?=
+ =?us-ascii?Q?9BCU6U0LcY1z7LlCP5Nm8xchrwzHUVzdtZTBj0nakEB7n5uIjSC6iLLxgQnA?=
+ =?us-ascii?Q?6orMfHwM51ygEyOy4oFbLBosdzxpuBeSGrfSr4S48yiE1oh3TNBa2Gyz8wna?=
+ =?us-ascii?Q?36QQxNRxFizPa5ZhnwXvfXVsyo/ZM16RmRDdreuvxG1oymhaZmaKHDxQWVis?=
+ =?us-ascii?Q?w/h7xOpSIFzwyayOKNzwXFlkev9SpiSrm4AhzbEdqhDHk7oEdSW93tZ5g+Lk?=
+ =?us-ascii?Q?HY2KeJ2mGH8GqaYsyCh4pOU+Pz/P71+WZlMYu/6IDLli7truuONX?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4169c315-16b6-42d6-7273-08df2e23ad3a
+X-MS-Exchange-CrossTenant-AuthSource: MI3PR04MB12438.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Oct 2026 20:58:07.6982
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: NcoNM1+fjtaExMhHnG2S/bJ/+v38XF2ku9VLaLmpEK+zGZb2tgp2imL8UDGUHgDbjzcp3hdpB6z/41RDUnek5Mbtw5v3+OWrXO694LSEFIsEiI2BnGmEr4SBi1ogaSkt
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBAPR04MB7302
 
-From: Sanan Hasanov <sanan.hasanov@ucf.edu>
+On Sun, Oct 18, 2026 at 05:27:31PM -0700, Alex Naylor wrote:
+> [You don't often get email from alex.r.naylor@gmail.com. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
+>
+> Hi Frank,
+>
+> I encountered a PPL recovery failure that appears relevant to this
+> proposal, on a QNAP TS-410 (Marvell Kirkwood, ARMv5).
+>
+> The system runs a custom Linux 6.1-based kernel with CONFIG_MV_XOR=y and
+> CONFIG_ASYNC_TX_DMA=y, plus a local PCIe startup-reset patch. Storage is
+> a four-member RAID5 with metadata 1.2, 512 KiB chunks and PPL enabled.
+>
+> After a power outage, array startup hit:
+>
+> kernel BUG at crypto/async_tx/async_tx.c:269!
+> PC: async_tx_quiesce
+> LR: ppl_xor [raid456]
+>
+> The call trace included:
+>
+> async_tx_quiesce
+> ppl_xor
+> ppl_recover_entry
+> ppl_init_log
+> raid5_run
+> md_run
+> do_md_run
+>
+> All four members had matching event counts and valid superblock
+> checksums, with no members marked failed.
+>
+> The apparent issue is that ppl_xor() submits with ASYNC_TX_ACK, then
+> passes the returned descriptor to async_tx_quiesce(), which asserts that
+> it is not already acknowledged.
+>
+> Disabling both Marvell XOR engines through their device-tree status
+> properties, while retaining the same kernel binary and modules, allowed
+> the existing array to assemble and the filesystem to recover. No forced
+> assembly, array recreation or PPL-policy change was used. File transfers
+> are working again.
 
-level_store() lets userspace switch a running array to another
-personality through the takeover path, and then ignores the return value
-of pers->run(). Takeover is expected to always produce something the new
-personality can run, but that no longer holds for an array that has
-already failed: since commit 57668f0a4cc4 ("raid5: introduce MD_BROKEN"),
-has_failed() treats MD_BROKEN as fatal, so raid5_run() refuses such an
-array. It then frees the new conf and clears mddev->private, while
-level_store() has already installed the raid5 personality and freed the
-old one. The array is left with mddev->pers == &raid5_personality and
-mddev->private == NULL, and the next operation that reaches the
-personality dereferences NULL:
+Do you means mv_xor actually broken at kernel 6.1?
 
-  md/raid0md0: Disk failure on loop0 detected, failing array.
-  md/raid:md0: not enough operational devices (1/3 failed)
-  md/raid:md0: failed to run raid set.
-  KASAN: null-ptr-deref in range [0x0000000000000060-0x0000000000000067]
-  RIP: 0010:kasan_byte_accessible+0x12/0x30 mm/kasan/generic.c:210
-  Call Trace:
-   spin_lock_irq include/linux/spinlock_rt.h:96 [inline]
-   lock_all_device_hash_locks_irq drivers/md/raid5.c:107 [inline]
-   raid5_quiesce+0xc2/0x8a0 drivers/md/raid5.c
-   __md_stop_writes+0xeb/0x4b0 drivers/md/md.c:7038
-   md_set_readonly+0x330/0x560 drivers/md/md.c:7138
-   array_state_store+0x584/0xe90 drivers/md/md.c:4720
-
-syzbot gets there by failing a member of a raid0 array, which sets
-MD_BROKEN, then writing "raid5" to md/level and "readonly" to
-md/array_state. The same applies to a two-disk raid1 array whose last
-working device has failed: raid1_error() sets MD_BROKEN but leaves
-degraded at 1, so raid5_takeover_raid1() still accepts it.
-
-MD_BROKEN is never cleared while the array is running, and a failed
-array can't be turned into a working one by changing its level. Refuse
-the change up front with -EBUSY, which is also what state_store()
-returns when failing a device leaves the array broken.
-
-Fixes: 57668f0a4cc4 ("raid5: introduce MD_BROKEN")
-Reported-by: syzbot+0b672810a475890d3636@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=0b672810a475890d3636
-Cc: stable@vger.kernel.org
-Signed-off-by: Sanan Hasanov <sanan.hasanov@ucf.edu>
----
- drivers/md/md.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 680b34a63c..367b183f1e 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4088,6 +4088,12 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
- 	    mddev->sysfs_active)
- 		goto out_unlock;
- 
-+	if (test_bit(MD_BROKEN, &mddev->flags)) {
-+		pr_warn("md: %s: cannot change personality of a failed array\n",
-+			mdname(mddev));
-+		goto out_unlock;
-+	}
-+
- 	rv = -EINVAL;
- 	if (!mddev->pers->quiesce) {
- 		pr_warn("md: %s: %s does not support online personality change\n",
--- 
-2.34.1
-
+Frank
