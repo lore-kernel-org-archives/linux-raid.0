@@ -1,28 +1,27 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AA52331EC2;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A7653264F9;
 	Mon, 19 Oct 2026 01:15:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792372550; cv=none; b=dYxygxL3pzPSEq2eol5J65bpfdxO87Hl45aB6E178Prubbvfz9H+iNfgwaySY49KFVpTfnn0uz/UGbfpCuTQJvjK3jBNLETTeNTOsWxdDNvHp7gITDlCyjU0u29V/YRqQ68h3B5TPrqyQFX8EUgRD/KZiaPE4cOdG61IBgEI304=
+	t=1792372550; cv=none; b=N4RDo0NAQDc+LvJoKcV6m8JMMUnSk+94m3NA8u7hPWx5nJbLzB9Ntj/Y5SRUjV7O8tXzldEUcqR09OOA+3p7/z1Wkp17EptgAHRo9dEqIj1T7DE8r+lLDJKTgi4h68UHWB9q64H+PT/9oQPq96fIoU42i8ZI6Cwb7Wig+MKKYNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1792372550; c=relaxed/simple;
-	bh=ZAnTXQc0f7P0tzvqfmezm/Yazl+p4SAeLfizcquFfLQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NsGxs3z+GDcKWuj4r01Lq50UkxWSTjwdyT563BmQHRsyuTyg4ZzGBaFuo9BlaHp4SOkgmBg3CDsyQbDeoMeOPP+Mk+LFejzIbgeDgfmqZ808VY0NJb6PsBMaCelYNS4JWZm1S97s/ZOxdmaUaGZ/dzccm1klwndFvXRBJcCl4pA=
+	bh=sOVBp+DcbI5xWQzbjbK1Mmn/uO63rqpVfwoXlg6wHxI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OAc6/Qsrgw4ftuBP6YEafDDQYkRotMCUoO2zxOPozQflyVHjPXvik+IURmqhwjqFeRnpQUb2OJD4FngbWn25zX5Q0z9MKZ7JhhPqBjZ1YOGnI2z7ivgUouAgR25euyfBNH56iL6iM3ZgzUAqijDGy1ZVbgF4WIVcHuS9ARdsn9E=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.177])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4j7HdT5GdDzYQtwK;
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4j7HdT1sk4zYQtw7;
 	Mon, 19 Oct 2026 09:14:37 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 7BE8740C9E;
+	by mail.maildlp.com (Postfix) with ESMTP id 0F8034056E;
 	Mon, 19 Oct 2026 09:15:38 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.85.155])
-	by APP4 (Coremail) with UTF8SMTPSA id gCh0CgBXkO85b9VqI9LoAw--.23742S9;
-	Mon, 19 Oct 2026 09:15:38 +0800 (CST)
+	by APP4 (Coremail) with UTF8SMTPSA id gCh0CgBXkO85b9VqI9LoAw--.23742S4;
+	Mon, 19 Oct 2026 09:15:37 +0800 (CST)
 From: Zizhi Wo <wozizhi@huaweicloud.com>
 To: song@kernel.org,
 	yukuai@fygo.io,
@@ -33,12 +32,10 @@ Cc: linux-kernel@vger.kernel.org,
 	yangerkun@huawei.com,
 	chengzhihao1@huawei.com,
 	wozizhi@huawei.com
-Subject: [PATCH V2 5/6] md/raid0: factor out raid0_member_sectors()
-Date: Mon, 19 Oct 2026 09:08:26 +0800
-Message-ID: <20261019010827.2922617-6-wozizhi@huaweicloud.com>
+Subject: [PATCH V2 0/6] md: fix takeover failure handling and raid0 size calculation
+Date: Mon, 19 Oct 2026 09:08:21 +0800
+Message-ID: <20261019010827.2922617-1-wozizhi@huaweicloud.com>
 X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20261019010827.2922617-1-wozizhi@huaweicloud.com>
-References: <20261019010827.2922617-1-wozizhi@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -46,94 +43,61 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBXkO85b9VqI9LoAw--.23742S9
-X-Coremail-Antispam: 1UD129KBjvJXoW7ArW5Xw18Kw13KF47tF48tFb_yoW8trykpw
-	48Kas2grW8WryfW3WDJ34Uuayrtry5GrWDKFy7Za48Wwn7ur1DGFW3X345WFyUAasYv343
-	t3yjkrWqk3Z5KrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBIb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
-	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
-	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267
-	AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7Cj
-	xVAFwI0_Cr1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F4
-	0Ex7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC
-	6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2
-	Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s02
-	6x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0x
-	vE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY
-	6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aV
-	CY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1wSdDUUUUU==
+X-CM-TRANSID:gCh0CgBXkO85b9VqI9LoAw--.23742S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7uFyrZF17Wr17AF4UWr47XFb_yoW8GrWkpa
+	nxt3W5Zw4rG34fZwnIk34UAayrtw18G3WUtF9xJw4rWF9rZFy8CrWDGrW5GayDX3sYqa4Y
+	qw1DXrnYkF4DK37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUk0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26r4UJVWxJr1l84ACjcxK6I8E87Iv6x
+	kF7I0E14v26F4UJVW0owAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAq
+	x4xG6I80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6x
+	CaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxkF7I0En4kS14v26r1q6r43MxAIw28I
+	cxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2
+	IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI
+	42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42
+	IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280
+	aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUrsqXDUUUU
 X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
 
 From: Zizhi Wo <wozizhi@huawei.com>
 
-create_strip_zones() and the takeover coverage check both compute the size
-a member contributes to a raid0 array. Pull that into a small helper so the
-two sites share one definition.
+Patches 1-3 fix the inconsistent mddev state left behind when a takeover
+fails.
 
-No functional change.
+Patch 4 rejects a raid0 takeover whose zones cannot cover the capacity the
+gendisk advertises, fixing a syzbot BUG() in find_zone().
 
-Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
----
- drivers/md/raid0.c | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+Patch 5 factors out the member-size rounding. Patch 6 uses it in
+raid0_size(), where the power-of-2 mask is not a round down for a
+non-power-of-2 chunk.
 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 8a76158c8395..3ab1e5079cc5 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -61,10 +61,16 @@ static void dump_zones(struct mddev *mddev)
- 			(unsigned long long)zone_size>>1);
- 		zone_start = conf->strip_zone[j].zone_end;
- 	}
- }
- 
-+static sector_t raid0_member_sectors(sector_t sectors, unsigned int chunk)
-+{
-+	sector_div(sectors, chunk);
-+	return sectors * chunk;
-+}
-+
- static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- {
- 	int i, c, err;
- 	sector_t curr_zone_end, sectors;
- 	struct md_rdev *smallest, *rdev1, *rdev2, *rdev, **dev;
-@@ -84,13 +90,12 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 			 mdname(mddev),
- 			 rdev1->bdev);
- 		c = 0;
- 
- 		/* round size to chunk_size */
--		sectors = rdev1->sectors;
--		sector_div(sectors, mddev->chunk_sectors);
--		rdev1->sectors = sectors * mddev->chunk_sectors;
-+		rdev1->sectors = raid0_member_sectors(rdev1->sectors,
-+						      mddev->chunk_sectors);
- 
- 		if (mddev_is_dm(mddev))
- 			blksize = max(blksize, queue_logical_block_size(
- 				      rdev1->bdev->bd_disk->queue));
- 
-@@ -652,16 +657,12 @@ static int raid0_takeover_check(struct mddev *mddev, int chunk)
- {
- 	sector_t capacity = get_capacity(mddev->gendisk);
- 	sector_t coverage = 0;
- 	struct md_rdev *rdev;
- 
--	rdev_for_each(rdev, mddev) {
--		sector_t sectors = rdev->sectors;
--
--		sector_div(sectors, chunk);
--		coverage += sectors * chunk;
--	}
-+	rdev_for_each(rdev, mddev)
-+		coverage += raid0_member_sectors(rdev->sectors, chunk);
- 
- 	if (coverage < capacity) {
- 		pr_warn("md/raid0:%s: refusing takeover, zones cover only %llu of %llu sectors\n",
- 			mdname(mddev), (unsigned long long)coverage,
- 			(unsigned long long)capacity);
+Changes since v1:
+ - Added 3 patches fixing the inconsistent mddev state left behind by a
+   failed takeover in raid0, raid10 and raid5.
+ - Patch 4: expanded the commit message with a paragraph addressing the
+   issue previously reported by Sashiko.
+
+v1:
+https://lore.kernel.org/all/20261017005802.2212102-1-wozizhi@huaweicloud.com/
+
+Zizhi Wo (6):
+  md/raid0: don't leave mddev in an inconsistent state when takeover
+    fails
+  md/raid10: don't leave mddev in an inconsistent state when takeover
+    fails
+  md/raid5: don't leave mddev in an inconsistent state when takeover
+    fails
+  md/raid0: reject a takeover whose zones cannot cover the array
+  md/raid0: factor out raid0_member_sectors()
+  md/raid0: round member size in raid0_size() with sector_div()
+
+ drivers/md/raid0.c  | 84 +++++++++++++++++++++++++++++++++++----------
+ drivers/md/raid10.c | 11 ++++--
+ drivers/md/raid5.c  | 13 ++++---
+ 3 files changed, 84 insertions(+), 24 deletions(-)
+
 -- 
 2.52.0
 
