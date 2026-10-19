@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9231549FC4;
-	Mon, 19 Oct 2026 13:56:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 463FE5D9D75;
+	Mon, 19 Oct 2026 14:02:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418209; cv=none; b=D/jbhxi3iYweMHKHXNbtkEc3MaXXNnV5pJcMmiOnPSyUJX0CWFMkN9qsA0PJDKlQhHnU9s1CRo4CEUOtHgaoEyEaWn1AXuwjNdzGAmxeDRXwQFv0EGXuMsDja/gcLgI9TlrMfkvKU1knvebaBGlkT7NonQf06InXHF3f7Ny5Q4c=
+	t=1792418524; cv=none; b=N46wzxLHHlEjBhWji8FU2Vk/M+cYcc8iaPwesSLzpeKnG+aBRiR0abgKGBjUaSULFxkk5bT9mYMo+1C16REcosIPhD2SFuvV5U7Vf/BlDpFa5qnRunvxPcPfSSyR57Td8VtPI1myp1L4JDdddYcvTQ1yuAVOzocrpa8dHb9bqp8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418209; c=relaxed/simple;
-	bh=LoGHjCg9Sdcxom0ypPmWIaigurbig5u9/msoRi9pe9E=;
+	s=arc-20240116; t=1792418524; c=relaxed/simple;
+	bh=MMD+EBEPV0Pg7Ltq9yTjC1CMXB2jXqd4hX7pdWvy8Vc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ar5PNBgxhMQa1CNJ02DoiJPdnXlv5W/dox1+7ccNa6qHoHiHkXd9CHXCtIcm3OfU6dNffayr/+K0BXzgb8lgQ9ZeWH1A/uQlkt42fr1Q+s9WbpE0XB1kJmIv3P0DdbzsKyLSGhU7CgbyEZEPg7Eh64i6qSkDDytdb5x14AJEHFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JsCneYY1; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=KLxSu98svAcFK1QDJg1zuNn0CwTTGnXSrEXiJXKQMuID6Wj2viSO3x82DOy6cwtTRRFfwdm8J1HWIgxpufVsb6L9KxlYQA7KuX2+y6xr6gR4A/1V51SHUDPblgmGtyatqnZzYzUklnKu8w5fOcaqOgglMvZsgDXF7+v8H8Ss064=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dvpfWu8G; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JsCneYY1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E17B11F000C6;
-	Mon, 19 Oct 2026 13:56:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dvpfWu8G"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 494D81F000C8;
+	Mon, 19 Oct 2026 14:02:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418206;
-	bh=uG5gA47gOYSyqqgUu8gf686568I17wT33QCswzzSEF4=;
+	s=k20260515; t=1792418521;
+	bh=u/avkUqxcKZrBjqLt0ZXn2Myl1uHIiz9AgCo+A8lC9Q=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=JsCneYY1MgmhpCzfm5O6CLs+yIAv4q2PBtazRARbHJ9HgADn+ghuia+eMWDfdhWml
-	 Ku5WaPzOfXwTUtPvHtp1MSW9IvDyHt3gKfBvUXMeTOGhUHyaR9qD9ms+JL7R0xYqKw
-	 b6Db/cAj0tNvnop5pvodQFE3EDBc1AJi4u6oM2RhXVH3JD0PiTQ6pVvjnGQOlLQ8xR
-	 CQWJlX5pcVB/EQC43PvQwfJGUzH15fUPm1gcBgvgqG39y1sJ3pUZORd0dqBxRSbckk
-	 oQXlat4+gOjHOLa60WRMJ8GkD8/oDy5b463bQljwUy8e2DMqpj1Ut2peKXjxYJ963t
-	 K9xjUwk0I6cVA==
+	b=dvpfWu8GEO41oTL8jjpm9IUERIg0k/mjDLKlfOYb5EU6AiKgpqpHh2uK6dzGuMMq3
+	 iY4QJVEsPbpgauJ0uUaZaBDQrdijapKo7EDCvYdhIC9omdaEeoKN0DpMza1DadM6Dd
+	 sGh1TkyM1Aj060g4BDX5Z/IcXf0D1E+4Kn9SGgP+iyZ7hWFcdZCGir+1Id7PqJCr0y
+	 S3FxoxSMoxnMI9YdvZmIaM6KQ/U1wpFU1LBuN/4ahVQERqT+lpydWxzahOhjoYLfLS
+	 6lBQNlJpG8XZi5bZTK3/w3bLIItpm45LL6+GH2WDAX8K/BRJ2rQ7O1mj3nIbWSH+dD
+	 k82S2kIFpqPKQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Yunye Zhao <yunye.zhao@linux.alibaba.com>,
-	Yu Kuai <yukuai@fygo.io>,
+Cc: Yu Kuai <yukuai@fygo.io>,
+	Mykola Marzhan <mykola@meshstor.io>,
 	Sasha Levin <sashal@kernel.org>,
 	song@kernel.org,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] md: add cond_resched() to md_do_sync()'s skip path
-Date: Mon, 19 Oct 2026 09:46:19 -0400
-Message-ID: <20261019135441.1420968-88-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] md: skip bitmap accounting for empty write ranges
+Date: Mon, 19 Oct 2026 09:49:58 -0400
+Message-ID: <20261019135441.1420968-307-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -53,326 +53,494 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Yunye Zhao <yunye.zhao@linux.alibaba.com>
+From: Yu Kuai <yukuai@fygo.io>
 
-[ Upstream commit 162eb5ba791f6260fdaabae75fa2df20134f67d8 ]
+[ Upstream commit 87c10252e3d6c28769d93bea9e6a9b592e5809d1 ]
 
-When sync_request() reports a skipped region (*skipped == 1),
-md_do_sync()'s main loop advances the cursor and takes an early
-continue:
+mkfs.ext4 can submit zero-sector flush/FUA bios. These bios are WRITE
+bios for md_write_start() purposes, but they do not cover any data sector
+and must not dirty bitmap bits.
 
-	j += sectors;
-	...
-	if (last_check + window > io_sectors || j == max_sectors)
-		continue;
+md bitmap accounting currently passes such bios to bitmap start_write().
+For llbitmap this reaches llbitmap_start_write() with sectors == 0,
+which underflows the end chunk calculation.
 
-If the personality returns a small span per call (raid10 recovery
-returns only 128 sectors), syncing a large, mostly clean array iterates
-this branch an enormous number of times without ever yielding the CPU.
-On a non-preemptive kernel the resync thread then trips the soft-lockup
-watchdog:
+Personality bitmap mapping can also turn a non-empty bio into an empty
+bitmap range when the requested sectors are outside the active bitmap
+geometry. Treat both cases as not started, so the completion path will not
+call end_write() for an empty range.
 
-  watchdog: BUG: soft lockup - CPU#149 stuck for 313s! [mdX_resync]
-   md_bitmap_start_sync+0x6f/0xe0
-   raid10_sync_request+0x2c9/0x1530 [raid10]
-   md_do_sync+0x810/0x1030
-   md_thread+0xa7/0x150
-
-Add a cond_resched().  This does not reduce the wasted iterations; the
-excessive iteration count is a raid10 problem addressed separately.
-
-Signed-off-by: Yunye Zhao <yunye.zhao@linux.alibaba.com>
-Link: https://patch.msgid.link/20260723135535.101995-3-yunye.zhao@linux.alibaba.com
+Tested-by: Mykola Marzhan <mykola@meshstor.io>
+Link: https://patch.msgid.link/20260802195038.164272-11-yukuai@kernel.org
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-The checked-out tree is **6.18.53** (`pending-6.18`). The skip path in
-`md_do_sync()` is present, has no yield, and matches this patch. That is
-a real soft-lockup fix.
+The local tree is **6.18.53** (`p-6.18`). The empty-range skip is
+missing, and the llbitmap underflow path is present. Full analysis
+follows.
 
-## Phase 1: Commit message forensics
+===============================================================
+PHASE 1: COMMIT MESSAGE FORENSICS
+===============================================================
 
-**Step 1.1 — Subject**
-- Record: `[md] [add] add cond_resched() to md_do_sync()'s skip path`
-- Subsystem: MD RAID core. Verb “add” here is a yield on an existing
-  loop, not a feature.
+**Step 1.1: PARSE THE SUBJECT LINE**
 
-**Step 1.2 — Tags**
-- Record:
-  - `Signed-off-by: Yunye Zhao <yunye.zhao@linux.alibaba.com>` (author)
-  - `Link: https://patch.msgid.link/20260723135535.101995-3-
-    yunye.zhao@linux.alibaba.com`
-  - `Signed-off-by: Yu Kuai <yukuai@fygo.io>` (md maintainer; applied)
-  - No `Fixes:` / `Reported-by:` / `Tested-by:` in the committed text
-  - Original v2 submission **did** include `Cc: stable@vger.kernel.org`;
-    Yu Kuai dropped it when applying (“Remove the cc stable as there is
-    no fixtag”). That is process, not a technical NAK.
-  - Pipeline `Signed-off-by: Sasha Levin` / `[Upstream commit …]`
-    ignored as instructed.
+Record: **[md] [skip] skip bitmap accounting for empty write ranges**
+- Subsystem: `md` (MD RAID core)
+- Action verb: **skip** (prevent incorrect handling)
+- Intent: do not run bitmap start/end accounting when the write covers
+  no data sectors
 
-**Step 1.3 — Body**
-- Record:
-  - **Bug:** when `sync_request()` returns `*skipped == 1` with a small
-    span (RAID10 recovery: 128 sectors), `md_do_sync()` takes `continue`
-    and never reaches the existing `cond_resched()`.
-  - **Symptom:** `watchdog: BUG: soft lockup - CPU#149 stuck for 313s!
-    [mdX_resync]` with `md_bitmap_start_sync` → `raid10_sync_request` →
-    `md_do_sync` → `md_thread`.
-  - **Trigger:** large, mostly-clean RAID10 recovery (author:
-    2^40-sector device → ~2^33 iterations).
-  - **Root cause of CPU burn:** RAID10 recovery discards the bitmap’s
-    large clean span and returns 128; that is patch 3/3. This commit
-    only yields.
-  - Author tested on 6.6.102 and mainline.
+**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
 
-**Step 1.4 — Hidden bug fix?**
-- Record: Not hidden. Explicit soft-lockup fix. Series cover letter
-  calls it a “safety net, any personality/layout.”
+Record:
+- `Tested-by: Mykola Marzhan <mykola@meshstor.io>` — independent
+  hardware/user verification
+- `Link:
+  https://patch.msgid.link/20260802195038.164272-11-yukuai@kernel.org` —
+  v5 series, patch 10/29 (msgid `-11` is 1-based with cover)
+- `Signed-off-by: Yu Kuai <yukuai@fygo.io>` — author (MD contributor;
+  ignore pipeline SoBs)
+- No `Fixes:` tag (expected)
+- No `Cc: stable` (expected)
+- No `Reported-by:` / syzbot
+- No `Reviewed-by:` on this revision (v1 had Reviewed-by from Su Yue on
+  earlier series patches)
 
-## Phase 2: Diff analysis
+**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
 
-**Step 2.1 — Inventory**
-- Record: `drivers/md/md.c` only; ~3 insertions / 1 deletion in
-  `md_do_sync()`. Surgical, single-function.
+Record:
+- **Bug:** mkfs.ext4 can submit zero-sector flush/FUA bios. They are
+  WRITE bios for `md_write_start()`, but they cover no data and must not
+  dirty bitmap bits. They are still passed to bitmap `start_write()`.
+- **llbitmap failure mode:** `llbitmap_start_write()` with `sectors ==
+  0` underflows the end-chunk calculation (`offset + sectors - 1`).
+- **Second case:** personality `bitmap_sector()` can map a non-empty bio
+  to an empty bitmap range (outside active geometry). Completion must
+  not call `end_write()` for a start that never ran / was empty.
+- **Symptom:** bitmap accounting of a zero-length range → unsigned wrap
+  in llbitmap, then a huge page/chunk walk (barriers + state machine),
+  i.e. hang, bitmap corruption, or crash.
+- **Version info:** none in the message; code is the post-6.14 upper-
+  layer bitmap path + llbitmap (2025).
 
-**Step 2.2 — Flow**
-- Record: **Before:** skip/early-continue path never yields. **After:**
-  `cond_resched()` then `continue`. Normal I/O path still uses the later
-  `cond_resched()` at the speed-limit check.
+**Step 1.4: DETECT HIDDEN BUG FIXES**
 
-**Step 2.3 — Bug mechanism**
-- Record: **Hang / soft-lockup** (non-preemptive). Skip path bypasses
-  the yield that already exists later in the same loop.
+Record: **Not hidden.** It is an explicit correctness fix: skip empty
+ranges so start/end stay balanced and llbitmap does not underflow.
 
-Verified in this tree:
+===============================================================
+PHASE 2: DIFF ANALYSIS
+===============================================================
 
-```9751:9753:drivers/md/md.c
-                if (last_check + window > io_sectors || j ==
-max_sectors)
-                        continue;
-```
+**Step 2.1: INVENTORY THE CHANGES**
 
-```9779:9779:drivers/md/md.c
-                cond_resched();
-```
+Record:
+- File: `drivers/md/md.c` only (~+7 / −2, four tight edits)
+- Functions: `md_bitmap_start()`, `md_end_clone_io()`, `md_clone_bio()`
+- Scope: **single-file surgical fix**
 
-Skip `continue` never reaches line 9779. `window` is `32 * (PAGE_SIZE /
-512)` (256 sectors). If `skipped`, `io_sectors` does not increase, so
-`last_check + window > io_sectors` stays true.
+**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
 
-RAID10 recovery still does `max_sync = RESYNC_PAGES << (PAGE_SHIFT-9)`
-(128 sectors). On a clean bitmap, `biolist == NULL` → `giveup` clamps to
-`max_sync` and, because `max_sector` is a parameter (not reset at
-`skipped:`), the call returns 128 to `md_do_sync()`.
+Record:
+1. **`md_bitmap_start`:** after optional `bitmap_sector()` remap,
+   **return if `sectors == 0`** instead of calling
+   `start_write`/`start_discard`.
+2. **`md_end_clone_io`:** call `md_bitmap_end()` only if
+   `md_io_clone->sectors != 0` (paired with start).
+3. **`md_clone_bio`:** set `md_io_clone->sectors = 0` (mempool reuse).
+   Skip the start path unless `bio_sectors(*bio) != 0`.
+4. **Affected paths:** WRITE clone accounting (`md_account_bio` →
+   `md_clone_bio`), including 0-sector flush/FUA and post-map empty
+   ranges. Not a refactor of the hot data path.
 
-**Step 2.4 — Fix quality**
-- Record: Obviously correct. Same primitive already used in this
-  function. Process context (`md_thread`). No new API/locks. Regression
-  risk very low. Might slightly slow tight skip loops; that is the goal.
+**Step 2.3: IDENTIFY THE BUG MECHANISM**
 
-## Phase 3: Git history
+Record:
+- **Category:** logic / integer underflow (unsigned wrap) + start/end
+  accounting mismatch
+- **Mechanism:** `llbitmap_start_write()` does
+  `end = (offset + sectors - 1) >> chunkshift`.
+  `sectors == 0` underflows. If `offset == 0`, `end` becomes a huge
+  chunk index; the `page_start <= page_end` loop and
+  `llbitmap_state_machine()` then walk a massive range.
+- Legacy `bitmap_start_write()` uses `while (sectors)` and is a no-op
+  for 0; the crash is **llbitmap-specific**, but the skip is correct for
+  both backends.
+- The `sectors = 0` init is required: after skipping the start `if`,
+  completion must not see a stale mempool `sectors` value.
 
-**Step 3.1 — Blame**
-- Record: Skip `continue` dates to early MD (`57afd89f98a99` / 2.6 era).
-  Long-standing. RAID10 128-sector recovery cap is equally old
-  (`RESYNC_BLOCK_SIZE` 64KiB).
+**Step 2.4: ASSESS THE FIX QUALITY**
 
-**Step 3.2 — Fixes: tag**
-- Record: None. Not a regression from a single later commit; interaction
-  of skip-continue and RAID10 recovery skip size.
+Record:
+- **Obviously correct:** empty range → don’t start, don’t end, init
+  `sectors` to 0.
+- **Minimal:** four related edits, no API change.
+- **Regression risk: low.** Worst case is skipping bitmap bits for a
+  0-sector I/O (correct). Start/end stay balanced.
+- **Local extra path:** this tree’s `md_free_cloned_bio()` also calls
+  `md_bitmap_end()` without a `sectors` check (raid5 reshape-wait
+  abort). A faithful backport should add the same guard there. That is a
+  small extra hunk, not a reason to reject.
 
-**Step 3.3 — Related commits**
-- Record: Patch 2/3 of “md/raid10: fix recovery corruption and soft
-  lockup on large arrays”.
-  - 1/3 `md/raid10: fix still_degraded being inverted` — **already in
-    this tree** (`0efabe6229dc6`). Independent.
-  - 3/3 `md/raid10: skip clean regions in bulk` — **not** in this tree.
-    Independent; this yield still needed for far/offset layouts and
-    other personalities.
-- No `cond_resched` on this skip path in `HEAD`.
+===============================================================
+PHASE 3: GIT HISTORY INVESTIGATION
+===============================================================
 
-**Step 3.4 — Author**
-- Record: Yunye Zhao (Alibaba). Applied by Yu Kuai (md maintainer).
+**Step 3.1: BLAME THE CHANGED LINES**
 
-**Step 3.5 — Dependencies**
-- Record: Standalone. Uses existing `cond_resched()`. 6.18
-  `md_do_sync()` already has `update:`, `MD_RESYNC_ACTIVE`, and 4-arg
-  `sync_request()` — same context as the patch. Clean apply.
+Record:
+- `md_bitmap_start` / clone accounting introduced by `cd5fc65338181`
+  (“md/md-bitmap: move bitmap_{start, end}write to md upper layer”,
+  2025-01-09) — **is an ancestor of this HEAD**.
+- Discard ops wiring: `ac9dad8faaa7b`.
+- `else md_io_clone->start_time = 0` already here from `d81822fd5fa81`
+  (“md: avoid stale clone I/O accounting timestamps”).
+- llbitmap: `5ab829f1971dc` (“md/md-llbitmap: introduce new lockless
+  bitmap”, 2025-09-06) — **present**.
+- Bug is in **this** 6.18 tree, not only in later mainline.
 
-## Phase 4: Mailing list
+**Step 3.2: FOLLOW THE FIXES: TAG**
 
-**Step 4.1 — Discussion**
-- Record: https://lore.kernel.org/linux-
-  raid/20260723135535.101995-3-yunye.zhao@linux.alibaba.com/ (also
-  openwall mirrors).
-- v1: single `cond_resched` patch. Yu Kuai initially thought it was a
-  dead loop.
-- v2: 3 patches; this one retitled; v1 “io_sectors never increases”
-  claim corrected.
-- Yu Kuai on v1 follow-up: “This patch is still valuable, even a 5s
-  lockup is not acceptable.”
-- Applied to md-7.3. No NAK on the yield itself.
+Record: **No Fixes: tag.** Introducers are `cd5fc65338181` (upper-layer
+accounting of all WRITE bios, including 0-sector) and `5ab829f1971dc`
+(llbitmap underflow). Both are in this tree (`git merge-base --is-
+ancestor` exit 0 for `cd5fc65338181`).
 
-**Step 4.2 — Recipients**
-- Record: Song Liu, Yu Kuai; Cc Li Nan, Xiao Ni, linux-raid, linux-
-  kernel.
+**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
 
-**Step 4.3 — Bug report**
-- Record: Author stack trace; 2^40-sector array; ~8.6e9 iterations;
-  313s. Cover letter: before patch 3, 37.2s 100% CPU on 8T-per-disk
-  sparse recovery; `softlockup_panic=1`.
+Record: recent `drivers/md/md.c` on this branch includes:
+- `73881ff7a7591` md: wait for behind writes before destroying bitmap
+  (v5 patch 6)
+- `d81822fd5fa81` md: avoid stale clone I/O accounting timestamps (v5
+  patch 7)
 
-**Step 4.4 — Series**
-- Record: 2/3 is the md-core safety net. Does not depend on 1/3 or 3/3.
+Same series already on this tree:
+- `930cc4f1af5a1` md/md-llbitmap: prevent create failure bitmap UAF
+  (patch 8)
+- `c55aa6c17f019` md/md-llbitmap: stop daemon timer rearm on destroy
+  (patch 9)
 
-**Step 4.5 — stable@**
-- Record: No useful stable-list thread found (lore.kernel.org/stable
-  403). Maintainer dropped `Cc: stable` only for missing `Fixes:`.
+This commit is **v5 10/29**, the next accounting fix. Standalone vs
+later reshape patches (11+). **No missing prerequisite** among 6–9 for
+this hunk.
 
-## Phase 5: Semantics
+**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
 
-**Step 5.1 — Functions**
-- Record: `md_do_sync()`.
+Record: Yu Kuai is a primary MD/llbitmap author on this tree (bitmap
+move, llbitmap, this series). Weight: high.
 
-**Step 5.2 — Callers**
-- Record: Registered as the MD resync thread
-  (`md_register_thread(md_do_sync, …)`). Kernel thread, not IRQ.
-  Userspace triggers via array recovery/resync/check (`mdadm`).
+**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
 
-**Step 5.3 — Callees**
-- Record: `pers->sync_request()`, bitmap start/end, `cond_resched()`,
-  speed-limit waits.
+Record: Needs `md_bitmap_start` / `md_io_clone` /
+`bitmap_ops->start_write` — all present. Does **not** need patch 12
+(`prepare_range` / exact mapping); v5 commit text was updated to
+`bitmap_sector` so it stands alone. **Can apply standalone** with small
+context tweaks.
 
-**Step 5.4 — Reachability**
-- Record: Yes. Disk replace / rebuild / `--syncaction` on RAID10 with
-  internal bitmap. Production path.
+===============================================================
+PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+===============================================================
 
-**Step 5.5 — Similar patterns**
-- Record: Same file already yields on the I/O path. RAID1/5/10 use
-  `cond_resched()` in other loops. Skip path was the hole.
+**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
 
-## Phase 6: This tree (6.18.53)
+Record:
+- Lore msgid `20260802195038.164272-11-yukuai@kernel.org` (v5 10/29).
+- Cover: [PATCH v5 00/29] md: improve lockless bitmap reshape support
+  https://lists.openwall.net/linux-kernel/2026/08/02/769
+- Earlier: v1 2026-06-05, v2, v4 07/25, v5 10/29.
+- Cover: patches 6–11 are “md core and llbitmap lifetime/accounting
+  prerequisites”; this one is “empty bitmap ranges”.
+- v5 note: “Fix patch 10 to keep empty-range handling valid before the
+  exact mapping hook is introduced.”
+- **No NAK** in the fetched cover/patch bodies.
+- `b4 mbox`/`b4 dig -c` did not resolve without a mainline SHA (local
+  master is older than this series). Thread recovered via
+  gnuweeb/IU/openwall.
 
-**Step 6.1 — Buggy code present?**
-- Record: **Yes.** `drivers/md/md.c` ~9752 skip `continue` with no
-  yield. RAID10 `giveup` still advances by `max_sync` (128). `git
-  describe HEAD`: `p-6.18-1-g03b85e06ca9bf`. `make kernelversion`:
-  `6.18.53`.
+**Step 4.2: CHECK WHO REVIEWED THE PATCH**
 
-**Step 6.2 — Backport difficulty**
-- Record: **Clean apply.** Local hunk matches the submitted diff
-  (`MD_RESYNC_ACTIVE`, `update:`).
+Record: To/Cc Song Liu, Li Nan, Xiao Ni; lists linux-raid, linux-kernel.
+Tested-by Mykola Marzhan (v4, carried to v5). Su Yue Reviewed-by on v1
+series (not re-stated on this hunk in v5).
 
-**Step 6.3 — Already fixed?**
-- Record: No. 1/3 is in tree; 2/3 and 3/3 are not. Older `71e8e4f288e74`
-  (bitmap size vs array size) is a different lockup.
+**Step 4.3: SEARCH FOR THE BUG REPORT**
 
-## Phase 7: Subsystem
+Record: No syzbot/bugzilla. Trigger described as **mkfs.ext4 zero-sector
+flush/FUA** — common userspace. Tested-by supports real-world impact.
+**UNVERIFIED:** did not reproduce mkfs.ext4 on this kernel.
 
-**Step 7.1**
-- Record: `drivers/md` — **IMPORTANT** (enterprise RAID, dm-raid). Not
-  staging.
+**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
 
-**Step 7.2**
-- Record: Active; recent RAID10/md fixes on this branch.
+Record: Independent of reshape (11+). Empty-range skip is valid before
+`prepare_range`. Same-series 6–9 already in this tree.
 
-## Phase 8: Impact and risk
+**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
 
-**Step 8.1 — Who**
-- Record: MD/RAID users, especially RAID10 recovery of large mostly-
-  clean arrays. Distro/enterprise kernels often `PREEMPT_NONE` /
-  `PREEMPT_VOLUNTARY`.
+Record: gnuweeb `/stable/?q=skip+bitmap+accounting...` returned
+unrelated stable-rc noise, **no dedicated stable thread**. Not a
+negative signal.
 
-**Step 8.2 — Trigger**
-- Record: Recovery/resync of a large sparse array. Not unprivileged
-  syscall; rebuild is a privileged/admin path. Common after disk
-  replace. Timing-independent tight loop.
+===============================================================
+PHASE 5: CODE SEMANTIC ANALYSIS
+===============================================================
 
-**Step 8.3 — Failure mode**
-- Record: Soft lockup (313s in the report). With `softlockup_panic=1`,
-  panic. **CRITICAL**.
+**Step 5.1: KEY FUNCTIONS**
 
-**Step 8.4 — Risk vs benefit**
-- Record: Benefit high (stops watchdog/panic). Risk very low (3 lines,
-  existing helper). Ratio strongly in favor. Remaining CPU spin is patch
-  3; this still prevents the BUG.
+Record: `md_bitmap_start`, `md_bitmap_end` (unchanged body, callers
+gated), `md_end_clone_io`, `md_clone_bio`. Callee of interest:
+`llbitmap_start_write` / `bitmap_start_write`. Local extra:
+`md_free_cloned_bio`.
 
-## Phase 9: Synthesis
+**Step 5.2: TRACE CALLERS**
 
-**For backporting**
-- Real, reproduced soft lockup with stack trace.
-- Hole is in this tree; patch matches.
-- Tiny, obviously correct; maintainer applied it and called it valuable.
-- Independent of 3/3; still needed after 1/3.
-- Classic stable pattern: `cond_resched()` to stop a lockup.
+Record:
+- `md_clone_bio` ← `md_account_bio`
+- `md_account_bio` ← raid0, raid1, raid10, raid5, md-linear
+  `make_request`
+- `md_end_clone_io` = clone `bi_end_io`
+- `md_free_cloned_bio` ← raid5 `STRIPE_WAIT_RESHAPE` abort
+- Context: block submit from userspace (mkfs, etc.), not init-only
 
-**Against**
-- Does not cut the 128-sector crawl (author is explicit).
-- No `Fixes:` (maintainer dropped `Cc: stable` for that).
-- Pre-existing `md_new_event()` spam on `last_check == 0` (not
-  introduced here).
+**Step 5.3: TRACE CALLEES**
 
-**Unresolved:** none that change the verdict. Could not fetch
-lore.kernel.org/stable (403); discussion from the patch mbox is enough.
+Record: `md_bitmap_start` → `pers->bitmap_sector` (raid5) →
+`bitmap_ops->start_write` (`llbitmap_start_write` or
+`bitmap_start_write`). llbitmap: unsigned end chunk, per-page barriers,
+`llbitmap_state_machine(..., BitmapActionStartwrite)`.
 
-**Stable rules**
-1. Obviously correct and tested — **PASS** (mainline + QEMU tests;
-   maintainer applied).
-2. Real user-visible bug — **PASS** (soft lockup on RAID10 recovery).
-3. Important (crash/hang) — **PASS** (soft lockup / possible panic).
-4. Small and contained — **PASS** (~3 lines, one function).
-5. No new features/APIs — **PASS**.
-6. Applies to this tree — **PASS** (clean).
+**Step 5.4: FOLLOW THE CALL CHAIN**
 
-**Exception category:** none required; it is a hang fix.
+Record: **Userspace-reachable.** raid1/raid5 still send PREFLUSH empty
+bios to `md_flush_request()`, which completes `bio_sectors == 0` without
+accounting. FUA-only 0-sector WRITEs, or PREFLUSH that falls through
+(`-EAGAIN` journal fallback in raid5), hit `md_account_bio`.
+raid0/linear call `md_account_bio` on the I/O path. Confirmed in-tree:
+`raid5_make_request` calls `md_account_bio` at line 6182 after flush
+handling.
 
-This matters on 6.18 because RAID rebuild of large arrays is normal
-operations, and a 5–313s lockup (or panic) is exactly what stable is
-for. The yield is the same one the I/O path already uses.
+**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
 
-## Verification
-- [Phase 1] Tags: author SOB, Yu Kuai SOB, msgid link; v2 had `Cc:
-  stable`, dropped on apply for missing Fixes.
-- [Phase 2] Diff: 3 lines in `md_do_sync()` skip `continue`; 6.18 code
-  at 9752–9753 / 9779 matches.
-- [Phase 2] RAID10: `max_sync = RESYNC_PAGES << (PAGE_SHIFT-9)` = 128;
-  `biolist == NULL` → `giveup`.
-- [Phase 3] `git describe HEAD` / `make kernelversion`: 6.18.53, branch
-  `pending-6.18`.
-- [Phase 3] 1/3 already ancestor (`0efabe6229dc6`); this commit is not
-  in HEAD.
-- [Phase 4] `b4 mbox` 21-message thread; Yu Kuai: yield still valuable;
-  applied to md-7.3.
-- [Phase 5] Caller: `md_register_thread(md_do_sync)` resync thread.
-- [Phase 6] Skip path present; context matches; expected clean apply.
-- [Phase 8] Failure: soft lockup 313s; severity CRITICAL.
-- UNVERIFIED: lore.kernel.org/stable search (HTTP 403). Does not change
-  the verdict.
+Record: `llbitmap_end_write` / `llbitmap_start_discard` use the same
+`offset + sectors - 1` pattern. This patch avoids calling them with 0.
+Legacy bitmap is safe via `while (sectors)`. No duplicate core skip
+already present (`rg` found no `if (!md_io_clone->sectors)`).
+
+===============================================================
+PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
+===============================================================
+
+**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
+
+Record: **Yes.**
+- Tree: `git describe HEAD` → `p-6.18-1-g03b85e06ca9bf`; `make
+  kernelversion` → **6.18.53**
+- `md_bitmap_start()` at `drivers/md/md.c:9261` calls `fn()` with no
+  empty-range check
+- `md_clone_bio()` at 9319 starts bitmap on every WRITE if bitmap
+  enabled, including `bio_sectors == 0`
+- `llbitmap_start_write()` at `md-llbitmap.c:1074` does `offset +
+  sectors - 1`
+- `raid5_bitmap_sector()` can set `*sectors = end - start` to 0 when the
+  mapped range is empty
+
+**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
+
+Record: **Minor conflicts / small extra hunk.**
+- Local `md_end_clone_io` uses `bio->bi_private` as `md_io_clone*`;
+  candidate uses `container_of` + reshape completion. The `sectors &&`
+  condition still matches.
+- Local already has `else start_time = 0` (patch 7).
+- Add the same `md_io_clone->sectors &&` guard to `md_free_cloned_bio()`
+  (6.18-only helper).
+
+**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
+
+Record: Empty-range skip **not** present. Series patches 6–9 **are**
+present. No alternate fix for this underflow.
+
+===============================================================
+PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+===============================================================
+
+**Step 7.1: SUBSYSTEM AND CRITICALITY**
+
+Record: **md (MD RAID bitmap accounting).** **IMPORTANT** — not core
+mm/vfs, but RAID+bitmap is widely used; mkfs on an MD device is a normal
+path. llbitmap is the lockless bitmap backend in 6.18.
+
+**Step 7.2: SUBSYSTEM ACTIVITY**
+
+Record: **Active** on this branch (llbitmap, clone accounting, this Yu
+Kuai series). Still a real bug in shipping 6.18 code, not a speculative
+cleanup.
+
+===============================================================
+PHASE 8: IMPACT AND RISK ASSESSMENT
+===============================================================
+
+**Step 8.1: WHO IS AFFECTED**
+
+Record: **MD users with a bitmap enabled**, especially **llbitmap**.
+Triggered by 0-sector WRITE/flush/FUA (mkfs.ext4) or raid5
+`bitmap_sector` mapping a request to an empty range. Config: `CONFIG_MD`
++ bitmap (llbitmap or classic).
+
+**Step 8.2: TRIGGER CONDITIONS**
+
+Record:
+- Common: mkfs.ext4 / empty flush+FUA on an MD array with bitmap
+- Also: raid5 geometry mapping to a zero bitmap range
+- Unprivileged user with write access to the array (typical admin/mkfs)
+- Not a narrow race; it is size==0 handling
+
+**Step 8.3: FAILURE MODE SEVERITY**
+
+Record:
+- llbitmap: unsigned wrap → enormous chunk/page walk, barriers, state
+  machine on invalid range → **hang, bitmap corruption, possible crash**
+- Classic bitmap: `while (sectors)` no-op, but start/end still run with
+  0; skip is still correct
+- Severity: **HIGH** (hang/corruption on a common mkfs path with
+  llbitmap)
+
+**Step 8.4: RISK-BENEFIT RATIO**
+
+Record:
+- **Benefit: high** — stops underflow/wrong bitmap updates on a real I/O
+  pattern
+- **Risk: very low** — ~7–10 lines, local to clone accounting, start/end
+  remain paired
+- **Ratio: strongly favors backport**
+
+===============================================================
+PHASE 9: FINAL SYNTHESIS
+===============================================================
+
+**Step 9.1: COMPILE THE EVIDENCE**
+
+**FOR:**
+- Real bug: 0-sector WRITE accounting into llbitmap underflow
+- Common trigger (mkfs.ext4 flush/FUA), Tested-by
+- Buggy path exists in this 6.18.53 tree (`md_bitmap_start`, llbitmap)
+- Small, obviously correct, no new API
+- Series patches 6–9 already here; this is the matching empty-range fix
+- MD RAID data-integrity relevant
+
+**AGAINST:**
+- Part of a larger reshape series (but this hunk is standalone)
+- `md_free_cloned_bio` needs the same `sectors` guard (small extra hunk)
+- Context differs slightly (`bi_private` vs `container_of`)
+
+**UNRESOLVED:**
+- Did not run mkfs.ext4 against this build
+- `b4 dig -c` had no mainline SHA in this clone; thread confirmed via
+  other archives
+- gnuweeb stable search was noisy, no dedicated nomination thread
+
+**Step 9.2: STABLE RULES CHECKLIST**
+
+1. Obviously correct and tested? **PASS** — paired start/end skip +
+   Tested-by
+2. Real bug affecting users? **PASS** — mkfs.ext4 0-sector WRITE +
+   llbitmap wrap
+3. Important (crash/corruption/hang)? **PASS** — HIGH (underflow walk /
+   bitmap corruption)
+4. Small and contained? **PASS** — one file, ~9 lines
+5. No new features/APIs? **PASS**
+6. Can apply to the local tree? **PASS** — logic matches; minor extra
+   hunk on `md_free_cloned_bio`
+
+**Step 9.3: EXCEPTION CATEGORIES**
+
+Record: Not an exception category. Ordinary important bug fix.
+
+**Step 9.4: DECISION**
+
+This tree already moved bitmap accounting into `md_clone_bio` and has
+llbitmap. Empty WRITEs still call `start_write(sectors == 0)`, which
+underflows llbitmap. The patch is the right, small fix and belongs on
+6.18.y.
+
+Verification:
+- [Phase 1] Tags: Tested-by Mykola Marzhan; Link msgid
+  20260802195038.164272-11 (v5 10/29); author Yu Kuai; no Fixes/Cc-
+  stable
+- [Phase 2] Diff: `md.c` only; skip empty start; gate end on `sectors`;
+  init `sectors = 0`; require `bio_sectors` before start
+- [Phase 2] Confirmed `llbitmap_start_write` uses `offset + sectors - 1`
+  at md-llbitmap.c:1079
+- [Phase 3] `git merge-base --is-ancestor cd5fc65338181 HEAD` → 0
+  (upper-layer bitmap in tree)
+- [Phase 3] llbitmap file present; intro `5ab829f1971dc` in history
+- [Phase 3] Series 6–9 already on this branch (`73881ff7`, `d81822fd`,
+  `930cc4f1`, `c55aa6c1`)
+- [Phase 3] No `skip bitmap accounting` commit in local `git log --
+  drivers/md/`
+- [Phase 4] Cover letter: empty bitmap ranges as accounting
+  prerequisite; v5 rebased so patch 10 does not need `prepare_range`
+- [Phase 4] lore.kernel.org 403; recovered via gnuweeb + openwall + IU
+- [Phase 4] No NAK in fetched cover/patch
+- [Phase 5] Callers: raid0/1/5/10/linear `md_account_bio`; userspace
+  block I/O
+- [Phase 5] Legacy `bitmap_start_write` is `while (sectors)` — llbitmap
+  is the underflow
+- [Phase 6] `git describe HEAD` = p-6.18-1-g03b85e06ca9bf; `make
+  kernelversion` = 6.18.53
+- [Phase 6] Current `md_bitmap_start` has no empty return;
+  `md_clone_bio` has no `bio_sectors` guard
+- [Phase 6] Backport: add same `sectors` check to `md_free_cloned_bio`
+  (raid5 reshape abort)
+- [Phase 8] Failure: unsigned wrap → huge llbitmap walk; severity HIGH
+- UNVERIFIED: live mkfs.ext4 reproduction; `b4 dig` match by commit SHA
 
 **YES**
 
- drivers/md/md.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/md/md.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index ce3bd127e3bb3..44f44219ed7fe 100644
+index 03d328506b285..ce3bd127e3bb3 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -9751,8 +9751,10 @@ void md_do_sync(struct md_thread *thread)
- 			 */
- 			md_new_event();
+@@ -9266,6 +9266,8 @@ static void md_bitmap_start(struct mddev *mddev,
+ 		mddev->pers->bitmap_sector(mddev, &md_io_clone->offset,
+ 					   &md_io_clone->sectors);
  
--		if (last_check + window > io_sectors || j == max_sectors)
-+		if (last_check + window > io_sectors || j == max_sectors) {
-+			cond_resched();
- 			continue;
-+		}
++	if (!md_io_clone->sectors)
++		return;
+ 	fn(mddev, md_io_clone->offset, md_io_clone->sectors);
+ }
  
- 		last_check = io_sectors;
- 	repeat:
+@@ -9284,7 +9286,8 @@ static void md_end_clone_io(struct bio *bio)
+ 	struct bio *orig_bio = md_io_clone->orig_bio;
+ 	struct mddev *mddev = md_io_clone->mddev;
+ 
+-	if (bio_data_dir(orig_bio) == WRITE && md_bitmap_enabled(mddev, false))
++	if (bio_data_dir(orig_bio) == WRITE && md_io_clone->sectors &&
++	    md_bitmap_enabled(mddev, false))
+ 		md_bitmap_end(mddev, md_io_clone);
+ 
+ 	if (bio->bi_status && !orig_bio->bi_status)
+@@ -9308,12 +9311,14 @@ static void md_clone_bio(struct mddev *mddev, struct bio **bio)
+ 	md_io_clone = container_of(clone, struct md_io_clone, bio_clone);
+ 	md_io_clone->orig_bio = *bio;
+ 	md_io_clone->mddev = mddev;
++	md_io_clone->sectors = 0;
+ 	if (blk_queue_io_stat(bdev->bd_disk->queue))
+ 		md_io_clone->start_time = bio_start_io_acct(*bio);
+ 	else
+ 		md_io_clone->start_time = 0;
+ 
+-	if (bio_data_dir(*bio) == WRITE && md_bitmap_enabled(mddev, false)) {
++	if (bio_data_dir(*bio) == WRITE && bio_sectors(*bio) &&
++	    md_bitmap_enabled(mddev, false)) {
+ 		md_io_clone->offset = (*bio)->bi_iter.bi_sector;
+ 		md_io_clone->sectors = bio_sectors(*bio);
+ 		md_io_clone->rw = op_stat_group(bio_op(*bio));
 -- 
 2.53.0
 
