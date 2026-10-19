@@ -1,57 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.217.51
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792424081;
-	b=yxRoxmOpSwjWCeqB6X+brWX2xW6KxOibrtLwfVitPRiL0XH0hJiQ5S3Zv62qT0AHgIsT
-	 HXRZ0cloQktolm4Ne0o/QcEtu9tWN4np3qWJKIdf20eQslgUmDBIMtjoBkS0+NJdDB+Vf
-	 NxdQHY/n/qT1arIY4Q8IMAMZXTT3Di9ymXJP35sK7emB4LKraandw12fwh6Oy63EIMWK7
-	 2H4rWowNcuKeIfbnx6dT7I9SSskXM6dCMpM8tOnM+qGkb35AEAz+t9JT0X/ObITGJPads
-	 tlEYmwcc+PDt1ze4tvsvBiE4inGGOGkDkvVawuVwz948VWYrnX+ogU0zSyU6GymjfMw==
+	t=1792438625;
+	b=Q8Ky7FgigFPdQVlCtqRwHxB8QtCeTP1+pUXX7DUNLxkimM/2JaadBpnkTmel9j60/SaL
+	 vp7mcgEUb7kUX4VL1bhli2pm2duKxS1MRl+PKvm+po8J4oNL5LXGAKQ7yVqjZhaQLfuHM
+	 lFkmg9zlpSpNHCi8dkCol9d5p5kk8QtL8hhDrpHs6XdhyJrjWuU4VZ6d4Db/N6RBTb30U
+	 PXHAajxYblOiczPJrB1a6Mm/tscrYEb16mA0G96u8dhzHAKEQzsV+rqDfVfr7wBp22IVR
+	 XQmchZKPBBCv400hjbIIJkYiPKicaFskmMYDVWEN5zJIyAjXATX45I0VSldSz38kWFQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792424081;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=6u8MkbRgPXGIfcuMuQWHOghF0MVIXMQ778vLUgvR7i0=;
-	b=R/GwYYS3h8i7xbIwrqcm5KqggZMF2HhIu89jpJg4c6Qy2nPTXYedLQYHZG9fG4Ww9vxS
-	 2XEqCrEbLizd0dyTFNWHdpaqmgobV9cfYj/ocIgihFkIyzZJccRkOArXLNIgHHRxRBu/f
-	 ny496vNIH11Ft67MuS5+9ex/skSXxumTQrS8gEZIA/kMELf0JVbWMTZoc35m9DSUjKjx6
-	 AXrdOWGM0pBdvdNDERrLSsjqcRfNbX0zqhFmQvkGnCnyPQKhzbQmAcw8Z9o963tlWbOO8
-	 G3GI+mx/plA4da+SAwTJyXo4ZmIAIG0aDqpnIZd+ClprlqmNJwhDttCxZatDkb5+RLg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792438625;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=FvmBdp1Dmbv2yJxDADj49tSTGQ/TMgCg8VxwxHkXYlo=;
+	b=RFaVWo1mL9BUumV/70QOTtOm/2cAtgaPgQn7wsoEc0EIvljC9PN4OEwTsHqXp87aw8iL
+	 ShttOthg0O8Wt9wsCDfPqTydFl7vHSIDyjuqDQIN4ELcpBddNfdAFVJIbH8YsjtUddwUx
+	 MpR6mkwT1ABzW0cbKfnS03Uw5ILab331tSFZ3csMu4i/zQveqJKu+p9VdNFFx/gcMKwMZ
+	 RafJve7SWs1gPEOP/H1Kb352G9AwXlvE6XhFRzLE7/FpR5esvY3TSdMBWsCrFZTPJTqUt
+	 Ol1fbyWkpGr48awGB0KEOWlDJfWEPg9NJ3VcamhNCkOh4AwZRscAGLBu/vabMCSgM4w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AJ6Q1djL;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=jw5RywPK;
+	arc=none smtp.remote-ip=209.85.217.51
+Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9273E606EFC7
-	for <linux-raid@vger.kernel.org>; Mon, 19 Oct 2026 15:34:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB381606A31D
+	for <linux-raid@vger.kernel.org>; Mon, 19 Oct 2026 19:37:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EB381606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AJ6Q1djL
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D16E1F0283C;
-	Mon, 19 Oct 2026 15:34:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792424080;
-	bh=6u8MkbRgPXGIfcuMuQWHOghF0MVIXMQ778vLUgvR7i0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=AJ6Q1djLUxOKz1JdY4s/YNgmzSs3q1CPmUZu88OChBwXyqqilFqAmMcpEfsrQaO6L
-	 SrNh+D04CfBmm14XWvyYS/173szA3y7q8VZq1PRIJKRXmLzZoOgiCnYQE/cDGXmrnn
-	 1CEIP0AVjhG9Te3wtGu9uk6cEWOFgyhlVYEjXsOLdlLSNT5tsscb76F3pSiS3iv/fv
-	 CmUqZRi2Zbgn7JSiqWwvIxWTLM+dtql8P7MneSCZhFT9v4GPmA1T4iWhQlQOwmaIsN
-	 ByS0dHH8NId32dVs68uFLoPqPQkfXWQWagbZoUVSwHR1CnmGkL+nxTyq19VMxM4gcG
-	 YfSp8dHdzdTxQ==
-Message-ID: <sashiko-outbox-177759@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH AUTOSEL 6.18] md: skip bitmap accounting for empty write
- ranges
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sasha Levin" <sashal@kernel.org>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20261019135441.1420968-307-sashal@kernel.org>
-References: <20261019135441.1420968-1-sashal@kernel.org>
- <20261019135441.1420968-307-sashal@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 19 Oct 2026 15:34:39 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=jw5RywPK
+Received: by mail-vs1-f51.google.com with SMTP id ada2fe7eead31-7cc0fb88c90so70553137.3
+        for <linux-raid@vger.kernel.org>; Mon, 19 Oct 2026 12:37:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792438624; x=1793043424; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=FvmBdp1Dmbv2yJxDADj49tSTGQ/TMgCg8VxwxHkXYlo=;
+        b=jw5RywPKPKu5GRuRcgskbWzYFCcD0g5ucpK/qpfpLuQnp1pSH1ynMYoeytWy48VM4k
+         suzFSX1RFLmCUJgW99Iynkwr4NE5nZtOuGbuBZ1GGdBE/QAsaWm4C8v1WVfTMeTEISFf
+         xqlXdHqwHYInPfjieQqVTCq2gdk4mlEqNuEiPo8oZLqmvY3sZiumaBaqNK3ZbeEPDeAa
+         vgVsgV4hVrmK4EL2oE64PxVWLGFXBTNcSNiLsQjX8OrL5PhKfpOKbzS93DG/nlvJx1RQ
+         UQ7E841Ph1Nv377dSka7PzCTVAM1Ib3FDg6lUs1St2SkzifXXjNFjEVEf4emzEtnEino
+         F2bA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792438624; x=1793043424;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=FvmBdp1Dmbv2yJxDADj49tSTGQ/TMgCg8VxwxHkXYlo=;
+        b=rq6b1xFmY86AvUJ3j2yM5syuylILnMjRLEURhSOAG5gaB2/Y4oklaplFpQytrH4nd+
+         CyfVEsvcYRmxRLcuBvsTM5npHb6e0LMkyUOiO+GaoZP4spSMlcPsnd9LskYHnbRSyl9j
+         8MHG0QB3ivo40CMpdg7OzUEbMgLEwPHJQFnvO4useYKuZ9wfXjLqI2ArV7oM/LdtNb2b
+         pwTWfspambWXE1GmJJK/cSKtuLNHnW3dRRAm9bXYKLiOLObD/wHAxeW8NVBkj9O9ylvb
+         sqarqk+ZOFWq69ZraYavUOq758RxwhmqT/xgg75+vHIg/nhx9DkRbRC6dPKwUeHGqJfA
+         v3jg==
+X-Forwarded-Encrypted: i=1; AKwUvBzM28cJ8a1G8QqxtDMnqRdjHt8uKbiMuq0uBjt/PKXzK6kyzDhMnpseZT2S4r0/TUNh19cE1SCsDxDl@vger.kernel.org
+X-Gm-Message-State: AFq9FYLSrMvT0AZEs85LNtbo0x2MgkIIW0K1vs3zU181LhRjnf/Ut0+x
+	hP2PvwwRCYNtBJOuzJQdWJcjRSryoXGsjKp1+LmhOeT5AHKGnlAGMuIr
+X-Gm-Gg: AYBFou3xrhfsiQsKcqrtPLhSYNM7Coarq8ePwwSM8PgiKcfkvIxdjnYD/tlqs5KQDgA
+	mHqjw79TdqxmnvS9n0wDxY8bMBJETAktgva7xoQch0cK2CrF8itsUbKh+TqRZoCLVNkj7Pg7Cwf
+	mYih8keKxaW4aG3lohykoaWYqJpEo4asH/CsQlU4rTazNBhSZatSgaZBsmxOd1DZr4HW7RtTykM
+	ZH2VExuNyXHR1J/8OuQgvZ3CZtNcHyoG7G3JjuKl1fbv04vgKgaSKlGSyXRDHAIorjeXOuh97AB
+	UaVkxV6NcxOrMuP9q8WQEr7Rulc1nP3e5hGSKrcP7cDBFl01ejouxvucaprSj97v55KR1UaP2ro
+	RwLRyWNjRHHYL9uF9YSeBkMQ/duQ1y4osjNEeLCO9TVzJ8ZhdUC+7/rORk5UwIcN1Y07qvbBccD
+	/Ralxjq+OTtTrBm9UbU3k4YxGzXghC3xYJYveGe7hV/AQQr6hAk0q7xjsf2Gq7k0m9Bz1Nf4WWZ
+	JTuGN5u7vGLW0VsnYqJINsAtvM3xuzTWt70IMo2p8GldiXcvJ5n7eWurInMVpBLMBSereLJy/sp
+	4FYSZDHdOmDYSuCo/Uk=
+X-Received: by 2002:a05:6102:1624:b0:7c3:99a3:314e with SMTP id ada2fe7eead31-7cc364a294amr1425709137.0.1792438623550;
+        Mon, 19 Oct 2026 12:37:03 -0700 (PDT)
+Received: from localhost.localdomain ([132.170.205.109])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-990bb335be9sm1057850241.3.2026.10.19.12.37.02
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Mon, 19 Oct 2026 12:37:03 -0700 (PDT)
+From: Sanan Hasanov <sanan.hasanou@gmail.com>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	syzbot+0b672810a475890d3636@syzkaller.appspotmail.com,
+	Sanan Hasanov <sanan.hasanov@ucf.edu>,
+	stable@vger.kernel.org
+Subject: [PATCH] md: don't allow changing the personality of a failed array
+Date: Mon, 19 Oct 2026 15:36:59 -0400
+Message-ID: <20261019193659.31381-1-sanan.hasanou@gmail.com>
+X-Mailer: git-send-email 2.48.1
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -60,118 +99,73 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] md: missing sectors check in md_free_cloned_bio() before md_bitmap=
-_end()
---
+From: Sanan Hasanov <sanan.hasanov@ucf.edu>
 
-commit 6836aa7ecbc70ba01261dda2960c8f2c78bf3f55
-Author: Yu Kuai <yukuai@fygo.io>
+level_store() lets userspace switch a running array to another
+personality through the takeover path, and then ignores the return value
+of pers->run(). Takeover is expected to always produce something the new
+personality can run, but that no longer holds for an array that has
+already failed: since commit 57668f0a4cc4 ("raid5: introduce MD_BROKEN"),
+has_failed() treats MD_BROKEN as fatal, so raid5_run() refuses such an
+array. It then frees the new conf and clears mddev->private, while
+level_store() has already installed the raid5 personality and freed the
+old one. The array is left with mddev->pers == &raid5_personality and
+mddev->private == NULL, and the next operation that reaches the
+personality dereferences NULL:
 
-md: skip bitmap accounting for empty write ranges
+  md/raid0md0: Disk failure on loop0 detected, failing array.
+  md/raid:md0: not enough operational devices (1/3 failed)
+  md/raid:md0: failed to run raid set.
+  KASAN: null-ptr-deref in range [0x0000000000000060-0x0000000000000067]
+  RIP: 0010:kasan_byte_accessible+0x12/0x30 mm/kasan/generic.c:210
+  Call Trace:
+   spin_lock_irq include/linux/spinlock_rt.h:96 [inline]
+   lock_all_device_hash_locks_irq drivers/md/raid5.c:107 [inline]
+   raid5_quiesce+0xc2/0x8a0 drivers/md/raid5.c
+   __md_stop_writes+0xeb/0x4b0 drivers/md/md.c:7038
+   md_set_readonly+0x330/0x560 drivers/md/md.c:7138
+   array_state_store+0x584/0xe90 drivers/md/md.c:4720
 
-This commit skips md bitmap start_write() and end_write() accounting when a
-write bio has zero sectors or when personality bitmap mapping turns the bio
-into an empty bitmap range.
+syzbot gets there by failing a member of a raid0 array, which sets
+MD_BROKEN, then writing "raid5" to md/level and "readonly" to
+md/array_state. The same applies to a two-disk raid1 array whose last
+working device has failed: raid1_error() sets MD_BROKEN but leaves
+degraded at 1, so raid5_takeover_raid1() still accepts it.
 
-Link: https://patch.msgid.link/20260802195038.164272-11-yukuai@kernel.org
+MD_BROKEN is never cleared while the array is running, and a failed
+array can't be turned into a working one by changing its level. Refuse
+the change up front with -EBUSY, which is also what state_store()
+returns when failing a device leaves the array broken.
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 03d328506b285..ce3bd127e3bb3 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -9266,6 +9266,8 @@ static void md_bitmap_start(struct mddev *mddev,
->  		mddev->pers->bitmap_sector(mddev, &md_io_clone->offset,
->  					   &md_io_clone->sectors);
-> =20
-> +	if (!md_io_clone->sectors)
-> +		return;
->  	fn(mddev, md_io_clone->offset, md_io_clone->sectors);
->  }
-> =20
-> @@ -9284,7 +9286,8 @@ static void md_end_clone_io(struct bio *bio)
->  	struct bio *orig_bio =3D md_io_clone->orig_bio;
->  	struct mddev *mddev =3D md_io_clone->mddev;
-> =20
-> -	if (bio_data_dir(orig_bio) =3D=3D WRITE && md_bitmap_enabled(mddev, fal=
-se))
-> +	if (bio_data_dir(orig_bio) =3D=3D WRITE && md_io_clone->sectors &&
-> +	    md_bitmap_enabled(mddev, false))
->  		md_bitmap_end(mddev, md_io_clone);
-> =20
->  	if (bio->bi_status && !orig_bio->bi_status)
-> @@ -9308,12 +9311,14 @@ static void md_clone_bio(struct mddev *mddev, str=
-uct bio **bio)
->  	md_io_clone =3D container_of(clone, struct md_io_clone, bio_clone);
->  	md_io_clone->orig_bio =3D *bio;
->  	md_io_clone->mddev =3D mddev;
-> +	md_io_clone->sectors =3D 0;
->  	if (blk_queue_io_stat(bdev->bd_disk->queue))
->  		md_io_clone->start_time =3D bio_start_io_acct(*bio);
->  	else
->  		md_io_clone->start_time =3D 0;
-> =20
-> -	if (bio_data_dir(*bio) =3D=3D WRITE && md_bitmap_enabled(mddev, false))=
- {
-> +	if (bio_data_dir(*bio) =3D=3D WRITE && bio_sectors(*bio) &&
-> +	    md_bitmap_enabled(mddev, false)) {
->  		md_io_clone->offset =3D (*bio)->bi_iter.bi_sector;
->  		md_io_clone->sectors =3D bio_sectors(*bio);
->  		md_io_clone->rw =3D op_stat_group(bio_op(*bio));
+Fixes: 57668f0a4cc4 ("raid5: introduce MD_BROKEN")
+Reported-by: syzbot+0b672810a475890d3636@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=0b672810a475890d3636
+Cc: stable@vger.kernel.org
+Signed-off-by: Sanan Hasanov <sanan.hasanov@ucf.edu>
+---
+ drivers/md/md.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-[Severity: High]
-Should md_free_cloned_bio() in drivers/md/md.c also check
-md_io_clone->sectors before calling md_bitmap_end(), just like
-md_end_clone_io() does here?
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 680b34a63c..367b183f1e 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4088,6 +4088,12 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
+ 	    mddev->sysfs_active)
+ 		goto out_unlock;
+ 
++	if (test_bit(MD_BROKEN, &mddev->flags)) {
++		pr_warn("md: %s: cannot change personality of a failed array\n",
++			mdname(mddev));
++		goto out_unlock;
++	}
++
+ 	rv = -EINVAL;
+ 	if (!mddev->pers->quiesce) {
+ 		pr_warn("md: %s: %s does not support online personality change\n",
+-- 
+2.34.1
 
-In drivers/md/md.c, md_free_cloned_bio() still has:
-
-	if (bio_data_dir(orig_bio) =3D=3D WRITE && md_bitmap_enabled(mddev, false))
-		md_bitmap_end(mddev, md_io_clone);
-
-In raid5_make_request() -> md_account_bio() -> md_clone_bio(), the bio is
-cloned before calling make_stripe_request(). If make_stripe_request()
-returns STRIPE_WAIT_RESHAPE when a reshape is interrupted,
-raid5_make_request() aborts the cloned bio via md_free_cloned_bio():
-
-	if (res =3D=3D STRIPE_WAIT_RESHAPE) {
-		md_free_cloned_bio(bi);
-		return false;
-	}
-
-With this patch, there are two cases where md_bitmap_start() is skipped
-with md_io_clone->sectors =3D=3D 0:
-
-1. When bio_sectors(*bio) =3D=3D 0 (for example, a zero-sector REQ_OP_WRITE=
- |
-REQ_FUA bio, or a zero-sector REQ_OP_WRITE | REQ_PREFLUSH bio falling
-through log_handle_flush_request() with -EAGAIN), md_clone_bio() sets
-md_io_clone->sectors =3D 0 and skips initializing md_io_clone->offset and
-md_io_clone->rw (leaving stale contents from the mddev->io_clone_set
-mempool) and skips calling md_bitmap_start().
-
-2. When bio_sectors(*bio) !=3D 0, but mddev->pers->bitmap_sector()
-(raid5_bitmap_sector()) maps the range to md_io_clone->sectors =3D=3D 0,
-md_bitmap_start() returns early without calling start_write() or
-start_discard().
-
-If make_stripe_request() then returns STRIPE_WAIT_RESHAPE,
-md_free_cloned_bio() will unconditionally call md_bitmap_end(mddev,
-md_io_clone) with md_io_clone->sectors =3D=3D 0 (and uninitialized offset a=
-nd
-rw in the first case). For llbitmap, llbitmap_end_write() and
-llbitmap_end_discard() compute:
-
-	unsigned long end =3D (offset + sectors - 1) >> llbitmap->chunkshift;
-
-When sectors =3D=3D 0, if offset =3D=3D 0 this underflows to ULONG_MAX and =
-walks
-llbitmap->pctl[] out of bounds, or if offset > 0 it calls
-llbitmap_release_barrier() to drop page barrier references on
-pctl->active that were never raised.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261019135441.1420=
-968-307-sashal@kernel.org?part=3D1
