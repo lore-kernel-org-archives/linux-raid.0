@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F7E25D8C9E;
-	Mon, 19 Oct 2026 14:02:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAE5253F9AB;
+	Mon, 19 Oct 2026 14:05:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418537; cv=none; b=DF0JhsAVkhf+l9tvzGidpank1VFOvDFzhe3kFP/Vby2Ie0zU8D2i5r/Qcj+JfAY92aYXfkTNpFxjiYbWJpdAboB1TBPpg10kprYoFhCWYj4ogwFKncltclqdsuo2qBVAqacAF4VAZgYuqlsyBDQ13av+OzyOZYpd7AfWmk0MLKc=
+	t=1792418722; cv=none; b=YENZhJtmEqF5DmFr1KVLe5YvgB78rCkaiDsE821gX6orcg3gEGGEYj+xqOb/JmPXxo3c7dagYIzlOUHOxEREOSbzpkI+nLDinUSZPQisoQbk62ncXpEa/L/SF0QYHl1xPjJSnyDHQgMN8kzH0V0owowy1oda6tmwYQm3vajCaus=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418537; c=relaxed/simple;
-	bh=KRjUi9m61hUJXhNp30prZZoG7F0ZzDqJJcR4H4iHVbo=;
+	s=arc-20240116; t=1792418722; c=relaxed/simple;
+	bh=fpKt3M6Yb4rAuiuMk+ukdm6y9Uzj2EfKJngLWbZqIMs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uIGxncjr1co1JkjMk80Ccakyq139bBQ8Xs/wfrWBtQdGP9+GLQYEeBPZPrfblrbUd6C5yjQ8hoCyrUu5qnCjP9xHwHsVEtrCwrNMzDCcrBSGYdobjUzTKNGAUz85UrDQfUwrwqCAdn7TMwVGwj3ndGjBBlFHkypr8ZOOa1RvkYY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UBwVAnRo; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=NKY1lUzX+odaAmGWP54ybpw9o+tYTg5vpRknxQTt+N8AUEDzX4CEri/KunHDNBzp2QYd6br9C2k1nBrR4KcKxpsLqhG9icOe8EjbmCQvxtYDOb65l78gBij/uzwMAsnHd3mSSRXd6Mu9i7oUvm4Gfn8XD1CFBZNVLta5/y8zZ8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nk2nKAAA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UBwVAnRo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E2121F000CA;
-	Mon, 19 Oct 2026 14:02:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nk2nKAAA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 578201F000C5;
+	Mon, 19 Oct 2026 14:05:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418533;
-	bh=VEX4lCPK+/AocbyN8CKqcWs4cMNwySrK0OZC2wVRcIw=;
+	s=k20260515; t=1792418719;
+	bh=+hcH1HiLgHTHuCm0DvzlFDDPUk0wpg9BqkPllEirZrE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=UBwVAnRonuuRqen00SLTzgAg2/Rfcq+nM4Gr7n4mUhzT7qv/Ds4QMR+K5uRYRpiBE
-	 xdVk+7qhiQjhthTiZDmvve5MwAcHvZ6++QyWJpFeFG/nrnDXGTDEzg7YjQWfR9n+hb
-	 V1U0g+2E205VThL2TvAiu9KkwYly+f+SP7tFgNrkfaxNL7NWjiwVyBs7Ar13kKs0LV
-	 AkExVR0hsPAQl70CIUjcwPg/4zZ4Wv5TjKBCVA368BENHm3kxYf7b8ZuGca5nCZMuk
-	 IuG2QynIaY8dmxnljwftaOmDWlXUS+Pm+D8eqjpcaQilkJHsXOKES3I5Gp4lVqh5Ho
-	 AQTNvrpdsoXdQ==
+	b=nk2nKAAAfJRqHb3yMGbpYrSmumy52OMwELcgJ3AUd9jFnXJdOifg17KGD+dMJmoSt
+	 dlVVh7wRVY8dTc/lfjTTDmMGWoXYZeoXZjLBTUoDVoSH/48rHKMBBB5epixVDKZgYf
+	 c+7K1zdZSEaqasmCrzaQ2AigjMsCJ8ESsNxUKWziIk3pIS8mg3GMPx+KT+mKasFtw4
+	 x4Tj6Ipkqf446IvKVi4nTxzOxERaKDCdFM3xme3csoIlX2rXbfe4/DVelSDgM0RjMz
+	 c+aO86Nmv7l3Z4M9ZAfD9nF98nIqJcJCk29lfa6FZQrEZKoDS4k4bnkLWuVq4xwXFs
+	 pkX2Qx0POPtvQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Yu Kuai <yukuai@fygo.io>,
-	Mykola Marzhan <mykola@meshstor.io>,
+Cc: Genjian Zhang <zhanggenjian@kylinos.cn>,
+	Yu Kuai <yukuai@fygo.io>,
 	Sasha Levin <sashal@kernel.org>,
 	song@kernel.org,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] md/raid5: reject zero-sector reshape chunks
-Date: Mon, 19 Oct 2026 09:50:06 -0400
-Message-ID: <20261019135441.1420968-315-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] md/raid5: complete discard bios while reshape is active
+Date: Mon, 19 Oct 2026 09:52:18 -0400
+Message-ID: <20261019135441.1420968-447-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -53,95 +53,70 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Yu Kuai <yukuai@fygo.io>
+From: Genjian Zhang <zhanggenjian@kylinos.cn>
 
-[ Upstream commit a41bb2ee1aca486853e84920565e50c15f86fa5d ]
+[ Upstream commit 85764f475f3b3abd956bf8eaeaa643b367676cf4 ]
 
-Sashiko reported that RAID5 can accept a reshape chunk size that becomes
-zero sectors. chunk_size_store() stores the sysfs byte value as n >> 9, so
-writing a value below 512 bytes sets mddev->new_chunk_sectors to zero.
-RAID5 then accepted that pending reshape geometry and raid5_start_reshape()
-installed it into conf->chunk_sectors, letting reshape code divide by zero.
+make_discard_request() returns without completing the bio when reshape
+is in progress. Discard callers block in submit_bio_wait()
+waiting for a completion that never arrives.  The caller hangs in
+uninterruptible sleep, and this does not resolve when reshape finishes.
 
-Reject zero-sector chunks both in check_reshape(), where normal sysfs
-requests are validated, and in raid5_start_reshape(), so assembly/resume
-paths also cannot install zero chunk geometry.
+Complete the bio with BLK_STS_AGAIN so userspace can retry after reshape,
+consistent with the existing policy of not processing discard during
+reshape.
 
-Test script: in QEMU, create a plain three-disk RAID5 array with 64K
-chunks, write/read back a small pattern, write 1 to
-/sys/block/md0/md/chunk_size, add a fourth disk, and run mdadm --grow
---raid-devices=4 --backup-file=... . The script scans dmesg for divide
-error/Oops/KASAN signatures.
+Tested on a loop-backed RAID5 array during mdadm --grow: without this
+patch, blkdiscard hangs in bio_await() and remains in uninterruptible
+sleep after md reports "reshape done"; with this patch it returns
+-EAGAIN instead.
 
-Bad kernel, eb29914412c3:
-
-  echo 1 > /sys/block/md0/md/chunk_size
-  mdadm --grow /dev/md0 --raid-devices=4 --backup-file=/root/md0-grow.bak
-
-  Oops: divide error: 0000 [#1] SMP KASAN NOPTI
-  RIP: raid5_get_active_stripe+0x863/0xc10
-  Call Trace:
-   raid5_sync_request
-   md_do_sync
-   md_thread
-  Kernel panic - not syncing: Fatal exception
-
-Fixed kernel: echo 1 > /sys/block/md0/md/chunk_size bash: echo: write
-error: Invalid argument chunk_write_rc=1 grow_rc=skipped RESULT:
-REJECTED_ZERO_CHUNK_NO_OOPS
-
-Tested-by: Mykola Marzhan <mykola@meshstor.io>
-Link: https://patch.msgid.link/20260802195038.164272-5-yukuai@kernel.org
+Signed-off-by: Genjian Zhang <zhanggenjian@kylinos.cn>
+Reviewed-by: Yu Kuai <yukuai@fygo.io>
+Link: https://patch.msgid.link/20260711161326.962336-1-zhanggenjian@126.com
 Signed-off-by: Yu Kuai <yukuai@fygo.io>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-This is a **5-line RAID5 input-validation fix** for a divide-by-zero
-panic during reshape. The local tree is **6.18.53** (`pending-6.18`);
-the buggy path is present and the patch applies.
+This tree is **6.1.188**. The reshape discard hang is present here; the
+fix is a small completion of an otherwise leaked bio.
 
 ===============================================================
 PHASE 1: COMMIT MESSAGE FORENSICS
 ===============================================================
 
 Step 1.1: PARSE THE SUBJECT LINE
-Record: **[md/raid5] [reject] reject zero-sector reshape chunks**
+Record: `[md/raid5] [complete] complete discard bios while reshape is
+active`
 
 Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
 Record:
-- **Tested-by:** Mykola Marzhan `<mykola@meshstor.io>` (independent QEMU
-  reproduction)
-- **Link:**
-  `https://patch.msgid.link/20260802195038.164272-5-yukuai@kernel.org`
-  (v5 04/29)
-- **Signed-off-by:** Yu Kuai `<yukuai@fygo.io>` (MD RAID co-maintainer)
-- No **Fixes:**, **Reported-by:**, **Cc: stable**, **Reviewed-by**, or
-  **Acked-by** on the committed message (absence of Fixes/Cc:stable is
-  expected for this review)
-- Body names **Sashiko** as the reporter (test harness, not syzbot)
-- Bad-kernel SHA cited: `eb29914412c3`
+- Signed-off-by: Genjian Zhang <zhanggenjian@kylinos.cn> (author)
+- Reviewed-by: Yu Kuai <yukuai@fygo.io> (applied the patch to md-7.3)
+- Link:
+  https://patch.msgid.link/20260711161326.962336-1-zhanggenjian@126.com
+- Signed-off-by: Yu Kuai <yukuai@fygo.io> (maintainer tree)
+- No Fixes: tag (expected)
+- No Cc: stable (expected)
+- No Reported-by / Tested-by / Acked-by
+- Ignore pipeline SOBs
 
 Step 1.3: ANALYZE THE COMMIT BODY TEXT
 Record:
-- **Bug:** `chunk_size_store()` does `n >> 9`. A sysfs write below 512
-  bytes stores `mddev->new_chunk_sectors = 0`. RAID5 accepts that
-  geometry; `raid5_start_reshape()` copies it into
-  `conf->chunk_sectors`.
-- **Symptom:** `Oops: divide error` in `raid5_get_active_stripe`, call
-  chain `raid5_sync_request` → `md_do_sync` → `md_thread`, then **kernel
-  panic**.
-- **Trigger:** RAID5 array, `echo 1 > /sys/block/md0/md/chunk_size`,
-  then `mdadm --grow --raid-devices=4`.
-- **Fix:** return `-EINVAL` in `check_reshape()` and
-  `raid5_start_reshape()` when `new_chunk_sectors` is zero.
-- **Fixed result:** sysfs write returns `Invalid argument`; grow is
-  skipped; no oops.
+- Bug: `make_discard_request()` returns without `bio_endio()` when
+  `mddev->reshape_position != MaxSector`.
+- Symptom: discard callers (`submit_bio_wait()` / `blkdiscard`) sleep in
+  D-state forever. Hang survives reshape completion.
+- Root cause: early return that skips completion; the bio is never
+  finished.
+- Fix: complete with `BLK_STS_AGAIN` so userspace gets `-EAGAIN` and can
+  retry after reshape.
+- Author tested loop-backed RAID5 during `mdadm --grow`.
 
 Step 1.4: DETECT HIDDEN BUG FIXES
-Record: Not hidden. Explicit panic fix with a reproduction and a
-before/after result.
+Record: Not hidden. This is an explicit hang fix (bio never completed).
 
 ===============================================================
 PHASE 2: DIFF ANALYSIS - LINE BY LINE
@@ -149,35 +124,42 @@ PHASE 2: DIFF ANALYSIS - LINE BY LINE
 
 Step 2.1: INVENTORY THE CHANGES
 Record:
-- **File:** `drivers/md/raid5.c` only (**+5 / −0**)
-- **Functions:** `check_reshape()`, `raid5_start_reshape()`
-- **Scope:** single-file surgical validation
+- File: `drivers/md/raid5.c` only
+- Scope: surgical, one function (`make_discard_request`)
+- Candidate form: early `return` → `goto complete_again`; success-path
+  `bio_endio` gets an explicit `return`; new label calls
+  `bio_endio_status(bi, BLK_STS_AGAIN)`
+- Mailing-list v1 (what Yu Kuai applied): 3 insertions / 1 deletion,
+  inline `bio_endio_status` before `return`. Same behavior.
 
 Step 2.2: UNDERSTAND THE CODE FLOW CHANGE
 Record:
-- **Hunk 1 (`check_reshape`):** after `has_failed()`, add `if
-  (!mddev->new_chunk_sectors) return -EINVAL`. Sysfs/`mdadm` reshape
-  checks that previously accepted 0 now fail. `chunk_size_store()` then
-  restores `new_chunk_sectors` to the live chunk size.
-- **Hunk 2 (`raid5_start_reshape`):** after `MD_RECOVERY_RUNNING` busy-
-  check, same reject. Covers start-reshape, assembly, and resume so zero
-  geometry cannot be installed into `conf->chunk_sectors`.
+- Before: reshape active → return, bio left outstanding.
+- After: reshape active → complete bio with `BLK_STS_AGAIN`.
+- Path: discard submit during reshape (admin `blkdiscard` / `fstrim` /
+  FS discard).
+- Success path unchanged (`bio_endio(bi)` still runs).
 
 Step 2.3: IDENTIFY THE BUG MECHANISM
-Record: **[Logic / correctness + divide-by-zero]**
-`raid5_check_reshape()` only validates chunk size when `new_chunk > 0`,
-so **0 skips the power-of-two / PAGE_SIZE checks**. `check_reshape()`
-then treats `0 != current chunk` as a real reshape.
-`raid5_start_reshape()` does `conf->chunk_sectors =
-mddev->new_chunk_sectors`. `stripe_set_idx()` / `raid5_compute_sector()`
-then `sector_div(..., conf->chunk_sectors)` with divisor 0.
+Record:
+- Category: logic / resource-completion bug → uninterruptible hang
+- Mechanism: bio remaining count never reaches zero; `submit_bio_wait()`
+  sits in `wait_for_completion_io()`.
+- Fix: complete the bio with a retryable status instead of dropping it.
 
 Step 2.4: ASSESS THE FIX QUALITY
-Record: Obviously correct. Two `-EINVAL` guards, no API/locking/data-
-structure change. Regression risk is rejecting a reshape that previously
-panics. Normal grow does not use chunk size 0: `setup_conf()` already
-requires a non-zero chunk, and running arrays keep `new_chunk_sectors ==
-chunk_sectors`.
+Record:
+- Obviously correct: every bio must be completed; this path did not.
+- Minimal: a few lines, one function.
+- Regression: callers see `-EAGAIN` instead of hanging.
+  `blkdev_issue_discard()` maps `-EOPNOTSUPP` to success, so
+  `BLK_STS_NOTSUPP` would lie; `BLK_STS_AGAIN` is the right retry
+  signal. Header comment says `BLK_STS_AGAIN` is for NOWAIT; maintainer
+  still accepted this, and the author showed `NOTSUPP` would look like a
+  successful discard.
+- Red flags: none on the hang fix itself. Helper `bio_endio_status()` is
+  missing in 6.1 (backport uses existing `bio->bi_status` +
+  `bio_endio()`).
 
 ===============================================================
 PHASE 3: GIT HISTORY INVESTIGATION
@@ -185,38 +167,40 @@ PHASE 3: GIT HISTORY INVESTIGATION
 
 Step 3.1: BLAME THE CHANGED LINES
 Record:
-- Zero-chunk reject in **`setup_conf()`** since **Andre Noll, 2009**
-  (`664e7c413f1e9`) — array *start* is safe.
-- `raid5_check_reshape()` `if (new_chunk > 0)` hole since **Neil Brown,
-  2009** (`b3546035277847`).
-- `chunk_size_store()` `n >> 9` since **2009**.
-- `conf->chunk_sectors = mddev->new_chunk_sectors` in
-  `raid5_start_reshape()` since **2009** (`09c9e5fa1b93ad`).
-- Bug is long-standing, not new 6.18 code.
+- Introducer: `620125f2bf8ff0` “MD: raid5 trim support” (Shaohua Li,
+  2012-10-11).
+- The skip-without-complete has been in tree since RAID5 discard was
+  added.
+- Present in this 6.1 checkout at `drivers/md/raid5.c:5809-5811`.
 
 Step 3.2: FOLLOW THE FIXES: TAG
-Record: No Fixes: tag. Introducer is the 2009 `n >> 9` store plus the
-`new_chunk > 0` skip, both in this tree.
+Record: No Fixes: tag. Introducer confirmed via blame + `git merge-base
+--is-ancestor 620125f2bf8ff0 HEAD`.
 
 Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES
 Record:
-- This tree **already has** series patch 05: `02c10581866d0 md/raid5:
-  round bitmap stripes with sector division` (upstream `17ea021ae7498`).
-- This commit (series 04, `a41bb2ee1aca4`) is **not** an ancestor of
-  HEAD.
-- Cover letter: first five patches are **standalone** RAID5/llbitmap
-  correctness fixes. 04 does not depend on 05; 05 being present does not
-  replace 04.
+- Recent `raid5.c` work is other hang/lockup fixes, not this discard
+  skip.
+- `git log --grep='complete discard'` / `'discard bios while reshape'`
+  on `drivers/md/`: not in this tree.
+- Standalone patch (not `N/M`).
 
 Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS
-Record: Yu Kuai is listed in MAINTAINERS as **SOFTWARE RAID** co-
-maintainer with Song Liu. Frequent `drivers/md/raid5.c` contributor.
-Weight: high.
+Record:
+- Genjian Zhang: not an MD regular in this tree.
+- Yu Kuai: frequent MD contributor here (`md/raid5: account discard IO`,
+  `fix IO hang when array is broken with IO inflight`, etc.) and applied
+  this to md-7.3.
 
 Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS
-Record: None. Adds two comparisons on existing
-`mddev->new_chunk_sectors`. `git apply --check` of `a41bb2ee1aca4`
-**succeeded** (hunks at 8445 and 8490, offset −103).
+Record:
+- Functional dependency: none. Completing the bio does not need later
+  RAID5 refactoring.
+- `bio_endio_status()` is absent in 6.1; equivalent is already used
+  (`bio_wouldblock_error()`, `bio->bi_status = ...; bio_endio()`).
+- `raid5_discard_limits()` is context from later mainline, not used by
+  the fix. Not in 6.1.
+- Applies standalone with a 2-line helper substitution.
 
 ===============================================================
 PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
@@ -224,136 +208,164 @@ PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
 Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION
 Record:
-- **b4 dig -c a41bb2ee1aca4:** `[PATCH v5 04/29] md/raid5: reject zero-
-  sector reshape chunks` —
-  `https://patch.msgid.link/20260802195038.164272-5-yukuai@kernel.org`
-- Series: **v5 of 29**, “md: improve lockless bitmap reshape support”
-- This check was **added in v3** (“Add patch 4 to reject zero-sector
-  RAID5 reshape chunks”); v4/v5 keep the same diff.
-- Cover letter: *“The first five patches fix standalone llbitmap and
-  RAID5 correctness issues that are independent of reshape.”*
-- No NAK found on patchew/LKML/openwall mirrors. lore.kernel.org fetch
-  returned **403**; discussion taken from b4, patchew, LKML IU, and
-  openwall.
+- Lore/msgid: `20260711161326.962336-1-zhanggenjian@126.com`
+- `b4 mbox`: 6-message thread, standalone v1 (no v2).
+- Recipients: Song Liu, Yu Kuai, linux-raid, linux-kernel.
+- Yu Kuai 2026-07-19: Reviewed-by; leave REQ_NOWAIT hang (nowait being
+  removed in mainline).
+- Yu Kuai 2026-07-31: “Rebase and applied to md-7.3”.
+- Author: no v2 for REQ_NOWAIT.
+- No NAK. No reviewer `Cc: stable`.
+- Sashiko bot: (1) REQ_NOWAIT also leaks the bio (pre-existing); (2)
+  `BLK_STS_AGAIN` on blocking bios.
+- Author: NOTSUPP is wrong (discard is supported, just not during
+  reshape); `blkdev_issue_discard()` treats `-EOPNOTSUPP` as success, so
+  NOTSUPP would report success with no discard; `BLK_STS_AGAIN` matches
+  raid10’s discard-during-reshape `-EAGAIN` policy.
 
 Step 4.2: CHECK WHO REVIEWED THE PATCH
-Record: **b4 dig -w** To/Cc: Song Liu, Li Nan, Xiao Ni, linux-raid,
-linux-kernel, Mykola Marzhan, Su Yue. Subsystem maintainers were on the
-original mail. No Reviewed-by on this specific commit; series v1 had
-Reviewed-by from Su Yue on other patches.
+Record: MD maintainers CC’d (Song Liu, Yu Kuai). Yu Kuai reviewed and
+applied. Song Liu did not comment in the thread.
 
 Step 4.3: SEARCH FOR THE BUG REPORT
-Record: Reproduced in QEMU with an oops/panic log. **Tested-by** Mykola
-Marzhan. Not syzbot. Trigger is crafted (write `1` then grow) but the
-oops is real.
+Record: No bugzilla/syzbot. Author reproduced with `blkdiscard` during
+`mdadm --grow` on loop RAID5. Hang remained after “reshape done”.
 
 Step 4.4: CHECK FOR RELATED PATCHES AND SERIES
-Record: 29-patch llbitmap reshape series. **This patch is standalone
-(04/29).** Later patches add llbitmap reshape; they are not required for
-this reject.
+Record: Standalone. REQ_NOWAIT leak left unfixed on maintainer request
+(mainline nowait removal). In 6.1 that WARN_ON_ONCE return without
+`bio_endio` is still present; it is a separate, rarer path.
 
 Step 4.5: CHECK STABLE MAILING LIST HISTORY
-Record: No stable@ thread found for this subject. UNVERIFIED beyond web
-search (lore.kernel.org/stable also 403).
+Record: No stable-list discussion found for this subject. Absence of
+`Cc: stable` is expected for this review pipeline.
 
 ===============================================================
 PHASE 5: CODE SEMANTIC ANALYSIS
 ===============================================================
 
 Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF
-Record: `check_reshape()`, `raid5_start_reshape()`. Callers of the
-first: `raid5_check_reshape()`, `raid6_check_reshape()` (raid4/5/6
-`pers->check_reshape`).
+Record: `make_discard_request()` only.
 
 Step 5.2: TRACE CALLERS
 Record:
-- `check_reshape` via sysfs: `chunk_size_store()`, `layout_store()`,
-  `raid_disks_store` → `update_raid_disks()`, `action_store`
-  (“reshape”), plus ioctl/`md_check_recovery`.
-- `raid5_start_reshape`: `pers->start_reshape` from
-  action/ioctl/assembly when a reshape starts or is resumed.
-- Context: md thread / reconfig, not IRQ.
+- Only caller: `raid5_make_request()` when `bio_op(bi) ==
+  REQ_OP_DISCARD` (`drivers/md/raid5.c:6175-6178`).
+- After the call: `md_write_end(mddev)` always runs, so write accounting
+  stays balanced if the bio is completed with error.
+- Context: MD make_request from `submit_bio` / `submit_bio_wait`.
 
 Step 5.3: TRACE CALLEES
-Record: After the new checks, existing `check_stripe_cache()`,
-`has_failed()`, `resize_chunks()`, and geometry install. The dangerous
-callee is later `sector_div` on `conf->chunk_sectors`.
+Record: On the buggy skip path, no stripe work, no `bio_inc_remaining`,
+no bitmap. Completing the original bio is sufficient. Success path still
+ends with `bio_endio(bi)` after stripe setup.
 
 Step 5.4: FOLLOW THE CALL CHAIN
-Record (verified in this tree):
-1. `chunk_size_store()` (`drivers/md/md.c:4492`) `new_chunk_sectors = n
-   >> 9` (write `1` → 0).
-2. `raid5_check_reshape()` (`8793`) skips validation because `new_chunk
-   > 0` is false (`8805`).
-3. `check_reshape()` (`8436`) has **no** zero reject; `0 !=
-   chunk_sectors` so it does not take the “nothing to do” return.
-4. `mdadm --grow` → `raid5_start_reshape()` (`8533`)
-   `conf->chunk_sectors = mddev->new_chunk_sectors` (**0**).
-5. Reshape sync: `raid5_sync_request` → `raid5_get_active_stripe` →
-   `init_stripe` → `stripe_set_idx` (`3576`) **`sector_div(stripe,
-   sectors_per_chunk)` with 0** → divide error.
-
-Userspace-reachable via sysfs + mdadm; `chunk_size` is `S_IWUSR` (root).
+Record:
+```
+blkdiscard / FITRIM / FS discard
+  → blkdev_issue_discard() / sb_issue_discard()
+  → submit_bio_wait()  [wait_for_completion_io, uninterruptible]
+  → raid5_make_request()
+  → make_discard_request()
+  → return without bio_endio  [BUG]
+```
+Reachable from userspace on a RAID5/6 array with discard enabled. Needs
+admin (BLKDISCARD / fstrim), not an unprivileged syscall gadget.
 
 Step 5.5: SEARCH FOR SIMILAR PATTERNS
-Record: `setup_conf()` already rejects `!new_chunk_sectors` (`7524`).
-Reshape is the missing twin of that start-time check. `new_chunk_sectors
-= 0` elsewhere is array teardown (`md.c` reset), not a live RAID5
-reshape sentinel.
+Record:
+- Same file still has REQ_NOWAIT `WARN_ON_ONCE` then `return` without
+  completing (6.1-only leftover).
+- RAID10 already returns `-EAGAIN` for discard during reshape
+  (`raid10_handle_discard`, `drivers/md/raid10.c:1653-1654`) and
+  completes NOWAIT discards with `bio_wouldblock_error()`.
+- `raid5_make_request` already uses `bio_wouldblock_error()` for NOWAIT
+  vs reshape on normal I/O (`:6193-6201`). Discard skipped that pattern.
+
+No semcode MCP in this environment; callers/callees from `rg` + reading
+the functions.
 
 ===============================================================
 PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
 ===============================================================
 
 Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?
-Record: **Yes.** Tree is **v6.18.53 / pending-6.18** (`git describe`:
-`p-6.18-1-g03b85e06ca9bf`). `a41bb2ee1aca4` is **not** an ancestor of
-HEAD. Hole is at `check_reshape()` `8436` and `raid5_start_reshape()`
-`8480`; store is `md.c:4492`.
+Record: Yes.
+
+```5809:5811:drivers/md/raid5.c
+        if (mddev->reshape_position != MaxSector)
+                /* Skip discard while reshape is happening */
+                return;
+```
+
+- Tree: `p-6.1-11-g10bc6eb33d95f`, `make kernelversion` → 6.1.188.
+- Bug since 2012 (`620125f2bf8ff0`), ancestor of HEAD.
 
 Step 6.2: CHECK FOR BACKPORT COMPLICATIONS
-Record: **Clean apply** (`git apply --check` exit 0, offset −103 only).
-Insertion points match: after `has_failed()` and after
-`MD_RECOVERY_RUNNING`.
+Record: Needs a small backport, not a rework.
+- No `bio_endio_status()` in 6.1 → `bi->bi_status = BLK_STS_AGAIN;
+  bio_endio(bi);` (or `bio_wouldblock_error(bi)`).
+- No `raid5_discard_limits()` (later context only).
+- 6.1 still has the REQ_NOWAIT warning above the reshape check; leave it
+  (out of scope of this commit).
+- Expected difficulty: minor context/helper adjustment.
 
 Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE
-Record: No `zero-sector reshape` commit in this tree. Sibling 05 is
-present; it does not reject zero chunks. `setup_conf()` zero check does
-not cover reshape.
+Record: This hang is not fixed. Discard still disabled by default
+(`devices_handle_discard_safely = false`), but the hang exists whenever
+that param is set and discard is issued during reshape.
 
 ===============================================================
 PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 ===============================================================
 
 Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY
-Record: **md/raid5 (software RAID)** — **IMPORTANT**. RAID5 reshape is a
-production path (grow/shrink/layout change).
+Record: MD RAID5/6 (`drivers/md/raid5.c`). IMPORTANT: not core VFS/mm,
+but widely used for storage. RAID5 reshape (`mdadm --grow`) is a
+supported production operation.
 
 Step 7.2: ASSESS SUBSYSTEM ACTIVITY
-Record: Actively maintained (`raid5.c` still getting lock/bitmap/discard
-fixes). This hole is old (2009), not a new-feature bug.
+Record: Active in this tree (recent hang, lockup, discard accounting
+fixes). Yu Kuai is a regular MD committer here. Official maintainer in
+MAINTAINERS: Song Liu.
 
 ===============================================================
 PHASE 8: IMPACT AND RISK ASSESSMENT
 ===============================================================
 
 Step 8.1: DETERMINE WHO IS AFFECTED
-Record: **Driver-specific:** RAID4/5/6 users who reshape (or resume a
-reshape) after a sub-512 `chunk_size` sysfs write, or with a superblock
-`new_chunk` that becomes 0.
+Record: RAID5/6 users who enabled discard
+(`raid456.devices_handle_discard_safely=Y`) and run discard
+(`blkdiscard`, `fstrim`, mount-time/online discard) while reshape is
+active. Config- and workload-specific, not universal.
 
 Step 8.2: DETERMINE THE TRIGGER CONDITIONS
-Record: Not every boot. Needs a running RAID5/6, privileged sysfs write
-`< 512` to `chunk_size`, then reshape (or resume with zero new-chunk in
-metadata). Unprivileged users normally cannot write that sysfs file.
-Still a real panic for admins, scripts, and test/fuzz tools.
+Record:
+- Trigger: discard bio while `reshape_position != MaxSector`.
+- How common: reshape is infrequent; overlap with `fstrim.timer` / admin
+  trim is realistic on SSD RAID.
+- Unprivileged: typically no (needs write on the device /
+  CAP_SYS_ADMIN). Still a production hang for admins and FS discard from
+  `fstrim`/ext4/xfs/f2fs (those use `blkdev_issue_discard` →
+  `submit_bio_wait`).
 
 Step 8.3: DETERMINE THE FAILURE MODE SEVERITY
-Record: **Kernel oops + panic (divide-by-zero).** **CRITICAL.**
+Record:
+- Failure: uninterruptible sleep (`wait_for_completion_io`) that does
+  **not** clear when reshape finishes. Process is unkillable; hung-task
+  warnings; reboot to recover.
+- Severity: **CRITICAL** for the affected path (hang), even though the
+  feature is opt-in.
 
 Step 8.4: CALCULATE RISK-BENEFIT RATIO
-Record: **Benefit: high** (stops a proven panic). **Risk: very low** (5
-lines, error-path `-EINVAL` only). Ratio strongly favors backport.
+Record:
+- Benefit: high for RAID5/6 + discard + reshape (unkillable hang →
+  `-EAGAIN`).
+- Risk: very low (few lines, error-only path, no new API, no
+  locking/data-structure change). Worst case: discard fails with
+  `-EAGAIN` instead of hanging.
+- Ratio: strongly favors backport.
 
 ===============================================================
 PHASE 9: FINAL SYNTHESIS
@@ -361,127 +373,115 @@ PHASE 9: FINAL SYNTHESIS
 
 Step 9.1: COMPILE THE EVIDENCE
 
-**FOR:**
-- Proven divide-by-zero panic with call trace and QEMU repro.
-- Same hole exists in this 6.18.53 tree (`n >> 9`, `if (new_chunk > 0)`
-  skip, unconditional install in `raid5_start_reshape`).
-- 5-line, obviously correct guards; apply-check clean.
-- Standalone per author cover letter; no new APIs.
-- MD co-maintainer author; Tested-by from a third party.
-- `setup_conf()` already rejects 0; reshape was the gap.
+FOR:
+- Real, tested uninterruptible hang; does not self-resolve after
+  reshape.
+- Small, obviously correct: complete a bio that was leaked.
+- Buggy code present in this 6.1 tree since 2012.
+- Maintainer Reviewed-by and applied (Yu Kuai, md-7.3).
+- `BLK_STS_AGAIN` avoids the `-EOPNOTSUPP`→success lie in
+  `blkdev_issue_discard()`.
+- Matches “complete with retryable error” rather than silent drop.
+- Callers (`blkdev_issue_discard`, FITRIM, `sb_issue_discard`) all wait
+  on completion.
 
-**AGAINST:**
-- Privileged, somewhat artificial trigger (`echo 1` then grow).
-- Nested in a 29-patch series (mitigated: explicitly standalone).
-- No Fixes:/Cc:stable (expected here; not a negative).
+AGAINST:
+- Discard off by default (`devices_handle_discard_safely`).
+- Exact mainline helper `bio_endio_status()` missing (trivial substitute
+  exists).
+- `BLK_STS_AGAIN` is documented as NOWAIT-oriented; maintainer accepted
+  it anyway.
+- No `Cc: stable` (not a negative for this process).
 
-**UNRESOLVED:**
-- Full lore.kernel.org HTML was 403; used b4 + mirrors.
-- No stable@ discussion found.
+UNRESOLVED:
+- Could not use `b4 dig -c <sha>` (commit not in this checkout). Thread
+  recovered via msgid/`b4 mbox`.
+- No stable-list thread found.
 
 Step 9.2: APPLY THE STABLE RULES CHECKLIST
-1. Obviously correct and tested? **PASS** — two guards; Tested-by;
-   before/after log.
-2. Fixes a real bug that affects users? **PASS** — oops/panic on RAID5
-   reshape.
-3. Important issue? **PASS** — **CRITICAL** kernel panic.
-4. Small and contained? **PASS** — +5 lines, one file.
+1. Obviously correct and tested? **PASS** — missing `bio_endio` is the
+   hang; author tested `blkdiscard` vs reshape; Yu Kuai reviewed.
+2. Fixes a real bug that affects users? **PASS** — D-state hang on
+   discard during reshape.
+3. Important issue? **PASS** — unkillable hang / hung task (CRITICAL on
+   that path).
+4. Small and contained? **PASS** — one function, a few lines.
 5. No new features or APIs? **PASS**.
-6. Can apply to the local tree? **PASS** — apply-check succeeded; bug
-   present.
+6. Can apply to the local tree? **PASS** with a trivial backport
+   (`bio_endio_status` → set `bi_status` + `bio_endio`).
 
 Step 9.3: CHECK FOR EXCEPTION CATEGORIES
-Record: Not an ID/quirk/DT/docs exception. It is a normal stability fix.
+Record: Not an ID/quirk/DT/docs exception. Ordinary hang fix.
 
 Step 9.4: MAKE YOUR DECISION
-Backport to this 6.18.53 tree. It closes a long-standing validation hole
-that panics the kernel, with negligible regression risk.
+Backport to this 6.1 tree. The hang is in this code, the fix is
+surgical, and the only adjustment is how to set bio status without
+`bio_endio_status()`.
 
-===============================================================
-What the commit solves for this tree
-===============================================================
+Verification:
+- [Phase 1] Subject/tags/body from the candidate message and lore mbox;
+  hang + `-EAGAIN` policy confirmed.
+- [Phase 2] Diff: reshape early-return without completion → `bio_endio`
+  with `BLK_STS_AGAIN`.
+- [Phase 3] `git blame` `raid5.c:5809-5811` → `620125f2bf8ff0` (2012);
+  `git merge-base --is-ancestor` true; fix not in this tree.
+- [Phase 3] `git log --grep` on `drivers/md/` for this subject: empty.
+- [Phase 4] `b4 mbox` msgid
+  `20260711161326.962336-1-zhanggenjian@126.com`: 6 msgs; Yu Kuai
+  Reviewed-by + applied md-7.3; author rationale for AGAIN vs NOTSUPP.
+- [Phase 4] Openwall/LKML mirrors match the patch; lore.kernel.org fetch
+  403 (Anubis); thread obtained via b4.
+- [Phase 5] `rg make_discard_request`: only `raid5_make_request`.
+  `submit_bio_wait` uses `wait_for_completion_io`.
+  `blkdev_issue_discard` treats only `-EOPNOTSUPP` as 0.
+- [Phase 5] RAID10 already returns `-EAGAIN` for discard during reshape
+  (`raid10.c:1653-1654`).
+- [Phase 6] `git describe HEAD` → `p-6.1-11-g10bc6eb33d95f`; `make
+  kernelversion` → 6.1.188. Buggy return present. `bio_endio_status` /
+  `raid5_discard_limits` absent.
+- [Phase 6] Equivalent completion: `include/linux/bio.h`
+  `bio_wouldblock_error()` / `BLK_STS_AGAIN`.
+- [Phase 7] MAINTAINERS: Song Liu / linux-raid; Yu Kuai active on
+  `drivers/md/raid5.c` in this tree.
+- [Phase 8] Failure mode: D-state hang until reboot; discard opt-in via
+  `devices_handle_discard_safely`.
+- UNVERIFIED: whether some later mainline commit renamed the helper-only
+  form to the `goto complete_again` form (functionally equivalent).
 
-On 6.18.53, writing a sub-512 value to `/sys/block/mdX/md/chunk_size`
-stores zero sectors. RAID5 reshape validation treats 0 as “no chunk
-change” in `raid5_check_reshape()`, then accepts it in
-`check_reshape()`, and `raid5_start_reshape()` installs 0 into
-`conf->chunk_sectors`. Reshape then divides by zero in
-`stripe_set_idx()` / `raid5_compute_sector()` and panics.
-
-The patch rejects that geometry at the two points that can install it.
-That matches `setup_conf()`’s existing start-time check and does not
-change normal `mdadm --grow` (which keeps the current non-zero chunk).
-
-Risk vs benefit: five lines of `-EINVAL` versus a documented panic.
-Apply is clean. Series membership is not a blocker; the cover letter
-calls this patch standalone, and this tree already took the following
-patch (05) without this one.
-
-===============================================================
-Verification
-===============================================================
-
-- **[Phase 1]** Parsed tags: Tested-by Mykola Marzhan; Link msgid
-  `20260802195038.164272-5`; SoB Yu Kuai; no Fixes/Cc:stable.
-  Subject/body describe divide-by-zero panic.
-- **[Phase 2]** Diff: +5 in `check_reshape` and `raid5_start_reshape`
-  only. Confirmed `raid5_start_reshape` assigns `conf->chunk_sectors =
-  mddev->new_chunk_sectors` at `raid5.c:8533`.
-- **[Phase 3]** `git merge-base --is-ancestor a41bb2ee1aca4 HEAD` → not
-  in tree (exit 1). Blame: `n >> 9` and `new_chunk > 0` from 2009.
-  Author is MD co-maintainer (`MAINTAINERS` SOFTWARE RAID).
-- **[Phase 3]** `git apply --check` of `a41bb2ee1aca4` → success, offset
-  −103.
-- **[Phase 3]** Sibling 05 `02c10581866d0` is already in HEAD; 04 is
-  not. Cover letter: first five patches standalone.
-- **[Phase 4]** `b4 dig -c a41bb2ee1aca4` → v5 04/29, msgid.link above.
-  `b4 dig -w` → Song Liu, linux-raid, testers. Patch added in v3; v5
-  matches committed diff. lore.kernel.org WebFetch 403.
-- **[Phase 4]** patchew/LKML/openwall: same patch text; Mykola Tested-by
-  on the series; no NAK found.
-- **[Phase 5]** Call path verified in this tree: `chunk_size_store`
-  (`md.c:4492`) → `raid5_check_reshape` (`if (new_chunk > 0)` at 8805) →
-  `check_reshape` (no zero check) → `raid5_start_reshape` install →
-  `stripe_set_idx` `sector_div` at 3576. `setup_conf` already rejects 0
-  at 7524.
-- **[Phase 6]** `git describe HEAD` = `p-6.18-1-g03b85e06ca9bf`; `make
-  kernelversion` = **6.18.53**; branch `pending-6.18`. Buggy code
-  present; no existing zero-sector reshape fix.
-- **[Phase 7]** md/raid5, IMPORTANT, actively maintained.
-- **[Phase 8]** Failure mode: divide error oops + panic. Severity
-  CRITICAL. Trigger: privileged sysfs + reshape. Benefit high, risk very
-  low.
-- **UNVERIFIED:** Full lore.kernel.org thread HTML (HTTP 403); no
-  stable@ hit beyond web search.
+The hang is real in 6.1, the fix is a few lines, and a missing helper is
+not a reason to leave an unkillable discard stall in place.
 
 **YES**
 
- drivers/md/raid5.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/md/raid5.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b7da2b83e1938..56d7e05e94ce6 100644
+index 2817cd7d197e9..b7da2b83e1938 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -8437,6 +8437,8 @@ static int check_reshape(struct mddev *mddev)
- 		return 0; /* nothing to do */
- 	if (has_failed(conf))
- 		return -EINVAL;
-+	if (!mddev->new_chunk_sectors)
-+		return -EINVAL;
- 	if (mddev->delta_disks < 0 && mddev->reshape_position == MaxSector) {
- 		/* We might be able to shrink, but the devices must
- 		 * be made bigger first.
-@@ -8480,6 +8482,9 @@ static int raid5_start_reshape(struct mddev *mddev)
- 	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
- 		return -EBUSY;
+@@ -5707,8 +5707,7 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
+ 	int stripe_sectors;
  
-+	if (!mddev->new_chunk_sectors)
-+		return -EINVAL;
+ 	if (mddev->reshape_position != MaxSector)
+-		/* Skip discard while reshape is happening */
+-		return;
++		goto complete_again;
+ 
+ 	stripe_sectors = conf->chunk_sectors *
+ 		(conf->raid_disks - conf->max_degraded);
+@@ -5786,6 +5785,11 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
+ 	}
+ 
+ 	bio_endio(bi);
++	return;
 +
- 	if (!check_stripe_cache(mddev))
- 		return -ENOSPC;
++complete_again:
++	/* Skip discard while reshape is happening */
++	bio_endio_status(bi, BLK_STS_AGAIN);
+ }
  
+ static bool ahead_of_reshape(struct mddev *mddev, sector_t sector,
 -- 
 2.53.0
 
