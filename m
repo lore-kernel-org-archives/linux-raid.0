@@ -1,47 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.4
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792544420;
-	b=PE/wYnE+ase4DIntMTCCGLmLVXG2ljKNRuyVB6gxskj4Hfk+eZCdipUCXLHtJB12r+BO
-	 PV/7EL2oI/RGpIV19WEIXUUAp6gezYkh1/RLmKMypAxEaUE15GUYOc+0xCqo9IMf56H8K
-	 /VeUWbffo8fhl5cT5Bq1mB0nwkQUSvfrHRF98KIGAVS04UMtE4JQzy/AIFpujqXbHaMKc
-	 wq5IZWINF55JfD8LfqjV2TV+BFVqHHdiiy/7X8x4a+LThC72S/kjIavxy3i45E89SWFQ/
-	 pU/UMI8myKaG/SR6iiGre7GSdThf+d7Qa0NaSSfSkQnl0XVBoaPGrgKt5DsVDZBAVkw==
+	t=1792546844;
+	b=rAXfYP4rCfBb4FPCDjDut5UxlIxtavEpCSILh7mUr9fLlw8oJBdtbydhbboLH9fmFAvY
+	 zcwIXcoaTHwIntdBhTQzXd0MCzrmCHYoDuKu6AE+/KIP3uC+zwsnBoQ9ihZU4g6aMboKJ
+	 FUu+mAqLe0KPEcu4BBanYRPSILiSPvwuieMuwTVs4jyzYKniUxyFy/JyI/1ixh7QLU6UY
+	 TxCeU4cmXkn4p1oCfushv6ulWTSVIN0TBLNAvF+u+MYRWAEwi4xoYI7YfDQBWVMehltCa
+	 knlwnYfYHyIi5+0IzvQKGoQwE0Af3T9Va5sz9AFLNeuJ/MFsEYrjrPZMoNlDAvk1iAg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792544420;
-	h=DMARC-Filter:Received:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
-	 X-CM-SenderInfo;
-	bh=lKaMXO6A9FG34UhzMzov2zcmA1FJblBJ4naK4GIm76A=;
-	b=lSG8+Qcu4PjaCZFU/ThIEVbeSuK4fRlOE2jmXa5SGh+THztUqSnKEUhzINrg4WZ8d9u9
-	 JuYGx1u6pUdnIBbbRDcVPGgIYIh5W4zaNCfvNK8z10cuSq+ijU5r7cs3cdOc2csROKUgU
-	 pMifkegJ1UG5bhPocMzU0ke0Fn/xfVeX982uYjtUeOSOfujnSci5NQSoekfqnCYKXXf2/
-	 ftKJqCN8lT0/Xz6mOsnt0S6d33zHemOfATEWsoCShjKE6PNfcQ4N3YswOBa8ppnp2CS2T
-	 HJHR/adXOXpBfpXGj3LyfX3F3Yft3in3l6nWQJwiT6we+TZPm6swOqKveVlqg6M9KpA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792546844;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding:
+	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
+	bh=HeDOc1a25yKZFHVErDRfWSX7GxV09UeyrppnQuDKie4=;
+	b=nXnJXuejgmC6vx/SB9jWqEaQdbZ8//wA43VA4wGlMhcGdVmNBX8AGqxTkmTFJ2OgY3N0
+	 AcjteZwnb9CpyW41iDQtJJuWkCqU9z+JzvbpyI6K/O51rmduR6xLtuRV3u1pLSqXJWTDr
+	 m4XiSDWVq/E2dCRCudnOq+1YZg9w3QchnGdtOhpRDm43wEX9YFOjENC57Au6GM5W8Z39v
+	 tH7lq4muup/PxccVw0EjNFqpjIlv6/LFT3bkOzhVEb88bTaA8Haud3MzlsPYVaIDgq0J0
+	 QjceDjPrLrL1loaOF3cfxliuLcxw63KeVcIRBM6UjbhyOrTPz+1gmKgFHP0/OAWBeug==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=huaweicloud.com;
-	spf=none smtp.mailfrom=huaweicloud.com;
-	arc=none smtp.remote-ip=45.249.212.51
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	dmarc=pass header.from=163.com;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=al5lKTVZ;
+	arc=none smtp.remote-ip=117.135.210.4
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D52A606A319
-	for <linux-raid@vger.kernel.org>; Wed, 21 Oct 2026 01:00:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6D52A606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4j8WCw4GNCzYQtml
-	for <linux-raid@vger.kernel.org>; Wed, 21 Oct 2026 09:00:12 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 64DE240573
-	for <linux-raid@vger.kernel.org>; Wed, 21 Oct 2026 09:00:15 +0800 (CST)
-Received: from [10.174.178.164] (unknown [10.174.178.164])
-	by APP4 (Coremail) with UTF8SMTPSA id gCh0CgAXTu2dDthqOEHnBA--.19257S3;
-	Wed, 21 Oct 2026 09:00:15 +0800 (CST)
-Message-ID: <cc3dc99d-cb3e-49b6-b01d-1eaedabfae0e@huaweicloud.com>
-Date: Wed, 21 Oct 2026 09:00:12 +0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74FFE606A319;
+	Wed, 21 Oct 2026 01:40:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 74FFE606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=al5lKTVZ
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=He
+	DOc1a25yKZFHVErDRfWSX7GxV09UeyrppnQuDKie4=; b=al5lKTVZ0RGRiYmUsx
+	yc36VgQnurINXS1sNdNbgR8iZEuI/6NlEiV89e2uaG5gMRSQG/CNyKSvL2JcWKrm
+	NXDQj/egfcCXCeRnPmZEI5lK96KNLmpzrRrqPmcC3uDuJzfTEyIFlnrrR2j8EOO2
+	cnaf38+4eXc3VVzwmCNW44mK0=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp5 (Coremail) with SMTP id QCgvCgB345b7F9hqHjJlBA--.9484S2;
+	Wed, 21 Oct 2026 09:40:12 +0800 (CST)
+From: "Li Youhong" <dayou5941@163.com>
+To: song@kernel.org,
+	yukuai@fygo.io
+Cc: magiclinan@didiglobal.com,
+	xiao@kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Li Youhong <liyouhong@kylinos.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH v3] md/raid5: use dedicated llist for stripe plug
+Date: Wed, 21 Oct 2026 09:40:09 +0800
+Message-Id: <20261021014009.1206807-1-dayou5941@163.com>
+X-Mailer: git-send-email 2.25.1
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -51,102 +64,122 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2 0/6] md: fix takeover failure handling and raid0 size
- calculation
-To: Bruce Johnston <bjohnsto@redhat.com>, Zizhi Wo <wozizhi@huaweicloud.com>,
- yukuai@fygo.io, Li Nan <magiclinan@didiglobal.com>
-Cc: linux-raid@vger.kernel.org, yangerkun <yangerkun@huawei.com>,
- "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>
-References: <20261019010827.2922617-1-wozizhi@huaweicloud.com>
- <atenHrzZVtzu5YOa@vdo-obuilder-bjohnston.permabit.com>
-From: Zizhi Wo <wozizhi@huaweicloud.com>
-In-Reply-To: <atenHrzZVtzu5YOa@vdo-obuilder-bjohnston.permabit.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXTu2dDthqOEHnBA--.19257S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7ur15GF43Gw47AF1rKrW7urg_yoW8tw47p3
-	9xJ3WY9398G34Svwnxtry8A3yFyw1xGF1UtF9xJw48WFy2vry7CrykKryruF98X3s5Xa4j
-	yws8Xr9akFyqyrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkm14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
-	1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v26r12
-	6r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-	0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y
-	0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-	WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1l
-	IxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUYCJmUUUUU
-X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
+X-CM-TRANSID:QCgvCgB345b7F9hqHjJlBA--.9484S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxZw1fZF1fAr15ZF18uw1kAFb_yoWrXrWxpw
+	n8G3yY9rW8ur40vrWvqFWDuF9a9a1agryakrWFka4S9F1YvrW7ta43WFZ8CFn8AFZ5u3y3
+	Xwn09r17Gr45CrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jYMKZUUUUU=
+X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC3R3VhGrYF-2vvgAA3Y
 
-Hi,
+From: Li Youhong <liyouhong@kylinos.cn>
 
-在 2026/10/21 1:38, Bruce Johnston 写道:
-> I was wondering how you would feel about splitting up this series
-> into two separate patch sets. 1 for the takeover failure rework and
-> the other for the code cleanup.
+release_stripe_plug() and do_release_stripe() share sh->lru.
+release_stripe_plug() sets STRIPE_ON_UNPLUG_LIST and
+list_add_tail()s sh->lru onto raid5_plug_cb.list without
+device_lock. do_release_stripe() holds device_lock and, when the
+last reference drops, list_add()s the same lru onto a handle or
+inactive list.
 
-Thanks, I see your point. IMO the split is a little tricky though:
-- 1-3 are one fix: stale mddev state after a failed takeover.
-- 4 is also a fix and touches the same takeover functions, so it shares
-the context of patch 1-3.
-- 5 is the only pure cleanup, but it rewrites the check for 4.
-- 6 is a size fix, and uses the helper from 5.
+Two list_add()s on one node corrupt it. sh->lru can be
+reinitialized into a self-loop while raid5_plug_cb.list still
+points at that stripe. raid5_unplug() then walks the list under
+device_lock with IRQs disabled and never finishes. Other CPUs
+waiting for the same lock hard-lockup.
 
-So the chain is [1-3] -> 4 -> 5 -> 6. I'd slightly prefer to keep them
-together for that reason. Of course, this also depends on what Yu Kuai,
-Li Nan and the other maintainers think. What do you think?
+Add a dedicated llist_node, unplug_list, to stripe_head, as
+release_list is used for released_stripes.
 
-Thanks,
-Zizhi Wo
+Fixes: 8811b5968f62 ("raid5: make_request use batch stripe release")
+Suggested-by: Yu Kuai <yukuai@fygo.io>
+Cc: stable@vger.kernel.org
+Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
+---
+v3:
+- Skip device_lock when llist_del_all() returns NULL. The plug
+  callback can still run with an empty list, and the check avoids
+  an unnecessary spin_lock.
+- v2: link: https://lore.kernel.org/linux-raid/20260922060928.3486799-1-dayou5941@163.com/
 
-> 
-> On Mon, Oct 19, 2026 at 09:08:21AM +0800, Zizhi Wo wrote:
->> From: Zizhi Wo <wozizhi@huawei.com>
->>
->> Patches 1-3 fix the inconsistent mddev state left behind when a takeover
->> fails.
->>
->> Patch 4 rejects a raid0 takeover whose zones cannot cover the capacity the
->> gendisk advertises, fixing a syzbot BUG() in find_zone().
->>
->> Patch 5 factors out the member-size rounding. Patch 6 uses it in
->> raid0_size(), where the power-of-2 mask is not a round down for a
->> non-power-of-2 chunk.
->>
->> Changes since v1:
->>   - Added 3 patches fixing the inconsistent mddev state left behind by a
->>     failed takeover in raid0, raid10 and raid5.
->>   - Patch 4: expanded the commit message with a paragraph addressing the
->>     issue previously reported by Sashiko.
->>
->> v1:
->> https://lore.kernel.org/all/20261017005802.2212102-1-wozizhi@huaweicloud.com/
->>
->> Zizhi Wo (6):
->>    md/raid0: don't leave mddev in an inconsistent state when takeover
->>      fails
->>    md/raid10: don't leave mddev in an inconsistent state when takeover
->>      fails
->>    md/raid5: don't leave mddev in an inconsistent state when takeover
->>      fails
->>    md/raid0: reject a takeover whose zones cannot cover the array
->>    md/raid0: factor out raid0_member_sectors()
->>    md/raid0: round member size in raid0_size() with sector_div()
->>
->>   drivers/md/raid0.c  | 84 +++++++++++++++++++++++++++++++++++----------
->>   drivers/md/raid10.c | 11 ++++--
->>   drivers/md/raid5.c  | 13 ++++---
->>   3 files changed, 84 insertions(+), 24 deletions(-)
->>
->> -- 
->> 2.52.0
->>
->>
-> 
-> 
-> 
+v2:
+- Drop taking device_lock in release_stripe_plug(). Add a dedicated
+  unplug_list.
+- v1: link: https://lore.kernel.org/linux-raid/20260902095307.358569-1-dayou5941@163.com/
+
+---
+ drivers/md/raid5.c | 20 +++++++++++---------
+ drivers/md/raid5.h |  1 +
+ 2 files changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index b91545ce090d..dbc6e6876509 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5710,7 +5710,7 @@ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
+ 
+ struct raid5_plug_cb {
+ 	struct blk_plug_cb	cb;
+-	struct list_head	list;
++	struct llist_head	unplug_list;
+ 	struct list_head	temp_inactive_list[NR_STRIPE_HASH_LOCKS];
+ };
+ 
+@@ -5718,17 +5718,18 @@ static void raid5_unplug(struct blk_plug_cb *blk_cb, bool from_schedule)
+ {
+ 	struct raid5_plug_cb *cb = container_of(
+ 		blk_cb, struct raid5_plug_cb, cb);
+-	struct stripe_head *sh;
++	struct stripe_head *sh, *tmp;
+ 	struct mddev *mddev = cb->cb.data;
+ 	struct r5conf *conf = mddev->private;
++	struct llist_node *head;
+ 	int cnt = 0;
+ 	int hash;
+ 
+-	if (cb->list.next && !list_empty(&cb->list)) {
++	head = llist_del_all(&cb->unplug_list);
++	if (head) {
++		head = llist_reverse_order(head);
+ 		spin_lock_irq(&conf->device_lock);
+-		while (!list_empty(&cb->list)) {
+-			sh = list_first_entry(&cb->list, struct stripe_head, lru);
+-			list_del_init(&sh->lru);
++		llist_for_each_entry_safe(sh, tmp, head, unplug_list) {
+ 			/*
+ 			 * avoid race release_stripe_plug() sees
+ 			 * STRIPE_ON_UNPLUG_LIST clear but the stripe
+@@ -5768,15 +5769,16 @@ static void release_stripe_plug(struct mddev *mddev,
+ 
+ 	cb = container_of(blk_cb, struct raid5_plug_cb, cb);
+ 
+-	if (cb->list.next == NULL) {
++	if (!cb->temp_inactive_list[0].next) {
+ 		int i;
+-		INIT_LIST_HEAD(&cb->list);
++
++		init_llist_head(&cb->unplug_list);
+ 		for (i = 0; i < NR_STRIPE_HASH_LOCKS; i++)
+ 			INIT_LIST_HEAD(cb->temp_inactive_list + i);
+ 	}
+ 
+ 	if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state))
+-		list_add_tail(&sh->lru, &cb->list);
++		llist_add(&sh->unplug_list, &cb->unplug_list);
+ 	else
+ 		raid5_release_stripe(sh);
+ }
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index cb5feae04db2..e314f17eb949 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -201,6 +201,7 @@ struct stripe_head {
+ 	struct hlist_node	hash;
+ 	struct list_head	lru;	      /* inactive_list or handle_list */
+ 	struct llist_node	release_list;
++	struct llist_node	unplug_list;
+ 	struct r5conf		*raid_conf;
+ 	short			generation;	/* increments with every
+ 						 * reshape */
+-- 
+2.25.1
 
