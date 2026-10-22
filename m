@@ -1,117 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.129.124
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792617440;
-	b=lSbGkClPkJTFFBZV33mUinssPA0EL6+s4h+mhOX4ueH+KihRIXENcPVF16hQsiorjSwK
-	 esS0wpY5uLj+WUflsAScDqCiiRI8KzQSrwpnG8y4YZ8+PjqY0jh+WxXEu1LtKEFt1QFip
-	 q2zzZ7Wf8qILOt4H5JlhxaG1BfBbJjM+TqqojQrXTEtHQrw60wYozTmb39VZGvH6/EjVk
-	 yIXyFKTKBUHu+ZnkjIbGixDSevjwA6gIHpK57F+gxDFy6jFyRCI2172F/sHXybsLldbei
-	 HdByZI1LFhEs+2A+mp/5r+I0ki0BLBrGBgttsvodBSDQ/FrwWCcgMgRozZ/RHY3lRZA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792617440;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:MIME-Version:References:In-Reply-To:From:Date:
-	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type;
-	bh=RJUIsMIkPpvhWF1NBSmRJxgDLKZfTvlFZQEWC9TVqmQ=;
-	b=Z1dEG9/cQh7xbInc7xSGPYE8iPh4vhmOPqoBGh82Mb9C2mh3b++iG+zGuSHZvP57yxUG
-	 QDdGDkRG3VxEDXN9eDnjwXUPcxFt3qMHu/BfmE93dbZ2uiu3M4aChdcle96A0GGfM1y4Y
-	 GdYUoFFy6clwiHs8kHx+SjaX7BuqVDLeULn7aeMnYR+ZYEbV+0eyV64Zsz5IomXGjjws/
-	 ZKiTpMf4fjspNKlRukR5oVqM38iLhzqC9PW6C1OPmSDIRszUo66Ugzu2qkcjqT5VVYh0K
-	 nkjcW/+UNAWA+ePxyySTkoq5VPvZd/IoIOEGCZFyLopKE2HuomuIXDBAbOCkEuxJd1Q==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=fvNikAbw;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=rAHCCk8H;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.20
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792640058;
+	b=24F+oPWhfXNmmceoKBTAHbkc2yZ7WED4GXTyKRtL3NML8o/W1N9wRzd+E4i9+YsxoIgV
+	 5BuMdVZ45PkK+5jzQykjGaybD3j+rwVPjucFHZbCGCXbr6QsnDxOv5gmD4+VklldYbkKg
+	 74q7dovUnUaLlRmRYYAr248QZX4Blde1DmTGjNYmVJC7yF17XaqE2whvqcrcmdg6vMQmK
+	 dLoHXFSwExSfaEtsVjWWKkf2uOmVKJsJv2rRwlkhRZjEkwx4k3R8VZVpRQjKg7Cq6GDEu
+	 I2OqzK1v8MN12Z6Yt1VJTMr/XSH1jT/UtKu++vLXG0ZVAXK+C8eeIcK89j3vkX6FUTw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792640058;
+	h=DMARC-Filter:DKIM-Signature:In-Reply-To:X-Original-From:To:From:
+	 Message-Id:X-Lms-Return-Path:Date:Content-Transfer-Encoding:Received:
+	 Cc:Mime-Version:Content-Type:References:Reply-To:Subject:User-Agent;
+	bh=yD0b3S9s+1o6zBqSgF7q03eIOb1HjjlnNNtuiDAFCiA=;
+	b=Ib6AabW+W2bl1W/cH+drvkZGrdanbMkeDgKRUXW9odbcTiUtblBy3aWOGv2FLhOxdioq
+	 Ds2ljYTdTzVkbkG6smcz4NxMPyR0Jku1K2i3VkuJE/UmjjyeMitk1d1ceBA+HBqJLz7ca
+	 btiKBvi0S4SpMcFMg8FBrjJQfBe0O7KUYGQXyvYDYlcDC+tdtMFmCYz1a0q49MFhQvxZu
+	 E1ariWV7Z+oN4hyHXNFIZj98+ue6r0PwRtd1Re2H3rTW6m2FBL/LZaBEueS4TgvDUmXN2
+	 Y6oMSR2uxHuJ8ffZ3jWp4Mg0EUDFu8UFH1PLg4xBw/LRj6Wz9w9IbUJoN3C1S2rxYzA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=fygo.io;
+	spf=pass smtp.mailfrom=fygo.io;
+	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=mtHWUDrS;
+	arc=none smtp.remote-ip=209.127.231.20
+Received: from va-2-20.ptr.blmpb.com (va-2-20.ptr.blmpb.com [209.127.231.20])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9961606A32E
-	for <linux-raid@vger.kernel.org>; Wed, 21 Oct 2026 21:17:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A9961606A32E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 560C2606A320
+	for <linux-raid@vger.kernel.org>; Thu, 22 Oct 2026 03:34:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 560C2606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=fvNikAbw;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=rAHCCk8H
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792617438;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=RJUIsMIkPpvhWF1NBSmRJxgDLKZfTvlFZQEWC9TVqmQ=;
-	b=fvNikAbwTO/JnBmNLpsn6vIFUzkuJk4camPUvY+2FItyJm1pVrd5EKbmMA+wcdojZFBxff
-	h1XQcGaHR/702a1XSP81JX3UdsGCkA8Hc+tAprVGhtOVDq7Q8o/0kNpTv+VA239vvIdyee
-	9JBzb7FMTDEyB1up5NJEO2Ml15zMpEA=
-Received: from mail-dy1-f197.google.com (mail-dy1-f197.google.com
- [74.125.82.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-651-sXHgWnhlNVaC6g0HNG_qPQ-1; Wed, 21 Oct 2026 21:17:11 +0000
-X-MC-Unique: sXHgWnhlNVaC6g0HNG_qPQ-1
-X-Mimecast-MFC-AGG-ID: sXHgWnhlNVaC6g0HNG_qPQ_1792617430
-Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-3580c07911eso3259766eec.0
-        for <linux-raid@vger.kernel.org>; Wed, 21 Oct 2026 14:17:11 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792617430; cv=none;
-        d=google.com; s=arc-20260327;
-        b=s2QO6BRv7F+ZMZKDXdsaP93V5Wu4k+B3/ltkj2AP3A5gRijdxYoxwt+jkcEW8r56Mi
-         QcdBbyg+rUJEYHuUtXdDrP7gqqS8x+zl6bU7iAR3Sjh4ik7bSf/HR4OLNJQUf8VfeptX
-         TG1iQobKBV6awC1qMTeXyNnofwZhIqFnIB1h913Vz2AOo8bbLeUutxcuvwsCIffK24ZB
-         Xhg++tGqN0VNdjuOvvKWAdrIbLyUvTfdKmXsS43beGhx8sjfdUlYscDLEf2wH+uA43EN
-         AjOhHZDB12PIR397KwUhTYPU92SXn9WP2gT66KEvPV1AMlRxOjZ9y5IBczZNmRk/OCoN
-         zNmQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=RJUIsMIkPpvhWF1NBSmRJxgDLKZfTvlFZQEWC9TVqmQ=;
-        fh=39egR711mJrwnXr+N6t/uDrsU4bhTM5AdYh2nRJGL1E=;
-        b=YOc0fe6ZMEueOJWm/r/Cd9EW08mruav8I6G9kiIUCa1bbmLOCWeij2jkhiGLQtkXsu
-         L43qvgsS1U2AdftGi2mEwB+sDI/Xz7W2K8MP6thKNz84rDRj7676Nr8mAJK/PvbNcUNj
-         16HnOKerGyu/F0tmX+61Fpacb9TwwjRZkqOokUNC1Bz70+vAxzBPrSvx9AevaKTSqsr0
-         qbzpp9/Gz8VyczwrLQxrtGQuo05o/dkpS9pYcxjYw5LZPBb0FvINRm/leToTVCC0Tht5
-         HPp5jnK6AM3OMsrmtZ+AErq15oQn6SsWsKADtQYoZAh8apK3um6ldrvtMVEXV92F89zu
-         Fc4g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1792617430; x=1793222230; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=RJUIsMIkPpvhWF1NBSmRJxgDLKZfTvlFZQEWC9TVqmQ=;
-        b=rAHCCk8H7EQ4kXw/JI2vPmO3WoGkC6xcjATrqTNPkCdHtg878c1uo6SCGD0IAZd6OA
-         rXf28ni7QzLEVlXmll2H1HDGGI88FV4Ef01wpZFW0EwzJDpvtRkJlZqmkBhZdpgXRYlB
-         1SxboOoGWW9rVzU7XLY1TZKYcP9K9V+ByALovyHI4RD5Skcgj6pKDiJC1J5zMR9rlgj2
-         FFhmoufyApwgxsI7AcL0DrfFMRDXISA2TglgsNBJgmjrN+XrVsa4RytjsvJl0/HKWgcf
-         qmPHuwDRiM95X/Dse/cPsCdzhnfDqhuR9Yxfi1JW54ShOovaWO29ndt7s81W4tEZkCBx
-         /WEQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792617430; x=1793222230;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=RJUIsMIkPpvhWF1NBSmRJxgDLKZfTvlFZQEWC9TVqmQ=;
-        b=fW7Ja632Dwsw/TdUYdU2rLMF+G+PZ0KvYpyYaaKa0hraWtlXHPj3StwG9eVpzYVJ2A
-         9+l2ceZZlvadAAvkY3zMFr5zQ1zAzHb5YEA5VNXFp2dsqnSvCyjh1AwXlW/xVSuXlmQc
-         3aTJ22GkfLkfkO6wIrhGpZyTpZfpTEOfCZApdWJmEtukmystwyQZUz8vaGGXP3jmjJc/
-         3fLrG9oPQ478LBhiWuyE95BMSsjTd0Y37yNelFncCz5v8OJneiP2X6IVvOKHlPy3J76n
-         UATZvfKTPEA/kDaXrlhYvFxw27oycVkKuKedd4MqDs3EFK8F6UC+D4bkyPt/7ChlifbK
-         edow==
-X-Forwarded-Encrypted: i=1; AKwUvByZOUBksz2W9lCxsDOmlz+Pcp9HpHRiXwz7evoO9WjGnbOIr1g8ld35XF7l4y0FZ1rPAfXmmPPqpcUm@vger.kernel.org
-X-Gm-Message-State: AFq9FYI5Milb/WRoPWY36ipvVdtMLuwoOXBG90ljj54ienuiPGhQKxWX
-	PKVSKJp5UyqiGcWxOsVFun7fKJiEqNyrN6fu1mYYt2z+ZC8KM5O4J2+O96yi6vKGLNlx8oCKvMT
-	y/ocTwRajH/fY+IHglyOImNretKeMWix5R3FIdqAqmAAXxWLljIzI+C4+dwAOouM5ChOy3BSI5F
-	SSPxgc6OtZ6vvLDmyujDSfKKMl1ypEPS6OwxCWc94A0WqkpQ==
-X-Gm-Gg: AYBFou3sGv8ZODnQL/WypdxDmdlb7WyqjYgl6D5246AxFzImoYG3CD+GFk5zpCdDu6B
-	amWCb4eo6KTygF6vFJTal98m003ez4wyi9i7PDhzyJbJ23C9GFFShV3pA06AOMJATUk7dOkYpbo
-	iylzzFX/eq+hr27z/alz3MUQqrvQyIKrOys7Mi9CZw0Rdnjm/nB+vYY6w=
-X-Received: by 2002:a05:7301:2ab1:b0:35f:f0:8ed1 with SMTP id 5a478bee46e88-367502ff37bmr4843253eec.36.1792617429937;
-        Wed, 21 Oct 2026 14:17:09 -0700 (PDT)
-X-Received: by 2002:a05:7301:2ab1:b0:35f:f0:8ed1 with SMTP id
- 5a478bee46e88-367502ff37bmr4843217eec.36.1792617429377; Wed, 21 Oct 2026
- 14:17:09 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=mtHWUDrS
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1792640045;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=yD0b3S9s+1o6zBqSgF7q03eIOb1HjjlnNNtuiDAFCiA=;
+ b=mtHWUDrSISvFXXMXgoDTPwfRdQXiRx0vDp+kyWuPyQFG3WPGBE/OTEk5fQEJBY2cKd3lKd
+ tHaU4pJipK/rLHMRJGQZbTLMJBRba99qFdzYOfOUFIq0dEJ8MwEojIYfq2VV+exyl2HPCV
+ RBDfnJx47iISYkcXoGoAMOdwZmqHrpP/TYpFOwkXky0siZ3lXWTNTkQMHYK9jXI6kFLyxY
+ f9l5YuTxopftCILNH8pJKMcpTRybQ5jJTD11eTWjQa80ZWlwZm41opcj3QCRY9cLIvAm8o
+ 6DOQSLg55JKqlDBiMY+X5RjI6jb6QQjxCGeuLjFhAjQY35aqnU/U3mfThiZ/sQ==
+In-Reply-To: <20260923124634.5497-1-aadityakansal390@gmail.com>
+X-Original-From: yu kuai <yukuai@fygo.io>
+To: "Aaditya Kansal" <aadityakansal390@gmail.com>, 
+	"Song Liu" <song@kernel.org>, "yu kuai" <yukuai@fygo.io>
+From: "yu kuai" <yukuai@fygo.io>
+Message-Id: <e743762c-2ed0-465b-bfa1-57e75aabf034@fygo.io>
+X-Lms-Return-Path: <lba+26ad98423+dce483+vger.kernel.org+yukuai@fygo.io>
+Date: Thu, 22 Oct 2026 11:33:51 +0800
+Content-Transfer-Encoding: quoted-printable
+Received: from [192.168.1.104] ([39.182.0.21]) by smtp.larksuite.com with ESMTPS; Thu, 22 Oct 2026 03:33:54 +0000
+Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, 
+	<syzbot+9e3014263a35700ab49b@syzkaller.appspotmail.com>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -120,77 +64,129 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-References: <20261019010827.2922617-1-wozizhi@huaweicloud.com>
- <atenHrzZVtzu5YOa@vdo-obuilder-bjohnston.permabit.com> <cc3dc99d-cb3e-49b6-b01d-1eaedabfae0e@huaweicloud.com>
-In-Reply-To: <cc3dc99d-cb3e-49b6-b01d-1eaedabfae0e@huaweicloud.com>
-From: Bruce Johnston <bjohnsto@redhat.com>
-Date: Wed, 21 Oct 2026 17:16:58 -0400
-X-Gm-Features: AclHuK8rrnanGn0t5epyTiMkNesBYBrar3akDGPkemeD7KZyXMIklFTd-fYL8nI
-Message-ID: <CAOjDE+DNYYa9GEgSD_JVTZAhsxiecxRwR2GB4XnCSjHp7AbtkQ@mail.gmail.com>
-Subject: Re: [PATCH V2 0/6] md: fix takeover failure handling and raid0 size calculation
-To: Zizhi Wo <wozizhi@huaweicloud.com>
-Cc: yukuai@fygo.io, Li Nan <magiclinan@didiglobal.com>, linux-raid@vger.kernel.org, 
-	yangerkun <yangerkun@huawei.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20260923124634.5497-1-aadityakansal390@gmail.com>
+Reply-To: yukuai@fygo.io
+Subject: Re: [PATCH v2] md: fix out-of-bound by adding checks at store
+User-Agent: Mozilla Thunderbird
 
->
-> So the chain is [1-3] -> 4 -> 5 -> 6. I'd slightly prefer to keep them
-> together for that reason. Of course, this also depends on what Yu Kuai,
-> Li Nan and the other maintainers think. What do you think?
->
+Hi,
 
-I'm happy to hear other opinions. I will try to review the patches as
-presented.
-
-> Thanks,
-> Zizhi Wo
+=E5=9C=A8 2026/9/23 20:46, Aaditya Kansal =E5=86=99=E9=81=93:
+> syzbot reported array-index-out-of-bounds in super_90_sync()
+>      UBSAN: array-index-out-of-bounds in drivers/md/md.c:1697:17
+>      index 124 is out of range for type 'mdp_disk_t [27]'
+>      CPU: 1 UID: 0 PID: 10197 Comm: syz.3.1362 Tainted: G    L
+>      syzkaller #0 PREEMPT(full)
+>      Tainted: [L]=3DSOFTLOCKUP
+>      Hardware name: Google Google Compute Engine/Google Compute Engine,
+>      BIOS Google 08/05/2026
+>      Call Trace:
+>       <TASK>
+>       __dump_stack lib/dump_stack.c:94 [inline]
+>       dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
+>       ubsan_epilogue+0xa/0x30 lib/ubsan.c:233
+>       __ubsan_handle_out_of_bounds+0xcc/0xf0 lib/ubsan.c:455
+>       super_90_sync+0x1eed/0x1ff0 drivers/md/md.c:1697
+>   ...
 >
-> >
-> > On Mon, Oct 19, 2026 at 09:08:21AM +0800, Zizhi Wo wrote:
-> >> From: Zizhi Wo <wozizhi@huawei.com>
-> >>
-> >> Patches 1-3 fix the inconsistent mddev state left behind when a takeover
-> >> fails.
-> >>
-> >> Patch 4 rejects a raid0 takeover whose zones cannot cover the capacity the
-> >> gendisk advertises, fixing a syzbot BUG() in find_zone().
-> >>
-> >> Patch 5 factors out the member-size rounding. Patch 6 uses it in
-> >> raid0_size(), where the power-of-2 mask is not a round down for a
-> >> non-power-of-2 chunk.
-> >>
-> >> Changes since v1:
-> >>   - Added 3 patches fixing the inconsistent mddev state left behind by a
-> >>     failed takeover in raid0, raid10 and raid5.
-> >>   - Patch 4: expanded the commit message with a paragraph addressing the
-> >>     issue previously reported by Sashiko.
-> >>
-> >> v1:
-> >> https://lore.kernel.org/all/20261017005802.2212102-1-wozizhi@huaweicloud.com/
-> >>
-> >> Zizhi Wo (6):
-> >>    md/raid0: don't leave mddev in an inconsistent state when takeover
-> >>      fails
-> >>    md/raid10: don't leave mddev in an inconsistent state when takeover
-> >>      fails
-> >>    md/raid5: don't leave mddev in an inconsistent state when takeover
-> >>      fails
-> >>    md/raid0: reject a takeover whose zones cannot cover the array
-> >>    md/raid0: factor out raid0_member_sectors()
-> >>    md/raid0: round member size in raid0_size() with sector_div()
-> >>
-> >>   drivers/md/raid0.c  | 84 +++++++++++++++++++++++++++++++++++----------
-> >>   drivers/md/raid10.c | 11 ++++--
-> >>   drivers/md/raid5.c  | 13 ++++---
-> >>   3 files changed, 84 insertions(+), 24 deletions(-)
-> >>
-> >> --
-> >> 2.52.0
-> >>
-> >>
-> >
-> >
-> >
+> super_90_sync() exists for older version 0.90, which supports up to 27
+> maximum disks (MD_SB_DISKS). This function doesn't contain any bound chec=
+ks
+> for raid disks. The repro wrote higher value (124) in raid_disks sysfs
+> attribute to trigger this bug.
 >
+> The repro is one configuration that triggers this bug, which is caused by
+> the lack of proper checks at sysfs stores. Store is one path to reach
+> OOB.
+>
+> Add helper function md_check_disks_fit_metadata() and call it at
+> raid_disks_store() and metadata_store() to reject the write for
+> mismatched configuration (raid_disks > MD_SB_DISKS for major =3D=3D 0). T=
+his
+> prevents invalid configuration via stores from reaching the super_90_sync
+> function.
+>
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Reported-by: syzbot+9e3014263a35700ab49b@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=3D9e3014263a35700ab49b
+> Signed-off-by: Aaditya Kansal <aadityakansal390@gmail.com>
+> ---
+> v2:
+> - moved the fix from super_90_sync() to a level above at store functions
+> - add checks at stores themselves to prevent wrong configuration from
+>    reaching the target function
+> - add helper function to be called at all the sites where check is
+>    required
+>
+>   drivers/md/md.c | 23 ++++++++++++++++++++++-
+>   1 file changed, 22 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 680b34a63cb3..f0f693f6bf7c 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1354,6 +1354,13 @@ int md_check_no_bitmap(struct mddev *mddev)
+>   }
+>   EXPORT_SYMBOL(md_check_no_bitmap);
+>
+> +static int md_check_disks_fit_metadata(int major, int raid_disks)
+> +{
+> +	if (major =3D=3D 0 && raid_disks > MD_SB_DISKS)
 
+Just checking major =3D=3D 0 is not enough, external metadata should be exc=
+luded,
+and all possible cases should be listed and checked, as I'm not sure if the=
+re are
+other cases for now.
+
+> +		return -EINVAL;
+> +	return 0;
+> +}
+> +
+>   /*
+>    * load_super for 0.90.0
+>    */
+> @@ -4448,8 +4455,15 @@ raid_disks_store(struct mddev *mddev, const char *=
+buf, size_t len)
+>   		mddev->delta_disks =3D n - olddisks;
+>   		mddev->raid_disks =3D n;
+>   		mddev->reshape_backwards =3D (mddev->delta_disks < 0);
+> -	} else
+> +	} else {
+> +		err =3D md_check_disks_fit_metadata(mddev->major_version, n);
+> +		if (err) {
+> +			pr_warn("md: raid disks (%d) exceeds max disks (%d) for metadata vers=
+ion 0.90",
+> +					n, MD_SB_DISKS);
+> +			goto out_unlock;
+> +		}
+>   		mddev->raid_disks =3D n;
+> +	}
+>   out_unlock:
+>   	memalloc_noio_restore(noio_flags);
+>   	mddev_unlock_and_resume(mddev);
+> @@ -5041,6 +5055,13 @@ metadata_store(struct mddev *mddev, const char *bu=
+f, size_t len)
+>   	err =3D -ENOENT;
+>   	if (major >=3D ARRAY_SIZE(super_types) || super_types[major].name =3D=
+=3D NULL)
+>   		goto out_unlock;
+> +
+> +	err =3D md_check_disks_fit_metadata(major, mddev->raid_disks);
+> +	if (err) {
+> +		pr_warn("md: metadata version 0.90 doesn't support raid disks count hi=
+gher than %d",
+> +				MD_SB_DISKS);
+> +		goto out_unlock;
+> +	}
+>   	mddev->major_version =3D major;
+>   	mddev->minor_version =3D minor;
+>   	mddev->persistent =3D 1;
+> --
+> 2.55.0
+
+--=20
+Thanks,
+Kuai
