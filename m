@@ -1,120 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.51
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792762169;
-	b=m4kdc8uNbuAI9KM6a3psHl6HsaT2nkGfozFNpo/h8RQ8BoT5rtCeXMr6tWqUUjpe/VMd
-	 D+GuUHblkiH3ht1wPi5jdfsJFw36NhRZww7dk6bavqU9lBsL7IKHNg8y3yCga+6qEsZxf
-	 SP2Zx/Je+bhYlx3rGuu0feHnwyxwMDUNlCZSLrSXxc92Vb2oV442tvJg2iBbyKUkuZblF
-	 ZDaJOmH+ZB56m0T829dLMnHqfcK6WdSd63/HAKXaJnPp4u/iuqwZUY2X1k9bRZ9Pq9Ltx
-	 PD/yw2+3+VKGy6XHsQUBHXm0to4K6mZrJH7o2zvrD0nabBXQjBhnt6iNUbqW2IN+zUQ==
+	t=1792779677;
+	b=MGPw9j6DDkRP9h/Ld+zsdC8a1rUdjvTvN5vcB56Ghny4DpU2D50Ye6+1IWc/3ksRbgBT
+	 2j2MjLntw2mr2jfppew5Nsphi5KDl5eYWdTfGSAzkBJ/Tz/P/v9+nps7KBv9gcxstBJgh
+	 DSh8aSFMmYPOJvop8wTIFXrpCU/5XKNn/x8QBSynb9tK0IPNGuWjVyYX+qWC72aQcrERy
+	 Sh+UZXbiVXK4WqE+JMF5VHxQiJ+oDIpfCNAKZC8sDCi4gCshv6zOAsBlvvpO1vfGN/P+s
+	 zCiVEO6dXBZJCYn3hcD37iSBDc4+t9z1QaY5ISIJwI+Qc2qzfzz85yKTFoIcc1OOenQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792762169;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	a=rsa-sha256; c=relaxed/relaxed; t=1792779677;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:MIME-Version:References:In-Reply-To:From:Date:
-	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=WJ+grZ4lbWZ8KaHJYCpBfwtWw/sRlKb2fRhe/pAbeJg=;
-	b=GFgrnH/AWig3wKHo0gwpp/W3carLsZAkDKEN2D+084ywqMWkA1jHLsCGmgbxwd0rLtNu
-	 AmtFVxHOqZL/9f7zw7dMWf1GNvM0a7EOVvUH4s5WBv0EMFWLKn1/1qQyCcD4s6oJ1Zgel
-	 jU3Pz4bOcalf6nXqEzouRsONYO7qHHGD4Hokbyu5FDhK+eNNC97IPpzKUtXdmk0hIoCPK
-	 DFJB8aliKbsTWpZ1rqwym5igD5rT5DjNuEfnwtnFyedkSB6MVkZT5zwJr9m0TsI8M6dIS
-	 onma313aC6vEUi5U4/q1yHMgigIXfZzPyJ1/qgmAtm1yXGyzui1V/8jjhyMUFEEPS3Q==
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=JPXYTcb2GVIpXeWLwsxVi5QbrL0t2UUrrpmBeD3Y8TQ=;
+	b=B/jBmxJ3MloRb+nx29egDLbHJ4XkMpyq0iM7xxWzRD0l5R28FVxONjHq+Q5aXfRoEVHy
+	 eBRSK9ixF+SDEQU+mhZPpTnQO9AJGz5g1G7dUkr5noCEaovsrhkL08u+PAlKHAyaq6Xke
+	 UBWT5Cq8A/5Vpnu+hS5dU246YuuuaYFeUMHSqP5nCvyEf3mQsGK6O8i1VYVjbp+RaoJ23
+	 KzYH3uj5Ef1MUUL52sTAYFFnSvFMGygJVwqw8QHXPpW5GkjDoZ5XAO1K7tnETQAfN6V2E
+	 GdlL3nOjXrlNPCDvpMarDgkPTf+WtzphkRdo6IveFcqqq8P5Bh5maq34rqT9PbLpqMA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Er3itx01;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=AjTieBTk;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=cloud.ionos.com;
+	spf=pass smtp.mailfrom=ionos.com;
+	dkim=pass header.d=cloud.ionos.com header.i=@cloud.ionos.com header.a=rsa-sha256 header.s=google header.b=jPVbTySp;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.51
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C36A7606A31A
-	for <linux-raid@vger.kernel.org>; Fri, 23 Oct 2026 13:29:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C36A7606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC560606A324
+	for <linux-raid@vger.kernel.org>; Fri, 23 Oct 2026 18:21:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AC560606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Er3itx01;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=AjTieBTk
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792762167;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=WJ+grZ4lbWZ8KaHJYCpBfwtWw/sRlKb2fRhe/pAbeJg=;
-	b=Er3itx01WYCmHtup5PUNZqwTiIde4OymtN5130lxIQm39xpJUytsvBqcrw6PJNoA6V1IzP
-	vOsy2K7z+jIF52kEh200xXiHjASp1Y9c/+4HTAkUC+hwYU3ruKfrD+LCdeHprBL5x+d7tN
-	UJP3fhO6t2sf8SMhqXLferfJb0b/i18=
-Received: from mail-dy1-f197.google.com (mail-dy1-f197.google.com
- [74.125.82.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-661-h4apXzW4OtOy5CvLZXhXZA-1; Fri, 23 Oct 2026 09:29:26 -0400
-X-MC-Unique: h4apXzW4OtOy5CvLZXhXZA-1
-X-Mimecast-MFC-AGG-ID: h4apXzW4OtOy5CvLZXhXZA_1792762165
-Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-3548cdfd2fbso1310889eec.1
-        for <linux-raid@vger.kernel.org>; Fri, 23 Oct 2026 06:29:25 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792762165; cv=none;
+	dkim=pass (2048-bit key, unprotected) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.a=rsa-sha256 header.s=google header.b=jPVbTySp
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-c2937c43f31so15873966b.3
+        for <linux-raid@vger.kernel.org>; Fri, 23 Oct 2026 11:21:15 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792779674; cv=none;
         d=google.com; s=arc-20260327;
-        b=F8RMqLY9HgB9leEWivsEaPba9XtZrTi5/+j4lsEAOJCEUBbOO8B+SPpozh8ORBw/ua
-         2IrRfYjsyYa6pOlL0f8ZxQt7nvcQ+0/f007JzbBTr0ZUeDHVFu08Di74w9nXHoSXJHjU
-         piNfSFbtr0RmQZ8tHu/m2orv52IXChEjbVzkAAsWQQp2G6l9g1kCzTnar0jECqvtJHes
-         YuIzimI9HisOFkQDM8yA9E9NeYFTf2y1d+/cwK3RNaC9ns6UixhvWllWVlapO/w0H+yx
-         JOZLBEbOKP1fUMxdB307QXiTHtLwIRG9MkCtxADMaYs2VCqzwHait79LLyQOpkH3jveG
-         mgpw==
+        b=qVfaAmkorcqUsXanV1v6cj3Eaw+p+hG/Ayg/eDEX/7J1ckoL39OK6wU1eSJzTVgVXI
+         RGsvFBw9rT7WLPPUaVQFVuq0OVXQoHo+tzE7cS1d/hSjOBgQUTKeXsGg5GEi8+6Vsqbs
+         /83ZFP0CXt2vmAO2iayAlwH7X5pNsSnnUVTyk3/1IOI9/93C6b5KUlZm/czCmumehqBd
+         4ittDNQcg/W6YEc6582rQDs2xKmsgl3aftmHlXda/j8AEvS+lLEiNf7y2WZha5yp/9zd
+         5F+qcE9o95+hde1UsmrCueu0k1fbJt3TwOaR5B7n4IuXOtvAGiHiUx1qVDWSNPtCI/U1
+         onTA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=WJ+grZ4lbWZ8KaHJYCpBfwtWw/sRlKb2fRhe/pAbeJg=;
-        fh=zFX6AcOjsvVTtpAM6P7u8MF6Y+8ckAzoq5kp2Sa6QSE=;
-        b=MhH2vBz1j8ja2zyWmchNUA6HSfIzJ4aLL8XRAhZIRo0Sv2pl6GbDTdFXkXpzr2YPRm
-         9OntU39R8yO6AMnifK+iQyqJvMw7Kk/TBhtZFloSxdADl2wbus4mcB+lvNDoTcZzgcDe
-         2L0eG05cdBP7u6sdW8McCuXfECJRGJHC6lZIc9CCq695rExjmhZZd4gFo4FbLIZ8FHFh
-         d0FuGOHQ8PbVzkdVjgrIBI+QJ/pSnIcmjb8d273cypRYRhnloc3fk/cfU/bN8y9lIYla
-         9w9OeQVogUn0RmK3opFFoKV+WHAXxN2ZKOWn1qNRRwYUMFddqiDFW7SqD/q4FQ0oQY7x
-         d+zg==;
+        bh=JPXYTcb2GVIpXeWLwsxVi5QbrL0t2UUrrpmBeD3Y8TQ=;
+        fh=LRmys52b28FTWQnN+dterU7suXooG+Mp/615KOZtwRs=;
+        b=nV61N5Xf3jpAcAAa/jrZulq0c1u7NZ2NO3aoCehhNEUVp+SvESYXxYWYK3v/jncZG8
+         sWq3yuNh3rFIXBqSJcoGeKpfB8WNHSoRZm/MOXJd3rYfS06rIpuVRU5UxJrX2IQXBWLx
+         UuuiNN8avPqSDgVnP+cvpyN5wBQHuRaIiInTUJc0SZOlb+whMSGpmKUeduWDsBGC+b/U
+         Etnqvg7fEo0pTCwRmK3kVGm/sssAze2Uys8Z9klNdp+T8vqkxV7SdJfDvAJmH6PBeL+H
+         l7H6YgA9X0f42xzNmHToE7Ohcp6x/H+Bmh1cp8R1ejx0+kbnz+dEz9EfdhNiMQTjanwP
+         5DiQ==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1792762165; x=1793366965; darn=vger.kernel.org;
+        d=cloud.ionos.com; s=google; t=1792779674; x=1793384474; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=WJ+grZ4lbWZ8KaHJYCpBfwtWw/sRlKb2fRhe/pAbeJg=;
-        b=AjTieBTka2G8Eml4GMw4XK4ado1H4L5O0wrOEGxtrMbwwaq7NfG4IwjKOz5soXqQrf
-         pdoXQHMP7xNtWeqgHeVb2hGXtqWxL+L10VfNG7HDHDGa11Q4nBOCGrx0NhHIW9SYOYuG
-         9NQkGfMZjNPIngxOPBZsIeNWqmDL/pzszL2+aRgNS9LiswMKZWa/biK0YuZc5QtHIfUh
-         agEkTWEooQBhv2v3Pg+ky2OXLEwJ8/muaMqCn69SBacevLk28flRa2W2VZFD9PCOIeRB
-         ulD3+3gx/P8mY3Q+eNwwZbeUhaqDo7bz57uUVsgRgf6FplF8hc0+AOEqdb8nWeXO2xRt
-         7AnQ==
+        bh=JPXYTcb2GVIpXeWLwsxVi5QbrL0t2UUrrpmBeD3Y8TQ=;
+        b=jPVbTySpKu9bZwpJjjiHg6fWlvq4ipOGD42e9huBV/TtiWterg17v+cdPrZn3MRa7T
+         GwwYEbO4nFeltQ9kAj0QDov6NtWoR1H4CmtvcGP7qz5XwCGvsBLsEUo0vI+80p6AOWJY
+         xojMxYAmpVyO6EPl59ZMkh6oteNu4blWQTCqH32R+JykOQSJwJHb9AlZMt49GKljBcgy
+         5kgQc9pj7uTGSqN60A3M2VpP7CJsUH4N5r1TuHN0R2KDy5mC23gAWIzkHg+2C7HpPGbl
+         Ei2eqaznzgYMGG5B9fXLf5srIPoENLvio3e7y8rILDgzMvMRoKgRn5Wmf+Mu9OsMgCgL
+         HoHw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792762165; x=1793366965;
+        d=1e100.net; s=20260707; t=1792779674; x=1793384474;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=WJ+grZ4lbWZ8KaHJYCpBfwtWw/sRlKb2fRhe/pAbeJg=;
-        b=f9LbDQ1XJktxd/a/7fBp7XahyWJ8lhHyxytTK21RVYPSnFlvPAsPqMBf83YdJbJuSr
-         Zt+0MRtCmgn5O0WOnjBJERAQgVV/5nKy/v2gKNWFW380LUbEkJw+GQUurFpXV5duPsav
-         jMGUyNQrTAh+H5lLhjAoIA6eqyCzC1fQ0/Mn0fqRv0bZCJEmWuio8/HpPgbMujusk6n1
-         ZmvO/AKygwbQlrOpjs6+khDNueV9Oc3ncKjUl9Pf/M50zdELGzrLDNhPquodTE+2XHDU
-         LuIiSrDUA25HQ+wrt4WNU7Xc2wxSZcgQgnvR52jak9UvJg2syFYA7KyNbNjH63IJiZCk
-         STcQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxxQbK9srJ5ySeQBOPF693TdAM0C3v2m9FVbUcf7CaLcKuLSwtk4fjk6aFLIgVom78Gi6w95maw5/H6@vger.kernel.org
-X-Gm-Message-State: AFq9FYI9VwGg52LEIy69mlOg+JNdmgpioK4t2kQL1VQ0asYHS0VIOilB
-	EXErxrn2R/OEDgzhDD4Q7upDMdorH6oC2VZ2JL0YZ8kUOjGBJ5N+JPiZxfQRTuf9jxEuoXU8kJa
-	9zC1v8j/mamQxBHnFVsNQ55oI5fyXWZrniggWie7Hd0RyPjh0UZL80taL61lWDcPIetuQXWN7tj
-	PoSag5STyRwKeVXO4v1yPmviWb4aXKh98ZQdqivw==
-X-Gm-Gg: AYBFou15DURvAVcPvwT7cem8I3f/EYcT1RGqUU4Vft83WbJVR+MiJAa0o8y2eHFt3mh
-	phPKeVpzbgtDMio1wP6Vi87vzP3DmDCiHMi20MupU/vnuYWGasvm5QCjblxVq5UPsXLllGQxqUr
-	qhs6Ndqzc3VP2UX30Pf31PKBWzKhTJOYOriBt85nTJVOIYc1c63DNn7Sc=
-X-Received: by 2002:a05:7023:d0d:b0:18e:5292:2670 with SMTP id a92af1059eb24-19598c7823emr3524659c88.23.1792762164528;
-        Fri, 23 Oct 2026 06:29:24 -0700 (PDT)
-X-Received: by 2002:a05:7023:d0d:b0:18e:5292:2670 with SMTP id
- a92af1059eb24-19598c7823emr3524616c88.23.1792762163694; Fri, 23 Oct 2026
- 06:29:23 -0700 (PDT)
+        bh=JPXYTcb2GVIpXeWLwsxVi5QbrL0t2UUrrpmBeD3Y8TQ=;
+        b=1gjZG2v9ZDps3aTU7GrECVq3mgt3bQQDKrIz+GdAk6KaD7GEwSQ6UcvM3Nl3UQyGNJ
+         vd667E2nvtSMi9JsxSh0cNsoWcKbXgcXegnVVJpRYhMbCuUQk8jl1w7vEUnsw79KLUGS
+         C66fPku0ryOOTsq97Zx8z5v91gKHG0WGptrYXVbZCrg0ZFFcHQtSGZrzasLNx4LXnL96
+         tmjChhJC3W/ua8O86nXMwGwJufR6ALTm68fqbiaR4hy3BKIgx2C/vSnQNfKI3jxg7MbH
+         Melz1jzOaGDyPR7BtQITEoUB7LqamGhJviFTZ7b77dNNxF/VBevCEjDx5mcHjd9I3Fta
+         44mA==
+X-Forwarded-Encrypted: i=1; AKwUvBxWkU8SS5jKSq3RB68kkKByzmq/Fl9VNYe6+nm/L04L53b/Lw6IBqndWyeMaq/vkCkZID0PfZoXeyew@vger.kernel.org
+X-Gm-Message-State: AFq9FYLlSvyXxMw1twO8EjR6Nz/7jAc4EvO4axDahVU2RWvOi+sX5U2U
+	paFiTFmbqATh/oV1uAOBPMBkAIa7niAjJU2UqlHNcAPpwM8K5ygPDmyVLcbtmY3y1SCuTft9nmr
+	B6MYzYjSSp5VemNR7HBcDqRLfG8tk7Cl5/+Q8t+nUB0iS/WTbHuI3Kkk=
+X-Gm-Gg: AYBFou19h0w0bMxSKyf1y0YtHu/jeBydT5HHhTkiSCXqXq2cNB4bjsaKfaMBliDM48b
+	pVyGczJSIJFcWmdSeq8U3Io+5uMxexnUBZdfA6l+hqcvqZpBUylFibUi2H6F28PmMPdKW8Nt17n
+	FeVh8wNBHvLstmA0nH1zmmWrbr0EmO1jygzLbRMnBx+8e2Uuc86McOfO0jXB8gT3Cgdf2mmSDHu
+	ph0B5rqc2R7uzSbAIi6zw9Vp5/gTMTYgu0sWE9Jog3E0x+DEcfhX55XJeo2Sqrc+t6+5qVrpctA
+	0PvTrv+esLx0bPPEiSZBuMWsm9zOOsJAofFPC5kBwOau8LW3DFNk+C+javpceAoT+dBRL0SDFXw
+	gK8NYBx4tfaaRfKgdnaa00XkJ4Bpjz7/BWBMnlrbLLmA1sqLQ/EA6I6dFg5QZAtG1A4a7Ig==
+X-Received: by 2002:a17:906:560d:b0:c25:2ded:ad36 with SMTP id
+ a640c23a62f3a-c46a8e5e8famr381988966b.0.1792779674049; Fri, 23 Oct 2026
+ 11:21:14 -0700 (PDT)
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -124,168 +104,199 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261019010827.2922617-1-wozizhi@huaweicloud.com> <20261019010827.2922617-2-wozizhi@huaweicloud.com>
-In-Reply-To: <20261019010827.2922617-2-wozizhi@huaweicloud.com>
-From: Bruce Johnston <bjohnsto@redhat.com>
-Date: Fri, 23 Oct 2026 09:29:12 -0400
-X-Gm-Features: AclHuK-yTLpqARnkRDI7dk5n00WjVv97rLiODDTXduGe6PENvnMBjX29F5aKlcM
-Message-ID: <CAOjDE+C8KFcTsaWjMfmcWcQOwv8qetm-QKvYts+cUGFzgUB8uA@mail.gmail.com>
-Subject: Re: [PATCH V2 1/6] md/raid0: don't leave mddev in an inconsistent
- state when takeover fails
-To: Zizhi Wo <wozizhi@huaweicloud.com>
-Cc: song@kernel.org, yukuai@fygo.io, magiclinan@didiglobal.com, 
-	xiao@kernel.org, linux-raid@vger.kernel.org, yangerkun@huawei.com, 
-	chengzhihao1@huawei.com, wozizhi@huawei.com
+References: <20260910081114.1605746-1-jinpu.wang@ionos.com> <e2c36f31-d198-40a7-a18d-156e1fd6fbb2@fygo.io>
+In-Reply-To: <e2c36f31-d198-40a7-a18d-156e1fd6fbb2@fygo.io>
+From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Date: Fri, 23 Oct 2026 20:21:00 +0200
+X-Gm-Features: AclHuK95vt0fwIpK5hKjjmZvyy0BYIwu-sPwB35kyz_hWeMoZZCxGN2pFtQZ1y8
+Message-ID: <CAMGffE=LF4o0to7teb_k1i7H1FhhvfEs5ntDG8JfumS0fWPQRw@mail.gmail.com>
+Subject: Re: [PATCH v2 0/8] md: don't wait for q->limits_lock while md holds
+ back I/O
+To: yukuai@fygo.io
+Cc: Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, 
+	Nilay Shroff <nilay@linux.ibm.com>, abd.masalkhi@gmail.com, linux-block@vger.kernel.org, 
+	Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Damien Le Moal <dlemoal@kernel.org>, 
+	Ming Lei <tom.leiming@gmail.com>, Xiao Ni <xiao@kernel.org>, 
+	Li Nan <magiclinan@didiglobal.com>, Mike Snitzer <snitzer@kernel.org>, 
+	Mikulas Patocka <mpatocka@redhat.com>, dm-devel@lists.linux.dev, 
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, Oct 18, 2026 at 9:16=E2=80=AFPM Zizhi Wo <wozizhi@huaweicloud.com> =
-wrote:
->
-> From: Zizhi Wo <wozizhi@huawei.com>
->
-> raid0_takeover_raid45(), raid0_takeover_raid10() and raid0_takeover_raid1=
-()
-> update mddev before create_strip_zones(), which can fail.
->
-> On failure, level_store() only rolls back new_level, new_layout,
-> new_chunk_sectors, raid_disks and delta_disks. The old personality is
-> therefore left with a reset resync_offset, cleared feature flags, and, fo=
-r
-> raid1, the wrong chunk size.
->
-> Set only what create_strip_zones() needs before calling it, and move the
-> rest after it succeeds.
->
-> create_strip_zones() also rounds rdev->sectors, but the old levels do not
-> use it for I/O, so that is harmless. And mddev->degraded is already reset
-> by level_store() on success, so drop the redundant assignment in
-> raid0_takeover_raid10().
->
+Hi Kuai,
 
-The rounding of sectors is not too much of a concern of mine. I'm more conc=
-erned
-about rdev->sectors getting set to mddev->dev_sectors in the
-raid0_takeover_raid45.
-While I think I understand why it is done and I agree rdev->sectors
-isn't used by the 4/5 raid
-level I/O, I'm pretty sure the field is still used in sysfs fields and
-things like mdstat. On
-a takeover failure, I feel like we are losing what the old
-rdev->sectors value was when
-we go back to raid 4/5 (rdev->sectors and mddev->dev_sectors can be
-different values)
-
-Do you have any thoughts on this? I know it would be a pain to backup
-/ restore every
-rdev.
-
-> Fixes: 9af204cf720c ("md: Add support for Raid5->Raid0 and Raid10->Raid0 =
-takeover")
-> Fixes: fc3a08b85b7a ("Add raid1->raid0 takeover support")
-> Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
-> ---
->  drivers/md/raid0.c | 36 +++++++++++++++++++++++-------------
->  1 file changed, 23 insertions(+), 13 deletions(-)
+On Tue, Oct 20, 2026 at 8:57=E2=80=AFAM yu kuai <yukuai@fygo.io> wrote:
 >
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index 35e103f0c2c3..8157e1058a24 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -669,15 +669,16 @@ static void *raid0_takeover_raid45(struct mddev *md=
-dev)
->         mddev->new_level =3D 0;
->         mddev->new_layout =3D 0;
->         mddev->new_chunk_sectors =3D mddev->chunk_sectors;
->         mddev->raid_disks--;
->         mddev->delta_disks =3D -1;
-> -       /* make sure it will be not marked as dirty */
-> -       mddev->resync_offset =3D MaxSector;
-> -       mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV_FLAGS);
+> Hi,
 >
-> -       create_strip_zones(mddev, &priv_conf);
-> +       if (!create_strip_zones(mddev, &priv_conf)) {
-> +               /* make sure it will be not marked as dirty */
-> +               mddev->resync_offset =3D MaxSector;
-> +               mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV_FL=
-AGS);
-> +       }
+> =E5=9C=A8 2026/9/10 16:11, Jack Wang =E5=86=99=E9=81=93:
+> > From: Jack Wang <jinpu.wang@cloud.ionos.com>
+> >
+> > Writing to a queue limits attribute of an md array while a spare is
+> > being re-added deadlocks the array.  I reported this earlier here:
+> >
+> >    https://lore.kernel.org/linux-raid/CAMGffE=3DheGA3y8FjQ0Sm1jj-kd-=3D=
+H9Y54WozKASSEZhc9UNKjA@mail.gmail.com/
+> >
+> > Four tasks, one array:
+> >
+> >    udev-worker    queue_attr_store() holds q->limits_lock, waits in
+> >                   blk_mq_freeze_queue() for q_usage_counter to drain
 >
->         return priv_conf;
->  }
+> Sorry for the delay, usually blk_mq_freeze_queue() is useless for bio-bas=
+ed
+> disks, because it can't guarantee inflight BIOs to drain. So this looks l=
+ike
+> a long term problem since queue_attr_store() can still update limits whil=
+e
+> there can still be bios inflight.
 >
->  static void *raid0_takeover_raid10(struct mddev *mddev)
-> @@ -711,23 +712,25 @@ static void *raid0_takeover_raid10(struct mddev *md=
-dev)
->         mddev->new_level =3D 0;
->         mddev->new_layout =3D 0;
->         mddev->new_chunk_sectors =3D mddev->chunk_sectors;
->         mddev->delta_disks =3D - mddev->raid_disks / 2;
->         mddev->raid_disks +=3D mddev->delta_disks;
-> -       mddev->degraded =3D 0;
-> -       /* make sure it will be not marked as dirty */
-> -       mddev->resync_offset =3D MaxSector;
-> -       mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV_FLAGS);
+> >    fio            holds a q_usage_counter reference, parked in
+> >                   md_handle_request()'s is_suspended() loop
+> >    mdadm          suspended the array, waits for reconfig_mutex
+> >    md_start_sync  holds reconfig_mutex, waits for q->limits_lock
 >
-> -       create_strip_zones(mddev, &priv_conf);
-> +       if (!create_strip_zones(mddev, &priv_conf)) {
-> +               /* make sure it will be not marked as dirty */
-> +               mddev->resync_offset =3D MaxSector;
-> +               mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV_FL=
-AGS);
-> +       }
-> +
->         return priv_conf;
->  }
+> And this deadlock looks related to blk_mq_freeze_queue() concurrent with
+> mddev_suspend(), hence there can be bio blocked between. So I think there
+> can be a simpler solution for this deadlock.
 >
->  static void *raid0_takeover_raid1(struct mddev *mddev)
->  {
->         struct r0conf *priv_conf;
->         int chunksect;
-> +       int old_chunk_sectors;
+> 1) either remove the blk_mq_freeze_queue() from limits update for mdraid,=
+ or
+> 2) also add blk_mq_freeze_queue() to mddev_suspend().
 >
->         /* Check layout:
->          *  - (N - 1) mirror drives must be already faulty
->          */
->         if ((mddev->raid_disks - 1) !=3D mddev->degraded) {
-> @@ -748,22 +751,29 @@ static void *raid0_takeover_raid1(struct mddev *mdd=
-ev)
+> If this is a mdraid specific problem, I'll suggest 2). If there are other
+> bio-based drivers have the same problem, we might what to replace
+> blk_mq_freeze_queue() with driver's bio suspend to fix that limits can
+> update with inflight bios as well.
+Thanks for the suggestion, will look into it back from vacation. Yes,
+it's a MDraid specific problem.
 >
->         if ((chunksect << 9) < PAGE_SIZE)
->                 /* array size does not allow a suitable chunk size */
->                 return ERR_PTR(-EINVAL);
->
-> +       /* Save for rollback if create_strip_zones() fails */
-> +       old_chunk_sectors =3D mddev->chunk_sectors;
-> +
->         /* Set new parameters */
->         mddev->new_level =3D 0;
->         mddev->new_layout =3D 0;
->         mddev->new_chunk_sectors =3D chunksect;
->         mddev->chunk_sectors =3D chunksect;
->         mddev->delta_disks =3D 1 - mddev->raid_disks;
->         mddev->raid_disks =3D 1;
-> -       /* make sure it will be not marked as dirty */
-> -       mddev->resync_offset =3D MaxSector;
-> -       mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV_FLAGS);
->
-> -       create_strip_zones(mddev, &priv_conf);
-> +       if (!create_strip_zones(mddev, &priv_conf)) {
-> +               /* make sure it will be not marked as dirty */
-> +               mddev->resync_offset =3D MaxSector;
-> +               mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV_FL=
-AGS);
-> +       } else {
-> +               mddev->chunk_sectors =3D old_chunk_sectors;
-> +       }
-> +
->         return priv_conf;
->  }
->
->  static void *raid0_takeover(struct mddev *mddev)
->  {
+> >
+> > The last leg is mddev_stack_new_rdev() from ->hot_add_disk().  Since
+> > commit c99f66e4084a ("block: fix queue freeze vs limits lock order in
+> > sysfs store methods") the sysfs store holds q->limits_lock across the
+> > freeze, so md must not block on that lock while it is holding back the
+> > I/O the freeze waits for.  That is the same hazard mddev_suspend()
+> > already documents for reconfig_mutex.
+> >
+> > v1 kept q->limits_lock outermost where it could and used a trylock
+> > everywhere else.  Christoph asked for the lock ordering to be fixed
+> > instead, so v2 drops the trylock and the block patch that added it.
+> >
+> > The rule v2 applies is that q->limits_lock nests outside reconfig_mutex
+> > and the suspend everywhere, with no exceptions to paper over.  The two
+> > callers that cannot own an update do not need one: check_sb_changes()
+> > and md_check_recovery() only ever re-add a device that is already a
+> > member, so its limits are stacked and the update is a refresh, and they
+> > now take the no-stack path unconditionally.  mddev_update_io_opt() is
+> > not an add and does need the update, so patch 4 defers it to a work
+> > item that takes the lock with nothing held.
+> >
+> > Making the hoists unconditional exposed a second cycle that the trylock
+> > had been hiding, which Nilay hit with lockdep on v1:
+> >
+> >    q->limits_lock -> reconfig_mutex        added by this series
+> >    reconfig_mutex -> disk->open_mutex      pre-existing, md opens legs
+> >                                            under reconfig_mutex
+> >    disk->open_mutex -> q->limits_lock      pre-existing, sd_open() ->
+> >                                            sd_revalidate_disk()
+> >
+> > Only the middle edge can go, so legs are now opened before any md lock
+> > is taken.  Patch 7 does the opens and patch 8 the holder links, which
+> > take disk->open_mutex too and were easy to miss because the release
+> > side only takes blk_holder_mutex.  Opening without reconfig_mutex means
+> > the superblock format fields have to be snapshotted and rechecked once
+> > the array is locked.
+> >
+> > Patches 1, 3 and 6 are plumbing with no functional change.
+> >
+> > Two callers still take q->limits_lock inside reconfig_mutex, both with
+> > the array suspended, and patch 5 says why: ->start_reshape() from
+> > action_store(), which suspends before flushing sync_work, and
+> > raid*_run() -> queue_limits_set() from level_store(), which already
+> > hangs on its own because it freezes the queue while suspended.  Both
+> > need more restructuring than belongs here.
+> >
+> > The patches are based on v7.3-rc2.
+> >
+> > v1: https://lore.kernel.org/linux-raid/20260909063029.GC29874@lst.de/T/=
+#t
+> >
+> > Changes since v1:
+> >   - Drop the trylock and the block patch adding
+> >     queue_limits_start_update_trylock(), per Christoph.
+> >   - check_sb_changes() and md_check_recovery() take the no-stack path
+> >     unconditionally instead of trying the lock first.
+> >   - Defer the io_opt update to a work item rather than skipping it on a
+> >     contended pass (patch 4, was "md: don't wait for q->limits_lock in
+> >     mddev_update_io_opt()").
+> >   - New patches 6-8 to close the reconfig_mutex -> disk->open_mutex
+> >     edge that lockdep reported on v1: pass a queue_limits through
+> >     ->run(), open new legs before locking the array, and link their
+> >     holders there too.
+> >   - Rebased on v7.3-rc2.
+> >
+> > Testing, on v7.3-rc2 with lockdep (PROVE_LOCKING, DEBUG_LOCK_ALLOC):
+> >
+> >   - the reproducer below, 20 fail/remove/add cycles with fio in flight
+> >     and a loop writing queue/max_sectors_kb, where the same test wedges
+> >     the array before the series
+> >   - array start at raid0, raid1, raid5, raid10 and linear, spare add,
+> >     fail and remove, the rdev sysfs stores, ADD_NEW_DISK, array_state
+> >     transitions, a level change and a raid5 3 -> 4 reshape to
+> >     completion, which is what exercises patch 4's work item: io_opt
+> >     goes from 1048576 to 1572864 once end_reshape() runs
+> >   - HOT_ADD_DISK of an undersized leg, so bind_rdev_to_array() fails
+> >     and patch 8's release path runs
+> >
+> > No lockdep reports, and debug_locks stayed 1 throughout.  Every patch
+> > builds on its own.
+> >
+> > A blktests case covering this deadlock will be sent separately.
+> >
+> > The reproducer, for anyone who wants it:
+> >
+> >    mdadm -C /dev/md111 --force -e 1.2 --assume-clean -l 1 \
+> >          --bitmap=3Dinternal -n 2 /dev/ram0 /dev/ram1
+> >
+> >    fio --direct=3D1 --rw=3Drandrw --ioengine=3Dlibaio --iodepth=3D32 --=
+numjobs=3D4 \
+> >        --time_based=3D1 --runtime=3D180 --filename=3D/dev/md111 --name=
+=3Drepro &
+> >
+> >    while :; do
+> >        echo 128 > /sys/block/md111/queue/max_sectors_kb 2>/dev/null
+> >    done &
+> >
+> >    for i in $(seq 20); do
+> >        mdadm /dev/md111 --fail /dev/ram0
+> >        mdadm /dev/md111 --remove /dev/ram0
+> >        mdadm /dev/md111 --add /dev/ram0
+> >        mdadm --wait /dev/md111
+> >    done
+> >
+> > Jack Wang (8):
+> >    md: pass a queue_limits down to ->hot_add_disk()
+> >    md: don't wait for q->limits_lock in check_sb_changes()
+> >    md: pass a queue_limits through the rdev sysfs stores
+> >    md: defer the io_opt update out of the sync thread
+> >    md: take q->limits_lock before locking and suspending the array
+> >    md: pass a queue_limits through ->run()
+> >    md: open new legs before locking the array
+> >    md: link a new leg's holder before locking the array
+> >
+> >   drivers/md/dm-raid.c       |   4 +-
+> >   drivers/md/md-autodetect.c |  38 ++-
+> >   drivers/md/md-linear.c     |  30 +-
+> >   drivers/md/md.c            | 661 +++++++++++++++++++++++++++++-------=
+-
+> >   drivers/md/md.h            |  56 +++-
+> >   drivers/md/raid0.c         |  16 +-
+> >   drivers/md/raid1.c         |  26 +-
+> >   drivers/md/raid10.c        |  37 ++-
+> >   drivers/md/raid5.c         |  54 ++-
+> >   9 files changed, 741 insertions(+), 181 deletions(-)
+> >
 > --
-> 2.52.0
->
->
-
+> Thanks,
+> Kuai
