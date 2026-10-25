@@ -1,52 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.60
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792952212;
-	b=gXMJLqlBtpGnNDRmqujdWMjY8tM2a7rsfQKYps2Y8RnfDVplC39b8Jp9Slgk3b+N1OU1
-	 A3f7B0rhJCsjcR/v8AIRak2Z7SHxVChQwKQEZgYo03XgP+XMf3p5w33QCGJMIHe3b51fT
-	 lCQYqzoOyTFle9swGY0sYvpe+llpnsxTm/xjVvoMZDc5RbjzyXXqPvOS2FwlwHL5sbWdK
-	 Eu2t29MqO19cfEdp+EEs43qS12/VrknBTKiVJVibxVnsdihslj/u346pcXQ4IPnWYWINJ
-	 IJCvQUGLekzx59gwl9V5+H/MkMAeEALO9+du6bYsb99mLbdDKN4AAI9EhGvVgVk94hA==
+	t=1792955551;
+	b=1bI9bhPp7zcyMWIUPOqWEx/0zs71a9z6G20jU++ExIIKdIGJz4ZjrS/CxXhv654/VQnq
+	 +FNpJ3GTqbsDmhe92s91hNCxiHzA6vqzjuDbZM8zviGnIwT/HugMoYxTQaIanDt2CBMYg
+	 2SqXmGmQRNjPZjrBf8B7Bo53YNh0GdXqHvYdqmDc2tgkS1PKNNK4m5Nhvr2f5pp6HfPzH
+	 kqdnGMKW0XesaqIwbloQ9BIfOKHlEjkljYssAemIILU1GLmKIG1xrcRSkZpG6q64g6iQa
+	 e1gMY5Mbi8OppJLd5//gtKhk7W7LYIPArvlo/g0Bw2QlBmEuPmEQXWMRI00VpY1rN0Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792952212;
-	h=DMARC-Filter:DKIM-Signature:User-Agent:Cc:Mime-Version:In-Reply-To:
-	 Date:Message-Id:X-Original-From:Received:To:From:Subject:References:
-	 X-Lms-Return-Path:Reply-To:Content-Transfer-Encoding:Content-Type;
-	bh=/5lwkv3QUM5YvGs1kBijpp/6wHjZlSgrb379+9vBQcE=;
-	b=W3rYSaCMPfmyklKqn4LkTsawRbCCd36YGL0BAmVQ77P6/7msynN1khKGM8lIYSd6rG5Y
-	 jSqj+CbNHkG3hSrL5d4vd1RhZssBs73Qt9psLcNtXMqt2T5dMiVwVOrxQaoMw7++iXpKA
-	 zanchEI2Q9kA7Srt05scjBUVk7mMcK42cWeVVtZX4huukReDZzZBKuIxATaDlZYidvOc0
-	 qDHI0vpa24g2TiFiLr2lEkJpv0F5KwESGN4lps62ValvE5sg1KKC0B0TQbaTarofbCf3R
-	 DBJ1bd6fJ6LPSRuCGU8PNLG3gKbhVISZmKgEBvE3gEJGN7Sr3bbcnKiuTcR/N26Yquw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792955551;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=wC0I1+krNoOJrd0SMrgBAZIz3+ubw1NyoMfQtLzjC5A=;
+	b=FIeQ/JSLchnaYJVNoDsQgfZRVXAJOefgEkfiRrAOl4olBNSZlXTfU+GWRRFKhca/txlA
+	 264ZcI8DGDGMwz9dygqF7zU4WiB0g+CtMDR2L4HuK2J/Eg6N7hXFVt5zvTN6BKL8r9jo8
+	 gu6BPqgFbnz78cDYZfme31LKsk/rLw4AvZlRyb6Ou+vzAXKc0HTX9c0Yf79Cj/weQfH2s
+	 6jwPoA06NBqJdYr7xeV2Un9u3VDNmBB3WDWMrcepRujc/Y2kYot5RWkJvVpXJOg8jCbf2
+	 hLcNd+TaUvdZh+Znd0cHteRleUodHXNOS28Co5JtvEkgjU5WKmxbnm8W0pIrTFH7n0A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=fygo.io;
-	spf=pass smtp.mailfrom=fygo.io;
-	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=QuBD33Uo;
-	arc=none smtp.remote-ip=209.127.231.60
-Received: from va-2-60.ptr.blmpb.com (va-2-60.ptr.blmpb.com [209.127.231.60])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=auoAI0bi;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1FB8606A31A
-	for <linux-raid@vger.kernel.org>; Sun, 25 Oct 2026 18:16:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E1FB8606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C39B606A320;
+	Sun, 25 Oct 2026 19:12:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=QuBD33Uo
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1792952204;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=/5lwkv3QUM5YvGs1kBijpp/6wHjZlSgrb379+9vBQcE=;
- b=QuBD33UoJ0XNrNXlulx7JRtaPsQ4qoqOqO8xJleODGAQi7PudADFCXzp3QV1GvRqWJZXf4
- pxOcuxVcAZoEqvS1aKDUfAVE86SFcvCiSgUpuUOyqAsEBtlCoRdRvRhqdnBIdqiydKXIyn
- 5pT4JKYpfOjFId8YEuQqrQ3IkOOSdxRdFp9dSu7vJ2ARzG5LiPAxor+eID8RdsDUlVTNvm
- VxCCjMymqju3+OIX0xPBCl+UZW7C9RoL9wNqpneUkbqiZRpKfPqAYUNrAApqdBPxgm3S11
- pa/P4F00FcJhINf1B0xV0woy8m4g/TJNM6DCY3Ez7yQILu/DeCXaHo6qi3Iy4Q==
-User-Agent: Mozilla Thunderbird
-Cc: "wale.zhang.ftd@gmail.com" <wale.zhang.ftd@gmail.com>, 
-	<kent.overstreet@linux.dev>, <colyli@fygo.io>, 
-	"song@kernel.org" <song@kernel.org>, <regressions@lists.linux.dev>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=auoAI0bi
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDD8F1F01828;
+	Sun, 25 Oct 2026 19:12:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792955551;
+	bh=wC0I1+krNoOJrd0SMrgBAZIz3+ubw1NyoMfQtLzjC5A=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=auoAI0bihOA1YUyE2UWRA9EozOXUXAl6cO3xX5j9IKD0GKr7/uPHrU0bvFYqI4bdv
+	 aXuamiOD+FWo0OZ2KggKMuTzO5iv1jjm7ivqbQR00348VOYNhrpPHIXZha3H4TKrej
+	 xDwtcuXJbdvokJ2rCFNcECjIlXsv6jveIUJ14MsZveDKvsmX43GhlRyyTujrNUCimI
+	 4VBnFxDLPvs4kIOaljI1vmsM0qqMT9bSz5dEoHdib56KpzwwWGEjmE4cy4J2re3VK1
+	 mbO6+ZVcB0njNyFFP55uN9YI5y28uLlIDRCQ8sygAqz7x3GMUpmrJZl3TBtELlMlt6
+	 xs9L5N0mtrANw==
+From: Eric Biggers <ebiggers@kernel.org>
+To: linux-raid@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-crypto@vger.kernel.org,
+	x86@kernel.org,
+	linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	Eric Biggers <ebiggers@kernel.org>
+Subject: [PATCH 2/3] raid6: remove obsolete MMX optimized code
+Date: Sun, 25 Oct 2026 12:12:06 -0700
+Message-ID: <20261025191207.86590-3-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261025191207.86590-1-ebiggers@kernel.org>
+References: <20261025191207.86590-1-ebiggers@kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -55,134 +61,356 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-In-Reply-To: <CAO96y0V6oncv54ihXnHfJMYiG_QAQ-NM8BOdqPDXKL8r8-kR9Q@mail.gmail.com>
-Date: Mon, 26 Oct 2026 02:16:39 +0800
-Message-Id: <b6685fc8-0580-4118-ba65-a7d319c08bcf@fygo.io>
-X-Original-From: yu kuai <yukuai@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.25]) by smtp.larksuite.com with ESMTPS; Sun, 25 Oct 2026 18:16:43 +0000
-To: "Konstantin Nikiforov" <helllamer@gmail.com>, 
-	<linux-bcache@vger.kernel.org>, <linux-raid@vger.kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [REGRESSION] md/raid5: discards on an array of non-TRIM HDDs now fail with BLK_STS_NOTSUPP; bcache counts them as backing-device errors and stops the device
-References: <CAO96y0V6oncv54ihXnHfJMYiG_QAQ-NM8BOdqPDXKL8r8-kR9Q@mail.gmail.com>
-X-Lms-Return-Path: <lba+26ade478b+8e7a4e+vger.kernel.org+yukuai@fygo.io>
-Reply-To: yukuai@fygo.io
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Hi,
+The MMX optimized RAID6 code is used only on 25-year old 32-bit CPUs
+that lack SSE2 support -- and only on systems that actually have a RAID
+array.  Those CPUs already have well-tested scalar C fallbacks.
 
-=E5=9C=A8 2026/10/25 20:38, Konstantin Nikiforov =E5=86=99=E9=81=93:
-> #regzbot introduced: 90573092673c
->
-> Hi,
->
-> since upgrading from 7.1.8 to 7.2.11 a machine with root on
-> LVM -> bcache -> md raid5 (three SATA HDDs without TRIM) loses its root
-> device a few minutes after boot. The same stack ran on 7.1.x without
-> any bcache backing-device errors.
->
-> Storage stack
-> -------------
->    3x ST1000DM010-2EP102 (no TRIM; discard_max_hw_bytes =3D 0)
->     -> md126: raid5, 3 devices, 512K chunk, metadata 1.2
->     -> bcache0: md126 as backing device, cache set detached
->        (also reproduced while an NVMe cache was attached)
->     -> LVM vgpcrd5
->     -> btrfs (/usr, /var, /opt; mounted without any discard option)
->        + ext4 (/, /home)
->
-> Kernel: 7.2.11-arch1-1 (Arch Linux), mdadm 4.6, bcache-tools 1.1
->
-> Symptoms
-> --------
-> Every boot, starting ~3 minutes after mount, dmesg fills with:
->
->    bcache: bch_count_backing_io_errors() md126: IO error on backing
-> device, unrecoverable
->
-> in bursts of up to ~35 lines 2 ms apart. Per boot I counted 11, 17, 22
-> and 63 of them. bcache's io_error_limit is 64, so once a boot crosses it
-> bch_cached_dev_error() stops bcache0 and root, /usr, /var and /home
-> disappear. No I/O errors are logged by libata, sd or md; all three
-> members are healthy (SMART clean, array [UUU], no rebuild).
->
-> Analysis
-> --------
-> Since 90573092673c ("md/raid5: validate discard support at request
-> time", v7.2-rc1) raid5_set_limits() unconditionally sets
->
->    lim.max_hw_discard_sectors =3D UINT_MAX;
->
-> and records member support in conf->raid5_discard_unsupported. On this
-> array sysfs now shows:
->
->    /sys/block/md126/queue/discard_max_hw_bytes: 2199023255040
->    /sys/block/md126/queue/discard_max_bytes:    2199023255040
->    /sys/block/md126/queue/discard_granularity:  0
->    /sys/block/sd[abc]/queue/discard_max_hw_bytes: 0
->    (md127, a raid1 on the same disks, still shows 0 for all of these)
->
-> Two upper layers react to the advertised discard support:
->
-> 1. btrfs enables discard=3Dasync by default because the device advertises
->     discard (mount shows "ssd,discard=3Dasync" although nothing in fstab
->     asks for it).
->
-> 2. bcache forwards discards to the backing device whenever
->     bdev_max_discard_sectors(dc->bdev) is non-zero (cached_dev_write()
->     and detached_dev_do_request()). Before 7.2 that was 0 for this array
->     and bcache completed the discards itself.
->
-> raid5_discard_limits() then completes every such bio with
-> BLK_STS_NOTSUPP. bcache's backing_request_endio() treats any non-zero
-> bi_status as a media error and calls bch_count_backing_io_errors(), so
-> each discard brings the backing device one step closer to being stopped.
-> With 64 small deletions on the btrfs volume a root filesystem on
-> raid5+bcache is gone.
->
-> The granularity is also inconsistent: discard_granularity is 0 while
-> discard_max_hw_bytes is non-zero, so writing any non-zero value to
-> discard_max_bytes fails with EINVAL (only 0 is accepted).
->
-> Related changes I found:
-> - efdffeb6d491 ("md: skip discard on unsupported member devices", 7.3)
->    fixes the same bcache symptom for raid0/raid10 via
->    md_submit_discard_bio(), but raid5 does not use that helper and still
->    returns BLK_STS_NOTSUPP in current mainline (raid5_discard_limits()).
-> - 85764f475f3b ("md/raid5: complete discard bios while reshape is
->    active") addresses a different fallout of the same commit (hang during
->    reshape).
->
-> I have not found a report for this raid5 + bcache case on lore.
->
-> Possible fixes (either side would do):
-> - md/raid5: when conf->raid5_discard_unsupported is set, complete the
->    bio successfully (discard is advisory) instead of BLK_STS_NOTSUPP, or
->    do not advertise max_hw_discard_sectors in that case, as before 7.2.
+It's also the only remaining MMX optimized code in the kernel.  MMX
+optimizations for the much more commonly called functions memcpy(),
+copy_page(), and clear_page() were already removed years ago by
+commit c6dbd3e5e69c ("x86/mmx_32: Remove X86_USE_3DNOW").
 
-I think it's fine to complete the bio successfully in this case, the same
-as the old code did. I can cook a patch, however, if you like, feel free to
-test and send a patch by yourself :)
+Remove the MMX optimized RAID6 code.  This includes
+lib/raid/raid6/x86/sse1.c, which was really an MMX implementation with
+SSE1 prefetches and non-temporal stores added on top.
 
-> - bcache: do not count BLK_STS_NOTSUPP (or failed REQ_OP_DISCARD) in
->    bch_count_backing_io_errors(), the same way REQ_RAHEAD failures are
->    already ignored.
->
-> Workaround in use
-> -----------------
-> A udev rule writing 0 to /sys/block/md126/queue/discard_max_bytes and
-> /sys/block/bcache0/queue/discard_max_bytes (also inside the initramfs),
-> plus "nodiscard" on the btrfs mounts. With that, io_errors stays at 0.
->
-> I can test patches on this machine.
->
-> Regards,
-> Konstantin Nikiforov
-> Claude Fable 5.1
+Signed-off-by: Eric Biggers <ebiggers@kernel.org>
+---
+ lib/raid/raid6/Makefile      |   4 --
+ lib/raid/raid6/x86/mmx.c     | 118 ------------------------------
+ lib/raid/raid6/x86/pq_arch.h |  18 -----
+ lib/raid/raid6/x86/sse1.c    | 136 -----------------------------------
+ 4 files changed, 276 deletions(-)
+ delete mode 100644 lib/raid/raid6/x86/mmx.c
+ delete mode 100644 lib/raid/raid6/x86/sse1.c
 
---=20
-Thanks,
-Kuai
+diff --git a/lib/raid/raid6/Makefile b/lib/raid/raid6/Makefile
+index 5cdb7223de2af..0bfc20a60ae92 100644
+--- a/lib/raid/raid6/Makefile
++++ b/lib/raid/raid6/Makefile
+@@ -38,10 +38,6 @@ raid6_pq-$(CONFIG_RISCV_ISA_V)	+= riscv/rvv.o \
+ 				   riscv/recov_rvv.o
+ raid6_pq-$(CONFIG_S390)		+= s390/s390vx8.o \
+ 				   s390/recov_s390xc.o
+-ifeq ($(CONFIG_X86),y)
+-raid6_pq-$(CONFIG_X86_32)	+= x86/mmx.o \
+-				   x86/sse1.o
+-endif
+ raid6_pq-$(CONFIG_X86)		+= x86/sse2.o \
+ 				   x86/avx2.o \
+ 				   x86/avx512.o \
+diff --git a/lib/raid/raid6/x86/mmx.c b/lib/raid/raid6/x86/mmx.c
+deleted file mode 100644
+index afa82536142da..0000000000000
+--- a/lib/raid/raid6/x86/mmx.c
++++ /dev/null
+@@ -1,118 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0-or-later
+-/*
+- * Copyright 2002 H. Peter Anvin - All Rights Reserved
+- *
+- * MMX implementation of RAID-6 syndrome functions.
+- */
+-
+-#include <asm/cpufeature.h>
+-#include <asm/fpu/api.h>
+-#include "algos.h"
+-
+-/* Shared with raid6/sse1.c */
+-const struct raid6_mmx_constants {
+-	u64 x1d;
+-} raid6_mmx_constants = {
+-	0x1d1d1d1d1d1d1d1dULL,
+-};
+-
+-/*
+- * Plain MMX implementation
+- */
+-static void raid6_mmx1_gen_syndrome(int disks, size_t bytes, void **ptrs)
+-{
+-	u8 **dptr = (u8 **)ptrs;
+-	u8 *p, *q;
+-	int d, z, z0;
+-
+-	z0 = disks - 3;		/* Highest data disk */
+-	p = dptr[z0+1];		/* XOR parity */
+-	q = dptr[z0+2];		/* RS syndrome */
+-
+-	kernel_fpu_begin();
+-
+-	asm volatile("movq %0,%%mm0" : : "m" (raid6_mmx_constants.x1d));
+-	asm volatile("pxor %mm5,%mm5");	/* Zero temp */
+-
+-	for ( d = 0 ; d < bytes ; d += 8 ) {
+-		asm volatile("movq %0,%%mm2" : : "m" (dptr[z0][d])); /* P[0] */
+-		asm volatile("movq %mm2,%mm4");	/* Q[0] */
+-		for ( z = z0-1 ; z >= 0 ; z-- ) {
+-			asm volatile("movq %0,%%mm6" : : "m" (dptr[z][d]));
+-			asm volatile("pcmpgtb %mm4,%mm5");
+-			asm volatile("paddb %mm4,%mm4");
+-			asm volatile("pand %mm0,%mm5");
+-			asm volatile("pxor %mm5,%mm4");
+-			asm volatile("pxor %mm5,%mm5");
+-			asm volatile("pxor %mm6,%mm2");
+-			asm volatile("pxor %mm6,%mm4");
+-		}
+-		asm volatile("movq %%mm2,%0" : "=m" (p[d]));
+-		asm volatile("pxor %mm2,%mm2");
+-		asm volatile("movq %%mm4,%0" : "=m" (q[d]));
+-		asm volatile("pxor %mm4,%mm4");
+-	}
+-
+-	kernel_fpu_end();
+-}
+-
+-const struct raid6_calls raid6_mmxx1 = {
+-	.gen_syndrome	= raid6_mmx1_gen_syndrome,
+-	.name		= "mmxx1",
+-};
+-
+-/*
+- * Unrolled-by-2 MMX implementation
+- */
+-static void raid6_mmx2_gen_syndrome(int disks, size_t bytes, void **ptrs)
+-{
+-	u8 **dptr = (u8 **)ptrs;
+-	u8 *p, *q;
+-	int d, z, z0;
+-
+-	z0 = disks - 3;		/* Highest data disk */
+-	p = dptr[z0+1];		/* XOR parity */
+-	q = dptr[z0+2];		/* RS syndrome */
+-
+-	kernel_fpu_begin();
+-
+-	asm volatile("movq %0,%%mm0" : : "m" (raid6_mmx_constants.x1d));
+-	asm volatile("pxor %mm5,%mm5");	/* Zero temp */
+-	asm volatile("pxor %mm7,%mm7"); /* Zero temp */
+-
+-	for ( d = 0 ; d < bytes ; d += 16 ) {
+-		asm volatile("movq %0,%%mm2" : : "m" (dptr[z0][d])); /* P[0] */
+-		asm volatile("movq %0,%%mm3" : : "m" (dptr[z0][d+8]));
+-		asm volatile("movq %mm2,%mm4"); /* Q[0] */
+-		asm volatile("movq %mm3,%mm6"); /* Q[1] */
+-		for ( z = z0-1 ; z >= 0 ; z-- ) {
+-			asm volatile("pcmpgtb %mm4,%mm5");
+-			asm volatile("pcmpgtb %mm6,%mm7");
+-			asm volatile("paddb %mm4,%mm4");
+-			asm volatile("paddb %mm6,%mm6");
+-			asm volatile("pand %mm0,%mm5");
+-			asm volatile("pand %mm0,%mm7");
+-			asm volatile("pxor %mm5,%mm4");
+-			asm volatile("pxor %mm7,%mm6");
+-			asm volatile("movq %0,%%mm5" : : "m" (dptr[z][d]));
+-			asm volatile("movq %0,%%mm7" : : "m" (dptr[z][d+8]));
+-			asm volatile("pxor %mm5,%mm2");
+-			asm volatile("pxor %mm7,%mm3");
+-			asm volatile("pxor %mm5,%mm4");
+-			asm volatile("pxor %mm7,%mm6");
+-			asm volatile("pxor %mm5,%mm5");
+-			asm volatile("pxor %mm7,%mm7");
+-		}
+-		asm volatile("movq %%mm2,%0" : "=m" (p[d]));
+-		asm volatile("movq %%mm3,%0" : "=m" (p[d+8]));
+-		asm volatile("movq %%mm4,%0" : "=m" (q[d]));
+-		asm volatile("movq %%mm6,%0" : "=m" (q[d+8]));
+-	}
+-
+-	kernel_fpu_end();
+-}
+-
+-const struct raid6_calls raid6_mmxx2 = {
+-	.gen_syndrome	= raid6_mmx2_gen_syndrome,
+-	.name		= "mmxx2",
+-};
+diff --git a/lib/raid/raid6/x86/pq_arch.h b/lib/raid/raid6/x86/pq_arch.h
+index 02f8843b05372..4a863b253b909 100644
+--- a/lib/raid/raid6/x86/pq_arch.h
++++ b/lib/raid/raid6/x86/pq_arch.h
+@@ -2,10 +2,6 @@
+ 
+ #include <asm/cpufeature.h>
+ 
+-extern const struct raid6_calls raid6_mmxx1;
+-extern const struct raid6_calls raid6_mmxx2;
+-extern const struct raid6_calls raid6_sse1x1;
+-extern const struct raid6_calls raid6_sse1x2;
+ extern const struct raid6_calls raid6_sse2x1;
+ extern const struct raid6_calls raid6_sse2x2;
+ extern const struct raid6_calls raid6_sse2x4;
+@@ -50,13 +46,6 @@ static inline bool raid6_has_sse2(void)
+ 		    boot_cpu_has(X86_FEATURE_XMM2);
+ }
+ 
+-static inline bool raid6_has_sse1_or_mmxext(void)
+-{
+-	return boot_cpu_has(X86_FEATURE_MMX) &&
+-		(boot_cpu_has(X86_FEATURE_XMM) ||
+-		 boot_cpu_has(X86_FEATURE_MMXEXT));
+-}
+-
+ static __always_inline void __init arch_raid6_init(void)
+ {
+ 	if (raid6_has_avx2()) {
+@@ -78,13 +67,6 @@ static __always_inline void __init arch_raid6_init(void)
+ 			raid6_algo_add(&raid6_sse2x4);
+ 	} else {
+ 		raid6_algo_add_default();
+-		if (raid6_has_sse1_or_mmxext()) {
+-			raid6_algo_add(&raid6_sse1x1);
+-			raid6_algo_add(&raid6_sse1x2);
+-		} else if (boot_cpu_has(X86_FEATURE_MMX)) {
+-			raid6_algo_add(&raid6_mmxx1);
+-			raid6_algo_add(&raid6_mmxx2);
+-		}
+ 	}
+ 
+ 	if (raid6_has_avx512())
+diff --git a/lib/raid/raid6/x86/sse1.c b/lib/raid/raid6/x86/sse1.c
+deleted file mode 100644
+index f4b260df522a3..0000000000000
+--- a/lib/raid/raid6/x86/sse1.c
++++ /dev/null
+@@ -1,136 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0-or-later
+-/*
+- * Copyright 2002 H. Peter Anvin - All Rights Reserved
+- *
+- * SSE-1/MMXEXT implementation of RAID-6 syndrome functions.
+- *
+- * This is really an MMX implementation, but it requires SSE-1 or AMD MMXEXT for
+- * prefetch support and a few other features.  The support for nontemporal
+- * memory accesses is enough to make this worthwhile as a separate
+- * implementation.
+- */
+-
+-#include <asm/cpufeature.h>
+-#include <asm/fpu/api.h>
+-#include "algos.h"
+-
+-/* Defined in raid6/mmx.c */
+-extern const struct raid6_mmx_constants {
+-	u64 x1d;
+-} raid6_mmx_constants;
+-
+-/*
+- * Plain SSE1 implementation
+- */
+-static void raid6_sse11_gen_syndrome(int disks, size_t bytes, void **ptrs)
+-{
+-	u8 **dptr = (u8 **)ptrs;
+-	u8 *p, *q;
+-	int d, z, z0;
+-
+-	z0 = disks - 3;		/* Highest data disk */
+-	p = dptr[z0+1];		/* XOR parity */
+-	q = dptr[z0+2];		/* RS syndrome */
+-
+-	kernel_fpu_begin();
+-
+-	asm volatile("movq %0,%%mm0" : : "m" (raid6_mmx_constants.x1d));
+-	asm volatile("pxor %mm5,%mm5");	/* Zero temp */
+-
+-	for ( d = 0 ; d < bytes ; d += 8 ) {
+-		asm volatile("prefetchnta %0" : : "m" (dptr[z0][d]));
+-		asm volatile("movq %0,%%mm2" : : "m" (dptr[z0][d])); /* P[0] */
+-		asm volatile("prefetchnta %0" : : "m" (dptr[z0-1][d]));
+-		asm volatile("movq %mm2,%mm4");	/* Q[0] */
+-		asm volatile("movq %0,%%mm6" : : "m" (dptr[z0-1][d]));
+-		for ( z = z0-2 ; z >= 0 ; z-- ) {
+-			asm volatile("prefetchnta %0" : : "m" (dptr[z][d]));
+-			asm volatile("pcmpgtb %mm4,%mm5");
+-			asm volatile("paddb %mm4,%mm4");
+-			asm volatile("pand %mm0,%mm5");
+-			asm volatile("pxor %mm5,%mm4");
+-			asm volatile("pxor %mm5,%mm5");
+-			asm volatile("pxor %mm6,%mm2");
+-			asm volatile("pxor %mm6,%mm4");
+-			asm volatile("movq %0,%%mm6" : : "m" (dptr[z][d]));
+-		}
+-		asm volatile("pcmpgtb %mm4,%mm5");
+-		asm volatile("paddb %mm4,%mm4");
+-		asm volatile("pand %mm0,%mm5");
+-		asm volatile("pxor %mm5,%mm4");
+-		asm volatile("pxor %mm5,%mm5");
+-		asm volatile("pxor %mm6,%mm2");
+-		asm volatile("pxor %mm6,%mm4");
+-
+-		asm volatile("movntq %%mm2,%0" : "=m" (p[d]));
+-		asm volatile("movntq %%mm4,%0" : "=m" (q[d]));
+-	}
+-
+-	asm volatile("sfence" : : : "memory");
+-	kernel_fpu_end();
+-}
+-
+-const struct raid6_calls raid6_sse1x1 = {
+-	.gen_syndrome	= raid6_sse11_gen_syndrome,
+-	.name		= "sse1x1",
+-};
+-
+-/*
+- * Unrolled-by-2 SSE1 implementation
+- */
+-static void raid6_sse12_gen_syndrome(int disks, size_t bytes, void **ptrs)
+-{
+-	u8 **dptr = (u8 **)ptrs;
+-	u8 *p, *q;
+-	int d, z, z0;
+-
+-	z0 = disks - 3;		/* Highest data disk */
+-	p = dptr[z0+1];		/* XOR parity */
+-	q = dptr[z0+2];		/* RS syndrome */
+-
+-	kernel_fpu_begin();
+-
+-	asm volatile("movq %0,%%mm0" : : "m" (raid6_mmx_constants.x1d));
+-	asm volatile("pxor %mm5,%mm5");	/* Zero temp */
+-	asm volatile("pxor %mm7,%mm7"); /* Zero temp */
+-
+-	/* We uniformly assume a single prefetch covers at least 16 bytes */
+-	for ( d = 0 ; d < bytes ; d += 16 ) {
+-		asm volatile("prefetchnta %0" : : "m" (dptr[z0][d]));
+-		asm volatile("movq %0,%%mm2" : : "m" (dptr[z0][d])); /* P[0] */
+-		asm volatile("movq %0,%%mm3" : : "m" (dptr[z0][d+8])); /* P[1] */
+-		asm volatile("movq %mm2,%mm4");	/* Q[0] */
+-		asm volatile("movq %mm3,%mm6"); /* Q[1] */
+-		for ( z = z0-1 ; z >= 0 ; z-- ) {
+-			asm volatile("prefetchnta %0" : : "m" (dptr[z][d]));
+-			asm volatile("pcmpgtb %mm4,%mm5");
+-			asm volatile("pcmpgtb %mm6,%mm7");
+-			asm volatile("paddb %mm4,%mm4");
+-			asm volatile("paddb %mm6,%mm6");
+-			asm volatile("pand %mm0,%mm5");
+-			asm volatile("pand %mm0,%mm7");
+-			asm volatile("pxor %mm5,%mm4");
+-			asm volatile("pxor %mm7,%mm6");
+-			asm volatile("movq %0,%%mm5" : : "m" (dptr[z][d]));
+-			asm volatile("movq %0,%%mm7" : : "m" (dptr[z][d+8]));
+-			asm volatile("pxor %mm5,%mm2");
+-			asm volatile("pxor %mm7,%mm3");
+-			asm volatile("pxor %mm5,%mm4");
+-			asm volatile("pxor %mm7,%mm6");
+-			asm volatile("pxor %mm5,%mm5");
+-			asm volatile("pxor %mm7,%mm7");
+-		}
+-		asm volatile("movntq %%mm2,%0" : "=m" (p[d]));
+-		asm volatile("movntq %%mm3,%0" : "=m" (p[d+8]));
+-		asm volatile("movntq %%mm4,%0" : "=m" (q[d]));
+-		asm volatile("movntq %%mm6,%0" : "=m" (q[d+8]));
+-	}
+-
+-	asm volatile("sfence" : :: "memory");
+-	kernel_fpu_end();
+-}
+-
+-const struct raid6_calls raid6_sse1x2 = {
+-	.gen_syndrome	= raid6_sse12_gen_syndrome,
+-	.name		= "sse1x2",
+-};
+-- 
+2.56.0
+
