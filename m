@@ -1,120 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.133.124
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793025956;
-	b=lAi7RTgCfySHzkYEGsw+/uzq4WxFZHHtYHToJNwjs/S9GNDsEa2Abfe4SNiFXg/mF9jl
-	 mLh0udB7d3oBeKpIHY7hXH6z+2Qzam0XJP1ccJYfjT4tTFbJ3WfDxba8O90ST56a/f1+J
-	 UpWGLSrWuCJqul4wbgu8qYOnRqVcj0G95990NsmtTToQXRjbLzj1O2a+0sozL080zVNL+
-	 XpVho7DYVORgENFzIOAqhwRuG7hkVoN3SJDFxG2FSoyqYxAhZviK5YZ2tdqA+Joft8v+I
-	 PHUEMqAZS/4vDKazmOxaEdR/rvAOLSjCbte3/SjTVkDhyxlH+A5LyO8iaUmEu8OAtpw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793025956;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:MIME-Version:References:In-Reply-To:From:Date:
-	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=Xl5/intmUiXAE8+mmqtuYRR1ZbCkeJBNVCGX7MeNWxE=;
-	b=MEAOBiXsCOEXEjxSvpQMFi4hBgFZiyKNoT0NXhkiAnrO+LJzR393WYNRScADQnnc3Pga
-	 zGoveWpiLYxHtdMTFtIlgdh+vgdqMJovSu6D/dXHjT7Qq3BhKx8soueRVcv47CCL2TmJ2
-	 02brf3gGk3ad+cuLtZ1ut4N0EATCbxGdTvtfFiYJn6Spjf8LwSSlEYSJ3jtlevsjH5MHs
-	 j0079qYpeaYZfkOBF6mmJPlDheAydrTKzAp8ZJQXboHjIeK9QD+BK84TKU2Ebjh96OvAF
-	 ukJr0AuN1g5/FiWKFU3/2gCEEyI4W4Pk6Lj+eMg7e/MH+p915XFBmkH/saCDVO7THnw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Jf69yF2C;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=KuY4zS5u;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.52
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793026628;
+	b=c280Y3y/EAwVYsYmtOnvtR1nN2+QXjrlWC5tA1sYl+Xt8pcOLJaUjaqA+enJVRB7Ltw8
+	 OuCgpu3IEmiqx1xdA8eeGIn8pRRWdFhh096n/kC2IwK1NarkKN3d1SSuaQB8PerDnz6nt
+	 wa2yC7iUsTcMXOyOlVrz0ZflOiN22Ss7lLgLbNRo/iCIHqPXOcfZ8w+O/KaJTM5L4oSh1
+	 wPv+eMacVdEf47vA4BwAfMxWEUpgps+9llMuAJV573CGndKsddfA+dxR5/njzUeLYdyT8
+	 pa5Gp/LOZfaVmqcgzZcPDXI55bpgWeMgoBSY7C17R7APhhUc1vGLndnsyNvgEN0ZIPA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793026628;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:In-Reply-To:References:X-Mailer:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=r4TeSRrJfvEb9bXGYtvTmzKxtpAZeorrt+MbujrYaNo=;
+	b=X7865anJBKtn0FbtP2QW4ka357Er1M2y68ECYYeaXZET5174t5Y1N8bwP6cUTnlFxMFL
+	 E0StdasfTDRy8IhcYxVkcfn/y8qMkeltOQuXywPaJZbxbgSEozkEvNKwXvxyGGPkVJy/j
+	 c8iKJPl6goE9Z9Y3x2IkKq74b86uBtDeSKO/IgLC0rhrbcTdC66vIKyZ1GBQ936GVuaec
+	 f12Ua8D0iiH6PyjLTyLSOAf29l1UHdATanilyHAa9idVuA4/s8Y0ySESQ9PkCYV/3Kyd9
+	 xHRW4FjcNfNAd/KT89l86n6/+Y9szuIdv75K4q6AXY87LzK3YOtrv2YpfgdZ7gTuKPw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=iNVvKNRO;
+	arc=none smtp.remote-ip=209.85.128.52
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77E21606A31A
-	for <linux-raid@vger.kernel.org>; Mon, 26 Oct 2026 14:45:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 77E21606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04A5A606A31E
+	for <linux-raid@vger.kernel.org>; Mon, 26 Oct 2026 14:57:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 04A5A606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Jf69yF2C;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=KuY4zS5u
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793025954;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Xl5/intmUiXAE8+mmqtuYRR1ZbCkeJBNVCGX7MeNWxE=;
-	b=Jf69yF2CuldRznxpH3B6o6xs6janSzAP0dyork7klELDLtsVlTj3gyCtaArhoETX9ZED/8
-	xUSpSWo8FJa+nlUpUQkHSVPOBZ0pQpOUdy+Nr3/MeQvFu5O1fEJvVMz62n3+C9xjJZ2Rhw
-	+B+9aFpdTtsv7O5aJneOBeW6MjgSOMc=
-Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com
- [74.125.82.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-198-fNZK4GwgNk2f22_vKCa-4w-1; Mon, 26 Oct 2026 10:45:53 -0400
-X-MC-Unique: fNZK4GwgNk2f22_vKCa-4w-1
-X-Mimecast-MFC-AGG-ID: fNZK4GwgNk2f22_vKCa-4w_1793025952
-Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-341eff9e381so9005091eec.1
-        for <linux-raid@vger.kernel.org>; Mon, 26 Oct 2026 07:45:52 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793025952; cv=none;
-        d=google.com; s=arc-20260327;
-        b=bOqdw7A1ymXlrJZmuIeCWfgQsSz/6GZ/kWqmeg/XWcgdU07uLII6212EQdKYh/AQ/a
-         Eu8OYhmTi+NZtcXiSWFRPBCb9DtnxGJWtYVdAhRfz8gp07oXnadxo8Bqg+JzJjxovAeu
-         UeSxdQWO1zUUB8jcsOzNTZFfNNX0jR6pE9KR/gIoOZNFwpdZ05241qTtXQSebKvM4oxB
-         Dk7ZDHaCdk+mnrUfUL2SxW1K6Qb/fdRI2ij86JkEZwKInhj+RL6OD25Q9NRyDy0vTs8W
-         VrqCTArvfo62IbxvPsn+iQvIrJjx8Zci2sUWdVolHKg54LEEaoo18KTFpKgHZ34Kshql
-         iBBg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Xl5/intmUiXAE8+mmqtuYRR1ZbCkeJBNVCGX7MeNWxE=;
-        fh=DR8Y1d9vQRlceI+RK2xtE5hQpHK3qLBZWFF/HLiko8k=;
-        b=b67oq4X/qGyqtyHfzs4nwcVJyX4oPIPDWa33/iGGa5ZC80utpA2dYyGnCmzpTAc6Yo
-         k0BoUXp44j5pYj1d1Nb5Xp7mbLMRUhZEmUVg1clddt5kra+XjtajnUVmroYH6hzsHbKp
-         H19qZ5/AT+shVDfTiDcnODwKgmC0Z7ecNpr6vPN3byMpa3H/f+IwWH51h5ReYx1Kluk7
-         cUu8F6g3m3A939Uifk8rWo9RyARNfyWTuVkNH/lxmf0e8MDWPeX71nAWx6g4z0VO/J2T
-         f8+/1MyP3/WvEPyRZ1sHpqmc+JPwkq8W9v0MHFhszvs/dVzmKIZucTclXaR/p1Y4k1hd
-         ZHNw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=iNVvKNRO
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4a20a37703bso23805015e9.1
+        for <linux-raid@vger.kernel.org>; Mon, 26 Oct 2026 07:57:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1793025952; x=1793630752; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+        d=gmail.com; s=20251104; t=1793026626; x=1793631426; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=Xl5/intmUiXAE8+mmqtuYRR1ZbCkeJBNVCGX7MeNWxE=;
-        b=KuY4zS5ux37JecH9R5jfr+a2fY4KwSAI3CplLD2R+R73gIXWIGLEhvMxmsCq3Y9wIO
-         ZsUiyjIPSlgKOwaHEYlLNrWuSgYtSgQ80tuvc2g+2Ywyd9/HINGoFYA+zNQwpNNwML91
-         qH86lzoXwPywp/AMaV+uas6DfIw39oDY0Ihycg9iKdcsM36ZFj929dr1QOg0z4pdnifh
-         Ip5MOj4wNBGT860tthD6gXd8/ENmuNiBdp6VrCFPUUlyPnCC9NctuzKCziNWU69CqkN0
-         Of94oLc92i+/N5mvhwdYT4F47y9aqw/fbEWZTOd/U5aGsUhHg/Qiy8321hQtSavMP5X8
-         mEdg==
+        bh=r4TeSRrJfvEb9bXGYtvTmzKxtpAZeorrt+MbujrYaNo=;
+        b=iNVvKNROw0TJV/07MSUPeQWkiFUyo/r8Mun0JgwcYN1aZGEO0Sv9204nzc6yLc+hls
+         lVDl0aZxytSZYw6BSeTenz/KJCMjoIb3xqnZcqJByX9Q1EVWAOI4/EPnmwvYoqYnj6dd
+         x3IhiPjf9SGcxTw9rFWvRlZWALlhTOvZHCIyZSp43diZHDSMZ2IxvGB66IJT+IVb/U4T
+         xUqg6QFK6dKmeVQ7PYbVwsYmJYaeHZg8gB7z8rmiLz9RLTzAgFaL21Re3C9M8ShTE0WW
+         XGN8R0/rpsSwV0e9tmEqkvS8gli54EjPIrO8yhunGeG3DJ2Xh3hXiCO6wU93iVLhlOu3
+         bZEQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793025952; x=1793630752;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20260707; t=1793026626; x=1793631426;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Xl5/intmUiXAE8+mmqtuYRR1ZbCkeJBNVCGX7MeNWxE=;
-        b=Dk1rGx2F/FKMMuzi40h/7RlyXRXncvn7aPF6sbMZf8sRfFjBUshsPgbIKeGRJwcf8L
-         vUHDRNAUa8Q3bWV7/avjNdNAI2xk4S/1oUWSfnujLIne5MPkTFxXY9GbBE3hauaiKWpD
-         yeoIPXvC8DZZ6xGZtXPFuSBiv88W+a2wnt+rt6khv2MRHvbeBkl+fvWqBMnJ0FwA8MHA
-         iH6B5yib40mRCQLoL9kFp9lo5Xilnl1Uu2MiCEUkWITsl8qiBWLT7EqLfRWF0t/LK0e/
-         bCNaKvLjigP2+Z/bTBtMijzouHnd1XtIV37NQ2G87VSS3WcEjGiwKt4RkSr+pDZBS6/f
-         Mg7w==
-X-Forwarded-Encrypted: i=1; AKwUvBzSap95MHzd8pgUZi3bbhAKCKHAEEeo86AMZ54AxSQ6WwXdpfrbE84S4iwmdsjReQ3aK5CPMgl444FR@vger.kernel.org
-X-Gm-Message-State: AFq9FYJIQAzZkXFmlHOxgesiNbbkoE/DKIb0v22/opCFmlHPcFFp2H6s
-	+07H1Pq3ZRchugi9GBTKCCdbVSaJdsC5EEPl39VQlNlPsl9xDzT5U84EFl/IStseA5agFZaMK8n
-	8CoeKllT/S4ND3I86Yu87jjkPYe3oneWXGqpTlX3O3wJQTfmtBY5+XdfhXjNAEXaQ/78wQTWWa9
-	DYGFrCH0zvpkYlCjscG1SMjwZVoxeOa7cP9mK0BA==
-X-Gm-Gg: AYBFou0N7OChJGT1VWBIKdq6JYcui8rqSbqVTsbsm3iMd3bDeIyIsX+mt3tlcTgh+cq
-	8J213I/kaPm8W2lzSgRMJnvNSv2b9TzOEC/6gY3/ixgMWVI4iz4O2JowwdVezWE2GbP4Eb/34Un
-	8IjPkmAs3LFg7Mjn0z/SI3DDDBatXh9jDeO+oav0aLdZ5B9hRI8jzmVLQ=
-X-Received: by 2002:a05:7301:6194:10b0:35e:5f8f:9665 with SMTP id 5a478bee46e88-369e850755bmr10994313eec.29.1793025950890;
-        Mon, 26 Oct 2026 07:45:50 -0700 (PDT)
-X-Received: by 2002:a05:7301:6194:10b0:35e:5f8f:9665 with SMTP id
- 5a478bee46e88-369e850755bmr10994256eec.29.1793025949831; Mon, 26 Oct 2026
- 07:45:49 -0700 (PDT)
+        bh=r4TeSRrJfvEb9bXGYtvTmzKxtpAZeorrt+MbujrYaNo=;
+        b=W02CKK9WDYSt4atr2ErsU3cnu2zSQrEGm7IqaGlaUEI3YtFgseIBFOzyXLGjGp7zYm
+         nY0v1aI/TfW0DuydSTdEaIS+50H2hEIcV6Xxtkg/BqKkubNqn6dCZdkMabNYLVDILw5B
+         63PxjFif95BGxYwDkOgB5aC5mTHx2nUXnrPcxtGULkUTaAva5sLfkBpfq6E9qBMVLy0X
+         Y61C8mH6SRjQrqTLc2+/T3VsYo1ra8jPJ3gYU6pmETHGYlh45H+xyu5sslMBRgr2WYcj
+         ml+RFcNO4oMYLXac7xtNWvUFeXgMHfkzmYpVPKJ/sQ1gAyKxzwIDX1KGTHhT2q+QowcC
+         zb2Q==
+X-Gm-Message-State: AFq9FYJwfzgpS6STKRv4qMTQxNdRv+7Xh3c2lOQ3LwolxAsRw5YJgUOb
+	L9IwUTus9jP2K/ChTFIj/RaxFCqjaIE9uVUSoms3y7P7A/0TyNwV5Rt7
+X-Gm-Gg: AYBFou1WrVNFjpltfCfn3uuQ6bUHxJL+eMca83ul/DBQsx6VMpwogJx7FoPJ4rBu9+v
+	vHZOPM/9X5r5rF+QH/0K29WSMfuHdIbPsQ13PzSyXP6My9dL0+KRBHeqrcf2axIC8KtUh3F2gSv
+	92b2Xx6y4g+uB3uwJE/4WsgRnGADt0VIXQqBD2qmKMzRjsgpf47tSnaelAe9CTnQpNZ9Jrm28Rx
+	cJ4isLM6rpRTTqv4QruExp91L0+HwftSfpunqd+3cHdUWaNTVRsnfQujJ/Pafziw+erFk+ZqKrR
+	nFi/WRqeLTarvI8V3sU53iMLc7Kfo00rZT9nyhXnnSKaQ8P+dLvOzm82g2/Hxqx/Da8uae5R/jJ
+	NCRsKqjiDZMfQiFLrNk8//J9xFGmT5ABNNhOzS/JLGCJffXvBfrP0Q9BefbwQZDz70ireg/CoHq
+	1qU2+z4SEBXm6nrRMVSbWU6INuW2lvTYcTCTCqG2El3sARXxj5rXbTNvEkDENrYix6Q+3APAbsQ
+	FlsuNe6G5d0pXP4ahEahlzUhQN8Uyse9ELInRmSGz/klxMTDmdUHLoGa6Kh7Fr/5eFyDLyIoziv
+	nvniH1WeX2byqPDo
+X-Received: by 2002:a05:600c:83c7:b0:4a2:c9b:9b98 with SMTP id 5b1f17b1804b1-4a35ac95f44mr128561225e9.17.1793026626028;
+        Mon, 26 Oct 2026 07:57:06 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a35a07ebc0sm94940725e9.3.2026.10.26.07.57.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 26 Oct 2026 07:57:05 -0700 (PDT)
+Date: Mon, 26 Oct 2026 14:57:04 +0000
+From: David Laight <david.laight.linux@gmail.com>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: linux-raid@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>,
+ linux-crypto@vger.kernel.org, x86@kernel.org, linux-kernel@vger.kernel.org,
+ Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/3] raid6: simplify CPU feature checks
+Message-ID: <20261026145704.5601466f@pumpkin>
+In-Reply-To: <20261025191207.86590-4-ebiggers@kernel.org>
+References: <20261025191207.86590-1-ebiggers@kernel.org>
+	<20261025191207.86590-4-ebiggers@kernel.org>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -124,279 +99,86 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261019010827.2922617-1-wozizhi@huaweicloud.com>
- <20261019010827.2922617-2-wozizhi@huaweicloud.com> <CAOjDE+C8KFcTsaWjMfmcWcQOwv8qetm-QKvYts+cUGFzgUB8uA@mail.gmail.com>
- <f4ff3d74-c6ca-49d2-aeb5-fdf6c6276e98@huaweicloud.com>
-In-Reply-To: <f4ff3d74-c6ca-49d2-aeb5-fdf6c6276e98@huaweicloud.com>
-From: Bruce Johnston <bjohnsto@redhat.com>
-Date: Mon, 26 Oct 2026 10:45:38 -0400
-X-Gm-Features: AclHuK8Vc9jcw6lsqbbSxyc8IkB-eoOZDWys1hpJKEFvQhgsBlFP6ro9Irzdft4
-Message-ID: <CAOjDE+CNXzZ86tyq4u6Yw_oFxLK96A7U86pigtY2NWC7MHi9ew@mail.gmail.com>
-Subject: Re: [PATCH V2 1/6] md/raid0: don't leave mddev in an inconsistent
- state when takeover fails
-To: Zizhi Wo <wozizhi@huaweicloud.com>
-Cc: song@kernel.org, yukuai@fygo.io, magiclinan@didiglobal.com, 
-	xiao@kernel.org, linux-raid@vger.kernel.org, yangerkun@huawei.com, 
-	chengzhihao1@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-I've been trying to devise a solid takeover fix for a while now
-but I have been distracted lately. I'm glad others are
-looking into this issue as well.
+On Sun, 25 Oct 2026 12:12:07 -0700
+Eric Biggers <ebiggers@kernel.org> wrote:
 
-My hope is/was to create a new mddev and pass it around to
-pers->takeover and pers->run, so that if things failed we could
-just discard the new mddev and the old mddev would still be
-there and untouched. I'm still trying to get the code right.
+> Remove unnecessary checks for features that are prerequisites for other
+> features, such as AVX which is a prerequisite for AVX2.
+> 
+> (Note: in most cases arch/x86/kernel/cpu/cpuid-deps.c warns about
+> missing prerequisites rather than enforcing them.  This is intentional,
+> and it does not mean the prerequisites should be checked elsewhere.)
+> 
+> Then, move the raid6_recov_algo_add() lines into the appropriate places
+> just above so that the same CPU features aren't checked multiple times.
+> 
+> Signed-off-by: Eric Biggers <ebiggers@kernel.org>
+> ---
+>  lib/raid/raid6/x86/pq_arch.h | 51 ++++++++----------------------------
+>  1 file changed, 11 insertions(+), 40 deletions(-)
+> 
+> diff --git a/lib/raid/raid6/x86/pq_arch.h b/lib/raid/raid6/x86/pq_arch.h
+> index 4a863b253b909..418e4d4a2930f 100644
+> --- a/lib/raid/raid6/x86/pq_arch.h
+> +++ b/lib/raid/raid6/x86/pq_arch.h
+> @@ -16,63 +16,34 @@ extern const struct raid6_recov_calls raid6_recov_ssse3;
+>  extern const struct raid6_recov_calls raid6_recov_avx2;
+>  extern const struct raid6_recov_calls raid6_recov_avx512;
+>  
+> ...
+>  static __always_inline void __init arch_raid6_init(void)
+>  {
+> -	if (raid6_has_avx2()) {
+> +	if (boot_cpu_has(X86_FEATURE_AVX2)) {
+>  		raid6_algo_add(&raid6_avx2x1);
+>  		raid6_algo_add(&raid6_avx2x2);
+>  		if (IS_ENABLED(CONFIG_X86_64))
+>  			raid6_algo_add(&raid6_avx2x4);
+> -		if (raid6_has_avx512()) {
+> +		if (boot_cpu_has(X86_FEATURE_AVX512BW) &&
+> +		    boot_cpu_has(X86_FEATURE_AVX512VL) &&
+> +		    boot_cpu_has(X86_FEATURE_AVX512DQ)) {
+>  			raid6_algo_add(&raid6_avx512x1);
+>  			raid6_algo_add(&raid6_avx512x2);
+>  			if (IS_ENABLED(CONFIG_X86_64))
+>  				raid6_algo_add(&raid6_avx512x4);
+> +			raid6_recov_algo_add(&raid6_recov_avx512);
+> +		} else {
+> +			raid6_recov_algo_add(&raid6_recov_avx2);
 
-If I were doing this myself and only concerned with fixing the
-pers->takeover function, I would likely put any new
-backup/restore fields in the personality configuration struct.
-r0conf, r10conf, etc. Some of them already store temporary
-values from mddev, like dev_sectors in r10conf. Some of
-them even have arrays of md_rdevs like r0conf. The conf
-could be passed around to other functions as needed,
-like create_stripe_zones.
+Is that right (you haven't changed it)?
+You get both the avx2 and axv512 normal algorithms, but only one
+of the recov ones.
 
-1. Create copies in the conf structs for the things you plan to
-change in mddev. This is raid level specific.
-2. Allocate the conf as the very first thing you do in the
-pers->takeover functions. fail if allocate fails.
-3. Change the values in the conf. Do whatever code
-validation code and value changes you do now, but on the
-conf struct. On any failure, you just fail. mddev is not
-affected.
-4. At very end of pers->takeover when you know everything
-is ok, you copy the appropriate conf fields over to the mddev.
-counterparts.
+I presume these are added in addition to the generic C code and
+some startup test decides which is fastest and so used?
 
-Fixing the failure cases in pers->takeover is a great step but
-even if we get this right, it doesn't solve the entire takeover
-issue. The trouble is that later on in level_store we call
-pers->run. This function can also fail. If it does, you need
-to clean up all the things that got modified in run before
-the failure AND also all the changes that happened above
-the pers->run function call in level_store, including the
-pers->takeover function call. So even if takeover succeeds
-and we get to step 4 above, we now have to restore all
-those changes if pers->run fails.
+David
 
-I realize all this "extra" stuff is outside the scope of what you
-are trying to do but I wanted to give you some context on
-what I see is the the overall issue with level_store and
-takeover in general.
 
-Bruce
-
-On Sun, Oct 25, 2026 at 11:05=E2=80=AFPM Zizhi Wo <wozizhi@huaweicloud.com>=
- wrote:
->
->
->
-> =E5=9C=A8 2026/10/23 21:29, Bruce Johnston =E5=86=99=E9=81=93:
-> > On Sun, Oct 18, 2026 at 9:16=E2=80=AFPM Zizhi Wo <wozizhi@huaweicloud.c=
-om> wrote:
-> >>
-> >> From: Zizhi Wo <wozizhi@huawei.com>
-> >>
-> >> raid0_takeover_raid45(), raid0_takeover_raid10() and raid0_takeover_ra=
-id1()
-> >> update mddev before create_strip_zones(), which can fail.
-> >>
-> >> On failure, level_store() only rolls back new_level, new_layout,
-> >> new_chunk_sectors, raid_disks and delta_disks. The old personality is
-> >> therefore left with a reset resync_offset, cleared feature flags, and,=
- for
-> >> raid1, the wrong chunk size.
-> >>
-> >> Set only what create_strip_zones() needs before calling it, and move t=
-he
-> >> rest after it succeeds.
-> >>
-> >> create_strip_zones() also rounds rdev->sectors, but the old levels do =
-not
-> >> use it for I/O, so that is harmless. And mddev->degraded is already re=
-set
-> >> by level_store() on success, so drop the redundant assignment in
-> >> raid0_takeover_raid10().
-> >>
-> >
-> > The rounding of sectors is not too much of a concern of mine. I'm more =
-concerned
-> > about rdev->sectors getting set to mddev->dev_sectors in the
-> > raid0_takeover_raid45.
-> > While I think I understand why it is done and I agree rdev->sectors
-> > isn't used by the 4/5 raid
-> > level I/O, I'm pretty sure the field is still used in sysfs fields and
-> > things like mdstat. On
-> > a takeover failure, I feel like we are losing what the old
-> > rdev->sectors value was when
-> > we go back to raid 4/5 (rdev->sectors and mddev->dev_sectors can be
-> > different values)
-> >
-> > Do you have any thoughts on this? I know it would be a pain to backup
-> > / restore every
-> > rdev.
->
-> Thanks for the review.
->
-> If I understand you correctly: since rdev->sectors is exposed to
-> userspace via sysfs (and similar interfaces), it's better to keep it
-> consistent across a failed takeover, i.e. restore the original value on
-> the error path.
->
-> Looking at the takeover flow, there are two places that modify
-> rdev->sectors:
->
-> 1. In create_strile_zones(), here the value is adjusted by at most
-> *chunk_sectors - 1*, so the discrepancy is small?
->
-> 2. In raid0_takeover_raid45(), where it gets overwritten by
-> mddev->dev_sectors =E2=80=94 here the difference can be much larger.
->
-> In principle both would leave a stale value behind on failure. My
-> understanding is that you consider the first one "not too much of a
-> concern" because the delta is tiny, while the second is the one that
-> really matters. Is that correct?
->
-> However, if the user has dynamically changed chunk_sectors to a large
-> value at runtime, and the corresponding rdev->sectors was originally
-> small, then the difference presented to the user could actually be quite
-> significant. RAID0 doesn't allow modifying chunk_sectors at runtime, but
-> RAID4/5/etc. do. Is this something we need to be concerned about?
->
-> I currently see two possible approaches:
->
-> 1. In raid0_takeover_raid45(), allocate a temporary array up front to
-> save the old values, and restore them on failure =E2=80=94 a targeted fix=
- for
-> just the raid45 case.
->
-> 2. In create_strip_zones(), allocate a temporary array up front to save
-> the old values; then remove the rdev->sectors assignment from
-> raid0_takeover_raid45() and consolidate all the assignment logic into
-> create_strip_zones() (which already assigns this field anyway), choosing
-> between rdev->sectors and mddev->dev_sectors based on the level. The
-> error path would then restore the saved values, fixing both places at
-> once.
->
-> Do you have a preference between these two, or is there a simpler
-> approach you'd suggest?
->
-> Thanks,
-> Zizhi Wo
->
-> >
-> >> Fixes: 9af204cf720c ("md: Add support for Raid5->Raid0 and Raid10->Rai=
-d0 takeover")
-> >> Fixes: fc3a08b85b7a ("Add raid1->raid0 takeover support")
-> >> Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
-> >> ---
-> >>   drivers/md/raid0.c | 36 +++++++++++++++++++++++-------------
-> >>   1 file changed, 23 insertions(+), 13 deletions(-)
-> >>
-> >> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> >> index 35e103f0c2c3..8157e1058a24 100644
-> >> --- a/drivers/md/raid0.c
-> >> +++ b/drivers/md/raid0.c
-> >> @@ -669,15 +669,16 @@ static void *raid0_takeover_raid45(struct mddev =
-*mddev)
-> >>          mddev->new_level =3D 0;
-> >>          mddev->new_layout =3D 0;
-> >>          mddev->new_chunk_sectors =3D mddev->chunk_sectors;
-> >>          mddev->raid_disks--;
-> >>          mddev->delta_disks =3D -1;
-> >> -       /* make sure it will be not marked as dirty */
-> >> -       mddev->resync_offset =3D MaxSector;
-> >> -       mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV_FLAGS);
-> >>
-> >> -       create_strip_zones(mddev, &priv_conf);
-> >> +       if (!create_strip_zones(mddev, &priv_conf)) {
-> >> +               /* make sure it will be not marked as dirty */
-> >> +               mddev->resync_offset =3D MaxSector;
-> >> +               mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV=
-_FLAGS);
-> >> +       }
-> >>
-> >>          return priv_conf;
-> >>   }
-> >>
-> >>   static void *raid0_takeover_raid10(struct mddev *mddev)
-> >> @@ -711,23 +712,25 @@ static void *raid0_takeover_raid10(struct mddev =
-*mddev)
-> >>          mddev->new_level =3D 0;
-> >>          mddev->new_layout =3D 0;
-> >>          mddev->new_chunk_sectors =3D mddev->chunk_sectors;
-> >>          mddev->delta_disks =3D - mddev->raid_disks / 2;
-> >>          mddev->raid_disks +=3D mddev->delta_disks;
-> >> -       mddev->degraded =3D 0;
-> >> -       /* make sure it will be not marked as dirty */
-> >> -       mddev->resync_offset =3D MaxSector;
-> >> -       mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV_FLAGS);
-> >>
-> >> -       create_strip_zones(mddev, &priv_conf);
-> >> +       if (!create_strip_zones(mddev, &priv_conf)) {
-> >> +               /* make sure it will be not marked as dirty */
-> >> +               mddev->resync_offset =3D MaxSector;
-> >> +               mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV=
-_FLAGS);
-> >> +       }
-> >> +
-> >>          return priv_conf;
-> >>   }
-> >>
-> >>   static void *raid0_takeover_raid1(struct mddev *mddev)
-> >>   {
-> >>          struct r0conf *priv_conf;
-> >>          int chunksect;
-> >> +       int old_chunk_sectors;
-> >>
-> >>          /* Check layout:
-> >>           *  - (N - 1) mirror drives must be already faulty
-> >>           */
-> >>          if ((mddev->raid_disks - 1) !=3D mddev->degraded) {
-> >> @@ -748,22 +751,29 @@ static void *raid0_takeover_raid1(struct mddev *=
-mddev)
-> >>
-> >>          if ((chunksect << 9) < PAGE_SIZE)
-> >>                  /* array size does not allow a suitable chunk size */
-> >>                  return ERR_PTR(-EINVAL);
-> >>
-> >> +       /* Save for rollback if create_strip_zones() fails */
-> >> +       old_chunk_sectors =3D mddev->chunk_sectors;
-> >> +
-> >>          /* Set new parameters */
-> >>          mddev->new_level =3D 0;
-> >>          mddev->new_layout =3D 0;
-> >>          mddev->new_chunk_sectors =3D chunksect;
-> >>          mddev->chunk_sectors =3D chunksect;
-> >>          mddev->delta_disks =3D 1 - mddev->raid_disks;
-> >>          mddev->raid_disks =3D 1;
-> >> -       /* make sure it will be not marked as dirty */
-> >> -       mddev->resync_offset =3D MaxSector;
-> >> -       mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV_FLAGS);
-> >>
-> >> -       create_strip_zones(mddev, &priv_conf);
-> >> +       if (!create_strip_zones(mddev, &priv_conf)) {
-> >> +               /* make sure it will be not marked as dirty */
-> >> +               mddev->resync_offset =3D MaxSector;
-> >> +               mddev_clear_unsupported_flags(mddev, UNSUPPORTED_MDDEV=
-_FLAGS);
-> >> +       } else {
-> >> +               mddev->chunk_sectors =3D old_chunk_sectors;
-> >> +       }
-> >> +
-> >>          return priv_conf;
-> >>   }
-> >>
-> >>   static void *raid0_takeover(struct mddev *mddev)
-> >>   {
-> >> --
-> >> 2.52.0
-> >>
-> >>
-> >
-> >
->
+>  		}
+> -	} else if (IS_ENABLED(CONFIG_X86_64) || raid6_has_sse2()) {
+> +	} else if (IS_ENABLED(CONFIG_X86_64) ||
+> +		   boot_cpu_has(X86_FEATURE_XMM2)) {
+>  		/* x86_64 can assume SSE2 as baseline */
+>  		raid6_algo_add(&raid6_sse2x1);
+>  		raid6_algo_add(&raid6_sse2x2);
+>  		if (IS_ENABLED(CONFIG_X86_64))
+>  			raid6_algo_add(&raid6_sse2x4);
+> +		if (boot_cpu_has(X86_FEATURE_SSSE3))
+> +			raid6_recov_algo_add(&raid6_recov_ssse3);
+>  	} else {
+>  		raid6_algo_add_default();
+>  	}
+> -
+> -	if (raid6_has_avx512())
+> -		raid6_recov_algo_add(&raid6_recov_avx512);
+> -	else if (raid6_has_avx2())
+> -		raid6_recov_algo_add(&raid6_recov_avx2);
+> -	else if (raid6_has_ssse3())
+> -		raid6_recov_algo_add(&raid6_recov_ssse3);
+>  }
 
