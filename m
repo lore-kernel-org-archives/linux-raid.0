@@ -1,55 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793040436;
-	b=b/e7JLg/PRt6hQHOSacNPG7ztDHhpmDOJyiT1b8gxt+cg4SQiZ9e2O3c/FQRRXQTB+kw
-	 /o0rVqBBd6FKVLjPn6K45yhcQTC2uDtgCIhJ/atdIqfdW2DCx/DaNBk3AhJOyFJq5mCWg
-	 T8IWI1uoNnogb7A5MomcGi2FvTP6eunF6DoNOeS2EgyRbl3VjegYbOtgWnefHLtbJUhpP
-	 LL9vxKSDavrP8Th0JYmmpOkKF2fmjcVDAU4GogETp3R1lRts4034mcigbsoBshlzzU8w+
-	 RWT1N6coruiVVB9++52klAXLVgG52PMJWgDEtq4pRd/at8SGGUBCDcGI1b9aCwPoShg==
+	t=1793044644;
+	b=qYIGKLEbz8GbcjPM5gRH9nwOXze1Aw38WYNQHSdVald57R8ce0P/x9nWLvYxtPI+Wq+R
+	 tRIm/XLS6Y3CW0Jjgnst+RZIrn4WRUKhifY8KVjALWbvsWlVSzKUubOEYCtubKn6kCS5Y
+	 kMShJZPB6TWsqUgJMq+DAH1neqHPSGawTZV4/PXQL5iWEipRnI6zszhFdO3Z6xZPt58Sp
+	 +QEkSkb9913sQmLTwb7CiO0rWbXfFo/mz46RhNEMyfZuK1DZHJmXMbyGc3sxAd+FpOeNj
+	 MMiJvzhblCdzUj3gXrEaJP8jRlxDxeZyahDfbuFLs3LZ9vIGxSjVND8oPafFfKUp6NA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793040436;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=U//eGvYDF2+/yYUB5pO51EtZ64gK1iprB2hzIuimqus=;
-	b=LFbOKw8fAi37fuR1c8KUWVZ/EDuAGwp5VL2nz/qheUBirGy8yugkDVY2LjyVFnFLxiab
-	 af3N/PCPSS3/WXhUMOGj4FpalhfZB1jWBLoWxHlsfwZiTHeb9WeB9RNGo+7gB/OMRf+Iv
-	 yQ6F9CpiQz0qK5EHtlboORqkfWXTGBh5vWOylmo4fY1ybLXDF5uu98foEXPW+vv+OtFv+
-	 4uhCwgy0ek24QGP2rtteRQurdEyeUI3F9KTtmpVw+gW8MmPIqg0PdME69r4xyateFG0gD
-	 5YIjb2XJFv9jJ95BuZjAXCQVGuvj1InK2Eiu/41Nx4esRidRA6zOI/QzcUcYN4xMR/g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793044644;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=SSRy3Kou6RgDcrMUYyxjRgI7Ddq5E6pjX3+7QfjGyUs=;
+	b=kbyjIOe40FDiIDbfmz3TEQkGwkF/nlwmexgXCZvprq2c7uCunV5EMcvQL/ecCEyRxRaO
+	 Rl5YKhGas/rpOSl+7SVtJ+Ycn7WMj3aicHUMwX+Z3SEBP8AcMAYXrWQnPaghgqbOl6j2h
+	 Fr97A7oLO7qpqYrV3ZopIJWl2JTp+PYqWI4rBvVzyP2XL0/OElfv700E7PSjwSBGEvto1
+	 0TVSJgguR4UMr+1wumcGgqvbSg38//8OR0SQ0Jv0D/8RAZ8miIA9BYj8IWImfH3UAjcSs
+	 bVFrjVe+Pt5S35GJ9kWGp9nx4DFZ7OaDgsR3ntPDJfDLKvXUkj/V3Kux327Jr3MV0qA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=j7BZuj4H;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=sZbwU1Wu;
+	arc=none smtp.remote-ip=199.89.1.14
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4466C606A31A;
-	Mon, 26 Oct 2026 18:47:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 578AE606A31A;
+	Mon, 26 Oct 2026 19:57:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 578AE606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=j7BZuj4H
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEB301F01825;
-	Mon, 26 Oct 2026 18:47:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793040436;
-	bh=U//eGvYDF2+/yYUB5pO51EtZ64gK1iprB2hzIuimqus=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=j7BZuj4HerJfS21FoyC8+8SuiNC4IVV6qP3vjQELuaNqFNONlo3huyIk2dFtHEHZo
-	 qYhnU+gCJ7PLVabMK6xmy/5nZ9Ef0Cii1VWo1jh/eMvEzsseVz+fIfS1R7XAGNFJaL
-	 4G/sTBvTW6Vd2qd5plxVPe1WwdtsVgFiFPz61phz8n5DBGC7zuvECXjYgGFpWeMQym
-	 jfxAdWGR3dckQvvYd5DMogiaae70ChnaTcsjnAzJf/GT571UAcEhF+DssmjkJ4aJu6
-	 DiR7IAMvtbf0JLuH1MHaiX4iATFbtZJFSbW5Y3KRv/DcFAZCfvEft4KcfnA8GSE2x3
-	 Pg36Cbh7s1qyg==
-Date: Mon, 26 Oct 2026 11:47:14 -0700
-From: Eric Biggers <ebiggers@kernel.org>
-To: David Laight <david.laight.linux@gmail.com>
-Cc: linux-raid@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>,
-	linux-crypto@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/3] raid6: simplify CPU feature checks
-Message-ID: <20261026184714.GB1876@quark>
-References: <20261025191207.86590-1-ebiggers@kernel.org>
- <20261025191207.86590-4-ebiggers@kernel.org>
- <20261026145704.5601466f@pumpkin>
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=sZbwU1Wu
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jD4Cl5tltz1XM30g;
+	Mon, 26 Oct 2026 19:57:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1793044640; x=1795636641; bh=SSRy3Kou6RgDcrMUYyxjRgI7Ddq5E6pjX3+
+	7QfjGyUs=; b=sZbwU1WuXE8ZoI14mGevFozIrffkzi2urdjb+Jes2ZIIKE6Ho1Z
+	FUPxrNa6QpbY9sXk3ZeOhM8x0NReEfTJkdO3BdS6yBn+eUXHyG4JLvmtj9eCNAqB
+	nMxn7Cu9HW0ZzL3Jtn2LZArQDQIVa8kxTISgxH3/YmYNygKP8BSpU2lEhE7bUnI6
+	6BjNOJygPxpK3IsGTvAOkfxhLOy9m4w6NdKM/L6XFdiqE1ZFvW793MeMRLkGTNcU
+	PaIZmgU7kCUZ2NhnusqE5iETegaWosI0vb6E78tSKjPy7wtWWvdVDwHOFfwfzMJ+
+	N9DjldKeAWlT8HxtR2To4a4Z+I1Ux0UPeww==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id K7JP1SGDI2wu; Mon, 26 Oct 2026 19:57:20 +0000 (UTC)
+Received: from bvanassche.c.googlers.com.com (57.237.82.34.bc.googleusercontent.com [34.82.237.57])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jD4Ch2Zpxz1XM4Tl;
+	Mon, 26 Oct 2026 19:57:20 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH] md: Fix an unlock in an error path of lbs_store()
+Date: Mon, 26 Oct 2026 12:57:12 -0700
+Message-ID: <9dd41992e8b2d4bd63f74a245d34fa7850529bed.1793044632.git.bvanassche@acm.org>
+X-Mailer: git-send-email 2.56.0.307.g5fe7bd680c-goog
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -59,74 +78,34 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261026145704.5601466f@pumpkin>
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Oct 26, 2026 at 02:57:04PM +0000, David Laight wrote:
-> On Sun, 25 Oct 2026 12:12:07 -0700
-> Eric Biggers <ebiggers@kernel.org> wrote:
-> 
-> > Remove unnecessary checks for features that are prerequisites for other
-> > features, such as AVX which is a prerequisite for AVX2.
-> > 
-> > (Note: in most cases arch/x86/kernel/cpu/cpuid-deps.c warns about
-> > missing prerequisites rather than enforcing them.  This is intentional,
-> > and it does not mean the prerequisites should be checked elsewhere.)
-> > 
-> > Then, move the raid6_recov_algo_add() lines into the appropriate places
-> > just above so that the same CPU features aren't checked multiple times.
-> > 
-> > Signed-off-by: Eric Biggers <ebiggers@kernel.org>
-> > ---
-> >  lib/raid/raid6/x86/pq_arch.h | 51 ++++++++----------------------------
-> >  1 file changed, 11 insertions(+), 40 deletions(-)
-> > 
-> > diff --git a/lib/raid/raid6/x86/pq_arch.h b/lib/raid/raid6/x86/pq_arch.h
-> > index 4a863b253b909..418e4d4a2930f 100644
-> > --- a/lib/raid/raid6/x86/pq_arch.h
-> > +++ b/lib/raid/raid6/x86/pq_arch.h
-> > @@ -16,63 +16,34 @@ extern const struct raid6_recov_calls raid6_recov_ssse3;
-> >  extern const struct raid6_recov_calls raid6_recov_avx2;
-> >  extern const struct raid6_recov_calls raid6_recov_avx512;
-> >  
-> > ...
-> >  static __always_inline void __init arch_raid6_init(void)
-> >  {
-> > -	if (raid6_has_avx2()) {
-> > +	if (boot_cpu_has(X86_FEATURE_AVX2)) {
-> >  		raid6_algo_add(&raid6_avx2x1);
-> >  		raid6_algo_add(&raid6_avx2x2);
-> >  		if (IS_ENABLED(CONFIG_X86_64))
-> >  			raid6_algo_add(&raid6_avx2x4);
-> > -		if (raid6_has_avx512()) {
-> > +		if (boot_cpu_has(X86_FEATURE_AVX512BW) &&
-> > +		    boot_cpu_has(X86_FEATURE_AVX512VL) &&
-> > +		    boot_cpu_has(X86_FEATURE_AVX512DQ)) {
-> >  			raid6_algo_add(&raid6_avx512x1);
-> >  			raid6_algo_add(&raid6_avx512x2);
-> >  			if (IS_ENABLED(CONFIG_X86_64))
-> >  				raid6_algo_add(&raid6_avx512x4);
-> > +			raid6_recov_algo_add(&raid6_recov_avx512);
-> > +		} else {
-> > +			raid6_recov_algo_add(&raid6_recov_avx2);
-> 
-> Is that right (you haven't changed it)?
-> You get both the avx2 and axv512 normal algorithms, but only one
-> of the recov ones.
-> 
-> I presume these are added in addition to the generic C code and
-> some startup test decides which is fastest and so used?
+If mddev_lock() fails, lbs_store() calls mddev_unlock() although the
+reconfig_mutex is not held. Fix this by returning the mddev_lock() error
+code directly. This bug has been detected by the Clang thread-safety
+analyzer.
 
-Yes, it's unchanged from before.
+Fixes: 62ed1b582246 ("md: allow configuring logical block size")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/md/md.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-The raid6 library implements runtime benchmark-based selection for
-struct raid6_algo, but not for struct raid6_recov_algo where only one
-can be registered.  As always, you're welcome to check the code rather
-than speculate; see lib/raid/raid6/algos.c.
-
-Yes, it's inconsistent.  However, changing that is outside the scope of
-this series.  (FWIW, none of the crypto or CRC code uses runtime
-benchmark-based selection.  I think it's not worth it.)
-
-- Eric
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index ac03b99f6428..7ce527073be9 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6049,11 +6049,10 @@ lbs_store(struct mddev *mddev, const char *buf, s=
+ize_t len)
+=20
+ 	err =3D mddev_lock(mddev);
+ 	if (err)
+-		goto unlock;
++		return err;
+=20
+ 	err =3D mddev_set_logical_block_size(mddev, lbs);
+=20
+-unlock:
+ 	mddev_unlock(mddev);
+ 	return err ?: len;
+ }
