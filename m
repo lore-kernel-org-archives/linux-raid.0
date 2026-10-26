@@ -1,74 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793044644;
-	b=qYIGKLEbz8GbcjPM5gRH9nwOXze1Aw38WYNQHSdVald57R8ce0P/x9nWLvYxtPI+Wq+R
-	 tRIm/XLS6Y3CW0Jjgnst+RZIrn4WRUKhifY8KVjALWbvsWlVSzKUubOEYCtubKn6kCS5Y
-	 kMShJZPB6TWsqUgJMq+DAH1neqHPSGawTZV4/PXQL5iWEipRnI6zszhFdO3Z6xZPt58Sp
-	 +QEkSkb9913sQmLTwb7CiO0rWbXfFo/mz46RhNEMyfZuK1DZHJmXMbyGc3sxAd+FpOeNj
-	 MMiJvzhblCdzUj3gXrEaJP8jRlxDxeZyahDfbuFLs3LZ9vIGxSjVND8oPafFfKUp6NA==
+	t=1793055367;
+	b=Z5+Ve2zpz3dIBddPpNupAl1zau1ZFSu0HMrOOubtqpyHXRcBZ8YZB0qEgz8BW6jy2nri
+	 A1M8u3l187Q9/Srgggdtg14EAlfUkgJr6jVMp/vjxfBgDpzk7SyGFjOfreCEhBprFF/Ze
+	 Z1iAnt/xJ4eyZDTSEmw1/7gwSWAUHYdJNGlxcjUgGe/ED7Gof54wSqP3MiWW9lTBlpVFw
+	 uGoSTLpBHxU+ippZcGmENrQa40it+cYJe4JMg7oJv0EVphegp2Uq+QZJD3swKFB3xrrKW
+	 L5jN6fSfD/MfPPCAgz/vaiPnsM+5rcfo0ubloaq9bDq3mPEWkEjKW26rV71F8uJx/Tg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793044644;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=SSRy3Kou6RgDcrMUYyxjRgI7Ddq5E6pjX3+7QfjGyUs=;
-	b=kbyjIOe40FDiIDbfmz3TEQkGwkF/nlwmexgXCZvprq2c7uCunV5EMcvQL/ecCEyRxRaO
-	 Rl5YKhGas/rpOSl+7SVtJ+Ycn7WMj3aicHUMwX+Z3SEBP8AcMAYXrWQnPaghgqbOl6j2h
-	 Fr97A7oLO7qpqYrV3ZopIJWl2JTp+PYqWI4rBvVzyP2XL0/OElfv700E7PSjwSBGEvto1
-	 0TVSJgguR4UMr+1wumcGgqvbSg38//8OR0SQ0Jv0D/8RAZ8miIA9BYj8IWImfH3UAjcSs
-	 bVFrjVe+Pt5S35GJ9kWGp9nx4DFZ7OaDgsR3ntPDJfDLKvXUkj/V3Kux327Jr3MV0qA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793055367;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=1otLA+a9Ck17uJBdWOMD9aQZ7I1FL45z0Ke0U7Gcj7k=;
+	b=E39jpQlRR4IJQPz1sCB7rcTjHiRah7E5+7t9NqgvsyPWqPD+5a/LgwuqvvzizM+lb3Sw
+	 my86346mLJVx58lSI+w0q7lS+bbP1Kk+EifmTDOHjzmhvwrKrzxfI4beinl0lbAaRWigm
+	 wfOsSe1YwanEfs1dUGTdXXUtcxhpZkRgZMmdVzKhRVRuuMeUXRuqVt7T9a/Emp8NXg8gn
+	 3CKMLm4x39doNfn7Hu8LtU97n+QEwt6cndPpiF9232aBa4FEks+v1Wc+akEmIfTqTN4S4
+	 BmAG80X2xDqwPNUHDBkfRZxIJTm7FPqlnRd+N7yUJWaC7PkBMr2jgC8cfVgGCErnGXw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=sZbwU1Wu;
-	arc=none smtp.remote-ip=199.89.1.14
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z4wSkXnS;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 578AE606A31A;
-	Mon, 26 Oct 2026 19:57:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 578AE606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00D50606A320;
+	Mon, 26 Oct 2026 22:56:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=sZbwU1Wu
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jD4Cl5tltz1XM30g;
-	Mon, 26 Oct 2026 19:57:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1793044640; x=1795636641; bh=SSRy3Kou6RgDcrMUYyxjRgI7Ddq5E6pjX3+
-	7QfjGyUs=; b=sZbwU1WuXE8ZoI14mGevFozIrffkzi2urdjb+Jes2ZIIKE6Ho1Z
-	FUPxrNa6QpbY9sXk3ZeOhM8x0NReEfTJkdO3BdS6yBn+eUXHyG4JLvmtj9eCNAqB
-	nMxn7Cu9HW0ZzL3Jtn2LZArQDQIVa8kxTISgxH3/YmYNygKP8BSpU2lEhE7bUnI6
-	6BjNOJygPxpK3IsGTvAOkfxhLOy9m4w6NdKM/L6XFdiqE1ZFvW793MeMRLkGTNcU
-	PaIZmgU7kCUZ2NhnusqE5iETegaWosI0vb6E78tSKjPy7wtWWvdVDwHOFfwfzMJ+
-	N9DjldKeAWlT8HxtR2To4a4Z+I1Ux0UPeww==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id K7JP1SGDI2wu; Mon, 26 Oct 2026 19:57:20 +0000 (UTC)
-Received: from bvanassche.c.googlers.com.com (57.237.82.34.bc.googleusercontent.com [34.82.237.57])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jD4Ch2Zpxz1XM4Tl;
-	Mon, 26 Oct 2026 19:57:20 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>
-Cc: Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z4wSkXnS
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E25C1F01825;
+	Mon, 26 Oct 2026 22:56:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793055366;
+	bh=1otLA+a9Ck17uJBdWOMD9aQZ7I1FL45z0Ke0U7Gcj7k=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=Z4wSkXnSSasjyucKKu/pcwtqdTTfwU2z0R/BhMGq3RpwMSEUjaUFtpzZnDHVKI1cd
+	 Iegnqi019w9RbfW6BTp+P+R9YApjVHI9SLuz7bx1+qOIkgqxUlT4gb2fmBckww35eq
+	 LHSBKUHNaxZBDnvxKzuxI1Bgm12lEP/9WB4dFmS5Kn8tGJ5MCbhpWT7cyUexnu2WwA
+	 qqefe2wsF9rJbXX9auxZA6RLQm7Gw4+Ca41F9xcjGFNbuwdBopCmRfBlhFbitwNTdj
+	 Pe9X8rbV7UwrRwV5fbJQ9jyQoXTcHSNbd1XWi2D8ymUlAz3akS6xyg3ywBGjdmQ/zf
+	 5+GhPpbAWnGMA==
+From: Sasha Levin <sashal@kernel.org>
+To: stable@vger.kernel.org
+Cc: Sasha Levin <sashal@kernel.org>,
 	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH] md: Fix an unlock in an error path of lbs_store()
-Date: Mon, 26 Oct 2026 12:57:12 -0700
-Message-ID: <9dd41992e8b2d4bd63f74a245d34fa7850529bed.1793044632.git.bvanassche@acm.org>
-X-Mailer: git-send-email 2.56.0.307.g5fe7bd680c-goog
+	EOS - Manlio Morini <morini@eosdev.it>
+Subject: Re: [5.15.y] Request to backport c567c86b90d4 (md/raid10 fstrim kernel crash)
+Date: Mon, 26 Oct 2026 18:55:54 -0400
+Message-ID: <2026-10-26-1-daily-reply-0003-md-io-acct-set-5-15@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <50c31a4e-9a41-46bf-9c70-ccbc1ed07b2e@eosdev.it>
+References: <50c31a4e-9a41-46bf-9c70-ccbc1ed07b2e@eosdev.it>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -78,34 +59,18 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-If mddev_lock() fails, lbs_store() calls mddev_unlock() although the
-reconfig_mutex is not held. Fix this by returning the mddev_lock() error
-code directly. This bug has been detected by the Clang thread-safety
-analyzer.
+> I'd like to request the backport of the following upstream commit to the
+> Linux 5.15.y stable series:
+>
+> c567c86b90d4715081adfe5eb812141a5b6b4883
+> md: move initialization and destruction of 'io_acct_set' to md.c
 
-Fixes: 62ed1b582246 ("md: allow configuring logical block size")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/md/md.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Queued for 5.15, thanks. The io_acct_set exit went into md_stop() and
+md_free() rather than __md_stop(), since that is where 5.15 tears down the
+other biosets.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index ac03b99f6428..7ce527073be9 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6049,11 +6049,10 @@ lbs_store(struct mddev *mddev, const char *buf, s=
-ize_t len)
-=20
- 	err =3D mddev_lock(mddev);
- 	if (err)
--		goto unlock;
-+		return err;
-=20
- 	err =3D mddev_set_logical_block_size(mddev, lbs);
-=20
--unlock:
- 	mddev_unlock(mddev);
- 	return err ?: len;
- }
+-- 
+Thanks,
+Sasha
