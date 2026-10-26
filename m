@@ -1,94 +1,93 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.41
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793026628;
-	b=c280Y3y/EAwVYsYmtOnvtR1nN2+QXjrlWC5tA1sYl+Xt8pcOLJaUjaqA+enJVRB7Ltw8
-	 OuCgpu3IEmiqx1xdA8eeGIn8pRRWdFhh096n/kC2IwK1NarkKN3d1SSuaQB8PerDnz6nt
-	 wa2yC7iUsTcMXOyOlVrz0ZflOiN22Ss7lLgLbNRo/iCIHqPXOcfZ8w+O/KaJTM5L4oSh1
-	 wPv+eMacVdEf47vA4BwAfMxWEUpgps+9llMuAJV573CGndKsddfA+dxR5/njzUeLYdyT8
-	 pa5Gp/LOZfaVmqcgzZcPDXI55bpgWeMgoBSY7C17R7APhhUc1vGLndnsyNvgEN0ZIPA==
+	t=1793026843;
+	b=VdXg8q7Pj+g/ZvkyIMIM6dF5kEbwdMFg6dDvseM+PddZwQoOASqlRgoT3eCKpNwC8+97
+	 SqID41j9or03X7LXkbzNdwHm3TPbNCB4KJvaxA3rqvoKYuzGpJmRz1W0psra2StuMJ9Y0
+	 e6E311Er52OJM8N4lZA05dsuwLrV2EJ63xRmhGquTpukehF1uiHM7o8x1tnBInQBY51bz
+	 ku0iGZo1qpaZB4RMEOlK9NCDKxQc5eRYy2YbJtGZqGrNJOtQV7vz7U4MrY3nvU3gAJFKh
+	 uIlDu5HqNaT1bA398IRM0wIuTY8wSNeRO81IPa91b0uLQYKEhl23KmJrrK3xr9b3scw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793026628;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793026843;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Date:From:To:Cc:
 	 Subject:Message-ID:In-Reply-To:References:X-Mailer:MIME-Version:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=r4TeSRrJfvEb9bXGYtvTmzKxtpAZeorrt+MbujrYaNo=;
-	b=X7865anJBKtn0FbtP2QW4ka357Er1M2y68ECYYeaXZET5174t5Y1N8bwP6cUTnlFxMFL
-	 E0StdasfTDRy8IhcYxVkcfn/y8qMkeltOQuXywPaJZbxbgSEozkEvNKwXvxyGGPkVJy/j
-	 c8iKJPl6goE9Z9Y3x2IkKq74b86uBtDeSKO/IgLC0rhrbcTdC66vIKyZ1GBQ936GVuaec
-	 f12Ua8D0iiH6PyjLTyLSOAf29l1UHdATanilyHAa9idVuA4/s8Y0ySESQ9PkCYV/3Kyd9
-	 xHRW4FjcNfNAd/KT89l86n6/+Y9szuIdv75K4q6AXY87LzK3YOtrv2YpfgdZ7gTuKPw==
+	bh=2fEUp+1KLX1g9pxymcQPGBgvQdM6meDnFJ6iLYfyBzk=;
+	b=nP+A4S0seFZTrf4JXsOa/20Stt+Ft8xZSFUYVtaiALB/drsfx3gvBt5tOOyhOm8LgvWX
+	 Wz01wA4QarfZdMAe7mmQD3+G1A3+DzYRnOhG6Cr1qA4RNo23jwacETPs8JmdZD4UIBoan
+	 C0J3KAQ6Xgvq3/dxNH9xfrvC74IhIkSVfaWwKUjDje3e0aoZJCsedoWZMQEUK9xOcD485
+	 qIIDCG9hnrY1dJcpfiQxs7ef9RsC6YgwbZ1T6LK/4w1XAY7INPwykB5ZLieUz2hBKHyI5
+	 3AirW7RcP2YEy0wtByOj9ug0/2LLE8miGUdESxocoHAN5i4PqW0dzKxjLrFxmyoIz8w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=iNVvKNRO;
-	arc=none smtp.remote-ip=209.85.128.52
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Lra6s915;
+	arc=none smtp.remote-ip=209.85.128.41
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04A5A606A31E
-	for <linux-raid@vger.kernel.org>; Mon, 26 Oct 2026 14:57:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 04A5A606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D2EE606A31E
+	for <linux-raid@vger.kernel.org>; Mon, 26 Oct 2026 15:00:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6D2EE606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=iNVvKNRO
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4a20a37703bso23805015e9.1
-        for <linux-raid@vger.kernel.org>; Mon, 26 Oct 2026 07:57:07 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Lra6s915
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4a549cd7fd2so12494695e9.0
+        for <linux-raid@vger.kernel.org>; Mon, 26 Oct 2026 08:00:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1793026626; x=1793631426; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1793026841; x=1793631641; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:mime-version:references
          :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=r4TeSRrJfvEb9bXGYtvTmzKxtpAZeorrt+MbujrYaNo=;
-        b=iNVvKNROw0TJV/07MSUPeQWkiFUyo/r8Mun0JgwcYN1aZGEO0Sv9204nzc6yLc+hls
-         lVDl0aZxytSZYw6BSeTenz/KJCMjoIb3xqnZcqJByX9Q1EVWAOI4/EPnmwvYoqYnj6dd
-         x3IhiPjf9SGcxTw9rFWvRlZWALlhTOvZHCIyZSp43diZHDSMZ2IxvGB66IJT+IVb/U4T
-         xUqg6QFK6dKmeVQ7PYbVwsYmJYaeHZg8gB7z8rmiLz9RLTzAgFaL21Re3C9M8ShTE0WW
-         XGN8R0/rpsSwV0e9tmEqkvS8gli54EjPIrO8yhunGeG3DJ2Xh3hXiCO6wU93iVLhlOu3
-         bZEQ==
+        bh=2fEUp+1KLX1g9pxymcQPGBgvQdM6meDnFJ6iLYfyBzk=;
+        b=Lra6s915j8vZyMBLzKiUyF9yhNwktX1OzErVRKT/BPE+RAJfo5Llf4uPPZuAlrYz6b
+         eeFUllvSvT/2MXKEr6n9XgjdQLi1t6K2eETXDEyNCAB0a5CHGAwoMlvmHZyTNKRvcchi
+         CtnKpn4dR9H/ozlsReAL7ghF+31+8KZ0KmGJeMxWjk5/1NMR5ZmZ3+n89Iqj6naf+CUM
+         wsAbxiw0VIujFV8WDECRIJbpa53lWo3Cd+qOJbhXtoyOQeWWVwmzTmZR5YP5rzrpSisF
+         kSOHzF7RpnsfTQsuQ34tmfVSxzFTtOJM9rsiabq26H3iShsLuI1J14tRIIxtkOTFu9hu
+         3hxQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793026626; x=1793631426;
+        d=1e100.net; s=20260707; t=1793026841; x=1793631641;
         h=content-transfer-encoding:content-type:mime-version:references
          :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=r4TeSRrJfvEb9bXGYtvTmzKxtpAZeorrt+MbujrYaNo=;
-        b=W02CKK9WDYSt4atr2ErsU3cnu2zSQrEGm7IqaGlaUEI3YtFgseIBFOzyXLGjGp7zYm
-         nY0v1aI/TfW0DuydSTdEaIS+50H2hEIcV6Xxtkg/BqKkubNqn6dCZdkMabNYLVDILw5B
-         63PxjFif95BGxYwDkOgB5aC5mTHx2nUXnrPcxtGULkUTaAva5sLfkBpfq6E9qBMVLy0X
-         Y61C8mH6SRjQrqTLc2+/T3VsYo1ra8jPJ3gYU6pmETHGYlh45H+xyu5sslMBRgr2WYcj
-         ml+RFcNO4oMYLXac7xtNWvUFeXgMHfkzmYpVPKJ/sQ1gAyKxzwIDX1KGTHhT2q+QowcC
-         zb2Q==
-X-Gm-Message-State: AFq9FYJwfzgpS6STKRv4qMTQxNdRv+7Xh3c2lOQ3LwolxAsRw5YJgUOb
-	L9IwUTus9jP2K/ChTFIj/RaxFCqjaIE9uVUSoms3y7P7A/0TyNwV5Rt7
-X-Gm-Gg: AYBFou1WrVNFjpltfCfn3uuQ6bUHxJL+eMca83ul/DBQsx6VMpwogJx7FoPJ4rBu9+v
-	vHZOPM/9X5r5rF+QH/0K29WSMfuHdIbPsQ13PzSyXP6My9dL0+KRBHeqrcf2axIC8KtUh3F2gSv
-	92b2Xx6y4g+uB3uwJE/4WsgRnGADt0VIXQqBD2qmKMzRjsgpf47tSnaelAe9CTnQpNZ9Jrm28Rx
-	cJ4isLM6rpRTTqv4QruExp91L0+HwftSfpunqd+3cHdUWaNTVRsnfQujJ/Pafziw+erFk+ZqKrR
-	nFi/WRqeLTarvI8V3sU53iMLc7Kfo00rZT9nyhXnnSKaQ8P+dLvOzm82g2/Hxqx/Da8uae5R/jJ
-	NCRsKqjiDZMfQiFLrNk8//J9xFGmT5ABNNhOzS/JLGCJffXvBfrP0Q9BefbwQZDz70ireg/CoHq
-	1qU2+z4SEBXm6nrRMVSbWU6INuW2lvTYcTCTCqG2El3sARXxj5rXbTNvEkDENrYix6Q+3APAbsQ
-	FlsuNe6G5d0pXP4ahEahlzUhQN8Uyse9ELInRmSGz/klxMTDmdUHLoGa6Kh7Fr/5eFyDLyIoziv
-	nvniH1WeX2byqPDo
-X-Received: by 2002:a05:600c:83c7:b0:4a2:c9b:9b98 with SMTP id 5b1f17b1804b1-4a35ac95f44mr128561225e9.17.1793026626028;
-        Mon, 26 Oct 2026 07:57:06 -0700 (PDT)
+        bh=2fEUp+1KLX1g9pxymcQPGBgvQdM6meDnFJ6iLYfyBzk=;
+        b=OBJezkPbQ+yMuM62nvtk0IwqM0aBfEM/eDUo+vBPOVcWfBnGqptL4SDNG+0jy5+tKm
+         zNLdylBGy1QFco+qbX6iEWXq68F5aZpJA50PGKOl6H5jt0oyenHRaFrztfebB9NUAnmb
+         n7YWNzd+pgUmcQcmZF3SjjSt8wBK3iVDhlc6e/wz0Z6y1mAUvqtU8z4qJdpQxmVfqjZI
+         dU5cU5wAOAdb/40IFhwyP/jyA8XTDFPSwKknuxe3WX+2MSpN/fsqxcn4btwexQ0R008g
+         Y/buAbQVw/m+kcPpzicd54koOEzdre8RkRCDr/3UkiQ8mkSBe0GahyMFkL7olhowZjnb
+         ivZQ==
+X-Gm-Message-State: AFq9FYJUw5wdqvFERPjETzXcf3b2YcpJIdPLs8Vcovy1Q0Vb2w187WWP
+	peftd6EcW4UFSJrr7N/U+8UacMd6exRn15EE65UaNjuW8Gn7w0TRk+Lw
+X-Gm-Gg: AYBFou1DLSf7biP2DQvvNwEJpyZNQCmSGMaKUHSzSw7gCKknUnp1le2ny6l41ciqK9u
+	xZtOM93CVloyCcCdHUwG1BbRohCniaf439ZPz+Lc/J/e1Ldx3Y57TX4J9b4ZAoDGCFrvEITi1VF
+	IkvzymKs/qW3EvQWhTslVJ57oxGDLI8Ztc6wKIvcNpUc34aZ4/wPoFTT7yrCBMY6FkGZR8C+69m
+	4uxun9kK5G9IYHyOofhpORAcwYbeIJLj2MN+ww13J+nkzO9tU6B7f6EcZL+LkCwe0Fog3SIW1sS
+	/aywB2fwQeCGaG2YRmR17f5znXffhKkKFeIJnkHFL6m9y4qojs5VIC50o3++7efuoNjAt2Cyc3w
+	svMzAAqgdkSu+P361lpRMfAQyH/1eo7ou3N02WfIns6dYIGr/oC5TLnc4my4tEjw1NnIdL7Rn0c
+	3n3caj+O9i7eZDf84TRLp8usz1/IZO4YNXMc/xR6VcHAXAjkNTV2s/ZMy9zmjiJFYZE6dYN2JLs
+	qOEKNh3xYeKMNpjPUCavLF6rcxOu9+K/4hGFL/Bl0iGKP09UdR4l46n9hXIyCyMqmW20+1mOp6p
+	2h41u70kS/XUUtBF
+X-Received: by 2002:a05:600c:3b82:b0:4a2:18c4:61a5 with SMTP id 5b1f17b1804b1-4a35ae71a3emr134917565e9.6.1793026840517;
+        Mon, 26 Oct 2026 08:00:40 -0700 (PDT)
 Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a35a07ebc0sm94940725e9.3.2026.10.26.07.57.05
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a35a0cc374sm207837235e9.9.2026.10.26.08.00.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 07:57:05 -0700 (PDT)
-Date: Mon, 26 Oct 2026 14:57:04 +0000
+        Mon, 26 Oct 2026 08:00:39 -0700 (PDT)
+Date: Mon, 26 Oct 2026 15:00:38 +0000
 From: David Laight <david.laight.linux@gmail.com>
 To: Eric Biggers <ebiggers@kernel.org>
 Cc: linux-raid@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>,
  linux-crypto@vger.kernel.org, x86@kernel.org, linux-kernel@vger.kernel.org,
  Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/3] raid6: simplify CPU feature checks
-Message-ID: <20261026145704.5601466f@pumpkin>
-In-Reply-To: <20261025191207.86590-4-ebiggers@kernel.org>
+Subject: Re: [PATCH 0/3] raid: remove obsolete MMX optimized code
+Message-ID: <20261026150038.6d08478c@pumpkin>
+In-Reply-To: <20261025191207.86590-1-ebiggers@kernel.org>
 References: <20261025191207.86590-1-ebiggers@kernel.org>
-	<20261025191207.86590-4-ebiggers@kernel.org>
 X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -102,83 +101,46 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Sun, 25 Oct 2026 12:12:07 -0700
+On Sun, 25 Oct 2026 12:12:04 -0700
 Eric Biggers <ebiggers@kernel.org> wrote:
 
-> Remove unnecessary checks for features that are prerequisites for other
-> features, such as AVX which is a prerequisite for AVX2.
+> This series retires 32-bit MMX optimizations for RAID.
 > 
-> (Note: in most cases arch/x86/kernel/cpu/cpuid-deps.c warns about
-> missing prerequisites rather than enforcing them.  This is intentional,
-> and it does not mean the prerequisites should be checked elsewhere.)
-> 
-> Then, move the raid6_recov_algo_add() lines into the appropriate places
-> just above so that the same CPU features aren't checked multiple times.
-> 
-> Signed-off-by: Eric Biggers <ebiggers@kernel.org>
-> ---
->  lib/raid/raid6/x86/pq_arch.h | 51 ++++++++----------------------------
->  1 file changed, 11 insertions(+), 40 deletions(-)
-> 
-> diff --git a/lib/raid/raid6/x86/pq_arch.h b/lib/raid/raid6/x86/pq_arch.h
-> index 4a863b253b909..418e4d4a2930f 100644
-> --- a/lib/raid/raid6/x86/pq_arch.h
-> +++ b/lib/raid/raid6/x86/pq_arch.h
-> @@ -16,63 +16,34 @@ extern const struct raid6_recov_calls raid6_recov_ssse3;
->  extern const struct raid6_recov_calls raid6_recov_avx2;
->  extern const struct raid6_recov_calls raid6_recov_avx512;
->  
-> ...
->  static __always_inline void __init arch_raid6_init(void)
->  {
-> -	if (raid6_has_avx2()) {
-> +	if (boot_cpu_has(X86_FEATURE_AVX2)) {
->  		raid6_algo_add(&raid6_avx2x1);
->  		raid6_algo_add(&raid6_avx2x2);
->  		if (IS_ENABLED(CONFIG_X86_64))
->  			raid6_algo_add(&raid6_avx2x4);
-> -		if (raid6_has_avx512()) {
-> +		if (boot_cpu_has(X86_FEATURE_AVX512BW) &&
-> +		    boot_cpu_has(X86_FEATURE_AVX512VL) &&
-> +		    boot_cpu_has(X86_FEATURE_AVX512DQ)) {
->  			raid6_algo_add(&raid6_avx512x1);
->  			raid6_algo_add(&raid6_avx512x2);
->  			if (IS_ENABLED(CONFIG_X86_64))
->  				raid6_algo_add(&raid6_avx512x4);
-> +			raid6_recov_algo_add(&raid6_recov_avx512);
-> +		} else {
-> +			raid6_recov_algo_add(&raid6_recov_avx2);
+> Affected CPUs, such as the Pentium MMX and Pentium II, will just fall
+> back to the existing well-tested scalar code instead.
 
-Is that right (you haven't changed it)?
-You get both the avx2 and axv512 normal algorithms, but only one
-of the recov ones.
-
-I presume these are added in addition to the generic C code and
-some startup test decides which is fastest and so used?
+Seems like a good idea.
+I wonder if all that loop unrolling was needed :-)
 
 David
 
-
->  		}
-> -	} else if (IS_ENABLED(CONFIG_X86_64) || raid6_has_sse2()) {
-> +	} else if (IS_ENABLED(CONFIG_X86_64) ||
-> +		   boot_cpu_has(X86_FEATURE_XMM2)) {
->  		/* x86_64 can assume SSE2 as baseline */
->  		raid6_algo_add(&raid6_sse2x1);
->  		raid6_algo_add(&raid6_sse2x2);
->  		if (IS_ENABLED(CONFIG_X86_64))
->  			raid6_algo_add(&raid6_sse2x4);
-> +		if (boot_cpu_has(X86_FEATURE_SSSE3))
-> +			raid6_recov_algo_add(&raid6_recov_ssse3);
->  	} else {
->  		raid6_algo_add_default();
->  	}
-> -
-> -	if (raid6_has_avx512())
-> -		raid6_recov_algo_add(&raid6_recov_avx512);
-> -	else if (raid6_has_avx2())
-> -		raid6_recov_algo_add(&raid6_recov_avx2);
-> -	else if (raid6_has_ssse3())
-> -		raid6_recov_algo_add(&raid6_recov_ssse3);
->  }
+> 
+> This was the only remaining MMX optimized code in the kernel.  MMX
+> optimizations for the much more commonly called functions memcpy(),
+> copy_page(), and clear_page() were already removed years ago by commit
+> c6dbd3e5e69c ("x86/mmx_32: Remove X86_USE_3DNOW").  There are zero MMX
+> optimizations for anything else, like crypto or CRC, which left the RAID
+> code as an outlier.
+> 
+> Patch 3 also cleans up the CPU feature checks in the RAID6 code.
+> 
+> Eric Biggers (3):
+>   xor: remove MMX optimized code
+>   raid6: remove MMX optimized code
+>   raid6: simplify CPU feature checks
+> 
+>  lib/raid/raid6/Makefile      |   4 -
+>  lib/raid/raid6/x86/mmx.c     | 118 --------
+>  lib/raid/raid6/x86/pq_arch.h |  69 +----
+>  lib/raid/raid6/x86/sse1.c    | 136 ---------
+>  lib/raid/xor/Makefile        |   2 +-
+>  lib/raid/xor/x86/xor-mmx.c   | 515 -----------------------------------
+>  lib/raid/xor/x86/xor_arch.h  |   5 -
+>  7 files changed, 12 insertions(+), 837 deletions(-)
+>  delete mode 100644 lib/raid/raid6/x86/mmx.c
+>  delete mode 100644 lib/raid/raid6/x86/sse1.c
+>  delete mode 100644 lib/raid/xor/x86/xor-mmx.c
+> 
+> 
+> base-commit: 21a7f44fd0765fcc5194130b28767786eba1d1e7
 
