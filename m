@@ -1,57 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.182
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793306884;
-	b=0PMZ6Fz6rkRwKDLmJKbfIKjGKhdFCxzIYg9ld18uURur+gqa5GyEaIDmdI/gExzG6Ry2
-	 m7uzPhMjDDQovjH92EbQKYBcqsfXo1wBskZkwCa+H6P6GzVK2k0ppKr7LbHVQ2zWozhMB
-	 P+k9mCocDgBFc0dD4FYnxkanFdvu1eTutxs/V9b7wPxvM3PbKdfm8bLGTdtsF4YK2ZfRu
-	 gH8EGA987/gTAvAjrjMJaCwpe4RfVRIxLHpvQz/qiZIFGbATy58t3cp8/BLI3LD4CPsTE
-	 1jaqxLTihr9ZNzP3yCN+IWypXdm2W9YBzhYLuSLdpZt907p93Dvponn83cGxGpn0Vig==
+	t=1793335221;
+	b=Ui4HG7wY8Cu9GWrM3ZoMjU3OniX7ryCqWenbN5wMBLJzLmbJRqSy4HoN5P60XjC7B5C+
+	 OcEmA8n7dwTkWqifNsVFXC7dBtrH+183KjsMZaNrkJD8t9I7RBLI0SrIOz57D81k0FPcZ
+	 tPxinBqG6x4AZjoym/U/ygxtzVJ4v4ZZLLa+VwGnf2aCG4tKz9vwNjFAqAN4BANiIuLYj
+	 VCZG0gPQIymoNADd4N+qTEmNzlxaNEdHhBn47MscoLMzwACPsKphPKzwqxsMZnpbdVWdM
+	 H/301F1qch2dcxUt6XxLhoZSc1kTIjBY40emGHxCSUzb0C/vC6KgyAfvFIw520DgT/Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793306884;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=TsbArIddT7HAhpqUOGS7kygpC/50OM7Is0mXmYaeuow=;
-	b=lmXEML8hChuJzlZlg3zLxVqMtm7Pr0XWwZ0YySdv1tHNfK030jhW9+fjXL517I5FX3pM
-	 L0bWuMOYVVTFz8gTNJUTHtFBEDEI8bwQy5o2Dna+KIsxEIESExWAgssZhwnXbxhKLgUvo
-	 /B0CqgRJnMnCkNNEkmCuktZs8PxEniN9gN7f+ov1Ax3Aw6FNcTf6XYFwrBcGvWOYNLoND
-	 0Yojlz0RyQJWrMgbqPh14dSBaWJe8ECeTj7sgooBwhhIUMF48gTRIOyc1eJKskITZSP4g
-	 9qPrHEG+z0JC3E6klxyHT5WAfUiuwbWOe0MYqqQ9nCMdw8Z6LVuqEEZ3mf99EIkvcjQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793335221;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=0pxIDWqNP9QlFHJneHeVIH00VqBfWsrjURorHdYn0cc=;
+	b=o6R4BoXV+9ZKBSBwX1sFcpHTE1hdZRyellhQkLY3ZRfvQhiPepULHQHoAJM2MIOfEVPy
+	 SuWqy/oq2kfSvK4bl+0MFOFVe9ANvAlJdU9o4gA+a+Wd2pQEApNcbqGbnjcV29VuLxQJK
+	 gBFUDEcN6m8LA4kvcKkRHA1taE7ghy5gicefWerzUy/qUBn+MbueRr33AusFAUAF+uqeK
+	 sNPIT8gjzPQvXTCiYFTZI6QDKoPk97yVuBhTFZsn5b7KXf1bButR2e6uHwozsRldCnwxm
+	 W+tEMZZvBUfMSUcjaqiQAORcmdltFWeuwuid4Jsxh9WVIxpxOUfOx+TBoYFT0df5Lkg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ht9fOytJ;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=wsyE4d4u;
+	arc=none smtp.remote-ip=74.125.82.182
+Received: from mail-dy1-f182.google.com (mail-dy1-f182.google.com [74.125.82.182])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A99A4606A31A
-	for <linux-raid@vger.kernel.org>; Thu, 29 Oct 2026 20:48:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4A76606A31A
+	for <linux-raid@vger.kernel.org>; Fri, 30 Oct 2026 04:40:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B4A76606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ht9fOytJ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F6D91F01824;
-	Thu, 29 Oct 2026 20:48:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793306883;
-	bh=TsbArIddT7HAhpqUOGS7kygpC/50OM7Is0mXmYaeuow=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Ht9fOytJ4L/n35ajG+YZ9Kf1LlukZiaHQaHyWNfwj/Mpcrh0Jb75O43Bwlz4N2HSt
-	 r2vpouKHUc8JW2+nIiA9q+JTpzlxiEZVJuhkTZ228Lv6Ge2n6SJiY9nCS3cP5QvANz
-	 q24Zzc26JFwFCq9Ife/pLRQoJCceriR1IF5rMbfFhQBwyyJENaIjkcw8FhuHXjS6E/
-	 gaNGlQxoDkDE8R7zEXKGcA8l2SijD+AW8m7KqDkaBusQqWdMNloDkMgCXLlh4lVnGe
-	 D3AHDi/Ois+jAQVwc2aZE5lmLlO8MJT8Rs9i7F45SycbZVAI9NWZa0peqe33fxlryx
-	 aUdFSfuEW8pOA==
-Message-ID: <sashiko-outbox-189939@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v5 4/4] md: add a control device for array
- management
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20261029202209.1422567-5-abd.masalkhi@gmail.com>
-References: <20261029202209.1422567-1-abd.masalkhi@gmail.com>
- <20261029202209.1422567-5-abd.masalkhi@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 20:48:02 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=wsyE4d4u
+Received: by mail-dy1-f182.google.com with SMTP id 5a478bee46e88-3535bf8b3e0so548352eec.0
+        for <linux-raid@vger.kernel.org>; Thu, 29 Oct 2026 21:40:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793335220; x=1793940020; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=0pxIDWqNP9QlFHJneHeVIH00VqBfWsrjURorHdYn0cc=;
+        b=wsyE4d4u2kSup272juIJcOdXxrmp3tLhWNSx5Dxjau/usYM/LbvXq/R3mOrtj0JkF2
+         uHyMzBA0bvVhH0sBF+4GeZM6iP/EMQA/H2jG4HxSHFlzUNKBXAYr3nyoT35OK1VEDTyT
+         2ovsznb8q/PeZ66P1ry3PXuisJ3fq8uHzPkzwZDDYPBbGrszjQ3/AH2+4CiXMhfU6znf
+         Gy3NI9EBrrLpq2ECd8B3XJOQl5Q8s+kVF+aEFVjU1rZCsTlaJGSQQ23kRpqX/7Mysl/N
+         2NvpK2c9hmp29lOuAklEr63DDDwQrSJimmi2boLoXa080ycUfhg+HpPqfh59OJ9gmsnU
+         NIpw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793335220; x=1793940020;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=0pxIDWqNP9QlFHJneHeVIH00VqBfWsrjURorHdYn0cc=;
+        b=nGQ/SPUbbu29PxqqcWQS/rg5hVfMwtm6fCenGZfnqp/IQNIHoeozKY4gjTbafYC5p2
+         VgxGq7GeQnPPJGReiAi4CDg0RLdmnYpCfeTle2sa3T4UE3FxfzBdu0gVkQs+VBb71T+4
+         L4m8jozviG/4ui2uhca3O5dAoxICBowOTXnDngtiR3r8TBHdy0AEVQCBX38UvhYG03Cz
+         +v1+E4Tk39AYuhaFEhbd2lLt9y0lwVMMB/xZZB63tWatQmfI2gilV5KM3Sym02BXRVfs
+         WarvA6Mn8eramB3/rTqYaGpWwLS7HyUUJDE7SAc5mHCHfCyTVLyWNPDkvhxvagnlPWmf
+         6CJQ==
+X-Forwarded-Encrypted: i=1; AKwUvBz2zqS3ZkMlvmo8GXTwfFnWR+wnVq6g2QEsCT6o+DEsbnR/fPJo5WM5kS7itx//KW4XLf0FEGUGFTc1@vger.kernel.org
+X-Gm-Message-State: AFq9FYK3d3SurFQdLyG1FEMgaFFuFG3FEq9w2cR1DYzJhNdcb0F/Dvdc
+	mOvJ2MUVMO/g0gXUHR5/7og4SJjmKMsb0N8Pxv8JoQDQA13eO3i0acss
+X-Gm-Gg: AYBFou0b5eMzqGc/bjundJiRammjEdkSjPnGoTxQ88lcFpVqY6JziXSXM6KpUZ/2CfJ
+	UsRgZke0doI5yCX+mZw8E1TN+p9BHbwQB62SQ2d38XgEy4HEyr+VDZkPqWM7jwKbK/YLbhjFPBs
+	YAwzC/ayCCyb+gvlCHQu0CgO6a6HSUG3j52yI27wXENFpTF0KNbLM/Toui69hZoH6KLypdLKsVE
+	zL6+4nv6Kn3bSOYeTCD/QLMrsAyU1HW7sTYIPaHpGXD/sq3QeY+L7v5Njv2tS1z9UsUB7t/fMvA
+	guLKSgthd2jbdIxlQU7azRwX9IFtgPvzZZiGNOpyqWkSizhjKk4L+rpmYdgfC12PyNaoZBQ8fls
+	s8UX9lI9p5olo9EtYNl68/eHjiV+8AEJWn+NSszDJH8Rqv/BCAl/ckx2sotTz5xWbyHCTVcWT1r
+	C51QRziQso4BUE2uAayBqB/4wbFHl6O2/5fqwYxWJOnkMipDPamUHaO4Q2mHMqptYtFlITJ2jwa
+	nFX+qI4q0SV6z+MA2H6pUb6oKqEUomkEoe3wyApD1OCTGKo5YSDZkQu2wGl7RsUXkGiHQnLP1cz
+	ZZIF5vAU2ajq0RoJb2TUIkpog2Q0MqiSHLkGaHEqDKj3bqMf
+X-Received: by 2002:a05:7301:640b:b0:33c:16f1:2e11 with SMTP id 5a478bee46e88-36a42363ef8mr1827511eec.7.1793335219596;
+        Thu, 29 Oct 2026 21:40:19 -0700 (PDT)
+Received: from spidy ([2401:4900:51d6:8e8c:242c:3f96:88a:43dc])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a42669128sm3710509eec.3.2026.10.29.21.40.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 Oct 2026 21:40:19 -0700 (PDT)
+From: Gowtham S Bhushan <gowtham398gs@gmail.com>
+To: song@kernel.org,
+	yukuai@fygo.io
+Cc: magiclinan@didiglobal.com,
+	xiao@kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	syzbot+fc26c366038b54261e53@syzkaller.appspotmail.com,
+	Gowtham S Bhushan <gowtham398gs@gmail.com>,
+	syzbot+75f49ec552cc74d9d69b@syzkaller.appspotmail.com
+Subject: [PATCH v2] md/raid1: reject out-of-range raid_disks in setup_conf()
+Date: Fri, 30 Oct 2026 10:10:08 +0530
+Message-ID: <20261030044008.34293-1-gowtham398gs@gmail.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261028152755.383821-1-gowtham398gs@gmail.com>
+References: <20261028152755.383821-1-gowtham398gs@gmail.com>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -60,483 +102,69 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 7 potential issue(=
-s) to consider:
-- [Critical] md: unlocked set_disk_faulty() call in mdctl_ioctl() races wit=
-h __md_stop()
-- [High] md: missing MD_CLOSING check in mdctl_find_mddev() and mdctl_ioctl=
-()
-- [High] md: missing state revalidation after lock drop in mdctl_ioctl()
-- [Medium] md: MD_CTL_STOP_ARRAY with MD_CTL_RO_FLAG returns -EINVAL on ina=
-ctive array
-- [Medium] md: mdctl_get_mddev_uuid() and mdctl_lookup_array() use non-nati=
-ve or stale uuid
-- [Medium] md: tautological MINOR() check and u64 md_dev truncation in mdct=
-l_find_mddev()
-- [Medium] md: race between md_alloc() kobject_add() failure and mdctl_find=
-_mddev()
---
+mddev->raid_disks can be set from user space with SET_ARRAY_INFO and
+is not bounded before RUN_ARRAY reaches raid1_run(). With a very large
+value, setup_conf() asks the allocator for more than KMALLOC_MAX_SIZE
+when allocating conf->mirrors, and the allocator warns:
 
-commit a0c97489b840f0bb7566f8fcc5073f039699c2e5
-Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+  WARNING: mm/slub.c:5459 at ___kmalloc_large_node
+   setup_conf+0x15d/0x700
+   raid1_run+0x109/0x250
+   md_run+0x6c3/0xec0
+   do_md_run+0x27/0x3b0
+   md_ioctl+0x163f/0x1ca0
 
-md: add a control device for array management
+The array fails to start, but machines running with panic_on_warn
+crash and syzbot keeps reporting it.
 
-This commit introduces a /dev/md-control misc device to allow configuring,
-querying, and stopping MD arrays by name, UUID, or device number without
-opening the MD block device directly. It also moves disks_mutex to file
-scope to synchronize control device lookups with md_alloc().
+Fail early instead. Version 1.x metadata can describe at most 1920
+devices, so use that as the upper bound, and test the sign before the
+value is used. At that limit the allocations that scale with
+raid_disks (conf->mirrors, the r1bio mempool element and the resync
+buffers) stay well below KMALLOC_MAX_SIZE.
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 3b4497b615cf0..a1425b5e6b3ec 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
+Reported-by: syzbot+75f49ec552cc74d9d69b@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=75f49ec552cc74d9d69b
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 
-[ ... ]
+Signed-off-by: Gowtham S Bhushan <gowtham398gs@gmail.com>
+---
+ drivers/md/raid1.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-> @@ -8601,6 +8607,618 @@ static int md_compat_ioctl(struct block_device *b=
-dev, blk_mode_t mode,
->  }
->  #endif /* CONFIG_COMPAT */
-> =20
-> +static struct mddev *mdctl_get_mddev_dev(dev_t dev)
-> +{
-> +	struct mddev *mddev, *ret =3D ERR_PTR(-EINVAL);
-> +
-> +	if (MINOR(dev) >=3D (1 << MINORBITS))
-> +		return ret;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index f0646fb24371..1cfe983167de 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -48,6 +48,13 @@ static void allow_barrier(struct r1conf *conf, sector_t sector_nr);
+ static void lower_barrier(struct r1conf *conf, sector_t sector_nr);
+ static void raid1_free(struct mddev *mddev, void *priv);
+ 
++/*
++ * Version 1.x md metadata keeps a 256-byte header and then 2 bytes per
++ * device in a 4096-byte block, so no array described by it can have more
++ * devices than this. Arrays created through the ioctl alone have no
++ * on-disk limit, so apply the same cap to them.
++ */
++#define RAID1_MAX_DISKS	((4096 - 256) / 2)
+ #define RAID_1_10_NAME "raid1"
+ #include "raid1-10.c"
+ 
+@@ -3051,6 +3058,11 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 	size_t r1bio_size;
+ 	int err = -ENOMEM;
+ 
++	/* raid_disks comes from user space and sizes the allocations below */
++
++	if (mddev->raid_disks <= 0 || mddev->raid_disks > RAID1_MAX_DISKS)
++		return ERR_PTR(-EINVAL);
++
+ 	conf = kzalloc_obj(struct r1conf);
+ 	if (!conf)
+ 		goto abort;
+-- 
+2.56.0
 
-[ ... ]
-
-> +static struct mddev *mdctl_get_mddev_uuid(const char *uuid)
-> +{
-> +	struct mddev *mddev, *ret =3D ERR_PTR(-ENODEV);
-> +
-> +	spin_lock(&all_mddevs_lock);
-> +	list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
-> +		if (memcmp(mddev->uuid, uuid, sizeof(mddev->uuid)) =3D=3D 0) {
-> +			ret =3D mddev_get(mddev);
-> +			if (!ret)
-> +				ret =3D ERR_PTR(-ENODEV);
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock(&all_mddevs_lock);
-> +
-> +	return ret;
-> +}
-
-[Severity: Medium]
-Can mdctl_get_mddev_uuid() and mdctl_lookup_array() match or report a
-non-native or stale mddev->uuid?
-
-The commit description notes that UUID lookup is only available for arrays
-with native metadata, but there are two places where mddev->uuid is
-populated on arrays that do not have active persistent native metadata:
-
-1. In md_set_array_info(), get_random_bytes(mddev->uuid, 16) populates
-   mddev->uuid even when info->not_persistent is set (!mddev->persistent).
-   As a result, mdctl_get_mddev_uuid() matches non-persistent arrays and
-   mdctl_lookup_array() copies a non-zero UUID to userspace for them.
-
-2. When an array is stopped via do_md_stop() -> md_clean(), md_clean()
-   resets mddev->raid_disks and mddev->persistent to 0, but never clears
-   mddev->uuid:
-
-drivers/md/md.c:md_clean() {
-	mddev->array_sectors =3D 0;
-	...
-	mddev->raid_disks =3D 0;
-	...
-	mddev->persistent =3D 0;
-}
-
-If the stopped mddev remains in all_mddevs (for example, while
-hold_active =3D=3D UNTIL_STOP or before delayed deletion completes),
-mdctl_get_mddev_uuid() will still match its stale mddev->uuid. Furthermore,
-if an older mddev with MD_DELETED set is still on all_mddevs when the array
-is re-assembled on a new mddev later in the list, mddev_get() will return
-NULL on the first match and mdctl_get_mddev_uuid() will break out of the
-loop and return -ENODEV instead of continuing to find the live mddev.
-
-Should mdctl_get_mddev_uuid() and mdctl_lookup_array() check
-mddev->persistent (and skip entries where mddev_get() fails), or should
-md_clean() also clear mddev->uuid?
-
-> +
-> +static struct mddev *mdctl_find_mddev(struct mdu_ioctl *md_ctl)
-> +{
-> +	struct mddev *ret =3D ERR_PTR(-EINVAL);
-> +
-> +	/*
-> +	 * md_alloc() adds a new mddev to all_mddevs before it creates the
-> +	 * gendisk. If creation fails. it frees the mddev directly, without
-> +	 * looking at ->active. All of this happens under disks_mutex.
-> +	 * Holding disks_mutex for the lookup means we only see mddevs that
-> +	 * md_alloc() has finished, so taking a reference is safe and every
-> +	 * mddev we find has a gendisk.
-> +	 */
-> +	mutex_lock(&disks_mutex);
-
-[Severity: Medium]
-Does holding disks_mutex in mdctl_find_mddev() prevent taking a reference to
-an mddev when kobject_add() fails in md_alloc()?
-
-In md_alloc(), if kobject_add() fails, disks_mutex is unlocked before
-mddev_put() is called:
-
-drivers/md/md.c:md_alloc() {
-	...
-	error =3D kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "md");
-	if (error) {
-		mddev->hold_active =3D 0;
-		mutex_unlock(&disks_mutex);
-		mddev_put(mddev);
-		return ERR_PTR(error);
-	}
-}
-
-Because MD_DELETED is only set inside mddev_put() -> __mddev_put() when
-mddev->active drops to 0, a concurrent mdctl_ioctl() -> mdctl_find_mddev()
-can acquire disks_mutex right after md_alloc() unlocks it and call
-mddev_get(mddev), incrementing mddev->active from 1 to 2 before md_alloc()
-calls mddev_put(mddev).
-
-When md_alloc() then calls mddev_put(mddev), atomic_dec_and_lock() sees
-mddev->active drop from 2 to 1 and returns early without setting MD_DELETED.
-If the racing mdctl_ioctl() runs MD_CTL_SET_ARRAY_INFO, md_set_array_info()
-sets mddev->ctime (and mddev->raid_disks), causing the subsequent
-mddev_put() in mdctl_ioctl() to also skip __mddev_put() deletion and leaving
-an mddev without a sysfs kobject in all_mddevs.
-
-> +
-> +	if (memchr_inv(md_ctl->md_uuid, 0, MD_UUID_LEN)) {
-> +		if (*md_ctl->md_name || md_ctl->md_dev) {
-> +			pr_err_ratelimited("md: only supply one of name, uuid or dev number\n=
-");
-> +			goto out;
-> +		}
-> +		ret =3D mdctl_get_mddev_uuid(md_ctl->md_uuid);
-> +	} else if (*md_ctl->md_name) {
-> +		if (md_ctl->md_dev) {
-> +			pr_err_ratelimited("md: only supply one of name, uuid or dev number\n=
-");
-> +			goto out;
-> +		}
-> +		ret =3D mdctl_get_mddev_name(md_ctl->md_name);
-> +	} else if (md_ctl->md_dev) {
-> +		ret =3D mdctl_get_mddev_dev(new_decode_dev(md_ctl->md_dev));
-> +	}
-
-[Severity: Medium]
-Can passing md_ctl->md_dev directly to new_decode_dev() silently truncate
-64-bit device numbers, and is the MINOR(dev) check in mdctl_get_mddev_dev()
-reachable?
-
-In struct mdu_ioctl, md_dev is __u64, whereas new_decode_dev() takes a u32.
-In 64-bit userspace, dev_t encodings (such as glibc makedev()) store
-minor[31:20] and major[31:12] in the upper 32 bits. Passing md_ctl->md_dev
-to new_decode_dev() without checking that it fits in u32 (or using
-huge_decode_dev()) discards the upper 32 bits, so a device number with
-minor =3D (1 << 20) decodes as minor 0 and aliases to md0 instead of failing
-with -EINVAL.
-
-In addition, in mdctl_get_mddev_dev():
-
-	if (MINOR(dev) >=3D (1 << MINORBITS))
-		return ret;
-
-MINOR(dev) is defined as ((unsigned int)((dev) & MINORMASK)) where MINORMASK
-is ((1U << MINORBITS) - 1), so MINOR(dev) >=3D (1 << MINORBITS) is always
-false.
-
-> +
-> +out:
-> +	mutex_unlock(&disks_mutex);
-> +	return ret;
-> +}
-
-[ ... ]
-
-> +static long mdctl_ioctl(struct file *filp, uint cmd, ulong u)
-> +{
-
-[ ... ]
-
-> +	/* These commands do not need reconfig_mutex. */
-> +	err =3D -ENODEV;
-> +	switch (cmd) {
-> +	case MD_CTL_GET_ARRAY_INFO:
-> +		if (mddev_configured(mddev))
-> +			err =3D mdctl_get_array_info(mddev, arg);
-> +		goto out;
-> +
-> +	case MD_CTL_GET_DISK_INFO:
-> +		if (mddev_configured(mddev))
-> +			err =3D mdctl_get_disk_info(mddev, arg);
-> +		goto out;
-> +
-> +	case MD_CTL_GET_BITMAP_FILE:
-> +		err =3D get_bitmap_file(mddev, arg);
-> +		goto out;
-> +
-> +	case MD_CTL_SET_DISK_FAULTY:
-> +		err =3D set_disk_faulty(mddev, new_decode_dev(md_ctl.arg));
-> +		goto out;
-> +	}
-
-[Severity: Critical]
-Can calling set_disk_faulty() here without reconfig_mutex or an opener
-reference race with __md_stop() and trigger a use-after-free or NULL pointer
-dereference?
-
-In the legacy block device md_ioctl() path, the caller holds /dev/mdX open,
-so mddev->openers >=3D 1 prevents another task from stopping the array via
-STOP_ARRAY. Through /dev/md-control, mdctl_ioctl() does not open the block
-device, so mddev->openers is 0 and MD_CTL_SET_DISK_FAULTY runs without
-reconfig_mutex.
-
-If another task concurrently stops the array via MD_CTL_STOP_ARRAY (or writ=
-es
-"inactive" or "clear" to sysfs array_state), do_md_stop() calls
-__md_stop(mddev) before export_array(mddev) unbinds the rdevs:
-
-drivers/md/md.c:__md_stop() {
-	...
-	spin_lock(&mddev->lock);
-	mddev->pers =3D NULL;
-	spin_unlock(&mddev->lock);
-	if (mddev->private)
-		pers->free(mddev, mddev->private);
-	mddev->private =3D NULL;
-	put_pers(pers);
-}
-
-Concurrently, set_disk_faulty() only takes rcu_read_lock(), finds the still
-bound rdev via md_find_rdev_rcu(), and calls md_error(mddev, rdev):
-
-drivers/md/md.c:md_error() {
-	...
-	if (!mddev->pers || !mddev->pers->error_handler)
-		return;
-	mddev->pers->error_handler(mddev, rdev);
-
-	if (mddev->pers->head.id =3D=3D ID_RAID0 ||
-	    mddev->pers->head.id =3D=3D ID_LINEAR)
-		return;
-	...
-}
-
-Because __md_stop() clears mddev->pers and immediately frees mddev->private
-(such as struct r1conf, r10conf, or r5conf) without waiting for an RCU grace
-period or holding reconfig_mutex against set_disk_faulty(), md_error() and
-mddev->pers->error_handler() can dereference a NULL mddev->pers or a freed
-mddev->private.
-
-> +
-> +	if (cmd =3D=3D MD_CTL_STOP_ARRAY) {
-> +		/* Need to flush page cache, and ensure no openers */
-> +		err =3D mddev_set_closing_and_sync_blockdev(mddev, 0);
-> +		if (err)
-> +			goto out;
-> +
-> +		closing =3D true;
-> +	}
-> +
-> +	if (!md_is_rdwr(mddev))
-> +		flush_work(&mddev->sync_work);
-> +
-> +	suspend =3D mdctl_ioctl_need_suspend(cmd);
-> +	err =3D suspend ? mddev_suspend_and_lock(mddev) : mddev_lock(mddev);
-> +	if (err) {
-> +		pr_debug("md: ioctl lock interrupted, reason %d, cmd %d\n",
-> +			 err, cmd);
-> +		goto out;
-> +	}
-
-[Severity: High]
-Does mdctl_ioctl() or mdctl_find_mddev() need to check whether MD_CLOSING is
-set on mddev->flags?
-
-When legacy_async_del_gendisk is true (the default), stopping an array where
-mddev->hold_active =3D=3D 0 via do_md_stop(mddev, 0) -> md_clean() leaves
-MD_CLOSING set on mddev->flags without setting MD_DELETED:
-
-drivers/md/md.c:md_clean() {
-	...
-	if (legacy_async_del_gendisk && mddev->hold_active) {
-		clear_bit(MD_CLOSING, &mddev->flags);
-	} else {
-		/* if UNTIL_STOP is set, it's cleared here */
-		mddev->hold_active =3D 0;
-		/* Don't clear MD_CLOSING, or mddev can be opened again. */
-		mddev->flags &=3D BIT_ULL_MASK(MD_CLOSING);
-	}
-}
-
-For legacy block device ioctls, md_open() checks test_bit(MD_CLOSING,
-&mddev->flags) and returns -ENODEV, preventing any new ioctls from
-reconfiguring the array before mddev_put() -> __mddev_put() sets MD_DELETED
-and queues del_work.
-
-However, mdctl_find_mddev() -> mddev_get() and mddev_lock() only check
-MD_DELETED, not MD_CLOSING. If a concurrent task issues MD_CTL_SET_ARRAY_IN=
-FO
-or MD_CTL_ADD_NEW_DISK via /dev/md-control and grabs a reference in
-mdctl_find_mddev() before the stopping task's mddev_put() drops
-mddev->active to 0, __mddev_put() will not run when the stop finishes. The
-second task then locks the mddev and populates mddev->ctime,
-mddev->raid_disks, or mddev->disks while MD_CLOSING is still set. When
-mddev_put() later drops mddev->active to 0, __mddev_put() sees that the
-mddev is no longer empty and returns early without deleting it:
-
-drivers/md/md.c:__mddev_put() {
-	if (mddev->raid_disks || !list_empty(&mddev->disks) ||
-	    mddev->ctime || mddev->hold_active)
-		return;
-	...
-}
-
-This leaves MD_CLOSING permanently set on the mddev, leaking the mddev and
-its bound rdevs and causing subsequent md_open() calls to fail with -ENODEV
-and MD_CTL_STOP_ARRAY calls to fail with -EBUSY.
-
-> +	if (suspend)
-> +		noio_flags =3D memalloc_noio_save();
-> +
-> +	/*
-> +	 * Commands querying/configuring an existing array.
-> +	 *
-> +	 * If the array is not initialised yet, check of the command requires
-> +	 * the array to be initialised.
-> +	 */
-> +	if (!mddev_configured(mddev) && mdctl_ioctl_need_config(cmd, flags)) {
-> +		err =3D -ENODEV;
-> +		goto unlock;
-> +	}
-> +
-> +	/*
-> +	 * Commands even a read-only array can execute:
-> +	 */
-> +	switch (cmd) {
-> +	case MD_CTL_SET_ARRAY_INFO:
-> +		err =3D mdctl_set_array_info(mddev, arg);
-> +		goto unlock;
-> +
-> +	case MD_CTL_RESTART_ARRAY_RW:
-> +		err =3D restart_array(mddev);
-> +		goto unlock;
-> +
-> +	case MD_CTL_STOP_ARRAY:
-> +		err =3D -EINVAL;
-> +		if (!flags)
-> +			err =3D do_md_stop(mddev, 0);
-> +		else if (flags =3D=3D MD_CTL_RO_FLAG && mddev->pers)
-> +			err =3D md_set_readonly(mddev);
-> +		goto unlock;
-
-[Severity: Medium]
-What happens when MD_CTL_STOP_ARRAY is called with flags =3D=3D MD_CTL_RO_F=
-LAG
-on a configured array that is not currently running (mddev->pers =3D=3D NUL=
-L)?
-
-In the legacy md_ioctl() handler, err is initialized to 0 before the switch:
-
-drivers/md/md.c:md_ioctl() {
-	...
-	case STOP_ARRAY_RO:
-		if (mddev->pers)
-			err =3D md_set_readonly(mddev);
-		goto unlock;
-}
-
-so STOP_ARRAY_RO on a configured but inactive array succeeds with 0 (and
-clears mddev->hold_active =3D=3D UNTIL_IOCTL at unlock).
-
-In mdctl_ioctl(), err is set to -EINVAL before the if/else chain, so when
-flags =3D=3D MD_CTL_RO_FLAG and mddev->pers is NULL, neither branch is take=
-n and
-mdctl_ioctl() returns -EINVAL.
-
-> +
-> +	case MD_CTL_HOT_REMOVE_DISK:
-> +		err =3D hot_remove_disk(mddev, new_decode_dev(md_ctl.arg));
-> +		goto unlock;
-> +
-> +	case MD_CTL_ADD_NEW_DISK:
-> +		/* We can support ADD_NEW_DISK on read-only arrays
-> +		 * only if we are re-adding a preexisting device.
-> +		 * So require mddev->pers and MD_DISK_SYNC.
-> +		 */
-> +		if (mddev->pers) {
-> +			struct mdu_disk_info64 info;
-> +
-> +			if (copy_from_user(&info, arg, sizeof(info)))
-> +				err =3D -EFAULT;
-> +			else if (!(info.state & (1 << MD_DISK_SYNC)))
-> +				/* Need to clear read-only for this */
-> +				break;
-> +			else
-> +				err =3D md_add_new_disk(mddev, &info);
-> +			goto unlock;
-> +		}
-> +		break;
-> +	}
-> +
-> +	/*
-> +	 * The remaining ioctls are changing the state of the
-> +	 * superblock, so we do not allow them on read-only arrays.
-> +	 */
-> +	if (!md_is_rdwr(mddev) && mddev->pers) {
-> +		if (mddev->ro !=3D MD_AUTO_READ) {
-> +			err =3D -EROFS;
-> +			goto unlock;
-> +		}
-> +		mddev->ro =3D MD_RDWR;
-> +		sysfs_notify_dirent_safe(mddev->sysfs_state);
-> +		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> +		/* mddev_unlock will wake thread */
-> +		/* If a device failed while we were read-only, we
-> +		 * need to make sure the metadata is updated now.
-> +		 */
-> +		if (test_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags)) {
-> +			mddev_unlock(mddev);
-> +			wait_event(mddev->sb_wait,
-> +				   !test_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags) &&
-> +				   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
-> +			mddev_lock_nointr(mddev);
-> +		}
-> +	}
-
-[Severity: High]
-Can the array be stopped and deleted while mdctl_ioctl() drops
-reconfig_mutex to wait on mddev->sb_wait here?
-
-In md_ioctl(), the caller holds the block device open (mddev->openers >=3D =
-1),
-which prevents a concurrent STOP_ARRAY from passing
-mddev_set_closing_and_sync_blockdev() while reconfig_mutex is dropped.
-In mdctl_ioctl(), the block device is not open (mddev->openers =3D=3D 0).
-
-When mdctl_ioctl() drops reconfig_mutex via mddev_unlock(mddev) and sleeps
-in wait_event(mddev->sb_wait, ...), a concurrent MD_CTL_STOP_ARRAY (which
-does not call mddev_suspend()) or a sysfs array_state write can acquire
-reconfig_mutex and run do_md_stop(mddev, 0). That stops the personality,
-exports all disks, clears mddev->sb_flags and mddev->raid_disks in
-md_clean(), sets MD_DELETED (when !legacy_async_del_gendisk), and in
-mddev_unlock() wakes mddev->sb_wait and deletes the gendisk.
-
-mdctl_ioctl() then wakes up, reacquires reconfig_mutex via
-mddev_lock_nointr(mddev) (which does not check MD_DELETED or MD_CLOSING),
-and proceeds into the switch below without revalidating that the array is
-still active or configured. For example, if cmd is MD_CTL_ADD_NEW_DISK,
-md_add_new_disk() will see mddev->raid_disks =3D=3D 0 and bind a new rdev o=
-nto
-the stopped/deleted mddev, preventing __mddev_put() from freeing the mddev
-and leaving the rdev's block device claimed.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029202209.1422=
-567-1-abd.masalkhi@gmail.com?part=3D4
