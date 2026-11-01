@@ -1,73 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=202.108.3.163
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793357782;
-	b=2mA6lHBSWt26VSZfqN+ehFffhN0e9QxZGpCCubT1F9Yn0JdBsj36uI/ti6/SOPg5puJU
-	 g3ZyadiKKunW3eAGc5CNZDcKdxdNkZElwtd7JU5cmiU+oyA7ah9qSEi+J1qrPHT1Dqm9+
-	 zv6/BO3odlY0DVs4cE+HgxBaMNYyYjqMGIge4WuAZznvLR+1XxWU3i0EA6uK61k/Q4Bj7
-	 BKOAiDpTGY+o49XjgPqkqInOSh/25fmn4GKa7HutgPqZfc6SBSiuzZ0JoCqniw8pgxCFp
-	 OrgbX0f6Df/kNxc3NAw7UTtFJxtm1ZuRooQ91KzuIyDlB3f4ErQJiigChZXAHQeekzg==
+	t=1793535004;
+	b=qOITYUjx6Ljj+lx0v8RoQQPNbciEcrA176CBLiKobftj3vfTsjtSePztDKdDLd/ZfOS0
+	 3ViSEf9bJLEwqXgN0GxQZL4BeEVyiCnM1PsVRhnwiTLN8NTJWPfvYy4x3tiHLVVeKTNxS
+	 ZD05mAfbuHMxybZtD8r81qt4Vhd+QmHtaIjAlmII01sLk/RbJjSQbaXnA+8rPO/rLuAku
+	 6Y8xBFQ+78BDrmLEq/Ffw5G9mCVmrZRUDWwzAOLTOGlprZZdRGJYiUsJmtDwTVHIYDf9g
+	 OnZ+Ncuuq3HcBQ1lT1EVeyE4Wr9pmLumY/yGRqeP33YxQN+q9jMeY+85q5n5cDDOFGA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793357782;
-	h=DMARC-Filter:DKIM-Signature:X-SMAIL-HELO:Received:X-Sender:X-Auth-ID:
-	 X-SMAIL-MID:X-SMAIL-UIID:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=wJe0umuqp0gpxHBN0e/q3xGdapc1vXFbfr7ab2zgNnY=;
-	b=P1hSjJSQNxPZvUdKt8p4vhB2SBraKSZDmxQWac6UkeBhKM+Lplo67Fv0SKdBjYEEbT3S
-	 h77GFQaxnkmFNglktL2bgn/XaY1AhJewAOyq7GBUnULwpqtbYcjfPt4oQTRgqKlOoEZI9
-	 6I+RZyrNrCX3doDTnDzNr3B9QAOs80BfYYu7lC2Ii2OUDNSLJ0SawGp01v4SO9l2Digun
-	 K28vVL1rFzzYRDEbclecs/SDNn0lIaSkOlgF+6JRM7/dO4H7dAcx3SEr1r4Nx8CdSXozU
-	 mWQebuYOvLG0eHTOR7smEimM4dQ0Wetkd8t/V7Bb+es6tKHCuvSSMl00Pm7Ot3KI2og==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793535004;
+	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
+	 Message-ID:Date:Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:
+	 X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:
+	 X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
+	bh=28v7zKMA0QC3u4309Ch10ZxYVg6RgZ3COat7tgKLjNo=;
+	b=B8WZ2d/XyZnWecLdEhZjVN3QiCmn6DlDjUx7VF14KZKCGUh1PJ/9EpAtX4EwQjsOh8Ao
+	 1P9Bw+Ftu184HTyisVM2Fb3h0Ni/KRAR42DZ5YLTizvdxj+QQakCvfOz81nT6GMfZsNl3
+	 sBFC7wEWUVFL/G2GyzuLftLvhnV24Ilt4QeqzCuDXa4/EqvtrCYh2XJLG4aB8/sWJXVIF
+	 qtfUbrUO9XianNa7uAUlmz7nMBpiP/r/paG6RE7ejfb+UgeIj4/a+F8/Lngg6NMLv0xmd
+	 xZ2LOH+WecbFZt/Lcn2PkNzOV1OQ7hv/VLjJuFpPn2im/xOJSofFY1RWbUUzrveBNhQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=sina.com;
-	spf=pass smtp.mailfrom=sina.com;
-	dkim=pass header.d=sina.com header.i=@sina.com header.a=rsa-sha256 header.s=201208 header.b=XTgJLUgq;
-	arc=none smtp.remote-ip=202.108.3.163
-Received: from mail3-163.sinamail.sina.com.cn (mail3-163.sinamail.sina.com.cn [202.108.3.163])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=zte.com.cn;
+	spf=pass smtp.mailfrom=zte.com.cn;
+	arc=none smtp.remote-ip=160.30.148.34
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.34])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A55C6606A330
-	for <linux-raid@vger.kernel.org>; Fri, 30 Oct 2026 10:56:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A55C6606A330
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sina.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sina.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=sina.com header.i=@sina.com header.a=rsa-sha256 header.s=201208 header.b=XTgJLUgq
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sina.com; s=201208; t=1793357779;
-	bh=wJe0umuqp0gpxHBN0e/q3xGdapc1vXFbfr7ab2zgNnY=;
-	h=From:Subject:Date:Message-ID;
-	b=XTgJLUgq29WwtrpcWjhkHZkYS0skahFwDGsnhHs5yEHrvlQiVQRbDFo0YebfuvlRm
-	 /RZFYbdBPe28KmD0pkgv1fzU8uoZizUVu22+q/8mt0NWJ8NCKTFm/YgufZ7LGFRrQ1
-	 RgtrFRLcxuhcqmP02hLC43pJmF6M5KTplSzCndPc=
-X-SMAIL-HELO: lxu-ped-host..
-Received: from unknown (HELO lxu-ped-host..)([111.198.231.89])
-	by sina.com (10.54.253.34) with ESMTP
-	id 6AE477CE0000480D; Fri, 30 Oct 2026 18:56:16 +0800 (CST)
-X-Sender: eadavis@sina.com
-X-Auth-ID: eadavis@sina.com
-Authentication-Results: sina.com;
-	 spf=none smtp.mailfrom=eadavis@sina.com;
-	 dkim=none header.i=none;
-	 dmarc=none action=none header.from=eadavis@sina.com
-X-SMAIL-MID: 7359056291668
-X-SMAIL-UIID: FC006E671CDD47A2B1D2E33C0B859FAF-20261030-185616-1
-From: Edward Adam Davis <eadavis@sina.com>
-To: syzbot+08318698e045b4b85f51@syzkaller.appspotmail.com
-Cc: linux-kernel@vger.kernel.org,
-	peterz@infradead.org,
-	syzkaller-bugs@googlegroups.com,
-	tglx@kernel.org,
-	bigeasy@linutronix.de,
-	song@kernel.org,
-	yukuai@fygo.io,
-	magiclinan@didiglobal.com,
-	xiao@kernel.org,
-	linux-raid@vger.kernel.org
-Subject: [PATCH] md/raid5: Cancel remove instance if adding it fails
-Date: Fri, 30 Oct 2026 18:56:14 +0800
-Message-ID: <20261030105614.378971-1-eadavis@sina.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <6ae34c61.bc88765f.313a3f.00b3.GAE@google.com>
-References: <6ae34c61.bc88765f.313a3f.00b3.GAE@google.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 045C7606A324;
+	Sun,  1 Nov 2026 12:10:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 045C7606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
+Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jHYYh6VTPz5B111;
+	Sun, 01 Nov 2026 20:10:00 +0800 (CST)
+Received: from xaxapp04.zte.com.cn ([10.99.98.157])
+	by mse-fl1.zte.com.cn with SMTP id 6A1C9td1094258;
+	Sun, 1 Nov 2026 20:09:55 +0800 (+08)
+	(envelope-from shao.mingyin@zte.com.cn)
+Received: from mapi (xaxapp02[null])
+	by mapi (Zmail) with MAPI id mid32;
+	Sun, 1 Nov 2026 20:09:58 +0800 (CST)
+X-Zmail-TransId: 2afa6ae72c1679c-63d42
+X-Mailer: Zmail v1.0
+Message-ID: <20261101200958563ZkI79UKy510arbmzZJPzd@zte.com.cn>
+Date: Sun, 1 Nov 2026 20:09:58 +0800 (CST)
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -76,76 +56,38 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+From: <shao.mingyin@zte.com.cn>
+To: <song@kernel.org>, <yukuai@fygo.io>, <linux-raid@vger.kernel.org>
+Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: =?UTF-8?B?W1BBVENIXSBtZC9yYWlkMTogZHJvcCB0aGUgcmVkdW5kYW50IHN5c2ZzX3VubGlua19yZGV2KCk=?=
+Content-Type: text/plain;
+	charset="UTF-8"
+X-MAIL:mse-fl1.zte.com.cn 6A1C9td1094258
+X-TLS: YES
+X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
+X-SOURCE-IP: 10.5.228.132 unknown Sun, 01 Nov 2026 20:10:00 +0800
+X-CLEAN: YES
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 6AE72C18.000/4jHYYh6VTPz5B111
 
-The failure of raid456_cpu_up_prepare() to allocate memory causes
-cpuhp_state_add_instance() to fail; consequently, the corresponding
-instance is not initialized, potentially hitting [1].
+raid1_reshape() unlinks the old "rd{d}" link, assigns the new
+raid_disk, then unlinks again.  The second call targets "rd{d2}", a slot
+that has no sysfs link yet, so it is a no-op; sysfs_link_rdev() below
+creates it.
 
-Additionally, there is another null-ptr-deref issue: conf->mddev is
-assigned too late, meaning that any error-handling exit occurring before
-this assignment, which jumps to the abort label, potentially hitting [2].
-
-[1]
-KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
-Call Trace:
- cpuhp_state_remove_instance include/linux/cpuhotplug.h:480 [inline]
- raid5_free_percpu drivers/md/raid5.c:7541 [inline]
- free_conf+0x238/0x710 drivers/md/raid5.c:7554
- setup_conf+0xd80/0x2a20 drivers/md/raid5.c:7885
- raid5_run+0x1260/0x1670 drivers/md/raid5.c:8129
-
-[2]
-BUG: KASAN: null-ptr-deref in free_conf+0xfd/0x7e0
-Read of size 8 at addr 0000000000000028 by task rp0/9459
-Call Trace:
- free_conf+0xfd/0x7e0
- setup_conf.cold+0x6e/0x4a1
- raid5_run+0x1260/0x1670
-
-Add a check before removing an instance, if the instance was not successfully
-added, skip the removal process. Move the assignment of conf->mddev after the
-memory allocation for conf.
-
-Fixes: 29c6d1bbd7a2 ("md/raid5: Convert to hotplug state machine")
-Reported-by: syzbot+08318698e045b4b85f51@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=08318698e045b4b85f51
-Signed-off-by: Edward Adam Davis <eadavis@sina.com>
+Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
 ---
- drivers/md/raid5.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b91545ce090d..e1f9ec8f25be 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7538,7 +7538,8 @@ static void raid5_free_percpu(struct r5conf *conf)
- 	if (!conf->percpu)
- 		return;
- 
--	cpuhp_state_remove_instance(CPUHP_MD_RAID5_PREPARE, &conf->node);
-+	if (!hlist_unhashed(&conf->node))
-+		cpuhp_state_remove_instance(CPUHP_MD_RAID5_PREPARE, &conf->node);
- 	free_percpu(conf->percpu);
- }
- 
-@@ -7675,6 +7676,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	if (conf == NULL)
- 		goto abort;
- 
-+	conf->mddev = mddev;
- #if PAGE_SIZE != DEFAULT_STRIPE_SIZE
- 	conf->stripe_size = DEFAULT_STRIPE_SIZE;
- 	conf->stripe_shift = ilog2(DEFAULT_STRIPE_SIZE) - 9;
-@@ -7743,7 +7745,6 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	ret = bioset_init(&conf->bio_split, BIO_POOL_SIZE, 0, 0);
- 	if (ret)
- 		goto abort;
--	conf->mddev = mddev;
- 
- 	ret = -ENOMEM;
- 	conf->stripe_hashtbl = kzalloc(PAGE_SIZE, GFP_KERNEL);
--- 
-2.43.0
-
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 894efb50c6d5..25b80ad52f00 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -3351,7 +3351,6 @@ static int raid1_reshape(struct mddev *mddev)
+ 		if (rdev && rdev->raid_disk != d2) {
+ 			sysfs_unlink_rdev(mddev, rdev);
+ 			rdev->raid_disk = d2;
+-			sysfs_unlink_rdev(mddev, rdev);
+ 			if (sysfs_link_rdev(mddev, rdev))
+ 				pr_warn("md/raid1:%s: cannot register rd%d\n",
+ 					mdname(mddev), rdev->raid_disk);
