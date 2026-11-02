@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793629475;
-	b=vVmNveRgxT5DrhSkPoYoRsx+2pZMM9tUaMoPRh3tETL0sk93LzduLbOYk8dhYYxmiPdq
-	 xrF9jrVYlWHnlpnh8jrNWQ9U52PwJbTxUKX7HWKw++K/xz1FoSOCg9R6EHSZgIo3BC0g4
-	 MfrRnYF5ePw7nAnS4vSNMh9tqICy4/I88kEnnguzSQgerEA+/XumH6aksx2z6NU/xEJ3F
-	 z0jj5bQoKU1RQ63D+TZ+RvjCX3A8uh6SbNjiDjpyr51QkKA9iIknoqgmjfkJk/QhLmM3L
-	 ttwSTgSqKJpWnE+7YayzyGOemGGww2viiuLKY5ZaucQrQy600LZLJ7c2w8Q8I4NSvDQ==
+	t=1793629504;
+	b=NotmhhvMp2jbtpgGiSnhlvPBtymqMuEEJLyjOE7tErxLPDSM9I3q9HS4bwetEEQC8qR6
+	 ykoeiitwguoiJcSeCB2pn4/3xQGixJX5cR4AzfSDi4FeWfjaOGpfJ0qevd11cXuUacXx4
+	 YihusBTgLbaUvzj+EXfEqAPOMz12tYKe8YRv4dWsmlmQrjAepUBllVrvriFBKSWjiO3uK
+	 ZhGtO2rXzsToo/FfZ6jztyqaOVRUtqtd7KbVCYBoPxYlh6Mrq/Bq6/Z6fbipHEFw+Qxx1
+	 HBwtoIlNc0JDutWVgijRFPykOpLKoGGFpL3uPNsxfbPeJQI/YnGpgw2PltTbo0TcK/Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793629475;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793629504;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=frXlYovGKxKiSN/Oj3/IY9GUET6etUhHzbC1M94LuG8=;
-	b=Aw82DG2PNTAkWHzTxP3V6UWRFt0flYg0vUOecNV9yOxbLnLynIbCirGV7u1NG9oh8jak
-	 2Ok2AKx9UZAJKCmj3Dem5m+hcqmlkWFr4USpbqiE6fnp/SLqc9P3+xQXyc5qiHO4l0SzV
-	 3OXb9w3DI6hHdLcjCbpL5bdCEjuAUj44GjOGEfNnImIJqAIQVyGc3LlC0Jj1KEEFikNVw
-	 c/MR0PYtWlXGdChYfovKKE/vQQ3PqRWls7rC0OrMNnhFEtDsqdg+cscfz217ysnIYEWq4
-	 zz2x52zwefSL+bgNjtDI0F4Yx6Qe6OhpxISeNwu9EfaL8Zkwwu18TuHLOSI4LkZB6aw==
+	bh=yb3WLcVokXU6BuV8DQIS3cnoxrtkXR+HXTNSt4lhnr4=;
+	b=LUE2zB83jR3WpBqQA+pg6oj06MgMbj6IqPbkpN7HnUkZ3Xj9lZ5W1rw9wwaMTuWWpE6j
+	 g+mS3uTefYzhBYi+WElWgNOm/MQEv/ceQ/Gfm+cQ3FVOhyS3xGZ5n1ECH4ZT4LwdPSA8V
+	 NnPMDSjI7G9gN8odr9o5gzvx7TEwdoiGotpbfL3F4ezS/GtDRB4bXuyyMJ3osMJbNvOtw
+	 MChtdOBTJG17WM3FKnKOjcph2d1RdFJj/UoDY4AcvArNjSpU7ZX9DajQ0W2B6z3iCORjY
+	 FXMu5oBu1g9utNgpvC9Xg9iPY9vxcdrIeM0ewRr15fLqNUyU72lFiZIxVqqpdxln9TA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ReJoE6zf;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GZiOx3qz;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95061607039F;
-	Mon,  2 Nov 2026 14:24:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0CA56072C45;
+	Mon,  2 Nov 2026 14:25:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ReJoE6zf
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AA8A1F00A16;
-	Mon,  2 Nov 2026 14:24:22 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GZiOx3qz
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 514531F00A16;
+	Mon,  2 Nov 2026 14:24:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793629475;
-	bh=frXlYovGKxKiSN/Oj3/IY9GUET6etUhHzbC1M94LuG8=;
+	s=k20260515; t=1793629503;
+	bh=yb3WLcVokXU6BuV8DQIS3cnoxrtkXR+HXTNSt4lhnr4=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=ReJoE6zfwlMZdL/D4kBPHthe/7b2K1B/nPEO/E9fDnKPvAkMnG3q8iqFJyxNfgYxT
-	 +l0bLxPIHxAyiwwkTWc0uyVHHVBYLTR/rNVKqQ159RwHOdEMgFr70nBybxd8JaVcAZ
-	 INkOE+RqOwXO8hKmtfOe3uu52SEXEIDC8EbApa4h43uDc6EQp0NHZaMrKSPGxDLmTa
-	 z3JiBZz/mUJm70MBn3REHME7mTQy2jABNt0dk+JRXthyckWXmXkXSvKDQjG8t3ZaWQ
-	 U87w9Z+1qwvggD1ALH9JqxHF/VsBzvY+LBC2uMMhSucHH25d+pQJrzTmhyQC9KPZ4G
-	 gBzTDPDZGkvzA==
+	b=GZiOx3qz574i7G4sq7Qj5FW+poGzHx4xdod9v+c0wQs044ndbo8YtJuzjzz+Le7ql
+	 5cTxXE9CzWg6EPV4MxszbcLp2C6ZsWzp9oeVP6uoHj7upUPwwroLqNsh41Sz3JVXM5
+	 yckoX19xo0T3oBfUMO+m7+UdClsC4AicPeSVsnbkVWlzvS64GY4fx7NtE/3cBm/jGz
+	 ZM9+DG2Es/IdFoi9n/atozhLfqSzs42elqcEif/j8WN8Ox6UI8UdLXG/RdqSvOSB81
+	 382CcANAMk/or+82KJJBXqoD4yYyV3R1x7/mjd7dPFt85mMcg0lpgdBZ0yY6v8VJOz
+	 OgF1Yl254onGQ==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 15:21:27 +0100
-Subject: [PATCH RFC 12/38] wifi: libipw: don't return 0 from writes to
- debug_level
+Date: Mon, 02 Nov 2026 15:21:29 +0100
+Subject: [PATCH RFC 14/38] um: NUL-terminate what is written to
+ /proc/exitcode
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -55,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-bugfixes-v1-12-59422ed3e465@kernel.org>
+Message-Id: <20261102-work-procfs-bugfixes-v1-14-59422ed3e465@kernel.org>
 References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 In-Reply-To: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -89,42 +89,45 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
  linux-debuggers@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
- Chuck Lever <cel@kernel.org>
+ Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1059; i=brauner@kernel.org;
- h=from:subject:message-id; bh=PSZyn/5j7f+UAGnOkF9zGJ8rErtLF7uTzeHltQyv5ig=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9mJNt0aR9f0p/qPzeecf+P/MKzGqZHjSv9nAx10fn5
- wXb57eqdpSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAExE6x4jQyt32MU/mspx/OIz
- 9f/2BxhfmF6ZzrB0Ced7yZ3V6unKfxgZbjIUhrXNX37666wNDOpX7329dlJiQe1ekZ5/lQ3MWmr
- ruQE=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1042; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=wRElBRQ5ywf1BhvCA77KtICLks8yyr6GFoKnZLCCyMo=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9mJOdsKVmvtvqn+l+CqJcqhVTz8/M753i1MLdtPdJz
+ RS2GwlqHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABN5E8LI8LBw7tKUPiXhmasU
+ BGdI++krPrfymz85hq3qxbk0wQO2RowMt9ZWzojz1tO+4XPUNkxeX7nqYWvpvKrUmfx7rnks+Nv
+ HBQA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-debug_level_proc_write() returns the length of the string it parsed. A
-write that starts with a NUL byte thus returns 0 and writers that use
-stdio retry it forever. Return the number of bytes that were written
-instead, which also stops writes longer than the 11 bytes it looks at
-from coming up short.
+exitcode_proc_write() copies up to sizeof(buf) bytes of the write into
+buf and hands it to simple_strtol() without terminating it. So
+"echo -n 5" parses whatever the stack held after the '5', and a write of
+seven bytes or more reads past the end of buf. Terminate the copy.
 
-Fixes: b453872c35cf ("[NET] ieee80211 subsystem")
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/net/wireless/intel/ipw2x00/libipw_module.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/um/kernel/exitcode.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_module.c b/drivers/net/wireless/intel/ipw2x00/libipw_module.c
-index 22358b2c2ecd..552c8ff3928b 100644
---- a/drivers/net/wireless/intel/ipw2x00/libipw_module.c
-+++ b/drivers/net/wireless/intel/ipw2x00/libipw_module.c
-@@ -236,7 +236,7 @@ static ssize_t debug_level_proc_write(struct file *file,
- 	else
- 		libipw_debug_level = val;
+diff --git a/arch/um/kernel/exitcode.c b/arch/um/kernel/exitcode.c
+index 43edc2aa57e4..0230354f4812 100644
+--- a/arch/um/kernel/exitcode.c
++++ b/arch/um/kernel/exitcode.c
+@@ -43,9 +43,10 @@ static ssize_t exitcode_proc_write(struct file *file,
+ 	size_t size;
+ 	int tmp;
  
--	return strnlen(buf, len);
-+	return count;
- }
+-	size = min(count, sizeof(buf));
++	size = min(count, sizeof(buf) - 1);
+ 	if (copy_from_user(buf, buffer, size))
+ 		return -EFAULT;
++	buf[size] = '\0';
  
- static const struct proc_ops debug_level_proc_ops = {
+ 	tmp = simple_strtol(buf, &end, 0);
+ 	if ((*end != '\0') && !isspace(*end))
 
 -- 
 2.53.0
