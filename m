@@ -1,97 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.71.94.104
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793604960;
-	b=WquWA4xPTEVLP3S0r/XMSdkAA9t8wLfLHNa1vZTYTqr+7XF/Yc8bo5j0kAuzchLDKS1y
-	 cJKto1GSTCOWfwKeNQh9DXVxNukjA+JUJ8R8YLT8j0XGlEXsXGesxLTJJUpR9vywKXoUo
-	 iw9L72Ewsar/WrktDdu/VOUA+OpsO9cXBbT9ApxwJpAPBVJdvUmrtBU8AHXx4HYkGQhcA
-	 Dg/U1+6nuzSOv0MangUceoITsnXYxyBf9/hB/syIin5QgGl9kTnt2Tqrg9y911w9QuCa+
-	 hR6o7G7n+lfcTQDqa5fdyq5qtZ6tSA7rKFyO73bR7Ei+y1z5IaUhaEOYytSmFykPMUg==
+	t=1793609182;
+	b=VLpto/+lif+O+bH0LiOY2tltE1imu3YMo6RRw0asC1ZLIWdNThd2+vWGvboFZDfYMWxC
+	 89j/pQZCOyAvGGuBSYjLQXwrYHtrePE8kZxpW+VKj2w75cLX+nXT1i14JA5RChw2zP5rn
+	 ytNoTKUIWlKf0OgYFFk/r3QxsjFdo9PKgDKFKSPRJenhiA9/uC06tV+jqmBOVqEjzkuFz
+	 u8W/MHqzy9Us8QFJL+CS14Tp6bTTKZ63nRB0nfw3n0nZVt4/elvBdZc+RSad59JB/u6Rd
+	 EhZpkpfIkeyXzuAqW1Ggoedcg3C22sNWPXbqjP3j2SECLGRqLbe+voiLbofy8ad5pSA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793604960;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=tgeRDsuy5w8yKpx9FEg0UTJK5z2DUghOSJu6TemiYLc=;
-	b=sjhyMgX3so/2OhZmZ2KY8aMz5llIopVxRXJIjdJ+TZ0qyEXtjn0DzAE1LDHPtgq71LgC
-	 72uM8vFWlM0sWD0K/wSvtKRrqye0MskLDjYDB/ncRFGrXvwYgWEdY1ys9vCx9ShILTnvo
-	 Pm4Qhnj3F5ZYypuGE8zei/7PPc6XbN7JBEhpJK9Eb2h0GEhudRMNT0ie7BweF1uyXJpH1
-	 Nus9P+gSTa5c5zkm4sYb1WK6sP6jgRyA+gPpSR+2n82E9xjafCOuTeClHQJWzrU82n52S
-	 OzBn0IKMMpfIl0SV3Ionsf6tC1lVKmzpBFt8FY/9l2MGf/QnCGqPtlOKHGYahQgxLKQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793609182;
+	h=DMARC-Filter:Received:Received:Received:From:To:Cc:Subject:Date:
+	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
+	 X-CM-SenderInfo;
+	bh=/izG8lm3u575/3B41GmNqXIxQnvbCRzRu6K9lcU/TUo=;
+	b=jSH2sne65mcSLupyxY2kqs+gKfNTKD9OLdsn/gxE2ymgXo2ZgwxgEgVWBa9h7Ow9O1pN
+	 kLa1Zl4d5tGo/M00skaQwYeWmNPXPwNjZm2JAJLoPtKeIallYpIcOuxc2xlzm/rbXfDYS
+	 QQ3h1o/AP3KjrO/0rSH5G0LnIKwFWkgvMwHy5k9QQTCDI5iWnGI6Apaao/5z/UhFEaXam
+	 f7p/RhUbM4NrYBtNNpL8lgpgP3Wgb5VSTv5gvQayD0Hmxns72dt9vNm8P0Zmp2M4HH04w
+	 RQ64CrwPwrEjE/iyVb/VAovj3xN60yxyt0lqVSexMMEKjABODNMY5+j1vViB3rXg8pw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=ionos.com;
-	spf=pass smtp.mailfrom=ionos.com;
-	dkim=pass header.d=ionos.com header.i=@ionos.com header.a=rsa-sha256 header.s=google header.b=eL9FLDwT;
-	arc=none smtp.remote-ip=209.85.128.46
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=none header.from=huaweicloud.com;
+	spf=pass smtp.mailfrom=huaweicloud.com;
+	arc=none smtp.remote-ip=124.71.94.104
+Received: from dggmsgout13.his.huawei.com (dggmsgout13.his.huawei.com [124.71.94.104])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF633606A33F
-	for <linux-raid@vger.kernel.org>; Mon,  2 Nov 2026 07:35:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DF633606A33F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ionos.com header.i=@ionos.com header.a=rsa-sha256 header.s=google header.b=eL9FLDwT
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4a56e05568aso10915555e9.1
-        for <linux-raid@vger.kernel.org>; Sun, 01 Nov 2026 23:35:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1793604958; x=1794209758; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=tgeRDsuy5w8yKpx9FEg0UTJK5z2DUghOSJu6TemiYLc=;
-        b=eL9FLDwTm7RgAydFwUlBt59URClfd6IDs4z2aAAMigqvsWcEIpNe+qPq3JHzUJHva1
-         Oq4s1W810lhJ4XEp1rUF8hFiGGf2ccPPdPJVbRV2A7iusf+caTcUk3uF05h0nIbKDTBE
-         peT/BYm859Xro6EcNUKbcpw0jG9ZhtvJG60PUDwQduxemZjTD34WeShHbR1bIYBDOJQ6
-         3S4qHJUG1ARNhCFQJSpEV6jZGlzeQ3qOf2V6ecBKDnTcnvmzUCRocO7nPgk3jtzniRP9
-         YbYi+gCm929GO0KJ8PPehmhB/o/cOzGKRd3j/ud5PEVE+qFhUlE3f18icD6ZFi8Hh5/5
-         9bHA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793604958; x=1794209758;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=tgeRDsuy5w8yKpx9FEg0UTJK5z2DUghOSJu6TemiYLc=;
-        b=fvTM7l4ZBW+FDuQPchotkrav0lmIL8tqMHVSyX556epAo/OPhGbT4oGRpk0W9RK5BA
-         1BrFw+CM+fqBD6K0j0+vnp06GFsPq5I52mgxRsFu7jDzS0axA3YTV1q+P/N/+uq66X2b
-         RHi3REpaBGlH9+Wa/VsGQENylep1jvCxXplATx866AN/AnQhHgNfmtoT4ebFFSmO0kld
-         tgAVt58S9uxZX9zSg8jm+wQR9YLJVqFzrZLBdybEWcRKTloBoYpmgNJwdwytL9vqz7zF
-         c5l8t2QtqQPyRRVr//Da5ruZYvswEt3Yw7lnBgFAhstKG3ijdZvIB10ZqcERx2nMidsq
-         nGzg==
-X-Forwarded-Encrypted: i=1; AKwUvBzlJHxGt1L1iV2htVpSNUtolHeuEWtHfl2UZo3UQe1FCEdG9buW5EyU5WVj26pdtCIoPDOQDUVWK8ZZ@vger.kernel.org
-X-Gm-Message-State: AFq9FYJfGmq/6tJQYsvEI9LfKs/HZjBxwx/LGKBA6uWqqPIeDEd0aJVB
-	MNLLoc7SPKPxZRgZejgMfvbT3+PalPjd1/aik579y0U3pv7Kma7bNaxO7c2MyoDaM10=
-X-Gm-Gg: AYBFou0xLN2qEhXfkIBupXFvbuaL9UnVA0/886ilPRZhI7Ro1DhNkgqeNE1tMBuO3Pg
-	NQNpJ6yniPGzTt1IYJ+zbpQn1bGRuEkYLTQfT2UxAtqsU3nOT1SgEzXYxAIaAoIGPPC8HnBMd7H
-	zMc6TEolKB2pgWclo/QX1J/rjVMUVPnAai2d8TKRYe6fZsORXzKxG9b4InCUyY+bBgJ8ZRGpZoy
-	yO9CKKe03zBrMss5jcROwqh52tq9XwwIMz6h+g9yemzwv5gorwzFXKTd11q9NrMf/GcoP617f7I
-	QWMMQo9yB40IDqkBmdCjBsoy9QQvMctHcXqq6UN5m1I5hoA9m2qvzFAracrRZqkgQpcUJHnnaAM
-	X1uTKdIg6+OhydwGttZ/mO+6TWpt0JCt6QG6biou7wtycwwPcmMRyM6+7eXEtjasSaoI+IknfGe
-	W7HHcf2tT3I6/hRXra+FfBwSOv6A4qwzmBhmmtnHgUOy8iIhONgrH0pg6ztFsbY6Sc3Sc/38UN8
-	32QF0HheiQjsRa0zDb6/l6VfRyve5j1mUtP4L9AZi0SHfelHkcglQvxLptwZnPztOA3nHY1kHxr
-	UgQF9+l2ZMz+OafNGfwZlZO2NdW2IIfXT97/7p0cx76ibhlRkNYQQaYlmdTQDg==
-X-Received: by 2002:a05:600c:c08c:b0:4a0:1e9f:64f6 with SMTP id 5b1f17b1804b1-4ac12193b17mr168784715e9.0.1793604957868;
-        Sun, 01 Nov 2026 23:35:57 -0800 (PST)
-Received: from jwang-ThinkPad-T14-Gen-6.fritz.box ([2001:9e8:1447:4f00:35ef:c1f0:6ffd:177c])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71baa1b3sm17676058f8f.56.2026.11.01.23.35.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Nov 2026 23:35:56 -0800 (PST)
-From: Jack Wang <jinpu.wang@ionos.com>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>
-Cc: Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jack Wang <jinpu.wang@cloud.ionos.com>
-Subject: [PATCH v3] md: clear MD_CLOSING when array_state_store() bails on interrupted lock
-Date: Mon,  2 Nov 2026 08:35:55 +0100
-Message-ID: <20261102073555.53941-1-jinpu.wang@ionos.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <eded31de-2e92-4a3b-9384-03dbebc5e9e7@fygo.io>
-References: <eded31de-2e92-4a3b-9384-03dbebc5e9e7@fygo.io>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A66D8606A329;
+	Mon,  2 Nov 2026 08:46:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A66D8606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggmsgout13.his.huawei.com (SkyGuard) with ESMTP id 4jJ4zj3MMDz1rrFF;
+	Mon,  2 Nov 2026 16:45:53 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id A9C8A405A4;
+	Mon,  2 Nov 2026 16:46:16 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.85.155])
+	by APP4 (Coremail) with UTF8SMTPSA id gCh0CgAnZvXXTehqaMofCw--.17777S5;
+	Mon, 02 Nov 2026 16:46:16 +0800 (CST)
+From: Zizhi Wo <wozizhi@huaweicloud.com>
+To: song@kernel.org,
+	yukuai@fygo.io,
+	magiclinan@didiglobal.com,
+	xiao@kernel.org,
+	linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	yangerkun@huawei.com,
+	chengzhihao1@huawei.com,
+	wozizhi@huawei.com
+Subject: [PATCH V3 1/3] md/raid0: reject a takeover whose zones cannot cover the array
+Date: Mon,  2 Nov 2026 16:38:13 +0800
+Message-ID: <20261102083815.127751-2-wozizhi@huaweicloud.com>
+X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20261102083815.127751-1-wozizhi@huaweicloud.com>
+References: <20261102083815.127751-1-wozizhi@huaweicloud.com>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -102,103 +66,128 @@ List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgAnZvXXTehqaMofCw--.17777S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxWF1kKF4UGF1fWrWxCrW8Crg_yoWrJF13pw
+	40qFn8Xrs5Gr93JwnxAryDGa4FyryxGrZrtF9xX348Gw13ArykGFy5XFyYgayUAas5ZryU
+	ta1UGFWqkFWvgrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Eb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
+	A2048vs2IY020Ec7CjxVAFwI0_JFI_Gr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AK
+	xVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ew
+	Av7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY
+	6r1j6r4UM4x0Y48IcxkI7VAKI48JMxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI4
+	8JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xv
+	wVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjx
+	v20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20E
+	Y4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267
+	AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1_cTDUUUUU==
+X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
 
-From: Jack Wang <jinpu.wang@cloud.ionos.com>
+From: Zizhi Wo <wozizhi@huawei.com>
 
-Writing "clear", "readonly", "inactive" or "read_auto" to array_state
-calls mddev_set_closing_and_sync_blockdev(), which sets MD_CLOSING to
-keep the array from being reopened while it is torn down. The flag is
-only cleared again at the tail of array_state_store() (for readonly /
-read_auto / inactive, or the failed-clear case).
+If a raid0 takeover builds strip zones that cover less than the advertised
+array size, the block layer still accepts I/O for the whole size.
+raid0_make_request() hands any request past the zones to the mapping code,
+which fails to map it and triggers a BUG_ON.
 
-Between setting the flag and reaching that tail there is an early return:
+The zones are built from the member sizes in rdev->sectors, which may not
+match the size the array already advertises, so the zones can come out
+covering less than it. The extreme case is a member with no size recorded
+at all: an array created without metadata imports its devices through
+md_import_device(dev, -1, -1), which never sets rdev->sectors, and
+bind_rdev_to_array() does not reject such a member either, because its
+check that mddev->dev_sectors fits inside a member is skipped when
+rdev->sectors is zero.
 
-	err = mddev_lock(mddev);
-	if (err)
-		return err;
+Refuse a raid0 takeover when its zones cannot cover the size the gendisk
+advertises. This prevents the takeover from silently shrinking the array,
+mirroring the rule raid5_start_reshape() and raid10_start_reshape() apply
+to a reshape.
 
-mddev_lock() is mutex_lock_interruptible() on reconfig_mutex. If the
-writing task catches a signal while blocked there, it returns -EINTR and
-MD_CLOSING is left set on a still-running array. do_md_stop() /
-md_set_readonly() never ran, so the array keeps working internally, but
-every subsequent md_open() now returns -ENODEV for all callers - the
-device shows up in /proc/mdstat and sysfs is fully populated, yet cannot
-be opened, and cannot be recovered without a reboot (all clear paths
-either need the device open or re-enter test_and_set_bit(MD_CLOSING) and
-bail with -EBUSY before the clear).
+The check iterates the same devices and uses the same rounding as
+create_strip_zones(). It does not skip devices with rdev->raid_disk < 0:
+such devices cannot be raid0 members, so counting them only overestimates
+the coverage and, if present, the takeover fails later in
+create_strip_zones() anyway.
 
-The window is easy to hit on a busy host: reconfig_mutex is held for long
-stretches by a running resync/recovery, widening the interruptible wait,
-and a userspace helper writing to array_state and then being killed or
-timed out is enough to leak the flag.
-
-Clear the flag directly in the interrupted-lock exit. Guard the clear
-with a set_closing flag that records whether this write actually set
-MD_CLOSING: the set call is skipped when the array is not running
-read-write (or mddev->pers is NULL), and in that case this write must
-not clear a MD_CLOSING it never set. This also tightens the pre-existing
-tail clear, which had the same unconditional behaviour.
-
-Fixes: 99b902ac1725 ("md: sync blockdev before stopping raid or setting readonly")
-Assisted-by: Claude:claude-opus-4-8 [Claude Code]
-Signed-off-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Fixes: 9af204cf720c ("md: Add support for Raid5->Raid0 and Raid10->Raid0 takeover")
+Fixes: fc3a08b85b7a ("Add raid1->raid0 takeover support")
+Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
 ---
-v3: (Kuai) clear MD_CLOSING directly at the mddev_lock() failure and
-    return, drop the out_clear_closing label; reword the commit message.
-    Keep the set_closing guard: the set call is skipped when the array
-    is not rdwr or mddev->pers is NULL, so this write may not own the
-    flag. Rebased on v7.4-rc1.
-v2: guard the clear with set_closing.
+ drivers/md/raid0.c | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
- drivers/md/md.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 03e35386a802..f14a31387990 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4671,6 +4671,7 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- {
- 	int err = 0;
- 	enum array_state st = match_word(buf, array_states);
-+	bool set_closing = false;
- 
- 	/* No lock dependent actions */
- 	switch (st) {
-@@ -4691,6 +4692,7 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 		err = mddev_set_closing_and_sync_blockdev(mddev, 0);
- 		if (err)
- 			return err;
-+		set_closing = true;
- 		break;
- 	default:
- 		break;
-@@ -4718,8 +4720,12 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
- 		return err ?: len;
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 35e103f0c2c3..fccc62a5fecc 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -643,6 +643,34 @@ static void raid0_error(struct mddev *mddev, struct md_rdev *rdev)
  	}
- 	err = mddev_lock(mddev);
--	if (err)
-+	if (err) {
-+		/* Interrupted before any teardown ran, don't leak MD_CLOSING */
-+		if (set_closing)
-+			clear_bit(MD_CLOSING, &mddev->flags);
- 		return err;
+ }
+ 
++/*
++ * Refuse a takeover whose strip zones cannot cover the capacity the gendisk
++ * advertises: raid0 derives those zones from the sizes of its members, so
++ * find_zone() cannot map I/O that falls beyond them.
++ */
++static int raid0_takeover_check(struct mddev *mddev, int chunk)
++{
++	sector_t capacity = get_capacity(mddev->gendisk);
++	sector_t coverage = 0;
++	struct md_rdev *rdev;
++
++	rdev_for_each(rdev, mddev) {
++		sector_t sectors = rdev->sectors;
++
++		sector_div(sectors, chunk);
++		coverage += sectors * chunk;
 +	}
- 
- 	switch (st) {
- 	case inactive:
-@@ -4792,8 +4798,9 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
++
++	if (coverage < capacity) {
++		pr_warn("md/raid0:%s: refusing takeover, zones cover only %llu of %llu sectors\n",
++			mdname(mddev), (unsigned long long)coverage,
++			(unsigned long long)capacity);
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ static void *raid0_takeover_raid45(struct mddev *mddev)
+ {
+ 	struct md_rdev *rdev;
+@@ -665,6 +693,9 @@ static void *raid0_takeover_raid45(struct mddev *mddev)
+ 		rdev->sectors = mddev->dev_sectors;
  	}
- 	mddev_unlock(mddev);
  
--	if (st == readonly || st == read_auto || st == inactive ||
--	    (err && st == clear))
-+	if (set_closing &&
-+	    (st == readonly || st == read_auto || st == inactive ||
-+	     (err && st == clear)))
- 		clear_bit(MD_CLOSING, &mddev->flags);
++	if (raid0_takeover_check(mddev, mddev->chunk_sectors))
++		return ERR_PTR(-EINVAL);
++
+ 	/* Set new parameters */
+ 	mddev->new_level = 0;
+ 	mddev->new_layout = 0;
+@@ -707,6 +738,9 @@ static void *raid0_takeover_raid10(struct mddev *mddev)
+ 		return ERR_PTR(-EINVAL);
+ 	}
  
- 	return err ?: len;
++	if (raid0_takeover_check(mddev, mddev->chunk_sectors))
++		return ERR_PTR(-EINVAL);
++
+ 	/* Set new parameters */
+ 	mddev->new_level = 0;
+ 	mddev->new_layout = 0;
+@@ -750,6 +784,9 @@ static void *raid0_takeover_raid1(struct mddev *mddev)
+ 		/* array size does not allow a suitable chunk size */
+ 		return ERR_PTR(-EINVAL);
+ 
++	if (raid0_takeover_check(mddev, chunksect))
++		return ERR_PTR(-EINVAL);
++
+ 	/* Set new parameters */
+ 	mddev->new_level = 0;
+ 	mddev->new_layout = 0;
 -- 
-2.43.0
+2.52.0
 
