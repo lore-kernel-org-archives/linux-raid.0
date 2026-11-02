@@ -1,83 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793634531;
-	b=arbCpehmjt3ZW2m0cv52QGPzWXdHDm4z6qKcA6zPAaeO16diynXlrudU9Yy3H+IroX5S
-	 OrjwiSd7YU+vrp1mwUSewws2GR+TkifkYQRoycn5LoZpbuenQ+P3LoKU2tNXfeT5BSr26
-	 kc1CdqzPPqg4pGSB/yhTOm+m9VqAHzJr3e1QyfisGqDX4R4OgNZnK1TJH2Y9d6wHPQMha
-	 bGch+S/ek7f/Bdczs5c7qnnNL6lbFcIx587GruWYuvacRNfUmeFMjXEQJ2DBsPrNRzzEz
-	 +VaXK0LfbXWiOSwDqivph7s6LIkM8kbNBLJO9gRhWYB8Oe2WUvgJ92FtP93QTBhfrZQ==
+	t=1793634533;
+	b=T+YZOb3i4UGOtDFa8ZLoA1/KC/SrBfqk8Ch3kKMZw74Qqq5zQamgL9MRmEYKDt+0CjOy
+	 jE7aUjMKfce7O4+V6SAvD6r97IWs6nD2KubYdYZqhDo2Oyep1G5pYwRgNguvk2NVhJwtA
+	 lnNTmF0LQHmOTr0Jg/dpa78KG4HAd0Cg3DhGgn/+mwao35rW3sGfG8zZ1kWDiDEBcSOJZ
+	 pda+dH0MpqRXo9hGEhH6ttyXDtDSMXgmoCCmS59I1aSadWj75J3DODRhqC3JoJQ7pxv/q
+	 gEBtyYbXZD6EHaMfgtNplVrv+BE7UwTNjitFny4tBdCgXz2fRzlugQmxX7sEMEso3hg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793634531;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793634533;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=a/7HdddsrBGNDK6RARp0U8KGOn5itFvaqEt1f5qWc5E=;
-	b=lEDILcLB094eFC516T/Mp4+XRSyoQyH8PVeh/377T+NlKFZeH83vkEXf/I2hBoMS8HFn
-	 S1shYrMrN4cWXdl4QJTU8tjlR+aDvLcxNvmQFDhAluPuDFbo9G5ViEvlMZvlaLbitagAJ
-	 8wNOmH1YNExzozk+h6EstpTANgbUBL29sV0TzNwZbNrWVIrBVAnEknjiHCDu6iFUmcoeL
-	 2zVokf/As+kOjGeMCy6x1xUh+wFwr7zU24wRDcv7/KA1VO74xc8ro16h6Cse3H7p3lsLT
-	 1HghVfE/pyH///CTfnZ3sEoBw/iXRoGo8ozBBvV8R0oixeTa3FwY8rAUM5E7rO0U1cg==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=wsovmGaHf6OijX5AfvsTlFk+cLMkd7U87o19Pl3YYsE=;
+	b=4toSt0lLG+5wGvPviY/FWCGmfhc9oh+V5wD+RKTDo84Paz2jqdXbWfGgOgvqbz5G74YC
+	 r60BNiLJBi8Y+eN/w1vtCp5+lZPQAhF409JSlwJaQUvF6+R3MmbPP7EVqs1YsvomcE/Vk
+	 AtfkOygXmgg5IRorjZbLOgQIMvWuTuLS847+2qT/746+2gp2WJ7zF8PxGpoyNpV8rZ6Jm
+	 cYHLU8eoDWQtVEpNHWC3VxDwV3Cj2FnBzi1JaNsTdB8IgVkGpzOpX2QMgK4RiOd43bTt1
+	 2byEPac46oqcof/UeTWdZ9za6zrPNfujXpT/HydSKCNfDAe0rfufF2dupnO0oEmUahg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=ionos.com;
 	spf=pass smtp.mailfrom=ionos.com;
-	dkim=pass header.d=ionos.com header.i=@ionos.com header.a=rsa-sha256 header.s=google header.b=eHEhq7tT;
-	arc=none smtp.remote-ip=209.85.128.41
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	dkim=pass header.d=ionos.com header.i=@ionos.com header.a=rsa-sha256 header.s=google header.b=R9em9S1L;
+	arc=none smtp.remote-ip=209.85.128.48
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98868606A32F
-	for <linux-raid@vger.kernel.org>; Mon,  2 Nov 2026 15:48:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 98868606A32F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2972A60771E8
+	for <linux-raid@vger.kernel.org>; Mon,  2 Nov 2026 15:48:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2972A60771E8
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ionos.com header.i=@ionos.com header.a=rsa-sha256 header.s=google header.b=eHEhq7tT
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4a1f80b7bf6so5460635e9.3
-        for <linux-raid@vger.kernel.org>; Mon, 02 Nov 2026 07:48:50 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=ionos.com header.i=@ionos.com header.a=rsa-sha256 header.s=google header.b=R9em9S1L
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4a599e9110eso17335235e9.0
+        for <linux-raid@vger.kernel.org>; Mon, 02 Nov 2026 07:48:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1793634529; x=1794239329; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=a/7HdddsrBGNDK6RARp0U8KGOn5itFvaqEt1f5qWc5E=;
-        b=eHEhq7tTHFXlJKul3sd9mxqbkZmljlDu7JBP0VeMLlVi35sXLSd4JXf5bHA9de2ljn
-         iETS1SpCSHEj2rIYy8BZL4Z15wBQ9N6OEG2H5nZL3Aav3H/zEbMl2w76tO7tDgMTqSML
-         YHTnrHHNDI9bS3NWn8/jFl/0vIlf29zv4NDrVKSZ1SvtMV6OYWSqAEgOMlyRqudio45d
-         uxuZzaLi0oafcXZQJZwUwZmP2ZVVoKVMLhigYQbslcaaHT09SnANTT556mDr4ZCuJsbx
-         Aw8c4kE+9xKkcIxs2GK4r7IUsu6rGifhERM4Dk9LrD6aJzeUZ+OMbwFSqcrnuIAFZJrw
-         pH+Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793634529; x=1794239329;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=ionos.com; s=google; t=1793634530; x=1794239330; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=a/7HdddsrBGNDK6RARp0U8KGOn5itFvaqEt1f5qWc5E=;
-        b=01298STGDO0gZk7SsgUgmCYK260TbZ29CL3UFBxGlMM3jFk/91AjyZM9pZHf0IEKSU
-         dJmISjgkhFrbe6btXBAxapTuMYZM4UNjq3O7l4FbPlnSBD7ecWKhJeW/nn+1cXdPlV4j
-         mgTDJK6rUNwWTLRD1utpfQO/HxsPCYJYIKvpNF2IAuWiXOVsXZOpThSoqSsnBh02KpSr
-         5ooaMKXgF1XQVo77JCzwxCqHc+Cn9aUMPeCHlxfhpXQ/QeE+1cTBnt/u6TZas1GtxKj/
-         GCo7J49aSEz6hBsYRYLLeOpxylHL1HOJi50gHvOFRJMgD5Pxcx5csGh27G7BW+4S3Yod
-         dBdA==
-X-Forwarded-Encrypted: i=1; AKwUvBzIuP99BzAQeeedFDXQYlMqBdJH2ufrqsyKVtfwSFao8KlitsdRwrIJYUQ1JY5fRbRmalbu6mo7+jlm@vger.kernel.org
-X-Gm-Message-State: AFq9FYKZ5QwsWFjiUDRcODYOz2OOMa4rIuimuAW5c3pO+H/oXebW4MZL
-	ITneBZIKReVXm8HFcfdfsGrrChMqUn1ad4TylS9Igknw4FvH/hBTtx0GqCs+Xf3YF0A=
-X-Gm-Gg: AYBFou1AQfQ31ammIGqwWgkhWs9sw+x2pJ+gIcdvodaaSYz9wHQnTmcSivyU5jrlD0a
-	lve9ZX+yAF3hSahIrHr6Dn2YKvS3umUqZZKKJAUcc0sp331K9Ck2H7++wQThT8X0ik+epRIeGbE
-	uDfH42ndcqNll9ZhYFRXmFkdt1DgvJwvQKGo+EBdrunPqJJl1YWiybkq8hfrGS6e3fQRoT5MXEM
-	s6po7WSzNcXIPus2GwvAkB7Toz6x/5aVIrHBwd5LoHvtRDvFYRY7vMU/ofemFSVatCpETrjcY2f
-	XHpJ6lxjEbKKK7V/8XSXwcK/2EO8g+JZ6ucjFr7jxinkvH9+i4AnHASAhH/TPocIlQgbGOBiYbg
-	NNyIP13IAs2xM9UWMlN2z0fmQ+TrB/YI7UH5+KavjZxT0hJZgQoa66cPWugGHebvzgvEozxrcOU
-	jkNMQOWWHNvAkH/aqOLml1liAgJpJKFzA1hKUd+oEnjkjeuhu9EW9QWahax0X06YAIACrNWwSVa
-	VAUUc5bCJZaL1lppAH0zHLGGKqKgMhDIl6cc+5gSI55DkXG0PUB6gxqnCDKPIwELANvogf1Xa4c
-	qgvbnXfBlIuZFn4SU12vCu1cZOJWFHSSUFABtjolf2qhmJa+kaBUrQN9zdeYK8O2ZV2bKc7ic3J
-	6avaIfsA=
-X-Received: by 2002:a05:600c:a010:b0:4a1:7dcf:be1f with SMTP id 5b1f17b1804b1-4ac166ee4d6mr239662965e9.1.1793634528898;
-        Mon, 02 Nov 2026 07:48:48 -0800 (PST)
+        bh=wsovmGaHf6OijX5AfvsTlFk+cLMkd7U87o19Pl3YYsE=;
+        b=R9em9S1Lx1vExMyQA9P0H+QKW3uOx1aVTQ32hg5p4bxuq0esA6CgxBO4QPJWnAmW/z
+         bkWGqKQvcmtZCiTBUuSPaIs8PtPHSvP2odEcdEH6Za8yXDtugfUcbcPyCDIBGFiHIemV
+         uMBfVIDcIig8P4mNQlX6EqR5ZKaLObvveAkFgi4hGB4m2Ll/cvoK2I9aIyHRFArcgcj0
+         ldbSvE6oo49K7AA+jBbYtKCqyAexjVOJOXRAeZJVCu0x93hkBj8RZE8nQDXnrDBFAVQQ
+         tnElTuCMYo+bXlhkpNxVyHndqoXwEMGfcdhFUpZlZKCjLTDYm9xt8z1xTh+fhDvdxXNG
+         svvA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793634530; x=1794239330;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=wsovmGaHf6OijX5AfvsTlFk+cLMkd7U87o19Pl3YYsE=;
+        b=1KgcGlXQ6qnNlBaRSjtq8Y0Qz0pl3mKUqZs3MyJOWCb+HC8YZKjmyDryegDCgAHlYL
+         CE98m+OfEoJQlj+wuJzmcKZiDhpQv8RrTzIdnJfVgwbAD6ORelKS5pItruC3D/IZes8W
+         uVledpMp7p39hwQYS3rVAude2+PqkfNZceoLKKPYh74ueShl+pprSdH0zxU7Uh+pkszX
+         HG433ZtIkHLwnxSZhIzL0N7Vh60ujeXoKxgcdptmGmE3g1GB+ZkDUhouXwxiHbSfjzPI
+         DJ57QKr8bwLGF94dKDdPV20opfcJ1QyDa+2a1gDAtrU6KS0T6q8EXI0bdrxOp08QMvr+
+         ai6g==
+X-Forwarded-Encrypted: i=1; AKwUvByelR8/V1Yc0S6oM7+zPQmBROUNY9daLvT9ad90IWSktBIu6lUyESUE9T+WbjSmwPdeSMNG2fYEIJDZ@vger.kernel.org
+X-Gm-Message-State: APuU4Z81+ByqVl9UT/GMr9Z2oq9se4LNqHw1F6xrFV8v2bWmmHobTijs
+	N4kSTMfo2DNEKFNfilXvHwDK44LnM7CEfggHc2aRO5ebIGSpzMLfw8+I+D7qHJZCe0s=
+X-Gm-Gg: AYBFou2g2ds7pdqt/gUofVchih6grXrh60POiClNz53JmY4ro2NGKOAcJV1b3w9c70a
+	3++3JMRKkAzXwfhvETMMdG19W5OTb8foXQkbaey8TPtk07+df6LZkSOJaL5NDR5RGpbS+C0f2d3
+	YDOdQYiBMuFCTS5iWq9KFuWN+WcqtOuHwpSJGXcbRPZ26ReA/rh1AoCZwb2NwZsf7uIXq4Y9aaF
+	5uACoaf7pr2BmJRa2VXD33YXQWysbYZRoMmB7OJFYbtwapBw+qFIe7tFnRLM5bC3x+tfDtU29rj
+	BZXAdy1EnbZaqICtUJkz1OVRpPttwvVUX38pqFVIEi4yIPaote1WobAjrVe8upyHlF6Gkwnyzm7
+	7hK70uwzEHUxpCwqnL7EKJeR8YjODWx88i10Fi+FwgQm9AGYEoTaJ8rOOVfcpxUD7GDW3ZFhj7w
+	1vmtUHQXU2N73JwzHZT96XZQaYdhDUqcAQeQ6CLi2fgtaM5s4a+4Q61vbeGWF2UO25Z92uXVSVV
+	d2BnFE0zRgMJYgu5DGdNm1sUDYihb792C42n++G8UHIHeUdpki1xEbfKRaSn6l+cvMI3MVAHz33
+	FtsAcVxDDEXLuOLqEwbh+DxuGtrzCN2aLuVKktmZd84r0dPrECp5N61CKJgfQcy/iX13ntKD+Pr
+	psABcoVkO
+X-Received: by 2002:a5d:6612:0:b0:48b:58e:6cb7 with SMTP id ffacd0b85a97d-48e6e4fad98mr16810739f8f.6.1793634530320;
+        Mon, 02 Nov 2026 07:48:50 -0800 (PST)
 Received: from jwang-ThinkPad-T14-Gen-6.fritz.box ([2001:9e8:1447:4f00:8b7d:ec80:fa70:d638])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71ba4ac6sm22000850f8f.52.2026.11.02.07.48.47
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71ba4ac6sm22000850f8f.52.2026.11.02.07.48.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2026 07:48:48 -0800 (PST)
+        Mon, 02 Nov 2026 07:48:49 -0800 (PST)
 From: Jack Wang <jinpu.wang@ionos.com>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fygo.io>,
@@ -87,10 +88,12 @@ Cc: Nilay Shroff <nilay@linux.ibm.com>,
 	linux-kernel@vger.kernel.org,
 	Jens Axboe <axboe@kernel.dk>,
 	Jack Wang <jinpu.wang@cloud.ionos.com>
-Subject: [PATCH v3 0/1] md: freeze the queue in mddev_suspend()
-Date: Mon,  2 Nov 2026 16:48:46 +0100
-Message-ID: <20261102154847.198472-1-jinpu.wang@ionos.com>
+Subject: [PATCH v3 1/1] md: freeze the queue in mddev_suspend()
+Date: Mon,  2 Nov 2026 16:48:47 +0100
+Message-ID: <20261102154847.198472-2-jinpu.wang@ionos.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261102154847.198472-1-jinpu.wang@ionos.com>
+References: <20261102154847.198472-1-jinpu.wang@ionos.com>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -104,105 +107,106 @@ Content-Transfer-Encoding: 8bit
 
 From: Jack Wang <jinpu.wang@cloud.ionos.com>
 
-Writing to a queue limits attribute of an md array while a spare is
-being re-added deadlocks the array.  I reported this earlier here:
+queue_attr_store() holds q->limits_lock and waits in
+blk_mq_freeze_queue() for q_usage_counter to drain. A bio parked in the
+is_suspended() loop of md_handle_request() still holds a reference, so
+the freeze never completes. If the suspender waits for reconfig_mutex
+held by md_start_sync(), which waits for q->limits_lock, the tasks
+deadlock.
 
-  https://lore.kernel.org/linux-raid/CAMGffE=heGA3y8FjQ0Sm1jj-kd-=H9Y54WozKASSEZhc9UNKjA@mail.gmail.com/
+Freeze the queue in mddev_suspend() and unfreeze it on resume, so bios
+submitted while suspended block in bio_queue_enter() without holding a
+reference.
 
-Four tasks, one array:
-
-  udev-worker    queue_attr_store() holds q->limits_lock, waits in
-                 blk_mq_freeze_queue() for q_usage_counter to drain
-  fio            holds a q_usage_counter reference, parked in
-                 md_handle_request()'s is_suspended() loop
-  mdadm          suspended the array, waits for reconfig_mutex
-  md_start_sync  holds reconfig_mutex, waits for q->limits_lock
-
-Since commit c99f66e4084a ("block: fix queue freeze vs limits lock
-order in sysfs store methods") the sysfs store holds q->limits_lock
-across the freeze.  A bio that is parked in md_handle_request() while
-the array is suspended still holds a q_usage_counter reference, so that
-freeze can never complete, and everything behind it stalls.
-
-v2 reworked the lock ordering so that q->limits_lock is taken outside
-reconfig_mutex and the suspend everywhere, which took eight patches.
-Yu Kuai pointed out in his reply to v2 that the freeze is of little use
-for bio based devices on its own, since it cannot guarantee that
-in-flight bios have drained, and that the deadlock is really a
-blk_mq_freeze_queue() running concurrently with mddev_suspend().  He
-suggested freezing the queue in mddev_suspend() instead.  This version
-does that, and replaces the whole of v2 with one patch.
-
-With the queue frozen by the suspend, bios submitted while the array is
-suspended block in bio_queue_enter() without holding a reference, so a
-concurrent limits update can finish and release q->limits_lock.  No
-lock ordering has to change.
-
-The freeze cannot always wait for the queue to drain.  A writer waiting
-on the suspend_lo/suspend_hi window and raid456 I/O waiting on an
-interrupted reshape sit in submit_bio() holding a reference, and only
-make progress once the suspend has completed.  In those two cases the
-freeze is started but not waited for.  The original deadlock can still
-happen there, the same as before the patch.  dm-raid has no gendisk and
+Skip the drain wait when parked bios can only progress after the suspend
+completes: writers waiting on the suspend_lo/suspend_hi window and
+raid456 IO waiting on an interrupted reshape. dm-raid has no gendisk and
 is not frozen.
 
-v2: https://lore.kernel.org/linux-raid/e2c36f31-d198-40a7-a18d-156e1fd6fbb2@fygo.io/
-v1: https://lore.kernel.org/linux-raid/20260909063029.GC29874@lst.de/T/#t
-
-Changes since v2:
- - Drop the series.  Freeze the queue in mddev_suspend() as suggested
-   by Yu Kuai, instead of changing the q->limits_lock vs
-   reconfig_mutex / disk->open_mutex ordering.
- - Skip the drain wait for the suspend_lo/suspend_hi window and for an
-   interrupted raid456 reshape.
- - Do not freeze dm-raid, which has no gendisk.
- - Rebased on v7.4-rc1.
-
-Testing, on a 6.12 based kernel with the same change, lockdep enabled
-(PROVE_LOCKING, DEBUG_LOCK_ALLOC):
-
- - the reproducer below, 20 fail/remove/add cycles with fio in flight
-   and a loop writing queue/max_sectors_kb, which wedges the array
-   without the patch
- - a raid5 3 -> 4 reshape with fio writing, which moves the
-   suspend_lo/suspend_hi window while writers are active, and
-   mdadm --stop afterwards
-
-No lockdep reports and no hung tasks.  I have not yet run the mdadm
-test tests/25raid456-reshape-deadlock, dm-raid, or an upstream kernel
-with this patch.
-
-A blktests case covering this deadlock was sent separately:
-
-  https://lore.kernel.org/all/20260910100916.1638378-1-jinpu.wang@ionos.com/
-
-The reproducer:
-
-  mdadm -C /dev/md111 --force -e 1.2 --assume-clean -l 1 \
-        --bitmap=internal -n 2 /dev/ram0 /dev/ram1
-
-  fio --direct=1 --rw=randrw --ioengine=libaio --iodepth=32 --numjobs=4 \
-      --time_based=1 --runtime=180 --filename=/dev/md111 --name=repro &
-
-  while :; do
-      echo 128 > /sys/block/md111/queue/max_sectors_kb 2>/dev/null
-  done &
-
-  for i in $(seq 20); do
-      mdadm /dev/md111 --fail /dev/ram0
-      mdadm /dev/md111 --remove /dev/ram0
-      mdadm /dev/md111 --add /dev/ram0
-      mdadm --wait /dev/md111
-  done
-
-Jack Wang (1):
-  md: freeze the queue in mddev_suspend()
-
+Fixes: c99f66e4084a ("block: fix queue freeze vs limits lock order in sysfs store methods")
+Suggested-by: Yu Kuai <yukuai@fygo.io>
+Signed-off-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+---
  drivers/md/md.c | 45 +++++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 45 insertions(+)
 
-
-base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 03e35386a802..29737a624844 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -472,6 +472,42 @@ static void md_submit_bio(struct bio *bio)
+ 	md_handle_request(mddev, bio);
+ }
+ 
++/*
++ * Freeze the queue so a concurrent blk_mq_freeze_queue() (e.g. a limits
++ * update) can't wait on a bio parked in md_handle_request() while suspended.
++ * Skip the drain wait when parked bios hold a reference and only progress
++ * after suspend: the suspend_lo/hi window, or an interrupted raid456 reshape.
++ * Resume may run in another task, hence the non_owner variants.
++ */
++static int mddev_freeze_queue(struct mddev *mddev, bool interruptible)
++{
++	struct request_queue *q;
++
++	if (mddev_is_dm(mddev))
++		return 0;
++
++	q = mddev->gendisk->queue;
++	blk_freeze_queue_start_non_owner(q);
++
++	if (READ_ONCE(mddev->suspend_lo) < READ_ONCE(mddev->suspend_hi) ||
++	    (mddev->pers && mddev->pers->prepare_suspend &&
++	     reshape_interrupted(mddev)))
++		return 0;
++
++	if (!interruptible) {
++		blk_mq_freeze_queue_wait(q);
++		return 0;
++	}
++	return wait_event_interruptible(q->mq_freeze_wq,
++			percpu_ref_is_zero(&q->q_usage_counter));
++}
++
++static void mddev_unfreeze_queue(struct mddev *mddev)
++{
++	if (!mddev_is_dm(mddev))
++		blk_mq_unfreeze_queue_non_owner(mddev->gendisk->queue);
++}
++
+ /*
+  * Make sure no new requests are submitted to the device, and any requests that
+  * have been submitted are completely handled.
+@@ -500,6 +536,13 @@ int mddev_suspend(struct mddev *mddev, bool interruptible)
+ 		return 0;
+ 	}
+ 
++	err = mddev_freeze_queue(mddev, interruptible);
++	if (err) {
++		mddev_unfreeze_queue(mddev);
++		mutex_unlock(&mddev->suspend_mutex);
++		return err;
++	}
++
+ 	percpu_ref_kill(&mddev->active_io);
+ 
+ 	/*
+@@ -520,6 +563,7 @@ int mddev_suspend(struct mddev *mddev, bool interruptible)
+ 				percpu_ref_is_zero(&mddev->active_io));
+ 	if (err) {
+ 		percpu_ref_resurrect(&mddev->active_io);
++		mddev_unfreeze_queue(mddev);
+ 		mutex_unlock(&mddev->suspend_mutex);
+ 		return err;
+ 	}
+@@ -555,6 +599,7 @@ static void __mddev_resume(struct mddev *mddev, bool recovery_needed)
+ 	md_wakeup_thread(mddev->thread);
+ 	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
+ 
++	mddev_unfreeze_queue(mddev);
+ 	mutex_unlock(&mddev->suspend_mutex);
+ }
+ 
 -- 
 2.43.0
 
