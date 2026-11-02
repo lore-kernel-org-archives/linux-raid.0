@@ -1,49 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793629589;
-	b=u5f2aWsjHrtHWl8lnTKRBboEo1+Msy1dDSo+k7RCNwguvjzXLz167j7B2ZC0O0R3yrUk
-	 qf6do1+7J0LX10V9Gk/qzuy6W676wOh4oxhywh5zl9lbVFVrPsBApDKmIY3X9TP/4MvU7
-	 c5IYS2+R2ZoxcL5rycCnU6xMOJGS6W8f7LAOab10FMMbWz2fmM2CbZjaj/3yGYQsWhxQQ
-	 vIBJWAPErOjPh4hCWrZxme4NKhfs5SkpaTc6qd0thuOpbHEEiLV4AYOE1w/XE3NaduNsp
-	 lhwbc9TuX8v0DSYbYYuqxNtBkIdFBp95Qhrf9fQDgWh+wgUiGAsXz/5c+QmdL3NRFlw==
+	t=1793629627;
+	b=5o/AAxycrvsC8GT/NhC1uUB6PUjJpTQCoeg2AVZgDzF8+azW5JQ681C/ngny2gxuEAq5
+	 aNgn/TOWTSpL0i0YinTGmJcro3JCCoY8Pay+xtXPujS5e2MinfhcmZDLw/wRBWXprfK5b
+	 TsHSFhpSijJPXd4EH6UqRKsTmmAgZnS3KOQosYxYQbJ8w3KXkHJw3NzQjBjwZtCFj5OmP
+	 OOU1mcr7Ljv9eZu58f0MH6l9rt52E/LTCQ1D5tDN6FaTFz8QNiiEAiSb6g037IiqBPUQl
+	 XCzH0JJPpgcyFZBU4tYvChAq1BcKWYJPOSytC+5HbsNyH2c1WZJEtRDCtch9cvtSr0A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793629589;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793629627;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=+smlnQLXpLrL35ZrT755yEE+Gx6TEny4ygG6ui3b9as=;
-	b=ATQnD5f/XfCSFTTAcuKVEFvJTiRpQXTQ+cf1rbFykSNnQalv71k24iep/Il7eCoRt3U5
-	 LF6WnTaiXuEmE18RwPNMRvw7q+1Ufspubu/zo6J1/HcIFUng6ziE7TsMbRWN6H9LLFtE2
-	 7TNxcm3NitowaFadcT+9VwaFwG9gtBP38ALhgJu4SHhAsal1xH53D2hut+E5FIL0MwoWw
-	 BC7AjpeSXKn4wfsyeQL15bdb2crrZmYGYZDK6YhsDqrsdyVGWR8dCjKu9skqg1iaTn6SK
-	 XwAyIKZOXhSE5rI+v2ylFHfIdVa2aHRzBPVvTa7s3Ua/l1b6id/wqcpq+wQ5ZmuuE5w==
+	bh=vzxa9WYWKU2hIPXRh8KIDL7iPDal71uWut2R3PeQ4Y0=;
+	b=tdA8Cy1hQFS8OLE66u4nq6uQvCsIzj7Yuxnnw1iMkhXe5YWzIq16Nn+Hgg9N4IYNHc/v
+	 Da6thucc2bzJtD5dnZqiHgSmxDCuAwPQ6zndob7F/viEF4K4KHwduCXK6HYdr4ZTMpZO7
+	 nKdmctVpeNrRVvpewa03uDYj8q7I4tPwUu1booGVnc6qdLSjatJsx54Or1Ms2gaJJ45Hm
+	 B1SCfGMBZ6na45qT4kcac7zRycii+xR/181IBkLTyHdqczlKbIM1msZUMNiSW/OcjL5OK
+	 rfDBbjGHm7AHk6BZsFoFYX+GnogD3xdwPDASunPVGiRTjf1exEoobYNPcdGkDRVRSRQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XJEhvund;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dcbte5hd;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9933606A333;
-	Mon,  2 Nov 2026 14:26:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9059B607A88C;
+	Mon,  2 Nov 2026 14:27:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XJEhvund
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13A611F00A17;
-	Mon,  2 Nov 2026 14:26:14 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dcbte5hd
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 929881F00A1A;
+	Mon,  2 Nov 2026 14:26:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793629588;
-	bh=+smlnQLXpLrL35ZrT755yEE+Gx6TEny4ygG6ui3b9as=;
+	s=k20260515; t=1793629627;
+	bh=vzxa9WYWKU2hIPXRh8KIDL7iPDal71uWut2R3PeQ4Y0=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=XJEhvund6hMVPQJ3RcEchBrOm5EXEzPG/XmOipl3N20lbtuOVIbVGGth/lwANQmOm
-	 2MLHVUgbpwmfwoS6ZxvNWEGNZytL8um4VA7L96QCc5ZElIKpNRCAnjTuSrPtTgq/Ku
-	 F0u5uYY2avJ1M+M77dUQXw+eL3oJN09kinA/iBSZfN3TBIPuTtvvoIYzixJ6K1SmrK
-	 we6emJ68mbMzZ9QAzcQ4Aq8/Ofd0frHNm3JBOohEdkJCS96TvC/88mtWwbGHABeGbk
-	 QZHQknmcNs15nJxqRWMOPnS6OX7+hzotVdKm4q4BOSltonATyDmmP/vwWts9yNXKSM
-	 NLhKCLq2kEgYg==
+	b=dcbte5hdW7xjuWRdXMJ9nUGRptVMxwMDxFZD2ZHCRvhATLFLbmCjO/p7ODwW6VkxD
+	 y7TF4q7FxSh3ont9POQCTTY0PwswUZV/ZqG4O8wvRMxs5F8284pF+mcGzm4MaK93NQ
+	 QpE3IepC7NC3BeKk4OMULpvVs62kxU/MrowPIKoZY6XO5y1lgBCb/ZkDGZhuIEq6NW
+	 CebUwpQ9Bu8ybMNIDU6UpP7VHTtt7ORw+YnjUGlgQRZHNtXQRbikAiiBKHiyiL/Vym
+	 Kt3ER8pjmFooN4uaNfApJD5LlOSUElugetgObusGmTVg7V6wXoTDdDCVHauOcLAVDL
+	 k6v5tGZIFoVqg==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 15:21:35 +0100
-Subject: [PATCH RFC 20/38] selftests/proc: check a /proc listing while
- entries come and go
+Date: Mon, 02 Nov 2026 15:21:38 +0100
+Subject: [PATCH RFC 23/38] proc: don't let NOMMU map procfs files
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -55,7 +54,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-bugfixes-v1-20-59422ed3e465@kernel.org>
+Message-Id: <20261102-work-procfs-bugfixes-v1-23-59422ed3e465@kernel.org>
 References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 In-Reply-To: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -89,306 +88,116 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
  linux-debuggers@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
- Chuck Lever <cel@kernel.org>
+ Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=8577; i=brauner@kernel.org;
- h=from:subject:message-id; bh=6+oF1vHJFxUuLveQtxt4wRQj/KGMCrRoYw4g79cugGE=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9mJPdk2/MaPxuoVaHsJFFWUnHu7MegVvsd+nWb7w79
- YfU78hZHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABPRPMTIsFeHlV3F/6jK3TCp
- 71XvNEzlLc87dG3dbSaXlxFZc7FZhuF/9HF+hXesy7/WGOV3RQY+PZAT9Yl/vifbXOeYsx2PWTR
- ZAQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3736; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=z8wCFpT+9QBGZHOy3TWX3BTOUWtbXQrp/PYYpjal0N4=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9mJPtsd9LyTjxn8etT/1L5/2vmRnbF3jUb0ZGzE+VN
+ WutAza+7yhlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZiIwGxGhonbJLQPhS/4cP0g
+ 78WZUsuMuwP0t0uVRT6JrMjxPpyY/4WR4cI2pcs8h/Usw6/eF8xTrDD7dyb70sRAec7Qk5mztX6
+ 2cwAA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-List /proc/net/dev_snmp6 of a new network namespace while a tun device
-comes and goes:
+Every procfs file has a ->mmap since commit 786d7e1612f0 ("Fix
+rmmod/read/write races in /proc entries"), whether the entry has a
+->proc_mmap or not. On NOMMU validate_mmap_request() takes that to mean
+the file can be mapped. procfs has no ->mmap_capabilities so a regular
+file gets NOMMU_MAP_COPY, and a private mapping never calls ->mmap at
+all. Instead do_mmap() takes nommu_region_sem for writing and
+do_mmap_private() reads the file into the copy with kernel_read().
 
-- with a buffer that holds the dots and "lo", add a device whose name
-  sorts first, finish the listing: "lo" is listed once
+Reading /proc/maps takes nommu_region_sem as well:
 
-- with that device added and a buffer that holds the dots and it,
-  remove it, finish the listing: "lo" is still listed
+  mmap(NULL, 4096, PROT_READ, MAP_PRIVATE, open("/proc/maps", O_RDONLY), 0)
 
-- with that device added, stall getdents64() on a userfaultfd page
-  while it writes the device's entry, remove the device, finish the
-  listing: "lo" is still listed
+  do_mmap()                          // down_write(&nommu_region_sem)
+  -> do_mmap_private()
+     -> kernel_read()
+        -> seq_read_iter()
+           -> nommu_region_list_start()   // down_read()
 
-All three fail without the fix, the first lists "lo" twice, the other
-two not at all.
+The task hangs for good, holding nommu_region_sem and its own mmap_lock,
+and every mmap(), munmap() and exit after that hangs behind it.
+/proc/maps is 0444 so any user can do that.
 
+Give the procfs files a ->mmap_capabilities on NOMMU that allows
+nothing. Mapping a procfs file then fails with -ENODEV, like mapping a
+file without ->mmap did before 786d7e1612f0. NOMMU never called
+->proc_mmap() for a regular file anyway, procfs never offered
+NOMMU_MAP_DIRECT.
+
+Reported-by: Chris Mason <mason@kernel.org>
+Fixes: 786d7e1612f0 ("Fix rmmod/read/write races in /proc entries")
+Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- tools/testing/selftests/proc/.gitignore           |   1 +
- tools/testing/selftests/proc/Makefile             |   1 +
- tools/testing/selftests/proc/proc-readdir-churn.c | 236 ++++++++++++++++++++++
- 3 files changed, 238 insertions(+)
+ fs/proc/inode.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/tools/testing/selftests/proc/.gitignore b/tools/testing/selftests/proc/.gitignore
-index 9c9735570abf..8520c7878ea2 100644
---- a/tools/testing/selftests/proc/.gitignore
-+++ b/tools/testing/selftests/proc/.gitignore
-@@ -8,6 +8,7 @@
- /proc-maps-race
- /proc-multiple-procfs
- /proc-net-dev-lseek
-+/proc-readdir-churn
- /proc-empty-vm
- /proc-pid-vm
- /proc-self-map-files-001
-diff --git a/tools/testing/selftests/proc/Makefile b/tools/testing/selftests/proc/Makefile
-index a7de2bb6d8be..e0c0d313f4d0 100644
---- a/tools/testing/selftests/proc/Makefile
-+++ b/tools/testing/selftests/proc/Makefile
-@@ -11,6 +11,7 @@ TEST_GEN_PROGS += proc-2-is-kthread
- TEST_GEN_PROGS += proc-loadavg-001
- TEST_GEN_PROGS += proc-maps-race
- TEST_GEN_PROGS += proc-net-dev-lseek
-+TEST_GEN_PROGS += proc-readdir-churn
- TEST_GEN_PROGS += proc-empty-vm
- TEST_GEN_PROGS += proc-pid-vm
- TEST_GEN_PROGS += proc-self-map-files-001
-diff --git a/tools/testing/selftests/proc/proc-readdir-churn.c b/tools/testing/selftests/proc/proc-readdir-churn.c
-new file mode 100644
-index 000000000000..223b8a6698ee
---- /dev/null
-+++ b/tools/testing/selftests/proc/proc-readdir-churn.c
-@@ -0,0 +1,236 @@
-+// SPDX-License-Identifier: GPL-2.0
+diff --git a/fs/proc/inode.c b/fs/proc/inode.c
+index b7634f975d98..9933f03ab9fb 100644
+--- a/fs/proc/inode.c
++++ b/fs/proc/inode.c
+@@ -466,6 +466,18 @@ proc_reg_get_unmapped_area(struct file *file, unsigned long orig_addr,
+ 	return rv;
+ }
+ 
++#ifndef CONFIG_MMU
 +/*
-+ * A listing of a /proc directory that takes more than one getdents64()
-+ * must not show an entry twice or skip one when an entry is added or
-+ * removed in between, and a listing must go on after an entry that is
-+ * removed while it is being emitted. /proc/net/dev_snmp6/<dev> of a tun
-+ * device comes and goes with the device.
++ * NOMMU never calls ->proc_mmap() for a regular file. It reads the file into
++ * a private copy instead, with nommu_region_sem held for writing, which
++ * reading /proc/maps takes as well. Don't map procfs files at all.
 + */
-+#define _GNU_SOURCE
-+#include <dirent.h>
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <limits.h>
-+#include <linux/if.h>
-+#include <linux/if_tun.h>
-+#include <linux/userfaultfd.h>
-+#include <poll.h>
-+#include <pthread.h>
-+#include <sched.h>
-+#include <string.h>
-+#include <sys/ioctl.h>
-+#include <sys/mman.h>
-+#include <sys/syscall.h>
-+#include <unistd.h>
-+
-+#include "../kselftest_harness.h"
-+
-+#define SNMP6_DIR	"/proc/net/dev_snmp6"
-+#define TUN_NAME	"a0"		/* sorts before "lo" */
-+#define TUN_PATH	SNMP6_DIR "/" TUN_NAME
-+#define SMALL_BUF	80		/* ".", ".." and one short name */
-+#define NAMES		64
-+
-+static int tun_open(const char *name)
++static unsigned int proc_reg_mmap_capabilities(struct file *file)
 +{
-+	struct ifreq ifr = {};
-+	int fd;
-+
-+	fd = open("/dev/net/tun", O_RDWR | O_CLOEXEC);
-+	if (fd < 0)
-+		return -1;
-+	strncpy(ifr.ifr_name, name, IFNAMSIZ - 1);
-+	ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-+	if (ioctl(fd, TUNSETIFF, &ifr)) {
-+		close(fd);
-+		return -1;
-+	}
-+	return fd;
++	return 0;
 +}
++#endif
 +
-+/* one getdents64() into @buf, the names appended to @names */
-+static int list(int fd, char *buf, size_t size, char names[][NAME_MAX + 1],
-+		int *n)
-+{
-+	long ret, off;
-+	int got = 0;
-+
-+	ret = syscall(__NR_getdents64, fd, buf, size);
-+	if (ret < 0)
-+		return -errno;
-+	for (off = 0; off < ret;) {
-+		struct dirent64 *d = (void *)(buf + off);
-+
-+		if (*n < NAMES)
-+			strcpy(names[(*n)++], d->d_name);
-+		got++;
-+		off += d->d_reclen;
-+	}
-+	return got;
-+}
-+
-+static int count(char names[][NAME_MAX + 1], int n, const char *name)
-+{
-+	int i, c = 0;
-+
-+	for (i = 0; i < n; i++)
-+		if (!strcmp(names[i], name))
-+			c++;
-+	return c;
-+}
-+
-+/* removes the device once getdents64() faults on its entry, then resolves */
-+struct stall {
-+	int uffd;
-+	int tun;
-+	unsigned long addr;
-+	unsigned long len;
-+	int removed;
-+};
-+
-+static void *stall_resolve(void *arg)
-+{
-+	struct stall *s = arg;
-+	struct pollfd pfd = { .fd = s->uffd, .events = POLLIN };
-+	struct uffdio_zeropage zero = {
-+		.range = { .start = s->addr, .len = s->len },
-+	};
-+	struct uffd_msg msg;
-+
-+	if (poll(&pfd, 1, 10000) != 1)
-+		return NULL;
-+	if (read(s->uffd, &msg, sizeof(msg)) != sizeof(msg) ||
-+	    msg.event != UFFD_EVENT_PAGEFAULT)
-+		return NULL;
-+	close(s->tun);
-+	s->removed = access(TUN_PATH, F_OK) == -1;
-+	ioctl(s->uffd, UFFDIO_ZEROPAGE, &zero);
-+	return NULL;
-+}
-+
-+FIXTURE(proc_readdir) {
-+	int dir;
-+	int n;
-+	char names[NAMES][NAME_MAX + 1];
-+	char buf[65536];
-+};
-+
-+FIXTURE_SETUP(proc_readdir)
-+{
-+	if (unshare(CLONE_NEWNET))
-+		SKIP(return, "unshare(CLONE_NEWNET): %s", strerror(errno));
-+	if (access("/dev/net/tun", F_OK))
-+		SKIP(return, "/dev/net/tun: %s", strerror(errno));
-+	self->dir = open(SNMP6_DIR, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-+	if (self->dir < 0)
-+		SKIP(return, SNMP6_DIR ": %s", strerror(errno));
-+	self->n = 0;
-+}
-+
-+FIXTURE_TEARDOWN(proc_readdir)
-+{
-+	close(self->dir);
-+}
-+
-+/* a device added in front of the position doesn't repeat an entry */
-+TEST_F(proc_readdir, add_in_front)
-+{
-+	int tun;
-+
-+	/* ".", ".." and "lo" */
-+	ASSERT_EQ(list(self->dir, self->buf, SMALL_BUF, self->names, &self->n), 3);
-+	ASSERT_EQ(count(self->names, self->n, "lo"), 1);
-+
-+	tun = tun_open(TUN_NAME);
-+	ASSERT_GE(tun, 0);
-+	ASSERT_EQ(access(TUN_PATH, F_OK), 0);
-+
-+	while (list(self->dir, self->buf, sizeof(self->buf), self->names,
-+		    &self->n) > 0)
-+		;
-+	EXPECT_EQ(count(self->names, self->n, "lo"), 1);
-+	close(tun);
-+}
-+
-+/* a device removed in front of the position doesn't skip an entry */
-+TEST_F(proc_readdir, remove_in_front)
-+{
-+	int tun;
-+
-+	tun = tun_open(TUN_NAME);
-+	ASSERT_GE(tun, 0);
-+	ASSERT_EQ(access(TUN_PATH, F_OK), 0);
-+
-+	/* ".", ".." and the device, "lo" doesn't fit */
-+	ASSERT_EQ(list(self->dir, self->buf, SMALL_BUF, self->names, &self->n), 3);
-+	ASSERT_EQ(count(self->names, self->n, TUN_NAME), 1);
-+
-+	/* closing the device unregisters it and removes its entry */
-+	close(tun);
-+	ASSERT_EQ(access(TUN_PATH, F_OK), -1);
-+
-+	while (list(self->dir, self->buf, sizeof(self->buf), self->names,
-+		    &self->n) > 0)
-+		;
-+	EXPECT_EQ(count(self->names, self->n, "lo"), 1);
-+}
-+
-+/* the entry being emitted is removed meanwhile, the listing goes on */
-+TEST_F(proc_readdir, remove_current)
-+{
-+	struct uffdio_api api = { .api = UFFD_API };
-+	struct uffdio_register reg = {};
-+	long page = sysconf(_SC_PAGESIZE);
-+	struct stall s = {};
-+	pthread_t thread;
-+	char *map;
-+	long ret, off;
-+
-+	s.uffd = syscall(__NR_userfaultfd, O_CLOEXEC | O_NONBLOCK);
-+	if (s.uffd < 0)
-+		SKIP(return, "userfaultfd: %s", strerror(errno));
-+	ASSERT_EQ(ioctl(s.uffd, UFFDIO_API, &api), 0);
-+
-+	/* the first page is there, the second one faults */
-+	map = mmap(NULL, 2 * page, PROT_READ | PROT_WRITE,
-+		   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-+	ASSERT_NE(map, MAP_FAILED);
-+	map[0] = 0;
-+	s.addr = (unsigned long)map + page;
-+	s.len = page;
-+	reg.range.start = s.addr;
-+	reg.range.len = s.len;
-+	reg.mode = UFFDIO_REGISTER_MODE_MISSING;
-+	ASSERT_EQ(ioctl(s.uffd, UFFDIO_REGISTER, &reg), 0);
-+
-+	s.tun = tun_open(TUN_NAME);
-+	ASSERT_GE(s.tun, 0);
-+	ASSERT_EQ(access(TUN_PATH, F_OK), 0);
-+	ASSERT_EQ(pthread_create(&thread, NULL, stall_resolve, &s), 0);
-+
-+	/*
-+	 * ".." ends right before the second page, so writing the record of
-+	 * the device stalls until it has been removed.
-+	 */
-+	ret = syscall(__NR_getdents64, self->dir, map + page - 48, 48 + page);
-+	ASSERT_EQ(pthread_join(thread, NULL), 0);
-+	ASSERT_TRUE(s.removed);
-+	ASSERT_GT(ret, 0);
-+	for (off = 0; off < ret;) {
-+		struct dirent64 *d = (void *)(map + page - 48 + off);
-+
-+		if (self->n < NAMES)
-+			strcpy(self->names[self->n++], d->d_name);
-+		off += d->d_reclen;
-+	}
-+	ASSERT_EQ(count(self->names, self->n, TUN_NAME), 1);
-+
-+	while (list(self->dir, self->buf, sizeof(self->buf), self->names,
-+		    &self->n) > 0)
-+		;
-+	EXPECT_EQ(count(self->names, self->n, "lo"), 1);
-+	munmap(map, 2 * page);
-+	close(s.uffd);
-+}
-+
-+TEST_HARNESS_MAIN
+ static int proc_reg_open(struct inode *inode, struct file *file)
+ {
+ 	struct proc_dir_entry *pde = PDE(inode);
+@@ -559,6 +571,9 @@ static const struct file_operations proc_reg_file_ops = {
+ 	.unlocked_ioctl	= proc_reg_unlocked_ioctl,
+ 	.mmap		= proc_reg_mmap,
+ 	.get_unmapped_area = proc_reg_get_unmapped_area,
++#ifndef CONFIG_MMU
++	.mmap_capabilities = proc_reg_mmap_capabilities,
++#endif
+ 	.open		= proc_reg_open,
+ 	.release	= proc_reg_release,
+ };
+@@ -572,6 +587,9 @@ static const struct file_operations proc_iter_file_ops = {
+ 	.unlocked_ioctl	= proc_reg_unlocked_ioctl,
+ 	.mmap		= proc_reg_mmap,
+ 	.get_unmapped_area = proc_reg_get_unmapped_area,
++#ifndef CONFIG_MMU
++	.mmap_capabilities = proc_reg_mmap_capabilities,
++#endif
+ 	.open		= proc_reg_open,
+ 	.release	= proc_reg_release,
+ };
+@@ -586,6 +604,9 @@ static const struct file_operations proc_reg_file_ops_compat = {
+ 	.compat_ioctl	= proc_reg_compat_ioctl,
+ 	.mmap		= proc_reg_mmap,
+ 	.get_unmapped_area = proc_reg_get_unmapped_area,
++#ifndef CONFIG_MMU
++	.mmap_capabilities = proc_reg_mmap_capabilities,
++#endif
+ 	.open		= proc_reg_open,
+ 	.release	= proc_reg_release,
+ };
+@@ -600,6 +621,9 @@ static const struct file_operations proc_iter_file_ops_compat = {
+ 	.compat_ioctl	= proc_reg_compat_ioctl,
+ 	.mmap		= proc_reg_mmap,
+ 	.get_unmapped_area = proc_reg_get_unmapped_area,
++#ifndef CONFIG_MMU
++	.mmap_capabilities = proc_reg_mmap_capabilities,
++#endif
+ 	.open		= proc_reg_open,
+ 	.release	= proc_reg_release,
+ };
 
 -- 
 2.53.0
