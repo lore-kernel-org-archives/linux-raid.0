@@ -1,56 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793636442;
-	b=TYDDqWv1KhoxRHgcM0y+BkTviImOcSeCfo8lSbWT0bkBXqLq/D+etiInn2fa05ksozSU
-	 8T7ED20/Tt/ABClsyRk7/Kmx2VZTGyo0ZtJJeEtd2tSov2Ri877NzqnfQfp8NVDtumzAH
-	 sULe3CKeoG3JR7ngIjTQzwqXHfK281XKzJRVjO1qmndb8tZQYPxd/jC18vGln4yJy022H
-	 CVLH69djCCjvuM03ROm0SXCaZsLKmpWxo3u7XQNBaNVooO3tNLK8EMpsnX/J4SPEc9er4
-	 yMi4YFB6s2IVhL7onsCFksnJGAy4IdFCmZXzlyTW2UMyic4IFlMcowJS6yI9xUzRvuw==
+	t=1793642774;
+	b=oGHZ+nUGeV+pMu59Ow0hXNPDIG5cihv5qDsaSiFRqdnXJeY9QP4/xLuS5QIZjOiDcEQ/
+	 etGUACBFHi4gHEKhqIZcxOHkwDM0lNu2z8xW51hdEwqbn6WM0ojoIiZyJaho6m6pfMIwf
+	 7ws8rdkE1MqmKdaYKoO91IVf/WT984aj1vnHK3Wcfog9F/AR1GUsVvR5LhCVOCiabWCIn
+	 eoXs7zaO3sNsA3Pg81iSdtAEe4IOs193IXVlwNZEWQRqcThmu3bHpRb3F0tascdL347p9
+	 nAEd4+HBZhK/qn29tN18fcdclNBx422jHpjE+z4VcWYm66+tEMgmqdc0k51FZRMNFAw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793636442;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=vhKg+pPQERLt9aQzzC2HGlTOuEoPW93kdVTfIEYOuIc=;
-	b=J9PTI5F86DdCW2waRXfc3njRUKucWxaPov/zQWk6n3dDVDY5o9bK1xWiMODJmiIRBtQp
-	 djlvErA4e2zXFHai9vq+8+G4BuQYl2mbgDlU6mU9OEnCPt7Rxbvz5Fs3sx5lua8EGLmnW
-	 o+S7xDyyDRJp0gJYUl2YDJXSDYLvUdN9xN98fqhKXVRq4tLlsp4O11jY/0COD2xDntXs+
-	 wzLtOhpyh17nBwRQnZ7PXhME+9yC7AeFvAXhUuk06XzZ1+mNAP6861/WtkjPYfwKOixxt
-	 nnx+tUbh+LJJxtQhzPTiPIlaWqZCyRgo52FZzf62Rw4guK3HMUt90p3A33AKktO47uQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793642774;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Received:X-Forwarded-Encrypted:X-Received:MIME-Version:References:
+	 In-Reply-To:From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=/vXXDZI2TLqXD/tqTZGHj/cF0YcMq0fXP1TpWYkM2ME=;
+	b=13kMu0c/xcXfb9/NgaaSF+JuoUYiUS1FVDssevxIoFMAt95o6jUp4A6suGOUZ5UqpBVv
+	 /FKHXaJ5x7sgXRzclMtbZgudGGC5vxXyWqbKhGhYBbaOgozs17VX4m0ZOx5TdcqvJNBD7
+	 BXExfHoQP5A1GD55ULy5W2a61054glmhzktL75wLcY97s18nnzVWTbMabG5/0cKKtuWMf
+	 aNh0GpvW3Qc61wEzZWXbdOgygun3aUpDsSYf5PW8jNyZ0ceBU+OSns+WVchfzrnUfu00n
+	 9OewYtqZrCpn2AWbnXasj8efvLsNvNWlSFXpGOVl8HNmiYEwxG7y7I5r1OopSwhkvag==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=h4tMcj16;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=none header.from=linux-foundation.org;
+	spf=pass smtp.mailfrom=linuxfoundation.org;
+	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=google header.b=JOXQDs0W;
+	arc=none smtp.remote-ip=209.85.167.48
+Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com [209.85.167.48])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F55A60716D2
-	for <linux-raid@vger.kernel.org>; Mon,  2 Nov 2026 16:20:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D127B606A32C
+	for <linux-raid@vger.kernel.org>; Mon,  2 Nov 2026 18:06:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D127B606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=h4tMcj16
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05AF11F00A1C;
-	Mon,  2 Nov 2026 16:20:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793636442;
-	bh=vhKg+pPQERLt9aQzzC2HGlTOuEoPW93kdVTfIEYOuIc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=h4tMcj169GC7z1jDSD9++3BcHvX1UobC7l82YajhxlhGfa62vFsekvM4kN9bhJxYf
-	 FYWCOF4nlMiDrBLGAAHoRIRWb+ViSY5DV0wlynXGxynY14APRyYBTBjA7+JLqMEBbU
-	 y0lF/FV2c7768UBocnZ4RxqNe4GoYBQbsPdVfJ3qVcyE6YoJaynb51ANVdQzVuL2rq
-	 2u8BNbUNagGqQcTQe7THeO0Lk1A99KypDnaMv2XmJITaOKrrySuzu5GHR9kAhdNvM0
-	 PnEe7B55yAgrx03x8qhhzbd7IExXg1Q5AXMUWSH0PZNYcLN6M9j+wxSgIIYz5YjhLz
-	 8OCjp8jgsNMZg==
-Message-ID: <sashiko-outbox-193747@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 1/1] md: freeze the queue in mddev_suspend()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jack Wang" <jinpu.wang@ionos.com>, linux-raid@vger.kernel.org
-Cc: yukuai@fygo.io
-In-Reply-To: <20261102154847.198472-2-jinpu.wang@ionos.com>
-References: <20261102154847.198472-1-jinpu.wang@ionos.com>
- <20261102154847.198472-2-jinpu.wang@ionos.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 02 Nov 2026 16:20:41 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=google header.b=JOXQDs0W
+Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5be4fea434bso3802169e87.1
+        for <linux-raid@vger.kernel.org>; Mon, 02 Nov 2026 10:06:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1793642772; x=1794247572; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=/vXXDZI2TLqXD/tqTZGHj/cF0YcMq0fXP1TpWYkM2ME=;
+        b=JOXQDs0WKySicNYsIHlbCR2dvYN2is0ThJmgJkR3kItKFHcmG6VmzDy4j04WEFicWO
+         18gjtk3L1M8uw4vGfQERbKkbW7i976RWZDROlQZZwQiLuGTzeImnm+wc/cwJ8eJAY4dc
+         3qDAKN0cb+Ld/01GLEgy3oAplQ8KweGijQoYw=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793642772; x=1794247572;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=/vXXDZI2TLqXD/tqTZGHj/cF0YcMq0fXP1TpWYkM2ME=;
+        b=KNGm2VhC6+yj1+X8laniuTGCYBADh/ZjsTZ2CKnAFjWRYxcCXqaLwgEVDReq+tTZS3
+         eeTGte3igKK4vUgDfkJe2GrGPOBK6PQkIrmwq0IxBBAgziN54pEsV+HOCTCzownwWaCb
+         lYWSwKDM0f1DBvL6AMJKRyHDxrFw67/W8lW6oj0EtUvjINNouwxrRvrEUZB9YGD1Gcf/
+         zycdTsr9bkzPZM1Osl7KnbKsaqgvbjP7eigpC7KvQo9nfCQqmXBk/X9UzD2IK8RgMzMa
+         xEH9cI5w50y4FzrS0EO5VyVoX/fyDbIDOx2SyAU6icpjC27tLcmjn7gyXR2fE7cJB68+
+         Qjcw==
+X-Forwarded-Encrypted: i=1; AKwUvBxxTOzyVRBRG2oR7k5/6X/P+2Y+AJAiyo93TlGBSQgX5umtbjWr582PyqhJIwl4Zss55D4zGG8X5+ts@vger.kernel.org
+X-Gm-Message-State: APuU4Z/caWQTlzoX/Y8hjp6CjAHx6ySbT88MnNxcl2BkjlPKmKNlmcSe
+	I5lugP8tKT0B0TiTDuen+FpKOilwQGgJhLxPHdO3eJq3lP8hfuBOghXuOyQsLU0lryexbq/ypNB
+	aSCyKOVdp9A==
+X-Gm-Gg: AYBFou2wxyr5D3L5Nxgyega6o4JNCMlVhnL0JD2jQ2schlEDoBi/bT7lFKSVQCmW1sj
+	Q/q3mkj/8Bsyc1C6AFv9npnqHULYoOJfVqBsMISXoPAvADK8k59uAcGoeLt+9gHcy3AOjDyUrWI
+	mhZY1mpSn591q8NJ8IKKdeUk+s7kp1D/I09zFoXTjCxutiq6TnQapvcYaIe4KoGzKEY95P/jE3x
+	q1H7zJwLcyN3xVzrfTaN29CpQ/HN8lg5/RboGOj3aXx0xvgWXeljYJPR70QY2fukrhf5ovYWphu
+	E0vQncMNr3iy+Njc0a3p9ivaxuXqs/EsEd/W0UhRbGk8Xxn2Y3U/tdYF3OWcXNy8JNmOb9RD6Fu
+	wQJA47Wrj8RBHbtuGqFaYqrbDCaR89ZcDxGeAjWwPnPKe+AlPzLkj2wBBhXlFHTt2PiNefxO/Gl
+	ZZA6v5eKBgNpSmO4gp3Z3tDJ9CuDoom2RmYyahu4Paq1ufAWHlu/ztse85BHs5nwreq2Azj9y4R
+	PFnyabMAHLHY3SlhxqN9fnge+o5C2r6AneCzPPSGTJ3+UwvlHur9lY6xcKPbWrLwtRC1rYg7JY2
+	1/zvBjlWBx+xYSd52YHgoZROlRHJCzthtxgbGA+oDN6aP+SyeUeVfjA1//sG1vMdycKX8H7R1nK
+	KFw==
+X-Received: by 2002:a05:6512:2383:b0:5bf:c94d:4b49 with SMTP id 2adb3069b0e04-5bfd11ea1e0mr3748366e87.12.1793642772046;
+        Mon, 02 Nov 2026 10:06:12 -0800 (PST)
+Received: from mail-lf1-f41.google.com (mail-lf1-f41.google.com. [209.85.167.41])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5bfe0721793sm1818054e87.18.2026.11.02.10.06.11
+        for <linux-raid@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 02 Nov 2026 10:06:11 -0800 (PST)
+Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-5be4fea434bso3802153e87.1
+        for <linux-raid@vger.kernel.org>; Mon, 02 Nov 2026 10:06:11 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AKwUvBx2/ej2QVuUjaDwuQ7CnYdDzujnkQqGwjdYxgvOmd5P0cgY+UnM688NUR6dmZ3pSDkUPVpDPlNPHnRX@vger.kernel.org
+X-Received: by 2002:a17:907:d94:b0:c2d:c80e:8366 with SMTP id
+ a640c23a62f3a-c4ca7426f6emr874452266b.0.1793642348398; Mon, 02 Nov 2026
+ 09:59:08 -0800 (PST)
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -59,215 +93,61 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org> <20261102-work-procfs-bugfixes-v1-1-59422ed3e465@kernel.org>
+In-Reply-To: <20261102-work-procfs-bugfixes-v1-1-59422ed3e465@kernel.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 2 Nov 2026 09:58:51 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wiSA7-mqmAjTQDaU7UjUyWt0TxYwXHafL8ZAPudy+B_uQ@mail.gmail.com>
+X-Gm-Features: AclHuK_qZTBVsLQIdymgRHScSFenC6XsGggUDmcuOugjrSTbuVkeASUmC_hYPZo
+Message-ID: <CAHk-=wiSA7-mqmAjTQDaU7UjUyWt0TxYwXHafL8ZAPudy+B_uQ@mail.gmail.com>
+Subject: Re: [PATCH RFC 01/38] PCI/proc: don't truncate the position of config
+ space accesses
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, Jann Horn <jannh@google.com>, 
+	Josef Bacik <josef@toxicpanda.com>, Chris Mason <mason@kernel.org>, 
+	Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
+	Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
+	Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, Greg Kroah-Hartman <gregkh@suse.de>, 
+	Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, 
+	Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
+	linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, ntfs3@lists.linux.dev, 
+	platform-driver-x86@vger.kernel.org, coreteam@netfilter.org, 
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
+	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net, 
+	jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
+	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
+	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, 
+	samba-technical@lists.samba.org, sparclinux@vger.kernel.org, 
+	linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
+	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
+	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
+	linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] md: deadlock in raid1d() and raid10d() due to queue freeze in mdde=
-v_suspend()
-- [High] md: deadlock in mddev_freeze_queue() when reshape is interrupted d=
-uring wait
---
+On Mon, 2 Nov 2026 at 06:22, Christian Brauner <brauner@kernel.org> wrote:
+>
+> proc_bus_pci_write() truncates the file position to an int. A pwrite()
+> at an offset like 0xfffff000 turns it negative [..]
 
-commit bc4b2b2abc71e036c550ab67e56cbc50b4eb867f
-Author: Jack Wang <jinpu.wang@cloud.ionos.com>
+I think this would actually be better with rw_verify_area() just
+checking a per-file maxbytes.
 
-md: freeze the queue in mddev_suspend()
+We already have that logic for lseek and friends - using that fairly
+hacky combination of s_maxbytes and !unsigned_offsets().
 
-This commit freezes the request queue in mddev_suspend() and unfreezes it in
-__mddev_resume() so that bios submitted while the array is suspended block =
-in
-bio_queue_enter() without holding q_usage_counter, avoiding a deadlock with
-concurrent queue_attr_store() limits updates.
+We should combine s_maxbytes and unsigned_offsets() at file open time
+into f_maxbytes and check that not just at lseek but in
+rw_verify_area.
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 03e35386a8028..29737a624844a 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -472,6 +472,42 @@ static void md_submit_bio(struct bio *bio)
->  	md_handle_request(mddev, bio);
->  }
-> =20
-> +/*
-> + * Freeze the queue so a concurrent blk_mq_freeze_queue() (e.g. a limits
-> + * update) can't wait on a bio parked in md_handle_request() while suspe=
-nded.
-> + * Skip the drain wait when parked bios hold a reference and only progre=
-ss
-> + * after suspend: the suspend_lo/hi window, or an interrupted raid456 re=
-shape.
-> + * Resume may run in another task, hence the non_owner variants.
-> + */
-> +static int mddev_freeze_queue(struct mddev *mddev, bool interruptible)
-> +{
-> +	struct request_queue *q;
-> +
-> +	if (mddev_is_dm(mddev))
-> +		return 0;
-> +
-> +	q =3D mddev->gendisk->queue;
-> +	blk_freeze_queue_start_non_owner(q);
-> +
-> +	if (READ_ONCE(mddev->suspend_lo) < READ_ONCE(mddev->suspend_hi) ||
-> +	    (mddev->pers && mddev->pers->prepare_suspend &&
-> +	     reshape_interrupted(mddev)))
-> +		return 0;
-> +
-> +	if (!interruptible) {
-> +		blk_mq_freeze_queue_wait(q);
-> +		return 0;
-> +	}
-> +	return wait_event_interruptible(q->mq_freeze_wq,
-> +			percpu_ref_is_zero(&q->q_usage_counter));
-> +}
+And then things like proc_bus_pci could set it's size limit in one single place.
 
-[Severity: High]
-Could this wait in mddev_freeze_queue() deadlock if a RAID456 reshape is
-interrupted or frozen after the initial reshape_interrupted(mddev) check
-passes, while an unsplit bio is already inside md_handle_request()?
+Hmm?
 
-Consider an active RAID456 reshape where reshape_interrupted(mddev) is
-initially false and an unsplit bio enters:
-
-__submit_bio()
-  bio_queue_enter() /* acquires q->q_usage_counter */
-  md_submit_bio()
-    md_handle_request()
-      raid5_make_request()
-
-If mddev_suspend() runs concurrently (for example via suspend_lo_store() or
-suspend_hi_store(), which do not hold reconfig_mutex), mddev_freeze_queue()
-sees reshape_interrupted(mddev) =3D=3D false and blocks waiting for
-q->q_usage_counter to reach zero before mddev_suspend() reaches
-percpu_ref_kill(&mddev->active_io) or mddev->pers->prepare_suspend(mddev).
-
-If the reshape is then interrupted or frozen while mddev_freeze_queue() is
-waiting (for example via action_store() setting MD_RECOVERY_FROZEN or
-MD_RECOVERY_INTR, or md_error() setting MD_RECOVERY_INTR on a disk failure),
-make_stripe_request() sees reshape_interrupted(mddev) =3D=3D true and retur=
-ns
-STRIPE_WAIT_RESHAPE:
-
-drivers/md/raid5.c:raid5_make_request() {
-	...
-	if (res =3D=3D STRIPE_WAIT_RESHAPE) {
-		...
-		if (split) {
-			submit_bio_noacct(front_bio);
-			return true;
-		}
-		return false;
-	}
-}
-
-For an unsplit bio, raid5_make_request() returns false to md_handle_request=
-():
-
-drivers/md/md.c:md_handle_request() {
-	...
-	if (!mddev->pers->make_request(mddev, bio)) {
-		percpu_ref_put(&mddev->active_io);
-		if (mddev_is_dm(mddev) && mddev->pers->prepare_suspend)
-			return false;
-		goto check_suspended;
-	}
-}
-
-Previously, mddev_suspend() killed mddev->active_io first, so dropping
-mddev->active_io allowed mddev_suspend() to finish while the bio parked in
-check_suspended. With the queue freeze wait happening first, the bio loops
-back to check_suspended inside md_handle_request() without exiting
-md_submit_bio() or dropping q->q_usage_counter (and busy-loops because
-mddev->active_io has not been killed yet), or sleeps in conf->wait_for_resh=
-ape
-because prepare_suspend() has not been called, so q->q_usage_counter never
-drains.
-
-> +
-> +static void mddev_unfreeze_queue(struct mddev *mddev)
-> +{
-> +	if (!mddev_is_dm(mddev))
-> +		blk_mq_unfreeze_queue_non_owner(mddev->gendisk->queue);
-> +}
-> +
->  /*
->   * Make sure no new requests are submitted to the device, and any reques=
-ts that
->   * have been submitted are completely handled.
-> @@ -500,6 +536,13 @@ int mddev_suspend(struct mddev *mddev, bool interrup=
-tible)
->  		return 0;
->  	}
-> =20
-> +	err =3D mddev_freeze_queue(mddev, interruptible);
-> +	if (err) {
-> +		mddev_unfreeze_queue(mddev);
-> +		mutex_unlock(&mddev->suspend_mutex);
-> +		return err;
-> +	}
-> +
->  	percpu_ref_kill(&mddev->active_io);
-
-[Severity: High]
-Does freezing mddev->gendisk->queue before mddev->active_io drains cause a
-deadlock with raid1d() and raid10d() when handling read errors?
-
-For bio-based MD devices, __submit_bio() drops q->q_usage_counter in
-blk_queue_exit() as soon as md_submit_bio() returns, while the cloned
-r1_bio->master_bio or r10_bio->master_bio (allocated from mddev->io_clone_s=
-et
-by md_account_bio()) keeps holding a reference on mddev->active_io until the
-underlying member-disk read completes.
-
-If mddev_suspend() is called while a read bio is in flight on a member disk:
-1. mddev_freeze_queue() sees q->q_usage_counter is already zero and returns
-   with mddev->gendisk->queue frozen.
-2. mddev_suspend() kills mddev->active_io and blocks in wait_event() waiting
-   for percpu_ref_is_zero(&mddev->active_io).
-3. The member-disk read fails, and raid1d() or raid10d() runs
-   handle_read_error() -> raid1_read_request() / raid10_read_request() using
-   the md_io_clone master_bio:
-
-drivers/md/raid1.c:raid1_read_request() {
-	...
-	if (max_sectors < bio_sectors(bio)) {
-		bio =3D bio_submit_split_bioset(bio, max_sectors,
-					      &conf->bio_split);
-	...
-}
-
-If the surviving mirror has a smaller max_sectors (for example, due to bad
-blocks), bio_submit_split_bioset() splits the md_io_clone bio and calls
-submit_bio_noacct_nocheck() on the remainder targeting the MD device.
-
-Commit 7b15c24f8053 ("md: don't hang mddev_suspend() on resubmitted bios")
-added the md_cloned_bio() check in md_handle_request() so that resubmitted
-md_io_clone bios from raid1d() or raid10d() would bypass the suspend wait a=
-nd
-allow mddev->active_io to drain:
-
-drivers/md/md.c:md_handle_request() {
-check_suspended:
-	if (unlikely(md_cloned_bio(mddev, bio))) {
-		/*
-		 * This bio is an MD cloned bio and already holds an
-		 * active_io reference, so percpu_ref_get() is safe here.
-		 */
-		percpu_ref_get(&mddev->active_io);
-	} else {
-	...
-}
-
-However, because raid1d() and raid10d() run with current->bio_list =3D=3D N=
-ULL,
-submit_bio_noacct_nocheck() synchronously calls __submit_bio() ->
-bio_queue_enter() on the frozen MD queue and blocks on q->mq_freeze_wq befo=
-re
-reaching md_submit_bio() and md_handle_request(). Won't raid1d() or raid10d=
-()
-wait forever for the queue to be unfrozen by __mddev_resume(), while
-mddev_suspend() waits forever for the split md_io_clone bio to complete and
-drop mddev->active_io?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261102154847.1984=
-72-1-jinpu.wang@ionos.com?part=3D1
+                   Linus
