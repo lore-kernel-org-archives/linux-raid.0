@@ -1,109 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793615654;
-	b=EIc4t6SZ1KyBhGSCboB3uoexwIvVL5Xx1G9iz6DLoIFHFftMOpRtkEHp/8r+DsJOSzyY
-	 la0lPr1Dap3J4VJN8ScUThQHjQYmTRVjfkhmMjnibe9/GAX5944wLkazMHOMESU9xjXFS
-	 ZV++pssJYh0R1dQrnTgZ7qxF+KRhHeUpLiE+uOTP/5cKMYPD42acTfVExKEcKX046LUyT
-	 tiFjRCJ+53hONAGKZ+8Zt1cyYaOHQAJFwPs8daxYFjzq/zkgXY6i7s9cbseDUoXrYfJ//
-	 ZPB+Tnn9TgmtqDL7a2AIVPc07pjKffK5uLpWf1XXeuDj5QdIiR/CgKNGlpEuCkwzmdQ==
+	t=1793622544;
+	b=K26I/g/57gAKAa5to+ovN1hDnvEI0MAGm0l96RrHaRHX5dVoPG52W3TX/cBZTJOHCoXc
+	 4s5LxiS4fhnb0tQghKF0tmGlWVVoNMMQE6lruRu0vOpejnXkRVupLIamw/n1Eg/lTBpx/
+	 0F4GUERuqZ5fRF0xWAya9MwPCzkj2/f0ri0+6WvN5u5w8+t5H+i3Mxjhm6EXVnhzJ6jq8
+	 dx84RFRB2rO/aNa9iyDPog7Raix6vFwdMM/gCxEZN+80uS3IOITSJnZuM9nknH0K0lKbZ
+	 /j//97VFpNVtpnmpJrJLnxgpvyp6LtlnE8M/8hex/C8mRk7UMWZTb0b+JztanOsFHZw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793615654;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:From:To:Cc:
-	 Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793622544;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=3Lx5RB799LPUl/QCEDmBv3XwoKpIjZRdriPttvEFeZ8=;
-	b=tyqL43cm5NAQLQgWVENCQmYZPsHS9INqP5ioIMatL5CGoKbasPE7OgYBUUE9HZVVlDbS
-	 7X1V4gVh4xT96nSPiNCySFkeylu6fhPp3gKWEeCYW9mFBMW2ZUuVMxOQz5w2EDiVXKwxM
-	 YhwvsfZkAaGo8v/OCp1h/Qt9y9IWZsjuB8xH4rez0Y9ku6RoTJYY5cax1Bcb38ObTSlJu
-	 lLDexgwjlPxBV65F06VjuRx1AOIiEcFaSCqvvUknFLqoSnK4txHuP2uhlwDjJbt/4Nq+b
-	 oXz6+TbZSkTIXJQtsSVYPQLhyhxOZxFU2PoA8jraiRIANoicJnZXh9it8tmVAMiNwkw==
+	bh=GyZdeAbOtqkzbSkUpNh0d1h4qY0XMF49rbWHS3d1uig=;
+	b=jjTQ7gvOWTjhSbr4Sfj6bYcWfaNJjJKOaq1sKdFeM/Nefo6gAN3F+wBYWoG+gAyXvODV
+	 kzJNF8zO8/Um53eFN2Bj8IknJ2sjWFb3w7HEkFFzx7gTTGprT1NjxxES9zq1L1IzD9RdE
+	 /Uq/Xo9J5PvwthfkbCRzO3ydTqbzlFoFTGRCLmKu0PaoNXL8FwrLr8GWMsp54z0TBlank
+	 5Kw4fzFt4LqC9uttnCQrd12iBb/1FlcfG1azWvd9bkaMfMIkIR5Cr7eIqyxgjPLlC1zkd
+	 5ihc1zyg+1xHLJ4mAOAcStwjJj++f/Ph/sUVA4F9Z1gHWeS2dJ+7e1eAQ2bqD80UueA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=YnOkgJeP;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=NayNW+Ia;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="pyHd//ED";
+	arc=none smtp.remote-ip=209.85.219.42
+Received: from mail-qv1-f42.google.com (mail-qv1-f42.google.com [209.85.219.42])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 445B9606A324
-	for <linux-raid@vger.kernel.org>; Mon,  2 Nov 2026 10:34:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 445B9606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5547606A324
+	for <linux-raid@vger.kernel.org>; Mon,  2 Nov 2026 12:29:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D5547606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=YnOkgJeP;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=NayNW+Ia
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793615653;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=3Lx5RB799LPUl/QCEDmBv3XwoKpIjZRdriPttvEFeZ8=;
-	b=YnOkgJePwQ20WyOE4zqf3R4C95l7EkrvqvPQBtvRNs+/k5rfz4jL3jobOp2o9uyR2r9wr7
-	ZIvGJ0gUGWAvt+w2TSziq9PsjhCfOwQ9gHVw5Nh2cczsUw2nQC/sU1KyGQWTQc+rvAelSv
-	ER4+diEWPcyv+s249vfABv71FjsqunE=
-Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com
- [74.125.82.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-489-GBm45Uw_OPy_yGN05Amdug-1; Mon, 02 Nov 2026 05:34:12 -0500
-X-MC-Unique: GBm45Uw_OPy_yGN05Amdug-1
-X-Mimecast-MFC-AGG-ID: GBm45Uw_OPy_yGN05Amdug_1793615651
-Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-3698bd5392cso2609621eec.1
-        for <linux-raid@vger.kernel.org>; Mon, 02 Nov 2026 02:34:11 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=pyHd//ED
+Received: by mail-qv1-f42.google.com with SMTP id 6a1803df08f44-91c67992ce5so22331376d6.3
+        for <linux-raid@vger.kernel.org>; Mon, 02 Nov 2026 04:29:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1793615651; x=1794220451; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1793622543; x=1794227343; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=3Lx5RB799LPUl/QCEDmBv3XwoKpIjZRdriPttvEFeZ8=;
-        b=NayNW+Ia3gR7boUCzDzCJpYLRDpCzlCq54RssEAUM1MLZb7lRWgARdBAhpmwI/sy5e
-         sftbfa5FNfiW0hSF0IOGrrdiUnu8sS5LWSt8Y+4hxxZPeSQ50yegDabqGo/TpM+bYgG5
-         xWV/oQ3NZ26Ij2zMjX5QdnIpf55oH47ysmtpXk7qYypVqjoOw6Lrh7HZvnDGVKTNA2m0
-         lD9ShCj7zS7/cu19D/OWgEZA42nHJuDSxCC8oHh8apTUnhH98/LtF9i54ULE3ZR9NdEW
-         h4Ov3flT36tbeQ4HEwgxKk8IB24dg4sr0847ZLlIdw1zH9CsCOuxFNfvd8unvBShiy/1
-         NlDg==
+        bh=GyZdeAbOtqkzbSkUpNh0d1h4qY0XMF49rbWHS3d1uig=;
+        b=pyHd//EDO6sMRs2Eyv6ArIF0S4T1nBQcyGYd18mQA307hK6Vimkn+eYDIKYPOIJBAM
+         LXZfltIBDZVl7x4q3WusCqF3CP58tgow3o+jZy+rK3khMQ+Vnrwv0BVkNxxbF39M9aD7
+         vHghu+6nvAkoMwcA0FuvwarhhzR0NdsijfTDW8yLPjfqYIxVTMY/Ep/iCM0rdWpOlxR1
+         X7NIasuPZommqxVzEg89TaBP/rn/oRXufZRevaEHVbzgmy+3RhWUxrseqyK6h47Kp9i7
+         eqszrKLDltlBtWJaTGy6m043A+ad2DVnUhbO9nK6qRcKN6wdOUR76EPbqIsAePqvmiHh
+         5W5Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793615651; x=1794220451;
+        d=1e100.net; s=20260707; t=1793622543; x=1794227343;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=3Lx5RB799LPUl/QCEDmBv3XwoKpIjZRdriPttvEFeZ8=;
-        b=BIuvV1DribExHEeKg+a1gpxzGe9fx2D82DCkQAXgz9J0VL86ZuNwIqbhY9BwWfIFgU
-         LZqmSto3fd2AE+5rPupQAtu4/NEuphl4pyBj7iHg9eG0ZNQx9gYk6i2TUdrnbE6l5sI2
-         pAbQzcfn3RRcgzb2bS4papAqlxpelo0sZZ6YfBRvoxYp+e06sgo1etbp5IYbGeHS0rsP
-         IyhOS7ETWdMZL6Jwrut/4tZ6iko6Cj/zBI3X68zPGjEYrnBdtOAuFIVNO9oFe6uIIBvZ
-         sqI3LvOGIPdlIrbtYxQWwMUPfqXEGQAhQMRZJPHPwiPyc1oD6W2nWuMdbTJ+s4m7LeqN
-         VPiQ==
-X-Gm-Message-State: APuU4Z8nQrgNZQF+boRr0dXypSJsAaqxCbiA0u20NbsW4PxNuN8ueCbD
-	z258gPc6Y9UPgHnBagkIVUj9mis0Qj9nueGlh3y8VPgIosKvir8zr+uzB5TqCk6PbLJnvD5MCPp
-	8Gqx57hk8M1gLaXB42GALqmOuqtP7LmzYpYLz+y2p8+6uKnJ1zB/00Kzkw2D6go48UGEdIx4wFf
-	1vEGOMEeasykiRRH9TGjiz0h1is/9Nuh9fO1PtS5VD6X79Hg==
-X-Gm-Gg: AYBFou026Qyw+LszwOGZQPRelrUqsiwA8FM88Nn8/tn/wtANV9umJanAmczzKs2fddn
-	og/BEN3WJCziUWirtwXBpo7bSuY04GvsDZ3j3krTpA/jymxrBNURyQCe4Hvpz7oaRfDOQA+Ddbd
-	HsepWEnnuA/UpJbensYWrJIQcaaXWehugZCrS6Kh0vBiycAsg98uHqjquNuTrj+EPcFjoplvCXW
-	164ddwIm/gWxPeSZhP0EC+Onv8cSePdrkF7poCzLLuPlXJkC0pwxaBEQNt3ErMUSDa9F5ewq5ED
-	9pKBAJVwsZw4ATli28z3j+V2fie3du0QzkDBFeXVxp0Uv1bhLBjh89VSbNBci0mvtxwQ93/7JWu
-	m0Xorwg7uWTjJ2tWzDM1vNYywomeKoXHVD3nAkrJqOxot+OWUUUt6hqin8u7av1YM2Y1fn6kqRi
-	TSj0thvtT8DCk19bgWGJR8beSNqz2Dlt3nhnl3xPNo
-X-Received: by 2002:a05:7300:26a8:b0:361:2a55:b94e with SMTP id 5a478bee46e88-36a30032646mr19684556eec.15.1793615650635;
-        Mon, 02 Nov 2026 02:34:10 -0800 (PST)
-X-Received: by 2002:a05:7300:26a8:b0:361:2a55:b94e with SMTP id 5a478bee46e88-36a30032646mr19684502eec.15.1793615649726;
-        Mon, 02 Nov 2026 02:34:09 -0800 (PST)
-Received: from mgandhi-thinkpadp16vgen1.redhat.corp ([2401:4900:88fb:4f5c:533e:8bfd:3ede:2cf9])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a4294419dsm34886790eec.18.2026.11.02.02.34.07
+        bh=GyZdeAbOtqkzbSkUpNh0d1h4qY0XMF49rbWHS3d1uig=;
+        b=ACYEq9BputCq4i9qdiN8AHPz72G5GGjPJU/awxAm8ZX4MW5zJMAfianumdLRZjEgYZ
+         TwuwXz+4D/RnLc/wwO3yFtT1JraLgK87ruxg4BsQa0GKZwkxqvv6UXKVe7Z+iRI4KrGl
+         Vklh1nGH0gv2v9NubpSuqQr1QArKwgEzWzX+qKjkeqQn0TljvRLP+rIYND6YW39maS7n
+         Snt+Sf2WTWyKHM1n1yHgAmTmDctHNSfm4pCUQtsRsZmu74SSNcjWUgwI5iEi+YRL020l
+         Y3FwH8LWdepg5VYyOc+62d23t8xy9qmuN0WtFEpeZio5zfX6TVGRhGQM1y/zlov61Nev
+         7zgg==
+X-Forwarded-Encrypted: i=1; AKwUvBx73j994XPq94BWSnB6d6msS7Qmoehur5do6cYrJjYGOm1Oj1+GclLOvcH4wybllVAqxX3B37pkxr7B@vger.kernel.org
+X-Gm-Message-State: AFq9FYLnB9d+uHiRoo78hntAzRk8/M0HSbqPbdCCFDJQUtMhlk6nBzun
+	KME7kwOYZxPeTEpAlMQ0j5b3AFZ96jvqMeANG8sbb9aTKD4D1bNeEWFuFDtv/AON
+X-Gm-Gg: AYBFou0rHuWpr6IYHsNziXim6IyNpRruoajAvjqoHA8PnCCbsbtT4j0i6QX5t9QFPvR
+	uEiCUx54zG3L1VEQikl4woaVM04KOzhsB7KPFufA8k6gkMChoyaimKWn9rSYUWkpt+vruFuMl8/
+	AFYs62aETeiD2DdeEJ1pxMPVFjPj1xFZcXlorzDiwkKM1eOmAqPZC9tObsNfCCCTRUiD5rcCXnA
+	3OJHJIuNWr6VFmoNy3IOputqaTJ/rqZyqGwBrbo6RyGIFnZJQZ8vSzTb+wSGT5vDGnbsbLr5SUL
+	KW2amr446ZmKzJySH8wy0txEeZ4uCguvXzKETbvvA7h7kBVJhDlbxpw05FgolbWAU7ALNoR13lJ
+	9TNDFM5D4HWDEzrM4RiI+gpmAhvwkRkD4R9TrIF++f+Rfd/s4KxLEO/Lux4hl4R+p5JFAkFSnaN
+	pWqqCEwZHYEL20uKNoHbtgFa3Vn39BxgynwA/vN/AGQEwct+nHOiHDe+Dmpb05T5y+w5e5uzwEC
+	8SrdoebgeZvgBzL3QXTEKq100gJ8RymWWWCbXem2w95DaClxmZFzZmphgCvYs/+7pKqYMY0c2+z
+	FA9gGyoKf+Yd1XPqHxdRijMSHyZmc4XF
+X-Received: by 2002:a05:620a:801c:b0:93e:c12c:fbcd with SMTP id af79cd13be357-944217a3ad0mr1573777385a.73.1793622542751;
+        Mon, 02 Nov 2026 04:29:02 -0800 (PST)
+Received: from fedora ([2409:40d2:102d:42fe:94:1c18:1e05:91ee])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-94425852274sm825390585a.19.2026.11.02.04.28.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2026 02:34:09 -0800 (PST)
-From: "Milan P. Gandhi" <mgandhi@redhat.com>
-To: linux-raid@vger.kernel.org
-Cc: mariusz.tkaczyk@linux.intel.com,
-	jes@trained-monkey.org,
-	"Milan P. Gandhi" <mgandhi@redhat.com>
-Subject: [PATCH] mapfile: fix relative devname resolution in resolve_md_path
-Date: Mon,  2 Nov 2026 16:01:36 +0530
-Message-ID: <20261102103136.163554-1-mgandhi@redhat.com>
+        Mon, 02 Nov 2026 04:29:02 -0800 (PST)
+From: Sajal Gupta <sajal2005gupta@gmail.com>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Sajal Gupta <sajal2005gupta@gmail.com>,
+	syzbot+dcad997ed2b5bd95cc5e@syzkaller.appspotmail.com
+Subject: [PATCH] md: fix use-after-free in md_attr_store()
+Date: Mon,  2 Nov 2026 17:53:04 +0530
+Message-ID: <20261102122430.39209-1-sajal2005gupta@gmail.com>
 X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -116,64 +101,53 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When an array is defined in mdadm.conf using a relative device name
-(e.g., 'ARRAY customalias UUID=...'), resolve_md_path() fails to resolve
-it under DEV_MD_DIR during mapfile reconstruction.
+md_attr_store() calls sysfs_break_active_protection() for a "clear"
+write to array_state before it calls mddev_get().
+sysfs_break_active_protection() does kobject_get() on the mddev
+kobject. If the array is concurrently being deleted, the kobject
+refcount can already be zero, which triggers "refcount_t: addition on 0;
+use-after-free".
 
-The outer condition:
-    if (match && match->devname && match->devname[0] == '/')
-requires the configured devname to start with '/', rendering the nested
-relative path handling unreachable:
-    if (path[0] != '/') {
-        strcpy(namebuf, DEV_MD_DIR);
-        strcat(namebuf, path);
-        path = namebuf;
-    }
+Fix by calling mddev_get() first. If the array is being deleted it
+fails with -EBUSY before the kobject is touched, and if it succeeds the
+array cannot be freed until mddev_put(). The -EBUSY path no longer
+needs to call sysfs_unbreak_active_protection().
 
-Consequently, commands that rebuild the runtime map (such as 'mdadm
---incremental --rebuild-map') bypass the configured relative alias and
-fall back to the superblock's metadata name, creating an inconsistency
-with assemble-time symlink creation.
-
-Drop the redundant 'match->devname[0] == '/'' check from the outer
-conditional so relative device names configured in mdadm.conf reach the
-nested block, receive the DEV_MD_DIR prefix, and resolve to
-/dev/md/<name>.
-
-Test reproduction (RAID1 created with metadata name 'origarray',
-mdadm.conf configured with 'ARRAY customalias UUID=<UUID>'):
-
-    # rm -f /run/mdadm/map /dev/md/customalias
-
-    Before patch (unpatched mdadm):
-    # mdadm --incremental --rebuild-map --config=/tmp/test_mdadm.conf
-    # cat /run/mdadm/map
-    md99 1.2 fb1db62a:62817869:f8c2ab3f:f422a06d /dev/md/origarray
-
-    After patch (patched mdadm):
-    # ./mdadm --incremental --rebuild-map --config=/tmp/test_mdadm.conf
-    # cat /run/mdadm/map
-    md99 1.2 55f91d31:c1cc4a13:a18b124d:a8b77987 /dev/md/customalias
-
-Fixes: 360b463696e8 ("mapfile - when rebuilding, choose an appropriate name is none is found.")
-Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+Fixes: 9e59d609763f ("md: call del_gendisk in control path")
+Reported-by: syzbot+dcad997ed2b5bd95cc5e@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=dcad997ed2b5bd95cc5e
+Tested-by: syzbot+dcad997ed2b5bd95cc5e@syzkaller.appspotmail.com
+Signed-off-by: Sajal Gupta <sajal2005gupta@gmail.com>
 ---
- mapfile.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/md.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/mapfile.c b/mapfile.c
-index 2f198a92..f1cdee7a 100644
---- a/mapfile.c
-+++ b/mapfile.c
-@@ -381,7 +381,7 @@ static char *resolve_md_path(struct supertype *st, struct mdinfo *info, char *ho
- 	struct stat stb;
- 	int unum = -1;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 03e35386a802..26f17dd24bdf 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6163,17 +6163,16 @@ md_attr_store(struct kobject *kobj, struct attribute *attr,
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EACCES;
  
--	if (match && match->devname && match->devname[0] == '/') {
-+	if (match && match->devname) {
- 		char *path = match->devname;
+-	if (entry->store == array_state_store && cmd_match(page, "clear"))
+-		kn = sysfs_break_active_protection(kobj, attr);
+-
+ 	spin_lock(&all_mddevs_lock);
+ 	if (!mddev_get(mddev)) {
+ 		spin_unlock(&all_mddevs_lock);
+-		if (kn)
+-			sysfs_unbreak_active_protection(kn);
+ 		return -EBUSY;
+ 	}
+ 	spin_unlock(&all_mddevs_lock);
++
++	if (entry->store == array_state_store && cmd_match(page, "clear"))
++		kn = sysfs_break_active_protection(kobj, attr);
++
+ 	rv = entry->store(mddev, page, length);
  
- 		if (path[0] != '/') {
+ 	/*
 -- 
 2.56.0
 
