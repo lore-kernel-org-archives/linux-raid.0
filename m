@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793629641;
-	b=tIQYH0MThFIqfthk3KQNwQ5skdJjUQ74OcG3EOlc6X1U1PLt/LKw6zuN+kPePNOrOSi6
-	 TGJWno/6RBvppP5NzmKgmz4j8O09x+EONEKqZb62xIu7gbNzPKs+ObxgdtLrnuJY4sTCO
-	 KBf3V06zB3SjSj21juNUO8JhDUjNGShyQ0fefTJA8k0sO90d9PxDJFybUShDUXKBx9jZN
-	 Pq5fFxRvh3pzenMvH+/6S210IdNkL73ilCpj9lorcW86PgaquYtfNOI9L8h5q4qIOY1JY
-	 xQ4bXeryXeAix/fHJp6opJW+ve8yw3ooijfvfr4J8tnEzNPYQhyhKrG97oqphvQHP9A==
+	t=1793629681;
+	b=ag33JNnzEzM1onGZuZEGjnQzjF9zh6IWxQsLLi+/45HaWrh36AAKXfMcjXgJA8I2T972
+	 jxrNpL6kqw9wWLry4lfloBtY405R6HxRVlZQmcDTOOopvIUZTxr/pWCKmemNiFMjTUqR1
+	 7NrEocBAVBvzD4XVRXqm9AczNnRnirTELYbaoiYqk2ep24xKSfhQV5di7Ctu/kpXkEp7I
+	 jHaCPfo/vZlmi4ipJkEf1l3kDdV8HpwMJgvpvUQEqR1WIv7j+EPpGDPxu8J5Kdm4xvUXy
+	 omcwCTAJ2/6eJIoVV+vg65dEEzkxSIjCJcGoq5cd6MdPS1qnPi1r/iq8oqhG96IzPLw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793629641;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793629681;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=xlRe6ByN3zpYNOlJQq83OVbC6fU3d9RayIfuGISBpLE=;
-	b=Y21CVR5nXjzO6Nq0ZIP/7qHKvelij1GHwemzbmNLoURmfGfSkFKV//qMtS71Th4Gdzzl
-	 G0xAX8hioSmvepHE9LWmr06uOv2nQy8NuW8uXMImx37Q6OoBCcoJZXmmB38VzQ6I+wV1c
-	 i+jC8IzKPBVBV02OWkJzvsH0UTF+9mA3cM8Rs1RvK0hXyaI+ygqddV0nKWKPowe4VftM8
-	 Wz76DOSI49ClCAvKIvsFDgB5QTgVChnaKcNVlVRYcwlqrwcoTgZtq/rUwwNi+boEfdjIz
-	 13gQK5c7Fqao8PSUkbds0tv6HDk3AuLrSKMBipyklmRW77ARG0zVVvsUZ0sYISLLlWQ==
+	bh=x9e4ZuKPIpi8QBo4p8aCvRLGQ76YDcFSkXYxDQ/HDJc=;
+	b=g5G+nNS7PS0gJfUYuRLj/j+cLzurmCKA6MvhlyFxuIjL4Lfab8cZjVuM0PfHkJ7e6Xzh
+	 t3Q5RL5wgM89AtD+lqtiSiKtg0/cnivvrSV5yc80iJQAEZXWRNrNDmEu9pg3Eh1kQOENS
+	 PYTL47/XoLsO50z+ZQNWChvPo6QeHOGeaVVmmYba16ytIXA3PcRy7tZH+zQU5Eg6/KaJ3
+	 gsKfkk7fn8kMB1UjEs12QwwNhE2Y6CQXSdcX4qwTrPKOezNGxOUT7aEC4rZAZPV5Ytx0L
+	 iw5z9YvLrhAKH9aH6jEqVkbqtQJPCxNcKqnKhyhIVNzBy50Fe989v1AskhiI2+OKrBw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DrI+PNek;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z7jSW8oc;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0D37607B465;
-	Mon,  2 Nov 2026 14:27:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1FC2606F217;
+	Mon,  2 Nov 2026 14:28:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DrI+PNek
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2FE31F00A1C;
-	Mon,  2 Nov 2026 14:27:07 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z7jSW8oc
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F24E1F00A17;
+	Mon,  2 Nov 2026 14:27:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793629640;
-	bh=xlRe6ByN3zpYNOlJQq83OVbC6fU3d9RayIfuGISBpLE=;
+	s=k20260515; t=1793629680;
+	bh=x9e4ZuKPIpi8QBo4p8aCvRLGQ76YDcFSkXYxDQ/HDJc=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=DrI+PNekNretHUZ1kn1KtVLM1VAQ4asWCX4darvbDfIiADMbVebIHhgZrW1oD/LQm
-	 ET27Dsfxtbv5Bx6RMcyog3VOgeXPBOtvOh2VXPyT8GPO6Ybp+ewD3KRsx4thesz8VP
-	 QA7RHgKiSLQ1nhgNIeJZ4ihrXQPO5LDA6Zn+C6+rSuuh9NM+5LbiX/ev4owvWjFJK+
-	 w88KxP2goEYkeNG1aUmgx8CoQpiUa0JgLD5JUUs48hMCG8PnbgpkAsa8uZGjQLF3EQ
-	 k2GluFIjmgjBfX+GXD3ZOzpKoAHK50KNKTlCQq/MS76QVFek5Vdqcyn24CZ5KtXYnN
-	 gpYlqS5cSCEuw==
+	b=Z7jSW8ocw2GTtsdhy2iLSOSMpWez+vmr7UbhcqFGOJPgV+mfUirasVaGqGjfy1MhC
+	 JfdOwZP+NjPjF3axJA25tkHe3FYpmshpGP7JUFL5ycSp9F9xDVUWPTXynOAX7lLDQy
+	 lyX77813HhkSilKPJJiaixyUHa1YuUBkrL4nIlzerhARC42GiEhDGVDidxwBdM5Fve
+	 2202Lg+45oaSoehyVe/VfbRF4DlEvQXBh0kjqh2jlMLvpzzjhh601Kw2fcyec2y7B8
+	 HZR3WDITUZsok4mxLcicXIz+3n6P9tENE705RyDiGEHAZB1hWIT1RX87e64+KLQO9v
+	 YjlZGmkXrHfmA==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 15:21:39 +0100
-Subject: [PATCH RFC 24/38] proc/vmcore: don't let vmcore_cleanup() run
- twice at once
+Date: Mon, 02 Nov 2026 15:21:42 +0100
+Subject: [PATCH RFC 27/38] sunrpc: make queue_wait a global wait queue
+ again
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -55,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-bugfixes-v1-24-59422ed3e465@kernel.org>
+Message-Id: <20261102-work-procfs-bugfixes-v1-27-59422ed3e465@kernel.org>
 References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 In-Reply-To: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -91,56 +91,129 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
  Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1758; i=brauner@kernel.org;
- h=from:subject:message-id; bh=gmON/Vwu30bm66aR7FLjt15bWl4pslPspuVjwp92LoI=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9mJN9ymzS0mChk/OuHxLcK7hCIChOYcKK3y/vZOxX9
- hTemFvv2lHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCRv4kM/3SchYRYG9b+Xrc8
- wduJ9XImq3xMwSbxeTeYAicKTFfkvcLIcC/DZqdZ5/W1Oa+zPiduuy4Y56u/3qrMJ2nqgj3fHed
- 9YgUA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4395; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=WxVX5Tk7+VjiQ4HOwMZ1/ws7cMwoYvJOjs/gK5FWGI4=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9mJPzJJWxrePPaosrlWIRfIIVuzheh1b9qPU0WbiTl
+ 93hvZ9ERykLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwER+1zIyzD56TIlf772HuYFp
+ 7KHNoXN7XHoLLr75vvzNt5Pt06bJHWL4X7PzL9/h4ru8Jg+dc9RunmidE/k+d//0KxOeSjdxP5o
+ awQYA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-vmcore_cleanup() has a single caller, fadump's release_mem_store() on
-powerpc. That checks fw_dump.dump_active without a lock and calls
-vmcore_cleanup() without one, and kernfs only serializes the writers of
-one open file. So two tasks that write to
-/sys/kernel/fadump/release_mem through different files run
-vmcore_cleanup() at the same time.
+Since commit 552d0e17ea04 ("sunrpc: convert queue_wait from global to
+per-cache-detail waitqueue") poll() and epoll queue their waiters for a
+channel file on the queue_wait head in struct cache_detail. But the
+cache_detail can be freed while its channel file is still open and
+waited on.
 
-The first one removes /proc/vmcore and waits for its readers in
-proc_remove(). The second one finds the entry already unlinked, returns
-from proc_remove() right away and frees vmcore_list, the ELF headers
-and the device dumps while those readers still walk them. Or both of
-them free the same lists at once.
+The procfs channel files of a network namespace are removed when the
+namespace goes away. Removing a procfs file waits for the callers that
+are in one of its methods right now and then calls ->release on every
+file that is still open (cf. close_pdeo()). The waiters that poll() and
+epoll left on the head stay queued until their file is really closed.
+So:
 
-Serialize vmcore_cleanup() with a mutex of its own. It can't be
-vmcore_mutex, removing /proc/vmcore calls release_vmcore() which takes
-it. The second caller then finds nothing left to free.
+  sunrpc_exit_net()
+  -> ip_map_cache_destroy()
+     -> cache_unregister_net()
+        -> remove_cache_proc_entries()
+           -> proc_remove()      // ->release, the waiters stay queued
+     -> cache_destroy_net()      // kfree(cd)
+
+and when poll() returns remove_wait_queue() writes to the freed
+cache_detail:
+
+  BUG: KASAN: slab-use-after-free in _raw_spin_lock_irqsave+0x4b/0xa0
+  Read of size 1 at addr ff110001131bb570 by task sunrpc-poll-uaf/242
+  Call Trace:
+   remove_wait_queue+0x22/0x1c0
+   poll_freewait+0xc2/0x230
+   do_sys_poll+0x9ba/0xd50
+   __x64_sys_poll+0x165/0x470
+  Freed by task 12:
+   kfree+0x267/0x620
+   sunrpc_exit_net+0x34/0x80
+   ops_undo_list+0x271/0x8d0
+   cleanup_net+0x3f3/0x860
+
+Closing an epoll instance that watches the file gets there through
+ep_unregister_pollwait() instead.
+
+The channel files of a network namespace belong to the root of its
+user namespace and cache_open() doesn't check for a capability. So an
+unprivileged user can open the channel file of a namespace of its own
+from the outside, poll it and let the namespace die.
+
+Go back to a single static wait queue that never goes away. A wakeup
+for one cache wakes the waiters of all caches again but cache_poll()
+reports per cache_detail so that's just a spurious wakeup. procfs
+should really own the wait queue of its files like kernfs does but
+that's nothing for stable.
 
 Reported-by: Chris Mason <mason@kernel.org>
-Fixes: b500afff11f6 ("fadump: Invalidate registration and release reserved memory for general use.")
+Fixes: 552d0e17ea04 ("sunrpc: convert queue_wait from global to per-cache-detail waitqueue")
 Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/proc/vmcore.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ include/linux/sunrpc/cache.h |  1 -
+ net/sunrpc/cache.c           | 12 +++++++++---
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/fs/proc/vmcore.c b/fs/proc/vmcore.c
-index 1fe70c4ecc54..ccb795b85509 100644
---- a/fs/proc/vmcore.c
-+++ b/fs/proc/vmcore.c
-@@ -1764,6 +1764,11 @@ fs_initcall(vmcore_init);
- /* Cleanup function for vmcore module. */
- void vmcore_cleanup(void)
- {
-+	/* Not vmcore_mutex, removing /proc/vmcore calls release_vmcore(). */
-+	static DEFINE_MUTEX(vmcore_cleanup_mutex);
+diff --git a/include/linux/sunrpc/cache.h b/include/linux/sunrpc/cache.h
+index 2735c332ddb7..bf4fc543e1e5 100644
+--- a/include/linux/sunrpc/cache.h
++++ b/include/linux/sunrpc/cache.h
+@@ -119,7 +119,6 @@ struct cache_detail {
+ 	struct list_head	requests;
+ 	struct list_head	readers;
+ 	spinlock_t		queue_lock;
+-	wait_queue_head_t	queue_wait;
+ 	u64			next_seqno;
+ 
+ 	atomic_t		writers;		/* how many time is /channel open */
+diff --git a/net/sunrpc/cache.c b/net/sunrpc/cache.c
+index 1bc04109d213..1ceaea7e01b9 100644
+--- a/net/sunrpc/cache.c
++++ b/net/sunrpc/cache.c
+@@ -404,7 +404,6 @@ void sunrpc_init_cache_detail(struct cache_detail *cd)
+ 	INIT_LIST_HEAD(&cd->requests);
+ 	INIT_LIST_HEAD(&cd->readers);
+ 	spin_lock_init(&cd->queue_lock);
+-	init_waitqueue_head(&cd->queue_wait);
+ 	cd->next_seqno = 1;
+ 	spin_lock(&cache_list_lock);
+ 	cd->nextcheck = 0;
+@@ -965,13 +964,20 @@ static ssize_t cache_write(struct file *filp, const char __user *buf,
+ 	return ret;
+ }
+ 
++/*
++ * Not in struct cache_detail: poll and epoll waiters stay queued until
++ * their file is closed, but a channel file in procfs can stay open after
++ * the cache_detail of its dying network namespace has been freed.
++ */
++static DECLARE_WAIT_QUEUE_HEAD(queue_wait);
 +
-+	/* Two writers of fadump's release_mem can get here at once. */
-+	guard(mutex)(&vmcore_cleanup_mutex);
- 	if (proc_vmcore) {
- 		proc_remove(proc_vmcore);
- 		proc_vmcore = NULL;
+ static __poll_t cache_poll(struct file *filp, poll_table *wait,
+ 			       struct cache_detail *cd)
+ {
+ 	__poll_t mask;
+ 	struct cache_reader *rp = filp->private_data;
+ 
+-	poll_wait(filp, &cd->queue_wait, wait);
++	poll_wait(filp, &queue_wait, wait);
+ 
+ 	/* alway allow write */
+ 	mask = EPOLLOUT | EPOLLWRNORM;
+@@ -1236,7 +1242,7 @@ static int cache_do_upcall(struct cache_detail *detail, struct cache_head *h)
+ 	spin_unlock(&detail->queue_lock);
+ 	if (ret != -EAGAIN && detail->cache_notify)
+ 		detail->cache_notify(detail, h);
+-	wake_up(&detail->queue_wait);
++	wake_up(&queue_wait);
+ 	if (ret == -EAGAIN) {
+ 		kfree(buf);
+ 		kfree(crq);
 
 -- 
 2.53.0
