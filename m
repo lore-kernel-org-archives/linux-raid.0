@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793633635;
-	b=Tm0CF/YOZFUaYvTfba7eNZdkM0uee2mbPLUtK4HPyq0x0JOiF/hkgQls8Na/cF7qo6T9
-	 Mx8fvpiNx05UnbyZPU/s/5ZTWFm4szLYTUp27zgoXz+cWzxNSTDN/O8/vq7r0hWhgjspV
-	 PnH1BUBKRin+1rJkzSqy8YrRx9ef3+79mZhj3lg1UTmWdjZnc3I2TIifMQdIiGBawU9SV
-	 z8v2mEUcI1gZULVgVcM0cnmszi8WesWlLw+ztG98jrCkNrk3cWeXm1LY/EZltYKgBrQ8r
-	 hyGQTk8XP1IsVAsNJOJ6Pia1cuzlHBmlGdwgY2JWaUsbQxOuOHWwcAn0uzcdK8rNlfQ==
+	t=1793633679;
+	b=03hmakEJ1Nc07s1AzyyFfjSdckXJOYVHszGvXPlpd2aL0wgRb1zvRfF+5kdlBO2SNIyZ
+	 +hi3WLE3xwc/npcpGwnlEM3OS+9ddynE4Q8uzP9fdS2TlFcvYoJ8hoH6q57glG4ch6k9j
+	 9CvzrWLILTV9l2JtLUUBPb8S/WkDpdU9tEmdrux7K/A4lQ0mFsg+bQuTHJNNdtCqh29qI
+	 ysdntxwck9WCIyqIQxNCKLdCvJOa+GLVB3aRfKMQpgVkeFOSqXeP6ozbjzZiN0B4OEbva
+	 U6uhF48ELO9TaDL3GNQZJN2b68r3VcVkU08asMZ3EWmkNAj+B2qE8ZFVrSNwbIlKP0g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793633635;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793633679;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=TK360Q0J9loLLBJN1fCdf93Od8lfv7JQwcxqeqOSWBU=;
-	b=JPYGDcJi/N0G7z2K7vrhSnIvJWfL4CZJRgrmqCZnhhS4cPipWWi8vipnK56LcOzZlEAH
-	 IZOWHLHbz+WGLCKs1QTl+S1gUfc1M8PiW1Ub+XGGCPWxLW/dsvaGtKJAyH7u4LX2SmJw5
-	 SJTMQ83IWm6gxE1M6xnTP//2DaxmtyfYrae5CvNE7gAefSxN1sxMui3yKZepUSTEos8kv
-	 BhSNNn+j12fya0OdPUjK5Kz+Na8Dc/VE6ZQDfxVtd0gLo+ef8EqkxD7JMZhBSQTMBNRoV
-	 tqEK/6YuW8wJMWDJ7103K55+DKVoQvGBqIply4khiCdD3GaEVxoCHm31cbOdKSdd0tw==
+	bh=pmnFGMOE2v1+F0PJGOHw4Gdli7q7gPuktrXwX9LNfoQ=;
+	b=Ntl6lvG3+Fdabvv3E56DNikwuBnyR0rxzryI2AG96JczJEq1pjvStmchKRdrxjEUJEwf
+	 iatIv72eNkT2UMjb+nYkeO/afhMtpWS9+qd5JyUZCDI/1frTOvmeoofdsHKldkeCxZs+N
+	 WI5sO0LJXvmi3cuDfb7drMCl+ou2hge55YSlfS/3/Kra3C0g1OIXZonbskoNAibfM+pwa
+	 iUpw/Ae43L3eywo9tdKiPNdW9QU97CUMOVPQxveA/rWieS+oUaZ1ejBylgdZj3l/vSsUF
+	 7P8UqgU0JPLjhltSmJTVgEvvLzH/SPkfxh6lxu0MsdX16LoxWM+YgzeVhFcw2dqcmUQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VdcZ4QFp;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d9QGwQro;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93AA6606A92A;
-	Mon,  2 Nov 2026 15:33:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4FDF608B060;
+	Mon,  2 Nov 2026 15:34:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VdcZ4QFp
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C9631F00A16;
-	Mon,  2 Nov 2026 15:33:38 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d9QGwQro
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCFFB1F00A17;
+	Mon,  2 Nov 2026 15:34:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793633635;
-	bh=TK360Q0J9loLLBJN1fCdf93Od8lfv7JQwcxqeqOSWBU=;
+	s=k20260515; t=1793633678;
+	bh=pmnFGMOE2v1+F0PJGOHw4Gdli7q7gPuktrXwX9LNfoQ=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=VdcZ4QFphvz/aGivrbf7iePh6qXVUBStibznajyzqusVWBsrxcy0EcezsqqdXFTgw
-	 Tanj+pajzFQT1IcSiQwVY9ZF32/NB815X1E8niHSCQtrMcNmSJQoGopcmRQr+jm8Dc
-	 NY/X4yfjkgL9TTITZYZF8R43x6PS/zn9kAuwDXlY7N/+LREL5IIRSKVjJW+ZhgtZG+
-	 WKgH663rZrJFecmgkbpS0lrCfO660Tnz1keC9/Yr7gjUpWjGAkhB373EqJvMziyRLj
-	 5XaMNzWmZ65VAMr81aqdlEc9zjG/IDnaQuV+YpuDedYYCoO87rGXyvGaa3yJtqO2s6
-	 RolUHV3j7QlLw==
+	b=d9QGwQrotLscF4xo8DU9S109UjfAgcN4a46hjwVSf3SjqQgEaO4Rv1AEyP5dT4O5y
+	 xhGnDHnb/jFSk8D7qKuO+39L5VOpMdQp+GEPoALOWTv2sAj3bbh7bn9Ca6T4Zctpcj
+	 fNImnpjl37D5rGo6ytZAGYcvcU7Hs6e2nTEg5V2aQ/mC4G0yjxmcpG1Hu5e0aBYP77
+	 YqqQjJjSh1N4cnNNEz/pCqHHyFFMtbDFf9uvFYMyEZgjLi1JBmongPZBS4PXj3B4fR
+	 cGUqecnhkpX6QHjYWkx5oNKUT3XrFn+eoX8EGZYKiM0ZGpeR++e3aBl28Ylp4YaymR
+	 Z4/Or8kbU/uIg==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 16:07:22 +0100
-Subject: [PATCH RFC 08/11] SUNRPC: let procfs copy out reads
+Date: Mon, 02 Nov 2026 16:07:24 +0100
+Subject: [PATCH RFC 10/11] samples/kfifo: let procfs copy in writes
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -54,7 +54,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-net-v1-8-982104a4f592@kernel.org>
+Message-Id: <20261102-work-procfs-net-v1-10-982104a4f592@kernel.org>
 References: <20261102-work-procfs-net-v1-0-982104a4f592@kernel.org>
 In-Reply-To: <20261102-work-procfs-net-v1-0-982104a4f592@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -90,240 +90,142 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
  Chuck Lever <cel@kernel.org>
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=8375; i=brauner@kernel.org;
- h=from:subject:message-id; bh=a9MpcCErAr+XLynuyr8Lv5es65Jw33sURzMgM9R8Toc=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9WG4i+70iJeNx8lGhqrxO33iFhgsTlQPuhnOvMPwd3
- rh//YcNHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABPxO8/I8NR7wk6vqDbZy/ku
- XlenMv+62MaQHdmwTUfhc+08KaEjxxn+lxik7rhoK8Z4eLFcQ+KD1ZsiV5WdCOGP0rh+MF5JWsW
- OEwA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3950; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=wqPh89nrehb8eXTwTved41pSSj+cx0NGgazKeJSdQJg=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9WG5SKeDGcNhJw++9Z7LY3JTfuwQ+VK2efenXodN77
+ 51lStK62FHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCRuBCG/z6xtYb3b823yGzs
+ EFIryW+ZU83Lc9Vb497sqedPcyic+MvwP/CknED65Xe3rd5zTJCoDZgg+Puey5sJtRciovqzWZV
+ mcQMA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Implement ->proc_read_buf() for the procfs channel, flush,
-use-gss-proxy and gss_krb5_enctypes files so procfs copies what is read
-to userspace after it unpinned the entry.
-
-cache_read() takes an iov_iter now. The rpc_pipefs channel file passes
-one for the user buffer and behaves like before. The procfs one passes
-one for procfs' buffer, and a read still hands out at most one request.
-A reader of the procfs channel file whose copy out fails, a readv()
-with a bad later segment included, loses what was handed out, since the
-request moves on before procfs copies it out. If that was only part of
-a request the next read returns the rest of it. Both flush files share
-flush_time_text().
-
-The procfs files are removed when the network namespace goes away and
-that no longer waits for a reader that faults on its buffer.
+Implement ->proc_write_buf() so procfs copies in what is written before
+it pins the entry, and put that copy into the fifo with kfifo_in()
+instead of kfifo_from_user(). Writes larger than PAGE_SIZE - 1 bytes
+fail with -EINVAL now. kfifo_from_user() cut a record to 255 bytes,
+what the one byte that holds its length can say, so the record sample
+keeps doing that with PROC_ENTRY_SHORT_WRITES.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- net/sunrpc/auth_gss/svcauth_gss.c | 24 ++++++-------------
- net/sunrpc/cache.c                | 50 +++++++++++++++++++++++----------------
- 2 files changed, 36 insertions(+), 38 deletions(-)
+ samples/kfifo/bytestream-example.c |  9 +++------
+ samples/kfifo/inttype-example.c    | 10 ++++------
+ samples/kfifo/record-example.c     | 12 ++++++------
+ 3 files changed, 13 insertions(+), 18 deletions(-)
 
-diff --git a/net/sunrpc/auth_gss/svcauth_gss.c b/net/sunrpc/auth_gss/svcauth_gss.c
-index 8d105cd900d4..67e086a7127c 100644
---- a/net/sunrpc/auth_gss/svcauth_gss.c
-+++ b/net/sunrpc/auth_gss/svcauth_gss.c
-@@ -1442,32 +1442,22 @@ static ssize_t write_gssp(struct file *file, char *buf, size_t count,
- 	return count;
- }
- 
--static ssize_t read_gssp(struct file *file, char __user *buf,
-+static ssize_t read_gssp(struct file *file, char *buf,
- 			 size_t count, loff_t *ppos)
- {
- 	struct net *net = pde_data(file_inode(file));
- 	struct sunrpc_net *sn = net_generic(net, sunrpc_net_id);
--	unsigned long p = *ppos;
- 	char tbuf[10];
- 	size_t len;
- 
--	snprintf(tbuf, sizeof(tbuf), "%d\n", sn->use_gss_proxy);
--	len = strlen(tbuf);
--	if (p >= len)
--		return 0;
--	len -= p;
--	if (len > count)
--		len = count;
--	if (copy_to_user(buf, (void *)(tbuf+p), len))
--		return -EFAULT;
--	*ppos += len;
--	return len;
-+	len = snprintf(tbuf, sizeof(tbuf), "%d\n", sn->use_gss_proxy);
-+	return memory_read_from_buffer(buf, count, ppos, tbuf, len);
- }
- 
- static const struct proc_ops use_gss_proxy_proc_ops = {
- 	.proc_open	= nonseekable_open,
- 	.proc_write_buf	= write_gssp,
--	.proc_read	= read_gssp,
-+	.proc_read_buf	= read_gssp,
- };
- 
- static int create_use_gss_proxy_proc_entry(struct net *net)
-@@ -1494,7 +1484,7 @@ static void destroy_use_gss_proxy_proc_entry(struct net *net)
- 	}
- }
- 
--static ssize_t read_gss_krb5_enctypes(struct file *file, char __user *buf,
-+static ssize_t read_gss_krb5_enctypes(struct file *file, char *buf,
- 				      size_t count, loff_t *ppos)
- {
- 	struct rpcsec_gss_oid oid = {
-@@ -1512,7 +1502,7 @@ static ssize_t read_gss_krb5_enctypes(struct file *file, char __user *buf,
- 		return 0;
- 	}
- 
--	ret = simple_read_from_buffer(buf, count, ppos,
-+	ret = memory_read_from_buffer(buf, count, ppos,
- 				      mech->gm_upcall_enctypes,
- 				      strlen(mech->gm_upcall_enctypes));
- 	gss_mech_put(mech);
-@@ -1521,7 +1511,7 @@ static ssize_t read_gss_krb5_enctypes(struct file *file, char __user *buf,
- 
- static const struct proc_ops gss_krb5_enctypes_proc_ops = {
- 	.proc_open	= nonseekable_open,
--	.proc_read	= read_gss_krb5_enctypes,
-+	.proc_read_buf	= read_gss_krb5_enctypes,
- };
- 
- static int create_krb5_enctypes_proc_entry(struct net *net)
-diff --git a/net/sunrpc/cache.c b/net/sunrpc/cache.c
-index a257598768fa..81a3f0068f36 100644
---- a/net/sunrpc/cache.c
-+++ b/net/sunrpc/cache.c
-@@ -28,6 +28,7 @@
- #include <linux/workqueue.h>
- #include <linux/mutex.h>
- #include <linux/pagemap.h>
-+#include <linux/uio.h>
- #include <asm/ioctls.h>
- #include <linux/sunrpc/types.h>
- #include <linux/sunrpc/cache.h>
-@@ -837,9 +838,10 @@ cache_next_request(struct cache_detail *cd, u64 seqno)
- 	return NULL;
- }
- 
--static ssize_t cache_read(struct file *filp, char __user *buf, size_t count,
--			  loff_t *ppos, struct cache_detail *cd)
-+static ssize_t cache_read(struct file *filp, struct iov_iter *to,
-+			  struct cache_detail *cd)
- {
-+	size_t count = iov_iter_count(to);
- 	struct cache_reader *rp = filp->private_data;
- 	struct cache_request *rq;
- 	struct inode *inode = file_inode(filp);
-@@ -878,7 +880,7 @@ static ssize_t cache_read(struct file *filp, char __user *buf, size_t count,
- 		if (rp->offset + count > rq->len)
- 			count = rq->len - rp->offset;
- 		err = -EFAULT;
--		if (copy_to_user(buf, rq->buf + rp->offset, count))
-+		if (copy_to_iter(rq->buf + rp->offset, count, to) != count)
- 			goto out;
- 		rp->offset += count;
- 		if (rp->offset >= rq->len) {
-@@ -1499,16 +1501,11 @@ static int release_flush(struct inode *inode, struct file *file,
+diff --git a/samples/kfifo/bytestream-example.c b/samples/kfifo/bytestream-example.c
+index 4ae29a12cc8a..8c58fb46a2bf 100644
+--- a/samples/kfifo/bytestream-example.c
++++ b/samples/kfifo/bytestream-example.c
+@@ -110,20 +110,17 @@ static int __init testfunc(void)
  	return 0;
  }
  
--static ssize_t read_flush(struct file *file, char __user *buf,
--			  size_t count, loff_t *ppos,
--			  struct cache_detail *cd)
-+/* what reading the flush files returns */
-+static size_t flush_time_text(struct cache_detail *cd, char *tbuf, size_t size)
+-static ssize_t fifo_write(struct file *file, const char __user *buf,
++static ssize_t fifo_write(struct file *file, char *buf,
+ 						size_t count, loff_t *ppos)
  {
--	char tbuf[22];
--	size_t len;
--
--	len = snprintf(tbuf, sizeof(tbuf), "%llu\n",
-+	return snprintf(tbuf, size, "%llu\n",
- 			convert_to_wallclock(cd->flush_time));
--	return simple_read_from_buffer(buf, count, ppos, tbuf, len);
+-	int ret;
+ 	unsigned int copied;
+ 
+ 	if (mutex_lock_interruptible(&write_access))
+ 		return -ERESTARTSYS;
+ 
+-	ret = kfifo_from_user(&test, buf, count, &copied);
++	copied = kfifo_in(&test, buf, count);
+ 
+ 	mutex_unlock(&write_access);
+-	if (ret)
+-		return ret;
+ 
+ 	return copied;
+ }
+@@ -148,7 +145,7 @@ static ssize_t fifo_read(struct file *file, char __user *buf,
+ 
+ static const struct proc_ops fifo_proc_ops = {
+ 	.proc_read	= fifo_read,
+-	.proc_write	= fifo_write,
++	.proc_write_buf	= fifo_write,
+ 	.proc_lseek	= noop_llseek,
+ };
+ 
+diff --git a/samples/kfifo/inttype-example.c b/samples/kfifo/inttype-example.c
+index e4f93317c5d0..c5d16b815e73 100644
+--- a/samples/kfifo/inttype-example.c
++++ b/samples/kfifo/inttype-example.c
+@@ -103,20 +103,18 @@ static int __init testfunc(void)
+ 	return 0;
  }
  
- /* longest number the flush files take */
-@@ -1564,12 +1561,15 @@ static ssize_t write_flush(struct file *file, const char __user *buf,
- 	return do_write_flush(tbuf, count, ppos, cd);
- }
- 
--static ssize_t cache_read_procfs(struct file *filp, char __user *buf,
--				 size_t count, loff_t *ppos)
-+static ssize_t cache_read_procfs(struct file *filp, char *buf, size_t count,
-+				 loff_t *ppos)
+-static ssize_t fifo_write(struct file *file, const char __user *buf,
++static ssize_t fifo_write(struct file *file, char *buf,
+ 						size_t count, loff_t *ppos)
  {
- 	struct cache_detail *cd = pde_data(file_inode(filp));
-+	struct kvec kvec = { .iov_base = buf, .iov_len = count };
-+	struct iov_iter to;
+-	int ret;
+ 	unsigned int copied;
  
--	return cache_read(filp, buf, count, ppos, cd);
-+	iov_iter_kvec(&to, ITER_DEST, &kvec, 1, count);
-+	return cache_read(filp, &to, cd);
+ 	if (mutex_lock_interruptible(&write_access))
+ 		return -ERESTARTSYS;
+ 
+-	ret = kfifo_from_user(&test, buf, count, &copied);
++	copied = kfifo_in(&test, (const int *)buf, count / sizeof(int)) *
++		 sizeof(int);
+ 
+ 	mutex_unlock(&write_access);
+-	if (ret)
+-		return ret;
+ 
+ 	return copied;
+ }
+@@ -141,7 +139,7 @@ static ssize_t fifo_read(struct file *file, char __user *buf,
+ 
+ static const struct proc_ops fifo_proc_ops = {
+ 	.proc_read	= fifo_read,
+-	.proc_write	= fifo_write,
++	.proc_write_buf	= fifo_write,
+ 	.proc_lseek	= noop_llseek,
+ };
+ 
+diff --git a/samples/kfifo/record-example.c b/samples/kfifo/record-example.c
+index e4d1a2d7983c..dcc749247c64 100644
+--- a/samples/kfifo/record-example.c
++++ b/samples/kfifo/record-example.c
+@@ -117,20 +117,17 @@ static int __init testfunc(void)
+ 	return 0;
  }
  
- /* procfs copied in what was written */
-@@ -1620,7 +1620,7 @@ static int cache_release_procfs(struct inode *inode, struct file *filp)
- }
- 
- static const struct proc_ops cache_channel_proc_ops = {
--	.proc_read	= cache_read_procfs,
-+	.proc_read_buf	= cache_read_procfs,
- 	.proc_write_buf	= cache_write_procfs,
- 	.proc_write_size = CACHE_DOWNCALL_MAX,
- 	.proc_poll	= cache_poll_procfs,
-@@ -1668,12 +1668,15 @@ static int release_flush_procfs(struct inode *inode, struct file *filp)
- 	return release_flush(inode, filp, cd);
- }
- 
--static ssize_t read_flush_procfs(struct file *filp, char __user *buf,
--			    size_t count, loff_t *ppos)
-+static ssize_t read_flush_procfs(struct file *filp, char *buf, size_t count,
-+				 loff_t *ppos)
+-static ssize_t fifo_write(struct file *file, const char __user *buf,
++static ssize_t fifo_write(struct file *file, char *buf,
+ 						size_t count, loff_t *ppos)
  {
- 	struct cache_detail *cd = pde_data(file_inode(filp));
-+	char tbuf[22];
-+	size_t len;
+-	int ret;
+ 	unsigned int copied;
  
--	return read_flush(filp, buf, count, ppos, cd);
-+	len = flush_time_text(cd, tbuf, sizeof(tbuf));
-+	return memory_read_from_buffer(buf, count, ppos, tbuf, len);
+ 	if (mutex_lock_interruptible(&write_access))
+ 		return -ERESTARTSYS;
+ 
+-	ret = kfifo_from_user(&test, buf, count, &copied);
++	copied = kfifo_in(&test, buf, count);
+ 
+ 	mutex_unlock(&write_access);
+-	if (ret)
+-		return ret;
+ 
+ 	return copied;
  }
+@@ -155,8 +152,11 @@ static ssize_t fifo_read(struct file *file, char __user *buf,
  
- static ssize_t write_flush_procfs(struct file *filp, char *buf, size_t count,
-@@ -1688,7 +1691,7 @@ static ssize_t write_flush_procfs(struct file *filp, char *buf, size_t count,
+ static const struct proc_ops fifo_proc_ops = {
+ 	.proc_read	= fifo_read,
+-	.proc_write	= fifo_write,
++	.proc_write_buf	= fifo_write,
+ 	.proc_lseek	= noop_llseek,
++	/* kfifo_from_user() cut a record to what its length byte holds */
++	.proc_flags	= PROC_ENTRY_SHORT_WRITES,
++	.proc_write_size = U8_MAX,
+ };
  
- static const struct proc_ops cache_flush_proc_ops = {
- 	.proc_open	= open_flush_procfs,
--	.proc_read	= read_flush_procfs,
-+	.proc_read_buf	= read_flush_procfs,
- 	.proc_write_buf	= write_flush_procfs,
- 	.proc_write_size = CACHE_FLUSH_MAX,
- 	.proc_release	= release_flush_procfs,
-@@ -1795,8 +1798,10 @@ static ssize_t cache_read_pipefs(struct file *filp, char __user *buf,
- 				 size_t count, loff_t *ppos)
- {
- 	struct cache_detail *cd = RPC_I(file_inode(filp))->private;
-+	struct iov_iter to;
- 
--	return cache_read(filp, buf, count, ppos, cd);
-+	iov_iter_ubuf(&to, ITER_DEST, buf, count);
-+	return cache_read(filp, &to, cd);
- }
- 
- static ssize_t cache_write_pipefs(struct file *filp, const char __user *buf,
-@@ -1886,8 +1891,11 @@ static ssize_t read_flush_pipefs(struct file *filp, char __user *buf,
- 			    size_t count, loff_t *ppos)
- {
- 	struct cache_detail *cd = RPC_I(file_inode(filp))->private;
-+	char tbuf[22];
-+	size_t len;
- 
--	return read_flush(filp, buf, count, ppos, cd);
-+	len = flush_time_text(cd, tbuf, sizeof(tbuf));
-+	return simple_read_from_buffer(buf, count, ppos, tbuf, len);
- }
- 
- static ssize_t write_flush_pipefs(struct file *filp,
+ static int __init example_init(void)
 
 -- 
 2.53.0
