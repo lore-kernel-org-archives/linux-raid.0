@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793631796;
-	b=MgqD5AXN7x/YhfAqJj7wWqN6abH3N3+RfN3INIGp5jmrXO7YHo0BJiWSjTWFd9mdXOQ4
-	 hrlKYwnSRYIVIf35a1ZYVDRAU6+AdaSliD+v4eVHcxOqlVAr+moPRKX4t+59zQHVfqmj+
-	 Oml34uG8rDnvAEzo6ufVvzSZhqaAVwhHEcFqBGQB52W9Zx+WVqNTOaQMbGeTzqkg3qg4V
-	 GJuL/iKjdbn6ztc/qd8r3xe3FEnFwRnz7OpUBd8UDqYgsMcrnbq9tMxV/sbFOKShrlSEx
-	 nDJTOuXJAPP9t2EUZqOBeiAVAOnr/GHCIvHi5sh/+i5t/8UA66ZY0GofEZBDu2fa0XA==
+	t=1793631828;
+	b=ag+1HigokzRXVh4RS3Roo3Cn/rO9yVfO+4diodaqQVhmYvkXeipYR3t/ZuaYXriyiBvQ
+	 xGSEIVQQXjhwtEohZ5STEQRWYbki+sPheadeVkNS7AM5TvcoJg6Y1IwWKbkDlHRO1w9yS
+	 eiOjJEauO3uioAZxAgF5VFc9rxXlVeWi9Cq8gujn+d4s+K3AUrNGMIYB2gKsA/xWX2CcI
+	 myNX02wSkvQDSTtjTw3iaP0o6iInMyq4GLkdMnHxPUDHu6craA0SMynqZz99zGy6fse3q
+	 Xpbm1cvblX00IpOR6XlMs2f2QOfCmpzycC9y+2l1jDGMWyG4LB19lv81jifAEloZ+8Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793631796;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793631828;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer;
-	bh=SeSqWCgckwihcSErYyiMc6rZ3Zm4y3kjZ5EEGxJWIgU=;
-	b=3W7SwAoEWVXgSbT5v/jZe3iHsCpHfUeV25O9W93Sn3NrISAwhNs2DPkSsUq9j9q7zSXM
-	 fQ08hUQeESHf+ljqqOUTw7Mj+XzR77OsOjOgOmBKUNQmwKjwK4dlsAOWgtmxSwQpG5yTM
-	 bKa/u8h/lfRrDRi2Ts1zImd2M9o/qM/HjnFEog0gzZHgGFcv5kEFVT8gGCCcuVgL0sZaR
-	 dCgwHDWVMp2U97dFEcfU3WJlsuFyXm70vdMtPujJoyp0hjmPUuBBiiw9TzHwKuBjF8Zny
-	 Wo3bpcdYR6geTUSASY68Ft/isJdfZhOdLf76sz8IgyD0EqWq9QklowsX5gVVKhBGPkQ==
+	bh=glw1dCbJy4In8cXqUP53v95R3+j+o1Gb2tGtrZFmQOQ=;
+	b=LuwbTzaqhZV3udQrI8ItOLemZNN9O9ZcExprz64BC1WjtoeTZFyso76CrwBSmzISvk7G
+	 WnaAE92tD/GbGQ7fkxWFv1c/TEiYB1NItxyaort7JN+jXqyUMJd0kGMj7WdRsFaFoXSWz
+	 fMKQc9gMg31gQec12ua6ArAP57HUt0oQgJFebrHRSUowtioYhurrMt6FgyNA0KEqjpc2Z
+	 OOYKBJMUNOkLCPmfV5LwHYhfg3J7GF0SdFJDNTr5o9xDB6ZT9sRSr/k2fIr2RmIRpyoBX
+	 Qf3epmdggf9r7g6bBnCXe64s4v0AYshvbhYNj+T3mqAzR0pCNXnyo0eTQAaTqPDcXoQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CwNawf2u;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gH1uQceN;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A670608260F;
-	Mon,  2 Nov 2026 15:03:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 144B6609B583;
+	Mon,  2 Nov 2026 15:03:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CwNawf2u
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36FF31F00A18;
-	Mon,  2 Nov 2026 15:03:03 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gH1uQceN
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DB191F00A1A;
+	Mon,  2 Nov 2026 15:03:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793631795;
-	bh=SeSqWCgckwihcSErYyiMc6rZ3Zm4y3kjZ5EEGxJWIgU=;
+	s=k20260515; t=1793631827;
+	bh=glw1dCbJy4In8cXqUP53v95R3+j+o1Gb2tGtrZFmQOQ=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=CwNawf2uPczi8WJdPDNkHtSgDWIXAV10IshSH1eNh6O8W9BXkP2tEug+AdMt8nQZt
-	 380ZRltiSIxBcIZcWlnOLRJnpli4yznDcDX6tik4WmffnOqr144BmVKoQ7jmh10aLj
-	 xAc2Dh2kX4fj22+WC0AtCadmf5R8CNYLd8M/NFA0Xp8X5pkJQ1Mlk2iZ2DYC/2jliR
-	 ZPNHRMopA8L7QRp/6ITH6UKGjj9v8wUwbbdXfJb7+fQn27NXB1Qu0m5O94rsMJNxrl
-	 EJ7Px46au8wXJiUx591MNpF14s7TpJCkk+efIh02U2sqPl6KlYAL+Hv4MojyEgnZce
-	 +OkwRpXnT/WGA==
+	b=gH1uQceNT0pe04RugL3tkndtCg/BNWtt8gjyfjkjxpxrv4DD5Kj/ry0K4iVOfTu0T
+	 XyqCfm2AIZe63dMJyEouauqLimhfpL7Ahx9TJUWfLtSMlGm6wbGGbzqxmjJDCoGvoi
+	 8bXwyOHcBtFikAWlZHrtqTOUm7T60Rc1rGMBhy6wte8Tc2C2WHnRkyW6FZfLwJcAlt
+	 QIxSWGPq1Pt9aUCZFw5Fr8TfPzVXromMNqTo4BfW3zJS3GdVdZxJ1jiE4RlzKmMIbu
+	 NMgDHlNBEuimzLNekTMW7U7s+08uLY2Cp7ql1hPbJQuDeycC8awPE3b+o47F+6OePW
+	 BX1NU0ZbhTSrg==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 16:01:32 +0100
-Subject: [PATCH RFC 05/22] powerpc/rtas: let procfs copy in writes
+Date: Mon, 02 Nov 2026 16:01:34 +0100
+Subject: [PATCH RFC 07/22] powerpc/pseries: let procfs copy in writes
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -54,7 +54,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-arch-v1-5-c9492ab08480@kernel.org>
+Message-Id: <20261102-work-procfs-arch-v1-7-c9492ab08480@kernel.org>
 References: <20261102-work-procfs-arch-v1-0-c9492ab08480@kernel.org>
 In-Reply-To: <20261102-work-procfs-arch-v1-0-c9492ab08480@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -91,278 +91,168 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  Chuck Lever <cel@kernel.org>
 X-Mailer: b4 0.17-dev
 
-Implement ->proc_write_buf() for the files in /proc/powerpc/rtas and
-/proc/ppc64/rtas so procfs copies in what is written before it pins the
-entry, and parse what was written from that copy.
-
-firmware_flash, firmware_update and validate_flash take an image in 4k
-pieces and relied on writes coming up short. They keep doing that with
-PROC_ENTRY_SHORT_WRITES. Writes to the other files that are larger than
-PAGE_SIZE - 1 bytes fail with -EINVAL now.
-
-validate_flash only keeps the first 4k of the image and used to swallow
-whatever was written beyond that in one go. It takes at most 4k per
-write now, like for the part it keeps, so a writer has to loop there
-like it has to for the image itself.
+Implement ->proc_write_buf() for lparcfg, ofdt and the vcpudispatch
+files so procfs copies in what is written before it pins the entry, and
+parse what was written from that copy. ofdt takes as much as
+memdup_user_nul() could copy before since device tree updates can be
+large.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- arch/powerpc/kernel/rtas-proc.c  | 40 ++++++++++++++++++----------------------
- arch/powerpc/kernel/rtas_flash.c | 38 +++++++++++++++++---------------------
- 2 files changed, 35 insertions(+), 43 deletions(-)
+ arch/powerpc/platforms/pseries/lpar.c     | 14 ++++++--------
+ arch/powerpc/platforms/pseries/lparcfg.c  |  7 +++----
+ arch/powerpc/platforms/pseries/reconfig.c | 22 ++++++++--------------
+ 3 files changed, 17 insertions(+), 26 deletions(-)
 
-diff --git a/arch/powerpc/kernel/rtas-proc.c b/arch/powerpc/kernel/rtas-proc.c
-index ebf416840b3c..9598866f11cb 100644
---- a/arch/powerpc/kernel/rtas-proc.c
-+++ b/arch/powerpc/kernel/rtas-proc.c
-@@ -138,45 +138,45 @@ static unsigned long rtas_tone_volume = 0;
- static int ppc_rtas_sensors_show(struct seq_file *m, void *v);
- static int ppc_rtas_clock_show(struct seq_file *m, void *v);
- static ssize_t ppc_rtas_clock_write(struct file *file,
--		const char __user *buf, size_t count, loff_t *ppos);
-+		char *buf, size_t count, loff_t *ppos);
- static int ppc_rtas_progress_show(struct seq_file *m, void *v);
- static ssize_t ppc_rtas_progress_write(struct file *file,
--		const char __user *buf, size_t count, loff_t *ppos);
-+		char *buf, size_t count, loff_t *ppos);
- static int ppc_rtas_poweron_show(struct seq_file *m, void *v);
- static ssize_t ppc_rtas_poweron_write(struct file *file,
--		const char __user *buf, size_t count, loff_t *ppos);
-+		char *buf, size_t count, loff_t *ppos);
+diff --git a/arch/powerpc/platforms/pseries/lpar.c b/arch/powerpc/platforms/pseries/lpar.c
+index 48fe0be71a89..dfd027cc9047 100644
+--- a/arch/powerpc/platforms/pseries/lpar.c
++++ b/arch/powerpc/platforms/pseries/lpar.c
+@@ -498,7 +498,7 @@ static void dtl_worker_disable(unsigned long *time_limit)
+ 	up_write(&dtl_access_lock);
+ }
  
- static ssize_t ppc_rtas_tone_freq_write(struct file *file,
--		const char __user *buf, size_t count, loff_t *ppos);
-+		char *buf, size_t count, loff_t *ppos);
- static int ppc_rtas_tone_freq_show(struct seq_file *m, void *v);
- static ssize_t ppc_rtas_tone_volume_write(struct file *file,
--		const char __user *buf, size_t count, loff_t *ppos);
-+		char *buf, size_t count, loff_t *ppos);
- static int ppc_rtas_tone_volume_show(struct seq_file *m, void *v);
- static int ppc_rtas_rmo_buf_show(struct seq_file *m, void *v);
- 
- static const struct proc_ops ppc_rtas_poweron_proc_ops = {
- 	.proc_show	= ppc_rtas_poweron_show,
--	.proc_write	= ppc_rtas_poweron_write,
-+	.proc_write_buf	= ppc_rtas_poweron_write,
- };
- 
- static const struct proc_ops ppc_rtas_progress_proc_ops = {
- 	.proc_show	= ppc_rtas_progress_show,
--	.proc_write	= ppc_rtas_progress_write,
-+	.proc_write_buf	= ppc_rtas_progress_write,
- };
- 
- static const struct proc_ops ppc_rtas_clock_proc_ops = {
- 	.proc_show	= ppc_rtas_clock_show,
--	.proc_write	= ppc_rtas_clock_write,
-+	.proc_write_buf	= ppc_rtas_clock_write,
- };
- 
- static const struct proc_ops ppc_rtas_tone_freq_proc_ops = {
- 	.proc_show	= ppc_rtas_tone_freq_show,
--	.proc_write	= ppc_rtas_tone_freq_write,
-+	.proc_write_buf	= ppc_rtas_tone_freq_write,
- };
- 
- static const struct proc_ops ppc_rtas_tone_volume_proc_ops = {
- 	.proc_show	= ppc_rtas_tone_volume_show,
--	.proc_write	= ppc_rtas_tone_volume_write,
-+	.proc_write_buf	= ppc_rtas_tone_volume_write,
- };
- 
- static int ppc_rtas_find_all_sensors(void);
-@@ -216,16 +216,14 @@ static int __init proc_rtas_init(void)
- 
- __initcall(proc_rtas_init);
- 
--static int parse_number(const char __user *p, size_t count, u64 *val)
-+static int parse_number(const char *p, size_t count, u64 *val)
+-static ssize_t vcpudispatch_stats_write(struct file *file, const char __user *p,
++static ssize_t vcpudispatch_stats_write(struct file *file, char *p,
+ 		size_t count, loff_t *ppos)
  {
- 	char buf[40];
- 
- 	if (count > 39)
+ 	unsigned long time_limit = jiffies + HZ;
+@@ -509,8 +509,7 @@ static ssize_t vcpudispatch_stats_write(struct file *file, const char __user *p,
+ 	if (count > 15)
  		return -EINVAL;
  
 -	if (copy_from_user(buf, p, count))
 -		return -EFAULT;
--
 +	memcpy(buf, p, count);
+ 
  	buf[count] = 0;
+ 	rc = kstrtoint(buf, 0, &cmd);
+@@ -586,11 +585,11 @@ static int vcpudispatch_stats_display(struct seq_file *p, void *v)
  
- 	return kstrtoull(buf, 10, val);
-@@ -235,7 +233,7 @@ static int parse_number(const char __user *p, size_t count, u64 *val)
- /* POWER-ON-TIME                                                      */
- /* ****************************************************************** */
- static ssize_t ppc_rtas_poweron_write(struct file *file,
--		const char __user *buf, size_t count, loff_t *ppos)
-+		char *buf, size_t count, loff_t *ppos)
- {
- 	struct rtc_time tm;
- 	time64_t nowtime;
-@@ -269,15 +267,13 @@ static int ppc_rtas_poweron_show(struct seq_file *m, void *v)
- /* PROGRESS                                                           */
- /* ****************************************************************** */
- static ssize_t ppc_rtas_progress_write(struct file *file,
--		const char __user *buf, size_t count, loff_t *ppos)
-+		char *buf, size_t count, loff_t *ppos)
- {
- 	unsigned long hex;
- 
- 	if (count >= MAX_LINELENGTH)
- 		count = MAX_LINELENGTH -1;
--	if (copy_from_user(progress_led, buf, count)) { /* save the string */
--		return -EFAULT;
--	}
-+	memcpy(progress_led, buf, count); /* save the string */
- 	progress_led[count] = 0;
- 
- 	/* Lets see if the user passed hexdigits */
-@@ -301,7 +297,7 @@ static int ppc_rtas_progress_show(struct seq_file *m, void *v)
- /* CLOCK                                                              */
- /* ****************************************************************** */
- static ssize_t ppc_rtas_clock_write(struct file *file,
--		const char __user *buf, size_t count, loff_t *ppos)
-+		char *buf, size_t count, loff_t *ppos)
- {
- 	struct rtc_time tm;
- 	time64_t nowtime;
-@@ -660,7 +656,7 @@ static void get_location_code(struct seq_file *m, struct individual_sensor *s,
- /* INDICATORS - Tone Frequency                                        */
- /* ****************************************************************** */
- static ssize_t ppc_rtas_tone_freq_write(struct file *file,
--		const char __user *buf, size_t count, loff_t *ppos)
-+		char *buf, size_t count, loff_t *ppos)
- {
- 	u64 freq;
- 	int error = parse_number(buf, count, &freq);
-@@ -685,7 +681,7 @@ static int ppc_rtas_tone_freq_show(struct seq_file *m, void *v)
- /* INDICATORS - Tone Volume                                           */
- /* ****************************************************************** */
- static ssize_t ppc_rtas_tone_volume_write(struct file *file,
--		const char __user *buf, size_t count, loff_t *ppos)
-+		char *buf, size_t count, loff_t *ppos)
- {
- 	u64 volume;
- 	int error = parse_number(buf, count, &volume);
-diff --git a/arch/powerpc/kernel/rtas_flash.c b/arch/powerpc/kernel/rtas_flash.c
-index f1cd105f7426..77a4627f2507 100644
---- a/arch/powerpc/kernel/rtas_flash.c
-+++ b/arch/powerpc/kernel/rtas_flash.c
-@@ -307,7 +307,7 @@ static ssize_t rtas_flash_read_num(struct file *file, char __user *buf,
-  * count is.  If the system is low on memory it will be just as well
-  * that we fail....
-  */
--static ssize_t rtas_flash_write(struct file *file, const char __user *buffer,
-+static ssize_t rtas_flash_write(struct file *file, char *buffer,
- 				size_t count, loff_t *off)
- {
- 	struct rtas_update_flash_t *const uf = &rtas_update_flash_data;
-@@ -343,16 +343,11 @@ static ssize_t rtas_flash_write(struct file *file, const char __user *buffer,
- 		next_free = 0;
- 	}
- 
--	if (count > RTAS_BLK_SIZE)
--		count = RTAS_BLK_SIZE;
- 	p = kmem_cache_zalloc(flash_block_cache, GFP_KERNEL);
- 	if (!p)
- 		return -ENOMEM;
- 	
--	if(copy_from_user(p, buffer, count)) {
--		kmem_cache_free(flash_block_cache, p);
--		return -EFAULT;
--	}
-+	memcpy(p, buffer, count);
- 	fl->blocks[next_free].data = p;
- 	fl->blocks[next_free].length = count;
- 	fl->num_blocks++;
-@@ -390,7 +385,7 @@ static ssize_t manage_flash_read(struct file *file, char __user *buf,
- 	return simple_read_from_buffer(buf, count, ppos, msg, msglen);
- }
- 
--static ssize_t manage_flash_write(struct file *file, const char __user *buf,
-+static ssize_t manage_flash_write(struct file *file, char *buf,
- 				size_t count, loff_t *off)
- {
- 	struct rtas_manage_flash_t *const args_buf = &rtas_manage_flash_data;
-@@ -401,9 +396,8 @@ static ssize_t manage_flash_write(struct file *file, const char __user *buf,
- 
- 	if ((args_buf->status == MANAGE_AUTH) || (count == 0))
- 		return count;
--		
--	if (get_user(cmd, buf))
--		return -EFAULT;
-+
-+	cmd = buf[0];
- 
- 	if (cmd == '0')
- 		op = RTAS_REJECT_TMP_IMG;
-@@ -471,7 +465,7 @@ static ssize_t validate_flash_read(struct file *file, char __user *buf,
- 	return simple_read_from_buffer(buf, count, ppos, msg, msglen);
- }
- 
--static ssize_t validate_flash_write(struct file *file, const char __user *buf,
-+static ssize_t validate_flash_write(struct file *file, char *buf,
- 				    size_t count, loff_t *off)
- {
- 	struct rtas_validate_flash_t *const args_buf =
-@@ -494,11 +488,7 @@ static ssize_t validate_flash_write(struct file *file, const char __user *buf,
- 		args_buf->status = VALIDATE_INCOMPLETE;
- 	}
- 
--	if (!access_ok(buf, count))
--		return -EFAULT;
--
--	if (copy_from_user(args_buf->buf + *off, buf, count))
--		return -EFAULT;
-+	memcpy(args_buf->buf + *off, buf, count);
- 
- 	*off += count;
- 	return count;
-@@ -632,8 +622,10 @@ static const struct rtas_flash_file rtas_flash_files[] = {
- 		.filename	= "powerpc/rtas/" FIRMWARE_FLASH_NAME,
- 		.handle		= RTAS_FN_IBM_UPDATE_FLASH_64_AND_REBOOT,
- 		.status		= &rtas_update_flash_data.status,
-+		.ops.proc_flags	= PROC_ENTRY_SHORT_WRITES,
- 		.ops.proc_read	= rtas_flash_read_msg,
--		.ops.proc_write	= rtas_flash_write,
-+		.ops.proc_write_buf = rtas_flash_write,
-+		.ops.proc_write_size = RTAS_BLK_SIZE,
- 		.ops.proc_release = rtas_flash_release,
- 		.ops.proc_lseek	= default_llseek,
- 	},
-@@ -641,8 +633,10 @@ static const struct rtas_flash_file rtas_flash_files[] = {
- 		.filename	= "powerpc/rtas/" FIRMWARE_UPDATE_NAME,
- 		.handle		= RTAS_FN_IBM_UPDATE_FLASH_64_AND_REBOOT,
- 		.status		= &rtas_update_flash_data.status,
-+		.ops.proc_flags	= PROC_ENTRY_SHORT_WRITES,
- 		.ops.proc_read	= rtas_flash_read_num,
--		.ops.proc_write	= rtas_flash_write,
-+		.ops.proc_write_buf = rtas_flash_write,
-+		.ops.proc_write_size = RTAS_BLK_SIZE,
- 		.ops.proc_release = rtas_flash_release,
- 		.ops.proc_lseek	= default_llseek,
- 	},
-@@ -650,8 +644,10 @@ static const struct rtas_flash_file rtas_flash_files[] = {
- 		.filename	= "powerpc/rtas/" VALIDATE_FLASH_NAME,
- 		.handle		= RTAS_FN_IBM_VALIDATE_FLASH_IMAGE,
- 		.status		= &rtas_validate_flash_data.status,
-+		.ops.proc_flags	= PROC_ENTRY_SHORT_WRITES,
- 		.ops.proc_read	= validate_flash_read,
--		.ops.proc_write	= validate_flash_write,
-+		.ops.proc_write_buf = validate_flash_write,
-+		.ops.proc_write_size = VALIDATE_BUF_SIZE,
- 		.ops.proc_release = validate_flash_release,
- 		.ops.proc_lseek	= default_llseek,
- 	},
-@@ -660,7 +656,7 @@ static const struct rtas_flash_file rtas_flash_files[] = {
- 		.handle		= RTAS_FN_IBM_MANAGE_FLASH_IMAGE,
- 		.status		= &rtas_manage_flash_data.status,
- 		.ops.proc_read	= manage_flash_read,
--		.ops.proc_write	= manage_flash_write,
-+		.ops.proc_write_buf = manage_flash_write,
- 		.ops.proc_lseek	= default_llseek,
- 	}
+ static const struct proc_ops vcpudispatch_stats_proc_ops = {
+ 	.proc_show	= vcpudispatch_stats_display,
+-	.proc_write	= vcpudispatch_stats_write,
++	.proc_write_buf	= vcpudispatch_stats_write,
  };
+ 
+ static ssize_t vcpudispatch_stats_freq_write(struct file *file,
+-		const char __user *p, size_t count, loff_t *ppos)
++		char *p, size_t count, loff_t *ppos)
+ {
+ 	int rc, freq;
+ 	char buf[16];
+@@ -598,8 +597,7 @@ static ssize_t vcpudispatch_stats_freq_write(struct file *file,
+ 	if (count > 15)
+ 		return -EINVAL;
+ 
+-	if (copy_from_user(buf, p, count))
+-		return -EFAULT;
++	memcpy(buf, p, count);
+ 
+ 	buf[count] = 0;
+ 	rc = kstrtoint(buf, 0, &freq);
+@@ -622,7 +620,7 @@ static int vcpudispatch_stats_freq_display(struct seq_file *p, void *v)
+ 
+ static const struct proc_ops vcpudispatch_stats_freq_proc_ops = {
+ 	.proc_show	= vcpudispatch_stats_freq_display,
+-	.proc_write	= vcpudispatch_stats_freq_write,
++	.proc_write_buf	= vcpudispatch_stats_freq_write,
+ };
+ 
+ static int __init vcpudispatch_stats_procfs_init(void)
+diff --git a/arch/powerpc/platforms/pseries/lparcfg.c b/arch/powerpc/platforms/pseries/lparcfg.c
+index a6a137ce44ce..43af7f820fab 100644
+--- a/arch/powerpc/platforms/pseries/lparcfg.c
++++ b/arch/powerpc/platforms/pseries/lparcfg.c
+@@ -687,7 +687,7 @@ static ssize_t update_mpp(u64 *entitlement, u8 *weight)
+  * This function should be invoked only on systems with
+  * FW_FEATURE_SPLPAR.
+  */
+-static ssize_t lparcfg_write(struct file *file, const char __user * buf,
++static ssize_t lparcfg_write(struct file *file, char *buf,
+ 			     size_t count, loff_t * off)
+ {
+ 	char kbuf[64];
+@@ -702,8 +702,7 @@ static ssize_t lparcfg_write(struct file *file, const char __user * buf,
+ 	if (count == 0 || count > sizeof(kbuf))
+ 		return -EINVAL;
+ 
+-	if (copy_from_user(kbuf, buf, count))
+-		return -EFAULT;
++	memcpy(kbuf, buf, count);
+ 
+ 	kbuf[count - 1] = '\0';
+ 	tmp = strchr(kbuf, '=');
+@@ -799,7 +798,7 @@ static int lparcfg_data(struct seq_file *m, void *v)
+ }
+ 
+ static const struct proc_ops lparcfg_proc_ops = {
+-	.proc_write	= lparcfg_write,
++	.proc_write_buf	= lparcfg_write,
+ 	.proc_show	= lparcfg_data,
+ };
+ 
+diff --git a/arch/powerpc/platforms/pseries/reconfig.c b/arch/powerpc/platforms/pseries/reconfig.c
+index b41c5db726c9..f406e826a03e 100644
+--- a/arch/powerpc/platforms/pseries/reconfig.c
++++ b/arch/powerpc/platforms/pseries/reconfig.c
+@@ -349,7 +349,7 @@ static int do_update_property(char *buf, size_t bufsize)
+  * ofdt_write - perform operations on the Open Firmware device tree
+  *
+  * @file: not used
+- * @buf: command and arguments
++ * @kbuf: command and arguments
+  * @count: size of the command buffer
+  * @off: not used
+  *
+@@ -357,26 +357,19 @@ static int do_update_property(char *buf, size_t bufsize)
+  * whole nodes along with their properties.  Operations on individual
+  * properties are not implemented (yet).
+  */
+-static ssize_t ofdt_write(struct file *file, const char __user *buf, size_t count,
++static ssize_t ofdt_write(struct file *file, char *kbuf, size_t count,
+ 			  loff_t *off)
+ {
+ 	int rv;
+-	char *kbuf;
+ 	char *tmp;
+ 
+ 	rv = security_locked_down(LOCKDOWN_DEVICE_TREE);
+ 	if (rv)
+ 		return rv;
+ 
+-	kbuf = memdup_user_nul(buf, count);
+-	if (IS_ERR(kbuf))
+-		return PTR_ERR(kbuf);
+-
+ 	tmp = strchr(kbuf, ' ');
+-	if (!tmp) {
+-		rv = -EINVAL;
+-		goto out;
+-	}
++	if (!tmp)
++		return -EINVAL;
+ 	*tmp = '\0';
+ 	tmp++;
+ 
+@@ -392,13 +385,14 @@ static ssize_t ofdt_write(struct file *file, const char __user *buf, size_t coun
+ 		rv = do_update_property(tmp, count - (tmp - kbuf));
+ 	else
+ 		rv = -EINVAL;
+-out:
+-	kfree(kbuf);
++
+ 	return rv ? rv : count;
+ }
+ 
+ static const struct proc_ops ofdt_proc_ops = {
+-	.proc_write	= ofdt_write,
++	.proc_write_buf	= ofdt_write,
++	/* what memdup_user_nul() could copy in */
++	.proc_write_size = KMALLOC_MAX_SIZE - 1,
+ 	.proc_lseek	= noop_llseek,
+ };
+ 
 
 -- 
 2.53.0
