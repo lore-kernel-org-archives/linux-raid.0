@@ -1,60 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.43
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.20
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793672251;
-	b=3QRLY9AuFqEN9CawsevIWJUWMXtUqAGublbe4T26QCIrEBvlmdKAU/mT8dap19ljhkFc
-	 GqBP4icv1ZAmekPYVRnJ6loC4gMFTDBjazSc+FSb471xDqzXApkrZFlgPoYq4244DD2oI
-	 rmdAOYLcnDLPl2lhq5I9jNpmICZQber1tt6DpOPscwTI6cz2zdZmT3xTcQHVmdgKw1KVL
-	 Jb7BT2Pgcb76xMpiHYlSc6My2vzSKuj9N7tWbxqpGl+uPvBBZCREvzWSqre8DMhZ4s3LL
-	 yL9z/9ZRc7o0p0ec28nk+L7062sfHxyq3UPT2RWW8xwUfhvBjDjzth6FK0C13UYBrfg==
+	t=1793672630;
+	b=iM0jjN1vWe0z+ZF3u8h8+EWzlNAguERa213FLvY42sFeeNiu89zikm3bKxMyCv1pL9nB
+	 hQzdy0iVO2R5hOd4PsRlKj6PQmVbh5l/Q+XAR6ibcGVfoN3dcf5D9/pvH0RsjDNxM5AUi
+	 HVKA8bHI1VGr1pmwSIf7bE+AOLl/7jiw8X5rUR0KTBVnktI9KNUISwuvu9iGPSgT05WOH
+	 RsWnmtqV3ovtbD4MLeu6pMfuygbhjB6uJNAezmdu8hUU5eoo58dPHH/e6C27noOEir7cj
+	 ur+ZIASoJ0mEeJlEsNKHC6lANEKEjPbMUWKquhHkY8QKssPkwbr4zrAMcE46w3uJQFg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793672251;
-	h=DMARC-Filter:DKIM-Signature:Received:User-Agent:Reply-To:From:
-	 Subject:Content-Type:Cc:Date:Message-Id:Mime-Version:
-	 Content-Transfer-Encoding:X-Original-From:To:X-Lms-Return-Path:
-	 References:In-Reply-To;
-	bh=plM1RNTfkzjPFwIcUJoacAEK9nyx06xz7LtG90JphYg=;
-	b=aVE3PjC5NjhyQpLyCIMO91lcn2eb9fNKxuytfGUuiRmWu8bTLcQY2Wgsv0FKmGxvFCHL
-	 uBqDvIttOEy/MD2ZQvxuzZq5+ANLbFvmdR9jzHnVSkUIh4IBetDJGsXF+gt/bQvonlfPu
-	 /WrASSPHkeuYABOr6aY3Ks36yyJPg1pn7L0kxlMRUOFjXYzXsMLshqBHfnmAv6L/vP2Sa
-	 3ZS56Yfu0thDOjJTl8UGuXjRlBpbc3PsjBVq7KLkTWbwUV03XfV+p2aIYClZ2Fsd7+2E7
-	 93jIBbdX/p/AKEkNajT5AE0+R6Z4mYoEdPMRuqbijjEg8FS3GKWR8N+f0CpAW8Tf1zw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793672630;
+	h=DMARC-Filter:DKIM-Signature:Mime-Version:Content-Transfer-Encoding:
+	 Content-Type:Subject:From:References:Cc:To:In-Reply-To:
+	 X-Original-From:X-Lms-Return-Path:User-Agent:Reply-To:Message-Id:
+	 Received:Date;
+	bh=oxQllBAFT/GD689LugUGzY1mG/UNAwQ+Yi2gGE1tTSA=;
+	b=I0fm20r09gCD2lhTi5D0XW9apgstIJE8wFBrxZQAoaptHRclqF9wmZ59HXFa3rEZxRpj
+	 tu4myhriweHegVaemDIn7/SWGdQBBeSvAW/Jrp8ocgfnJE4Y8TrvLdynRaCnweMrlwvBm
+	 WUvOzJn/H1fItAtcUxm+hFELdEhYriVBrTd3TGkPKdOjEZh2VrrR+j0dQDxzlyaw0LPNb
+	 cx35nrvs53vhCcEsvbhH/PSxZXfOh+SZ/5EW8DM8ka56TxI3lrp4Nv+cURcHFen0GWfen
+	 hwgEq4areqorO2KqM/Qx5I2Z/UzaW+/EmUdzPsy+/Uu65fmt31S42vx77OgkuxkFNaA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=fygo.io;
 	spf=pass smtp.mailfrom=fygo.io;
-	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=h2SUoI98;
-	arc=none smtp.remote-ip=209.127.231.43
-Received: from va-2-43.ptr.blmpb.com (va-2-43.ptr.blmpb.com [209.127.231.43])
+	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=NnIXjQCH;
+	arc=none smtp.remote-ip=209.127.231.20
+Received: from va-2-20.ptr.blmpb.com (va-2-20.ptr.blmpb.com [209.127.231.20])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82651606A324
-	for <linux-raid@vger.kernel.org>; Tue,  3 Nov 2026 02:17:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 82651606A324
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 129F7606A327
+	for <linux-raid@vger.kernel.org>; Tue,  3 Nov 2026 02:23:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 129F7606A327
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=h2SUoI98
+	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=NnIXjQCH
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1793672238;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1793672624;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=plM1RNTfkzjPFwIcUJoacAEK9nyx06xz7LtG90JphYg=;
- b=h2SUoI987WKnH5IRglELJn+ZuN+NxEVu+i2CM1uvn8OU1OdZxgvoVIGir4hMWfnmiNBjzZ
- dXslE+7ckVI9R3BU4E4vNgRorenBDuQ8sTNoONdXnctI91Ov2fQMnjMlUJEpB6678FxVWk
- qwqbgmB0uIXchwqLkdFT8xUN24aOlsBSMeYpgTQkcZvjOjQknze4ApfR0tbayAyDuT69k6
- 5PXXxwCTakrZs/LHEcvejNHQluuVr1k2n3pMihwR+hftfo0ym4Ngob5qXeE36oXVrtsIgf
- abrF92aiTATU6ocquBmG9mpgh1uWaVBV9JvZXvjG5DKUfoopD5VPE76yoaTsRA==
-Received: from [192.168.1.104] ([39.182.0.25]) by smtp.larksuite.com with ESMTPS; Tue, 03 Nov 2026 02:17:16 +0000
-User-Agent: Mozilla Thunderbird
-Reply-To: yukuai@fygo.io
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH v3] md/raid5: use dedicated llist for stripe plug
-Content-Type: text/plain; charset=UTF-8
-Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"Li Youhong" <liyouhong@kylinos.cn>, <stable@vger.kernel.org>
-Date: Tue, 3 Nov 2026 10:17:13 +0800
-Message-Id: <d79b53ed-6ad0-4663-92ce-901f905cddbc@fygo.io>
+ bh=oxQllBAFT/GD689LugUGzY1mG/UNAwQ+Yi2gGE1tTSA=;
+ b=NnIXjQCHVQlC2eaQbNsvVXVPUIt3jYmfUYkdts2m5umi2Z3PgbUH7l60tM6nJZGCyw+2gy
+ U9pu0YStIiO3nQjBiZ2jmiQnl4FVrNw0hlOVX0dSDgj6s1FXoHU/TCAPwMKkUm8nQ6sw5C
+ /rr11YcjhueN0FyrNFjQaVPAx0BEt1vANOBYMnFrONJjMX95Ko3vVeUkv/WZnUu6b44DDP
+ Pus3evB/r0ZqOExBV7W95WZrloKIaVdaSBPJsCf2O9VRf2Q9PX3uBr+Ja/UJ81Xsl6wAg0
+ kcldmxByH2nOFo1wPHeM6CbpBsD22bpjy90oWWbn53myZjz1mPau8iWwDjaXrA==
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -65,56 +54,62 @@ List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-X-Original-From: yu kuai <yukuai@fygo.io>
-To: "Li Youhong" <dayou5941@163.com>, <song@kernel.org>, 
+Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH] md: Fix an unlock in an error path of lbs_store()
+From: "yu kuai" <yukuai@fygo.io>
+References: <9dd41992e8b2d4bd63f74a245d34fa7850529bed.1793044632.git.bvanassche@acm.org>
+Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+To: "Bart Van Assche" <bvanassche@acm.org>, "Song Liu" <song@kernel.org>, 
 	"yu kuai" <yukuai@fygo.io>
-X-Lms-Return-Path: <lba+26ae9442d+742937+vger.kernel.org+yukuai@fygo.io>
-References: <20261021014009.1206807-1-dayou5941@163.com>
-In-Reply-To: <20261021014009.1206807-1-dayou5941@163.com>
+In-Reply-To: <9dd41992e8b2d4bd63f74a245d34fa7850529bed.1793044632.git.bvanassche@acm.org>
+X-Original-From: yu kuai <yukuai@fygo.io>
+X-Lms-Return-Path: <lba+26ae945af+c2b3fc+vger.kernel.org+yukuai@fygo.io>
+User-Agent: Mozilla Thunderbird
+Reply-To: yukuai@fygo.io
+Message-Id: <cfc6e703-70cc-4f63-9fb1-875cb6cc4b1d@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.25]) by smtp.larksuite.com with ESMTPS; Tue, 03 Nov 2026 02:23:43 +0000
+Date: Tue, 3 Nov 2026 10:23:39 +0800
 
-=E5=9C=A8 2026/10/21 9:40, Li Youhong =E5=86=99=E9=81=93:
+Hi,
 
-> From: Li Youhong<liyouhong@kylinos.cn>
+=E5=9C=A8 2026/10/27 3:57, Bart Van Assche =E5=86=99=E9=81=93:
+> If mddev_lock() fails, lbs_store() calls mddev_unlock() although the
+> reconfig_mutex is not held. Fix this by returning the mddev_lock() error
+> code directly. This bug has been detected by the Clang thread-safety
+> analyzer.
 >
-> release_stripe_plug() and do_release_stripe() share sh->lru.
-> release_stripe_plug() sets STRIPE_ON_UNPLUG_LIST and
-> list_add_tail()s sh->lru onto raid5_plug_cb.list without
-> device_lock. do_release_stripe() holds device_lock and, when the
-> last reference drops, list_add()s the same lru onto a handle or
-> inactive list.
->
-> Two list_add()s on one node corrupt it. sh->lru can be
-> reinitialized into a self-loop while raid5_plug_cb.list still
-> points at that stripe. raid5_unplug() then walks the list under
-> device_lock with IRQs disabled and never finishes. Other CPUs
-> waiting for the same lock hard-lockup.
->
-> Add a dedicated llist_node, unplug_list, to stripe_head, as
-> release_list is used for released_stripes.
->
-> Fixes: 8811b5968f62 ("raid5: make_request use batch stripe release")
-> Suggested-by: Yu Kuai<yukuai@fygo.io>
-> Cc:stable@vger.kernel.org
-> Signed-off-by: Li Youhong<liyouhong@kylinos.cn>
+> Fixes: 62ed1b582246 ("md: allow configuring logical block size")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
-> v3:
-> - Skip device_lock when llist_del_all() returns NULL. The plug
->    callback can still run with an empty list, and the check avoids
->    an unnecessary spin_lock.
-> - v2: link:https://lore.kernel.org/linux-raid/20260922060928.3486799-1-da=
-you5941@163.com/
+>   drivers/md/md.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+
+This problem is already fixed:
+
+[PATCH] md: fix mddev_unlock() called without holding lock in=20
+lbs_store() - Jack Wang <https://lore.kernel.org/all/20260920103705.23191-1=
+-jinpu.wang@ionos.com/>
+
 >
-> v2:
-> - Drop taking device_lock in release_stripe_plug(). Add a dedicated
->    unplug_list.
-> - v1: link:https://lore.kernel.org/linux-raid/20260902095307.358569-1-day=
-ou5941@163.com/
->
-> ---
->   drivers/md/raid5.c | 20 +++++++++++---------
->   drivers/md/raid5.h |  1 +
->   2 files changed, 12 insertions(+), 9 deletions(-)
-Applied
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index ac03b99f6428..7ce527073be9 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -6049,11 +6049,10 @@ lbs_store(struct mddev *mddev, const char *buf, s=
+ize_t len)
+>  =20
+>   	err =3D mddev_lock(mddev);
+>   	if (err)
+> -		goto unlock;
+> +		return err;
+>  =20
+>   	err =3D mddev_set_logical_block_size(mddev, lbs);
+>  =20
+> -unlock:
+>   	mddev_unlock(mddev);
+>   	return err ?: len;
+>   }
 
 --=20
 Thanks,
