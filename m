@@ -1,54 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.28.115
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.200
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793706947;
-	b=Ruk/YojQDiqXc1JeDMEwDTby/UeOEdmAVIRx5Hp3Y/6yfXwoTgVZmWKL4x7+cpgAukJm
-	 ygavh7SsbvayAppTxvRq+NhXZIwrS4REOcCYzBStx09I2ThYkHJ+LHy1JLTbK/UnOSfRk
-	 98tjTNRjwpnF/2ybO9BqlQA2Lae2aTQqseND2mkSfTZ+EUg634ZRxL2csCzrF/Q8sh7DI
-	 j3vLrGjTNl7MoipGiEmoj4MGC7vul5IfFiDwk5rd7tMrjz0d+ism+xFl36/4JbJR8nMAd
-	 /UsHiXilNRrtjIMgv/ja5JyyUv8FCB9EVDstfb7fkA3CrmJQDHaNhnSq9N1fjmhusTw==
+	t=1793709212;
+	b=KSOgUgwxBZF1/yI76v2cvqJneplcgAF1lYgWqpOepwHYAt12v1Vd0Wja/qVEtbj2FK0a
+	 Rfyit6zTHvm8WfNK9Fw5dIDU1wTwlifDflYKRkFo2R6Nw4iHK5pgaSiWHMIvZkCwhyfau
+	 nR8LNB5wAmIFagr0uFGpNYfYO+V11lZUeaQ2YT9N05fgVtWIrc8m8uWHUOYLaYKDqQj3i
+	 P+9EB2Bnbq2jVB6+1r2CcLpUNDM+fRaeNvhe5Kh3Wh/ej/Uyw/UiqbVkVe74DvXN5rFzI
+	 xALOCo5WLKq4uJ+lbb6UXphxR2t4mrvn55xsP8pOWq0Vp152612u2B/gZCmIYi734QA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793706947;
-	h=DMARC-Filter:X-Alimail-AntiSpam:Received:From:To:Cc:Subject:Date:
-	 Message-Id:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=eGUTN5stq2GNQ65GIycmnbGlk5AjIXl4S++YM+uakBs=;
-	b=nQLlqkhQgY6riEUzlbr8VSDInbo/ZRl86pTohGAg/quwduoQNcDagaBi40McqidLtTsa
-	 erxZ8Ax8Ym49hmeOLcC51JTG8SUnTTGl/FKbCKqUY5nOwnI30N1peXJA3UtWL4dYDJDPk
-	 cOWim9NspAx/nwbYO+DaULrbKGAl+e7TDzGXrjOkEsOXZhzB9K/PNxSTbbbKCm2n679JA
-	 O/Yulhx2IbvlgX14nvWzPUXqXOHjIZqb7X/RKe/XZvnNgRHWonD4qAroS6lYCBvzzYRaF
-	 qRFF7MEX+8zLdqgjJ/lZWQdMfQJS7iUsPCLDmCAPRc77n9HEjJLxyuY5P+BIaQs8U1Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793709212;
+	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:MIME-Version:X-Received:Date:
+	 X-Google-Appengine-App-Id:X-Google-Appengine-App-Id-Alias:Message-ID:
+	 Subject:From:To:Content-Type;
+	bh=oXMJpEB1SAlRxcq+SoC4OVx2mtps+6gke2HzvVwNibI=;
+	b=hL0JFBKo7BRoAuOjiNaF0F2epi8bXqmL9aGWcG7XCtdrH4jV1gpwDIaWKGgedy3oVqzl
+	 mQkGrjzNqEs/jLneQzEs39ongnHLpfGR2GNoYcZKIQQJANACw32wNGYQqZC4w9TqqBeO4
+	 luFYMKqbMCKZgSh+4T36OJLp8x3OkH1BwHiyXI0JrOJfsCKyb4DmksPXVmN/ya1cJM1bC
+	 0hmnSwSSLmGOD8XhNVSBc5fd8I5YKNW8Of6unwbSFIJV8aeRIWpGzPJqpaf+k7YpMSScG
+	 LypiqBzGJ9/RIbuy3UFOGfk3c59eAv4abgcbJjA9em9oz4AsK8lm9EAUUYZR7k0UGkA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=kaihong.com;
-	spf=pass smtp.mailfrom=kaihong.com;
-	arc=none smtp.remote-ip=115.124.28.115
-Received: from out28-115.mail.aliyun.com (out28-115.mail.aliyun.com [115.124.28.115])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=fail header.from=syzkaller.appspotmail.com;
+	spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com;
+	arc=none smtp.remote-ip=209.85.167.200
+Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com [209.85.167.200])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04A88606A333;
-	Tue,  3 Nov 2026 11:55:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 04A88606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kaihong.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kaihong.com
-X-Alimail-AntiSpam:AC=CONTINUE;BC=0.07436259|-1;BR=01201311R111S59rulernew998_84748_2000303;CH=blue;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0107514-0.00587939-0.983369;FP=14128837808419836670|0|0|0|0|-1|-1|-1;HT=maildocker-contentspam033037033194;MF=wangjichen@kaihong.com;NM=1;PH=DS;RN=10;RT=10;SR=0;TI=SMTPD_---.jvip0Fh_1793706932;
-Received: from ubuntu.example.org(mailfrom:wangjichen@kaihong.com fp:SMTPD_---.jvip0Fh_1793706932 cluster:ay29)
-          by smtp.aliyun-inc.com;
-          Tue, 03 Nov 2026 19:55:33 +0800
-From: Wang Jichen <wangjichen@kaihong.com>
-To: Jens Axboe <axboe@kernel.dk>,
-	Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-raid@vger.kernel.org
-Cc: syzbot+cd254889291ef8666036@syzkaller.appspotmail.com,
-	wangjichen <wangjichen@kaihong.com>
-Subject: [PATCH] md: avoid block autoload while importing rdev under reconfig_mutex
-Date: Tue,  3 Nov 2026 11:55:29 +0000
-Message-Id: <20261103115530.2913093-1-wangjichen@kaihong.com>
-X-Mailer: git-send-email 2.34.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1483606A334
+	for <linux-raid@vger.kernel.org>; Tue,  3 Nov 2026 12:33:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A1483606A334
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-4cc89e86e9eso5380149b6e.3
+        for <linux-raid@vger.kernel.org>; Tue, 03 Nov 2026 04:33:31 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793709210; x=1794314010;
+        h=content-type:to:from:subject:message-id:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=oXMJpEB1SAlRxcq+SoC4OVx2mtps+6gke2HzvVwNibI=;
+        b=F4+Kla8IBluGYsgD7uU/wwR6XrUq8Iw2d5eZOLoQjdQXxGB01XdYcOjXACjDtblzwX
+         VjSruOLSWzusxcBdSdC02Di5QjrXWRUGxO01X7jI8sNff6GzMHqAw52nj4dhBQaYKqN6
+         5kmXPOKfl05ZK7udnhwyulyeuxm8806JcUyDo8G0Xw8BSFSFVjur9WDh7HEZGqJdEBHm
+         LcP3O5JWw9T3aCdEaTLkUP3XfPJR1TO8BbgEqT1PP/fH7VRaSUsjEmUTSBzxy9/gOfUp
+         ZhCTeeA3KJgli4IpyiSoyddd9DqIozWkPvNbk2X2TfRQ9fwg3kyrdWt8y2h3NaN30WsN
+         zazg==
+X-Forwarded-Encrypted: i=1; AKwUvBwrI1N6Hd5T/BiCSa2w5prtA8QyV4ujvNurKobTg8b1kM5rcnKkZ0B4gFnFCIopJZHSHrOZfJ4nYhNl@vger.kernel.org
+X-Gm-Message-State: APuU4Z+pbYpLCBVN45YRdcwFlkeAiNEnrIm1fxdFXt6Wl1nnCZvE4yU4
+	yB3glFS+Fj+yFGyVRVuBVriIXTRI/X7MFGHbvVnfGDOzdOsF5KprlooZ9H4lqhVGDdwK2lCEeBs
+	WbRM8B0jjWzPPaQWtbeD04GmisRrvz8mlQJXmfqg3SOHKcWDvREdRtOMJybo=
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -58,102 +58,48 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-Received: by 2002:a05:6808:1b2a:b0:4b3:7549:d3c0 with SMTP id
+ 5614622812f47-5640ddb5e3emr8203490b6e.18.1793709210654; Tue, 03 Nov 2026
+ 04:33:30 -0800 (PST)
+Date: Tue, 03 Nov 2026 04:33:30 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6ae9d49a.26d36f6c.15fe18.0009.GAE@google.com>
+Subject: [syzbot] Monthly raid report (Nov 2026)
+From: syzbot <syzbot+listb80138072a82b574f50f@syzkaller.appspotmail.com>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, 
+	syzkaller-bugs@googlegroups.com, yukuai@fygo.io
+Content-Type: text/plain; charset="UTF-8"
 
-From: wangjichen <wangjichen@kaihong.com>
+Hello raid maintainers/developers,
 
-md_import_device() runs with mddev->reconfig_mutex held from md_ioctl().
-Opening a member disk via bdev_file_open_by_dev() triggers legacy block
-autoload (blk_probe_dev), which takes major_names_lock. md_probe() can
-run under that lock and call md_alloc(), which takes disks_mutex and
-reconfig_mutex — a lockdep ABBA with the ioctl path.
+This is a 31-day syzbot report for the raid subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/raid
 
-Add bdev_file_open_by_dev_autoload() and use autoload=false from
-md_import_device(); member devices must already be present in the
-block layer (normal mdadmin usage).
+During the period, 0 new issues were detected and 1 were fixed.
+In total, 3 issues are still open and 11 have already been fixed.
+There are also 4 low-priority issues.
 
-Link: https://syzbot.org/bug?extid=cd254889291ef8666036
-Reported-by: syzbot+cd254889291ef8666036@syzkaller.appspotmail.com
-Tested-by: Wang Jichen <wangjichen@kaihong.com>
-Signed-off-by: Wang Jichen <wangjichen@kaihong.com>
+Some of the still happening issues:
+
+Ref Crashes Repro Title
+<1> 43      Yes   BUG: unable to handle kernel paging request in free_conf
+                  https://syzkaller.appspot.com/bug?extid=270624bb31d478afe62e
+<2> 29      Yes   general protection fault in md_handle_request
+                  https://syzkaller.appspot.com/bug?extid=89a9ab2a134d092fffae
+<3> 21      Yes   UBSAN: array-index-out-of-bounds in super_90_sync
+                  https://syzkaller.appspot.com/bug?extid=9e3014263a35700ab49b
+
 ---
- block/bdev.c           | 13 ++++++++++---
- drivers/md/md.c        |  8 ++++++--
- include/linux/blkdev.h |  2 ++
- 3 files changed, 18 insertions(+), 5 deletions(-)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-diff --git a/block/bdev.c b/block/bdev.c
-index f20f91b31..e78936556 100644
---- a/block/bdev.c
-+++ b/block/bdev.c
-@@ -1076,8 +1076,8 @@ static unsigned blk_to_file_flags(blk_mode_t mode)
- 	return flags;
- }
- 
--struct file *bdev_file_open_by_dev(dev_t dev, blk_mode_t mode, void *holder,
--				   const struct blk_holder_ops *hops)
-+struct file *bdev_file_open_by_dev_autoload(dev_t dev, blk_mode_t mode,
-+		void *holder, const struct blk_holder_ops *hops, bool autoload)
- {
- 	struct file *bdev_file;
- 	struct block_device *bdev;
-@@ -1088,7 +1088,7 @@ struct file *bdev_file_open_by_dev(dev_t dev, blk_mode_t mode, void *holder,
- 	if (ret)
- 		return ERR_PTR(ret);
- 
--	bdev = blkdev_get_no_open(dev, true);
-+	bdev = blkdev_get_no_open(dev, autoload);
- 	if (!bdev)
- 		return ERR_PTR(-ENXIO);
- 
-@@ -1110,6 +1110,13 @@ struct file *bdev_file_open_by_dev(dev_t dev, blk_mode_t mode, void *holder,
- 	}
- 	return bdev_file;
- }
-+EXPORT_SYMBOL(bdev_file_open_by_dev_autoload);
-+
-+struct file *bdev_file_open_by_dev(dev_t dev, blk_mode_t mode, void *holder,
-+				   const struct blk_holder_ops *hops)
-+{
-+	return bdev_file_open_by_dev_autoload(dev, mode, holder, hops, true);
-+}
- EXPORT_SYMBOL(bdev_file_open_by_dev);
- 
- struct file *bdev_file_open_by_path(const char *path, blk_mode_t mode,
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 03e35386a..d3717e2e8 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3858,9 +3858,13 @@ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int supe
- 	if (err)
- 		goto out_clear_rdev;
- 
--	rdev->bdev_file = bdev_file_open_by_dev(newdev,
-+	/*
-+	 * md_ioctl() holds reconfig_mutex; legacy autoload in bdev open takes
-+	 * major_names_lock via blk_probe_dev() and can deadlock with md_probe().
-+	 */
-+	rdev->bdev_file = bdev_file_open_by_dev_autoload(newdev,
- 			BLK_OPEN_READ | BLK_OPEN_WRITE,
--			super_format == -2 ? &claim_rdev : rdev, NULL);
-+			super_format == -2 ? &claim_rdev : rdev, NULL, false);
- 	if (IS_ERR(rdev->bdev_file)) {
- 		pr_warn("md: could not open device unknown-block(%u,%u).\n",
- 			MAJOR(newdev), MINOR(newdev));
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 0c2010230..e5121101a 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1699,6 +1699,8 @@ struct blk_holder_ops {
- 
- struct file *bdev_file_open_by_dev(dev_t dev, blk_mode_t mode, void *holder,
- 		const struct blk_holder_ops *hops);
-+struct file *bdev_file_open_by_dev_autoload(dev_t dev, blk_mode_t mode,
-+		void *holder, const struct blk_holder_ops *hops, bool autoload);
- struct file *bdev_file_open_by_path(const char *path, blk_mode_t mode,
- 		void *holder, const struct blk_holder_ops *hops);
- int bd_prepare_to_claim(struct block_device *bdev, void *holder,
--- 
-2.34.1
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
 
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
