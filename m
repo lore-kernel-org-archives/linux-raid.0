@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793718080;
-	b=dyh3+A/NZRhkg9nxP/mDJE5cEPJkMItbAnFgTt3BcDNJMOOn6JgT0CX8mX7FjsQBxKuG
-	 /9fImd4gZjcKwlf84zj8kqPCQtveLjNLP/tsBOk4fRc6uC2JPECDBC/Xaqj5TqENPJOIb
-	 jzAMOsevvp/WmeeIxDCXHJe5LbwRyp/4oKNej4ooSiFczFwKlDgQT33C5y7WQn0WTkK55
-	 fVmitoweZ+0OhR0Lo6Ei9H3r/z6tRVWmCLXIu6PJ1VbL0KLNbJ2ft2Ez66yZpc5Fn4I1m
-	 6+Dktz5HkHNcxkyr9vv3eNBtv9uBkrWBe637ST2VZk/WJ5EBZkzOxTuZZ/PJFV/ymgA==
+	t=1793718094;
+	b=Db4z39v0pRfxKpo36lpECKMeQli/NhSHfsV4FAYcm/ri7b7N78MFbBGkoMeBVLU/SZIt
+	 Ugyq5G3szM+ACfU+a4ipd/GONiUUqLd6jzV0JzuyXvVnLQVSEG8wMYPrzMLbfzO6zVadS
+	 KNoyi5NDXZjcBZS8LNEtfDPRrCFsKed9PzmgH1UtRVU+MyxqMzeLGTm+AnoE740V+Bekc
+	 kQ95aM0CtzctaQN8tZZTb53NkVXYV93fpqHbD+yZjpyO4rfIem4tSqSJRfouE+pnl/W2d
+	 TafO+H5u+/vR6LVP9wLcTIggcCo9VckH124BqNmU/ltCyPaJBF2jPMoGyVwF4R0LTUw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793718080;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793718094;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=pruwCsX2Nj8P2A3ZkDZfqhhveDP+NyBs8rSomhgGUU8=;
-	b=3tqHVLr0B/6JuPGul12JNszbThmletz7uA6N1EpVJ2ouM+YqPofC6NF6+t81ZsyHSy/M
-	 1WvdtTAkEEy3OFLeXvtkSNCFM/cZfWIU2SgsNjlXvwARJ5I4Yi7Wt3DA4z4tnlmCSDOs+
-	 ouDBDQZC4HO9+hAoCJivcYLyAvhfJThKihJ3sjNvdQ7R/cqFunbe1lVyA9yUsV+uiPDOw
-	 5CUafEl2aTvc7yH9qJNZIFQ1zdFmlUQIEFTt4EacaEssSU+/zGxdsJouHUfIyAyzLyPF6
-	 NHDLQNCdsnRY5bC3yMFwghIs2pITTmV8o+2Q7rgXY9FUFWqWL2qW+uLk/Xn2tMmzJZQ==
+	bh=r9QXWEwcwVsmD+gtjv1V0GbX1OqeCi9C0moHpPKkhRQ=;
+	b=MggeAuUpx2dlXj3d11Hq3gnPLT5xZDKd35cYtBQ/XCBEutq4lRZ+d8aomfpLyxhoB/Rl
+	 pSiqf2hxJUBrh/PzQ3XTapiksBIC2n/+OuVw9/X0g61bOF8mKBiBOTxVMO+upoUJV1Md8
+	 drAr6/dLwYJJkvra9prlr7lC+cO1xDmjHHQV6qzRytlyWoDWY15+/IhGY9DZ/qI9nv1yE
+	 VNg5Y9ORaA7TVKHEiRoQMOM/R2KDjTobFHDT/E9Q9v8F8Ihml1BU6AThKhUBRn7Un/xaK
+	 PkPe5zithHbt6adPD3VVX1tjyKNCXQacX5x3MdSjXKFy3LCMkaPxGyQqDADsXh1kjkg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gpYfA8iv;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Gp4zIMJh;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7FC660A262C;
-	Tue,  3 Nov 2026 15:01:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB2B960A5BC1;
+	Tue,  3 Nov 2026 15:01:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gpYfA8iv
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCD2A1F000C1;
-	Tue,  3 Nov 2026 15:01:17 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Gp4zIMJh
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12F351F00A17;
+	Tue,  3 Nov 2026 15:01:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793718079;
-	bh=pruwCsX2Nj8P2A3ZkDZfqhhveDP+NyBs8rSomhgGUU8=;
+	s=k20260515; t=1793718093;
+	bh=r9QXWEwcwVsmD+gtjv1V0GbX1OqeCi9C0moHpPKkhRQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gpYfA8ivu0EAnWhduZFmphtcIFZSGsJJkhZlvzy5YyKRExQz2lKkkw8OFY07G7zhl
-	 QXK+/wAx2e3lUZBCumPvDuR1/CWFBc91Z6WG2Hpe/KA3keAWuqHeKEckj6rl+uRvUm
-	 0DD2mqqO1kQPWJtMH9mgPG2OwfUnYuJ9j6ikz9y+dNaFMbCTYjhiXpIP4eWCi5yjYi
-	 Hz31AyUaH/D1IdodghQ/+cQxG+cvoF7GjEMSxwIAcogBIdrkyj4oC8VJmOIa5uaDa8
-	 BqiLNz4agF5A0jKeip5ntCNO+LfhUsYbiRyktw0MpTevQA8rbeHsgsbIZcoz3mCr6C
-	 TOSw9p+fDzh/g==
-Message-ID: <sashiko-outbox-195535@kernel.org>
+	b=Gp4zIMJhOwNqzm61c0h9XNd9e0AwMrFelEXQHKRAAlQ2LDeEpeF5m7tBEoFMtPFtY
+	 uS4RsfPUfBZ2hRlArgVukP7X27SDUoJHgd88tPlb4o1OnQzVSaWgr3kNiGA9hxIq/E
+	 7mb+cQIMUcKjUtjkRzdgBHMuNsu5EauysVoMaNwzoPfPD0sP32Kk9v3DT6vIUEgTNp
+	 cOzOKQMESWOupzjY/ff38B2v3OsIMhrG6ZdWGYcCgTBgg6ho7OLcY+ImD//T211CBM
+	 0ZuQsQcQMsjbrmcE+Eu/aRaJ5b+O1TMZX8eMsi4Ysf8/HRob1Y5+l5qFso1ia6iabK
+	 z49HG1oD9fXRg==
+Message-ID: <sashiko-outbox-195540@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 08/16] selftests/proc: check that a faulting reader
- doesn't hold up removal
+Subject: Re: [PATCH RFC 13/16] proc: let procfs copy out reads that don't go
+ through seq_file
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -57,12 +57,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Pavlu" <petr.pavlu@suse.com>, "Anna Schumaker" <anna@kernel.org>, yukuai@fygo.io, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261102-work-procfs-core-v1-8-75df35e4f8b8@kernel.org>
+In-Reply-To: <20261102-work-procfs-core-v1-13-75df35e4f8b8@kernel.org>
 References: <20261102-work-procfs-core-v1-0-75df35e4f8b8@kernel.org>
- <20261102-work-procfs-core-v1-8-75df35e4f8b8@kernel.org>
+ <20261102-work-procfs-core-v1-13-75df35e4f8b8@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 15:01:17 +0000
+Date: Tue, 03 Nov 2026 15:01:30 +0000
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -74,54 +74,64 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] selftests/proc: Makefile and .gitignore entries in wrong commit
+- [Low] proc: define and initialize __free(kvfree) variable buf in one stat=
+ement in pde_read_buf()
 --
 
-commit 9de4ed28fcd6656e6c6c2bb55f1514d9aa6600f6
+commit f2c1eb05c1e48ef170c932c3f77db0e09db3d058
 Author: Christian Brauner <brauner@kernel.org>
 
-selftests/proc: check that a faulting reader doesn't hold up removal
+proc: let procfs copy out reads that don't go through seq_file
 
-This commit adds a selftest in tools/testing/selftests/proc/proc-remove-slo=
-w-reader.c
-that verifies removing a /proc/net/dev_snmp6/<dev> entry does not block whe=
-n a
-concurrent reader faults while copying to userspace via userfaultfd.
+This commit adds a proc_read_buf callback to struct proc_ops so procfs
+entries can fill a kernel buffer while pinned and let procfs copy the
+buffer to userspace after unpinning the entry.
 
-> diff --git a/tools/testing/selftests/proc/proc-remove-slow-reader.c b/too=
-ls/testing/selftests/proc/proc-remove-slow-reader.c
-> new file mode 100644
-> index 0000000000000..a201645beca9d
-> --- /dev/null
-> +++ b/tools/testing/selftests/proc/proc-remove-slow-reader.c
-> @@ -0,0 +1,133 @@
+> diff --git a/fs/proc/inode.c b/fs/proc/inode.c
+> index c0bb40e7ff964..3f29a1663d266 100644
+> --- a/fs/proc/inode.c
+> +++ b/fs/proc/inode.c
 [ ... ]
-> +TEST(remove_while_reader_faults)
+> @@ -400,11 +402,67 @@ static loff_t proc_reg_llseek(struct file *file, lo=
+ff_t offset, int whence)
+>  	return rv;
+>  }
+> =20
+> +/*
+> + * The entry fills a kernel buffer and procfs copies that to userspace a=
+fter
+> + * unpinning the entry. A reader that faults on its buffer then doesn't =
+hold
+> + * up remove_proc_entry().
+> + */
+> +static ssize_t pde_read_buf(struct proc_dir_entry *pde, struct kiocb *io=
+cb,
+> +			    struct iov_iter *iter)
 > +{
+> +	struct file *file =3D iocb->ki_filp;
+> +	char *buf __free(kvfree) =3D NULL;
+> +	ssize_t rv, done =3D 0;
+> +	size_t len, count;
+> +	loff_t pos;
+> +
+> +	if (!iov_iter_count(iter))
+> +		return 0;
+> +	/* neither the allocation nor the entry can honor IOCB_NOWAIT */
+> +	if ((iocb->ki_flags & IOCB_NOWAIT) && !(file->f_flags & O_NONBLOCK))
+> +		return -EAGAIN;
+> +	len =3D min_t(size_t, iov_iter_count(iter), pde->read_size);
+> +	buf =3D kvmalloc(len, GFP_KERNEL);
 
 [Severity: Low]
-Should this commit also include the corresponding tools/testing/selftests/p=
-roc/Makefile
-and tools/testing/selftests/proc/.gitignore entries for proc-remove-slow-re=
-ader?
+This isn't a bug, but in pde_read_buf(), buf is declared with
+__free(kvfree) =3D NULL at the top of the function before the early return
+checks for !iov_iter_count(iter) and IOCB_NOWAIT, and then assigned
+separately via kvmalloc().
 
-In the current series, those entries:
-
-  tools/testing/selftests/proc/Makefile:
-    TEST_GEN_PROGS +=3D proc-remove-slow-reader
-
-  tools/testing/selftests/proc/.gitignore:
-    /proc-remove-slow-reader
-
-were placed in the earlier commit ("selftests/proc: check that a faulting
-readlink() doesn't hold up removal") before proc-remove-slow-reader.c exist=
-s.
-Building tools/testing/selftests/proc at that earlier commit or any interme=
-diate
-commit before this one fails due to the missing source file, breaking bisec=
-tion,
-and cherry-picking this commit on its own leaves the new test unbuilt.
+Could buf be defined and initialized in a single statement at the
+allocation site (char *buf __free(kvfree) =3D kvmalloc(len, GFP_KERNEL);)
+to follow the cleanup.h conventions?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261102-work-procf=
-s-core-v1-0-75df35e4f8b8@kernel.org?part=3D8
+s-core-v1-0-75df35e4f8b8@kernel.org?part=3D13
