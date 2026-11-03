@@ -1,49 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.20
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793672630;
-	b=iM0jjN1vWe0z+ZF3u8h8+EWzlNAguERa213FLvY42sFeeNiu89zikm3bKxMyCv1pL9nB
-	 hQzdy0iVO2R5hOd4PsRlKj6PQmVbh5l/Q+XAR6ibcGVfoN3dcf5D9/pvH0RsjDNxM5AUi
-	 HVKA8bHI1VGr1pmwSIf7bE+AOLl/7jiw8X5rUR0KTBVnktI9KNUISwuvu9iGPSgT05WOH
-	 RsWnmtqV3ovtbD4MLeu6pMfuygbhjB6uJNAezmdu8hUU5eoo58dPHH/e6C27noOEir7cj
-	 ur+ZIASoJ0mEeJlEsNKHC6lANEKEjPbMUWKquhHkY8QKssPkwbr4zrAMcE46w3uJQFg==
+	t=1793674507;
+	b=GCkBoNSBR5PG6iydASmQGKqBt7qqrpfsnYfYJEeITdrwrZgUd57jeKurEOCY1uWltFGE
+	 nJthkB56kp1ALsC8rybRWTwL/t5O0Vq4Ir32Hj4WdMuDBOk2WuzYHtOUgQaWHwEJiHSri
+	 jX1uW+VE0o83HRUVn0FdH2nnkuOWJ8+Xwb8k3cXNo4tToT6agwIBKsTZRfHRZzTm0FR/r
+	 RxOnQ/4QRzFlkU7jK8da/eX3TAZFBwpEt9pzK9x71WUGw1zopfGJk3Z+4Wi1vEf4MYpuQ
+	 JmVYgAQCsyaMEYesES7//6MicL+9ClzPMbGy0XWImdZTyE0VFNte0a+W1dLNbiHDCmg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793672630;
-	h=DMARC-Filter:DKIM-Signature:Mime-Version:Content-Transfer-Encoding:
-	 Content-Type:Subject:From:References:Cc:To:In-Reply-To:
-	 X-Original-From:X-Lms-Return-Path:User-Agent:Reply-To:Message-Id:
-	 Received:Date;
-	bh=oxQllBAFT/GD689LugUGzY1mG/UNAwQ+Yi2gGE1tTSA=;
-	b=I0fm20r09gCD2lhTi5D0XW9apgstIJE8wFBrxZQAoaptHRclqF9wmZ59HXFa3rEZxRpj
-	 tu4myhriweHegVaemDIn7/SWGdQBBeSvAW/Jrp8ocgfnJE4Y8TrvLdynRaCnweMrlwvBm
-	 WUvOzJn/H1fItAtcUxm+hFELdEhYriVBrTd3TGkPKdOjEZh2VrrR+j0dQDxzlyaw0LPNb
-	 cx35nrvs53vhCcEsvbhH/PSxZXfOh+SZ/5EW8DM8ka56TxI3lrp4Nv+cURcHFen0GWfen
-	 hwgEq4areqorO2KqM/Qx5I2Z/UzaW+/EmUdzPsy+/Uu65fmt31S42vx77OgkuxkFNaA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793674507;
+	h=DMARC-Filter:DKIM-Signature:Subject:Mime-Version:Received:
+	 Content-Type:Cc:In-Reply-To:X-Original-From:User-Agent:Reply-To:
+	 References:Content-Transfer-Encoding:To:From:Date:Message-Id:
+	 X-Lms-Return-Path;
+	bh=gHNVKexvi+2DC2GaCkkB9eH3+bs83qsGXoSScAr4A5A=;
+	b=zulxUVqGVARyztp/yh+K9xeTmSldVPqhzdUVaUIYmF+GNH8v/fM/s7s33P5rNWB9+10e
+	 +aLMgm2cuF5QV2PZJAEfscGzgHo6NS2Cko9jobn+9jyludoBcVrBItGQJH638RDs0EBME
+	 fNP4OhbTQy7SSbfZlwoB75VfaJTu89Ipl7+83l34qFkn6gtfk4zRRyEVuEBtyM6S/q0t0
+	 SyYN281h58RXkWw5+J5cnMSTX96ssaYmDia4PKBj2R3ZdWHnUianGPBg83KL1+PA+YFsD
+	 Dql2JiKftDVeYCsPlHmOiqd8j2O2B0jJ4leruJthA2+8r/kemGgNIt1mA/M0GqZpMIA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=fygo.io;
 	spf=pass smtp.mailfrom=fygo.io;
-	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=NnIXjQCH;
-	arc=none smtp.remote-ip=209.127.231.20
-Received: from va-2-20.ptr.blmpb.com (va-2-20.ptr.blmpb.com [209.127.231.20])
+	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b="a/omXujP";
+	arc=none smtp.remote-ip=209.127.231.42
+Received: from va-2-42.ptr.blmpb.com (va-2-42.ptr.blmpb.com [209.127.231.42])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 129F7606A327
-	for <linux-raid@vger.kernel.org>; Tue,  3 Nov 2026 02:23:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 129F7606A327
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F3A6606A327
+	for <linux-raid@vger.kernel.org>; Tue,  3 Nov 2026 02:55:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5F3A6606A327
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=NnIXjQCH
+	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=a/omXujP
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1793672624;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1793674498;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=oxQllBAFT/GD689LugUGzY1mG/UNAwQ+Yi2gGE1tTSA=;
- b=NnIXjQCHVQlC2eaQbNsvVXVPUIt3jYmfUYkdts2m5umi2Z3PgbUH7l60tM6nJZGCyw+2gy
- U9pu0YStIiO3nQjBiZ2jmiQnl4FVrNw0hlOVX0dSDgj6s1FXoHU/TCAPwMKkUm8nQ6sw5C
- /rr11YcjhueN0FyrNFjQaVPAx0BEt1vANOBYMnFrONJjMX95Ko3vVeUkv/WZnUu6b44DDP
- Pus3evB/r0ZqOExBV7W95WZrloKIaVdaSBPJsCf2O9VRf2Q9PX3uBr+Ja/UJ81Xsl6wAg0
- kcldmxByH2nOFo1wPHeM6CbpBsD22bpjy90oWWbn53myZjz1mPau8iWwDjaXrA==
+ bh=gHNVKexvi+2DC2GaCkkB9eH3+bs83qsGXoSScAr4A5A=;
+ b=a/omXujP/+BmTnJgjSY4xYcMc7qjB3iDvCZ+xEpiTWbVAjg5OS2t39x6THE7VleHpcqpXK
+ ZA4kSQ6dJ0doSCF2V3vjHcBtLBWkkcZVI10EI30cQNsRdYRP99S5G6KnxMrji8np0sA/Ba
+ xeE0XluN5yZnjxHMxJdSKaAUxGhqvIAwfKABJOX47MYj/Y9kEst2ePKamP30jWXR2GtRdd
+ isYa6PWu1/0s4fRJ2Q5HcunbvZHikTgGnoAGSpyJypvH/qCmkQMnI8kwFnxT/NqLTa3E5+
+ b0pix8/jOvp3Axq9GN5czUuTL3AAUmgYmuu96KVJVr2UX52s0td7vbDGhwV7Bw==
+Subject: Re: [PATCH] md/raid1: Prevent excessively large memory allocations
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -53,63 +54,71 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Received: from [192.168.1.104] ([39.182.0.25]) by smtp.larksuite.com with ESMTPS; Tue, 03 Nov 2026 02:54:56 +0000
 Content-Type: text/plain; charset=UTF-8
-Subject: Re: [PATCH] md: Fix an unlock in an error path of lbs_store()
-From: "yu kuai" <yukuai@fygo.io>
-References: <9dd41992e8b2d4bd63f74a245d34fa7850529bed.1793044632.git.bvanassche@acm.org>
-Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-To: "Bart Van Assche" <bvanassche@acm.org>, "Song Liu" <song@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-In-Reply-To: <9dd41992e8b2d4bd63f74a245d34fa7850529bed.1793044632.git.bvanassche@acm.org>
+Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<syzbot+fc26c366038b54261e53@syzkaller.appspotmail.com>, 
+	<syzbot+75f49ec552cc74d9d69b@syzkaller.appspotmail.com>, 
+	<stable@vger.kernel.org>, <syzkaller-bugs@googlegroups.com>
+In-Reply-To: <20261028152755.383821-1-gowtham398gs@gmail.com>
 X-Original-From: yu kuai <yukuai@fygo.io>
-X-Lms-Return-Path: <lba+26ae945af+c2b3fc+vger.kernel.org+yukuai@fygo.io>
 User-Agent: Mozilla Thunderbird
 Reply-To: yukuai@fygo.io
-Message-Id: <cfc6e703-70cc-4f63-9fb1-875cb6cc4b1d@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.25]) by smtp.larksuite.com with ESMTPS; Tue, 03 Nov 2026 02:23:43 +0000
-Date: Tue, 3 Nov 2026 10:23:39 +0800
+References: <20261028152755.383821-1-gowtham398gs@gmail.com>
+Content-Transfer-Encoding: quoted-printable
+To: "Gowtham S Bhushan" <gowtham398gs@gmail.com>, <song@kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+From: "yu kuai" <yukuai@fygo.io>
+Date: Tue, 3 Nov 2026 10:54:53 +0800
+Message-Id: <7135fce3-943f-4e3d-9413-2a4ba962021f@fygo.io>
+X-Lms-Return-Path: <lba+26ae94d01+d20be5+vger.kernel.org+yukuai@fygo.io>
 
 Hi,
 
-=E5=9C=A8 2026/10/27 3:57, Bart Van Assche =E5=86=99=E9=81=93:
-> If mddev_lock() fails, lbs_store() calls mddev_unlock() although the
-> reconfig_mutex is not held. Fix this by returning the mddev_lock() error
-> code directly. This bug has been detected by the Clang thread-safety
-> analyzer.
+=E5=9C=A8 2026/10/28 23:27, Gowtham S Bhushan =E5=86=99=E9=81=93:
+> Validate mddev->raid_disks before memory allocation to prevent integer
+> wrap-around or allocating an unreasonably large chunk of memory that
+> exceeds KMALLOC_MAX_SIZE boundaries.
 >
-> Fixes: 62ed1b582246 ("md: allow configuring logical block size")
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Reported-by: syzbot+75f49ec552cc74d9d69b@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=3D75f49ec552cc74d9d69b
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Tested-by: syzbot+75f49ec552cc74d9d69b@syzkaller.appspotmail.com
+> Cc: stable@vger.kernel.org
+> Cc: syzkaller-bugs@googlegroups.com
+>
+> Signed-off-by: Gowtham S Bhushan <gowtham398gs@gmail.com>
 > ---
->   drivers/md/md.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
-
-This problem is already fixed:
-
-[PATCH] md: fix mddev_unlock() called without holding lock in=20
-lbs_store() - Jack Wang <https://lore.kernel.org/all/20260920103705.23191-1=
--jinpu.wang@ionos.com/>
-
+>   drivers/md/raid1.c | 10 ++++++++++
+>   1 file changed, 10 insertions(+)
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index ac03b99f6428..7ce527073be9 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6049,11 +6049,10 @@ lbs_store(struct mddev *mddev, const char *buf, s=
-ize_t len)
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index f0646fb24371..88038d535727 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -3050,6 +3050,16 @@ static struct r1conf *setup_conf(struct mddev *mdd=
+ev)
+>   	struct md_rdev *rdev;
+>   	size_t r1bio_size;
+>   	int err =3D -ENOMEM;
+> +	size_t calculated_size;
+> +
+> +	/* prevent baseline integer wrap-around anomalies first*/
+> +	/* Safely calculate size; overflows automatically saturate to SIZE_MAX =
+*/
+> +
+> +	calculated_size =3D size_add(sizeof(struct r1conf),
+> +				   size_mul(mddev->raid_disks, sizeof(struct r1bio)));
+
+This is not the only place, raid1_reshape() has the same memory allocation.
+
+> +
+> +	if (mddev->raid_disks <=3D 0 || calculated_size >=3D KMALLOC_MAX_SIZE)
+> +		return ERR_PTR(-EINVAL);
 >  =20
->   	err =3D mddev_lock(mddev);
->   	if (err)
-> -		goto unlock;
-> +		return err;
->  =20
->   	err =3D mddev_set_logical_block_size(mddev, lbs);
->  =20
-> -unlock:
->   	mddev_unlock(mddev);
->   	return err ?: len;
->   }
+>   	conf =3D kzalloc_obj(struct r1conf);
+>   	if (!conf)
 
 --=20
 Thanks,
