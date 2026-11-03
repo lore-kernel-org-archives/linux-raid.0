@@ -1,123 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.28.115
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793702481;
-	b=rNYQKEDqsmiP3MogOH/JR171y9Bs0RPAUwcIkgx4wTrTnXiX0EkZzzdiNOoeGUQkJk/N
-	 emtRRJKWq4qI4yD5eWKjFrg065QOuhwb0g69WMOfcom9AczxxmJltma8tJ60qZmDgFI9X
-	 PCFnKfrJzpIayLsjNj1HSXwQYPc1HnpU+UVHoPVucU7VypwaMApYrYxv0w/YEU7iS0B4a
-	 1aMbLFDImW5tkACbeKz65AcT0DCBaMAQoLT2qEitamQvh8IzAE10Fzlwl8LyXjw0f/GVf
-	 41fVQbwRW+xf5uThEmf7ALfYfLztxSin0PNIvk48UJoFuZWdj4cyOcsf3woGgeozWOA==
+	t=1793706947;
+	b=Ruk/YojQDiqXc1JeDMEwDTby/UeOEdmAVIRx5Hp3Y/6yfXwoTgVZmWKL4x7+cpgAukJm
+	 ygavh7SsbvayAppTxvRq+NhXZIwrS4REOcCYzBStx09I2ThYkHJ+LHy1JLTbK/UnOSfRk
+	 98tjTNRjwpnF/2ybO9BqlQA2Lae2aTQqseND2mkSfTZ+EUg634ZRxL2csCzrF/Q8sh7DI
+	 j3vLrGjTNl7MoipGiEmoj4MGC7vul5IfFiDwk5rd7tMrjz0d+ism+xFl36/4JbJR8nMAd
+	 /UsHiXilNRrtjIMgv/ja5JyyUv8FCB9EVDstfb7fkA3CrmJQDHaNhnSq9N1fjmhusTw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793702481;
-	h=DMARC-Filter:Received:Received:Received:Date:Message-ID:From:To:Cc:
-	 Subject:In-Reply-To:References:User-Agent:MIME-Version:Content-Type:
-	 X-Rspamd-Pre-Result:X-Rspamd-Server:X-Spamd-Result:X-Spam-Flag:
-	 X-Spam-Score:X-Spam-Level:X-Rspamd-Queue-Id:X-Rspamd-Pre-Result:
-	 X-Rspamd-Action;
-	bh=n3928gBIWqHxVcE0Q0TQTSHKUQ5+JmJrD1oVco54lEw=;
-	b=HwjEIW3xc83Pm0CwR2K/jkKioKJQAd99tyX6Cj6/AI9N9iW/GZLJnxdXlQ0Md8xjAhXp
-	 UE7o9jZIB+LI63ZtxP6vN6y+Xa2ri8buth6IGDfiJmvMTMZhzbTH0SsXovYkLzVbKMXXq
-	 vFiXEDLAkZ+L9q6fw4jUwFncyR3YRX4/Enl/UY62hCFlYX14DcVGD2BOI8gPoV+9s44Gh
-	 NTh6As2zyA8On/8V/FwUCthQCAD8QE6ugtIC2CMxuUVLpLwWQObkkycenc7WWO7gIR9OU
-	 N7zwdfKQiWgR5tYfGnHvdPnsVNyCZZ3iwLafK2p+H23NKktgtnQh2Lj+IsH/Ghh3akA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793706947;
+	h=DMARC-Filter:X-Alimail-AntiSpam:Received:From:To:Cc:Subject:Date:
+	 Message-Id:X-Mailer:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=eGUTN5stq2GNQ65GIycmnbGlk5AjIXl4S++YM+uakBs=;
+	b=nQLlqkhQgY6riEUzlbr8VSDInbo/ZRl86pTohGAg/quwduoQNcDagaBi40McqidLtTsa
+	 erxZ8Ax8Ym49hmeOLcC51JTG8SUnTTGl/FKbCKqUY5nOwnI30N1peXJA3UtWL4dYDJDPk
+	 cOWim9NspAx/nwbYO+DaULrbKGAl+e7TDzGXrjOkEsOXZhzB9K/PNxSTbbbKCm2n679JA
+	 O/Yulhx2IbvlgX14nvWzPUXqXOHjIZqb7X/RKe/XZvnNgRHWonD4qAroS6lYCBvzzYRaF
+	 qRFF7MEX+8zLdqgjJ/lZWQdMfQJS7iUsPCLDmCAPRc77n9HEjJLxyuY5P+BIaQs8U1Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.de;
-	spf=pass smtp.mailfrom=suse.de;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	dmarc=none header.from=kaihong.com;
+	spf=pass smtp.mailfrom=kaihong.com;
+	arc=none smtp.remote-ip=115.124.28.115
+Received: from out28-115.mail.aliyun.com (out28-115.mail.aliyun.com [115.124.28.115])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23D3A606A81C;
-	Tue,  3 Nov 2026 10:41:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 23D3A606A81C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 8017122D12;
-	Tue,  3 Nov 2026 10:41:18 +0000 (UTC)
-Authentication-Results: smtp-out1.suse.de;
-	none
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A98D41350A;
-	Tue,  3 Nov 2026 10:41:17 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id fPJkIE266WqxEgAAD6G6ig
-	(envelope-from <tiwai@suse.de>); Tue, 03 Nov 2026 10:41:17 +0000
-Date: Tue, 03 Nov 2026 11:41:09 +0100
-Message-ID: <87ik2exkmy.wl-tiwai@suse.de>
-From: Takashi Iwai <tiwai@suse.de>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Jann Horn <jannh@google.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Chris Mason <mason@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Christoph Hellwig <hch@lst.de>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Joel Granados <joel.granados@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Jan Kara <jack@suse.com>,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04A88606A333;
+	Tue,  3 Nov 2026 11:55:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 04A88606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kaihong.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kaihong.com
+X-Alimail-AntiSpam:AC=CONTINUE;BC=0.07436259|-1;BR=01201311R111S59rulernew998_84748_2000303;CH=blue;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0107514-0.00587939-0.983369;FP=14128837808419836670|0|0|0|0|-1|-1|-1;HT=maildocker-contentspam033037033194;MF=wangjichen@kaihong.com;NM=1;PH=DS;RN=10;RT=10;SR=0;TI=SMTPD_---.jvip0Fh_1793706932;
+Received: from ubuntu.example.org(mailfrom:wangjichen@kaihong.com fp:SMTPD_---.jvip0Fh_1793706932 cluster:ay29)
+          by smtp.aliyun-inc.com;
+          Tue, 03 Nov 2026 19:55:33 +0800
+From: Wang Jichen <wangjichen@kaihong.com>
+To: Jens Axboe <axboe@kernel.dk>,
+	Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>,
+	Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	linux-block@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-um@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev,
-	platform-driver-x86@vger.kernel.org,
-	coreteam@netfilter.org,
-	kexec@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	netfilter-devel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	ibm-acpi-devel@lists.sourceforge.net,
-	jfs-discussion@lists.sourceforge.net,
-	linux-alpha@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-cifs@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-sh@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	samba-technical@lists.samba.org,
-	sparclinux@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-doc@vger.kernel.org,
-	linux-serial@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net,
-	Takashi Iwai <tiwai@suse.de>,
-	linux-input@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-debuggers@vger.kernel.org,
-	Chuck Lever <cel@kernel.org>,
-	stable@vger.kernel.org
-Subject: Re: [PATCH RFC 09/38] ALSA: info: don't write past the end of a data entry
-In-Reply-To: <20261102-work-procfs-bugfixes-v1-9-59422ed3e465@kernel.org>
-References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
-	<20261102-work-procfs-bugfixes-v1-9-59422ed3e465@kernel.org>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) Emacs/30.2 Mule/6.0
+	linux-raid@vger.kernel.org
+Cc: syzbot+cd254889291ef8666036@syzkaller.appspotmail.com,
+	wangjichen <wangjichen@kaihong.com>
+Subject: [PATCH] md: avoid block autoload while importing rdev under reconfig_mutex
+Date: Tue,  3 Nov 2026 11:55:29 +0000
+Message-Id: <20261103115530.2913093-1-wangjichen@kaihong.com>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -126,64 +57,103 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.00 / 50.00];
-	REPLY(-4.00)[]
-X-Spam-Flag: NO
-X-Spam-Score: -4.00
-X-Spam-Level: 
-X-Rspamd-Queue-Id: 8017122D12
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
-X-Rspamd-Action: no action
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mon, 02 Nov 2026 15:21:24 +0100,
-Christian Brauner wrote:
-> 
-> snd_info_entry_write() clamps the count to what is left of the entry
-> by computing entry->size - pos as a size_t. For a position past the end
-> that wraps and the write goes to the driver unclamped, for opl4 into
-> sample memory outside of what the entry covers. At the end of the entry
-> the driver gets a count of 0 and vmalloc(0) warns. Before the clamp
-> moved into the common code the driver ignored such writes. Fail them
-> with -ENOSPC instead, like a block device does at the end of the
-> device. Returning 0 would make writers that use stdio retry forever.
-> 
-> Fixes: d97e1b78239c ("ALSA: info - Check file position validity in common layer")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+From: wangjichen <wangjichen@kaihong.com>
 
-Reviewed-by: Takashi Iwai <tiwai@suse.de>
+md_import_device() runs with mddev->reconfig_mutex held from md_ioctl().
+Opening a member disk via bdev_file_open_by_dev() triggers legacy block
+autoload (blk_probe_dev), which takes major_names_lock. md_probe() can
+run under that lock and call md_alloc(), which takes disks_mutex and
+reconfig_mutex — a lockdep ABBA with the ioctl path.
 
+Add bdev_file_open_by_dev_autoload() and use autoload=false from
+md_import_device(); member devices must already be present in the
+block layer (normal mdadmin usage).
 
-thanks,
+Link: https://syzbot.org/bug?extid=cd254889291ef8666036
+Reported-by: syzbot+cd254889291ef8666036@syzkaller.appspotmail.com
+Tested-by: Wang Jichen <wangjichen@kaihong.com>
+Signed-off-by: Wang Jichen <wangjichen@kaihong.com>
+---
+ block/bdev.c           | 13 ++++++++++---
+ drivers/md/md.c        |  8 ++++++--
+ include/linux/blkdev.h |  2 ++
+ 3 files changed, 18 insertions(+), 5 deletions(-)
 
-Takashi
+diff --git a/block/bdev.c b/block/bdev.c
+index f20f91b31..e78936556 100644
+--- a/block/bdev.c
++++ b/block/bdev.c
+@@ -1076,8 +1076,8 @@ static unsigned blk_to_file_flags(blk_mode_t mode)
+ 	return flags;
+ }
+ 
+-struct file *bdev_file_open_by_dev(dev_t dev, blk_mode_t mode, void *holder,
+-				   const struct blk_holder_ops *hops)
++struct file *bdev_file_open_by_dev_autoload(dev_t dev, blk_mode_t mode,
++		void *holder, const struct blk_holder_ops *hops, bool autoload)
+ {
+ 	struct file *bdev_file;
+ 	struct block_device *bdev;
+@@ -1088,7 +1088,7 @@ struct file *bdev_file_open_by_dev(dev_t dev, blk_mode_t mode, void *holder,
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 
+-	bdev = blkdev_get_no_open(dev, true);
++	bdev = blkdev_get_no_open(dev, autoload);
+ 	if (!bdev)
+ 		return ERR_PTR(-ENXIO);
+ 
+@@ -1110,6 +1110,13 @@ struct file *bdev_file_open_by_dev(dev_t dev, blk_mode_t mode, void *holder,
+ 	}
+ 	return bdev_file;
+ }
++EXPORT_SYMBOL(bdev_file_open_by_dev_autoload);
++
++struct file *bdev_file_open_by_dev(dev_t dev, blk_mode_t mode, void *holder,
++				   const struct blk_holder_ops *hops)
++{
++	return bdev_file_open_by_dev_autoload(dev, mode, holder, hops, true);
++}
+ EXPORT_SYMBOL(bdev_file_open_by_dev);
+ 
+ struct file *bdev_file_open_by_path(const char *path, blk_mode_t mode,
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 03e35386a..d3717e2e8 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3858,9 +3858,13 @@ static struct md_rdev *md_import_device(dev_t newdev, int super_format, int supe
+ 	if (err)
+ 		goto out_clear_rdev;
+ 
+-	rdev->bdev_file = bdev_file_open_by_dev(newdev,
++	/*
++	 * md_ioctl() holds reconfig_mutex; legacy autoload in bdev open takes
++	 * major_names_lock via blk_probe_dev() and can deadlock with md_probe().
++	 */
++	rdev->bdev_file = bdev_file_open_by_dev_autoload(newdev,
+ 			BLK_OPEN_READ | BLK_OPEN_WRITE,
+-			super_format == -2 ? &claim_rdev : rdev, NULL);
++			super_format == -2 ? &claim_rdev : rdev, NULL, false);
+ 	if (IS_ERR(rdev->bdev_file)) {
+ 		pr_warn("md: could not open device unknown-block(%u,%u).\n",
+ 			MAJOR(newdev), MINOR(newdev));
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 0c2010230..e5121101a 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1699,6 +1699,8 @@ struct blk_holder_ops {
+ 
+ struct file *bdev_file_open_by_dev(dev_t dev, blk_mode_t mode, void *holder,
+ 		const struct blk_holder_ops *hops);
++struct file *bdev_file_open_by_dev_autoload(dev_t dev, blk_mode_t mode,
++		void *holder, const struct blk_holder_ops *hops, bool autoload);
+ struct file *bdev_file_open_by_path(const char *path, blk_mode_t mode,
+ 		void *holder, const struct blk_holder_ops *hops);
+ int bd_prepare_to_claim(struct block_device *bdev, void *holder,
+-- 
+2.34.1
 
-> ---
->  sound/core/info.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/sound/core/info.c b/sound/core/info.c
-> index c4d57d0809ad..982087bc8575 100644
-> --- a/sound/core/info.c
-> +++ b/sound/core/info.c
-> @@ -171,6 +171,8 @@ static ssize_t snd_info_entry_write(struct file *file, const char __user *buffer
->  	pos = *offset;
->  	if (!valid_pos(pos, count))
->  		return -EIO;
-> +	if (pos >= entry->size)
-> +		return count ? -ENOSPC : 0;
->  	if (count > 0) {
->  		size_t maxsize = entry->size - pos;
->  		count = min(count, maxsize);
-> 
-> -- 
-> 2.53.0
-> 
