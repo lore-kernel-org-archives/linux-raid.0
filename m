@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793814816;
-	b=zme++miS4E+oQ6J9xTc+6eik+Jy4cHGJsi3Ul5ZDXP9bGXgJ54JX4bh120emeeg+qcnx
-	 xvqtS7UBcjCZvNc/DtvUQTNHdZkalJmJDOdDipdiceID0M86mOxtKxgPMEcpbd0cyQOU5
-	 N2XlWMNty8S4XE+jdeo+3RJ2xSu+aaKbQVgJ7gslIIf53iEpzvBqzEEH+usPARJ28cd/2
-	 Kl5a7O+8vzCQ+kXQYO0gYnhvGT2R7HeTOGwE2TEbuRcT+YJEaLOqf7jxbkdpvqbF3JIQi
-	 lC1gfTLooFUtzIPfm0vxo6++xri9KFv/9Um/aeQ9juroTMivb4/WK4pDDnP2P13AyoA==
+	t=1793814861;
+	b=OZtgKm6Gju5kx8kEIIYD9XBUgCfITDhwTXEtpqTr/Li5vYSSbF8tb28qM6Ho4IB9XebX
+	 bZisKI+nJiauY640J18cS8T1FckxLrT2a6501aD33oJ7jweE90scio+YS8OnCjGH1B3VR
+	 lqKRvbjk/D3KxQRTCOXZA/WxOSu19RmgsCnfgA+5B5qTyDHRFnCEqV2uYGqPWPzqMxrz1
+	 DAdiwz4fmNzSmm4KRqmlzyFYrY4U5KBWebdI4EmXiAVLIJnNnpl97GxKeuIVIQI7HKaCz
+	 a1ANejnOg8sF/EDuslEfFSgBcKiSdGIHal6ScfVZVcSaxxzHK7MrmrdBzk6ENmGIZyg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793814816;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793814861;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=QKQgab6F/A3kQED3xQkQ3++bbO+NbqHo8+XrgOES7ts=;
-	b=3SGB6q/6vVyTlXeF2+f7wZYuorCWDiylCFAOXQOSP8s2/ysr5lD8c37SMUhHRnhfAvvX
-	 cGKbLV8C1x6zVw5VXJrLzkfMdD1VaAKKZas/4uANC13CJYSFGyCikCJIWzGtgrlQUQryb
-	 K/zSY87w23zJ0NFTbQV33CgO0lkmBa5AUhbXu7WED/bfzScbmgkWsSEVM4xKnJUtuQnhV
-	 DxafpllPMkW8jlcsQW7HrkiAswVZTr0uUUXzI1p8KUxNzVn2r4zCXKe4ramD/nyIuv6oW
-	 veI1s+8m6HhdEdkWkdqwboKRxeeg5UgzH2SdFOJzEoBU+dGJCKAhgFeQqGuoqgFi1Zw==
+	bh=H7K5JcYwiEwa4eeL0B3OVYVYuE4eo7ZLheZ5n77rVhE=;
+	b=qZHt/OfediYBo+W9M0UnH5cpkpLf4OJN3VhXx16uWRKvVK9PeTqPSHRxpHr4kQi8I07P
+	 RZufIfmutdmj7nx7dbOYUvfoCAeFiG9Nr14fvMr+Nn6vZxmyw6q+K4nU98uLxunAMu4fh
+	 3GJxXcLYFkRlKoj4eIwBlNrTXVX+bXBTiiEcGDJLicShalklkDpZh4NpTk3f9z4hbi2RW
+	 iLkHn0g/hGvr4F5nHVvSquvaoZVOEd2BoQykn0X+n3BQ6/qDuq37OsjEKMdsEXadgpk3C
+	 aFCwLV5VMLzO3JdalcK5eJpvJ9vAJqFq3CmW7vJ67A2GxFGq+Zx+EFIiRtNqpOwURDA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K2MBURx3;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gUDkAH9h;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23124606B22A;
-	Wed,  4 Nov 2026 17:53:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AD9660A2635;
+	Wed,  4 Nov 2026 17:54:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K2MBURx3
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3A771F000C1;
-	Wed,  4 Nov 2026 17:53:13 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gUDkAH9h
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8733C1F0093A;
+	Wed,  4 Nov 2026 17:53:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793814814;
-	bh=QKQgab6F/A3kQED3xQkQ3++bbO+NbqHo8+XrgOES7ts=;
+	s=k20260515; t=1793814860;
+	bh=H7K5JcYwiEwa4eeL0B3OVYVYuE4eo7ZLheZ5n77rVhE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=K2MBURx36IjZzkcLb2KZAEwlpj6Z6rTqm97dO+7doIkZr1Kqzh3uc53FtsyC6p1Qp
-	 E8Af1CfcCZKJoPDeo0p3M/GnYCJ80+n57IzNLCGvu4Bk9CouKYGn+orF70IL7nf4yK
-	 nSpBJriEksHHTVFnNpFK4ihBuIC0cyx3Y7QU8Dbel9oqxkaIvG8hLqBlKw9PD83NvO
-	 Bpz6mm+6hDo0ijhkfwkqF65V7CvpgQI6W9+n1sejUJ9eDCv5Ck/cp7SLlpsYIc7IQv
-	 Zd1bVKw2snQGORVqHtYYXf4KLvRRmu/GjBV2fT+bsIs5Xg1tLwdr852VnqimxYBAh0
-	 3a+pujJgabI2w==
+	b=gUDkAH9hpixlTIrc1lAucmE9ZhKlc7XWxWd4DDhcdwFUJqzy8FwQhm+hoL7kcO3O+
+	 RFW1GEL8HQaBMrGiferCsPCqYUlXou+gvzGu4IX4HRx9V47q5H5Dy4zlhWXpqmoUoJ
+	 ZbFGJac761mGP0G3hLH5Ve7YID4YoCZy4QRhHJziLwMGdPgWDN8OLmN5CvuAjRItqt
+	 FxUnjdAYq+9UGEzAU2CF2VDwQF+6RqiKbX723YfYbIY+UWDsqwqezxTL7uJJluOW/n
+	 dZu2BESdSyN02AdM7En6UZsFz47eKhz+EwC1fAA8Gk3fO3348SkTJhZqxuXZXOgTqJ
+	 kaGoySTY4rXaw==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -101,9 +101,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>,
 	stable@vger.kernel.org
-Subject: [PATCH v2 30/51] net: pktgen: reject device names with a '/'
-Date: Wed,  4 Nov 2026 18:47:16 +0100
-Message-ID: <20261104-work-procfs-bugfixes-v2-30-bbf7d5546809@kernel.org>
+Subject: [PATCH v2 32/51] proc: resume readdir after the last name it returned
+Date: Wed,  4 Nov 2026 18:47:18 +0100
+Message-ID: <20261104-work-procfs-bugfixes-v2-32-bbf7d5546809@kernel.org>
 In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -117,54 +117,216 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1684; i=brauner@kernel.org; h=from:subject:message-id; bh=F9CLtO30/n/hY0YqeSuPpMfy319PBmjhBXOfLkB61UI=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9znvCdcJ1NYf0fOujSQtemwvu3bBBpcRumo2Bz5Xi5 X/ThD8YdJSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAExkbhIjw/Ob9c5r2Pj/Kk6s buYtSBDaVZfYmFppvu/Y99lhKbqyPIwMMz2n+1lZtz+NPHGpn+1Yf0m55kdBz6TyQ6z6D9ifhZc wAQA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7297; i=brauner@kernel.org; h=from:subject:message-id; bh=ZNOmyzOFl2t4htw30uUhDwZ021Jq9cqPFYbiLU1C/ng=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9znvGFeo7KZFrt7y3q93GbQueJ3GmplyuPXWtrYrNf 03Xg9zrHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABNxncfIsGDHgXa9Oa/KT8Vy Ts9W/H/J+rDbm96+a88SC4zLNDX6+hkZ9s7786wqahFbYqkFX8cU0b2f9XJT2Pf+rPGtuHZXQYm THQA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-"add_device" takes a name like eth0@1. Only the part in front of the
-'@' has to name a network device. The rest is free text and all of it
-becomes the name of a file in /proc/net/pktgen, where procfs takes a
-'/' as a directory separator. So "add_device lo@a/b" makes procfs look
-for a directory "lo@a" that doesn't exist and warn about it. Any user
-can do that in a network namespace of its own:
+proc_readdir_de() counts the entries of a directory and resumes a
+listing at the number getdents64() stopped at. The entries are sorted
+by name, so one that is added or removed in between shifts everything
+behind it by one. Listing /proc/net/dev_snmp6 with a buffer that holds
+".", ".." and "lo" and adding a device whose name sorts before "lo"
+makes the next call return "lo" a second time. Removing one that sorted
+before the position makes the next call skip an entry instead.
 
-  name 'lo@a/b'
-  WARNING: fs/proc/generic.c:174 at __xlate_proc_name+0xb1/0xf0, CPU#3: bash/241
-  Call Trace:
-   __proc_create+0xd0/0x9b0
-   proc_create_reg+0x45/0xf0
-   proc_create_data+0x77/0xf0
-   pktgen_thread_write+0xd8d/0x1750
+Since commit 895b4c0c79b0 ("fs/proc: fix uaf in proc_readdir_de()") an
+entry that is removed while it is being emitted also ends the listing
+right there. pde_subdir_next() finds nothing after an erased entry, so
+proc_readdir_de() reports the end of the directory and the next call
+resumes by number, skipping another entry. For /proc itself
+proc_root_readdir() takes that as the end of the static entries and
+moves on to the pids, so the rest of the static entries is missing.
+And if the position is behind the last entry when a call starts
+proc_readdir_de() returns 0, so /proc then lists no pids at all.
 
-With panic_on_warn that takes the machine down. And if "lo@a" exists
-because somebody added a device of that name, procfs used to register
-the new entry below that regular file, and removing "lo@a" freed both.
+So remember the name of the last entry a call emitted in the file and
+resume at the first entry after it, like kernfs resumes after the node
+it stopped at. An entry that was removed while it was emitted is
+continued after by its name as well. If the position was moved by a
+seek in between the listing counts from the start like before.
 
-Reject names with a '/'.
-
-Reported-by: Chris Mason <mason@kernel.org>
-Fixes: e6fce5b916cd ("pktgen: multiqueue etc.")
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Fixes: 895b4c0c79b0 ("fs/proc: fix uaf in proc_readdir_de()")
 Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- net/core/pktgen.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ fs/proc/generic.c  | 89 ++++++++++++++++++++++++++++++++++++++++++++++--------
+ fs/proc/internal.h |  1 +
+ fs/proc/proc_net.c |  1 +
+ fs/proc/root.c     |  1 +
+ 4 files changed, 80 insertions(+), 12 deletions(-)
 
-diff --git a/net/core/pktgen.c b/net/core/pktgen.c
-index d63eeadddfcc..02af70d360bc 100644
---- a/net/core/pktgen.c
-+++ b/net/core/pktgen.c
-@@ -3831,6 +3831,10 @@ static int pktgen_add_device(struct pktgen_thread *t, const char *ifname)
- 	int err;
- 	int node = cpu_to_node(t->cpu);
+diff --git a/fs/proc/generic.c b/fs/proc/generic.c
+index 9e59796349e1..588999058e66 100644
+--- a/fs/proc/generic.c
++++ b/fs/proc/generic.c
+@@ -87,6 +87,28 @@ static struct proc_dir_entry *pde_subdir_find(struct proc_dir_entry *dir,
+ 	return NULL;
+ }
  
-+	/* The name becomes the name of a file in /proc/net/pktgen. */
-+	if (strchr(ifname, '/'))
-+		return -EINVAL;
++/* The first entry of @dir that sorts after @name. */
++static struct proc_dir_entry *pde_subdir_after(struct proc_dir_entry *dir,
++					       const char *name,
++					       unsigned int len)
++{
++	struct rb_node *node = dir->subdir.rb_node, *after = NULL;
 +
- 	/* We don't allow a device to be on several threads */
++	while (node) {
++		struct proc_dir_entry *de = rb_entry(node,
++						     struct proc_dir_entry,
++						     subdir_node);
++
++		if (proc_match(name, de, len) < 0) {
++			after = node;
++			node = node->rb_left;
++		} else {
++			node = node->rb_right;
++		}
++	}
++	return rb_entry_safe(after, struct proc_dir_entry, subdir_node);
++}
++
+ static bool pde_subdir_insert(struct proc_dir_entry *dir,
+ 			      struct proc_dir_entry *de)
+ {
+@@ -278,6 +300,40 @@ struct dentry *proc_lookup(struct inode *dir, struct dentry *dentry,
+ 	return proc_lookup_de(dir, dentry, PDE(dir));
+ }
  
- 	if (__pktgen_NN_threads(t->net, ifname, FIND)) {
++/*
++ * Where the next readdir resumes. The entries are counted, so one that is
++ * added or removed in front of the position would shift what the next call
++ * returns. The name of the last entry emitted doesn't move.
++ */
++struct proc_dir_cursor {
++	loff_t pos;			/* the position behind the entry */
++	unsigned int len;
++	char name[NAME_MAX + 1];
++};
++
++/* If this can't remember the entry the next call counts from the start. */
++static void proc_dir_cursor_set(struct file *file, struct proc_dir_entry *de,
++				loff_t pos)
++{
++	struct proc_dir_cursor *cursor = file->private_data;
++
++	if (!cursor) {
++		cursor = kmalloc(sizeof(*cursor), GFP_KERNEL);
++		if (!cursor)
++			return;
++		file->private_data = cursor;
++	}
++	cursor->pos = pos;
++	cursor->len = de->namelen;
++	memcpy(cursor->name, de->name, de->namelen);
++}
++
++int proc_dir_release(struct inode *inode, struct file *file)
++{
++	kfree(file->private_data);
++	return 0;
++}
++
+ /*
+  * This returns non-zero if at EOF, so that the /proc
+  * root directory can use this and check if it should
+@@ -290,23 +346,26 @@ struct dentry *proc_lookup(struct inode *dir, struct dentry *dentry,
+ int proc_readdir_de(struct file *file, struct dir_context *ctx,
+ 		    struct proc_dir_entry *de)
+ {
++	struct proc_dir_cursor *cursor = file->private_data;
++	struct proc_dir_entry *dir = de;
+ 	int i;
+ 
+ 	if (!dir_emit_dots(file, ctx))
+ 		return 0;
+ 
+-	i = ctx->pos - 2;
+ 	read_lock(&proc_subdir_lock);
+-	de = pde_subdir_first(de);
+-	for (;;) {
+-		if (!de) {
+-			read_unlock(&proc_subdir_lock);
+-			return 0;
+-		}
+-		if (!i)
+-			break;
+-		de = pde_subdir_next(de);
+-		i--;
++	if (cursor && cursor->pos == ctx->pos) {
++		/* Resume after the last entry emitted, wherever it is now. */
++		de = pde_subdir_after(dir, cursor->name, cursor->len);
++	} else {
++		/* Moved by a seek, count from the start like always. */
++		de = pde_subdir_first(dir);
++		for (i = ctx->pos - 2; de && i; i--)
++			de = pde_subdir_next(de);
++	}
++	if (!de) {
++		read_unlock(&proc_subdir_lock);
++		return 1;
+ 	}
+ 
+ 	do {
+@@ -319,8 +378,13 @@ int proc_readdir_de(struct file *file, struct dir_context *ctx,
+ 			return 0;
+ 		}
+ 		ctx->pos++;
++		proc_dir_cursor_set(file, de, ctx->pos);
+ 		read_lock(&proc_subdir_lock);
+-		next = pde_subdir_next(de);
++		/* Removed in the meantime, go on after its name. */
++		if (RB_EMPTY_NODE(&de->subdir_node))
++			next = pde_subdir_after(dir, de->name, de->namelen);
++		else
++			next = pde_subdir_next(de);
+ 		pde_put(de);
+ 		de = next;
+ 	} while (de);
+@@ -348,6 +412,7 @@ static const struct file_operations proc_dir_operations = {
+ 	.llseek			= generic_file_llseek,
+ 	.read			= generic_read_dir,
+ 	.iterate_shared		= proc_readdir,
++	.release		= proc_dir_release,
+ };
+ 
+ static int proc_net_d_revalidate(struct inode *dir, const struct qstr *name,
+diff --git a/fs/proc/internal.h b/fs/proc/internal.h
+index df873df9afc5..04f7ce2b24ed 100644
+--- a/fs/proc/internal.h
++++ b/fs/proc/internal.h
+@@ -287,6 +287,7 @@ extern struct dentry *proc_lookup(struct inode *, struct dentry *, unsigned int)
+ struct dentry *proc_lookup_de(struct inode *, struct dentry *, struct proc_dir_entry *);
+ extern int proc_readdir(struct file *, struct dir_context *);
+ int proc_readdir_de(struct file *, struct dir_context *, struct proc_dir_entry *);
++int proc_dir_release(struct inode *, struct file *);
+ 
+ static inline void pde_get(struct proc_dir_entry *pde)
+ {
+diff --git a/fs/proc/proc_net.c b/fs/proc/proc_net.c
+index b1f5eafb069a..dbcf87a257e1 100644
+--- a/fs/proc/proc_net.c
++++ b/fs/proc/proc_net.c
+@@ -351,6 +351,7 @@ const struct file_operations proc_net_operations = {
+ 	.llseek		= generic_file_llseek,
+ 	.read		= generic_read_dir,
+ 	.iterate_shared	= proc_tgid_net_readdir,
++	.release	= proc_dir_release,
+ };
+ 
+ static __net_init int proc_net_ns_init(struct net *net)
+diff --git a/fs/proc/root.c b/fs/proc/root.c
+index 7fbbe92bf73a..dfee1caa26f7 100644
+--- a/fs/proc/root.c
++++ b/fs/proc/root.c
+@@ -441,6 +441,7 @@ static const struct file_operations proc_root_operations = {
+ 	.read		 = generic_read_dir,
+ 	.iterate_shared	 = proc_root_readdir,
+ 	.llseek		= generic_file_llseek,
++	.release	= proc_dir_release,
+ };
+ 
+ /*
 
 -- 
 2.53.0
