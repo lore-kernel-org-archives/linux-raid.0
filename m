@@ -1,90 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.53
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793823120;
-	b=l1SHeLsmqcWFs7XmKC/q9pqnZn71tmo0Dvqm9Bu+LPz/beXvEq4QKjDUCMGaGZLFiuUn
-	 ZB7WAnEIDW9UCry3tPqWRNJnFgOB2hdVXNb4c6lEcA/Fq4lKezWMGSB/O3EipW5zZc77G
-	 g8h9rEo1vOEB40eJlMTleh311mmf6paq2ZDgLi4qsqkGgXNYTylyy+T0iwneVBuMuofh1
-	 VIo/pEJaNj/mLzV0AHDrLYTqFOoEV/xHoahcUOYYh5TB3pswDItCZMNe7l4+PSB8XKMfc
-	 csVYfMSD6dTAg9pBgB3e81bGICbc6XDVFTsJ5rTFin7gQ1QS20fzCXesRFJMRssET8w==
+	t=1793826831;
+	b=jNhvVbXQRN1558IC4fjziO2l2SEGpINRjiVxPaPegM9LjBRIty6RH0QTqaQ1DvhY+sx9
+	 1zqYoo1mmk/q4U9a5D4NWN0cm//5gWFZ+AA1y4ku/f+9777xj56eLfICIUKS6zgDfxVsw
+	 LPmh4I0xFbq6SbpiMqBDnxK8C+LonL/V7PMJtlAvVVEIi/bEvP82CMB1jbsz89Es5dQLP
+	 O8adDgSNO8XkwVoU284Dfzu+4mTu1LYnjUV+sIEKBaXjGpi9o2oztbshoPUMEE9GwVs3U
+	 TxCPDyX8C29tTYNmjTdCTByxADxFVPK8fseba5R21+0TdS6o76Z8/K4FEhBML7Plu6g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793823120;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:X-Forwarded-Encrypted:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=LCqiLHf1DIbfKNXx3ccWkvqxBhOdwo3yYkazQxIGarg=;
-	b=DstcOKBj4GWGarBVNbvqwJGwm7QH9tzINiyddP4qh/MFNB6kg5k4hFahPiKg59FNv2Vt
-	 Ql4126P2X+7UDT4r1T7i+D1sPbesbB5D3NacOaikMnZ3meRZ5AwrCDpJZOLGk0kbbpTRe
-	 u6jM2Zi3wemVb3d2+ESc3jiw2SB08YZI88vTtWL1sqkuNQWTQaZ0JNyRhwKYE9z76auwD
-	 VbEZxWQSDuxvMxMSNejGpdDJRKTrjKTpzPjC1DJXpdbthL9JGUYquD3ugLciiDupGSk3V
-	 elEd6+1e2SiQScSnDqiaCz0ioIk8G6QSdLWpeBWzh7w8ubz+Qe+fvFlONw2HvYSrAHw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793826831;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
+	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
+	bh=1MxYRYKjXg/+oT1B67MpjVjXxOUB68rY8isEKfXqK2M=;
+	b=E9xtwCou4ZB54/yt7/3/86vFLoaK5TO6k6WEXE0kea3J91VM4jHB5+meYFByzK4wO3Zp
+	 HuafphyZ07tiAX+kW6aem2Lr054TZc2hf9F57zRPJmPDVg63DCEUv+Lew1jB93P/G/aKu
+	 Lnet2DVtu04aNBwvfOcfncFPn4Ok53qUupERIhF3RgpkOC9vbennkrxIw/7XTC+csvz5y
+	 5cRa6PDokTtUFRUKl+RQ0lPacP/QqygOsyEo4pqXQbXtV/oiwkXXRPEFFh55sYc0v5GzP
+	 3teRFKtsKgBNTJR9W+Bgn3JDZSHkxeH0feY/kpLgi9T05qg7O3LQ2S0Vv2u//oKTBRQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=linux-foundation.org;
-	spf=pass smtp.mailfrom=linuxfoundation.org;
-	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=google header.b=I87Xvan8;
-	arc=none smtp.remote-ip=209.85.218.53
-Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ETQGuZ5m;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B950607F2A8
-	for <linux-raid@vger.kernel.org>; Wed,  4 Nov 2026 20:11:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9B950607F2A8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C2466071AFB;
+	Wed,  4 Nov 2026 21:13:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=google header.b=I87Xvan8
-Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-c423b145922so163075766b.3
-        for <linux-raid@vger.kernel.org>; Wed, 04 Nov 2026 12:11:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1793823118; x=1794427918; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=LCqiLHf1DIbfKNXx3ccWkvqxBhOdwo3yYkazQxIGarg=;
-        b=I87Xvan82apTuNxTLJiwfiF4obnDHzVroOHVTzadV1YGUVp1QwnjRMxSVbsG/iK39G
-         EEVt14kbkIBBSSQJoM/D+3ut2JariDEU0SJNqemZCHsv4V/IgRY3Ymmj8T6Awj3Csf0U
-         0Zk4haU9R+TZWsmGmd7Lim+kcMslMdg/kdog0=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793823118; x=1794427918;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=LCqiLHf1DIbfKNXx3ccWkvqxBhOdwo3yYkazQxIGarg=;
-        b=ql1g73uVYBJjFRqHABJ6xqf+CE85o3liWEFEJu90neh4GFVcybZ/l+ONnovbZoNhqD
-         x4wgN8/Q/yG05pL676/mZnaIdNnP65V2DWsPouCZ0hnYFgFX+W9ZBwASlCl4qmZft1J8
-         7S5+AK8+rzLJqtfSE4D17bpJAOWwGcL/rEnQGM4CF2w/YAbbLFealfFOQVhxmsuPmPEV
-         No36jskpDH7gSl5LQGMnU3cTMu98f8xQhmU319iL8f9lsmmJPZRGwPMUUw/cecnHaCeT
-         B6zYeclxURoYQa0b5zy93Dh9w5lbjLjXsKI0DsZmpG2sbiMqto2eB6Hwvp7p01ClSZtZ
-         Iytg==
-X-Forwarded-Encrypted: i=1; AKwUvBxU9NSKAsYP/C5ZJBCZtmTVzF5p3DNc8EJXNMB1tFGmYmp6eIgDuFkzsNK6dScNidUjuk/8jHYfVBAs@vger.kernel.org
-X-Gm-Message-State: APuU4Z9wtZneZbmbD/qpwK+SHlqUuToJRUd0rv6gCiMoIhmTEq5cceJ3
-	SqAnt9oc/fY1Jd5Hs82mVl6T3tYWIc0+vamkF/v28aLR0nKTome9XFmUo7ItbDhjkyZC+XqCAo+
-	3VXFHnB7fBA==
-X-Gm-Gg: AYBFou0tudW/EyOMmS2Bijplj3RdGMCSfmswPxNgtd+Z66+Q9zP/p+J5OuUuKPpyRtY
-	+H9ro3ng7/cLAMwrgf9OkBLQKcovpDE5JGtaa8jhC6r1BlPE3F+L++NNHNpCxgbLiG70OGJl8oZ
-	3sdA7wL5F4U3+Yu3qnphPiY8elf7oon7cyYWloeK+kDVG5+sNEskloxk8Dm2wM5hjRbYZNTnrUk
-	/nMGVYv9PWPSuAI9wSG4xGvO6tD0ARdAH8ncNL6DmFUhjM03hNk+4049czWJFoy/Y5+UsyKTI1s
-	PExEAqnwl6e9EQ1IPRing84l0/xfrJvdZt1FhHVx4Jeg/DQer73QNS5JjZnpeXAobmikjgLe+SV
-	KOfkJh22b91mwLwrMvmeEl2MzpJ+pHXokfLTBT5TVeY3AsqYGYCSTWer4LDyfiCJTUw7X8FZuQ6
-	L9uSYjZpJWsdJMw1N9Bdje6V2qvjIxQdQgar0xXm1LW4f4iEuqS8KBU/5UT4XgHHvrBjh+q50DQ
-	ZQW+ZRxRRCqWn2aghCRwvBWlwLHXyH/fRHBvE4SBu/O4IQSZSk/zJlp9DMhGYBRFVKNbYkik5IW
-	dXECgFW97S9JYIm9NxEW5GyyUQyTF9s9kwwlEYD/1zH36xzcooTI4WZQte7PsDURv0pOjEziMRz
-	Icw==
-X-Received: by 2002:a17:907:940f:b0:c25:afb6:2d91 with SMTP id a640c23a62f3a-c4ca795fa03mr1526429966b.2.1793823118044;
-        Wed, 04 Nov 2026 12:11:58 -0800 (PST)
-Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com. [209.85.208.50])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c4d0e140005sm110480266b.5.2026.11.04.12.11.57
-        for <linux-raid@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Nov 2026 12:11:57 -0800 (PST)
-Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-6b579003f29so81993a12.0
-        for <linux-raid@vger.kernel.org>; Wed, 04 Nov 2026 12:11:57 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AKwUvByjhpz00HMPcRNBYlDKLT8a/wDqws98mA3TpfWLLPwTISy1HA/DuedSieqf1HbCSlc51BMG/c3UIOyr@vger.kernel.org
-X-Received: by 2002:a17:907:60c8:b0:c49:a4b1:9cb1 with SMTP id
- a640c23a62f3a-c4ca795fa50mr1973235866b.3.1793822725121; Wed, 04 Nov 2026
- 12:05:25 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ETQGuZ5m
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9FDB1F000C1;
+	Wed,  4 Nov 2026 21:13:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793826831;
+	bh=1MxYRYKjXg/+oT1B67MpjVjXxOUB68rY8isEKfXqK2M=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=ETQGuZ5mWrJaw5vMCNoxKDTP6j6Ov//pzU7UV0re+JQ/fOVwqabIgrja5LMlvIx3R
+	 mBlsuHBCVE8oDvKETlbRqL1mhIdq3tD2pozrg28w+TtoHjgYEwWMJ4CIpaO1h6KvxQ
+	 V3ufmOQrumr5xp/6TYUAYOVWxzXCl9UAFw/i9yKn1dgBRAbUrpnmTDlh+YdGCs76Yl
+	 EsaKk9QvFagOgFekDjd3Lf3WCADE6zYjwBULe2sa8XrpB7drKPKJkJrEFpU3FefsUh
+	 RzD53Gz+X/bLDWxUAm40hLd+bK3dqFI/hYSlTDpB/hxhYfKzRFrbamvLaNX4sWezYW
+	 AXz5pXYWXwUog==
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org,
+	"Christian Brauner (Amutable)" <brauner@kernel.org>,
+	Chuck Lever <cel@kernel.org>
+Subject: [PATCH RESEND v2 10/13] SUNRPC: let procfs own the wait queue of the procfs channel files
+Date: Wed,  4 Nov 2026 22:13:37 +0100
+Message-ID: <20261104-work-procfs-net-v2-10-221e2437fed1@kernel.org>
+In-Reply-To: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
+References: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -94,51 +114,115 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261104-work-procfs-v2-0-b45cd5789ac5@brauner> <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
-In-Reply-To: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 4 Nov 2026 12:05:08 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wj9Y9NcOesBBm+jhPjYa7qO00fD7g7uwX+H-k0-R2difA@mail.gmail.com>
-X-Gm-Features: AclHuK9j_YIgrwhhpWOlnull6heAULBd4dgTqoOhUQQjFm_MgoIgrL1vgPfefvI
-Message-ID: <CAHk-=wj9Y9NcOesBBm+jhPjYa7qO00fD7g7uwX+H-k0-R2difA@mail.gmail.com>
-Subject: Re: [PATCH RESEND v2 00/30] proc: convert the fs, kernel and mm
- entries (Part 5/7)
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, Jann Horn <jannh@google.com>, 
-	Josef Bacik <josef@toxicpanda.com>, Chris Mason <mason@kernel.org>, 
-	Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
-	Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
-	Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, Greg Kroah-Hartman <gregkh@suse.de>, 
-	Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
-	linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, ntfs3@lists.linux.dev, 
-	platform-driver-x86@vger.kernel.org, coreteam@netfilter.org, 
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net, 
-	jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
-	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, 
-	samba-technical@lists.samba.org, sparclinux@vger.kernel.org, 
-	linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
-	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
-	linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3889; i=brauner@kernel.org; h=from:subject:message-id; bh=QPerLLDMXFlA+1II+fYpDsDcCxwkLoYz0L35dMx6y10=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97tPPWss1reVowb5lm3abTz0rMjlm2gkBvWsyExf/X HRC4GaxZEcpC4MYF4OsmCKLQ7tJuNxynorNRpkaMHNYmUCGMHBxCsBEVukwMuzjjI+PiJCdw3+7 2mPbsYasgi9fNtZwRVfcuHZVTzg6v42R4eTzNOM3P9YXtbtlPnjWlcQ/W1jsYVuwd/jiwx3zgv1 CmAE=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-On Wed, 4 Nov 2026 at 11:49, Christian Brauner <brauner@kernel.org> wrote:
->
-> Part 5/7 of "proc: move procfs to what kernfs does", on top of part 2
+cache_poll() sleeps the poller on queue_wait, which went back to being
+a static queue so that a poll() on a procfs channel file can't be left
+on the queue of a cache_detail that its network namespace freed. procfs
+owns the queue poll() uses now and it outlives the file, so the procfs
+channel files leave the poll_wait() to procfs and an upcall wakes their
+pollers through proc_poll_notify(). The channel entry is remembered in
+the cache_detail for that and forgotten before the entries are removed.
+The rpc_pipefs files keep sleeping on queue_wait, procfs has nothing to
+do with them.
 
-Christian - way too many patches, re-sent much too often, cc'd to way
-too many people.
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+ include/linux/sunrpc/cache.h |  2 ++
+ net/sunrpc/cache.c           | 20 +++++++++++---------
+ 2 files changed, 13 insertions(+), 9 deletions(-)
 
-Nobody is going to read these repeated resends, and all you are doing
-is clogging up peoples mailboxes.
+diff --git a/include/linux/sunrpc/cache.h b/include/linux/sunrpc/cache.h
+index bf4fc543e1e5..9d508205ebb2 100644
+--- a/include/linux/sunrpc/cache.h
++++ b/include/linux/sunrpc/cache.h
+@@ -129,6 +129,8 @@ struct cache_detail {
+ 		struct proc_dir_entry	*procfs;
+ 		struct dentry		*pipefs;
+ 	};
++	/* the channel file in @procfs, for proc_poll_notify() */
++	struct proc_dir_entry	*procfs_channel;
+ 	struct net		*net;
+ };
+ 
+diff --git a/net/sunrpc/cache.c b/net/sunrpc/cache.c
+index d242b6f33cbc..f220a3036b6e 100644
+--- a/net/sunrpc/cache.c
++++ b/net/sunrpc/cache.c
+@@ -970,20 +970,18 @@ out:
+ }
+ 
+ /*
+- * Not in struct cache_detail: poll and epoll waiters stay queued until
+- * their file is closed, but a channel file in procfs can stay open after
+- * the cache_detail of its dying network namespace has been freed.
++ * For the rpc_pipefs channel files. Not in struct cache_detail: poll and
++ * epoll waiters stay queued until their file is closed, which can be after
++ * the cache_detail is gone. The procfs channel files are polled on the wait
++ * queue procfs owns for them instead, see proc_poll_notify().
+  */
+ static DECLARE_WAIT_QUEUE_HEAD(queue_wait);
+ 
+-static __poll_t cache_poll(struct file *filp, poll_table *wait,
+-			       struct cache_detail *cd)
++static __poll_t cache_poll(struct file *filp, struct cache_detail *cd)
+ {
+ 	__poll_t mask;
+ 	struct cache_reader *rp = filp->private_data;
+ 
+-	poll_wait(filp, &queue_wait, wait);
+-
+ 	/* alway allow write */
+ 	mask = EPOLLOUT | EPOLLWRNORM;
+ 
+@@ -1248,6 +1246,7 @@ static int cache_do_upcall(struct cache_detail *detail, struct cache_head *h)
+ 	if (ret != -EAGAIN && detail->cache_notify)
+ 		detail->cache_notify(detail, h);
+ 	wake_up(&queue_wait);
++	proc_poll_notify(detail->procfs_channel);
+ 	if (ret == -EAGAIN) {
+ 		kfree(buf);
+ 		kfree(crq);
+@@ -1593,7 +1592,7 @@ static __poll_t cache_poll_procfs(struct file *filp, poll_table *wait)
+ {
+ 	struct cache_detail *cd = pde_data(file_inode(filp));
+ 
+-	return cache_poll(filp, wait, cd);
++	return cache_poll(filp, cd);
+ }
+ 
+ static int cache_open_procfs(struct inode *inode, struct file *filp)
+@@ -1690,6 +1689,7 @@ static const struct proc_ops cache_flush_proc_ops = {
+ static void remove_cache_proc_entries(struct cache_detail *cd)
+ {
+ 	if (cd->procfs) {
++		cd->procfs_channel = NULL;
+ 		proc_remove(cd->procfs);
+ 		cd->procfs = NULL;
+ 	}
+@@ -1718,6 +1718,7 @@ static int create_cache_proc_entries(struct cache_detail *cd, struct net *net)
+ 				     &cache_channel_proc_ops, cd);
+ 		if (p == NULL)
+ 			goto out_nomem;
++		cd->procfs_channel = p;
+ 	}
+ 	if (cd->cache_show) {
+ 		p = proc_create_data("content", S_IFREG | 0400, cd->procfs,
+@@ -1806,7 +1807,8 @@ static __poll_t cache_poll_pipefs(struct file *filp, poll_table *wait)
+ {
+ 	struct cache_detail *cd = RPC_I(file_inode(filp))->private;
+ 
+-	return cache_poll(filp, wait, cd);
++	poll_wait(filp, &queue_wait, wait);
++	return cache_poll(filp, cd);
+ }
+ 
+ static long cache_ioctl_pipefs(struct file *filp,
 
-             Linus
+-- 
+2.53.0
+
