@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793822002;
-	b=ECuKG9HJ8gW2JjDJkubf4neGKb6WwQJfOZRuzRAKDupmrREc3sfNUCZzP+p/Isddiaiv
-	 g9YN93iF2douLixEmxtLx3TDBb3vh/OqQRqgw6NYBsjkeySzcxUXg6RESmW86CGdfXqk7
-	 XHA/BriDZ731eCWi1f8/oIwkg9OLI+ThIcGntgkoMpdcQYG5V0Y9A1NgAeiO6ydiGx3p6
-	 xSwYj5zZS9XpbvHAvwie36zI4JCGvJq408pc3E1DTKsLiZSp/nv+FJciEd+oFWZkIU7fC
-	 7KzXqK3UtVAng6WihomI3kj/0/eBixpAAln58KRNAJhKHCZG2sCCxGnfkRWMI4elvtg==
+	t=1793822031;
+	b=QDFD6L95owrlikn6RocxKrwO8Zo0tQru4SSLCMtg+/Kmmr7CqseXIw9Asreju+mGv0oK
+	 xLiDDycilFy4vbWThZY/CgtsYrvzk5La8KA6XpcSpcPVrMdRwmlPSHQ6gIMsdeaSlKVRN
+	 uZrfK8mZSVPHZTyojMYxmX0Sg/2LDRs+hqsz8fcrSssVmhhk5wltcxEYPTLGMvceEZu3X
+	 RfPD2TjRqad3oXjn/jFf9UFYu+irO1ynuF6468hjxbLxAqaFGjwpPGdl+Bn0V4GRwHfNC
+	 p9gDH6X9QZa4ufaXHUP4u++KXo84DSILZR8oJbGeDxGnPr8JItMJVNTNja3uS52NbGw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793822002;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793822031;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=4FMH8RRbXwyOGE4j1ACekL014/FVLGRJa3NjwiBwv4k=;
-	b=JNBAmi0sONZBtWaEDcB8QgzjptMG+xE0AmdIQDA9RaR6h9UXHlHDZ1a3MjBZWdViHUV4
-	 eEibfLOVv+xUfrzDoPJCl9tiaYHX9mHh5+Lbd5u56teHdfAxoJ3Vm4ITlZ9Ho+hoqDDWM
-	 b7m8ht7zVuCuIiv5Nw4VY5U3G5Zkdjun+PZCVnDt3712xhx8ufv06fyOZdsD068u9nHk7
-	 FrNdpPojZjxPjJyKtOehCyQ0dW31nP8w1ozce9DWK9BEKcW/RVAv/OrNlzjIeu4l6Khh8
-	 ef3YpLqGtUhj+xTKO5tMei3BVq+joFQ0YI2IjysakxuOyt8RYk9c544ZSeawHhKO6NA==
+	bh=f4E5LhgvAcYWZljBgO/W1U3MMJwdn+qZCE/pQraBe8U=;
+	b=vpTPgj2aHAPv4016g7qv5RHiu4kYv5gSg691RMKFZekHijddOpQrefAoy0d1G6iA618y
+	 Kx10jviR+STTLW9ivYmbS1g6Y4aYRfzj63p699jEkI4xfVV2Gwr2iTLunHtH2J8o2J9w8
+	 6PwgjpRlD5/8edZdGOP18EYvIZnmnrJqsyvXM1rHOo2oWax4HLz+6xqxGpVO87IosJ94p
+	 zNJy7+M/SnSfWpHV+dNW+xzsDpXYgxTnl3qTt9XrnzeANrvmOwebBybdIRpZpL7cwq4CI
+	 nJjqy5+8v3NGaoaJfaAugL2nPE6H6rII53qmLnHNsh3cnG94dFIS/Lj6XSYT5VZK01g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gqnu7WCa;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ay5fDaWt;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E17E2609693B;
-	Wed,  4 Nov 2026 19:53:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84958606BA2E;
+	Wed,  4 Nov 2026 19:53:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gqnu7WCa
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1749F1F00919;
-	Wed,  4 Nov 2026 19:53:08 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ay5fDaWt
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AAC11F00919;
+	Wed,  4 Nov 2026 19:53:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793822001;
-	bh=4FMH8RRbXwyOGE4j1ACekL014/FVLGRJa3NjwiBwv4k=;
+	s=k20260515; t=1793822031;
+	bh=f4E5LhgvAcYWZljBgO/W1U3MMJwdn+qZCE/pQraBe8U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=gqnu7WCank0HPKzxIIuR0c+Y7qFDIfOx4OhXQRsH+bwXeorJsZ7tfbWZNyh3GbhMt
-	 NxTOPufkaHrp11YLfNa93/yXQ6n5h0z6fpBeg6Ly2XOx7LhglEYilynsq/HFu5e5m3
-	 ATdWLZ7uW1x0Y8xMKxBVUpJaU7+YU0ZruYzah//QhnYRcr/O7neJgjfCiw3cbGeL0f
-	 /scHMQ7wD59wgQWjLWITDYTvE8W4dpcfUNiJQWmwj5fEXCsq8JXV17jYeqe34cF0gX
-	 jLq6ATZZOpXLQz2og6LqAuxsn4M17sNhw8oW2RQKUyiL2Rz59/u2T2Au+Zeqcz04DQ
-	 gpufF/LrdsChg==
+	b=Ay5fDaWtG/yWIDOYM+DggFzTN2LWbh0BW6otP+jIWAHXSuBEsVaLRZz5ZGfpgRvCE
+	 6shldu61dY4NwBfkCYbw7q4cTqz3itoS1DSO0jJ/m80wdS5Zd4cXDBc3qovYZ0srLC
+	 U+IQP3Cf9hMAd3vazbsilUbA8DkxquoHSwEkBJ+7nEkOcCIfxO9SZLsKEJkxUQ3qC/
+	 DcxdbWZq7MCNC9JXaZdePv4FyzB69QN2POFSFhjzDTIlCOpxPJ8V89Q5VWoSMQ/EHp
+	 J1FcUjC8ycDtKpuAOuzPui/5hlEvRP7hunia1FQ4b8dx3JEke6caIeMQIFr6OP34Hm
+	 Nxddkhn+cC83A==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -100,9 +100,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-debuggers@vger.kernel.org,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 14/30] profiling: let procfs copy in writes to /proc/profile
-Date: Wed,  4 Nov 2026 20:53:06 +0100
-Message-ID: <20261104-work-procfs-fs-v2-14-319e0f9a8aae@kernel.org>
+Subject: [PATCH RESEND v2 16/30] profiling: mark /proc/profile permanent
+Date: Wed,  4 Nov 2026 20:53:37 +0100
+Message-ID: <20261104-work-procfs-fs-v2-16-319e0f9a8aae@kernel.org>
 In-Reply-To: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
 References: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -116,52 +116,32 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1504; i=brauner@kernel.org; h=from:subject:message-id; bh=acPYXqQQVYOg2sB+M+GQAGt+iBO20XAT2Sfl3M0drAc=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97rHOf25YKDbxbO9Bg6IFQW80Jrk2dVu9Wx+89J/Uj +nLeu/rdpSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEykIZiRYcq1Of62b8t3Tr08 3yy0w/fMvbrULi7+T2u03cst/b77X2BkOMOyo3gzb8Wco9XFOhk9DzgWqprLqslOEzaU3DZxl4A KIwA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=817; i=brauner@kernel.org; h=from:subject:message-id; bh=G0gwYdZ16oKFC7EZJsDlPxepqJg/P4CRWLJP6izrYeU=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97rGrTu0wWKSzkuXO+Urv0AN64bf3zr/V5uClEO3wY I7J/p1/OkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACZyag7DP5V5JQ833nexiq6f s5gt0f6uqxUzZ/T9PH2FDXJ9PK+sWhkZJl1nDLj2O2fpAYUv714J5enO/mdzabLGrvDt7b2/l0U pcQAA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-Implement ->proc_write_buf() so procfs copies in what is written before
-it pins the entry, and take the multiplier from that copy. Writes
-larger than PAGE_SIZE - 1 bytes fail with -EINVAL now.
+/proc/profile is created when profiling is turned on and never removed.
+Say so with PROC_ENTRY_PERMANENT, procfs then calls into it without
+pinning it.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- kernel/profile.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ kernel/profile.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/kernel/profile.c b/kernel/profile.c
-index 820d5ec909d4..dc2db66a77d2 100644
+index 64f6a45834b1..0c2672adcbb5 100644
 --- a/kernel/profile.c
 +++ b/kernel/profile.c
-@@ -189,16 +189,14 @@ int __weak setup_profiling_timer(unsigned mult)
-  * Writing a 'profiling multiplier' value into it also re-sets the profiling
-  * interrupt frequency, on architectures that support this.
-  */
--static ssize_t write_profile(struct file *file, const char __user *buf,
--			     size_t count, loff_t *ppos)
-+static ssize_t write_profile(struct file *file, char *buf, size_t count,
-+			     loff_t *ppos)
- {
- #ifdef CONFIG_SMP
- 	if (count == sizeof(int)) {
- 		unsigned int multiplier;
- 
--		if (copy_from_user(&multiplier, buf, sizeof(int)))
--			return -EFAULT;
--
-+		memcpy(&multiplier, buf, sizeof(int));
- 		if (setup_profiling_timer(multiplier))
- 			return -EINVAL;
- 	}
-@@ -209,7 +207,7 @@ static ssize_t write_profile(struct file *file, const char __user *buf,
+@@ -203,7 +203,7 @@ static ssize_t write_profile(struct file *file, char *buf, size_t count,
+ }
  
  static const struct proc_ops profile_proc_ops = {
- 	.proc_read	= read_profile,
--	.proc_write	= write_profile,
-+	.proc_write_buf	= write_profile,
+-	.proc_flags	= PROC_ENTRY_FULL_READS,
++	.proc_flags	= PROC_ENTRY_PERMANENT | PROC_ENTRY_FULL_READS,
+ 	.proc_read_buf	= read_profile,
+ 	.proc_write_buf	= write_profile,
  	.proc_lseek	= default_llseek,
- };
- 
 
 -- 
 2.53.0
