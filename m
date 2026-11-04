@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793814839;
-	b=yNYCeok0f5akSDG7r3v64P9avt2zOv8osMZYLkk4JbX53Ms7TnqcNxsEeq8pRIds9W3c
-	 4u5QMA117yBBypmCe662Y4ftsNcTRUT0buJTIsKXwA4g6MM+jyG7XfRZchTtjRUX/U6TQ
-	 /FMaW64Cg5JX+qB01MWycx7vTZ7ZDPVMmzfHZ4AjJjVaXP8DedbPK6G8CTVDf+dmKZbSU
-	 lEI56qDIKqB+uZouWaeeUCFIahoCbYqTNmwLJBORcwB4OdBazyHvufR7Z42bCsxu9+5Oz
-	 3T0Uq6pAUZKIKDeLfdyEAG/azV37QWzeRQ4XujNxP93DABrnT9pf+POfIpnoCWjwTgQ==
+	t=1793814885;
+	b=oMNjTjKcmgEW6yMpfpJ3qQtFTlGaQ6FjisdSc8kwMCFcDYtY8nkfxFX4NQSBmzojQlgX
+	 vJvcd5QrXhmdP2RVjjR3pCykapnib+3JrcqY0OM8qA3A0IapUjqOOQiEnjJztjqkdHMHb
+	 MaaDtzSo3NNaBNcV0A5rrPuQQCmTO1BRW0W7zIp1IgQART54SJFUgEKc6/ho9E+AHFunz
+	 GLERQk/OmGUR3R5g/1n+KRkeMmXl2HgwAdujYXHh/1jdtv12uSFNLcEPgr9uuyc1qgaof
+	 6TScOQb2GExPg1ERn853Iw4kBWRrRl9k4pgTnAdhQuPYCxEc2M3phiE3jgRjzqqSqxA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793814839;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793814885;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=bxrLiMapbfHc1EZ+4ADuNXD+VcOTR1takrrVPNDTeA0=;
-	b=G47iB2fMLDENgCbYQPUtlmenEPx9jMknvRKUlFwZ2/ua4unN0PXsLeB2Xw68Ej0cgDSF
-	 PeDV465GCv76sMApJcvpCTK3/21GukXkJRBB6HljxHTCek5WZurrbj2cTnlLK5gksQV9b
-	 1R5ActnVf2dThtpWm2+B8ZX2KlHtxKD6+pI1nzaQw767jPSBQukmAuar9Yf+NQqjC7Seo
-	 X63Y5zjVpZ08T9kSTym2dQSydCXCV+IdZfFkwy4Y5dhEqKgHEzxHuT2hSFGd+u5ekqBd7
-	 14Hxnd/HG2seACXRlo+Nd2vF6QBTDvK0tTR/62nciuKD/pq9Eu36NdmIXDCKveSkvCQ==
+	bh=/kkSM5euWaBmFK3xxQcLv4mgEkXFSNdIObYnznwfIo0=;
+	b=4gBVQu6xXPMmp8SdmpwCqd7sI65wK0xeTX4/u6Dq+DmN/xPowelpWrHKZUAWg5IqmHol
+	 tUU0jDfAhUVzuOr5BKCV9PdI5Iruoki213ws0ksEiq+oXUYwevYQlPq3TrTxMb4BWzkRZ
+	 Hz9ZezFFaX4GwDzEzwzpO5d2U5f3K25HYWRywu8Caclt1HdZzzubvBsE01bgee1BEH6S0
+	 V894JpEF0jLtG7tiKNWsdY3IL3Q43hoYaTW84lsaKP0F31AVRVfzIUHqHyImCfwFFkdAL
+	 t5yWnz5FFClVT9VD/E3s4uyMQT4EHbVXT5AKVn4Aw7YqccKDIidfKcccZjFOQoiz4AA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hR983dtE;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z6GBQG3a;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3979606B22A;
-	Wed,  4 Nov 2026 17:53:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DA0E606C905;
+	Wed,  4 Nov 2026 17:54:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hR983dtE
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98F761F0093A;
-	Wed,  4 Nov 2026 17:53:35 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z6GBQG3a
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAB5C1F000C1;
+	Wed,  4 Nov 2026 17:54:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793814838;
-	bh=bxrLiMapbfHc1EZ+4ADuNXD+VcOTR1takrrVPNDTeA0=;
+	s=k20260515; t=1793814884;
+	bh=/kkSM5euWaBmFK3xxQcLv4mgEkXFSNdIObYnznwfIo0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=hR983dtEUOSoR1nExeO0GeUwrjO/mgN+D93Hhi/YSJLgc+1HDjfD6+S1cMOHcfPiT
-	 EwYGbEXBA/2fP9wa9RUJc04pMLMUFs6iNYt5+uuoKFrGCAZ+txysVQRWfJZwCiA+36
-	 Kv6xb59h1lmkmNz2gcyZtJxNxT1pTMrmjXv0sxgWirSDR2g3Za04iKGP39Hj6YdQTl
-	 y5FF0uUYM1eHAIlFWaGpq2EWgbuk/UufrvUpVcYmkznTkZZpAQ78QK90TyF+5BousJ
-	 jriw2793lOU9jehM5A4wHIN7wbucrDzox4jCw/nDBd3RuuoodmWGmRhfe06iR5wnpq
-	 9u9MNzXAk8L5w==
+	b=Z6GBQG3a+cE9+wQbayuod2AfwcA5eSI1rtdPAEkR6NsmPTw1AE/19Dxg/FB18Obf3
+	 XeQ2JrZZMlq292+9ChK0bIQZeBI8yTk2Y7w0ArULtzz4HoZpwmfFIWQXX01jOs2qz2
+	 dBa6XSwjjcSVxzrNHHQHUyzzPpTJ3n31iuGj1X6UVrBJaXhutOPCNLWDGPPyku7CsY
+	 ADhF22IYElhWlzbCL+rEi0mABGy1i40iw8REYvQq+3G3YTtbJWrStHhaTNtT19/eg/
+	 Y2DXQdQbQR0mASt8maUnvhPyhKOUgnLTqnfjby8Gs9PaSRK+KNbc19NmvAxKsJvlJb
+	 jl2nFD68jaEVQ==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -99,11 +99,10 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-modules@vger.kernel.org,
 	linux-debuggers@vger.kernel.org,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
-	Chuck Lever <cel@kernel.org>,
-	stable@vger.kernel.org
-Subject: [PATCH v2 31/51] proc: don't WARN about a name that is already registered
-Date: Wed,  4 Nov 2026 18:47:17 +0100
-Message-ID: <20261104-work-procfs-bugfixes-v2-31-bbf7d5546809@kernel.org>
+	Chuck Lever <cel@kernel.org>
+Subject: [PATCH v2 33/51] selftests/proc: check a /proc listing while entries come and go
+Date: Wed,  4 Nov 2026 18:47:19 +0100
+Message-ID: <20261104-work-procfs-bugfixes-v2-33-bbf7d5546809@kernel.org>
 In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -117,67 +116,314 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2415; i=brauner@kernel.org; h=from:subject:message-id; bh=zKPnydEa7A3MJSKUBbljFnXGgiSfil9PV1OK0LsDT40=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9znv6v+fTdPXzZly6K78zubTOUDi3Ruzh+oLLi/f2t ta+4ivc31HKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCRMA+Gv0Lp97/U9/7qeXCd 84skr8y50Atv1zx7Ez9nf/97g/QpR3cw/LN/tfm1hsfnn7JPfh8xM7OMOVTLOG/+thWN9s07szU vWjECAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=9018; i=brauner@kernel.org; h=from:subject:message-id; bh=NzSqjSqcJKKkJ7jf3TwnqEZW3Bg2Bj/+2ncCZpJHWz8=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9znteUPfza18Zl1H306y789/998maHMe98ybzTa/LZ e7/2D687ShlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZjIxzcM/10mHY251p3WcXHP U1lhYVf/x9a7/IWf3ja4HKfZt1bWr4Xhr8jHyDNC91+GvAzI2e9Wfnz9rU0/6kyfbWNMMrCbZuM aygkA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-proc_register() WARNs when the directory already has an entry of the
-same name and fails the registration. Callers that pick their names
-themselves should never get there but some take names from userspace.
-pktgen creates a file for each device a writer of "add_device" adds,
-named after the device. A device can have any name, including "pgctrl"
-or "kpktgend_0", the names of pktgen's own files:
+List /proc/net/dev_snmp6 of a new network namespace while a tun device
+comes and goes:
 
-  ip link set lo name pgctrl
-  ip link set pgctrl up
-  echo "add_device pgctrl" > /proc/net/pktgen/kpktgend_0
+- with a buffer that holds the dots and "lo", add a device whose name
+  sorts first, finish the listing: "lo" is listed once
 
-  proc_dir_entry 'pktgen/pgctrl' already registered
-  WARNING: fs/proc/generic.c:404 at proc_register+0x555/0x8b0, CPU#0: bash/241
-  Call Trace:
-   proc_create_data+0x9f/0xf0
-   pktgen_thread_write+0xd9b/0x1780
-   proc_reg_write+0x1c2/0x3c0
-   vfs_write+0x1cd/0xfa0
+- with that device added and a buffer that holds the dots and it,
+  remove it, finish the listing: "lo" is still listed
 
-The files of a network namespace belong to the root of its user
-namespace and none of this requires a capability. So once pktgen is
-loaded an unprivileged user can taint the kernel, or crash it with
-panic_on_warn, from namespaces of its own. pktgen itself copes with
-the failed registration just fine.
+- with that device added, stall getdents64() on a userfaultfd page
+  while it writes the device's entry, remove the device, finish the
+  listing: "lo" is still listed
 
-So go back to what proc_register() did before commit 6c2f91e077f1
-("proc: use WARN() rather than printk+backtrace") and what
-sysfs_warn_dup() does for sysfs: report the name with pr_warn() and
-dump the stack. While at it, do that after dropping proc_subdir_lock
-instead of printing a backtrace while holding the lock that every
-lookup and readdir in procfs needs.
+All three fail without the fix, the first lists "lo" twice, the other
+two not at all.
 
-Reported-by: Chris Mason <mason@kernel.org>
-Fixes: 6c2f91e077f1 ("proc: use WARN() rather than printk+backtrace")
-Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/proc/generic.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ tools/testing/selftests/proc/.gitignore           |   1 +
+ tools/testing/selftests/proc/Makefile             |   1 +
+ tools/testing/selftests/proc/config               |   4 +
+ tools/testing/selftests/proc/proc-readdir-churn.c | 240 ++++++++++++++++++++++
+ 4 files changed, 246 insertions(+)
 
-diff --git a/fs/proc/generic.c b/fs/proc/generic.c
-index 6ac9c4c13897..9e59796349e1 100644
---- a/fs/proc/generic.c
-+++ b/fs/proc/generic.c
-@@ -402,9 +402,10 @@ struct proc_dir_entry *proc_register(struct proc_dir_entry *dir,
- 	write_lock(&proc_subdir_lock);
- 	dp->parent = dir;
- 	if (pde_subdir_insert(dir, dp) == false) {
--		WARN(1, "proc_dir_entry '%s/%s' already registered\n",
--		     dir->name, dp->name);
- 		write_unlock(&proc_subdir_lock);
-+		pr_warn("proc_dir_entry '%s/%s' already registered\n",
-+			dir->name, dp->name);
-+		dump_stack();
- 		goto out_free_inum;
- 	}
- 	write_unlock(&proc_subdir_lock);
+diff --git a/tools/testing/selftests/proc/.gitignore b/tools/testing/selftests/proc/.gitignore
+index 9c9735570abf..8520c7878ea2 100644
+--- a/tools/testing/selftests/proc/.gitignore
++++ b/tools/testing/selftests/proc/.gitignore
+@@ -8,6 +8,7 @@
+ /proc-maps-race
+ /proc-multiple-procfs
+ /proc-net-dev-lseek
++/proc-readdir-churn
+ /proc-empty-vm
+ /proc-pid-vm
+ /proc-self-map-files-001
+diff --git a/tools/testing/selftests/proc/Makefile b/tools/testing/selftests/proc/Makefile
+index a7de2bb6d8be..e0c0d313f4d0 100644
+--- a/tools/testing/selftests/proc/Makefile
++++ b/tools/testing/selftests/proc/Makefile
+@@ -11,6 +11,7 @@ TEST_GEN_PROGS += proc-2-is-kthread
+ TEST_GEN_PROGS += proc-loadavg-001
+ TEST_GEN_PROGS += proc-maps-race
+ TEST_GEN_PROGS += proc-net-dev-lseek
++TEST_GEN_PROGS += proc-readdir-churn
+ TEST_GEN_PROGS += proc-empty-vm
+ TEST_GEN_PROGS += proc-pid-vm
+ TEST_GEN_PROGS += proc-self-map-files-001
+diff --git a/tools/testing/selftests/proc/config b/tools/testing/selftests/proc/config
+index 68fbd2b35884..052e365af5a9 100644
+--- a/tools/testing/selftests/proc/config
++++ b/tools/testing/selftests/proc/config
+@@ -1 +1,5 @@
+ CONFIG_PROC_FS=y
++CONFIG_NET_NS=y
++CONFIG_IPV6=y
++CONFIG_TUN=y
++CONFIG_USERFAULTFD=y
+diff --git a/tools/testing/selftests/proc/proc-readdir-churn.c b/tools/testing/selftests/proc/proc-readdir-churn.c
+new file mode 100644
+index 000000000000..fd9b504b60f5
+--- /dev/null
++++ b/tools/testing/selftests/proc/proc-readdir-churn.c
+@@ -0,0 +1,240 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * A listing of a /proc directory that takes more than one getdents64()
++ * must not show an entry twice or skip one when an entry is added or
++ * removed in between, and a listing must go on after an entry that is
++ * removed while it is being emitted. /proc/net/dev_snmp6/<dev> of a tun
++ * device comes and goes with the device.
++ */
++#define _GNU_SOURCE
++#include <dirent.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <limits.h>
++#include <linux/if.h>
++#include <linux/if_tun.h>
++#include <linux/userfaultfd.h>
++#include <poll.h>
++#include <pthread.h>
++#include <sched.h>
++#include <string.h>
++#include <sys/ioctl.h>
++#include <sys/mman.h>
++#include <sys/syscall.h>
++#include <unistd.h>
++
++#include "../kselftest_harness.h"
++
++#define SNMP6_DIR	"/proc/net/dev_snmp6"
++#define TUN_NAME	"a0"		/* sorts before "lo" */
++#define TUN_PATH	SNMP6_DIR "/" TUN_NAME
++#define SMALL_BUF	80		/* ".", ".." and one short name */
++#define NAMES		64
++
++static int tun_open(const char *name)
++{
++	struct ifreq ifr = {};
++	int fd;
++
++	fd = open("/dev/net/tun", O_RDWR | O_CLOEXEC);
++	if (fd < 0)
++		return -1;
++	strncpy(ifr.ifr_name, name, IFNAMSIZ - 1);
++	ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
++	if (ioctl(fd, TUNSETIFF, &ifr)) {
++		close(fd);
++		return -1;
++	}
++	return fd;
++}
++
++/* one getdents64() into @buf, the names appended to @names */
++static int list(int fd, char *buf, size_t size, char names[][NAME_MAX + 1],
++		int *n)
++{
++	long ret, off;
++	int got = 0;
++
++	ret = syscall(__NR_getdents64, fd, buf, size);
++	if (ret < 0)
++		return -errno;
++	for (off = 0; off < ret;) {
++		struct dirent64 *d = (void *)(buf + off);
++
++		if (*n < NAMES)
++			strcpy(names[(*n)++], d->d_name);
++		got++;
++		off += d->d_reclen;
++	}
++	return got;
++}
++
++static int count(char names[][NAME_MAX + 1], int n, const char *name)
++{
++	int i, c = 0;
++
++	for (i = 0; i < n; i++)
++		if (!strcmp(names[i], name))
++			c++;
++	return c;
++}
++
++/* removes the device once getdents64() faults on its entry, then resolves */
++struct stall {
++	int uffd;
++	int tun;
++	unsigned long addr;
++	unsigned long len;
++	int removed;
++};
++
++static void *stall_resolve(void *arg)
++{
++	struct stall *s = arg;
++	struct pollfd pfd = { .fd = s->uffd, .events = POLLIN };
++	struct uffdio_zeropage zero = {
++		.range = { .start = s->addr, .len = s->len },
++	};
++	struct uffd_msg msg;
++
++	if (poll(&pfd, 1, 10000) != 1)
++		return NULL;
++	if (read(s->uffd, &msg, sizeof(msg)) != sizeof(msg) ||
++	    msg.event != UFFD_EVENT_PAGEFAULT)
++		return NULL;
++	close(s->tun);
++	s->removed = access(TUN_PATH, F_OK) == -1;
++	ioctl(s->uffd, UFFDIO_ZEROPAGE, &zero);
++	return NULL;
++}
++
++FIXTURE(proc_readdir) {
++	int dir;
++	int n;
++	char names[NAMES][NAME_MAX + 1];
++	char buf[65536];
++};
++
++FIXTURE_SETUP(proc_readdir)
++{
++	int tun;
++
++	if (unshare(CLONE_NEWNET))
++		SKIP(return, "unshare(CLONE_NEWNET): %s", strerror(errno));
++	tun = open("/dev/net/tun", O_RDWR | O_CLOEXEC);
++	if (tun < 0)
++		SKIP(return, "/dev/net/tun: %s", strerror(errno));
++	close(tun);
++	self->dir = open(SNMP6_DIR, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
++	if (self->dir < 0)
++		SKIP(return, SNMP6_DIR ": %s", strerror(errno));
++	self->n = 0;
++}
++
++FIXTURE_TEARDOWN(proc_readdir)
++{
++	close(self->dir);
++}
++
++/* a device added in front of the position doesn't repeat an entry */
++TEST_F(proc_readdir, add_in_front)
++{
++	int tun;
++
++	/* ".", ".." and "lo" */
++	ASSERT_EQ(list(self->dir, self->buf, SMALL_BUF, self->names, &self->n), 3);
++	ASSERT_EQ(count(self->names, self->n, "lo"), 1);
++
++	tun = tun_open(TUN_NAME);
++	ASSERT_GE(tun, 0);
++	ASSERT_EQ(access(TUN_PATH, F_OK), 0);
++
++	while (list(self->dir, self->buf, sizeof(self->buf), self->names,
++		    &self->n) > 0)
++		;
++	EXPECT_EQ(count(self->names, self->n, "lo"), 1);
++	close(tun);
++}
++
++/* a device removed in front of the position doesn't skip an entry */
++TEST_F(proc_readdir, remove_in_front)
++{
++	int tun;
++
++	tun = tun_open(TUN_NAME);
++	ASSERT_GE(tun, 0);
++	ASSERT_EQ(access(TUN_PATH, F_OK), 0);
++
++	/* ".", ".." and the device, "lo" doesn't fit */
++	ASSERT_EQ(list(self->dir, self->buf, SMALL_BUF, self->names, &self->n), 3);
++	ASSERT_EQ(count(self->names, self->n, TUN_NAME), 1);
++
++	/* closing the device unregisters it and removes its entry */
++	close(tun);
++	ASSERT_EQ(access(TUN_PATH, F_OK), -1);
++
++	while (list(self->dir, self->buf, sizeof(self->buf), self->names,
++		    &self->n) > 0)
++		;
++	EXPECT_EQ(count(self->names, self->n, "lo"), 1);
++}
++
++/* the entry being emitted is removed meanwhile, the listing goes on */
++TEST_F(proc_readdir, remove_current)
++{
++	struct uffdio_api api = { .api = UFFD_API };
++	struct uffdio_register reg = {};
++	long page = sysconf(_SC_PAGESIZE);
++	struct stall s = {};
++	pthread_t thread;
++	char *map;
++	long ret, off;
++
++	s.uffd = syscall(__NR_userfaultfd, O_CLOEXEC | O_NONBLOCK);
++	if (s.uffd < 0)
++		SKIP(return, "userfaultfd: %s", strerror(errno));
++	ASSERT_EQ(ioctl(s.uffd, UFFDIO_API, &api), 0);
++
++	/* the first page is there, the second one faults */
++	map = mmap(NULL, 2 * page, PROT_READ | PROT_WRITE,
++		   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
++	ASSERT_NE(map, MAP_FAILED);
++	map[0] = 0;
++	s.addr = (unsigned long)map + page;
++	s.len = page;
++	reg.range.start = s.addr;
++	reg.range.len = s.len;
++	reg.mode = UFFDIO_REGISTER_MODE_MISSING;
++	ASSERT_EQ(ioctl(s.uffd, UFFDIO_REGISTER, &reg), 0);
++
++	s.tun = tun_open(TUN_NAME);
++	ASSERT_GE(s.tun, 0);
++	ASSERT_EQ(access(TUN_PATH, F_OK), 0);
++	ASSERT_EQ(pthread_create(&thread, NULL, stall_resolve, &s), 0);
++
++	/*
++	 * ".." ends right before the second page, so writing the record of
++	 * the device stalls until it has been removed.
++	 */
++	ret = syscall(__NR_getdents64, self->dir, map + page - 48, 48 + page);
++	ASSERT_EQ(pthread_join(thread, NULL), 0);
++	ASSERT_TRUE(s.removed);
++	ASSERT_GT(ret, 0);
++	for (off = 0; off < ret;) {
++		struct dirent64 *d = (void *)(map + page - 48 + off);
++
++		if (self->n < NAMES)
++			strcpy(self->names[self->n++], d->d_name);
++		off += d->d_reclen;
++	}
++	ASSERT_EQ(count(self->names, self->n, TUN_NAME), 1);
++
++	while (list(self->dir, self->buf, sizeof(self->buf), self->names,
++		    &self->n) > 0)
++		;
++	EXPECT_EQ(count(self->names, self->n, "lo"), 1);
++	munmap(map, 2 * page);
++	close(s.uffd);
++}
++
++TEST_HARNESS_MAIN
 
 -- 
 2.53.0
