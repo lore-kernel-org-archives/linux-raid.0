@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793820184;
-	b=zEHpdiAy2iXAFqsMPPpXLImBSJd4fU+8cnythsLHcnXDQgI/A8JrN3RQ1jODG+C1ivul
-	 HeCwEuOh5wz0x60mUIdmKpE+1COzC75rfQRkV0JEa4Gbf1jwf/LJZmQOGChY92iGS1vpn
-	 0t3Zu8p1T7vZ5MJjP4m91evb9xkQRV5BN5PzTTm1x5vzrCYkFp6+peRpOeuDDB05orO1n
-	 jt1bbHBNA/0y0jaetIGWUcs7HY5vbmu+88TtSsx3RGlbvFH/1J/zlfjCKlbO7wTaHEP6z
-	 bAHPS9yERgT8JiUkVBHGr6fYKib59aA5ZmWpWi3qu5iv96dG7JVaLH+eoQHhgF9PsPQ==
+	t=1793820214;
+	b=LQmiWxuW82LH7nXxNkEfWkPUBX2fz1RcFt4uHfnTZO3NTCl5Gb5etQ5oTmDOv6EON2Wf
+	 rCo7+8/wKdpFGIRyFJnw4Ltk8tSnFKu45Q/QBjNzd1ETdSzdfGB0t0OmWC+Kkj9pRonqO
+	 lhNOWMuAlbQ9vkZWg0j4FPOT4Id21Ad69UDSBRsE85ZuzYEgST7t3WUUNTZLxIj7Zo0rG
+	 wZ48qh6FLWye/0KbFbNhg331qx9pNqEbmkg6a5WYF9QqywLN816noOy6/Nbdb7tzuVtVR
+	 52Rf249WzMPkLFEIPgF9CKWSGYpxxBWMlIe4mLKs4f/6tjnLQ92sn6nKu+utbvi/qaw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793820184;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793820214;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=LkQzylMBPw/rjuFeKsFyNpbMkN4WRhLixyhJUzJNoRI=;
-	b=gGsDmW0brNhffMD3BaoHbAzstTWuJHPgjg/PGKEFVCkd/agODJOQJNyNiEXMfNIfCzeB
-	 sA3otoO/At+SNjpE/9XoHwXZSNfefxAff6LbPcuGhM3efsvD4vYCIYFMSLduGnleCpzYM
-	 tczIKeyxkFfiXrSTdf/7TNmv1lo21r0DdTd3hN1Mi04+raakzjFvEP78icuCaSbLp07zh
-	 Of3Zy84XTjQYTxUm4x7BwBIRInOh19LjDWB93FciZMYGSP++9nUFttTQFC31/nMrwAxs9
-	 bvqi3R14RmoYcTjapSxOxBStdP+zf+VKObbeTlCedLP6fixgPXlDsMK4MlF0RFuQEsA==
+	bh=QKQgab6F/A3kQED3xQkQ3++bbO+NbqHo8+XrgOES7ts=;
+	b=cAIPIBan7WZ9cXCNRHA4c8F29o7Qn1X45GxMGbRaFUsxu5plv+bDRLQkpediQqDVwiwO
+	 KgE4m+4eRL00Dk1I+x9OpbKXQnfMuOqllBc2XpO6DH93hDjtpDrn609RRf5vO8W9bbSHL
+	 qLXYFdkv3DpQzTIkf/6AmHI8w7nPcwm3JYgZV/mYN9vcEEiiEMzUnRv7p8n9b+v6qHkBk
+	 NvmMMCgAvrE8OjQAT5X5CRnC0CGEXjWxR7RyQbheIJGGE1KHsX7SyiQvanAn5kjvuqBeg
+	 C/7rPBWOxdX1gUJyuadpnKm6ykatzo5U6KzcUlIYG7a7RMiQyV/DTLL9dXqZuDr6wDg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BSonnJ4f;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ijd6v8za;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83F64606C938;
-	Wed,  4 Nov 2026 19:23:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58C18606D4F9;
+	Wed,  4 Nov 2026 19:23:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BSonnJ4f
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CF251F000C1;
-	Wed,  4 Nov 2026 19:22:51 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ijd6v8za
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D48D21F000C1;
+	Wed,  4 Nov 2026 19:23:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793820184;
-	bh=LkQzylMBPw/rjuFeKsFyNpbMkN4WRhLixyhJUzJNoRI=;
+	s=k20260515; t=1793820214;
+	bh=QKQgab6F/A3kQED3xQkQ3++bbO+NbqHo8+XrgOES7ts=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=BSonnJ4f7yMH1lOXY4xKOkMixSuWwienI9M9D7I6GKt/5EQqTgA/iQ2QAehjV234u
-	 YFAT2O6XmzTeX9l9nI78c+OuI+vrlyGDMu28/cFZIebS7LVWB5yQYSIHuBROdXKmV/
-	 POjWxbi8h52DJlKnFdWShCkvORSC+wER9+m5Nc5I6YVlHAPNaszz5jWURsoc99UxNe
-	 HtvfWbnrw5mLr/fLV64EYTb0o/e2FYPIZl4AGyyNRZpEiF3Dc+H3TPm7clGTz3Hei1
-	 RJrKLHUu/lKQlBjZQXWIB8Dd4bHzwpk5JakS/D+nuaTqJL6rz4xnryqSZJ8XfbWmNB
-	 KVSx5DWPRFPdg==
+	b=ijd6v8zaNqCLmRZYja1X4maFJ83wlAF/2YPzGzhX/4NJzDk8gpRvHBDtpnvW2kzrE
+	 pKuK7II1mOaBx0Gj+L1vraczZZkB7OeRZ9ZoB7qpwQKM+pSqrDe3QY2fA7KCW/Fq2E
+	 oXyjbE6QtyNjJgArz+0tadzVnc7sFgUV5Zt+ED3IG+SNM2u1iqpNqo6J7AwifNHxzv
+	 2i3LIYQcM2epUeP/ADp5fAb3awZdnh30Pv8kl3Wbf1o49zKnVC71mI5vqn+a8eOGO2
+	 saOpPzNjuia2w4fAF7Rtkl4Ucl9o3AVDThJjpyzmxHF+vZXftQlfa3DzlUUjytBfdL
+	 q0wb/VbaGQJDg==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -101,9 +101,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>,
 	stable@vger.kernel.org
-Subject: [PATCH RESEND v2 28/51] ntfs3: don't warn when a huge label is written
-Date: Wed,  4 Nov 2026 20:22:49 +0100
-Message-ID: <20261104-work-procfs-bugfixes-v2-28-021c84d852e0@kernel.org>
+Subject: [PATCH RESEND v2 30/51] net: pktgen: reject device names with a '/'
+Date: Wed,  4 Nov 2026 20:23:19 +0100
+Message-ID: <20261104-work-procfs-bugfixes-v2-30-021c84d852e0@kernel.org>
 In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -117,46 +117,54 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1211; i=brauner@kernel.org; h=from:subject:message-id; bh=CQmQXvWqu+qpRxwX3Ai9kAzqqtrenD8xJsc3ckb17sQ=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bnz7K1goQOfBzlUZyTmXuaJF8js/Rb7//OzHk6rr7 JYtL5/6d5SyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAExEvIKRYcP67G2i6Wf/B2W2 7txs3neapZ43c+rjv8+u3w5s27n+2X+Gv2LPNsjtr59gXDV90xsjczOOh182+JoIeRm6VIqkhV3 i5wQA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1684; i=brauner@kernel.org; h=from:subject:message-id; bh=F9CLtO30/n/hY0YqeSuPpMfy319PBmjhBXOfLkB61UI=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bvywqoXlbXOlS3uySJpukM32T6snilzOFXlqcfhEv dGWr1sudJSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEzE9TTD/4KNy/KDs66oZjvq T7CTumjecrWj1yL2eO6RGRVGM7v/WjIynJutWGeWKrqa/8u9wz/unp7yJ4GpNbJ15Zfil4dMVgm eYwEA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-ntfs3_label_write() allocates as many bytes as are written with plain
-kmalloc(). A write that is larger than what kmalloc() can hand out then
-trips the page allocator's warning, which panics a panic_on_warn kernel.
-Use memdup_user(), which fails such an allocation quietly with -ENOMEM
-like before.
+"add_device" takes a name like eth0@1. Only the part in front of the
+'@' has to name a network device. The rest is free text and all of it
+becomes the name of a file in /proc/net/pktgen, where procfs takes a
+'/' as a directory separator. So "add_device lo@a/b" makes procfs look
+for a directory "lo@a" that doesn't exist and warn about it. Any user
+can do that in a network namespace of its own:
 
-Fixes: 7832e123490a ("fs/ntfs3: Add support /proc/fs/ntfs3/<dev>/volinfo and /proc/fs/ntfs3/<dev>/label")
+  name 'lo@a/b'
+  WARNING: fs/proc/generic.c:174 at __xlate_proc_name+0xb1/0xf0, CPU#3: bash/241
+  Call Trace:
+   __proc_create+0xd0/0x9b0
+   proc_create_reg+0x45/0xf0
+   proc_create_data+0x77/0xf0
+   pktgen_thread_write+0xd8d/0x1750
+
+With panic_on_warn that takes the machine down. And if "lo@a" exists
+because somebody added a device of that name, procfs used to register
+the new entry below that regular file, and removing "lo@a" freed both.
+
+Reject names with a '/'.
+
+Reported-by: Chris Mason <mason@kernel.org>
+Fixes: e6fce5b916cd ("pktgen: multiqueue etc.")
 Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/ntfs3/super.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ net/core/pktgen.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c
-index 29aabdc8a801..37e27b73b7a5 100644
---- a/fs/ntfs3/super.c
-+++ b/fs/ntfs3/super.c
-@@ -576,15 +576,10 @@ static ssize_t ntfs3_label_write(struct file *file, const char __user *buffer,
- 	if (sb_rdonly(sb))
- 		return -EROFS;
+diff --git a/net/core/pktgen.c b/net/core/pktgen.c
+index d63eeadddfcc..02af70d360bc 100644
+--- a/net/core/pktgen.c
++++ b/net/core/pktgen.c
+@@ -3831,6 +3831,10 @@ static int pktgen_add_device(struct pktgen_thread *t, const char *ifname)
+ 	int err;
+ 	int node = cpu_to_node(t->cpu);
  
--	label = kmalloc(count, GFP_NOFS);
-+	label = memdup_user(buffer, count);
-+	if (IS_ERR(label))
-+		return PTR_ERR(label);
++	/* The name becomes the name of a file in /proc/net/pktgen. */
++	if (strchr(ifname, '/'))
++		return -EINVAL;
++
+ 	/* We don't allow a device to be on several threads */
  
--	if (!label)
--		return -ENOMEM;
--
--	if (copy_from_user(label, buffer, ret)) {
--		ret = -EFAULT;
--		goto out;
--	}
- 	while (ret > 0 && label[ret - 1] == '\n')
- 		ret -= 1;
- 
+ 	if (__pktgen_NN_threads(t->net, ifname, FIND)) {
 
 -- 
 2.53.0
