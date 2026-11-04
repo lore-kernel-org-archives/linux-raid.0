@@ -1,110 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.53
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793822376;
-	b=EeQWh51M9qJYiRFPW7GEoSUPq7Fcb+D3u9I/ZOoetdQI2dfyOx+/qpm5z075Aurgk2Lj
-	 fKPE2RIcdjfTKX58jPcUDYlTc3pwDCE1Qi/mmnE8+B7E9Qoo7Etjy+W2rGBQ4AzIK3cPz
-	 80agfYc4BaOHSKbKf+wVrpwMseBwyGGGc3HhLVe9wUPGtViDYjPjdPphOyKicETOlLIK+
-	 XI8j2k4g2kkJ82+VQZW7SeBjT66HVcN6NwEm9hCb8xyF4mYobRzdrDF/U/+Vvm5z/M+d/
-	 5vKHlBw6CD+JxEvFCytW45ry7MQxuChZrIbSz7LxCUmtUi6B+RNaktMIFcEVLVpeTxQ==
+	t=1793823120;
+	b=l1SHeLsmqcWFs7XmKC/q9pqnZn71tmo0Dvqm9Bu+LPz/beXvEq4QKjDUCMGaGZLFiuUn
+	 ZB7WAnEIDW9UCry3tPqWRNJnFgOB2hdVXNb4c6lEcA/Fq4lKezWMGSB/O3EipW5zZc77G
+	 g8h9rEo1vOEB40eJlMTleh311mmf6paq2ZDgLi4qsqkGgXNYTylyy+T0iwneVBuMuofh1
+	 VIo/pEJaNj/mLzV0AHDrLYTqFOoEV/xHoahcUOYYh5TB3pswDItCZMNe7l4+PSB8XKMfc
+	 csVYfMSD6dTAg9pBgB3e81bGICbc6XDVFTsJ5rTFin7gQ1QS20fzCXesRFJMRssET8w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793822376;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
-	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=I87aXd9DKn5INMWxVGI3L3LJev8psccpA6qjKtl7++0=;
-	b=jQJ5K9TcfTUXatnz6wWVceU2Vk5mpeWRkH70MdV0DTfpwrcieQAy7t/Wkf3SLu6T4Iw/
-	 fLGxvrxL54Qs5G9FAK/z23tamBNCGwmWatcWqqcBq1Jx2L4rLsgrZ+jKJRwmrtT5rC10y
-	 /wajXS3ms19gdyYCMFSNhNRufOWozwpm03rrxIvTNlUe7bJOVLt8iui+YFYO0rQcIELpg
-	 iaS4IJR3gSoZveNBlbW+x53oKDqrT4DwAvHnStcaxELtACLlqwiyd/IV695ip6mOZ7oDw
-	 bOvxzomEbIDGtB79G7KziJAciZGv34EOgQuov3GWU+dkwA45zaQUjp7AkEjbx/jX+bQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793823120;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Received:X-Forwarded-Encrypted:X-Received:MIME-Version:References:
+	 In-Reply-To:From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=LCqiLHf1DIbfKNXx3ccWkvqxBhOdwo3yYkazQxIGarg=;
+	b=DstcOKBj4GWGarBVNbvqwJGwm7QH9tzINiyddP4qh/MFNB6kg5k4hFahPiKg59FNv2Vt
+	 Ql4126P2X+7UDT4r1T7i+D1sPbesbB5D3NacOaikMnZ3meRZ5AwrCDpJZOLGk0kbbpTRe
+	 u6jM2Zi3wemVb3d2+ESc3jiw2SB08YZI88vTtWL1sqkuNQWTQaZ0JNyRhwKYE9z76auwD
+	 VbEZxWQSDuxvMxMSNejGpdDJRKTrjKTpzPjC1DJXpdbthL9JGUYquD3ugLciiDupGSk3V
+	 elEd6+1e2SiQScSnDqiaCz0ioIk8G6QSdLWpeBWzh7w8ubz+Qe+fvFlONw2HvYSrAHw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nrCpHMqJ;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=none header.from=linux-foundation.org;
+	spf=pass smtp.mailfrom=linuxfoundation.org;
+	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=google header.b=I87Xvan8;
+	arc=none smtp.remote-ip=209.85.218.53
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15F73606BA3A;
-	Wed,  4 Nov 2026 19:59:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B950607F2A8
+	for <linux-raid@vger.kernel.org>; Wed,  4 Nov 2026 20:11:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9B950607F2A8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nrCpHMqJ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7AA61F000C1;
-	Wed,  4 Nov 2026 19:59:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793822375;
-	bh=I87aXd9DKn5INMWxVGI3L3LJev8psccpA6qjKtl7++0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=nrCpHMqJnM4/sQC5S1S2Zw8qcgNXDwp5M5frmMQ1a2YEm8KSyesVzABoG/prl1gEu
-	 b5yCZfTlj58jdNYknyrsSDRlMPnZ62hJzFY5ukIBsBbvKsCqbtZo+OaClqA5mnNTQ5
-	 RmlrEeWrqd82SvvID1akhJpJQXRL5M7HPpkzdM1ufcSEta6wA7KmOMAw3dbQTERPJI
-	 0DxtZkknuOjdAfUWP9ABo/4xVm5B4KshKmNCD8wCMG5k2yG5matPNPgJ5is1ZqqyUY
-	 LZiBF+HJWBtLc1ohmQHqNmi/qIfEBdTaicmB6L7NVy57kU83OXBM14TugcOlp7BOeD
-	 dtfxCwiwXkmew==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Jann Horn <jannh@google.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Chris Mason <mason@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Christoph Hellwig <hch@lst.de>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Joel Granados <joel.granados@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Jan Kara <jack@suse.com>,
-	linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-um@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev,
-	platform-driver-x86@vger.kernel.org,
-	coreteam@netfilter.org,
-	kexec@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	netfilter-devel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	ibm-acpi-devel@lists.sourceforge.net,
-	jfs-discussion@lists.sourceforge.net,
-	linux-alpha@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-cifs@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-sh@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	samba-technical@lists.samba.org,
-	sparclinux@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-doc@vger.kernel.org,
-	linux-serial@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net,
-	Takashi Iwai <tiwai@suse.de>,
-	linux-input@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-debuggers@vger.kernel.org,
-	"Christian Brauner (Amutable)" <brauner@kernel.org>,
-	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 07/13] SUNRPC: let procfs copy in writes
-Date: Wed,  4 Nov 2026 20:59:21 +0100
-Message-ID: <20261104-work-procfs-net-v2-7-221e2437fed1@kernel.org>
-In-Reply-To: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
-References: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
+	dkim=pass (1024-bit key, unprotected) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=google header.b=I87Xvan8
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-c423b145922so163075766b.3
+        for <linux-raid@vger.kernel.org>; Wed, 04 Nov 2026 12:11:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1793823118; x=1794427918; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=LCqiLHf1DIbfKNXx3ccWkvqxBhOdwo3yYkazQxIGarg=;
+        b=I87Xvan82apTuNxTLJiwfiF4obnDHzVroOHVTzadV1YGUVp1QwnjRMxSVbsG/iK39G
+         EEVt14kbkIBBSSQJoM/D+3ut2JariDEU0SJNqemZCHsv4V/IgRY3Ymmj8T6Awj3Csf0U
+         0Zk4haU9R+TZWsmGmd7Lim+kcMslMdg/kdog0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793823118; x=1794427918;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=LCqiLHf1DIbfKNXx3ccWkvqxBhOdwo3yYkazQxIGarg=;
+        b=ql1g73uVYBJjFRqHABJ6xqf+CE85o3liWEFEJu90neh4GFVcybZ/l+ONnovbZoNhqD
+         x4wgN8/Q/yG05pL676/mZnaIdNnP65V2DWsPouCZ0hnYFgFX+W9ZBwASlCl4qmZft1J8
+         7S5+AK8+rzLJqtfSE4D17bpJAOWwGcL/rEnQGM4CF2w/YAbbLFealfFOQVhxmsuPmPEV
+         No36jskpDH7gSl5LQGMnU3cTMu98f8xQhmU319iL8f9lsmmJPZRGwPMUUw/cecnHaCeT
+         B6zYeclxURoYQa0b5zy93Dh9w5lbjLjXsKI0DsZmpG2sbiMqto2eB6Hwvp7p01ClSZtZ
+         Iytg==
+X-Forwarded-Encrypted: i=1; AKwUvBxU9NSKAsYP/C5ZJBCZtmTVzF5p3DNc8EJXNMB1tFGmYmp6eIgDuFkzsNK6dScNidUjuk/8jHYfVBAs@vger.kernel.org
+X-Gm-Message-State: APuU4Z9wtZneZbmbD/qpwK+SHlqUuToJRUd0rv6gCiMoIhmTEq5cceJ3
+	SqAnt9oc/fY1Jd5Hs82mVl6T3tYWIc0+vamkF/v28aLR0nKTome9XFmUo7ItbDhjkyZC+XqCAo+
+	3VXFHnB7fBA==
+X-Gm-Gg: AYBFou0tudW/EyOMmS2Bijplj3RdGMCSfmswPxNgtd+Z66+Q9zP/p+J5OuUuKPpyRtY
+	+H9ro3ng7/cLAMwrgf9OkBLQKcovpDE5JGtaa8jhC6r1BlPE3F+L++NNHNpCxgbLiG70OGJl8oZ
+	3sdA7wL5F4U3+Yu3qnphPiY8elf7oon7cyYWloeK+kDVG5+sNEskloxk8Dm2wM5hjRbYZNTnrUk
+	/nMGVYv9PWPSuAI9wSG4xGvO6tD0ARdAH8ncNL6DmFUhjM03hNk+4049czWJFoy/Y5+UsyKTI1s
+	PExEAqnwl6e9EQ1IPRing84l0/xfrJvdZt1FhHVx4Jeg/DQer73QNS5JjZnpeXAobmikjgLe+SV
+	KOfkJh22b91mwLwrMvmeEl2MzpJ+pHXokfLTBT5TVeY3AsqYGYCSTWer4LDyfiCJTUw7X8FZuQ6
+	L9uSYjZpJWsdJMw1N9Bdje6V2qvjIxQdQgar0xXm1LW4f4iEuqS8KBU/5UT4XgHHvrBjh+q50DQ
+	ZQW+ZRxRRCqWn2aghCRwvBWlwLHXyH/fRHBvE4SBu/O4IQSZSk/zJlp9DMhGYBRFVKNbYkik5IW
+	dXECgFW97S9JYIm9NxEW5GyyUQyTF9s9kwwlEYD/1zH36xzcooTI4WZQte7PsDURv0pOjEziMRz
+	Icw==
+X-Received: by 2002:a17:907:940f:b0:c25:afb6:2d91 with SMTP id a640c23a62f3a-c4ca795fa03mr1526429966b.2.1793823118044;
+        Wed, 04 Nov 2026 12:11:58 -0800 (PST)
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com. [209.85.208.50])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c4d0e140005sm110480266b.5.2026.11.04.12.11.57
+        for <linux-raid@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 04 Nov 2026 12:11:57 -0800 (PST)
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-6b579003f29so81993a12.0
+        for <linux-raid@vger.kernel.org>; Wed, 04 Nov 2026 12:11:57 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AKwUvByjhpz00HMPcRNBYlDKLT8a/wDqws98mA3TpfWLLPwTISy1HA/DuedSieqf1HbCSlc51BMG/c3UIOyr@vger.kernel.org
+X-Received: by 2002:a17:907:60c8:b0:c49:a4b1:9cb1 with SMTP id
+ a640c23a62f3a-c4ca795fa50mr1973235866b.3.1793822725121; Wed, 04 Nov 2026
+ 12:05:25 -0800 (PST)
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -114,196 +94,51 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=6349; i=brauner@kernel.org; h=from:subject:message-id; bh=qIHvvtDF4hd5tLnMryapPJOuLcFfYH/7YZBGB4Dja6Y=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97tPWDijvvLiq30G1PaKN/bXgyT9/A9gNXwfur8jS2 ez9bFpARykLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwER4yxkZmg16dliqcnIvnt1y 7Jn1H/Gg45ULRBh9pY6k3ViRsu6+KyPDyT3Wor+sjocbG95uZVu58W2UZHPhy4/GH210twVIfBL kBwA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+References: <20261104-work-procfs-v2-0-b45cd5789ac5@brauner> <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
+In-Reply-To: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Wed, 4 Nov 2026 12:05:08 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wj9Y9NcOesBBm+jhPjYa7qO00fD7g7uwX+H-k0-R2difA@mail.gmail.com>
+X-Gm-Features: AclHuK9j_YIgrwhhpWOlnull6heAULBd4dgTqoOhUQQjFm_MgoIgrL1vgPfefvI
+Message-ID: <CAHk-=wj9Y9NcOesBBm+jhPjYa7qO00fD7g7uwX+H-k0-R2difA@mail.gmail.com>
+Subject: Re: [PATCH RESEND v2 00/30] proc: convert the fs, kernel and mm
+ entries (Part 5/7)
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, Jann Horn <jannh@google.com>, 
+	Josef Bacik <josef@toxicpanda.com>, Chris Mason <mason@kernel.org>, 
+	Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
+	Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
+	Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, Greg Kroah-Hartman <gregkh@suse.de>, 
+	Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, 
+	Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
+	linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, ntfs3@lists.linux.dev, 
+	platform-driver-x86@vger.kernel.org, coreteam@netfilter.org, 
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
+	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net, 
+	jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
+	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
+	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, 
+	samba-technical@lists.samba.org, sparclinux@vger.kernel.org, 
+	linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
+	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
+	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
+	linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-Implement ->proc_write_buf() for the procfs channel, flush and
-use-gss-proxy files so procfs copies in what is written before it pins
-the entry. The channel file parses the downcall from that copy and the
-flush files share the parsing with rpc_pipefs in do_write_flush(). The
-rpc_pipefs files keep copying in themselves.
+On Wed, 4 Nov 2026 at 11:49, Christian Brauner <brauner@kernel.org> wrote:
+>
+> Part 5/7 of "proc: move procfs to what kernfs does", on top of part 2
 
-CACHE_DOWNCALL_MAX and CACHE_FLUSH_MAX name the limits both sides
-enforce, procfs through ->proc_write_size. The procfs files are removed
-when the network namespace goes away and that no longer waits for a
-writer that faults on its buffer.
+Christian - way too many patches, re-sent much too often, cc'd to way
+too many people.
 
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
----
- net/sunrpc/auth_gss/svcauth_gss.c | 10 +++----
- net/sunrpc/cache.c                | 63 +++++++++++++++++++++++++++------------
- 2 files changed, 48 insertions(+), 25 deletions(-)
+Nobody is going to read these repeated resends, and all you are doing
+is clogging up peoples mailboxes.
 
-diff --git a/net/sunrpc/auth_gss/svcauth_gss.c b/net/sunrpc/auth_gss/svcauth_gss.c
-index 43839e805531..8d105cd900d4 100644
---- a/net/sunrpc/auth_gss/svcauth_gss.c
-+++ b/net/sunrpc/auth_gss/svcauth_gss.c
-@@ -1408,8 +1408,8 @@ svcauth_gss_proc_init(struct svc_rqst *rqstp, struct rpc_gss_wire_cred *gc)
- 
- #ifdef CONFIG_PROC_FS
- 
--static ssize_t write_gssp(struct file *file, const char __user *buf,
--			 size_t count, loff_t *ppos)
-+static ssize_t write_gssp(struct file *file, char *buf, size_t count,
-+			  loff_t *ppos)
- {
- 	struct net *net = pde_data(file_inode(file));
- 	char tbuf[20];
-@@ -1418,9 +1418,7 @@ static ssize_t write_gssp(struct file *file, const char __user *buf,
- 
- 	if (*ppos || count > sizeof(tbuf)-1)
- 		return -EINVAL;
--	if (copy_from_user(tbuf, buf, count))
--		return -EFAULT;
--
-+	memcpy(tbuf, buf, count);
- 	tbuf[count] = 0;
- 	res = kstrtoul(tbuf, 0, &i);
- 	if (res)
-@@ -1468,7 +1466,7 @@ static ssize_t read_gssp(struct file *file, char __user *buf,
- 
- static const struct proc_ops use_gss_proxy_proc_ops = {
- 	.proc_open	= nonseekable_open,
--	.proc_write	= write_gssp,
-+	.proc_write_buf	= write_gssp,
- 	.proc_read	= read_gssp,
- };
- 
-diff --git a/net/sunrpc/cache.c b/net/sunrpc/cache.c
-index 007521e8a57f..a257598768fa 100644
---- a/net/sunrpc/cache.c
-+++ b/net/sunrpc/cache.c
-@@ -924,6 +924,9 @@ static ssize_t cache_do_downcall(char *kaddr, const char __user *buf,
- 	return ret;
- }
- 
-+/* 32k is max userland buffer, lets check anyway */
-+#define CACHE_DOWNCALL_MAX	(32768 - 1)
-+
- static ssize_t cache_downcall(struct address_space *mapping,
- 			      const char __user *buf,
- 			      size_t count, struct cache_detail *cd)
-@@ -931,7 +934,7 @@ static ssize_t cache_downcall(struct address_space *mapping,
- 	char *write_buf;
- 	ssize_t ret = -ENOMEM;
- 
--	if (count >= 32768) { /* 32k is max userland buffer, lets check anyway */
-+	if (count > CACHE_DOWNCALL_MAX) {
- 		ret = -EINVAL;
- 		goto out;
- 	}
-@@ -1508,19 +1511,15 @@ static ssize_t read_flush(struct file *file, char __user *buf,
- 	return simple_read_from_buffer(buf, count, ppos, tbuf, len);
- }
- 
--static ssize_t write_flush(struct file *file, const char __user *buf,
--			   size_t count, loff_t *ppos,
--			   struct cache_detail *cd)
-+/* longest number the flush files take */
-+#define CACHE_FLUSH_MAX		19
-+
-+static ssize_t do_write_flush(char *tbuf, size_t count, loff_t *ppos,
-+			      struct cache_detail *cd)
- {
--	char tbuf[20];
- 	char *ep;
- 	time64_t now;
- 
--	if (*ppos || count > sizeof(tbuf)-1)
--		return -EINVAL;
--	if (copy_from_user(tbuf, buf, count))
--		return -EFAULT;
--	tbuf[count] = 0;
- 	simple_strtoul(tbuf, &ep, 0);
- 	if (*ep && *ep != '\n')
- 		return -EINVAL;
-@@ -1551,6 +1550,20 @@ static ssize_t write_flush(struct file *file, const char __user *buf,
- 	return count;
- }
- 
-+static ssize_t write_flush(struct file *file, const char __user *buf,
-+			   size_t count, loff_t *ppos,
-+			   struct cache_detail *cd)
-+{
-+	char tbuf[CACHE_FLUSH_MAX + 1];
-+
-+	if (*ppos || count > CACHE_FLUSH_MAX)
-+		return -EINVAL;
-+	if (copy_from_user(tbuf, buf, count))
-+		return -EFAULT;
-+	tbuf[count] = 0;
-+	return do_write_flush(tbuf, count, ppos, cd);
-+}
-+
- static ssize_t cache_read_procfs(struct file *filp, char __user *buf,
- 				 size_t count, loff_t *ppos)
- {
-@@ -1559,12 +1572,21 @@ static ssize_t cache_read_procfs(struct file *filp, char __user *buf,
- 	return cache_read(filp, buf, count, ppos, cd);
- }
- 
--static ssize_t cache_write_procfs(struct file *filp, const char __user *buf,
--				  size_t count, loff_t *ppos)
-+/* procfs copied in what was written */
-+static ssize_t cache_write_procfs(struct file *filp, char *buf, size_t count,
-+				  loff_t *ppos)
- {
- 	struct cache_detail *cd = pde_data(file_inode(filp));
-+	struct inode *inode = file_inode(filp);
-+	ssize_t ret;
- 
--	return cache_write(filp, buf, count, ppos, cd);
-+	if (!cd->cache_parse || !count)
-+		return -EINVAL;
-+
-+	inode_lock(inode);
-+	ret = cd->cache_parse(cd, buf, count);
-+	inode_unlock(inode);
-+	return ret ? ret : count;
- }
- 
- static __poll_t cache_poll_procfs(struct file *filp, poll_table *wait)
-@@ -1599,7 +1621,8 @@ static int cache_release_procfs(struct inode *inode, struct file *filp)
- 
- static const struct proc_ops cache_channel_proc_ops = {
- 	.proc_read	= cache_read_procfs,
--	.proc_write	= cache_write_procfs,
-+	.proc_write_buf	= cache_write_procfs,
-+	.proc_write_size = CACHE_DOWNCALL_MAX,
- 	.proc_poll	= cache_poll_procfs,
- 	.proc_ioctl	= cache_ioctl_procfs, /* for FIONREAD */
- 	.proc_open	= cache_open_procfs,
-@@ -1653,19 +1676,21 @@ static ssize_t read_flush_procfs(struct file *filp, char __user *buf,
- 	return read_flush(filp, buf, count, ppos, cd);
- }
- 
--static ssize_t write_flush_procfs(struct file *filp,
--				  const char __user *buf,
--				  size_t count, loff_t *ppos)
-+static ssize_t write_flush_procfs(struct file *filp, char *buf, size_t count,
-+				  loff_t *ppos)
- {
- 	struct cache_detail *cd = pde_data(file_inode(filp));
- 
--	return write_flush(filp, buf, count, ppos, cd);
-+	if (*ppos)
-+		return -EINVAL;
-+	return do_write_flush(buf, count, ppos, cd);
- }
- 
- static const struct proc_ops cache_flush_proc_ops = {
- 	.proc_open	= open_flush_procfs,
- 	.proc_read	= read_flush_procfs,
--	.proc_write	= write_flush_procfs,
-+	.proc_write_buf	= write_flush_procfs,
-+	.proc_write_size = CACHE_FLUSH_MAX,
- 	.proc_release	= release_flush_procfs,
- };
- 
-
--- 
-2.53.0
-
+             Linus
