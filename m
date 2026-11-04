@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793826991;
-	b=0OhJjc19R6XQtpF1bQDT9pio57aMv62pIEiAhyY9cyK/JiGFh5U+YqM29rx4ByITuv5W
-	 estlU/vdgP2e6OIL3Kz1zs94t6KbwmhE0KCjEeudPrmuCYfljHZq13RpPUsMt3Z8uceko
-	 j+IEEHUjyV6PXtclGTfgj+F1DsTsa7O2YklquO6o0J9k2Mc4H1VEdrx/HIlQwdcjEQ9d2
-	 qZTyKucs352zSoZGpd7Oy8z+Yy0wUmVjMN6gMcqGt29+TmK30hqf5AjEVZUsxXzACojw6
-	 jFqLehVjk+rILlzNXJN/Mnh0mlbANzfGW3b2q7pw9nEgWAYi6ukDAXfAkxcKTPGQq1g==
+	t=1793827021;
+	b=PNUOLaGZ+bmtcj2aomMyQxJEOo2PR+9oXReT48TytTZt04vhK46XfJnjwGg9XgGPCKF4
+	 CEUqsyfC7YwzCU1z3bt+z/oM68vOnNQjgp4cxC7s2TjsV3imb1cYa0XafQ2xr49QXDWky
+	 OEkGNYBl92nCAZvHa23Y9gwClDfRWW4l9Dseurga1iwKP6Q9D0lL5ryqCWwx9JKvATdN0
+	 hSE4GSGrWHgtjBTV0qOf/nO3Es66DTsojH9I94OwaqC4UF9KESHWeiJuXRaSaoCPXsnFk
+	 qIYo2Lszcg18HnbLfckPvLYiWK2bCoFlTLHjRrl1AId5A3jrP68a3rEK2nV5u1THCag==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793826991;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793827021;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=Z1ZOJsRk1XloR8+X/iuIjf2Funsf7/y+/bk4jcaChHA=;
-	b=OU6ruxm5hp+WYfoKo4utNTwfOUpRgFoeQGzCc+viknZLx89TGU9C7lW07RZA79U0oY2D
-	 8TaaKeItRg/1W7L+Bgp/7fw2mE62hqcd8Qg0vepdn/92u1z+VDNv8GESvUVgBewoaCQ97
-	 X6p6PDx96xH7Mka6C30Zvw4i4cYtX/x5Ka348TqXdqW6x8XHMDMCN60JfCxkYncUQOdoW
-	 UMX+BZ/rIk78Zjfl+Q9asCxBLPUag0wyHGWEw+yHxKmQB8ZcW1WGkML4/cTRIEcoedkgS
-	 y3cIGHIz5HU5kxGTzYElMT+Nh1c3yFD034kXdAaVqGbpvf3L23s/IcRTTk6npzXP3Ew==
+	bh=zeHs9UAP7YIb3jk19VW8WXuXpSby7HHZ4SLZ7Ya7qeg=;
+	b=NJug/H7Ioiu5StT7XnG/xBB9AEC2kOTlGoMob8Jmh/2hAWFJv9eFF/HjTSOj3p8o0RZn
+	 QwuxbQB0wrAhKAh+mOOXdn7TpaL8o9H6IiglnwCyq73yjziWdXZHQ5LtOLYZc7s8uFT6h
+	 6ROcD5HYmmHxibKVXD7UGQ2RlHXHwEfU6mZYgN6uy+lboOaWBt83jtle4WPOwH3hgUw0o
+	 tszlQt1iivaDWQHF+O+k3D6Hyv+qZR+RNjuDds+htZGDL9esajIPovSox2MAKnFrAE+j+
+	 DeJ/e+PI56jhGWfySq14GTzUOGzee0Qyk0xdI/GGuWh5UmuM7LziPNS0s+tI9mAqLJw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=M5RO5Q8k;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S3SzdWSz;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FC1D6070AB2;
-	Wed,  4 Nov 2026 21:16:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31780606A863;
+	Wed,  4 Nov 2026 21:17:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=M5RO5Q8k
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1C8C1F00A17;
-	Wed,  4 Nov 2026 21:16:18 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S3SzdWSz
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07AC31F00A02;
+	Wed,  4 Nov 2026 21:16:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793826991;
-	bh=Z1ZOJsRk1XloR8+X/iuIjf2Funsf7/y+/bk4jcaChHA=;
+	s=k20260515; t=1793827021;
+	bh=zeHs9UAP7YIb3jk19VW8WXuXpSby7HHZ4SLZ7Ya7qeg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=M5RO5Q8kBtwDno+ViL1y5BXewnnzbSUiD0Ia6wQ1ZDr5urhi8E89jYOlntRIgMa6v
-	 r9RG9WmdIkXzJfLAx6IEAN4oxhymXK8NsuNUBDZD3nMRrupGitCaAlM5t0w1l3kDgL
-	 mARlOJCbNgn+LG3omXIPOAWaGFV2e55MLLVLTjfJkon0ltiDwAfT1Rt1ryiES87BRl
-	 cEGRifGzsCYmn1JslL4AfUjzCoN8zMhn9yu3J19mR1xJZ8GjCByKe2bS2hgjUJtRn4
-	 /Ud57A9OrseLYf/NwNssA42XtxJOU93lZkF6vGX3KXvmVx1xxIECpGp59Xx8FusjIn
-	 0mcxJDl2Ikwlw==
+	b=S3SzdWSzW86Oi7IX1tUBoRNN3T1qaKpCsD195aJc0q3DFSVT8WBvY060bSLKhgobb
+	 ozqt92gwXbw5PQb0azuNQvXlPB7WnJ6cBECkdsTADqTj+zV4KFstm2CIoVK3RnyKHw
+	 qukYCNAdRUYdRI6RQkFYFD46MOjD+1c8YqXVIsSOalpjdzN976W0rXYKybUDWkvkIa
+	 rfbNpjRPuRxsQxtxAfSij5iqz5tsGOkFhdPq9CXCzRhQ5vabAbm6JESEBXYkE7I8Zz
+	 Xcw2dOWqmhnKSnz+HejYopwm49XOlRK/JAYtCOxhFx3vpJFr7q8EZmlKY7qc7HALif
+	 bf0zrDFVpbYqg==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -100,9 +100,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-debuggers@vger.kernel.org,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 4/6] proc: drop ->proc_read() and ->proc_read_iter()
-Date: Wed,  4 Nov 2026 22:16:16 +0100
-Message-ID: <20261104-work-procfs-cleanup-v2-4-1e6687e226b1@kernel.org>
+Subject: [PATCH RESEND v2 6/6] proc: drop the poll_table from ->proc_poll()
+Date: Wed,  4 Nov 2026 22:16:46 +0100
+Message-ID: <20261104-work-procfs-cleanup-v2-6-1e6687e226b1@kernel.org>
 In-Reply-To: <20261104-work-procfs-cleanup-v2-0-1e6687e226b1@kernel.org>
 References: <20261104-work-procfs-cleanup-v2-0-1e6687e226b1@kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -116,227 +116,158 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7998; i=brauner@kernel.org; h=from:subject:message-id; bh=abGcIl8EeF+AIW6UdJlLnKo66cLyls2IFZNMcomaikg=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9XpBYNFfA2KRJOfDTZK74ZD22FKmLHxed5Kk6wORr/ ZpL4dihjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIvYMTIcWimfoSnAVe9ge+Os 4tXw7JYtfefvJm1XPtb7fo/MxUtiDP9MH79h+uV3N1BJ9vml5a5/Vp2Wkxe2lT1h7Fs82/qXzEd WAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5605; i=brauner@kernel.org; h=from:subject:message-id; bh=xctjOvW/3SEZoVIWJreYFKvLSI3LgHd/aggSpp1K3Wc=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9XpDCwWfSYe8eveS8yHFO7St6c86UqkTd43v8XXbxs eORD9pDOkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACYivoGRYdl9h7P19TJf4stb 3x3lv8VUfL7o3Cmvh99vBMo/PlY8S4bhn/KGbxquT4Jf+f7xcV3IcHfqg01FBpdsX2pJecw75bG miBMA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-Nothing implements them anymore. Every entry that can be removed fills
-procfs' buffer through ->proc_read_buf() or is a seq_file entry, and
-the permanent ones that still read straight into userspace have
-file_operations of their own now.
-
-With them go the flag, the registration checks that kept them apart
-from ->proc_read_buf() and the seq_file entries, proc_reg_read(), and
-two of the three sets of file_operations for regular files:
-proc_reg_llseek() and proc_reg_read_iter() hand a seq_file entry to
-seq_lseek() and seq_read_iter() themselves now, like
-kernfs_fop_read_iter() does, so one set serves every entry that has
-proc_ops. That set has ->splice_read(), so a splice() from an entry
-that can't be read at all, a write-only one, fails with -EIO now
-instead of -EINVAL.
-
-Nothing in struct proc_ops takes a __user pointer anymore.
+Every entry sleeps its pollers on the wait queue procfs owns for it
+now, so take the poll_table away from the method. An entry can't hand
+procfs a queue of its own anymore then, which is what went wrong for
+sunrpc, and the method only reports the mask.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/proc/generic.c       | 14 ++++------
- fs/proc/inode.c         | 69 +++++--------------------------------------------
- fs/proc/internal.h      |  5 ----
- include/linux/proc_fs.h |  4 +--
- 4 files changed, 12 insertions(+), 80 deletions(-)
+ arch/powerpc/kernel/rtasd.c | 2 +-
+ drivers/input/input.c       | 2 +-
+ drivers/md/md.c             | 2 +-
+ fs/proc/inode.c             | 2 +-
+ include/linux/proc_fs.h     | 9 +++++----
+ kernel/sched/psi.c          | 4 ++--
+ mm/swapfile.c               | 2 +-
+ net/sunrpc/cache.c          | 2 +-
+ sound/core/info.c           | 2 +-
+ 9 files changed, 14 insertions(+), 13 deletions(-)
 
-diff --git a/fs/proc/generic.c b/fs/proc/generic.c
-index 4e0142fec582..2515df3a0110 100644
---- a/fs/proc/generic.c
-+++ b/fs/proc/generic.c
-@@ -454,8 +454,7 @@ static int pde_set_flags(struct proc_dir_entry *pde)
- 	}
- 	if (pde_is_seq_file(pde)) {
- 		/* procfs reads and seeks through the seq_file itself */
--		if (WARN_ON_ONCE(proc_ops->proc_read || proc_ops->proc_read_iter ||
--				 proc_ops->proc_lseek))
-+		if (WARN_ON_ONCE(proc_ops->proc_lseek))
- 			return -EINVAL;
- 		/* and frees it, see pde_seq_release() */
- 		if (WARN_ON_ONCE(proc_ops->proc_release == seq_release ||
-@@ -463,11 +462,8 @@ static int pde_set_flags(struct proc_dir_entry *pde)
- 				 proc_ops->proc_release == single_release))
- 			return -EINVAL;
- 		pde->flags |= PROC_ENTRY_proc_lseek;
--	} else {
--		if (proc_ops->proc_read_iter)
--			pde->flags |= PROC_ENTRY_proc_read_iter;
--		if (proc_ops->proc_lseek)
--			pde->flags |= PROC_ENTRY_proc_lseek;
-+	} else if (proc_ops->proc_lseek) {
-+		pde->flags |= PROC_ENTRY_proc_lseek;
- 	}
- 	if (proc_ops->proc_poll)
- 		pde->flags |= PROC_ENTRY_proc_poll;
-@@ -482,8 +478,8 @@ static int pde_set_flags(struct proc_dir_entry *pde)
- 			pde->flags |= PROC_ENTRY_SHORT_WRITES;
- 	}
- 	if (proc_ops->proc_read_buf) {
--		if (WARN_ON_ONCE(pde_is_seq_file(pde) || proc_ops->proc_read ||
--				 proc_ops->proc_read_iter))
-+		/* procfs reads through the seq_file itself */
-+		if (WARN_ON_ONCE(pde_is_seq_file(pde)))
- 			return -EINVAL;
- 		pde->flags |= PROC_ENTRY_proc_read_buf;
- 		pde->read_size = proc_ops->proc_read_size ?: PAGE_SIZE;
-diff --git a/fs/proc/inode.c b/fs/proc/inode.c
-index 49ae30b6e515..9719c1b89de3 100644
---- a/fs/proc/inode.c
-+++ b/fs/proc/inode.c
-@@ -413,6 +413,9 @@ static loff_t proc_reg_llseek(struct file *file, loff_t offset, int whence)
- 	struct proc_dir_entry *pde = PDE(file_inode(file));
- 	loff_t rv;
- 
-+	/* procfs seeks through the seq_file itself, see pde_seq_start() */
-+	if (pde_is_seq_file(pde))
-+		return seq_lseek(file, offset, whence);
- 	if (!pde_pin(pde))
- 		return -EINVAL;
- 	rv = pde->proc_ops->proc_lseek(file, offset, whence);
-@@ -477,37 +480,15 @@ static ssize_t pde_read_buf(struct proc_dir_entry *pde, struct kiocb *iocb,
- static ssize_t proc_reg_read_iter(struct kiocb *iocb, struct iov_iter *iter)
- {
- 	struct proc_dir_entry *pde = PDE(file_inode(iocb->ki_filp));
--	ssize_t ret;
- 
-+	/* procfs reads through the seq_file itself, see pde_seq_start() */
-+	if (pde_is_seq_file(pde))
-+		return seq_read_iter(iocb, iter);
- 	if (pde_has_proc_read_buf(pde))
- 		return pde_read_buf(pde, iocb, iter);
--	if (!pde_pin(pde))
--		return -EIO;
--	ret = pde->proc_ops->proc_read_iter(iocb, iter);
--	pde_unpin(pde);
--	return ret;
--}
--
--static ssize_t pde_read(struct proc_dir_entry *pde, struct file *file, char __user *buf, size_t count, loff_t *ppos)
--{
--	const auto read = pde->proc_ops->proc_read;
--	if (read)
--		return read(file, buf, count, ppos);
- 	return -EIO;
+diff --git a/arch/powerpc/kernel/rtasd.c b/arch/powerpc/kernel/rtasd.c
+index 49036790b67c..34705234db57 100644
+--- a/arch/powerpc/kernel/rtasd.c
++++ b/arch/powerpc/kernel/rtasd.c
+@@ -343,7 +343,7 @@ static ssize_t rtas_log_read(struct file * file, char * buf,
+ 	return error;
  }
  
--static ssize_t proc_reg_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
--{
--	struct proc_dir_entry *pde = PDE(file_inode(file));
--	ssize_t rv;
--
--	if (!pde_pin(pde))
--		return -EIO;
--	rv = pde_read(pde, file, buf, count, ppos);
--	pde_unpin(pde);
--	return rv;
--}
--
- /*
-  * procfs copies in what is written before it pins the entry. A writer that
-  * faults on its buffer then doesn't hold up remove_proc_entry().
-@@ -923,41 +904,7 @@ static int proc_reg_release(struct inode *inode, struct file *file)
+-static __poll_t rtas_log_poll(struct file *file, poll_table * wait)
++static __poll_t rtas_log_poll(struct file *file)
+ {
+ 	if (rtas_log_size)
+ 		return EPOLLIN | EPOLLRDNORM;
+diff --git a/drivers/input/input.c b/drivers/input/input.c
+index a984810eb80d..5a0547296c6c 100644
+--- a/drivers/input/input.c
++++ b/drivers/input/input.c
+@@ -1097,7 +1097,7 @@ struct input_seq_state {
+ 	int input_devices_state;
+ };
+ 
+-static __poll_t input_proc_devices_poll(struct file *file, poll_table *wait)
++static __poll_t input_proc_devices_poll(struct file *file)
+ {
+ 	struct seq_file *seq = file->private_data;
+ 	struct input_seq_state *state = seq->private;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 7560dcf0f5c8..94926a7c3d6f 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9176,7 +9176,7 @@ static int md_seq_open(struct inode *inode, struct file *file)
  	return 0;
  }
  
--/* For seq_file entries, see pde_seq_ops. */
--static const struct file_operations proc_seq_file_ops = {
--	.llseek		= seq_lseek,
--	.read_iter	= seq_read_iter,
--	.splice_read	= copy_splice_read,
--	.write		= proc_reg_write,
--	.poll		= proc_reg_poll,
--	.unlocked_ioctl	= proc_reg_unlocked_ioctl,
--	.compat_ioctl	= proc_reg_compat_ioctl,
--	.mmap		= proc_reg_mmap,
--	.get_unmapped_area = proc_reg_get_unmapped_area,
--#ifndef CONFIG_MMU
--	.mmap_capabilities = proc_reg_mmap_capabilities,
--#endif
--	.open		= proc_reg_open,
--	.release	= proc_reg_release,
--};
--
- static const struct file_operations proc_reg_file_ops = {
--	.llseek		= proc_reg_llseek,
--	.read		= proc_reg_read,
--	.write		= proc_reg_write,
--	.poll		= proc_reg_poll,
--	.unlocked_ioctl	= proc_reg_unlocked_ioctl,
--	.compat_ioctl	= proc_reg_compat_ioctl,
--	.mmap		= proc_reg_mmap,
--	.get_unmapped_area = proc_reg_get_unmapped_area,
--#ifndef CONFIG_MMU
--	.mmap_capabilities = proc_reg_mmap_capabilities,
--#endif
--	.open		= proc_reg_open,
--	.release	= proc_reg_release,
--};
--
--static const struct file_operations proc_iter_file_ops = {
- 	.llseek		= proc_reg_llseek,
- 	.read_iter	= proc_reg_read_iter,
- 	.write		= proc_reg_write,
-@@ -1026,10 +973,6 @@ struct inode *proc_get_inode(struct super_block *sb, struct proc_dir_entry *de)
- 		inode->i_op = de->proc_iops;
- 		if (pde_has_proc_fops(de))
- 			inode->i_fop = de->proc_fops;
--		else if (pde_is_seq_file(de))
--			inode->i_fop = &proc_seq_file_ops;
--		else if (pde_has_proc_read_iter(de) || pde_has_proc_read_buf(de))
--			inode->i_fop = &proc_iter_file_ops;
- 		else
- 			inode->i_fop = &proc_reg_file_ops;
- 	} else if (S_ISDIR(inode->i_mode)) {
-diff --git a/fs/proc/internal.h b/fs/proc/internal.h
-index 84c5c13651aa..0a22237e6778 100644
---- a/fs/proc/internal.h
-+++ b/fs/proc/internal.h
-@@ -103,11 +103,6 @@ static inline bool pde_has_proc_fops(const struct proc_dir_entry *pde)
- 	return pde->flags & PROC_ENTRY_proc_fops;
- }
- 
--static inline bool pde_has_proc_read_iter(const struct proc_dir_entry *pde)
--{
--	return pde->flags & PROC_ENTRY_proc_read_iter;
--}
--
- static inline bool pde_has_proc_lseek(const struct proc_dir_entry *pde)
+-static __poll_t mdstat_poll(struct file *filp, poll_table *wait)
++static __poll_t mdstat_poll(struct file *filp)
  {
- 	return pde->flags & PROC_ENTRY_proc_lseek;
+ 	struct seq_file *seq = filp->private_data;
+ 	__poll_t mask;
+diff --git a/fs/proc/inode.c b/fs/proc/inode.c
+index 7f6c63885f53..c35e13b44eed 100644
+--- a/fs/proc/inode.c
++++ b/fs/proc/inode.c
+@@ -546,7 +546,7 @@ static __poll_t proc_reg_poll(struct file *file, struct poll_table_struct *pts)
+ 	poll_wait(file, &pde->open->poll, pts);
+ 	if (!pde_pin(pde))
+ 		return DEFAULT_POLLMASK | EPOLLERR | EPOLLPRI;
+-	rv = pde->proc_ops->proc_poll(file, pts);
++	rv = pde->proc_ops->proc_poll(file);
+ 	pde_unpin(pde);
+ 	return rv;
+ }
 diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
-index 05e0d6e4f918..9c09766b8f72 100644
+index 872f3bd54c11..6e2bcdf3c1b5 100644
 --- a/include/linux/proc_fs.h
 +++ b/include/linux/proc_fs.h
-@@ -17,6 +17,7 @@ struct seq_operations;
- enum {
+@@ -84,11 +84,12 @@ struct proc_ops {
+ 	int	(*proc_release)(struct inode *, struct file *);
  	/*
- 	 * All /proc entries using this ->proc_ops instance are never removed.
-+	 * procfs calls into them without pinning them.
- 	 *
- 	 * If in doubt, ignore this flag.
+ 	 * procfs owns a wait queue for an entry with a ->proc_poll() and
+-	 * does the poll_wait() on it before it calls the method. The owner
+-	 * wakes the pollers with proc_poll_notify(). A poll on a removed
+-	 * entry reports EPOLLERR | EPOLLPRI.
++	 * does the poll_wait() on it before it calls the method, which only
++	 * reports the mask. The owner wakes the pollers with
++	 * proc_poll_notify(). A poll on a removed entry reports
++	 * EPOLLERR | EPOLLPRI.
  	 */
-@@ -26,7 +27,6 @@ enum {
- 	PROC_ENTRY_PERMANENT		= 1U << 0,
- #endif
- 
--	PROC_ENTRY_proc_read_iter	= 1U << 1,
- 	PROC_ENTRY_proc_fops		= 1U << 2,
- 	PROC_ENTRY_proc_lseek		= 1U << 3,
- 	PROC_ENTRY_proc_seq_ops		= 1U << 4,
-@@ -76,8 +76,6 @@ struct proc_ioctl_arg {
- struct proc_ops {
- 	unsigned int proc_flags;
- 	int	(*proc_open)(struct inode *, struct file *);
--	ssize_t	(*proc_read)(struct file *, char __user *, size_t, loff_t *);
--	ssize_t (*proc_read_iter)(struct kiocb *, struct iov_iter *);
+-	__poll_t (*proc_poll)(struct file *, struct poll_table_struct *);
++	__poll_t (*proc_poll)(struct file *);
  	/*
- 	 * mandatory unless nonseekable_open() or equivalent is used, procfs
- 	 * seeks seq_file entries itself
+ 	 * procfs pins the entry around ->proc_mmap() and wraps the
+ 	 * vm_operations of the mapping so that ->open(), ->fault(),
+diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+index 9362c27d47ab..ecb9028b5c49 100644
+--- a/kernel/sched/psi.c
++++ b/kernel/sched/psi.c
+@@ -1606,11 +1606,11 @@ static ssize_t psi_cpu_write(struct file *file, char *buf, size_t nbytes,
+ 	return psi_write(file, buf, nbytes, PSI_CPU);
+ }
+ 
+-static __poll_t psi_fop_poll(struct file *file, poll_table *wait)
++static __poll_t psi_fop_poll(struct file *file)
+ {
+ 	struct seq_file *seq = file->private_data;
+ 
+-	return psi_trigger_poll(&seq->private, wait);
++	return psi_trigger_poll(&seq->private, NULL);
+ }
+ 
+ static int psi_fop_release(struct inode *inode, struct file *file)
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 1d063a1cef43..e7c019871e35 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -3315,7 +3315,7 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
+ }
+ 
+ #ifdef CONFIG_PROC_FS
+-static __poll_t swaps_poll(struct file *file, poll_table *wait)
++static __poll_t swaps_poll(struct file *file)
+ {
+ 	struct seq_file *seq = file->private_data;
+ 
+diff --git a/net/sunrpc/cache.c b/net/sunrpc/cache.c
+index b8f70d8c3b0c..4854a42d43a2 100644
+--- a/net/sunrpc/cache.c
++++ b/net/sunrpc/cache.c
+@@ -1588,7 +1588,7 @@ static ssize_t cache_write_procfs(struct file *filp, char *buf, size_t count,
+ 	return ret ? ret : count;
+ }
+ 
+-static __poll_t cache_poll_procfs(struct file *filp, poll_table *wait)
++static __poll_t cache_poll_procfs(struct file *filp)
+ {
+ 	struct cache_detail *cd = pde_data(file_inode(filp));
+ 
+diff --git a/sound/core/info.c b/sound/core/info.c
+index 3439ae341e26..8e64d8e3e5b2 100644
+--- a/sound/core/info.c
++++ b/sound/core/info.c
+@@ -184,7 +184,7 @@ static ssize_t snd_info_entry_write(struct file *file, char *buffer,
+ 	return size;
+ }
+ 
+-static __poll_t snd_info_entry_poll(struct file *file, poll_table *wait)
++static __poll_t snd_info_entry_poll(struct file *file)
+ {
+ 	struct snd_info_private_data *data = file->private_data;
+ 	struct snd_info_entry *entry = data->entry;
 
 -- 
 2.53.0
