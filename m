@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793821866;
-	b=4eEokNWp6HZIKPnQBbbE0exeDxdYL2LkjV+aVEl072MIgkYVrGH2Qd7Bzt1dnO+4d3fr
-	 7lpsnULBn9QDirYTsb4PRp9ZMLdaqZ2Tk3+xBZyYbjAilZ3FwXMajL/Utzle4ziGKRUts
-	 eL9HvG6azgS4FjIEsrYxIk9f6ynlNVGQAVVdUjdDfvArMMrAzYwF4DRKnSQ8OmxNJJg+j
-	 sBFTPOfT6LdVsjQaz3R7QQfjCtUSflpH6svXWVj8NC8u6hGM9tkY3emgrgP7sGh37l59Z
-	 VGhunzERI7HgSqqdtEmDYmPgnIF6Hn6l74UasatzASp9P2+sT9rfrgnb0jiSiV6BgKg==
+	t=1793821911;
+	b=zda1mzE+qFDN7At/H2Vsy3HxtjpgaDyaNS3f931hPzuG0ZkHdNQDKDGaDgk7s1idCIwE
+	 ubh3jsL0cHSnp04yMgd/7I4CG+jgViye/u3/bzGQBiDI5lMJaRLKqPTxAj+yUcUbmlCqG
+	 O6Ms8S+vpouEC1VVv+M/5Wz/Lx9/5asp+5Ix/oVgmHrNVtBGSAAAuS+NIw2Xi7osPycOw
+	 WwOutybnmq+OnVfY/pKFKAYbaOqFPMimA1eV03EPGtSkimDVq2v4wC6tresp5Sv/vgTNE
+	 PQ+aEtnj8nbKFKsbbguEj64IcfWIwL4TQ+jRhOWCvlXgf5wEtPaoAGVc4SkQb3DmSZA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793821866;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793821911;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=nEQe0uyLMhpY0v6D+NYVpfdWFgM7DE6SumWpafCq12g=;
-	b=DmUQzX+uhxC73RSUT75Hz61XxufgTKqE4bCgFlTCCDqZVHX90Odyi72nRJ+brNPf8Q7B
-	 0Q+cLxHZ1Y6m+FjGNCCFcRC8YDBTfgPmfbAA2pcK+esfVWKdJHtHyiv/VaNvh9EYmfpYF
-	 jnY/K+ddYV18Klxc5Q4ERClD1HagD2rfQwbMk/E4Q8UpkqSbfyMOhEny8QAbehF7yMA4U
-	 lqotrZvsJ1hxHtixePUsSodKc6rypwZ0A3nj/0rhiUN8GWndEhKeVJ4HPq7CuQMXmv/od
-	 RujJ6uRQ8JTCRIu8v23rQ1jij+FAjNfdcR+wP5U9Wzk1CKsBLhm0BxPJCM35DHMt3Fg==
+	bh=lzw2p1lwQVTXGjOVK+O2fRllw6EWFGiyVpP4wwnyOh0=;
+	b=qDYoSIOxocN5AxdfVKvWW8Z8pzS6IHJu80jMsvk+jL4U2YaJRkHQI7K16D0G64moNf9Q
+	 yu6RXrFr0yZZqxUe5r9A09PGEZS9oHoub7MITEEdnmSTTZmCTxBNhGVHcjviRMdI+pBa7
+	 iMMmjdLimyLNdpWWhEnroBKkcxuyaxmH0IaZ27AQeCgn+VLXLkCPqOoqgocNJsOM+3W4K
+	 5zGcCshL3idye6MsOh98BZBXgLcyGqm2d33GKcN2kUMEQH8NRZka4sJYSI055sg9/h3bX
+	 MvB7WayvkV2Tapax0oRqpcha0UUtQVBKtpGdWWgEx/OEl93Mq0QfTtxKG7bk+HrDuXQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PNR1RL0M;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QAJQ3+WL;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21A196092BD2;
-	Wed,  4 Nov 2026 19:51:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C84EC606BA36;
+	Wed,  4 Nov 2026 19:51:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PNR1RL0M
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FE711F000C1;
-	Wed,  4 Nov 2026 19:50:53 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QAJQ3+WL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 515511F0093A;
+	Wed,  4 Nov 2026 19:51:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793821865;
-	bh=nEQe0uyLMhpY0v6D+NYVpfdWFgM7DE6SumWpafCq12g=;
+	s=k20260515; t=1793821910;
+	bh=lzw2p1lwQVTXGjOVK+O2fRllw6EWFGiyVpP4wwnyOh0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=PNR1RL0MdGjcQerL1pRweO0sDyx5srKRXEN8HDA+Rakv7ORmxGv0M2c4pYe9RS1TQ
-	 0hEIzB+5FOF0UCUZDy2W4t4c7HuYIzaQJTIIdmOzZYD7DdxjyO4UPMNhgtsSPIcilP
-	 VKQkCD781my0Xdy0OOhH6pW79rQPVmEqRIUUxd2NdY92712CXUTz6e3VpbB0hBPCek
-	 OuNQy8Ti5KEKBVAOmNI7xjQ/es+OJejnGIOCcQv3TLP2VhuvJQoptNjkpFmMJ9AFiD
-	 0pSOj7vYCxBvgAkRaIbFsX+qFB2wBAEL9TsIawHW/SCRe0fGQn34mw49XBQgFh27d6
-	 NX3UXBJy8hndg==
+	b=QAJQ3+WLDUkYLImp3HYyJ9xNQzT5ktofk3vTOb5CY1yyjGgMiMLV84eXcv7Ngn9pO
+	 0R1aIfFok0raVnzXU9Vxsqv/+8svHg8UrA6VN+qDutbG0MoaDiCzmWdmWTuVYeXa/I
+	 N2GChnCG6weK3daO3o2GHaFO3/dOVqhIMLzDjlCpOjj7c7+2YrdYYhUy9NCshP6wdl
+	 Lk+TkGZGwLWFEFiLx/wufa/ZxQYuvNY4PHonWIRM9HX3gymQ16OIyPKKYKRaJNOE5j
+	 ooOiwYlFZWYxO07ewx8hUYCero4307WQRVTKLVnFylG/X2Vx0yOkMhn63aRL8xUxMW
+	 sonQvq7YDKhvw==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -100,9 +100,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-debuggers@vger.kernel.org,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 05/30] nfsd: factor out setting up the exports seq_file
-Date: Wed,  4 Nov 2026 20:50:51 +0100
-Message-ID: <20261104-work-procfs-fs-v2-5-319e0f9a8aae@kernel.org>
+Subject: [PATCH RESEND v2 08/30] smb: client: let procfs own the seq_file of the smbdirect files
+Date: Wed,  4 Nov 2026 20:51:35 +0100
+Message-ID: <20261104-work-procfs-fs-v2-8-319e0f9a8aae@kernel.org>
 In-Reply-To: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
 References: <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -116,71 +116,38 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1726; i=brauner@kernel.org; h=from:subject:message-id; bh=vD80ghFjEqER+DW0z2Tx247oQHe2lrzCvRX/1X8RBv4=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97jE4HGMmWSWebTGtb+f+qbf6t/93PO9leHL1HTEbl YAwmQUfO0pZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACayJpThr5Txruw7h8z+75d5 n1L9ZprSX0ON4zl3v9jMV5lvl7Zx8waG/4W80ze0KR4rWpY6/3hi66zKk8tmbsxvP1RSWORQnvT 3OCsA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1034; i=brauner@kernel.org; h=from:subject:message-id; bh=RIZYcDqYt7NhFvt2L4C6pTMn3DylkXBLCyRwuGHjm7I=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97jG5tPWrw/cVrCsb765In/OBvcn09R7LsHQ9/q6+O V1HHE9ndpSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAExkz01Ghl3rSlga96Rmhvie 3JVu2vHMZ1KgvNQ2f7ZfM06avi3c5s3wv8ZDfv2t3meZR3nKlGZN/Jj7Lukpr3r48QVnD/23mvz tIT8A
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-Move setting up ->private and taking the reference to the network
-namespace into exports_net_init() and dropping it into
-exports_net_put(). The procfs file needs them without the seq_open()
-and seq_release() around them.
+Declare the show function in PROC_FILE_DEFINE() and let procfs open and
+free the seq_file. That makes the open functions unnecessary.
 
-No functional changes.
-
-Acked-by: Chuck Lever <cel@kernel.org>
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/nfsd/nfsctl.c | 26 +++++++++++++++++---------
- 1 file changed, 17 insertions(+), 9 deletions(-)
+ fs/smb/client/cifs_debug.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-diff --git a/fs/nfsd/nfsctl.c b/fs/nfsd/nfsctl.c
-index f32311f2d7cf..f8ce3c0fb077 100644
---- a/fs/nfsd/nfsctl.c
-+++ b/fs/nfsd/nfsctl.c
-@@ -143,28 +143,36 @@ static const struct file_operations transaction_ops = {
- 	.llseek		= default_llseek,
- };
- 
-+static void exports_net_init(struct net *net, struct seq_file *seq)
-+{
-+	struct nfsd_net *nn = net_generic(net, nfsd_net_id);
-+
-+	seq->private = nn->svc_export_cache;
-+	get_net(net);
-+}
-+
-+static void exports_net_put(struct seq_file *seq)
-+{
-+	struct cache_detail *cd = seq->private;
-+
-+	put_net(cd->net);
-+}
-+
- static int exports_net_open(struct net *net, struct file *file)
- {
- 	int err;
--	struct seq_file *seq;
--	struct nfsd_net *nn = net_generic(net, nfsd_net_id);
- 
- 	err = seq_open(file, &nfs_exports_op);
- 	if (err)
- 		return err;
- 
--	seq = file->private_data;
--	seq->private = nn->svc_export_cache;
--	get_net(net);
-+	exports_net_init(net, file->private_data);
- 	return 0;
- }
- 
- static int exports_release(struct inode *inode, struct file *file)
- {
--	struct seq_file *seq = file->private_data;
--	struct cache_detail *cd = seq->private;
--
--	put_net(cd->net);
-+	exports_net_put(file->private_data);
- 	return seq_release(inode, file);
+diff --git a/fs/smb/client/cifs_debug.c b/fs/smb/client/cifs_debug.c
+index dfcd2cdbb2a8..664072ab3342 100644
+--- a/fs/smb/client/cifs_debug.c
++++ b/fs/smb/client/cifs_debug.c
+@@ -873,16 +873,9 @@ static int name##_proc_show(struct seq_file *m, void *v) \
+ 	seq_printf(m, "%d\n", name); \
+ 	return 0; \
+ } \
+-static int name##_open(struct inode *inode, struct file *file) \
+-{ \
+-	return single_open(file, name##_proc_show, NULL); \
+-} \
+ \
+ static const struct proc_ops cifs_##name##_proc_fops = { \
+-	.proc_open	= name##_open, \
+-	.proc_read	= seq_read, \
+-	.proc_lseek	= seq_lseek, \
+-	.proc_release	= single_release, \
++	.proc_show	= name##_proc_show, \
+ 	.proc_write	= name##_write, \
  }
  
 
