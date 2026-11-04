@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793813335;
-	b=vl7bKepQqGm55qmU42ObrW6jf1Nxk4t6lvnpC319HhlxYV7yyGT8aQiG23ULaj26Of3P
-	 L4t6Jz5xm30/2N/e8eE5v4vKf1RUQBj6y6hFElyiw0uck9mnj5l9qfsbcqo5U7Ng70Ep3
-	 6RjUdk3FkN1vi3MsT6qNsSZ3t9WuGo37jKQ2JhJ/0bwLoEQQ0tnDQdWq8YN8T1jDn2xMg
-	 bi9cZPYsJ5vEjj6aL+TUDLwpqX0XJ7P/aIzHZvlXUJGkHFpf9pOjKYP1Qchc9h9av359e
-	 nMiQtl0JyzWmbqIJxRk7CtDqbKCSfw4TtrK9Z6nAMTG+uHzzq3haD1EQkmfOErQAU7g==
+	t=1793813375;
+	b=uLPYJ7wDfCKDILBBGY7tsoTV8pWFSIC9A9Su7mLdxY8dg4EEQZnUcMEhFEqibspfqyI0
+	 DeB8lTbZP0Sv9swJNWHSgyk/6NL7As9AoJAsnW+aZsTQmcIHxo320EhawHKLrbN2qlYJM
+	 hyuxfh03mJNvzFQ4U1sw7yeGXQ0v2PxgfDtcqn4PEOD0OPvFq1trm2o04Ewi+B+BqkUVc
+	 Pl1h5er/82TECEaRJXfnpN7v83SEzgpOpHKbx23EBgK00o/54THzfZcEcFnjU5+G+qtVi
+	 Jf8IRBCCAIUJY+E85YonPaUT6Hy4X5sWuYds2sDDLd3qMAA37jXc9H7NzeHvFDb8ZLA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793813335;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793813375;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=Em8mdDwLTSxa5ZBRNu+oIoQ2F8Zgf6ZNSHVwHsLTxqQ=;
-	b=0X/mMMk5yctkhCRkU8PDEzFBBwSw55+RPs4qJvc8QXjZHXQloje7KknPi/jVOf2Dd42Z
-	 ySm/BTcdzY0+sEUwEo29n3mSFUAEXBMzPhqsbgZhQjO5OnW1qPzckrpbTZ1QxiwTtKlLk
-	 uag+QOza43kmvKThrHt2zIkrxmC9RPGfaAAsYf6+76vNFcZnKxVYxJ26JLqC6X918TnRy
-	 uU2wQ5w6159JFhWA5cfAXmLkovUt5l8BXJb3PvswduT6NSsLKq8S6hjxm2QB7ljVtfb9x
-	 V//5+6vCl7ImGElkgMPfEo5Lm17WvpRK77rSydz6v8tBz3u1fZGYOO2kW4EpZEqISpQ==
+	bh=9+yARzdOpzdllKXUJ7Oz/hxaICj5Mm35ej5JnL7jd2E=;
+	b=TduCvu5mpkGVlu+UulMbVLhELCDGSgzA84IVIH32kKOWbOgKdqF4VOTwRH50GV/w485X
+	 pikfZX05g9IVom6ihYK1SzEXf+/6EjIJfiMhYbcd5Bum8H/0HVRJuh/fu3/8XhQcD3t+h
+	 U4XuIc7PvcPjhtMGnUxIByk/MtuNoYD4qZJsVyuAmSS3a6AgUblop06JiSOVynNr6l3TO
+	 HYFtO3/JXAXXhEZUyKtIbHOlRcMIqFEmVJ1m7NgTW931BsuYQFGs2915/F39RYKwqPTUO
+	 pKWIHCJxsRytDgMli5cpXrYlbUcUBuQV5UvdgUooBBVw2ZSG0xqBcSrt7aBedalrWKA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WlF7tGad;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GEKJ5oBt;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3187606D81B;
-	Wed,  4 Nov 2026 17:28:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 730EF60A380F;
+	Wed,  4 Nov 2026 17:29:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WlF7tGad
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35F761F00919;
-	Wed,  4 Nov 2026 17:28:39 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GEKJ5oBt
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 641541F0093A;
+	Wed,  4 Nov 2026 17:29:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793813333;
-	bh=Em8mdDwLTSxa5ZBRNu+oIoQ2F8Zgf6ZNSHVwHsLTxqQ=;
+	s=k20260515; t=1793813375;
+	bh=9+yARzdOpzdllKXUJ7Oz/hxaICj5Mm35ej5JnL7jd2E=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=WlF7tGadWEgcoZaI1uK4E88iTTgepprrifasds75i7VthYlwDtZlbOT38njQBleEb
-	 UPbfRvu/3NbdJdmajozNFYEjQ7CLKo3CQ2J3GJ8KprOwgxaPeKR/tPjmsa1SVubVZc
-	 1en2pZ6ZJTtEVyIRxb8Akk8hz+i5vksUw5t9jkHwoekjj/VsrPO/9oQMYE5lUZ/Gmm
-	 GUjsDpi349fDqaFLbiGR7qDbPwtf9QbhpGmf9fVBlF6p4pM0JpJvP1ofrRorpGAY+w
-	 2xFkMHZ1ZzA18zc8/hnvV/Wnix3shLePBWHi7TeHk0dW6WQ7yqtTL3j1rmlfaIJEkz
-	 qVzdX/epmct3g==
+	b=GEKJ5oBtLs1Ued5KRzNH5ufzbODMyZ6PKn/Udd/hvL22vNsuoFBfVggV2ZFxVjqP4
+	 8F6aIiAZmFuauOKTCLsqRblXf+tPD9fnHwb6IvcjUGRXyp5jYpp7RSlQRYmw3/tKTN
+	 3hMTsxwcM7o+Kilf/qR1r6m4VjBReM+Zmlafux1A+LYZbzqYGdtm7xeTAIKiPpNlNL
+	 g4/R+I932DYQ/ARbsO2FY4bDvIYVnkPqPp5PHE+IMmU+7MpzPMNLR8uYrmx3l5Cm5R
+	 oPZrT41KRDe91uyE80CWxhIqW85F4PsqrtLkGrQKTz3AeHWg2FuAsXTXsMj7Uv14PH
+	 8ydiIpfAzbpUw==
 From: Christian Brauner <brauner@kernel.org>
-Date: Wed, 04 Nov 2026 18:27:18 +0100
-Subject: [PATCH v2 01/51] alloc_tag: don't remove /proc/allocinfo under the
- codetag module lock
+Date: Wed, 04 Nov 2026 18:27:21 +0100
+Subject: [PATCH v2 04/51] PNP: isapnp: don't go on when isapnp_cfg_begin()
+ fails
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -55,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261104-work-procfs-bugfixes-v2-1-bbf7d5546809@kernel.org>
+Message-Id: <20261104-work-procfs-bugfixes-v2-4-bbf7d5546809@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -91,103 +91,118 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
  Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3465; i=brauner@kernel.org;
- h=from:subject:message-id; bh=C5Mw1tWGzCvAVdyOdBCkcSqd8MeBZuRbzsUttoDJMVc=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9zvplOalNaKKt8vuu2b8lsnQOcTE/KzbYPv1ll+Xp5
- mmPQhjTO0pZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACaSn8/wm81Zr+lISs2Ek/OM
- L7KdEcq5v/O1XVLdtyWXdiY8F0/he8vwV96O52JXaCnv3ctHP3V8+3Zga6R61CzWK7HM88uSHpZ
- tYwQA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3910; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=zJWqbpFP7Eog9HhLBr1/8hQ7kUfFg3Bc340XkbmHZ+k=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9zvqrMu+3ucHOq8s8Hi6dUyBieqBr4iYJ9fLMtfG+8
+ hk+XGY5HaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABOxkGT4Z1x3X32vSsH+H8de
+ Tzy0tm6dPV/iyZO8NQtV2Rd9k3CX7mdk+Gmf7XH+YJVede/Zl5mfRZNs98TPb/HRte7TWrnzoYE
+ JLwA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-codetag_alloc_module_section() takes the codetag type's mod_lock for
-writing and calls reserve_module_tags() with it held. When that can't
-reserve the tags, because the section's alignment doesn't fit, because
-there are too many tags for the page flag bits or because the memory
-for them can't be allocated, it shuts memory allocation profiling down
-and removes /proc/allocinfo, still with mod_lock held.
+isapnp_cfg_begin() refuses a logical device number above 10 and a bad
+card number with -EINVAL before it takes isapnp_cfg_mutex. The callers
+that read and write the device's configuration, the proc file included,
+don't look at that: they go on talking to whatever device the card
+currently has selected and then unlock a mutex they never took in
+isapnp_cfg_end(). isapnp_create_device() hands out logical device
+numbers without a bound, so a card with twelve or more logical devices
+gets there. Return the error instead.
 
-remove_proc_entry() waits until every reader of the entry has let go of
-it, and a reader of /proc/allocinfo takes mod_lock for reading in
-allocinfo_start() while it holds the entry. So a module load that hits
-one of those paths while /proc/allocinfo is being read waits for the
-reader and the reader waits for the module load, for good.
-
-Let a work item remove the entry in that case. The profiling is shut
-down right away like before, the file just goes a moment later.
-
-Fixes: 4835f747d3ed ("alloc_tag: support for page allocation tag compression")
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- mm/alloc_tag.c | 27 ++++++++++++++++++++++++---
- 1 file changed, 24 insertions(+), 3 deletions(-)
+ drivers/pnp/isapnp/core.c | 16 ++++++++++++----
+ drivers/pnp/isapnp/proc.c |  5 ++++-
+ sound/isa/es18xx.c        |  6 +++++-
+ 3 files changed, 21 insertions(+), 6 deletions(-)
 
-diff --git a/mm/alloc_tag.c b/mm/alloc_tag.c
-index 82e2c3448dcf..7d7ad6704953 100644
---- a/mm/alloc_tag.c
-+++ b/mm/alloc_tag.c
-@@ -15,6 +15,7 @@
- #include <linux/seq_file.h>
- #include <linux/string_choices.h>
- #include <linux/vmalloc.h>
-+#include <linux/workqueue.h>
- #include <linux/kmemleak.h>
- #include <uapi/linux/alloc_tag.h>
+diff --git a/drivers/pnp/isapnp/core.c b/drivers/pnp/isapnp/core.c
+index 219f96f2aaaf..3591a2791c1a 100644
+--- a/drivers/pnp/isapnp/core.c
++++ b/drivers/pnp/isapnp/core.c
+@@ -853,7 +853,9 @@ static int isapnp_get_resources(struct pnp_dev *dev)
  
-@@ -604,6 +605,26 @@ static void shutdown_mem_profiling(bool remove_file)
- 	mem_profiling_support = false;
- }
- 
-+static void remove_allocinfo_file(struct work_struct *work)
-+{
-+	remove_proc_entry(ALLOCINFO_FILE_NAME, NULL);
-+}
-+static DECLARE_WORK(remove_allocinfo_work, remove_allocinfo_file);
-+
-+/*
-+ * A module's tags are reserved with the codetag module lock held for
-+ * writing, and a reader of /proc/allocinfo takes that lock with the entry
-+ * pinned. Removing the entry there would wait for that reader for good, so
-+ * let a work item do it.
-+ */
-+static void shutdown_mem_profiling_async(void)
-+{
-+	if (!mem_profiling_support)
-+		return;
-+	shutdown_mem_profiling(false);
-+	schedule_work(&remove_allocinfo_work);
-+}
-+
- void __init alloc_tag_sec_init(void)
+ 	pnp_dbg(&dev->dev, "get resources\n");
+ 	pnp_init_resources(dev);
+-	isapnp_cfg_begin(dev->card->number, dev->number);
++	ret = isapnp_cfg_begin(dev->card->number, dev->number);
++	if (ret)
++		return ret;
+ 	dev->active = isapnp_read_byte(ISAPNP_CFG_ACTIVATE);
+ 	if (!dev->active)
+ 		goto __end;
+@@ -887,10 +889,12 @@ __end:
+ static int isapnp_set_resources(struct pnp_dev *dev)
  {
- 	struct alloc_tag *last_codetag;
-@@ -855,7 +876,7 @@ static void *reserve_module_tags(struct module *mod, unsigned long size,
- 		align = 1;
+ 	struct resource *res;
+-	int tmp;
++	int tmp, ret;
  
- 	if (!ensure_alignment(align, &prepend)) {
--		shutdown_mem_profiling(true);
-+		shutdown_mem_profiling_async();
- 		pr_err("%s: alignment %lu is incompatible with allocation tag indexing. Memory allocation profiling is disabled!\n",
- 			mod->name, align);
- 		return ERR_PTR(-EINVAL);
-@@ -905,14 +926,14 @@ unlock:
+ 	pnp_dbg(&dev->dev, "set resources\n");
+-	isapnp_cfg_begin(dev->card->number, dev->number);
++	ret = isapnp_cfg_begin(dev->card->number, dev->number);
++	if (ret)
++		return ret;
+ 	dev->active = 1;
+ 	for (tmp = 0; tmp < ISAPNP_MAX_PORT; tmp++) {
+ 		res = pnp_get_resource(dev, IORESOURCE_IO, tmp);
+@@ -936,9 +940,13 @@ static int isapnp_set_resources(struct pnp_dev *dev)
  
- 		module_tags.size = offset + size;
- 		if (mem_alloc_profiling_enabled() && !tags_addressable()) {
--			shutdown_mem_profiling(true);
-+			shutdown_mem_profiling_async();
- 			pr_warn("With module %s there are too many tags to fit in %d page flag bits. Memory allocation profiling is disabled!\n",
- 				mod->name, NR_UNUSED_PAGEFLAG_BITS);
- 		}
+ static int isapnp_disable_resources(struct pnp_dev *dev)
+ {
++	int ret;
++
+ 	if (!dev->active)
+ 		return -EINVAL;
+-	isapnp_cfg_begin(dev->card->number, dev->number);
++	ret = isapnp_cfg_begin(dev->card->number, dev->number);
++	if (ret)
++		return ret;
+ 	isapnp_deactivate(dev->number);
+ 	dev->active = 0;
+ 	isapnp_cfg_end();
+diff --git a/drivers/pnp/isapnp/proc.c b/drivers/pnp/isapnp/proc.c
+index c1f6e6bd0eb2..b3abab24050b 100644
+--- a/drivers/pnp/isapnp/proc.c
++++ b/drivers/pnp/isapnp/proc.c
+@@ -25,6 +25,7 @@ static ssize_t isapnp_proc_bus_read(struct file *file, char __user * buf,
+ 	struct pnp_dev *dev = pde_data(file_inode(file));
+ 	int pos = *ppos;
+ 	int cnt, size = 256;
++	int ret;
  
- 		grow_res = vm_module_tags_populate();
- 		if (grow_res) {
--			shutdown_mem_profiling(true);
-+			shutdown_mem_profiling_async();
- 			pr_err("Failed to allocate memory for allocation tags in the module %s. Memory allocation profiling is disabled!\n",
- 			       mod->name);
- 			return ERR_PTR(grow_res);
+ 	if (pos >= size)
+ 		return 0;
+@@ -37,7 +38,9 @@ static ssize_t isapnp_proc_bus_read(struct file *file, char __user * buf,
+ 	if (!access_ok(buf, cnt))
+ 		return -EINVAL;
+ 
+-	isapnp_cfg_begin(dev->card->number, dev->number);
++	ret = isapnp_cfg_begin(dev->card->number, dev->number);
++	if (ret)
++		return ret;
+ 	for (; pos < 256 && cnt > 0; pos++, buf++, cnt--) {
+ 		unsigned char val;
+ 		val = isapnp_read_byte(pos);
+diff --git a/sound/isa/es18xx.c b/sound/isa/es18xx.c
+index 3cadbf7cf238..de1eda5a0656 100644
+--- a/sound/isa/es18xx.c
++++ b/sound/isa/es18xx.c
+@@ -1950,7 +1950,11 @@ static int snd_audiodrive_pnp_init_main(int dev, struct pnp_dev *pdev)
+ 	/* ok. hack using Vendor-Defined Card-Level registers */
+ 	/* skip csn and logdev initialization - already done in isapnp_configure */
+ 	if (pnp_device_is_isapnp(pdev)) {
+-		isapnp_cfg_begin(isapnp_card_number(pdev), isapnp_csn_number(pdev));
++		int ret = isapnp_cfg_begin(isapnp_card_number(pdev),
++					   isapnp_csn_number(pdev));
++
++		if (ret)
++			return ret;
+ 		isapnp_write_byte(0x27, pnp_irq(pdev, 0));	/* Hardware Volume IRQ Number */
+ 		if (mpu_port[dev] != SNDRV_AUTO_PORT)
+ 			isapnp_write_byte(0x28, pnp_irq(pdev, 0)); /* MPU-401 IRQ Number */
 
 -- 
 2.53.0
