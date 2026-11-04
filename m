@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793821145;
-	b=qvqySqfbcuGxlzSsIT8J/K0LThqknAAKXDPTzf6KcJXT4wl1TVZZQHBJLer7bfXoWf0C
-	 6rg77lqVlXdy5OZ6rXv/C6EnVjMS18/79zlc9boI/lDUeEq5DEvQW0QNumX2VsEAxU5WY
-	 a3SPq+nOZ0WBsuO9DpymIYS8ajm99MPpzUdYa8F8h9kYVgYH3Zbb4D9/9wgZmAMgN6qyg
-	 T5i7Izi4UNQKv4mpmveeWmuYnNN/DSzanPHArov7ERx1ag5qp6M/EvbAmhWp64E/cWrQs
-	 ZhwmaK3jcVaOnYTli7ksqd6NDgOJbhVf7j3JNYb8X8HODG8l5HFaMSPSmHunntp93pA==
+	t=1793821204;
+	b=kTRDbx/nifpGBH9TRtVSowGz/xoxPSnsHi6acNUrmLXzoPJfHeZbA44kdiMqdo6cJM9P
+	 XJFPaYni8zjKgDDM18mdfzT2b2wlEQcpBxieFEEGnnjOMccqqBlFtYRUZbYkYs45118aP
+	 Xc9Syhu9ww0aG8nNsO+FlQKMAFQ9O6iqw2pPm8jZuHf/TzkzHCyXclBh8jx6z9rdfddrQ
+	 OdumWeJIhxsrPVlt7NRSEUV1Hm57SJ2Wi+TsLcyQq4hWeDZyL7TesjAmSZ7kOMCyV5o3g
+	 /sx0NRLa3fpWgbKIXtPCYeQpMJTYkAtpKt1vHQaPrNmCIopuj1zBLP38CGyvpmKplzQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793821145;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793821204;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=2GaZul5nsAkiA2gFzaNhtmiz6cl7FK3FoYt1S3NMwg0=;
-	b=dpdq8+VwiiGZkJtoYM07xW2qMQHFmyr00QG2SU0hZ3MbO039xmgEo/x3M7fdjqc1LjQ2
-	 L5ywXHyHux9a3vXS/UPipqFELzGfzCG/QEyBqdANSup2ZDST0+QVi8qJBYAj6j0iJZxGN
-	 Kbj6Ycf/L2yaEtv8nsxikVP2OVjDOlVnE6QgTn4Q9QXWr+mOq8b+NEYfOXYEIHlKIRav9
-	 vzmo7SymvdkgFJz/tOe1DXUnWbDGi+mAI4ILuC5n8nBaJJh3So2BgIga+l5OFmrn4JbDA
-	 MKQaDJmvqd2ZWzgj3Ud4Go6IqLMQ3iMTfQRKOvr+ezJh0N0i+WXXYWCMuRDy2c7IAEQ==
+	bh=I1miZOwU+uS7OyZJ+vljGqgplXbL3g+w9Z/kHpw+0Ic=;
+	b=BZIkSyvSlBgLxoksPDUZEhH95Ip1/C3w3/qpNCU3zjxWssI5tNPBgOyDfNzUsZPdfVoc
+	 kafM+gUBMf0LhfpuoXcYhKTecQ9O5G61tGVjpBvummJhPE0g3eWO/+nHRSC0MvL0WnrlW
+	 9H6Nw2pBo90dt4KBOPATabQ1NXpQvgwh0P1xI7/6XqVtyPQ3qq73I72qTmgDdDaaypp+G
+	 5lAwVLgh8QHBKkH1Cl9uzER0L1r2KfXuIa9hNiLYYMSBPCOKJMv9o8n1e4zAFg13M3Pbl
+	 XsmtqrW6L+m0Csbjj99lvZnsss73aNhKK4l2zKeXcS7mZByOG5RlI6vi9yU1GsA3zYg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EkijSZeV;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iWisENYU;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF74D606D81F;
-	Wed,  4 Nov 2026 19:39:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC72B6070F21;
+	Wed,  4 Nov 2026 19:40:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EkijSZeV
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB9AA1F00919;
-	Wed,  4 Nov 2026 19:38:51 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iWisENYU
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 400AF1F000C1;
+	Wed,  4 Nov 2026 19:39:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793821144;
-	bh=2GaZul5nsAkiA2gFzaNhtmiz6cl7FK3FoYt1S3NMwg0=;
+	s=k20260515; t=1793821203;
+	bh=I1miZOwU+uS7OyZJ+vljGqgplXbL3g+w9Z/kHpw+0Ic=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=EkijSZeVjK/rxqWkFZ0OqjZPZ2MuDjt77EIGi3oeRCPyvddqFu9s+uEMPbZyav6JU
-	 wR/usgrscOo+Xc/2BlwsQalbhrpqMfSzzRqIgv3T6yJ6Su3/KnDPj8UujUmSRlInc2
-	 OA+qa1pxZU+tpV0mOirJD8BdIgxcL9++M7vpMuIqy3oTTRQjm4+QyaGOZOJJljVRFM
-	 978mJ2y34/rrUxqJu2rf6osm9UbeqCNqVT1ww1vX9zJuceB82ZbPSNli3Pn90tp1pC
-	 vGmWMHMmL/iqTgm2FqrZJJMi0EDtSQb0qpfJ2D2g7q68SgWPBjHVtue51SAG0k/VAQ
-	 m6xHCkuZygl4A==
+	b=iWisENYUjAJsAzBSE3lGImGvChgp+BG03nV/9zJNmEmVEQqMUuspDJmWqJOL8vdCY
+	 oHV2GpTw7nzhZ8YSayGsDUlJzGRv0ThytArIl/pXnKxEHGqUREbYMyptK2QRO4tWb+
+	 0MJ2nNe6OsnVhX9kRXAgGrur5t53VezJ+BwOWZY1lK1M/S2AcooFeGbuJTcHh6MMK5
+	 Q0olsGHFDarOPT5Tg5XxJr8bNViO7g5QRvPbnb/bbKcsghMepoAlwc9fQuisDpBdNj
+	 xEFmyHVac3X4qFr6hW2l+JvJkyvtiVxI0WdyYW/zK53nj9PA2sh6Z3KYMrD0GYvMbO
+	 MorJYVNGc2nSQ==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -100,9 +100,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-debuggers@vger.kernel.org,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 13/23] x86/mtrr: let procfs own the seq_file of /proc/mtrr
-Date: Wed,  4 Nov 2026 20:38:49 +0100
-Message-ID: <20261104-work-procfs-arch-v2-13-2aeb952c9597@kernel.org>
+Subject: [PATCH RESEND v2 17/23] xtensa: simdisk: let procfs copy out reads
+Date: Wed,  4 Nov 2026 20:39:48 +0100
+Message-ID: <20261104-work-procfs-arch-v2-17-2aeb952c9597@kernel.org>
 In-Reply-To: <20261104-work-procfs-arch-v2-0-2aeb952c9597@kernel.org>
 References: <20261104-work-procfs-arch-v2-0-2aeb952c9597@kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
@@ -116,48 +116,49 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1271; i=brauner@kernel.org; h=from:subject:message-id; bh=JKCg0Vsec4l/XR03sLy8l8PQ6sAjtJH7fHwWHPLe1EE=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97vjDc7H1uCrz7Lca1inL3TMkhJlv3fnENrvceu2S/ ReZTC3Od5SyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEzk+F6G/2VugSv8pq08ZPfu Tmr9gR2hu+24ZwgWX2kN2zjp1ecfLS8YGa7UCoX+OCF32/XDAz/vezHLIq7fqM/cGxRkcUSq91z LXx4A
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1498; i=brauner@kernel.org; h=from:subject:message-id; bh=lmVHOivhxd1ieO/qCxQCbfFgZys6nsQ8zrRpqRkdZ/o=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97mTUYCmvn7tj1bZ3nRPePsj/znEsO+Ut/5eb7fKhN Rlbli062VHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjAR3UKG/45fU9K/nja5HyLM 7nljky3/puSce6cM0zZzlOzMKnx6ch0jQ/vS7+rz7ONa9NtY1Yu1H+1jtI6Tci9wC2pP5fa2eZP IAwA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-Declare the show function and let procfs open and free the seq_file.
-->proc_open() only does the checks now and ->proc_release() only drops
-the MTRRs the file added.
+Implement ->proc_read_buf() so procfs copies what is read to userspace
+after it unpinned the entry.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- arch/x86/kernel/cpu/mtrr/if.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ arch/xtensa/platforms/iss/simdisk.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/arch/x86/kernel/cpu/mtrr/if.c b/arch/x86/kernel/cpu/mtrr/if.c
-index 4049235b1bfe..9510e01d5103 100644
---- a/arch/x86/kernel/cpu/mtrr/if.c
-+++ b/arch/x86/kernel/cpu/mtrr/if.c
-@@ -349,7 +349,7 @@ static int mtrr_close(struct inode *ino, struct file *file)
- 		kfree(fcount);
- 		FILE_FCOUNT(file) = NULL;
- 	}
--	return single_release(ino, file);
-+	return 0;
+diff --git a/arch/xtensa/platforms/iss/simdisk.c b/arch/xtensa/platforms/iss/simdisk.c
+index 26c2fa39a66e..cfddfcd06be7 100644
+--- a/arch/xtensa/platforms/iss/simdisk.c
++++ b/arch/xtensa/platforms/iss/simdisk.c
+@@ -234,7 +234,7 @@ static int simdisk_detach(struct simdisk *dev)
+ 	return err;
  }
  
- static int mtrr_seq_show(struct seq_file *seq, void *offset)
-@@ -391,13 +391,12 @@ static int mtrr_open(struct inode *inode, struct file *file)
- 		return -ENXIO;
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
--	return single_open(file, mtrr_seq_show, NULL);
-+	return 0;
+-static ssize_t proc_read_simdisk(struct file *file, char __user *buf,
++static ssize_t proc_read_simdisk(struct file *file, char *buf,
+ 			size_t size, loff_t *ppos)
+ {
+ 	struct simdisk *dev = pde_data(file_inode(file));
+@@ -250,7 +250,7 @@ static ssize_t proc_read_simdisk(struct file *file, char __user *buf,
+ 	len = scnprintf(temp, PAGE_SIZE + 2, "%s\n", dev->filename ?: "");
+ 	spin_unlock(&dev->lock);
+ 
+-	len = simple_read_from_buffer(buf, size, ppos, temp, len);
++	len = memory_read_from_buffer(buf, size, ppos, temp, len);
+ 	kfree(temp);
+ 	return len;
+ }
+@@ -280,7 +280,7 @@ static ssize_t proc_write_simdisk(struct file *file, char *buf,
  }
  
- static const struct proc_ops mtrr_proc_ops = {
-+	.proc_show		= mtrr_seq_show,
- 	.proc_open		= mtrr_open,
--	.proc_read		= seq_read,
--	.proc_lseek		= seq_lseek,
- 	.proc_write		= mtrr_write,
- 	.proc_ioctl		= mtrr_ioctl,
- #ifdef CONFIG_COMPAT
+ static const struct proc_ops simdisk_proc_ops = {
+-	.proc_read	= proc_read_simdisk,
++	.proc_read_buf	= proc_read_simdisk,
+ 	.proc_write_buf	= proc_write_simdisk,
+ 	.proc_write_size = PAGE_SIZE,
+ 	.proc_lseek	= default_llseek,
 
 -- 
 2.53.0
