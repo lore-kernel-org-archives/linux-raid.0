@@ -1,47 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793907360;
-	b=M4qA1mx2kY+mGlogUUXq2B/s3jD8Hn1jdLsGnxx7RUPsKchx2U+Ml6CSLOnJ2FwY1RDW
-	 gQp4WVlnA9AgvKRn3HfHjsMKLNfdb8BtEcw89WfnVDkSUZgQV2sssv4Ldm5OlI5yCnlts
-	 sivp4GRwUn0EcOf37nLzRIvEP6FyshjhT8p1luSGjXawjbm75AiyjAYCmL6Bol9puyksC
-	 w0BFopuObpQ8tpR0h+dWzR/AAnrqPDXAlALJ9v5aZl441Iu2ga+oAEtGnAauoMAHTIw7T
-	 Y6TOxznj4Z7Ov+tY2Qcif6MJopbxP9f9Rth9kWluMHoxcF1NbciEhUQHakOaT+5kHWQ==
+	t=1793907357;
+	b=mwXLupQynTBfftl+8TbNBXkCJY2nBhuYHS2gzyLqAG8f1WVgT2CYtdPITd/WBGqfZ/4U
+	 YIntsaoMFY5JuMOUIA64Q+N02NAu5ZpGUWG1+tzfW5GzW/n472kyV7hjVZ8R7Itft2uUG
+	 fVJMv/yjkCAGRkkXWc+Uq1Our37yW03BXbyrOnqg3ZKj2xLZqRPJ4t8CfDN5ntfjmlMfv
+	 XR/izJJt91sHkctF+b75ovogBAsw/VIilglf58W1kKy/DaYXekIgysFDB30VaGhszLIG8
+	 B0tDB65flTxIYBIavAn1WQVXoPAJOZNBRFR62DV09psN4zWo93xtxm/wKuzCg9SbGOg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793907360;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907357;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=f7pbLgB+bOANV7ZH7bSfet1egKll+CXGNKYzJQU3Yrk=;
-	b=haJn/pwekRyTyY2x8MgY8XyGVhTJe4Nswqyzdc+JTxZ1h6mCc7kURtkkw5UiJ6z4EVh2
-	 KWUGXOCofRjp6sSGOmoZdo61B4qez1UO7k9j6tqZbbWOsbEpIyoC2OQoV4kizbHdaZ7fO
-	 MbOAbI2x6WzZJtEQyf57LejpSlvumj9g5AP5eKg7QgHGYif5b1izcRMjzxUg9/3jHY5xI
-	 38CdWIWRZ45xdUTQP7c2UcpHzo8FQVdbqxNbtFckX9vXMOPlHSy6r1cscQazv/ewnwr/N
-	 Ef+z2IdkhujdJ+EMm5GslWywHqqL+xkLC7Dl3tuevg7n5WD+an3EpL5W5snjuC6mUiA==
+	bh=oYzAsF0I+e0CW5z5u7FoosueNiGCXkY4vYyESz+rdRw=;
+	b=huqZLj6+DLoKYR3vR20QqWEUP/Jkbi3CyDKHeWNrtUbuGrTMU6gTIr7M6u+CT4I1iajd
+	 zVbW1Bl2nhrvpGtQc8Hhk7sOVNvRsQkh/J0yVvpiAOZbbRE4Uu8Bys60jZVZAVsDaRAmB
+	 TdaQxZ1jEjm+XZqZnfS4I7rSu9M8pJJr9p/op/aQOHWOKxahzbwmBtVM4xys1iuWUIuDL
+	 koDwnr9onu5b8/0g/cQf2tFik07/k50ExctfsOZ7SUe+0lYsI4TIdxniHGc6LueUVqIyb
+	 71EJO91zJcKzYUsxRG2+zXFxQLNibwdJfZUyZFq9rTA1hwXTDRMHaGTmqrWfPYgfPag==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iMGngCoO;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MNcTfu51;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2347A606D811;
-	Thu,  5 Nov 2026 19:35:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iMGngCoO
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4E9A1F008A3;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 985A5606F967;
 	Thu,  5 Nov 2026 19:35:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MNcTfu51
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CAAA1F0089E;
+	Thu,  5 Nov 2026 19:35:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793907359;
-	bh=f7pbLgB+bOANV7ZH7bSfet1egKll+CXGNKYzJQU3Yrk=;
+	s=k20260515; t=1793907357;
+	bh=oYzAsF0I+e0CW5z5u7FoosueNiGCXkY4vYyESz+rdRw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=iMGngCoOl/U4CYIB1rTzS3RguQRqLRp2sKfBp3odJCcMgrP4Y2V8PmtfZZo1x5Xkv
-	 FLC9VNWmdujwFQtrFCf8Mg1QUR9V0cBoPIZOnqaamHivU1nhWiKlmj37JQBwx8Nw4V
-	 gnJGb6AJHKNc0HghHI9fJU1uQS16q3fA1JPSybQgU9VxlezkJg9W+I3Lt4LPHuBS+G
-	 M91zjKny9mmSeWhknnqhOUNYocrnIZ20lXgBv1WbhSSK7LtbVS4MpUGhBLakgtch3v
-	 NiR+5uPctDAbSjOlOz7BSSMrEU1NCpxJBHKCCILKG0ymIlPQ81348+1c7a3Gat7yd+
-	 kdKHITt2fXI3g==
-Message-ID: <sashiko-outbox-199951@kernel.org>
+	b=MNcTfu51HAjp9arjwyGN1MZppN/dC3Ih6DC5avMnmUZvCl1H8KMvBU/ZZwYPTddlq
+	 8PnPW4CSFGBN1dDKTDcBXSBShP3a2WX5Pp6p0nXP7btknLRFB9PL8Ncjca4QfFR7o6
+	 oieIQ42NP3xLduOm0i3X+wXP5Uc/isojnKGZtzQxRcqeCltZdRDFH+n0KxLYl41RIP
+	 ATkNXn2O63ucMGLH8txRIYQC8ZLHJgxM0FFautSGCwD/y0R1M9Jy2DlUyf0qiqgXBM
+	 VIcI6Y0C/5lhKqfM+6+0N06nY7P1BiHq8y1ifirsgXbr9GMfqL0sos0ji0uQdTtER0
+	 P0SLP3MDfXv8g==
+Message-ID: <sashiko-outbox-199950@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 21/23] proc: let lockdep check the pin
+Subject: Re: [PATCH RESEND v2 20/23] selftests/proc: check that a mapped
+ entry can be removed
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -56,12 +57,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Pavlu" <petr.pavlu@suse.com>, "Anna Schumaker" <anna@kernel.org>, yukuai@fygo.io, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-core-v2-21-76ace653a773@kernel.org>
+In-Reply-To: <20261104-work-procfs-core-v2-20-76ace653a773@kernel.org>
 References: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
- <20261104-work-procfs-core-v2-21-76ace653a773@kernel.org>
+ <20261104-work-procfs-core-v2-20-76ace653a773@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:35:57 +0000
+Date: Thu, 05 Nov 2026 19:35:54 +0000
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -71,67 +72,116 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Low] proc: kernel-doc mismatch on __proc_create_net_single_write()
+- [Medium] selftests/proc: 32-bit off_t truncation in proc-remove-mapped mm=
+ap()
+- [Low] selftests/proc: unused len parameter in mem_bar() in proc-remove-ma=
+pped
 --
 
-commit 095fce4c95ecbe25e644f1a3fe90061f695e9271
+commit df303f424b9a370ffbd0eec6c07ff2a99d0ee4ea
 Author: Christian Brauner <brauner@kernel.org>
 
-proc: let lockdep check the pin
+selftests/proc: check that a mapped entry can be removed
 
-This commit adds lockdep tracking to proc_dir_entry pinning so lockdep can
-detect deadlocks between proc entry methods and removal under held locks.
-Entries created via proc_create_single() and related helpers receive a
-per-registration-site lock_class_key via wrapper macros.
+This commit adds a procfs selftest that maps a PCI device memory BAR via
+/proc/bus/pci and removes the PCI device through sysfs to verify that remov=
+ing
+a mapped procfs entry does not block and leaves the file returning -EIO on
+subsequent reads.
 
-> diff --git a/fs/proc/proc_net.c b/fs/proc/proc_net.c
-> index b78d627b024f8..9ddd7c323dfcd 100644
-> --- a/fs/proc/proc_net.c
-> +++ b/fs/proc/proc_net.c
+> diff --git a/tools/testing/selftests/proc/proc-remove-mapped.c b/tools/te=
+sting/selftests/proc/proc-remove-mapped.c
+> new file mode 100644
+> index 0000000000000..92860fb2a8f40
+> --- /dev/null
+> +++ b/tools/testing/selftests/proc/proc-remove-mapped.c
 
 [ ... ]
 
-> @@ -232,11 +233,12 @@ EXPORT_SYMBOL_GPL(proc_create_net_single);
->   * pde_data() on the file inode.  The network namespace must be accessed=
- by
->   * calling seq_file_single_net() on the seq_file struct.
->   */
-> -struct proc_dir_entry *proc_create_net_single_write(const char *name, um=
-ode_t mode,
-> -						    struct proc_dir_entry *parent,
-> -						    int (*show)(struct seq_file *, void *),
-> -						    proc_write_t write,
-> -						    void *data)
-> +struct proc_dir_entry *__proc_create_net_single_write(const char *name, =
-umode_t mode,
-> +						      struct proc_dir_entry *parent,
-> +						      int (*show)(struct seq_file *, void *),
-> +						      proc_write_t write,
-> +						      void *data,
-> +						      struct lock_class_key *key)
+> +/* the first memory BAR of @dev */
+> +static int mem_bar(const char *dev, unsigned long long *start,
+> +		   unsigned long long *len)
+> +{
+> +	unsigned long long s, e, flags;
+> +	char path[PATH_MAX];
+> +	int ret =3D -ENODEV;
+> +	FILE *f;
+> +
+> +	snprintf(path, sizeof(path), SYSFS_DEVICES "%s/resource", dev);
+> +	f =3D fopen(path, "r");
+> +	if (!f)
+> +		return -errno;
+> +	while (fscanf(f, "%llx %llx %llx", &s, &e, &flags) =3D=3D 3) {
+> +		if ((flags & IORESOURCE_MEM) && e >=3D s) {
+> +			*start =3D s;
+> +			*len =3D e - s + 1;
+> +			ret =3D 0;
+> +			break;
+> +		}
+> +	}
+> +	fclose(f);
+> +	return ret;
+> +}
+
+[ ... ]
+
+> +TEST_F(pci, remove_while_mapped)
+> +{
+> +	long psz =3D sysconf(_SC_PAGESIZE);
+> +	unsigned long long start =3D 0, len =3D 0;
+> +	char path[PATH_MAX];
+> +	volatile unsigned int *p;
+> +	unsigned int v;
+> +	int fd;
+> +
+> +	if (mem_bar(self->dev, &start, &len))
+> +		SKIP(return, "%s has no memory BAR", self->dev);
 
 [Severity: Low]
-When proc_create_net_single_write() in fs/proc/proc_net.c is renamed to
-__proc_create_net_single_write() and given the new key parameter, the
-preceding kernel-doc block still documents the old name and omits @key:
+This isn't a bug, but is the len parameter in mem_bar() needed? mem_bar()
+writes *len =3D e - s + 1 and remove_while_mapped() passes &len, but len is
+never read afterward because mmap() maps a single page of size psz.
 
-/**
- * proc_create_net_single_write - Create a writable net_ns-specific proc fi=
-le
- * @name: The name of the file.
- * @mode: The file's access mode.
- * @parent: The parent directory in which to create.
- * @show: The seqfile show method with which to read the file.
- * @write: The write method with which to 'modify' the file.
- * @data: Data for retrieval by pde_data().
+> +
+> +	fd =3D open(self->path, O_RDONLY | O_CLOEXEC);
+> +	ASSERT_GE(fd, 0);
+> +	if (ioctl(fd, PCIIOC_MMAP_IS_MEM)) {
+> +		/* no PCI mmap on this architecture, or locked down */
+> +		if (errno =3D=3D EINVAL || errno =3D=3D EPERM) {
+> +			close(fd);
+> +			SKIP(return, "PCIIOC_MMAP_IS_MEM: %s", strerror(errno));
+> +		}
+> +		ASSERT_TRUE(false) {
+> +			TH_LOG("PCIIOC_MMAP_IS_MEM: %s", strerror(errno));
+> +		}
+> +	}
+> +	p =3D mmap(NULL, psz, PROT_READ, MAP_SHARED, fd, start);
+> +	if (p =3D=3D MAP_FAILED)
+> +		SKIP(return, "mmap: %s", strerror(errno));
 
-Should this kernel-doc comment be updated to match
-__proc_create_net_single_write() and document @key (or moved to the
-proc_create_net_single_write() macro in include/linux/proc_fs.h) to avoid
-scripts/kernel-doc warnings when building with W=3D1?
+[Severity: Medium]
+On 32-bit architectures, will passing start to mmap() in remove_while_mappe=
+d()
+truncate or sign-extend PCI BAR addresses at or above 0x80000000?
+
+Neither proc-remove-mapped.c nor tools/testing/selftests/proc/Makefile defi=
+nes
+_FILE_OFFSET_BITS to 64, so off_t is a 32-bit signed integer on 32-bit buil=
+ds.
+When mem_bar() parses a BAR physical address >=3D 0x80000000 into unsigned =
+long
+long start, converting start to a 32-bit signed off_t in mmap() either
+truncates bits above 32 or produces a negative offset (which fails with EIN=
+VAL
+in musl, or sign-extends the page offset passed to mmap2 in glibc so
+pci_mmap_fits() in proc_bus_pci_mmap() fails with ENODEV and causes the test
+to skip).
+
+Should proc-remove-mapped.c define _FILE_OFFSET_BITS 64 before including the
+system headers?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-core-v2-0-76ace653a773@kernel.org?part=3D21
+s-core-v2-0-76ace653a773@kernel.org?part=3D20
