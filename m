@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793907353;
-	b=yEpFvzB2fAC80BExuTyQiPVieeL0dBUb/HHuHJh9WzwWJS80GuXzBlmlXedQSGLlyB91
-	 M2+c3mjxQeP2zWLkK5A+/+NLcAN6v+BEtUABZIAlBQpWBW/ArdaFin8gxdK0zk7KLPgF8
-	 38Bs4GlVfimyJbJ8ssb7sGspOpaETspW3UIckdPNp8VBFj7yTCrxvMB1m/Ne4kHZpLR6E
-	 qf85CKBopQN6olBXaENJ3elN7KVDXF5NioEPzxDzqF2sXr2p3OX/HdM3APZO3aCkr3C1+
-	 Oc2GCQxXWhBUxwVuIZb3vcglk6Y1/6FQIE3dSfBu7MS4dpFk3EXOA6T+rif+lrgT2hQ==
+	t=1793907348;
+	b=cO6Y2A1Fz1hdZ1ap3g2S0S5fmPUdlh2K7VmL41oiCRPZeR+C8zVX0TXkmTiGUnZ8iYna
+	 XF6gc1ZHH1RLQ56ffBSshjhTBSw6adf9DycIeSJtMkBPZ4v0mpf335/eeKB4LsSHBIspL
+	 M/8T4Ctvi6s0AxbFZ/WGxRaTyOgEKLy9jYTqMyYk93iSn8R4Ha3ZsxjqY0R1IakjYdk+G
+	 NUvaiUQsYFX6IeBS63s6VRYEv8kAXpjuL/xuDxLxmLEHLbEnK99PkWoJaKD69x2KOXbKW
+	 TpBZORLz7/u2QtYtW7e4JBHfxynNGIDq9FosC1DyQ/sHG9Aud/XNhyYEgorCYxy8qYg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793907353;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907348;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=eiSLs4tpW5+ooQETfUAsv7SD2u+8vxBZSNTA/E9JPSA=;
-	b=jOc0J9vnIU1voHfOBvssWczFLxvdj8mDG+IeGXOafQ3E/u0R4OSfxZbbtXoJ3RGlZO/i
-	 9coeOLtCCDWTBlPyBcAhHCeMqEJcPtwTGJyQrO3R35hwi1NS2Sr7JjJlGdzGmoPVMsJ+5
-	 eZPzEeEBWWg74R4M7gRoR8DL0mLCY4yutEA4pmp68P5FnqAeE6XBkNhf7SqB5nnQee4lR
-	 SiP+M7TD686Ipz+Uyi7u/iBn2pas7D0PzExUsjRq+/tHH3dctiCyUE6z9+9nwy8vshRU6
-	 Ftromdw1p86U3DPYONTkxAL+ZcCFJhwmm8h6ayCzDn+a2991m2v6OR2ECBLA6uesj/g==
+	bh=1MugNV8TCf3DcwhciMioHkCDdfBEvJqmJegZE7T3Anc=;
+	b=InNX0+epFldCpEeGNpurNV1NXTAAgoLkEF6Wga0NjjcyHMFiCHKE9E8JTVFOHn3U4Ki/
+	 qSoB6JlI49gwS1dNIZ/DgXjIUnwNPoEF1DzMWpcx7OnGQhYZxbYVHiesp+T8S4fJ3osoP
+	 oaWrE40xiqxCwJtCLzHN1XujqHib3h7pzOFZ/BgQaQiuaTG5T8dG/R1HKrhUVmAz3eulM
+	 pdLtpwfUULN0jJyLJlHdY3f5b4J9/3qm5P7tWsHLYJNlnwvtjPwlS0qsvq4xRZHJLXAjc
+	 Tdt++riBVcqVsMiqU2jeUDmCn9bnfy8Hk0Yl6rbaHZWfl9CJnL9KSDMDLbH0mn9ZoRQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QRVwl1Yw;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JxUDwRLS;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8E9A606C884;
-	Thu,  5 Nov 2026 19:35:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44D60607956B;
+	Thu,  5 Nov 2026 19:35:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QRVwl1Yw
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A24731F008A1;
-	Thu,  5 Nov 2026 19:35:50 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JxUDwRLS
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B6371F0089E;
+	Thu,  5 Nov 2026 19:35:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793907352;
-	bh=eiSLs4tpW5+ooQETfUAsv7SD2u+8vxBZSNTA/E9JPSA=;
+	s=k20260515; t=1793907348;
+	bh=1MugNV8TCf3DcwhciMioHkCDdfBEvJqmJegZE7T3Anc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QRVwl1Ywon7MS2C+OemnpnnRZyhhY3OqsfkA0hDxdTc+rduK6mkVEdlJDGNIGqSYy
-	 a1NLTQZZqowxlMpgmKyOfh8BBgOzgFAHydYWKlFfry5yNMxiI/UD8ldqZYx8WMm7ez
-	 QNVP0ICID7Qj8TKSjz1zNuhOdyu+/wENB2Pe+KXsAcn/SDnE1f4VadXGr2TU1yn/I4
-	 kSqEUN6UAmPa8USnYhqhq+djAtPsBeI0nhvEXQeRMsO17pEiCgKx17axw4dL2BiiBh
-	 F88Gi+dRDEKECFbv6g4fiHem3PZPjp3QB2HUifdGFOqWgr8pWyiCoUmeRakhBgXvWb
-	 R9lZgeMwuUEfw==
-Message-ID: <sashiko-outbox-199948@kernel.org>
+	b=JxUDwRLS659AKy9L6EF/sMAUNJPV9IWLdEGgYT37J3Q3xoM9Rgl+/f5tJog9D28GT
+	 YMaZHCMQxAz8Q/YhL7D2HkKgLdWMS13ODeIvOVS2cO3Xyt1UiWgXthVq8iKNCfiwYC
+	 CBZKMuWNvUYO3GRSHNobx37W6/E4wT6vFZKwM2U+b9rd+Q0o+xU/Q/0vCpfhxieJT7
+	 F6OAqSTAk8K2MFcN+drjgRiXeceRcYXDu/MhOHTrRoTOf/Jcy6qlsQJs6CLNabmhUG
+	 q0HrKvIx+/XHSn3ssmSRL1+tCAkBs5GI7/FQwPFk1on24fvEEyzBWmsp3oEib+CbCf
+	 nnIC8BG7tI46Q==
+Message-ID: <sashiko-outbox-199946@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 18/23] proc: let procfs copy ioctl arguments
- in and out
+Subject: Re: [PATCH RESEND v2 16/23] proc: let procfs copy out reads that
+ don't go through seq_file
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -57,12 +57,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Pavlu" <petr.pavlu@suse.com>, "Anna Schumaker" <anna@kernel.org>, yukuai@fygo.io, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-core-v2-18-76ace653a773@kernel.org>
+In-Reply-To: <20261104-work-procfs-core-v2-16-76ace653a773@kernel.org>
 References: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
- <20261104-work-procfs-core-v2-18-76ace653a773@kernel.org>
+ <20261104-work-procfs-core-v2-16-76ace653a773@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:35:50 +0000
+Date: Thu, 05 Nov 2026 19:35:45 +0000
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -74,61 +74,67 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] proc: __free() variable buf declared at top of pde_ioctl_buf()
+- [Low] proc: define and initialize __free(kvfree) variable buf in pde_read=
+_buf()
 --
 
-commit 56830294f9ddc9f5679014810e7198455a39f42c
+commit 19cf278eb9fee57b90ee19764f6b076d9cab553d
 Author: Christian Brauner <brauner@kernel.org>
 
-proc: let procfs copy ioctl arguments in and out
+proc: let procfs copy out reads that don't go through seq_file
 
-This commit adds support for ->proc_ioctl_buf() and ->proc_ioctl_args in
-struct proc_ops so that procfs can copy ioctl arguments from and to
-userspace without holding the proc_dir_entry pinned across user copies.
+This commit adds ->proc_read_buf() and PROC_ENTRY_FULL_READS to proc_ops so
+that non-seq_file procfs entries can fill a kernel buffer while pinned and
+let procfs copy it to userspace after unpinning the entry.
 
 > diff --git a/fs/proc/inode.c b/fs/proc/inode.c
-> index caa47933c233d..717cbaad65df2 100644
+> index df1caa0f238df..caa47933c233d 100644
 > --- a/fs/proc/inode.c
 > +++ b/fs/proc/inode.c
-
 [ ... ]
-
-> @@ -548,11 +549,66 @@ static long pde_ioctl(struct proc_dir_entry *pde, s=
-truct file *file, unsigned in
->  	return -ENOTTY;
+> @@ -377,11 +379,67 @@ static loff_t proc_reg_llseek(struct file *file, lo=
+ff_t offset, int whence)
+>  	return rv;
 >  }
 > =20
-
-[ ... ]
-
-> +static long pde_ioctl_buf(struct proc_dir_entry *pde, struct file *file,
-> +			  unsigned int cmd, void __user *uarg, unsigned long arg)
+> +/*
+> + * The entry fills a kernel buffer and procfs copies that to userspace a=
+fter
+> + * unpinning the entry. A reader that faults on its buffer then doesn't =
+hold
+> + * up remove_proc_entry().
+> + */
+> +static ssize_t pde_read_buf(struct proc_dir_entry *pde, struct kiocb *io=
+cb,
+> +			    struct iov_iter *iter)
 > +{
-> +	void *buf __free(kvfree) =3D NULL;
-> +	struct proc_ioctl_arg a;
-> +	size_t size;
-> +	long rv;
+> +	struct file *file =3D iocb->ki_filp;
+> +	char *buf __free(kvfree) =3D NULL;
+> +	ssize_t rv, done =3D 0;
+> +	size_t len, count;
+> +	loff_t pos;
 > +
-> +	if (!pde_ioctl_arg(pde, cmd, &a))
-> +		return -ENOTTY;
-> +	size =3D max(a.in, a.out);
-> +	if (size) {
-> +		buf =3D kvzalloc(size, GFP_KERNEL);
+> +	if (!iov_iter_count(iter))
+> +		return 0;
+> +	/* neither the allocation nor the entry can honor IOCB_NOWAIT */
+> +	if ((iocb->ki_flags & IOCB_NOWAIT) && !(file->f_flags & O_NONBLOCK))
+> +		return -EAGAIN;
+> +	len =3D min_t(size_t, iov_iter_count(iter), pde->read_size);
+> +	buf =3D kvmalloc(len, GFP_KERNEL);
 
 [Severity: Low]
-As reported by Sashiko on RFC [1], this isn't a bug, but in
-pde_ioctl_buf() in fs/proc/inode.c, buf is declared with
-__free(kvfree) =3D NULL at the top of the function and assigned later when
-size is non-zero.
+As reported by Sashiko on RFC [1], this isn't a bug, but in pde_read_buf()
+in fs/proc/inode.c, buf is declared with __free(kvfree) =3D NULL at the top
+of the function before the early returns and then assigned later at the
+kvmalloc() call. Could buf be defined and initialized in a single statement
+at the allocation site:
 
-Since the cleanup API convention prefers defining and initializing __free()
-variables in a single statement rather than initializing them to NULL at
-the top of the function and assigning them later, could buf be defined and
-initialized once size is known (for example via size ? kvzalloc(size,
-GFP_KERNEL) : NULL)?
+	char *buf __free(kvfree) =3D kvmalloc(len, GFP_KERNEL);
 
-[1] https://lore.kernel.org/r/sashiko-outbox-195542@kernel.org
+to follow the cleanup.h conventions?
+
+[1] https://lore.kernel.org/r/sashiko-outbox-195540@kernel.org
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-core-v2-0-76ace653a773@kernel.org?part=3D18
+s-core-v2-0-76ace653a773@kernel.org?part=3D16
