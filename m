@@ -1,48 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793907362;
-	b=jxU2D644CysPKKXQ0ern9Klsdk9HmFfMw+Vr/vcMe3ItpANGfCVBlfXeWCz3In0VGMb8
-	 cWYMF14Cmg43uR53S7VIlo4KMKNvJwkaiKDawMcIhNXsVZNpBb/7aDQU7cmNd2D66Cf3e
-	 DedItbqRM3d1D2Z2hpuE1KroYHiWZ5p1hQPfdAZe9+R0OtkrpQONUgnsQr7g8H1isrlvO
-	 o8NqbS4lK4cRt3p4UusJ42VU+Y+36kpOLpBRUi0S8ZfYuGbT/aifHBtuzw0ItOlY8lVxv
-	 xCa9tbDS4aqy9O5F/80cKXoegwmSNCoteCYzHg/AA9xgkWXiqCD2hPAFm/2uLNQIIQA==
+	t=1793907360;
+	b=M4qA1mx2kY+mGlogUUXq2B/s3jD8Hn1jdLsGnxx7RUPsKchx2U+Ml6CSLOnJ2FwY1RDW
+	 gQp4WVlnA9AgvKRn3HfHjsMKLNfdb8BtEcw89WfnVDkSUZgQV2sssv4Ldm5OlI5yCnlts
+	 sivp4GRwUn0EcOf37nLzRIvEP6FyshjhT8p1luSGjXawjbm75AiyjAYCmL6Bol9puyksC
+	 w0BFopuObpQ8tpR0h+dWzR/AAnrqPDXAlALJ9v5aZl441Iu2ga+oAEtGnAauoMAHTIw7T
+	 Y6TOxznj4Z7Ov+tY2Qcif6MJopbxP9f9Rth9kWluMHoxcF1NbciEhUQHakOaT+5kHWQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793907362;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907360;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=u3XH2HUDxRINO6oY1nDOxszi+5d2U3ZN+LfBIkkJykc=;
-	b=JjlaXt642gDQuEMAibHZlWzJl3muiwv6oa0OCGxAO5HTmztYHes39xlGwUVmliCTn925
-	 +hC9517jf0uMz3t3e4V7F3lJuGiDd0XrduuENootQqFQVT7keoTeUfRSaw7h+Avko1zK0
-	 mVBuLxysP34kWum40qxoRPP8j4CLQJd+dXbnbbUTaMDTxyL5GH6aRM+acjuvTKXKSgy1J
-	 Db5B7aq+u+T1S/xMNkgwGpNTrWkpsiiA6A/NF5sueMV8AdMZIIuJY+6xRcB4XvDTEsO5Z
-	 LL+GLtyMDx5wpAiggh4rmfRRL0dTtnEEV/oJdInx+PZR7O584QrkC4kjge8KpwXrfBQ==
+	bh=f7pbLgB+bOANV7ZH7bSfet1egKll+CXGNKYzJQU3Yrk=;
+	b=haJn/pwekRyTyY2x8MgY8XyGVhTJe4Nswqyzdc+JTxZ1h6mCc7kURtkkw5UiJ6z4EVh2
+	 KWUGXOCofRjp6sSGOmoZdo61B4qez1UO7k9j6tqZbbWOsbEpIyoC2OQoV4kizbHdaZ7fO
+	 MbOAbI2x6WzZJtEQyf57LejpSlvumj9g5AP5eKg7QgHGYif5b1izcRMjzxUg9/3jHY5xI
+	 38CdWIWRZ45xdUTQP7c2UcpHzo8FQVdbqxNbtFckX9vXMOPlHSy6r1cscQazv/ewnwr/N
+	 Ef+z2IdkhujdJ+EMm5GslWywHqqL+xkLC7Dl3tuevg7n5WD+an3EpL5W5snjuC6mUiA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="EbrLF/GI";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iMGngCoO;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AD90606D826;
-	Thu,  5 Nov 2026 19:36:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2347A606D811;
+	Thu,  5 Nov 2026 19:35:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EbrLF/GI
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CE711F0089E;
-	Thu,  5 Nov 2026 19:36:00 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iMGngCoO
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4E9A1F008A3;
+	Thu,  5 Nov 2026 19:35:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793907362;
-	bh=u3XH2HUDxRINO6oY1nDOxszi+5d2U3ZN+LfBIkkJykc=;
+	s=k20260515; t=1793907359;
+	bh=f7pbLgB+bOANV7ZH7bSfet1egKll+CXGNKYzJQU3Yrk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EbrLF/GI9zveLxnzZ8uxZ7LXZBqUJdqjZ/hKoCeJ+z1yLwXWHsb2qxVPJQ8BLsPOE
-	 K/NM8kOHLdOX413B6qu4BxuoBVdDuZNIDosQo3lfsNG21BWE641KvfyeVALDLSFtDe
-	 ESPTTOTW65bJL496sXvpAbFlSD7S31p5rbp2uYOnMbdF46/hUBlGYvOTz/9riUzRjK
-	 p3f2B9HZLlYz+fkIAktgBcJKJZDL0Yykv/zheSRbg1STyFrvMiDZro6fwOyZTiGupJ
-	 cJfQ/mrW1aSt0fhZWKbtOyHFZ50PXoXdNZ2u1li9/TrUnZma8Zf3atQs17wXbvbwaB
-	 b0ELZzT+OQZ5w==
-Message-ID: <sashiko-outbox-199952@kernel.org>
+	b=iMGngCoOl/U4CYIB1rTzS3RguQRqLRp2sKfBp3odJCcMgrP4Y2V8PmtfZZo1x5Xkv
+	 FLC9VNWmdujwFQtrFCf8Mg1QUR9V0cBoPIZOnqaamHivU1nhWiKlmj37JQBwx8Nw4V
+	 gnJGb6AJHKNc0HghHI9fJU1uQS16q3fA1JPSybQgU9VxlezkJg9W+I3Lt4LPHuBS+G
+	 M91zjKny9mmSeWhknnqhOUNYocrnIZ20lXgBv1WbhSSK7LtbVS4MpUGhBLakgtch3v
+	 NiR+5uPctDAbSjOlOz7BSSMrEU1NCpxJBHKCCILKG0ymIlPQ81348+1c7a3Gat7yd+
+	 kdKHITt2fXI3g==
+Message-ID: <sashiko-outbox-199951@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 22/23] proc: own the wait queue of an entry
- with a ->proc_poll()
+Subject: Re: [PATCH RESEND v2 21/23] proc: let lockdep check the pin
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -57,12 +56,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Pavlu" <petr.pavlu@suse.com>, "Anna Schumaker" <anna@kernel.org>, yukuai@fygo.io, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-core-v2-22-76ace653a773@kernel.org>
+In-Reply-To: <20261104-work-procfs-core-v2-21-76ace653a773@kernel.org>
 References: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
- <20261104-work-procfs-core-v2-22-76ace653a773@kernel.org>
+ <20261104-work-procfs-core-v2-21-76ace653a773@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:35:59 +0000
+Date: Thu, 05 Nov 2026 19:35:57 +0000
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -74,99 +73,65 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] proc: dual poll_wait() calls in proc_reg_poll() break AIO poll
+- [Low] proc: kernel-doc mismatch on __proc_create_net_single_write()
 --
 
-commit 443c1e3f3b75bcf766632cccb5651e0034423048
+commit 095fce4c95ecbe25e644f1a3fe90061f695e9271
 Author: Christian Brauner <brauner@kernel.org>
 
-proc: own the wait queue of an entry with a ->proc_poll()
+proc: let lockdep check the pin
 
-This commit gives procfs entries that implement ->proc_poll() a procfs-owned
-wait queue in struct pde_open_node and adds proc_poll_notify() to wake poll=
-ers
-on that queue. proc_reg_poll() calls poll_wait() on the procfs wait queue
-before invoking the entry's ->proc_poll() callback with the same poll_table.
+This commit adds lockdep tracking to proc_dir_entry pinning so lockdep can
+detect deadlocks between proc entry methods and removal under held locks.
+Entries created via proc_create_single() and related helpers receive a
+per-registration-site lock_class_key via wrapper macros.
 
-> diff --git a/fs/proc/inode.c b/fs/proc/inode.c
-> index 59de4681d8452..ab30a58879d51 100644
-> --- a/fs/proc/inode.c
-> +++ b/fs/proc/inode.c
+> diff --git a/fs/proc/proc_net.c b/fs/proc/proc_net.c
+> index b78d627b024f8..9ddd7c323dfcd 100644
+> --- a/fs/proc/proc_net.c
+> +++ b/fs/proc/proc_net.c
+
 [ ... ]
-> @@ -555,26 +561,46 @@ static ssize_t proc_reg_write(struct file *file, co=
-nst char __user *buf, size_t
->  	return rv;
->  }
-> =20
-> -static __poll_t pde_poll(struct proc_dir_entry *pde, struct file *file, =
-struct poll_table_struct *pts)
-> -{
-> -	const auto poll =3D pde->proc_ops->proc_poll;
-> -	if (poll)
-> -		return poll(file, pts);
-> -	return DEFAULT_POLLMASK;
-> -}
-> -
-> +/*
-> + * The pollers of an entry sleep on a wait queue procfs owns, which is t=
-here
-> + * for as long as the entry's inode is, however the entry's owner goes a=
-way.
-> + * The owner wakes them through proc_poll_notify(), and procfs does when=
- the
-> + * entry is removed: a poll of a removed entry reports EPOLLERR | EPOLLP=
-RI,
-> + * like kernfs_fop_poll().
-> + */
->  static __poll_t proc_reg_poll(struct file *file, struct poll_table_struc=
-t *pts)
->  {
->  	struct proc_dir_entry *pde =3D PDE(file_inode(file));
->  	__poll_t rv;
-> =20
-> -	if (!pde_pin(pde))
-> +	if (!pde_has_proc_poll(pde))
->  		return DEFAULT_POLLMASK;
-> -	rv =3D pde_poll(pde, file, pts);
-> +	poll_wait(file, &pde->open->poll, pts);
-> +	if (!pde_pin(pde))
-> +		return DEFAULT_POLLMASK | EPOLLERR | EPOLLPRI;
-> +	rv =3D pde->proc_ops->proc_poll(file, pts);
 
-[Severity: Medium]
-Does calling poll_wait() on pde->open->poll in proc_reg_poll() before passi=
-ng
-pts to pde->proc_ops->proc_poll() break Linux AIO polling (IOCB_CMD_POLL via
-io_submit()) for unconverted procfs entries?
+> @@ -232,11 +233,12 @@ EXPORT_SYMBOL_GPL(proc_create_net_single);
+>   * pde_data() on the file inode.  The network namespace must be accessed=
+ by
+>   * calling seq_file_single_net() on the seq_file struct.
+>   */
+> -struct proc_dir_entry *proc_create_net_single_write(const char *name, um=
+ode_t mode,
+> -						    struct proc_dir_entry *parent,
+> -						    int (*show)(struct seq_file *, void *),
+> -						    proc_write_t write,
+> -						    void *data)
+> +struct proc_dir_entry *__proc_create_net_single_write(const char *name, =
+umode_t mode,
+> +						      struct proc_dir_entry *parent,
+> +						      int (*show)(struct seq_file *, void *),
+> +						      proc_write_t write,
+> +						      void *data,
+> +						      struct lock_class_key *key)
 
-While ->proc_poll() implementations still receive pts and call poll_wait() =
-on
-their own wait queues, vfs_poll() -> proc_reg_poll() ends up calling
-poll_wait() twice on the same poll_table_struct: first on &pde->open->poll =
-and
-then on the subsystem's wait queue inside ->proc_poll().
+[Severity: Low]
+When proc_create_net_single_write() in fs/proc/proc_net.c is renamed to
+__proc_create_net_single_write() and given the new key parameter, the
+preceding kernel-doc block still documents the old name and omits @key:
 
-When userspace submits an IOCB_CMD_POLL request via io_submit() on a pollab=
+/**
+ * proc_create_net_single_write - Create a writable net_ns-specific proc fi=
 le
-procfs file (such as /proc/pressure/*, /proc/mdstat, /proc/swaps, or
-/proc/kmsg), aio_poll() sets apt.pt._qproc =3D aio_poll_queue_proc. The fir=
-st
-poll_wait() queues the request on &pde->open->poll and sets pt->queued =3D =
-true,
-and the second poll_wait() inside ->proc_poll() hits the single-waitqueue
-check in fs/aio.c:aio_poll_queue_proc():
+ * @name: The name of the file.
+ * @mode: The file's access mode.
+ * @parent: The parent directory in which to create.
+ * @show: The seqfile show method with which to read the file.
+ * @write: The write method with which to 'modify' the file.
+ * @data: Data for retrieval by pde_data().
 
-	/* multiple wait queues per file are not supported */
-	if (unlikely(pt->queued)) {
-		pt->error =3D -EINVAL;
-		return;
-	}
-
-If the polled event is not immediately ready, aio_poll() sees apt.error =3D=
-=3D
--EINVAL, removes the wait entry from &pde->open->poll, and fails the
-io_submit() request with -EINVAL.
+Should this kernel-doc comment be updated to match
+__proc_create_net_single_write() and document @key (or moved to the
+proc_create_net_single_write() macro in include/linux/proc_fs.h) to avoid
+scripts/kernel-doc warnings when building with W=3D1?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-core-v2-0-76ace653a773@kernel.org?part=3D22
+s-core-v2-0-76ace653a773@kernel.org?part=3D21
