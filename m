@@ -1,54 +1,127 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.199
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793876991;
-	b=ykmR3nXHnAfumynpEeH5iXR6/ptu1V1IgH5a9IWV0R+U5w0M/yYHeHE/ev2fqiiOXqFo
-	 U0La0tr1qw9Cca9BUuiKlWEsXE08vbD8Vb1Uxb8J4kWNpY/7VeQxkNh5mkbyxwZCE6I4M
-	 wMze2Zp8G78sTltgW98bfqtUxWfDrSr0b3m3k0P1QSBiELdyY3Y2XzFoedXBJTQxfWA8n
-	 I2ctJ8m0lcVMZWrU5fX5hws9J0ew7QCmM81wyKckxXGZ/rxVmu1jj+sPL48ARVpLa1tM4
-	 8bQS4b7cTbwYgkI/xQfPMdRqFhkHRq/mcrW3nkuO2w8uuD/Rf4d641Lsya6SYnUvJ2g==
+	t=1793878887;
+	b=kAcLaNmr9OowEUuKY34K7bElUicRgl0Z8aPEgJOlGUrWQ4Q5ywX4JZQqNUgQe6S1Wtez
+	 EWteHWF39iF8mDnZRXR9FLcxPZ85mQCY8VG55/8yo+cblxARqj7DF4Vl7atqY/jTCPObM
+	 g2sndOfLquoVQmVu3hFWblnuCKI/DNNP54LtPrk9Yjop4l4jx3kWi21Npe7wBc13reSjL
+	 YXsuZJMM5J+lpnf/RZZGSNTsRiDjs/pO4xxordlxhf7nQjR8fZrPDObXaecmvQQozWj9y
+	 THbzJM8xGrI0yYRIVs4SfOP2otV3bJDnkqv5OuEwkYlImIRdK8TVdTt2uO2ru/zgZ6g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793876991;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:MIME-Version:X-Received:Date:
-	 X-Google-Appengine-App-Id:X-Google-Appengine-App-Id-Alias:Message-ID:
-	 Subject:From:To:Content-Type;
-	bh=zQMckR/WesW9tsRdzIP/K6hyeTnb4+tfQfASj685Lf4=;
-	b=w18nD0ISMwcI2JGAyYNjULg7EFs8UheUw4ziV74HRr8TMx42ZEiLHoVLMKZ5YoM0b4Ft
-	 uNrPYeBpwIvRS1dS4ii1+1YCR7Kg5GmGDa0HZGLTS7M/EL/IHvGoo7kI8fUOkx4762qRE
-	 mWxQNCT/iiNsY4F/QeHXEl/ml2bYAT7LVU112FPqEs48TtAVBiGcDsrT32iJ2n/Cb4stf
-	 oqvaiNjwN676in8gzz/OM49lXf1wwOZIcc3/1YlNhnQ79R1nukYV7WfjS43Uz45gV2twF
-	 zaLAHH5YBMTftzsHdN78gyVIgHb4QyMX5paNRIhAiBNDHcsQQaQJ0VNXDqD+aORNWlg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793878887;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To:X-Spamd-Result:X-Spam-Score:X-Spam-Level:X-Spam-Flag;
+	bh=lCeU7WqtPlFL0u28tAWE4TptrCsWoJqXXac/H5Y8UUQ=;
+	b=mMZmgQgfX21J7V70Ucr/ox5EmRmv+mbtU853kjdKat9y8t02a4tXzPcQ1vpUuRSc7Zet
+	 ZgiwL0QCdX6D2KRk5SfdDvtayJPo0cnnXwv0DJOCLTPfVmLmVQO1zp3oC942caCaecRqg
+	 4VDw4l66QWAiKl5uzrfLgT950MCqHS+OJGkvph3BTYMta7hTHzNR+5BvNgHTjtJIB3CBv
+	 ffd9vZDroVEJcKRFEgeRZ+2GS5VFub1VqazP+zYpSwOcKvGWsiDk863y6abkwc5WbfRAF
+	 +Eyg492oY36Q6daxl3EVBYdCphMo1MywWWZ4iqHG0LKgaNJ38o7HYXHADrqOsiOwpng==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=syzkaller.appspotmail.com;
-	spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com;
-	arc=none smtp.remote-ip=209.85.167.199
-Received: from mail-oi1-f199.google.com (mail-oi1-f199.google.com [209.85.167.199])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=none header.from=suse.cz;
+	spf=pass smtp.mailfrom=suse.cz;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=sVeVtJRH;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=vuwkzsBE;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=sVeVtJRH;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=vuwkzsBE;
+	arc=none smtp.remote-ip=195.135.223.130
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BEF2606D80C
-	for <linux-raid@vger.kernel.org>; Thu,  5 Nov 2026 11:09:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2BEF2606D80C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oi1-f199.google.com with SMTP id 5614622812f47-4b2d1eb484aso2167024b6e.2
-        for <linux-raid@vger.kernel.org>; Thu, 05 Nov 2026 03:09:50 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793876990; x=1794481790;
-        h=content-type:to:from:subject:message-id:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=zQMckR/WesW9tsRdzIP/K6hyeTnb4+tfQfASj685Lf4=;
-        b=wj+RUKachPFpvjUjtOKFbUEutTzuUkb5h62l5k5FBl7qLmtvx60XGYEgz91d6gbpSU
-         s4OI6HbpPn+TpWCeRRzUyp1ysbrw5t/Njy/UItCYJAUj+YtahdKY8VzNiEDm5J5k5lwq
-         cQF4l4c7vQEUHPz1Pf5QsRfHVfoNcrje0aNZ6sjd5StkuRplueLB9q9X8NAo/TPEueo1
-         o6T/+4biOBmroWfow5FXh+ERlSrTQ7OdKsKSLfl/0srMCU85R0KGPFMEAplqZXPjNgBa
-         nY/RpFDvVXsCT53zo1ybU4naiSBqYKpT+L/mh0Yltqalqjow1s5J+vqONG3bRfb9i01p
-         6cYA==
-X-Forwarded-Encrypted: i=1; AKwUvBygiH2mUpP/J9B6fsaefIUJv+8EGCnrSD1xACKSwb1YMfLRiM3ZakWSgN5MBfdqB4UTx5IRvSeNfyX7@vger.kernel.org
-X-Gm-Message-State: APuU4Z+es3h7hQ1KCk9ZgflQMLOrooFi0iJJUzduExGB4WSJY99Ng5cT
-	kFUHz/q0AmpnXrE2/gFRpBn7CXspeXuWNypORXfDlKcbRwu53au6uhGS+2igTAkSlOuB0HnV1/S
-	nQEJQat6GWEYpJLlIKcv5aeIqQxR50OaBloyECxzyCiWgJvAifd6uUlNKyJ8=
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE8AC606A328;
+	Thu,  5 Nov 2026 11:41:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DE8AC606A328
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=sVeVtJRH;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=vuwkzsBE;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=sVeVtJRH;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=vuwkzsBE
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 0FD6521EC6;
+	Thu,  5 Nov 2026 11:41:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1793878885; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lCeU7WqtPlFL0u28tAWE4TptrCsWoJqXXac/H5Y8UUQ=;
+	b=sVeVtJRHmCez1LTgkgxlC7ymMIoqBUxHEcpbPuiTw+LbDT4oPlHADz2Nup5Y4XkVnbVoDk
+	it5vmGnaVZfno1DYDqX11TE+/cZqz+5DBii4SNDMZd47SSrwV/j/qOrqaptU0Cbv8IOz2R
+	SNKUKTm79wLZzIjQ8Z0k9Nr+vLNViV0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1793878885;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lCeU7WqtPlFL0u28tAWE4TptrCsWoJqXXac/H5Y8UUQ=;
+	b=vuwkzsBEcCG36qlub78Ir05oWJttjLgL1QqDCsASqboi7pG0u6LKGZy4KCtzu9Qqsj7mam
+	/axyOJZeWj8zunDA==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1793878885; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lCeU7WqtPlFL0u28tAWE4TptrCsWoJqXXac/H5Y8UUQ=;
+	b=sVeVtJRHmCez1LTgkgxlC7ymMIoqBUxHEcpbPuiTw+LbDT4oPlHADz2Nup5Y4XkVnbVoDk
+	it5vmGnaVZfno1DYDqX11TE+/cZqz+5DBii4SNDMZd47SSrwV/j/qOrqaptU0Cbv8IOz2R
+	SNKUKTm79wLZzIjQ8Z0k9Nr+vLNViV0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1793878885;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lCeU7WqtPlFL0u28tAWE4TptrCsWoJqXXac/H5Y8UUQ=;
+	b=vuwkzsBEcCG36qlub78Ir05oWJttjLgL1QqDCsASqboi7pG0u6LKGZy4KCtzu9Qqsj7mam
+	/axyOJZeWj8zunDA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C5448134F4;
+	Thu,  5 Nov 2026 11:41:24 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id CwQAKmRr7Go1dQAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 05 Nov 2026 11:41:24 +0000
+Received: by quack.suse.cz (Postfix, from userid 1000)
+	id 60CBBB6BA; Thu, 05 Nov 2026 12:41:20 +0100 (CET)
+Date: Thu, 5 Nov 2026 12:41:20 +0100
+From: Jan Kara <jack@suse.cz>
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, 
+	Linus Torvalds <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
+	Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
+	Eric Dumazet <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, 
+	Al Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
+	Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados <joel.granados@kernel.org>, 
+	Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
+	linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	netdev@vger.kernel.org, ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
+	coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
+	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
+	linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
+	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
+	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
+	sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
+	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
+	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, 
+	Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
+Subject: Re: [PATCH RFC 16/38] proc: don't walk through a non-directory when
+ resolving a name
+Message-ID: <xhnd2xzehnh35nmgphm2euuyulbwoz2fbxf7zmfn3hvdbcualr@ltehycoskzll>
+References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
+ <20261102-work-procfs-bugfixes-v1-16-59422ed3e465@kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -58,128 +131,105 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:c232:b0:4e6:cc78:edc6 with SMTP id
- 5614622812f47-5640ddf51bbmr13233038b6e.39.1793876990213; Thu, 05 Nov 2026
- 03:09:50 -0800 (PST)
-Date: Thu, 05 Nov 2026 03:09:50 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6aec63fe.5f5735a5.290c1c.0004.GAE@google.com>
-Subject: [syzbot] [raid?] BUG: unable to handle kernel paging request in remove_spares
-From: syzbot <syzbot+a53c2918175b36cfd601@syzkaller.appspotmail.com>
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, 
-	magiclinan@didiglobal.com, song@kernel.org, syzkaller-bugs@googlegroups.com, 
-	xiao@kernel.org, yukuai@fygo.io
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261102-work-procfs-bugfixes-v1-16-59422ed3e465@kernel.org>
+X-Spamd-Result: default: False [-11.30 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TO_DN_SOME(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	R_RATELIMIT(0.00)[to_ip_from(RL63fqwwx8ot6gmekemcs76f9d)];
+	RCVD_TLS_LAST(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCPT_COUNT_GT_50(0.00)[60];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:email,imap1.dmz-prg2.suse.org:helo,suse.com:email]
+X-Spam-Score: -11.30
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-Hello,
+On Mon 02-11-26 15:21:31, Christian Brauner wrote:
+> __xlate_proc_name() walks the components of a name like "a/b/c" and
+> takes whatever it finds for "a" and "b" as the directory to go on in.
+> It never checks that they actually are directories. So
+> proc_create("file/x") hangs x into the subdir tree of the regular file
+> "file". Nobody can look x up there, but remove_proc_subtree() on the
+> file removes and frees x along with it, behind the back of whoever
+> registered x.
+> 
+> pktgen passes the name the writer of "add_device" picks to
+> proc_create_data(), and only the part in front of the '@' has to name
+> a network device:
+> 
+>   echo "add_device lo@"   > /proc/net/pktgen/kpktgend_0
+>   echo "add_device lo@/x" > /proc/net/pktgen/kpktgend_1
+>   echo "rem_device_all"   > /proc/net/pktgen/kpktgend_0
+>   echo "rem_device_all"   > /proc/net/pktgen/kpktgend_1
+> 
+> The third write frees both entries and the fourth one makes kpktgend_1
+> call proc_remove() on the freed second one:
+> 
+>   BUG: KASAN: slab-use-after-free in proc_remove+0x8f/0xa0
+>   Read of size 8 at addr ff110001134c8e70 by task kpktgend_1/243
+>   Call Trace:
+>    proc_remove+0x8f/0xa0
+>    pktgen_remove_device.isra.0+0x118/0x500
+>    pktgen_rem_all_ifs+0xeb/0x1a0
+>    pktgen_thread_worker+0x1b42/0x7280
+> 
+> The files of a network namespace belong to the root of its user
+> namespace and these writes don't require a capability. So once pktgen
+> is loaded an unprivileged user can do this in namespaces of its own.
+> 
+> Treat a component that isn't a directory like one that doesn't exist.
+> All names with a '/' that the tree passes in as literals only walk
+> through directories. pktgen is fixed separately to not pass such names
+> in the first place.
+> 
+> Reported-by: Chris Mason <mason@kernel.org>
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
-syzbot found the following issue on:
+Looks good. Feel free to add:
 
-HEAD commit:    6628e7d4c6b2 Linux 7.4-rc1
-git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git for-kernelci
-console output: https://syzkaller.appspot.com/x/log.txt?x=15e6892d580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=a58b6b4d667e7a61
-dashboard link: https://syzkaller.appspot.com/bug?extid=a53c2918175b36cfd601
-compiler:       Debian clang version 22.1.8 (1~deb13u4), Debian LLD 22.1.8
-userspace arch: arm64
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=167b4359580000
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/f7244eb9fc82/disk-6628e7d4.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/7915cff348a4/vmlinux-6628e7d4.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/e1ce9287de30/Image-6628e7d4.gz.xz
+								Honza
 
-AI-generated root cause summary:
-In the MD (Multiple Devices / RAID) subsystem, md_start_sync is scheduled as a
-work item on the md_misc workqueue to initiate resynchronization or manage spare
-devices. For read-only arrays (!md_is_rdwr(mddev)), md_start_sync executes
-remove_and_add_spares(), which invokes remove_spares(). However, md_start_sync
-fails to verify whether the array's personality (mddev->pers) is still valid
-before calling into personality operations, and array stop/detach sequences do
-not ensure that mddev->sync_work is completely halted or prevented from running
-after mddev->pers is cleared. When remove_spares() executes with mddev->pers ==
-NULL, it attempts to invoke mddev->pers->hot_remove_disk (located at offset
-0x50), triggering a NULL pointer dereference crash.
-
-full analysis:  https://syzkaller.appspot.com/x/ai_root_cause?x=a53c2918175b36cfd601
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+a53c2918175b36cfd601@syzkaller.appspotmail.com
-
-Unable to handle kernel paging request at virtual address dfff80000000000a
-KASAN: null-ptr-deref in range [0x0000000000000050-0x0000000000000057]
-Mem abort info:
-  ESR = 0x0000000096000005
-  EC = 0x25: DABT (current EL), IL = 32 bits
-  SET = 0, FnV = 0
-  EA = 0, S1PTW = 0
-  FSC = 0x05: level 1 translation fault
-Data abort info:
-  ISV = 0, ISS = 0x00000005, ISS2 = 0x00000000
-  CM = 0, WnR = 0, TnD = 0, TagAccess = 0
-  GCS = 0, Overlay = 0, DirtyBit = 0
-[dfff80000000000a] address between user and kernel address ranges
-Internal error: Oops: 0000000096000005 [#1]  SMP
-Modules linked in:
-CPU: 1 UID: 0 PID: 4993 Comm: kworker/1:5 Not tainted syzkaller #0 PREEMPT 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/23/2026
-Workqueue: md_misc md_start_sync
-pstate: 83400005 (Nzcv daif +PAN -UAO +TCO +DIT -SSBS BTYPE=--)
-pc : remove_spares+0x100/0x3c8 drivers/md/md.c:10182
-lr : remove_spares+0xe0/0x3c8 drivers/md/md.c:10181
-sp : ffff800097277900
-x29: ffff8000972779a0 x28: ffff0000f4c1c070 x27: 1fffe0001e98380c
-x26: dfff800000000000 x25: ffff700012e4ef24 x24: 0000000000000050
-x23: 0000000000000000 x22: ffff0000f4c1d108 x21: 0000000000000000
-x20: ffff0000f4c1c058 x19: ffff0000f4c1c060 x18: 00000000ffffffff
-x17: ffff80012364b000 x16: ffff80008f920000 x15: ffff80008b586000
-x14: 00000000001b18f8 x13: 0000000000000001 x12: 0000000000000000
-x11: 0000000000000000 x10: ffff60001e983a48 x9 : 0000000000000000
-x8 : 000000000000000a x7 : 0000000000000000 x6 : 0000000000000000
-x5 : 0000000000000001 x4 : 0000000000000008 x3 : ffff8000841063ac
-x2 : 0000000000000000 x1 : ffff0000c4d55880 x0 : 0000000000000001
-Call trace:
- remove_spares+0x100/0x3c8 drivers/md/md.c:10182 (P)
- remove_and_add_spares+0xf4/0x580 drivers/md/md.c:10207
- md_start_sync+0x1f8/0xc80 drivers/md/md.c:10323
- process_one_work kernel/workqueue.c:3495 [inline]
- process_scheduled_works+0x91c/0x1250 kernel/workqueue.c:3578
- worker_thread+0x798/0xbd0 kernel/workqueue.c:3659
- kthread+0x304/0x3d4 kernel/kthread.c:436
- ret_from_fork+0x10/0x20 arch/arm64/kernel/entry.S:854
-Code: 972be018 f9400268 91014118 d343ff08 (387a6908) 
----[ end trace 0000000000000000 ]---
-----------------
-Code disassembly (best guess):
-   0:	972be018 	bl	0xfffffffffcaf8060
-   4:	f9400268 	ldr	x8, [x19]
-   8:	91014118 	add	x24, x8, #0x50
-   c:	d343ff08 	lsr	x8, x24, #3
-* 10:	387a6908 	ldrb	w8, [x8, x26] <-- trapping instruction
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+> ---
+>  fs/proc/generic.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/proc/generic.c b/fs/proc/generic.c
+> index 2b1971da4a85..c560c96a64eb 100644
+> --- a/fs/proc/generic.c
+> +++ b/fs/proc/generic.c
+> @@ -170,7 +170,7 @@ static int __xlate_proc_name(const char *name, struct proc_dir_entry **ret,
+>  	de = *ret ?: &proc_root;
+>  	while ((next = strchr(cp, '/')) != NULL) {
+>  		de = pde_subdir_find(de, cp, next - cp);
+> -		if (!de) {
+> +		if (!de || !S_ISDIR(de->mode)) {
+>  			WARN(1, "name '%s'\n", name);
+>  			return -ENOENT;
+>  		}
+> 
+> -- 
+> 2.53.0
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
