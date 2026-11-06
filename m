@@ -1,51 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.46
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.58
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793930459;
-	b=wnvV7S2Lc3JSznMrc8dNBpGFXvjKigRiSARfd4ri94YXzvHRTRpjR7fQqFkXDjsrLIEv
-	 4MWWCWWY0sd+ug4R0zm6rBGs8Lujr25scZJgv430/OZEQQAuiaynYS8UYNya4u9WNPoYT
-	 0YXVwU04cMEoawqyx3KX22Opko+Bo0EUCVp1BS3tYGWwsdD1whMrr6kwz/qS8OxDLe2xs
-	 e3k3ny+WBiJOQHm7CDSy8g/+R3e2zagWxM2s/nWDDr1kM4pYh6cIkWuJLHplevuDZfLKP
-	 Q2ZQoqad0WY4H1Z5Cia2T48ddcH8aI2zdlePH3IPaClruh6sUYXCXhWcuMeW/3lD/dQ==
+	t=1793935602;
+	b=fQ/IhyXlrGQxvQaQZOshuRfGWNfOHNcCuSMg2YClqRfdgBk4Ctb1dbhin725iWjFHk7t
+	 3bG7fiPCZmMSSm6IikAxIpUM7ROWK8C+FFKAd71DffKEfxmtcfdcBhvSGYUWagF20aIzP
+	 hkEgDUjjJJm5IK1bLMriYJ9pTt+7NySJG/Pdqn9VOq+Ah+UUhjHUEduzb4jWyHtY4W5Tk
+	 m2R0d0wFksZhHKvEvlOCvbJ+Yq4bCDmEtboK1F4ybLujNYpfb7Qfj/tSMGCIqCwjoIkfV
+	 zVF4E5cqhuH81gOZzQyB36HPUKSXZND9i17XVsh1rJifeq1amr9tyK+TYldkYkuUcZQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793930459;
-	h=DMARC-Filter:DKIM-Signature:User-Agent:X-Lms-Return-Path:
-	 Mime-Version:To:Message-Id:From:Subject:Content-Transfer-Encoding:
-	 Content-Type:References:Received:Reply-To:Cc:X-Original-From:Date:
-	 In-Reply-To;
-	bh=BzurbRUdgcB5LkEIB7Hn26hUmmq0gClbqcTlXGMVGzw=;
-	b=oalfaZrLA5Z6LahpdrT9bmof3ARv+5PSiu6sVKJ3vVi32NmvKTInZ2KwLxYl2x4kr8WR
-	 6L4lWbrWD+kKyhz3ZLtQ3Q2mfxSQgDUujc58GTcpj2eB+nK3p7DLo4IXrvPghmG8FmAV+
-	 WS4pbzg607uhscBs/NQ0w78ozcV65gAydGGV/QGdXkELgXJ5CeIDavTB93gd2klRvnULI
-	 z+vMWIZOyNfB7MTb8yEdlEv54mv8+9HrUpG46Ibs61NPp1R4OayyU9J79PTVFUNBSt5qs
-	 w9mIYAiceFrLMFeooBJwAj6XLeJGa30C/pNGAosA47Bzwwo/swyAfzn6x2vt0henCLw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793935602;
+	h=DMARC-Filter:DKIM-Signature:User-Agent:Content-Type:Reply-To:Cc:Date:
+	 Subject:Mime-Version:Content-Transfer-Encoding:In-Reply-To:
+	 X-Lms-Return-Path:Received:To:From:Message-Id:References:
+	 X-Original-From;
+	bh=GicqH+O3H0yQelB/uFYofYeCG5YOTIFkaNOJy/Z44EM=;
+	b=e7CWN3dulLODwj6cQVH0uSidoC7al6GvjcjMIUMUlbJuDYs+Xm3NGBozHLLO9Ax+cchh
+	 pjsofDs+ZujG00+KtZdPpaHmbMy64Vka3fQKT21+bzB/rcFCdJPXl6G2wfO5I5x+yMzVL
+	 R5wD+FX28693OeoBjvxleU/cH9OL2USFXlZVWXv61e15cBgjZFNxqYw396O+d+PdbJCRe
+	 A0iVutS7HhXq/okWtxANaUwqqph2NMo2+jhp3QZBveWH6FqcIFFFy/eB3oJg7kIqMTqoD
+	 dUdO4stzJGWCUWwGw4rIgoXBKE/HRKdJ4XD9EEbhshr6uIe/0pgRy7jSPCfEAFGw05g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=fygo.io;
 	spf=pass smtp.mailfrom=fygo.io;
-	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=ByicbgQn;
-	arc=none smtp.remote-ip=209.127.231.46
-Received: from va-2-46.ptr.blmpb.com (va-2-46.ptr.blmpb.com [209.127.231.46])
+	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=CcYn3gMZ;
+	arc=none smtp.remote-ip=209.127.231.58
+Received: from va-2-58.ptr.blmpb.com (va-2-58.ptr.blmpb.com [209.127.231.58])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F246606A332
-	for <linux-raid@vger.kernel.org>; Fri,  6 Nov 2026 02:00:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5F246606A332
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDA13606A329
+	for <linux-raid@vger.kernel.org>; Fri,  6 Nov 2026 03:26:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DDA13606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=ByicbgQn
+	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=CcYn3gMZ
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1793930450;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1793935589;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=BzurbRUdgcB5LkEIB7Hn26hUmmq0gClbqcTlXGMVGzw=;
- b=ByicbgQncgOWB8QtXNxPUp/boZqIU+6wT7nej9vW9WnUwlRKJJxXhDyv3AScbpqzJPxpUi
- EVR5W6q/WvqKawJVGIzWbPXKhL6kwEBZ08cmxCnqVhYot8Sz2ByUibbbiNfvwm5UdqkI2j
- y/pnu+FWGgqPOKF7BSnSlHDLpv3mpEdbkY8mo2v0KgMoF3CJ0ZXNKlXUOzjK7uRGr8c73T
- x6jtd0d2FPejJwkPytaoYVNp6dPepnUr8/yUQYrvO6a/LuRoAw1nbDLM0zjoyBwsuJ8G9C
- Uczub1HHhGfKtK3dAgx1GlKM0re8BSWOxMXAB6WL+MHdcDrz2dLyLztsi2ccPg==
+ bh=GicqH+O3H0yQelB/uFYofYeCG5YOTIFkaNOJy/Z44EM=;
+ b=CcYn3gMZZPVbv1GIO/pn7F75MseqFEBWoeXDtEflazMk8lx0qkostupKKmg9u1vUQS1NnU
+ Dq1t8aOoSTphAktHKDUDnaPTCmQJt3mIylp+2DeKiqDTIxuqn8imWi8+Z6oGzMoQ/l6oO5
+ u5XpQWROwQL7C15yl1CJWyl+llhxYKyO1OR/eweY69JsREk5ckzj/Tv/z3mUf7Il7xzYQ/
+ hpgcggVXn4sW+juXsorEg1DWjM8I5ahR26v1NHXXDRXwv+JMUd0/BT5H5qDNk7PXjrWx9w
+ wziuCb7l/1hkKh675enoSyUTqoCpbEZNOl7GOgDnInle98G++IVvxsPCa1sueA==
 User-Agent: Mozilla Thunderbird
-X-Lms-Return-Path: <lba+26aed34d1+510b79+vger.kernel.org+yukuai@fygo.io>
+Content-Type: text/plain; charset=UTF-8
+Reply-To: yukuai@fygo.io
+Cc: <linux-bcache@vger.kernel.org>, <regressions@lists.linux.dev>, 
+	<linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>, 
+	<song@kernel.org>, <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
+	<colyli@fygo.io>, <kent.overstreet@linux.dev>
+Date: Fri, 6 Nov 2026 11:26:23 +0800
+Subject: Re: [PATCH] md/raid5: complete unsupported discards successfully
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -55,72 +62,73 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
-To: "Sanan Hasanov" <sanan.hasanou@gmail.com>, "Song Liu" <song@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-Message-Id: <ab391b73-557c-4eef-ac05-bfa25f9e2d03@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH] md: don't allow changing the personality of a failed array
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-References: <20261019193659.31381-1-sanan.hasanou@gmail.com>
-Received: from [192.168.1.104] ([39.182.0.25]) by smtp.larksuite.com with ESMTPS; Fri, 06 Nov 2026 02:00:48 +0000
-Reply-To: yukuai@fygo.io
-Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<syzbot+0b672810a475890d3636@syzkaller.appspotmail.com>, 
-	"Sanan Hasanov" <sanan.hasanov@ucf.edu>, <stable@vger.kernel.org>
+In-Reply-To: <179299857972.12222.2729359466842183358@gmail.com>
+X-Lms-Return-Path: <lba+26aed48e5+b08a0b+vger.kernel.org+yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.25]) by smtp.larksuite.com with ESMTPS; Fri, 06 Nov 2026 03:26:28 +0000
+To: "Konstantin Nikiforov" <helllamer@gmail.com>, 
+	<linux-raid@vger.kernel.org>, "yu kuai" <yukuai@fygo.io>
+From: "yu kuai" <yukuai@fygo.io>
+Message-Id: <770fdf93-4330-4094-9807-a0cb449ecb73@fygo.io>
+References: <CAO96y0V6oncv54ihXnHfJMYiG_QAQ-NM8BOdqPDXKL8r8-kR9Q@mail.gmail.com> <179299857972.12222.2729359466842183358@gmail.com>
 X-Original-From: yu kuai <yukuai@fygo.io>
-Date: Fri, 6 Nov 2026 10:00:44 +0800
-In-Reply-To: <20261019193659.31381-1-sanan.hasanou@gmail.com>
 
-=E5=9C=A8 2026/10/20 3:36, Sanan Hasanov =E5=86=99=E9=81=93:
+=E5=9C=A8 2026/10/26 14:21, Konstantin Nikiforov =E5=86=99=E9=81=93:
 
-> From: Sanan Hasanov<sanan.hasanov@ucf.edu>
+> Since commit 90573092673c ("md/raid5: validate discard support at
+> request time") raid5 advertises max_hw_discard_sectors =3D UINT_MAX no
+> matter whether the member devices support discard or
+> devices_handle_discard_safely is set, and make_discard_request() fails
+> the discards it cannot handle with BLK_STS_NOTSUPP.
 >
-> level_store() lets userspace switch a running array to another
-> personality through the takeover path, and then ignores the return value
-> of pers->run(). Takeover is expected to always produce something the new
-> personality can run, but that no longer holds for an array that has
-> already failed: since commit 57668f0a4cc4 ("raid5: introduce MD_BROKEN"),
-> has_failed() treats MD_BROKEN as fatal, so raid5_run() refuses such an
-> array. It then frees the new conf and clears mddev->private, while
-> level_store() has already installed the raid5 personality and freed the
-> old one. The array is left with mddev->pers =3D=3D &raid5_personality and
-> mddev->private =3D=3D NULL, and the next operation that reaches the
-> personality dereferences NULL:
+> Before that commit such arrays did not advertise discard at all, so
+> upper layers never sent one. Now they do, and the failure is not
+> harmless:
 >
->    md/raid0md0: Disk failure on loop0 detected, failing array.
->    md/raid:md0: not enough operational devices (1/3 failed)
->    md/raid:md0: failed to run raid set.
->    KASAN: null-ptr-deref in range [0x0000000000000060-0x0000000000000067]
->    RIP: 0010:kasan_byte_accessible+0x12/0x30 mm/kasan/generic.c:210
->    Call Trace:
->     spin_lock_irq include/linux/spinlock_rt.h:96 [inline]
->     lock_all_device_hash_locks_irq drivers/md/raid5.c:107 [inline]
->     raid5_quiesce+0xc2/0x8a0 drivers/md/raid5.c
->     __md_stop_writes+0xeb/0x4b0 drivers/md/md.c:7038
->     md_set_readonly+0x330/0x560 drivers/md/md.c:7138
->     array_state_store+0x584/0xe90 drivers/md/md.c:4720
+>   - bcache forwards discards to its backing device whenever
+>     bdev_max_discard_sectors() is non-zero, and backing_request_endio()
+>     treats every non-zero bi_status as a media error. After io_error_limi=
+t
+>     (64) of them bch_cached_dev_error() stops the cached device. On a
+>     machine with root on LVM over bcache over a raid5 of three HDDs the
+>     root filesystem disappeared a few minutes after every boot.
 >
-> syzbot gets there by failing a member of a raid0 array, which sets
-> MD_BROKEN, then writing "raid5" to md/level and "readonly" to
-> md/array_state. The same applies to a two-disk raid1 array whose last
-> working device has failed: raid1_error() sets MD_BROKEN but leaves
-> degraded at 1, so raid5_takeover_raid1() still accepts it.
+>   - btrfs enables discard=3Dasync by default on any device that advertise=
+s
+>     discard, which is what generated the discards in the first place.
 >
-> MD_BROKEN is never cleared while the array is running, and a failed
-> array can't be turned into a working one by changing its level. Refuse
-> the change up front with -EBUSY, which is also what state_store()
-> returns when failing a device leaves the array broken.
+> Discard is advisory: blkdev_issue_discard() already turns -EOPNOTSUPP
+> into success for its callers, and md_submit_discard_bio() silently skips
+> raid0/raid10 members without discard support. Do the same here and
+> complete the bio successfully when the array cannot pass it down safely,
+> so that callers submitting their own discard bios, like bcache, see the
+> same behaviour.
 >
-> Fixes: 57668f0a4cc4 ("raid5: introduce MD_BROKEN")
-> Reported-by:syzbot+0b672810a475890d3636@syzkaller.appspotmail.com
-> Closes:https://syzkaller.appspot.com/bug?extid=3D0b672810a475890d3636
-> Cc:stable@vger.kernel.org
-> Signed-off-by: Sanan Hasanov<sanan.hasanov@ucf.edu>
+> Fixes: 90573092673c ("md/raid5: validate discard support at request time"=
+)
+> Cc:stable@vger.kernel.org # 7.2
+> Closes:https://lore.kernel.org/all/CAO96y0V6oncv54ihXnHfJMYiG_QAQ-NM8BOdq=
+PDXKL8r8-kR9Q@mail.gmail.com/
+> Signed-off-by: Konstantin Nikiforov<helllamer@gmail.com>
 > ---
->   drivers/md/md.c | 6 ++++++
->   1 file changed, 6 insertions(+)
+> Kuai, this is the raid5-side change you were fine with in the report
+> thread. Reproducer: raid5 over three loop devices with a bcache backing
+> device on top, four blkdiscard calls on the bcache device. On 7.2.11
+> without the patch bcache's io_errors goes to 4 (bch_count_backing_io_erro=
+rs
+> in dmesg); with the patch applied to 7.2.11 it stays at 0, and the
+> affected machine (root on LVM over bcache over raid5 of HDDs) boots and
+> runs with the patched module without any backing-device errors.
+> blkdiscard on the md device itself reports success either way because
+> blkdev_issue_discard() masks EOPNOTSUPP.
+>
+> One correction to my report: the "discard_granularity is 0" observation
+> was a side effect of my own workaround (writing 0 to discard_max_bytes
+> makes the block layer report granularity 0); on a fresh array the
+> granularity is the stripe size as expected.
+>
+>   drivers/md/raid5.c | 11 ++++++++++-
+>   1 file changed, 10 insertions(+), 1 deletion(-)
 Applied
 
 --=20
