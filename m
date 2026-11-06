@@ -1,58 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.58
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.45
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793935602;
-	b=fQ/IhyXlrGQxvQaQZOshuRfGWNfOHNcCuSMg2YClqRfdgBk4Ctb1dbhin725iWjFHk7t
-	 3bG7fiPCZmMSSm6IikAxIpUM7ROWK8C+FFKAd71DffKEfxmtcfdcBhvSGYUWagF20aIzP
-	 hkEgDUjjJJm5IK1bLMriYJ9pTt+7NySJG/Pdqn9VOq+Ah+UUhjHUEduzb4jWyHtY4W5Tk
-	 m2R0d0wFksZhHKvEvlOCvbJ+Yq4bCDmEtboK1F4ybLujNYpfb7Qfj/tSMGCIqCwjoIkfV
-	 zVF4E5cqhuH81gOZzQyB36HPUKSXZND9i17XVsh1rJifeq1amr9tyK+TYldkYkuUcZQ==
+	t=1793946909;
+	b=fZrSRBZV8vGKh9kN7/OWNsZ5fXGabdOz6NZMbWmUuERIhClZPZakfLs/xk8of64lDNPa
+	 GaeLojhaZclY+nnIbFiZaD59CWN7GtsKqB8gFjdI7Ul5qAI0/d5uIBb6DabCuiNFgX429
+	 kj2weuDYOeMLnZJI7WHvmbTSgbTF8s4JXmnicb20bB9SCn4h7zyJYlOFQAgt37a9+ZJg4
+	 oYCFsEk9p4dfvJ398Xvs9LOOeaSzZPMWSJ9/skwtOBYET/4M5oLO2FHYuKuoTQoRx4I+O
+	 mVUKge22VwekDnqH/Q2d25Mxz8qerR9LxPMAFSmIJXOgyFoTWDNfaae4yjymBAyiT7A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793935602;
-	h=DMARC-Filter:DKIM-Signature:User-Agent:Content-Type:Reply-To:Cc:Date:
-	 Subject:Mime-Version:Content-Transfer-Encoding:In-Reply-To:
-	 X-Lms-Return-Path:Received:To:From:Message-Id:References:
-	 X-Original-From;
-	bh=GicqH+O3H0yQelB/uFYofYeCG5YOTIFkaNOJy/Z44EM=;
-	b=e7CWN3dulLODwj6cQVH0uSidoC7al6GvjcjMIUMUlbJuDYs+Xm3NGBozHLLO9Ax+cchh
-	 pjsofDs+ZujG00+KtZdPpaHmbMy64Vka3fQKT21+bzB/rcFCdJPXl6G2wfO5I5x+yMzVL
-	 R5wD+FX28693OeoBjvxleU/cH9OL2USFXlZVWXv61e15cBgjZFNxqYw396O+d+PdbJCRe
-	 A0iVutS7HhXq/okWtxANaUwqqph2NMo2+jhp3QZBveWH6FqcIFFFy/eB3oJg7kIqMTqoD
-	 dUdO4stzJGWCUWwGw4rIgoXBKE/HRKdJ4XD9EEbhshr6uIe/0pgRy7jSPCfEAFGw05g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793946909;
+	h=DMARC-Filter:DKIM-Signature:From:Message-Id:Mime-Version:
+	 Content-Type:Reply-To:Date:Received:X-Lms-Return-Path:X-Original-From:
+	 Content-Transfer-Encoding:To:Cc:Subject:User-Agent:References:
+	 In-Reply-To;
+	bh=6pxqqWwqCMBNjMrohGkp19CQsBRYc3520S8CYGPY6s0=;
+	b=gUQmLutVww9e+eoiZcs3DG7GrEyWQAmCvjl0yWyB9wDG0LWV22BeO6pEDKa1DFwwr0Jl
+	 nCrXUhuckOkY+FhU8L9z0aVKhYwe4U/IXX595ECdHb5ryEy970F0vZixiKz3l/oP26+X+
+	 CAaxIIrRCOY+n7jGx8FkDSl51JjiQszYf6+uSlH/3BiEo6VUkWiKmUZ6t214nDOZZf4lz
+	 jTzsYpXT/lBO7JYsz3TRWx3F/FHLPV89xe1i2fwRxg82GyaMo6l9f7v1O0qgDZ8Z2vR24
+	 SJ7lme6IdnHQvfOpMBGDzhWWSt+hvNpA8kFEFuKd/ogK++J+tMxjBcPo43p/p9uP9eA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=fygo.io;
 	spf=pass smtp.mailfrom=fygo.io;
-	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=CcYn3gMZ;
-	arc=none smtp.remote-ip=209.127.231.58
-Received: from va-2-58.ptr.blmpb.com (va-2-58.ptr.blmpb.com [209.127.231.58])
+	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=EOpl5MrY;
+	arc=none smtp.remote-ip=209.127.231.45
+Received: from va-2-45.ptr.blmpb.com (va-2-45.ptr.blmpb.com [209.127.231.45])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDA13606A329
-	for <linux-raid@vger.kernel.org>; Fri,  6 Nov 2026 03:26:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DDA13606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ABF9606A326
+	for <linux-raid@vger.kernel.org>; Fri,  6 Nov 2026 06:35:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3ABF9606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=CcYn3gMZ
+	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=EOpl5MrY
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1793935589;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1793946900;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=GicqH+O3H0yQelB/uFYofYeCG5YOTIFkaNOJy/Z44EM=;
- b=CcYn3gMZZPVbv1GIO/pn7F75MseqFEBWoeXDtEflazMk8lx0qkostupKKmg9u1vUQS1NnU
- Dq1t8aOoSTphAktHKDUDnaPTCmQJt3mIylp+2DeKiqDTIxuqn8imWi8+Z6oGzMoQ/l6oO5
- u5XpQWROwQL7C15yl1CJWyl+llhxYKyO1OR/eweY69JsREk5ckzj/Tv/z3mUf7Il7xzYQ/
- hpgcggVXn4sW+juXsorEg1DWjM8I5ahR26v1NHXXDRXwv+JMUd0/BT5H5qDNk7PXjrWx9w
- wziuCb7l/1hkKh675enoSyUTqoCpbEZNOl7GOgDnInle98G++IVvxsPCa1sueA==
-User-Agent: Mozilla Thunderbird
-Content-Type: text/plain; charset=UTF-8
-Reply-To: yukuai@fygo.io
-Cc: <linux-bcache@vger.kernel.org>, <regressions@lists.linux.dev>, 
-	<linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>, 
-	<song@kernel.org>, <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<colyli@fygo.io>, <kent.overstreet@linux.dev>
-Date: Fri, 6 Nov 2026 11:26:23 +0800
-Subject: Re: [PATCH] md/raid5: complete unsupported discards successfully
+ bh=6pxqqWwqCMBNjMrohGkp19CQsBRYc3520S8CYGPY6s0=;
+ b=EOpl5MrYGjW7qy/J3V5VUo+NGhB3jGeEdB6yMhrgDkZ6e7t5ClgLRX1WxEoY6AoBcRTohW
+ ph0lbbfIbTtW/61XT3qIdPIjNajFWhgH6cTRRz/SZDTbiewEp+ZWL11DghtF18k7ijvQWD
+ sLhLxne9K6xztc6wMj5AxWdXSayWr6wAslQgJzMRJME/zCKP3TecY3oLbLzSrEKGPtlwvv
+ oAG3AtvH2pgN3uFWw8Yzo5AH5Bv49C5S8RTmFp/OJEbT9w7xdQGtgBuDwobUhZfOt0HaVI
+ seXLESbZkaaxZU6UciGYr7168K5hqCU4/ePEulN7KIS4Gt6f6FutRcQlNYlgNw==
+From: "yu kuai" <yukuai@fygo.io>
+Message-Id: <bc03d165-55fa-4029-b653-eb5359a2816c@fygo.io>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -62,74 +55,158 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <179299857972.12222.2729359466842183358@gmail.com>
-X-Lms-Return-Path: <lba+26aed48e5+b08a0b+vger.kernel.org+yukuai@fygo.io>
-Received: from [192.168.1.104] ([39.182.0.25]) by smtp.larksuite.com with ESMTPS; Fri, 06 Nov 2026 03:26:28 +0000
-To: "Konstantin Nikiforov" <helllamer@gmail.com>, 
-	<linux-raid@vger.kernel.org>, "yu kuai" <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Message-Id: <770fdf93-4330-4094-9807-a0cb449ecb73@fygo.io>
-References: <CAO96y0V6oncv54ihXnHfJMYiG_QAQ-NM8BOdqPDXKL8r8-kR9Q@mail.gmail.com> <179299857972.12222.2729359466842183358@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Reply-To: yukuai@fygo.io
+Date: Fri, 6 Nov 2026 14:34:54 +0800
+Received: from [192.168.1.104] ([39.182.0.25]) by smtp.larksuite.com with ESMTPS; Fri, 06 Nov 2026 06:34:58 +0000
+X-Lms-Return-Path: <lba+26aed7513+be8761+vger.kernel.org+yukuai@fygo.io>
 X-Original-From: yu kuai <yukuai@fygo.io>
+Content-Transfer-Encoding: quoted-printable
+To: "Zizhi Wo" <wozizhi@huaweicloud.com>, <song@kernel.org>, 
+	<magiclinan@didiglobal.com>, <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, "yu kuai" <yukuai@fygo.io>
+Cc: <linux-kernel@vger.kernel.org>, <yangerkun@huawei.com>, 
+	<chengzhihao1@huawei.com>, <wozizhi@huawei.com>
+Subject: Re: [PATCH V3 1/3] md/raid0: reject a takeover whose zones cannot cover the array
+User-Agent: Mozilla Thunderbird
+References: <20261102083815.127751-1-wozizhi@huaweicloud.com> <20261102083815.127751-2-wozizhi@huaweicloud.com>
+In-Reply-To: <20261102083815.127751-2-wozizhi@huaweicloud.com>
 
-=E5=9C=A8 2026/10/26 14:21, Konstantin Nikiforov =E5=86=99=E9=81=93:
+Hi,
 
-> Since commit 90573092673c ("md/raid5: validate discard support at
-> request time") raid5 advertises max_hw_discard_sectors =3D UINT_MAX no
-> matter whether the member devices support discard or
-> devices_handle_discard_safely is set, and make_discard_request() fails
-> the discards it cannot handle with BLK_STS_NOTSUPP.
+=E5=9C=A8 2026/11/2 16:38, Zizhi Wo =E5=86=99=E9=81=93:
+> From: Zizhi Wo <wozizhi@huawei.com>
 >
-> Before that commit such arrays did not advertise discard at all, so
-> upper layers never sent one. Now they do, and the failure is not
-> harmless:
+> If a raid0 takeover builds strip zones that cover less than the advertise=
+d
+> array size, the block layer still accepts I/O for the whole size.
+> raid0_make_request() hands any request past the zones to the mapping code=
+,
+> which fails to map it and triggers a BUG_ON.
 >
->   - bcache forwards discards to its backing device whenever
->     bdev_max_discard_sectors() is non-zero, and backing_request_endio()
->     treats every non-zero bi_status as a media error. After io_error_limi=
-t
->     (64) of them bch_cached_dev_error() stops the cached device. On a
->     machine with root on LVM over bcache over a raid5 of three HDDs the
->     root filesystem disappeared a few minutes after every boot.
+> The zones are built from the member sizes in rdev->sectors, which may not
+> match the size the array already advertises, so the zones can come out
+> covering less than it. The extreme case is a member with no size recorded
+> at all: an array created without metadata imports its devices through
+> md_import_device(dev, -1, -1), which never sets rdev->sectors, and
+> bind_rdev_to_array() does not reject such a member either, because its
+> check that mddev->dev_sectors fits inside a member is skipped when
+> rdev->sectors is zero.
 >
->   - btrfs enables discard=3Dasync by default on any device that advertise=
-s
->     discard, which is what generated the discards in the first place.
+> Refuse a raid0 takeover when its zones cannot cover the size the gendisk
+> advertises. This prevents the takeover from silently shrinking the array,
+> mirroring the rule raid5_start_reshape() and raid10_start_reshape() apply
+> to a reshape.
 >
-> Discard is advisory: blkdev_issue_discard() already turns -EOPNOTSUPP
-> into success for its callers, and md_submit_discard_bio() silently skips
-> raid0/raid10 members without discard support. Do the same here and
-> complete the bio successfully when the array cannot pass it down safely,
-> so that callers submitting their own discard bios, like bcache, see the
-> same behaviour.
+> The check iterates the same devices and uses the same rounding as
+> create_strip_zones(). It does not skip devices with rdev->raid_disk < 0:
+> such devices cannot be raid0 members, so counting them only overestimates
+> the coverage and, if present, the takeover fails later in
+> create_strip_zones() anyway.
 >
-> Fixes: 90573092673c ("md/raid5: validate discard support at request time"=
-)
-> Cc:stable@vger.kernel.org # 7.2
-> Closes:https://lore.kernel.org/all/CAO96y0V6oncv54ihXnHfJMYiG_QAQ-NM8BOdq=
-PDXKL8r8-kR9Q@mail.gmail.com/
-> Signed-off-by: Konstantin Nikiforov<helllamer@gmail.com>
+> Fixes: 9af204cf720c ("md: Add support for Raid5->Raid0 and Raid10->Raid0 =
+takeover")
+> Fixes: fc3a08b85b7a ("Add raid1->raid0 takeover support")
+> Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
 > ---
-> Kuai, this is the raid5-side change you were fine with in the report
-> thread. Reproducer: raid5 over three loop devices with a bcache backing
-> device on top, four blkdiscard calls on the bcache device. On 7.2.11
-> without the patch bcache's io_errors goes to 4 (bch_count_backing_io_erro=
-rs
-> in dmesg); with the patch applied to 7.2.11 it stays at 0, and the
-> affected machine (root on LVM over bcache over raid5 of HDDs) boots and
-> runs with the patched module without any backing-device errors.
-> blkdiscard on the md device itself reports success either way because
-> blkdev_issue_discard() masks EOPNOTSUPP.
+>   drivers/md/raid0.c | 37 +++++++++++++++++++++++++++++++++++++
+>   1 file changed, 37 insertions(+)
 >
-> One correction to my report: the "discard_granularity is 0" observation
-> was a side effect of my own workaround (writing 0 to discard_max_bytes
-> makes the block layer report granularity 0); on a fresh array the
-> granularity is the stripe size as expected.
->
->   drivers/md/raid5.c | 11 ++++++++++-
->   1 file changed, 10 insertions(+), 1 deletion(-)
-Applied
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index 35e103f0c2c3..fccc62a5fecc 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -643,6 +643,34 @@ static void raid0_error(struct mddev *mddev, struct =
+md_rdev *rdev)
+>   	}
+>   }
+>  =20
+> +/*
+> + * Refuse a takeover whose strip zones cannot cover the capacity the gen=
+disk
+> + * advertises: raid0 derives those zones from the sizes of its members, =
+so
+> + * find_zone() cannot map I/O that falls beyond them.
+> + */
+> +static int raid0_takeover_check(struct mddev *mddev, int chunk)
+> +{
+> +	sector_t capacity =3D get_capacity(mddev->gendisk);
+> +	sector_t coverage =3D 0;
+> +	struct md_rdev *rdev;
+> +
+> +	rdev_for_each(rdev, mddev) {
+> +		sector_t sectors =3D rdev->sectors;
+> +
+> +		sector_div(sectors, chunk);
+> +		coverage +=3D sectors * chunk;
+> +	}
+> +
+> +	if (coverage < capacity) {
+> +		pr_warn("md/raid0:%s: refusing takeover, zones cover only %llu of %llu=
+ sectors\n",
+> +			mdname(mddev), (unsigned long long)coverage,
+> +			(unsigned long long)capacity);
+
+Other than raid1, other levels already have mddev->chunk_secotrs set, and r=
+aid456/raid10 already
+have a full functional raid0, their takeover can not fail.
+
+Noted normally mdadm will set rdev->sectors and 1.x metadata will reject ze=
+ro rdev->sectors in super_1_load.
+However, it's still possible raid1 can be created with rdev->sectors be zer=
+o, this is the root cause of the
+problem syzbot reported.
+
+Although raid0_takeover_raid1() already calculate chunksect by mddev->array=
+_sectors, which is exactly the
+real rdev->sectors for raid1, and it should be guaranteed such takeover can=
+ succeed. However, as it's legacy
+usage that rdev->sectors can be zero, I'll suggest just checking rdev->sect=
+ors in raid0_takeover_raid1() and
+reject if it's 0.
+
+> +		return -EINVAL;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>   static void *raid0_takeover_raid45(struct mddev *mddev)
+>   {
+>   	struct md_rdev *rdev;
+> @@ -665,6 +693,9 @@ static void *raid0_takeover_raid45(struct mddev *mdde=
+v)
+>   		rdev->sectors =3D mddev->dev_sectors;
+>   	}
+>  =20
+> +	if (raid0_takeover_check(mddev, mddev->chunk_sectors))
+> +		return ERR_PTR(-EINVAL);
+> +
+>   	/* Set new parameters */
+>   	mddev->new_level =3D 0;
+>   	mddev->new_layout =3D 0;
+> @@ -707,6 +738,9 @@ static void *raid0_takeover_raid10(struct mddev *mdde=
+v)
+>   		return ERR_PTR(-EINVAL);
+>   	}
+>  =20
+> +	if (raid0_takeover_check(mddev, mddev->chunk_sectors))
+> +		return ERR_PTR(-EINVAL);
+> +
+>   	/* Set new parameters */
+>   	mddev->new_level =3D 0;
+>   	mddev->new_layout =3D 0;
+> @@ -750,6 +784,9 @@ static void *raid0_takeover_raid1(struct mddev *mddev=
+)
+>   		/* array size does not allow a suitable chunk size */
+>   		return ERR_PTR(-EINVAL);
+>  =20
+> +	if (raid0_takeover_check(mddev, chunksect))
+> +		return ERR_PTR(-EINVAL);
+> +
+>   	/* Set new parameters */
+>   	mddev->new_level =3D 0;
+>   	mddev->new_layout =3D 0;
 
 --=20
 Thanks,
