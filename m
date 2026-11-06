@@ -1,59 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.46
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793929496;
-	b=iI4gtPu0Cy4PUoICuuCiNSernrM4oCKVca9vRPAvCQ0Z1sOUF9WpKAW8xXyJURULF6mj
-	 AiyGkHq6Qd4wPmfrkOH2X73XoDurpMISwVxguMlHgCgAhgSkysHxsTr4Bo0HBBjL5T0kY
-	 46ewKKMJRcJAiy1PXVRJxOswRuruclzjhoYt7tWYqsZgSGpkyLflckcSj6qkT0qNj6T1j
-	 z6cbYDhyNke5nGjevFTxXthiQ98ykPHx15cuCSzv9EouqRWRDB04Wyr46KF6DapprxBa0
-	 pJ0pnVDfTaruIc3C85n2LgCFw8eFkS7/us1eN4lhTtcCO5z+D28v1Kpe61JqCLy7qeQ==
+	t=1793930459;
+	b=wnvV7S2Lc3JSznMrc8dNBpGFXvjKigRiSARfd4ri94YXzvHRTRpjR7fQqFkXDjsrLIEv
+	 4MWWCWWY0sd+ug4R0zm6rBGs8Lujr25scZJgv430/OZEQQAuiaynYS8UYNya4u9WNPoYT
+	 0YXVwU04cMEoawqyx3KX22Opko+Bo0EUCVp1BS3tYGWwsdD1whMrr6kwz/qS8OxDLe2xs
+	 e3k3ny+WBiJOQHm7CDSy8g/+R3e2zagWxM2s/nWDDr1kM4pYh6cIkWuJLHplevuDZfLKP
+	 Q2ZQoqad0WY4H1Z5Cia2T48ddcH8aI2zdlePH3IPaClruh6sUYXCXhWcuMeW/3lD/dQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793929496;
-	h=DMARC-Filter:DKIM-Signature:Date:Received:X-Original-From:Reply-To:
-	 From:User-Agent:References:Cc:Mime-Version:In-Reply-To:To:Subject:
-	 Message-Id:Content-Transfer-Encoding:X-Lms-Return-Path:Content-Type;
-	bh=o4pPrmBDJiBQchY+eYj3rF3LESB28usD21pFWJiMzzk=;
-	b=oUgfCf9kwVpQUiUTy3n/blT1BJBI3d4v/n6croK0DzzfFCodKsar+6Zjc7t3nzI+PFm/
-	 f3+Xf7E42uxRBsVqu/H1yGs8frnipmGax+a24j2gw4t/FyU0+QdCBy/3dqgLwFJUy8rn1
-	 CxCHt35Fz1iA/R/+floPX+6vmAtHyykoE9T4EfNZsMz46IYv/eD7XO9n+J6fVKnu8cz7E
-	 6CqJZ2/sJHDtItunN2beH1Mxvg2kUXRpNiWBnvOvsN3zqM6fkIrmphqs1v56RkvxPQDzs
-	 OCgL+tesWJlWyAeKUwVnO+5cvVG5D4SawCwt2QWIA2Bw+CDe3oJVoHV4JCJttZSxWiA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793930459;
+	h=DMARC-Filter:DKIM-Signature:User-Agent:X-Lms-Return-Path:
+	 Mime-Version:To:Message-Id:From:Subject:Content-Transfer-Encoding:
+	 Content-Type:References:Received:Reply-To:Cc:X-Original-From:Date:
+	 In-Reply-To;
+	bh=BzurbRUdgcB5LkEIB7Hn26hUmmq0gClbqcTlXGMVGzw=;
+	b=oalfaZrLA5Z6LahpdrT9bmof3ARv+5PSiu6sVKJ3vVi32NmvKTInZ2KwLxYl2x4kr8WR
+	 6L4lWbrWD+kKyhz3ZLtQ3Q2mfxSQgDUujc58GTcpj2eB+nK3p7DLo4IXrvPghmG8FmAV+
+	 WS4pbzg607uhscBs/NQ0w78ozcV65gAydGGV/QGdXkELgXJ5CeIDavTB93gd2klRvnULI
+	 z+vMWIZOyNfB7MTb8yEdlEv54mv8+9HrUpG46Ibs61NPp1R4OayyU9J79PTVFUNBSt5qs
+	 w9mIYAiceFrLMFeooBJwAj6XLeJGa30C/pNGAosA47Bzwwo/swyAfzn6x2vt0henCLw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=fygo.io;
 	spf=pass smtp.mailfrom=fygo.io;
-	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=XhWWQRow;
-	arc=none smtp.remote-ip=209.127.231.50
-Received: from va-2-50.ptr.blmpb.com (va-2-50.ptr.blmpb.com [209.127.231.50])
+	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=ByicbgQn;
+	arc=none smtp.remote-ip=209.127.231.46
+Received: from va-2-46.ptr.blmpb.com (va-2-46.ptr.blmpb.com [209.127.231.46])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08B8B606A336
-	for <linux-raid@vger.kernel.org>; Fri,  6 Nov 2026 01:44:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 08B8B606A336
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F246606A332
+	for <linux-raid@vger.kernel.org>; Fri,  6 Nov 2026 02:00:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5F246606A332
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=XhWWQRow
+	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=ByicbgQn
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1793929491;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1793930450;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=o4pPrmBDJiBQchY+eYj3rF3LESB28usD21pFWJiMzzk=;
- b=XhWWQRowQR2WeJBxcR2Jm1NhRUEgtTDOColGJYyDA4ftvaOfhoby2vEE7rTJtwjtneS7Ox
- e56iMfIS4vIrRGg9/XXDWxya/zqdkHGf+jd5enFlAI671sGA6U/Yi2Zc0QJTAC8Oyv6dvp
- 1BCBuFZ2PZLPIJhrVhFSM5BtIx0vWku/vsvT6NbJ30Iz3bu1VA2EAGkAG5QnDtma3+y3dN
- lShUg5On2Pz0se88/4ia3ktRjbxGQvVTT4ptOtjeKG6zdp+oBAGqcz3KxEA/A+Fw0pVZkA
- IdbMOdJrywSMssl30jpves9/Azahqw9qQRS3yAMaSejw6zT0fYWFJDFMG1Wmug==
-Date: Fri, 6 Nov 2026 09:44:45 +0800
-Received: from [192.168.1.104] ([39.182.0.25]) by smtp.larksuite.com with ESMTPS; Fri, 06 Nov 2026 01:44:49 +0000
-X-Original-From: yu kuai <yukuai@fygo.io>
-Reply-To: yukuai@fygo.io
-From: "yu kuai" <yukuai@fygo.io>
+ bh=BzurbRUdgcB5LkEIB7Hn26hUmmq0gClbqcTlXGMVGzw=;
+ b=ByicbgQncgOWB8QtXNxPUp/boZqIU+6wT7nej9vW9WnUwlRKJJxXhDyv3AScbpqzJPxpUi
+ EVR5W6q/WvqKawJVGIzWbPXKhL6kwEBZ08cmxCnqVhYot8Sz2ByUibbbiNfvwm5UdqkI2j
+ y/pnu+FWGgqPOKF7BSnSlHDLpv3mpEdbkY8mo2v0KgMoF3CJ0ZXNKlXUOzjK7uRGr8c73T
+ x6jtd0d2FPejJwkPytaoYVNp6dPepnUr8/yUQYrvO6a/LuRoAw1nbDLM0zjoyBwsuJ8G9C
+ Uczub1HHhGfKtK3dAgx1GlKM0re8BSWOxMXAB6WL+MHdcDrz2dLyLztsi2ccPg==
 User-Agent: Mozilla Thunderbird
-References: <20261028152755.383821-1-gowtham398gs@gmail.com> <20261030044008.34293-1-gowtham398gs@gmail.com>
-Cc: <magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<syzbot+fc26c366038b54261e53@syzkaller.appspotmail.com>, 
-	<syzbot+75f49ec552cc74d9d69b@syzkaller.appspotmail.com>
+X-Lms-Return-Path: <lba+26aed34d1+510b79+vger.kernel.org+yukuai@fygo.io>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -63,84 +55,73 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
-In-Reply-To: <20261030044008.34293-1-gowtham398gs@gmail.com>
-To: "Gowtham S Bhushan" <gowtham398gs@gmail.com>, <song@kernel.org>, 
+To: "Sanan Hasanov" <sanan.hasanou@gmail.com>, "Song Liu" <song@kernel.org>, 
 	"yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH v2] md/raid1: reject out-of-range raid_disks in setup_conf()
-Message-Id: <1a298f8e-84ce-4862-866a-b68766e590fb@fygo.io>
+Message-Id: <ab391b73-557c-4eef-ac05-bfa25f9e2d03@fygo.io>
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH] md: don't allow changing the personality of a failed array
 Content-Transfer-Encoding: quoted-printable
-X-Lms-Return-Path: <lba+26aed3112+c0420e+vger.kernel.org+yukuai@fygo.io>
 Content-Type: text/plain; charset=UTF-8
+References: <20261019193659.31381-1-sanan.hasanou@gmail.com>
+Received: from [192.168.1.104] ([39.182.0.25]) by smtp.larksuite.com with ESMTPS; Fri, 06 Nov 2026 02:00:48 +0000
+Reply-To: yukuai@fygo.io
+Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<syzbot+0b672810a475890d3636@syzkaller.appspotmail.com>, 
+	"Sanan Hasanov" <sanan.hasanov@ucf.edu>, <stable@vger.kernel.org>
+X-Original-From: yu kuai <yukuai@fygo.io>
+Date: Fri, 6 Nov 2026 10:00:44 +0800
+In-Reply-To: <20261019193659.31381-1-sanan.hasanou@gmail.com>
 
-Hi,
+=E5=9C=A8 2026/10/20 3:36, Sanan Hasanov =E5=86=99=E9=81=93:
 
-=E5=9C=A8 2026/10/30 12:40, Gowtham S Bhushan =E5=86=99=E9=81=93:
-> mddev->raid_disks can be set from user space with SET_ARRAY_INFO and
-> is not bounded before RUN_ARRAY reaches raid1_run(). With a very large
-> value, setup_conf() asks the allocator for more than KMALLOC_MAX_SIZE
-> when allocating conf->mirrors, and the allocator warns:
+> From: Sanan Hasanov<sanan.hasanov@ucf.edu>
 >
->    WARNING: mm/slub.c:5459 at ___kmalloc_large_node
->     setup_conf+0x15d/0x700
->     raid1_run+0x109/0x250
->     md_run+0x6c3/0xec0
->     do_md_run+0x27/0x3b0
->     md_ioctl+0x163f/0x1ca0
+> level_store() lets userspace switch a running array to another
+> personality through the takeover path, and then ignores the return value
+> of pers->run(). Takeover is expected to always produce something the new
+> personality can run, but that no longer holds for an array that has
+> already failed: since commit 57668f0a4cc4 ("raid5: introduce MD_BROKEN"),
+> has_failed() treats MD_BROKEN as fatal, so raid5_run() refuses such an
+> array. It then frees the new conf and clears mddev->private, while
+> level_store() has already installed the raid5 personality and freed the
+> old one. The array is left with mddev->pers =3D=3D &raid5_personality and
+> mddev->private =3D=3D NULL, and the next operation that reaches the
+> personality dereferences NULL:
 >
-> The array fails to start, but machines running with panic_on_warn
-> crash and syzbot keeps reporting it.
+>    md/raid0md0: Disk failure on loop0 detected, failing array.
+>    md/raid:md0: not enough operational devices (1/3 failed)
+>    md/raid:md0: failed to run raid set.
+>    KASAN: null-ptr-deref in range [0x0000000000000060-0x0000000000000067]
+>    RIP: 0010:kasan_byte_accessible+0x12/0x30 mm/kasan/generic.c:210
+>    Call Trace:
+>     spin_lock_irq include/linux/spinlock_rt.h:96 [inline]
+>     lock_all_device_hash_locks_irq drivers/md/raid5.c:107 [inline]
+>     raid5_quiesce+0xc2/0x8a0 drivers/md/raid5.c
+>     __md_stop_writes+0xeb/0x4b0 drivers/md/md.c:7038
+>     md_set_readonly+0x330/0x560 drivers/md/md.c:7138
+>     array_state_store+0x584/0xe90 drivers/md/md.c:4720
 >
-> Fail early instead. Version 1.x metadata can describe at most 1920
-> devices, so use that as the upper bound, and test the sign before the
-> value is used. At that limit the allocations that scale with
-> raid_disks (conf->mirrors, the r1bio mempool element and the resync
-> buffers) stay well below KMALLOC_MAX_SIZE.
+> syzbot gets there by failing a member of a raid0 array, which sets
+> MD_BROKEN, then writing "raid5" to md/level and "readonly" to
+> md/array_state. The same applies to a two-disk raid1 array whose last
+> working device has failed: raid1_error() sets MD_BROKEN but leaves
+> degraded at 1, so raid5_takeover_raid1() still accepts it.
 >
-> Reported-by: syzbot+75f49ec552cc74d9d69b@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3D75f49ec552cc74d9d69b
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> MD_BROKEN is never cleared while the array is running, and a failed
+> array can't be turned into a working one by changing its level. Refuse
+> the change up front with -EBUSY, which is also what state_store()
+> returns when failing a device leaves the array broken.
 >
-> Signed-off-by: Gowtham S Bhushan <gowtham398gs@gmail.com>
+> Fixes: 57668f0a4cc4 ("raid5: introduce MD_BROKEN")
+> Reported-by:syzbot+0b672810a475890d3636@syzkaller.appspotmail.com
+> Closes:https://syzkaller.appspot.com/bug?extid=3D0b672810a475890d3636
+> Cc:stable@vger.kernel.org
+> Signed-off-by: Sanan Hasanov<sanan.hasanov@ucf.edu>
 > ---
->   drivers/md/raid1.c | 12 ++++++++++++
->   1 file changed, 12 insertions(+)
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index f0646fb24371..1cfe983167de 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -48,6 +48,13 @@ static void allow_barrier(struct r1conf *conf, sector_=
-t sector_nr);
->   static void lower_barrier(struct r1conf *conf, sector_t sector_nr);
->   static void raid1_free(struct mddev *mddev, void *priv);
->  =20
-> +/*
-> + * Version 1.x md metadata keeps a 256-byte header and then 2 bytes per
-> + * device in a 4096-byte block, so no array described by it can have mor=
-e
-> + * devices than this. Arrays created through the ioctl alone have no
-> + * on-disk limit, so apply the same cap to them.
-> + */
-> +#define RAID1_MAX_DISKS	((4096 - 256) / 2)
->   #define RAID_1_10_NAME "raid1"
->   #include "raid1-10.c"
->  =20
-> @@ -3051,6 +3058,11 @@ static struct r1conf *setup_conf(struct mddev *mdd=
-ev)
->   	size_t r1bio_size;
->   	int err =3D -ENOMEM;
->  =20
-> +	/* raid_disks comes from user space and sizes the allocations below */
-> +
-> +	if (mddev->raid_disks <=3D 0 || mddev->raid_disks > RAID1_MAX_DISKS)
-> +		return ERR_PTR(-EINVAL);
-
-There is still the same kmalloc in raid1_reshape().
-
-> +
->   	conf =3D kzalloc_obj(struct r1conf);
->   	if (!conf)
->   		goto abort;
+>   drivers/md/md.c | 6 ++++++
+>   1 file changed, 6 insertions(+)
+Applied
 
 --=20
 Thanks,
