@@ -1,98 +1,165 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.170
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793999874;
-	b=y97u9vKAJttFIj6V+WtAHe44I+a6fcwlRsLB7BqcwdczqcziDNP8rNvSL6ZHjQKNyFRU
-	 WXs8qwNGYX8DWF74ImWrkg7DMbGseTqfK23Z6R8mZoT3/wellJIw+6WMQlc9iF7Vi6/r6
-	 1QGd6Bxe6bPIgAhlYlKKrFH9coR2bcK2xniwEEN27T2606AmgSFzCVxDjAckqjQTpM14Y
-	 4jjigmE+Y3yjcuqV+EXow7AEgZ3s6+7VSMEfMOZXC4C+BzUzcg/fW8CDGIBcDqkY210Mj
-	 kxOJJMj8toDQfVYdQ93aa+r4CKN1d7m/yeOic5VX9Sq36IpfmPZNbyeNQ4QSa3HBQZA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793999874;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type;
-	bh=2Y2QMKHFqDW0NHjVuOKUbThddEaPHy26Bs27ZfqY8i0=;
-	b=q47zn6KpbBLqt2fRA/6k4AJBV8pymuDdhrtTmsiuHI+7vErt5gnxVAZF85+Taj4gENEZ
-	 RwEGK+yLBY8+zb0y07y4+cCHaLFZHlpCs+sNbk/Go0qyFV5VxJ0r7nVpP/htgHPD+J9dd
-	 Wp6K3N02srXhsD8kjjxCl6eiOPGH8Bn1r/nbzk5bvt2N6+7b2JMMo7WKpid4HElsM16K9
-	 /T0JDUmpsk+pv7PeLmlEGDGGTlyuIADgFLBJNea4Gl/Xl6nkMrspYs3Xx0D/HWVSUhI1+
-	 2rmwf6LJQ6lF80boMTMKVPV3wFqt0kboKp3MFVlQTc9FcmaTghtwbWDfiSmG9poj0xw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=pkm-inc.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=pkm-inc.com header.i=@pkm-inc.com header.a=rsa-sha256 header.s=google header.b=XLcI0b1s;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.170
-Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794042019;
+	b=e2fPw7Y2rRfKFAQfgwC5LjDb0RhR4W31LDr7IxSWb6hORKRWERUu+1WEtFOl92kMR+Zo
+	 KghAG8ZirLzfM7O1gCouNZzUt68wkwJV6tgZ3db2UgMcM0W2QqUOf+0rU7XvntFCPDPTH
+	 6DoYyeBDsdz0YtWcS2VHIGxLgZ5S5ulHoTuNVuDTsgWQczKtNgnwyeuE7JnG7oBfgc8bB
+	 MRbq+6xUakG07XZz2ZBE9I5J17UE1f/LP2TegmIelH/wNPkqoa6dkh2qRke1qcsAe+adS
+	 QjuLnrXh/kdciTOZEvHuYPlZFVJTgL6hxN2rk8dC6vB84lMaEuI+53+LWws/WsqcQwQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794042019;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Date:Message-ID:From:To:Cc:Subject:
+	 In-Reply-To:References:User-Agent:MIME-Version:Content-Type:
+	 X-Spamd-Result:X-Rspamd-Server:X-Rspamd-Action:X-Spam-Flag:
+	 X-Spam-Score:X-Spam-Level:X-Rspamd-Queue-Id;
+	bh=2pUKIrJSjwOPfwhHfcJFzwrup6gCdhbZ3XgMEjE3Sk8=;
+	b=5D5/GGSofHUZCuwGhKeC7U+sxjjoltIbDqU/QjDFsQ2ceMBoFrfaSYU7jb/1Ur+pAwN2
+	 4akgWSfdDrLoE000HVYCnn60RmiK0eCIHPypjyVxYdt8JNhTKiEIfkBfRVwH+MAFkhPND
+	 ERS+RS4lfKADF/CttTLIpX8/Ad3MYi+RL+VPHI9LVJVgIz192TU4HV7DRen8mHy+lfBja
+	 yqu//OkUoKd5MDeSIJZ0cSXHezE/3klqx2NGRqL9RhqqraIv/TIetiP7yEbkhA/FjOkMW
+	 /MaRIhfGsrx4+1WO4ZDaqTZ+lEa3tvkeGgxoDgaZ1KojurV2QCO/cdhlAoO0t1CbQLw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=AwkH5jyM;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JTEoL3TZ;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=nvoaJ0mE;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=DZerp02L;
+	arc=none smtp.remote-ip=195.135.223.131
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7277E606A326
-	for <linux-raid@vger.kernel.org>; Fri,  6 Nov 2026 21:17:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7277E606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pkm-inc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B62B6606A32D;
+	Sat,  7 Nov 2026 09:00:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B62B6606A32D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=pkm-inc.com header.i=@pkm-inc.com header.a=rsa-sha256 header.s=google header.b=XLcI0b1s
-Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-33c10faf6easo152452eec.0
-        for <linux-raid@vger.kernel.org>; Fri, 06 Nov 2026 13:17:54 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1793999873; cv=none;
-        d=google.com; s=arc-20260327;
-        b=GkeKyYnutVo2eVSUra1U9gCCVowMaT9poPh+9lqjJK8YTyXUCCh1Hy+THgQAckrAzM
-         Ur1T9vW0i+sF0D59K3osPNQBKhf2NtokiH246NHrfMP8N/dDdfewNbI84DVqSSioGWTn
-         yCdJGetayDwx4HZ3yUjHUFBohDODmUU1pIXUoFzXOFpOVhvay4MWpE2woUKRR/ySVc6a
-         1NiVgAtogv7PjUCicnLzk6nbdLXuosxsNPjWlVpA4IqQXLZMvZ3+/MSq4ayxJ2IQ1fNU
-         zO3tFyPki3Z+KCokMfbsmBUIyUeNQh+pxsbd+/U7Sb8jKe9qUROlFvjfrSQ6sGoGn+F8
-         jedg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=2Y2QMKHFqDW0NHjVuOKUbThddEaPHy26Bs27ZfqY8i0=;
-        fh=1GuFve6lNc9hvsAuITm1txFvOHQT2vosSP7ICvc8qdc=;
-        b=KP7ktntOB7gC06jsNpF+3ImB0zitNdPMIP5ZOEAWyqRjT+8N7eA9HPbiaHugg1svSe
-         zik0bYrKUCvnRTtp11Eg5dJ+ce4JJ6X01q1ryOY/jIyQ6QaWRFj7cKaVO4MIqk+ilhRA
-         b92TAq7zClthx0CUTeB5EIFn+lP7DpRoTNvtBMwFAUi2m1rhwG2gy6mttKZN+B2y7HoB
-         bjQEWv+qj5K3D/XrM2PW/HWLH9EUvfyb+L5Fw3k9jgFB4aApOxqemkzV+hcEXnKnS6VX
-         WEhSQppr0aGS4a7Nu3Kbzr6MXmn56miutd0nBjUXOZOo0PDvt7MWVHIQrVQBFiPZKn8G
-         prFA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=pkm-inc.com; s=google; t=1793999873; x=1794604673; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=2Y2QMKHFqDW0NHjVuOKUbThddEaPHy26Bs27ZfqY8i0=;
-        b=XLcI0b1sjYeaPRM1aEs0uGul+62yBxbuKiK8MO3AYp6s6RdcAv6vl4xSI+tO5eAZkx
-         QCl7seMMsF3Lac5MLzyJZV9hS48kYUffSGZ8xpXsFmND4MGJ/gOBQqm+FdSNvZjQJM2g
-         b7C+RKW0ku0LoojnHUex+LLUiyvZgSGZBcMnVNCDOO2E4lxRKn1o4skGhahUan1qBTCa
-         6lqBJNjHtI7StRtwgb7KWx8yjM+aGcptb5JTRm/qSNsiHVVZBkuyIs5cYcD6RpJE6IA6
-         TDv3FGaulmwNyKBzhnXsjHtSkxC+MU+IWFnsVRmz3BLZqo9jUGp0EdWiBXtabGPfaziQ
-         sydg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793999873; x=1794604673;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=2Y2QMKHFqDW0NHjVuOKUbThddEaPHy26Bs27ZfqY8i0=;
-        b=dqNxnX7LKKGuQXuD41gFc5hq9L+sKqH7VzrioTbltjOKEFxFS4M5RRCm4acESJFTnL
-         eVjZwlrHM0INBMKW+D/iZj0SgoCWhC2mvUXc5GWO3XbJDW+oEcPng2jyCBvHUsMAS2bu
-         a5njTDn5RoM519clhEpkg6+a4r3bvzAan6KEINRwFzE3I/ZPXoNrRmMzb71TJr+1OAlx
-         ImIrFLBJmK01EHtHrYNhZGinAjZ7VccjBBhVgFqAeaqSdOEDcReVzMmCO1ZCZrPZriAt
-         eMVEPuVL9sZvygeCbGBov8vxykiCCGUQ/theWRA0FGdpEKi4Y97sOOH0byIK5lCET4zE
-         RMtg==
-X-Gm-Message-State: APuU4Z/3n/7D7AkgwHLcdOvBNPg+wdDcPnu6EVPo8erzrpMLis4Qimzq
-	CNE5AtPOwQBLRr/rM91XW8+gX7S5j6z23KD98zJfXu2D9D6+/hwMI7Nt999yD6l+jLgneTSeZl1
-	BgRBagZOmROiAFmn4BTSj7g3016063q0=
-X-Gm-Gg: AYBFou0jbons9PyNdgHkDgHhY2rY9vSax/EJ0fbrYsme8+/wpw3ToBifvJagbnwZGgH
-	xzF3XOe458To16YJRVob5cHtOXXzUZP9joHyQPrsxqYWByPx4nKZ2pOwlP6Aj6DTxGDjEQQztKr
-	yJYuewKk66MFb1VmsLd+2V9C4QilvinV++xLVWy3NSLXccU81wiQAWj7dzZeqYRCSWdW1coTXAJ
-	OJ2SAvej2qF5YZwXH4u9itQWH5Y697Wluvgnxd0pdnXfg1G1/2sr58V5axFVGokXreZm6zouqjG
-	sLt3XALjBmSoArEA75ERTSvz7vfbFtClh54Dsu8aXTWsiJQ5c+2cueyoYyy119b2En0NSdcrFU1
-	9KGH/87PMCQt8/zkhWw8H7aW1j7+x2LIKEqka58H1lqkQiPjHktcJgusI8w==
-X-Received: by 2002:a05:693c:8852:b0:36c:a1bc:6115 with SMTP id
- 5a478bee46e88-36f6f98d2f9mr7196331eec.0.1793999873134; Fri, 06 Nov 2026
- 13:17:53 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=AwkH5jyM;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JTEoL3TZ;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=nvoaJ0mE;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=DZerp02L
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 630761F74D;
+	Sat,  7 Nov 2026 09:00:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1794042016; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=2pUKIrJSjwOPfwhHfcJFzwrup6gCdhbZ3XgMEjE3Sk8=;
+	b=AwkH5jyM7t60XRGf7G1aRSt+1A3cbarzW4z/QkvISjLGNPrA/fY2MleEP5q/AQIm+UOa85
+	wJkleCWTNZsU7rGkzPqgTOEFser1A2ESxcK9o91TyOKwj1NxwYRnab9MqOSmomM2duqzSM
+	4ziRifDlEsg/eNGZ4IfRyZBtKF7+5L4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1794042016;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=2pUKIrJSjwOPfwhHfcJFzwrup6gCdhbZ3XgMEjE3Sk8=;
+	b=JTEoL3TZlb1DCclunsyxaCbXUYbLeMKEOnsS7PWO9bNheMA+zCRiSp1byJB7A+sAicRsv4
+	5OXD2QVrenEMHmAQ==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=nvoaJ0mE;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=DZerp02L
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1794042015; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=2pUKIrJSjwOPfwhHfcJFzwrup6gCdhbZ3XgMEjE3Sk8=;
+	b=nvoaJ0mEP/zd/0bKFGcoiLmtApr9OQGHZOiEECFWhUq1H30dGD7ZkdmACOX8M4XQGS4NuW
+	oB4Mc0g4OfzK2wWf0UF/9cqPMqA/oflypYavZBONS2BSNW+J/B7gdSUDzy/0qA9b4r1pv4
+	UXAedxogQW7c2CJkDX8oa4Afmn/sre4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1794042015;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=2pUKIrJSjwOPfwhHfcJFzwrup6gCdhbZ3XgMEjE3Sk8=;
+	b=DZerp02LRPNT9d5/AecFdQdh+IJlOFhOxwpkpzQNy3DQvQ4hOwgMkZ3mhYuZ46BFCA5rf0
+	CaTL33x7XZsPDhBQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E0528132C9;
+	Sat,  7 Nov 2026 09:00:13 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 19k0LZ3o7mq9VwAAD6G6ig
+	(envelope-from <tiwai@suse.de>); Sat, 07 Nov 2026 09:00:13 +0000
+Date: Sat, 07 Nov 2026 10:00:13 +0100
+Message-ID: <87jympyq1u.wl-tiwai@suse.de>
+From: Takashi Iwai <tiwai@suse.de>
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org,
+	Chuck Lever <cel@kernel.org>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH RESEND v2 03/51] ALSA: cs46xx: hand the region to the region proc files
+In-Reply-To: <20261104-work-procfs-bugfixes-v2-3-021c84d852e0@kernel.org>
+References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
+	<20261104-work-procfs-bugfixes-v2-3-021c84d852e0@kernel.org>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) Emacs/30.2 Mule/6.0
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -101,33 +168,57 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-References: <CAAiJnjr6fxY1LKmrYbradXPoxW+cS28uLo6VxYkwLxXsTcY4gg@mail.gmail.com>
-In-Reply-To: <CAAiJnjr6fxY1LKmrYbradXPoxW+cS28uLo6VxYkwLxXsTcY4gg@mail.gmail.com>
-From: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
-Date: Fri, 6 Nov 2026 22:17:41 +0100
-X-Gm-Features: AclHuK90E8Ig-Zw6mrMxhUyW5WXAVelgZVaoNbxuG0yzDtt3ykgo8_ZmPjdSqUo
-Message-ID: <CALtW_ajx9GGRh9US=KxKFPf6KSefpJtYhzUVOo7usO_TVDs-1g@mail.gmail.com>
-Subject: Re: xor_gen() md-raid6 performance improvement
-To: Anton Gavriliuk <antosha20xx@gmail.com>
-Cc: linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-Spamd-Result: default: False [-11.01 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:dkim];
+	R_RATELIMIT(0.00)[to_ip_from(RLij3mi59gqb8x3hiq1dpi8wgt)];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	RCPT_COUNT_GT_50(0.00)[60];
+	RCVD_COUNT_TWO(0.00)[2];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Flag: NO
+X-Spam-Score: -11.01
+X-Spam-Level: 
+X-Rspamd-Queue-Id: 630761F74D
 
-> [root@memverge3 ~]# fio --name=test --rw=write --bs=2048k
-> --filename=/dev/md111 --direct=1 --numjobs=1 --iodepth=64 --exitall
-> --group_reporting --ioengine=io_uring --runtime=600 --time_based=1
-> test: (g=0): rw=write, bs=(R) 2048KiB-2048KiB, (W) 2048KiB-2048KiB,
-> (T) 2048KiB-2048KiB, ioengine=io_uring, iodepth=64
-> fio-3.43-31-gbfffd
-> Starting 1 process
-> Jobs: 1 (f=1): [W(1)][100.0%][w=7438MiB/s][w=3719 IOPS][eta 00m:00s]
-> test: (groupid=0, jobs=1): err= 0: pid=4837: Fri Nov  6 17:02:31 2026
->   write: IOPS=3791, BW=7582MiB/s (7951MB/s)(4443GiB/600013msec)
->     slat (usec): min=8, max=3073, avg=35.39, stdev=14.87
->     clat (usec): min=2334, max=44420, avg=16845.30, stdev=3951.02
->      lat (usec): min=2375, max=44455, avg=16880.69, stdev=3955.63
->
->
-Nice improvement
-Run the same test using a single drive, in ideal case the performance should
-be 4x of a single drive.
+On Wed, 04 Nov 2026 20:16:45 +0100,
+Christian Brauner wrote:
+> 
+> snd_cs46xx_proc_init() stores the chip in the private data of the five
+> region entries, but snd_cs46xx_io_read() reads that back as the region,
+> so a read of /proc/asound/cardN/CS46xx_BA0 and friends copies from
+> whatever sits at the region's offset in struct snd_cs46xx instead of
+> the mapped registers. Store the region.
+> 
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+
+Reviewed-by: Takashi Iwai <tiwai@suse.de>
+
+
+thanks,
+
+Takashi
