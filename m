@@ -1,73 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.181
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794069870;
-	b=1GcCfaQ2kNlSh0U76kJcRsZQhOpcL1uhGo6tSjJrjRLx9ppWnPPnv+FyJUwcS5ki0iCh
-	 LFvB6oOJKLeuosoNQqn+/59wD7OKZmpLNeI/KsxKr9oeekRyxHs6EBQ7OsadIxXH2mFh5
-	 Fs7NGHZJDSkN9f5g07N+sdjhBHMzM62qjGUqwdjEQ2kHhNee1pFcfsl4NevStJSvAfHMv
-	 mCG228IaMh7DhIEAa+JzMLrt4AmDPXzOBnLpATU1xwk4JijYWdkVZ+RGslnmQsTQ1117B
-	 nbahlAO87PpUZD5iz0xmqQsSobDoFQSm9FrJOzrb7a7EOEyCAJ/LaSu3gbvBUUXICvA==
+	t=1794069879;
+	b=t6UT0yZRzC7m+mhn8d2nqAvlv+HkxI2p/0IGaNiBXRSozyPxtnUpAGf84qUqqzNjWmLQ
+	 d1tEpvWgFadIvUvgRQ/QvEi8TWwTAbs3oni5RGLgDuRClDMjCrd+dYDM6apAhyJ+ay6W/
+	 yItO+E+bd/NbrwvFFVI0YWyns5RuTDMTf9iNaOWAubb5yv5fCxzhvpEmKlOvTQvJF4elF
+	 SDRCe1F3srnlktEft1G0eB9SkopLTefTWRpIX8MBJLFJrb1bqUngNazK8oplzSAyYjhyn
+	 I3h1F8WM4SICjhnbe+jUJ6XXpCTICh4BCwnM1rlBTYjNBIRyi0TjeGkiyevidJRUO/Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794069870;
-	h=Received:DKIM-Signature:Received:Received:X-ME-Sender:
-	 X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:Received:X-Mailer:
-	 MIME-Version:X-ThreadId:Date:From:To:Cc:Message-Id:In-Reply-To:
-	 References:Subject:Content-Type:Content-Transfer-Encoding;
-	bh=G0TBUyhmKh6st027cPZY/A7ojV3HiUgM2XJr1Qt7yqs=;
-	b=jCi6hSpEXkeet96WrZy5W91lfRhM45iJSPTbDeyMzZ2A1Eq2yWMd2S1Lq6euc7jDUGlU
-	 Mu3GiGXK5eOq7DWV+azuTmG0fQxi3g1+Ia+X4eypsn74aDdIsg2NbC47Zh+zGZILz0qVp
-	 2MDDLxMDfTEVwjzlhtOfd6pQ37Y2oin7YDOS8NZHv4lTyT4yChkwlq3egerqfHaX3bkcH
-	 LWzjFG21mTHBne793df5aoBkwdJHbwDHAalw0TK5wTTvQzJG6yssbt00GzoK2AH2dHu8R
-	 +ib66m1jvty0ZqdIfrmG3Ql5I9EYUiR1lYLoGbKOyZt4hH2VU3C568ht/oBMSX+3Qvw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794069879;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=cwPj/yL5tuc3miMt3pQkwgcVVGWR+Pp3SqkYDrCFSX4=;
+	b=JAulS5+s6pcNDPQuK8//vUCZu9TspVKW6KMAY3dPyAFGoSRzWNDwbEXekgoNkIFgeUTe
+	 E5Ccno5tjJU3eXPmXqLg2U0gcjlN7dg/ey7ZJT+NcAoK88yzk2hrG6DXi+rjrlpYv7rZp
+	 5kiYX/F3YkuUbHFbPX+kq3TUpa7RNRt7O83i/dBlxC21cAC8yvzkqooxw2pAt/rXieQDi
+	 gceiQe7ZPiZg/iRX0L2geFtsntQqGuF0cDN4KavLwpok1ME4D1yhvbJ1TiLRBXo8/O9Lg
+	 SVpLPgG9K7j0iJ/6ByNsXW4AKr51ArYkr12TLMozM7IyH37tUZjOLZ53kERhA7xz/qQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Q3lPZ/DM";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=bYZMD7DG;
+	arc=none smtp.remote-ip=74.125.82.181
+Received: from mail-dy1-f181.google.com (mail-dy1-f181.google.com [74.125.82.181])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68160606A33A;
-	Sat,  7 Nov 2026 16:44:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25CA0606A33E
+	for <linux-raid@vger.kernel.org>; Sat,  7 Nov 2026 16:44:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 25CA0606A33E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Q3lPZ/DM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08C631F008A5;
-	Sat,  7 Nov 2026 16:44:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794069870;
-	bh=G0TBUyhmKh6st027cPZY/A7ojV3HiUgM2XJr1Qt7yqs=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject;
-	b=Q3lPZ/DM6uQ6KxKqeMit86Uw4h24/Oj4MoAMD+U42UyqHSJq4m8RqVF8SFBtqbgkl
-	 uLKz7uSZCEmnbuYs91ZPRuPISbz6KSUXhqlGhYcdFXvRs+fV4tNtz+fMJYc6LC8oMR
-	 oFDFo+Teg8oUBRgmiYpBQfMzAA1XArB/oe6USeIIpMwY/xLRQ+GXugleq6FMCjsnvR
-	 oL0GzjIOrGJ7szvoPIr8z2eQLBvFfcxaFY5OSG8DuQTl7sLA5iAPsPb9X1GVQmFWRl
-	 v9+b0K+DLHBtV/h4SwZCCLNGLR2bk/lGk8/rlnYsXPGkRtp7eujxFA2FlH7COmPBxC
-	 cINjf9/GH3c6w==
-Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 3FA84F40067;
-	Sat,  7 Nov 2026 11:44:28 -0500 (EST)
-Received: from phl-imap-15 ([10.202.2.104])
-  by phl-compute-10.internal (MEProxy); Sat, 07 Nov 2026 11:44:28 -0500
-X-ME-Sender: <xms:bFXvandvnO8fT9Ny0BCMkPPq4EFCNpni2vpykfELem4aQ_ooyMfLPQ>
-    <xme:bFXvaoAzA2Ev766iXQhLHmbFgZ3OtIBo7SEoGueehftkt2V279uG4gPc-dHGVACl4
-    3eUuL64evjIj3at6Odni9S14c19BTcr-N9PUxIQTqRuyqO5bQpFvwjH>
-X-ME-Proxy-Cause: dmFkZTFFrV0pX7VIZHKjzx4tcEIBivmHNdZcL0Pkl1lJMTa+tHru5crcMzNJ3Ws5mFJzd2
-    XoT9/tbpTRQi5ChHG+aO2WivfTQ8W/O4HZ8iiDaUhj+m1NpPL+KAn6GP/9UxfYRXNa7cOc
-    joX0s1lnfj++o3vhXCB/o3bz0dxm7d2O02yAjwOawfYiOaHUVz/507CGSU2dlZJBdpa+Lz
-    mT8nq07x/0R9yoox5e3apvL89qLOUo53VSUiLJOZQeHJ+y5wU8qmJSABIKtsK2dgt8sOGA
-    T0DJ96+tszK/FKEJttYLQ0VT04nQzocHzMxQ4SOw7VSUIeN3vxtysUHCL040YGaqf23dGj
-    ivvheSUM0dUu5CxVO2D3v9xKFwvw7gFiwnI6UZYJP+uiexSaebviQXnQh8wljTipWYfAFU
-    IDtD+lRbDheFBrn7MsE10utxcQB7tzgbJi/CxporQ/0eC9ISB6TmNPCUWQW6EWtOUS1W/V
-    EfIMfzoVkcdnKDH3f2go0raKAX0SZ+/rZLtKb8QoFwHn2sRk1lRwwIBewPwH60y5mUz1IA
-    WNrlo2pYNCHcEWWJdaW35YV6jWZAX+iToSdrBmlEz3no1vvx1gGr28JIlz5xbU3YSZffVC
-    XOYDs0bBCET+39NKG1Rl3ZxSLfa2WPKKz5qq4UxbERsnsGjG5/I8hnQr8ljA
-X-ME-Proxy: <xmx:bFXvaiBZo0cONei-bs8Nn0XJuMfXZQKqSffOVJ8zNsNVaUiIUh4gog>
-    <xmx:bFXvaj54dGXonsoLgi1ZS_BqxfhmI6DHm1oV66RilkelMocJVZZgbg>
-    <xmx:bFXvahk0NuZcDB1AhZh9ACjM7Ufrv3Lvp0-YaZL6LBc10s6td6_Deg>
-    <xmx:bFXvaqY5dGBTySVeOdGC2PKrnCR7w_fFScEZ0z0S-oALV8B19pi_ZA>
-    <xmx:bFXvagqosWNpEErQ6k8RVnvtVK1EAxpNL3pHPEOnn-RYopUKyguaOx3_>
-Feedback-ID: ifa6e4810:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id 12146782738; Sat,  7 Nov 2026 11:44:28 -0500 (EST)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=bYZMD7DG
+Received: by mail-dy1-f181.google.com with SMTP id 5a478bee46e88-36ecc11bd26so213981eec.3
+        for <linux-raid@vger.kernel.org>; Sat, 07 Nov 2026 08:44:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794069878; x=1794674678; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=cwPj/yL5tuc3miMt3pQkwgcVVGWR+Pp3SqkYDrCFSX4=;
+        b=bYZMD7DGhru4EwZGA53HcQKs9PXfxWRoYdEa8UkS5cPIVeJk2Trobpsc6CR25V8iNg
+         VtnDYeUP9TpLEQ9awEQPqbhrGzzb7CdET5VWPA8PWPk01v//VR0P9XtPLaXBCOdeUX8Q
+         tZyTh1e5t9VZQv0e+WBaxcvXPpbXsRf54qKkEvHFI648VVT3A4sh85XmQcMrS7SzNEFJ
+         1AzaymQ8xv72gaKHR0tbsS0hcegYTcXehOCNjd1hxesBbHFJwi8/4vUvBbGF8Cet+pQa
+         xfXMB6rxqHKL9nz1EhDU7yvO+teM8IqQ/TRlqrvJpI2X/i8PCxhAIyRJjg2sMPyKyekr
+         ftEA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794069878; x=1794674678;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=cwPj/yL5tuc3miMt3pQkwgcVVGWR+Pp3SqkYDrCFSX4=;
+        b=B1j4a8XqNrbFCvdascjC+6utVFV5RBr1Bf7BWva0oJI2CZV6WZHN3enKXG5ziwCCus
+         tAQBuWtEkhQ7QBLr+MhMneMOYFYb54Aokukat3SgcioPeSc4ZABCnYZ6PiKq0aehduuE
+         vFHGslaPPoBqiVxBz8m56OgqbpdldgUpfxNw+xpCswynXr/oNngvBICz9dwCTkzWp8m7
+         19Yi3d5LwRiJOyNmfjQ+9uFFTNTDkflx9k/i7V/LgnXzVd/BQUkXQ5mvOwwvO1iz16UH
+         YTRo0aW02S3c/WWCCUX/1DetWNhvzgnejGE0LVG4CIfvdh2+fLOnCl8jdB/xbPbvTS9m
+         ewWA==
+X-Gm-Message-State: APuU4Z/iAuOUMdi0T8KT6fd2xYgfvw6M7f5VOAC+gFZe5pHYxfI0jiAv
+	i/05nLuf2mo9SDp+X/umRtC9gsBbF1yhC87PRmTVrueZx/IDfiw/98+fqxsodHC1
+X-Gm-Gg: AYBFou1cve8t4DWADJm58bWhH179fgmEozuEuF0PY4aJZIVv2nl7Oy/0ozFkegZ7WzC
+	JXrWqqDPY1gpIImwtFLP6YHsdt08Vv/eeqAVJ3HD0iJj0B4g6J86iNcefeqOoIaGWWBygKaB5nX
+	uj084P6zMCCyWo1xauXp4no8w40HcmfwVDkxe5K3749lRwP5PEu1m6+Y78xQJoCsufLTBEjGoh+
+	0WDsuU7gontQuzbmlHrcQF6LVqsynAHjmr9zcBwOSHD8JzTjiaIazhFvxbNdYXpDCaTaF/bu87b
+	dBiWnlZNA9dvKjhXo1eKRcnl/K51ECVMwfvZ8swmFIbvYc/WpkKtnglZsRYI84RkDrej11U+QT2
+	Ow+3cFKlStgQNKg2JVocWOAK4NeBVHJFnx7OCrt9l+v2V2GMY1qATGBPghse2cACWLYEBGym2DB
+	66qlpRzesE/kQm91EhAc85fO/+DblXY13dpilZ98vh83d2L7sD0jWs7m5HOyIsx71mjN7AcoZ0V
+	nCGf7UHBHPQbnbZ01PZh5xqI0ou8KcGOqsWMYAijObrxR33zgbA0PaVe9thQUko6nju/p4oszaE
+	sK++xoycykWnt09iI8opLxWr05/txrdHDRFpFRAELqem9J7jm7C29oLtGQLstA==
+X-Received: by 2002:a05:693c:8852:b0:36c:a1bc:6114 with SMTP id 5a478bee46e88-36f6f3a068dmr6131284eec.0.1794069878005;
+        Sat, 07 Nov 2026 08:44:38 -0800 (PST)
+Received: from localhost.localdomain ([142.249.36.161])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36fa8d44a5fsm16172802eec.7.2026.11.07.08.44.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 07 Nov 2026 08:44:37 -0800 (PST)
+From: Chengyu Liu <lui2012qwq@gmail.com>
+To: linux-raid@vger.kernel.org
+Cc: song@kernel.org,
+	yukuai@fygo.io,
+	Chengyu Liu <lui2012qwq@gmail.com>
+Subject: [PATCH] md/bitmap: fix missing_pages restore in resize rollback
+Date: Sun,  8 Nov 2026 00:43:05 +0800
+Message-Id: <20261107164305.11476-1-lui2012qwq@gmail.com>
+X-Mailer: git-send-email 2.25.1
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -77,71 +93,31 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-ThreadId: A37rHgw9iumg
-Date: Sat, 07 Nov 2026 11:44:07 -0500
-From: "Chuck Lever" <cel@kernel.org>
-To: "Christian Brauner" <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
-Cc: "Linus Torvalds" <torvalds@linux-foundation.org>,
- "Jann Horn" <jannh@google.com>, "Josef Bacik" <josef@toxicpanda.com>,
- "Chris Mason" <mason@kernel.org>, "Jeff Layton" <jlayton@kernel.org>,
- NeilBrown <neil@brown.name>, "Eric Dumazet" <edumazet@kernel.org>,
- "Thomas Gleixner" <tglx@kernel.org>,
- "Alexander Viro" <viro@zeniv.linux.org.uk>,
- "Jonathan Corbet" <corbet@lwn.net>, "Christoph Hellwig" <hch@lst.de>,
- "Greg Kroah-Hartman" <gregkh@suse.de>,
- "Joel Granados" <joel.granados@kernel.org>, "Kees Cook" <kees@kernel.org>,
- "Jan Kara" <jack@suse.cz>, "Jan Kara" <jack@suse.com>,
- linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-s390@vger.kernel.org,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- linux-um@lists.infradead.org, linux-wireless@vger.kernel.org,
- "Linuxppc Dev" <linuxppc-dev@lists.ozlabs.org>, netdev@vger.kernel.org,
- ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org,
- coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org,
- linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org,
- dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net,
- jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org,
- linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org,
- linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
- samba-technical@lists.samba.org, sparclinux@vger.kernel.org,
- linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org,
- linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net,
- "Takashi Iwai" <tiwai@suse.de>, linux-input@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org
-Message-Id: <a04dde49-8373-4687-a905-10c3a3b89492@app.fastmail.com>
-In-Reply-To: <20261104-work-procfs-net-v2-8-221e2437fed1@kernel.org>
-References: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
- <20261104-work-procfs-net-v2-8-221e2437fed1@kernel.org>
-Subject: Re: [PATCH RESEND v2 08/13] SUNRPC: let procfs copy out reads
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+The rollback for a failed clustered-raid bitmap preallocation copies
+old_counts.pages into missing_pages instead of old_counts.missing_pages.
+The counter then reports every page as missing and can grow past the
+page count as pages are freed later, making the used_pages stat in
+/proc/mdstat wrap around.  Accounting only, no corruption.
 
+Signed-off-by: Chengyu Liu <lui2012qwq@gmail.com>
+---
+ drivers/md/md-bitmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On Wed, Nov 4, 2026, at 2:59 PM, Christian Brauner wrote:
-> Implement ->proc_read_buf() for the procfs channel, flush,
-> use-gss-proxy and gss_krb5_enctypes files so procfs copies what is read
-> to userspace after it unpinned the entry.
->
-> cache_read() takes an iov_iter now. The rpc_pipefs channel file passes
-> one for the user buffer and behaves like before. The procfs one passes
-> one for procfs' buffer, and a read still hands out at most one request.
-> A reader of the procfs channel file whose copy out fails, a readv()
-> with a bad later segment included, loses what was handed out, since the
-> request moves on before procfs copies it out. If that was only part of
-> a request the next read returns the rest of it. Both flush files share
-> flush_time_text().
->
-> The procfs files are removed when the network namespace goes away and
-> that no longer waits for a reader that faults on its buffer.
->
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
-
-Acked-by: Chuck Lever <cel@kernel.org>
-
-
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index b8325cb09a37..66ed92a0715b 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2495,7 +2495,7 @@
+ 				/* restore some fields from old_counts */
+ 				bitmap->counts.bp = old_counts.bp;
+ 				bitmap->counts.pages = old_counts.pages;
+-				bitmap->counts.missing_pages = old_counts.pages;
++				bitmap->counts.missing_pages = old_counts.missing_pages;
+ 				bitmap->counts.chunkshift = old_counts.chunkshift;
+ 				bitmap->counts.chunks = old_counts.chunks;
+ 				bitmap->mddev->bitmap_info.chunksize =
 -- 
-Chuck Lever (Come to NFS bake-a-thon! https://nfsv4bat.org)
+2.25.1
