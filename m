@@ -1,89 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.44
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794074348;
-	b=PqrIdKjIQoDDfqIWhfD6dcxHhPa3XrwHbrGRCdMgZn7PkGNRyBLl7+n2sVqzxQByXr/W
-	 sD7CKMQfnfOejnvqEIqbPOQ091GigH7ICDonyC245vXQkuJ1uObwIz27VOkiPAs2YA/RZ
-	 piT+N57zjtZOI+YNQ5MY5GLYeP6pJRdu/CezLFVPYkGU6zs/f+HIK8ahorfZwoYbavnar
-	 r28j3EhtzGsHQXblpC9IIwoxkZ4vxluq2zXd71B6yc42jwoLdES5ErTHvmZUWqN7DY07H
-	 vxeWFA6A2uaNIh9VUXSXQ4UZRkrxexDOcpCLVUHt/Jo8urhwXNlAzuDFDioc/BEWgAQ==
+	t=1794081201;
+	b=0dUfQvgTfReoZVnLo3NoJCiJopSV+y0Kdve00jIw9p8lklVy/pzO+LfOJz3EI6aZ7r9T
+	 RqKbZhbwTId3bSAfvBw3DEB/BnOOEO3gl5oYXK6fvNrRxdd9yh1uhrRsyptAzLbok8HsI
+	 Ub21A9zrpv1WlP7Hqa2WaQuuEPhj3cA1Dm0o/+bFEwVCpXpxd+9f+FVd9TfbHFvV4ndE/
+	 aEtu7R5zvQ+iYqngHJity42uDHNw/q7/IpA7SjZiSWfriAxnH+zqnLQ1XrQG4dGu654HT
+	 BtCl+IUBb1c7JCCOq3caNYxNuK+jjgarTKoM54DUpuUrdeKXlprXbhFKL5+UfQLCrTA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794074348;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=zyJeVbIylLraJ2Myhq2ortYzjqn4IY1ybAfIUyodYNA=;
-	b=bn2U5GQEulZkep51MdPFtd7tORnGcusandyrhRu5tCokAxUzUFFLkcrNclfEBQJZ/4rr
-	 RuXrTQApJxsfNAb/awcMOzlV0fRpOpdBVu3nTzf2JRJyxn5Ny2/hLYqTSEhR1gQjeCk3O
-	 XSG41UGB30tHnYEE69FITJlA8vmfPEAVjPzrDXCBhDCTQ+LFUCZWG6wfcoAdNTdX+sBfT
-	 Q0dfW3bFjhpVUGfxNnFxGW/BFidK98SXSwg3V87FBkDnLESG6v0sOL37/5gDpRmLc5bla
-	 yLDoiQLNRQLDXTVPVDsCEBVcCtDpWF8X+RympHytt5Ybj3KCtx/9naoGq4o+QJfikrA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794081201;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=AvZ97yWocWxohysGgiociKqR5TlzHE3BV/H/45G4aYE=;
+	b=xPoGdBG17jYKg97xjtPoQ0AdtO0jKX1l9b8O/dhSDhREjisPwfbGmnRFaXYWUfczB+lD
+	 7LQOGXEnUqty5kF/fOxEbtZLeaaxk259yze2LyHhsZdkPjftgcz6D4fVTjLvf98c2MQ7P
+	 ONlCCpczkukw6REZF3vRpbUB0YpJNyUP9FeXWYqumgIPPfeY0yUmt2lR5+f6pR+sJFaG7
+	 Fds3GNaLcDE/M7MtMh6HihAoTsfVntlHB+mEWUP8qZHEnH1V4EqIQ4gz3aA9hMOb0LIsM
+	 2iiZz0QPWLkwTtrEBHG3SQUYtww4ROcTrWYy5MsDQ6ftLkVulqcobdOXgLK9cqtRAyw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=QlP5C+uT;
-	arc=none smtp.remote-ip=74.125.82.44
-Received: from mail-dl1-f44.google.com (mail-dl1-f44.google.com [74.125.82.44])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OAmNdvRD;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3036606A326
-	for <linux-raid@vger.kernel.org>; Sat,  7 Nov 2026 17:59:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C3036606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E02E606A326;
+	Sat,  7 Nov 2026 19:53:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=QlP5C+uT
-Received: by mail-dl1-f44.google.com with SMTP id a92af1059eb24-1430eec0070so51667c88.3
-        for <linux-raid@vger.kernel.org>; Sat, 07 Nov 2026 09:59:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794074347; x=1794679147; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=zyJeVbIylLraJ2Myhq2ortYzjqn4IY1ybAfIUyodYNA=;
-        b=QlP5C+uTjgSHFjFkU44etWZWOpHP4+H06TKMEbzaSKTKQ/c0Gb6o40xH42ivxGfKJQ
-         5PBkAkiFgxcC5jrOGreQPnmdHboH7UWJLSiHx67sf486vwQmoPmbslq8L4vvdBpbN3Yr
-         dX5tomlHM+k1Bhz3JNDxlu+BqAI/Nzm/F5I4t69PD79y8KlwYssRm1/cQ8AWNR7ZEJzT
-         +oGZLrbqrxGUcf4sgjfn3sJyIitMeFt9gyQycNtQnHlYUpCdMi1L6UfmNnkzyIexqD10
-         MLhOiFa8ceWdIdi2xtUDRLnx1bmPLalkWYO3C6SwfptavGf7vvyYoR7HKxlTujxBy9Sf
-         +dFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794074347; x=1794679147;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=zyJeVbIylLraJ2Myhq2ortYzjqn4IY1ybAfIUyodYNA=;
-        b=sfeAFc1YVW1t1Sc51F2grCT8rHR0bZKRc3/Bl4092RRO6orJMp7JmVXhF38mjNeJoD
-         XPA7NQX+pTyF1uEoVkue0J0mdfhAVRaAp+DVfQthPvMpaZxgJtoSs62XymSFx+bZQM04
-         Yql+7kDJR+JmHanixN2JkUhvklHTnW+Xo8bEs9T4PrElj4VWdpxx8UjDFlGZKTastlt+
-         l2Gak+HhwDz3BaN8YndKNsTmvvA8wtb12CVdBwLYjIKtMQdGkVJPXzjG/14MieSbBsKa
-         WFy3KYFxXiKh9oNSzjKYIYf5vNrO6Yw/38jd+GJeerf93ISQo8ZWIO1LpefrUZAyn81/
-         P6Vw==
-X-Gm-Message-State: APuU4Z8aMTVyWmmSApnYIboX0xUTYH82IIykzzer55B7vGgPEm/ARAOf
-	THstEuSleexyN1yvBQoEuv2rEnfhs6M73V+PpJLVyXyhoEBr8Bl6CcrmwLHUZeW4nXY=
-X-Gm-Gg: AYBFou2RI5PxqYLa+Y6XWAneNU3VoyU5ElRmdJ7MuM7A4T/76mePIGI/G3Cm7fG8y2K
-	SqEDsCz6YmqnwtLxEXjkysoEKcETPqXnsPvE2wAyL1Nczv/myMZXvrDwA9mrJ+tmZ8Ga3RrlNN2
-	T7xi7VGsZs2IHqscDiEhi83Xu/kA7JO7meE/Gks3+cuWeAiDCBhsGfdQT8yx0zyMxp3yY1IyLnp
-	CPIJe6MUG2t8o1rT3toTtvnetNVVllQtFuYijKNf2j2BAoNBBJOOElJAVuIEFzwhQiSHqxcuCaJ
-	y++3EvxakMQMpk542Dm1p4FDIRLTUTh+Lwwkauarbvy1zgvSdKas3mQn7H1ry+2XdEYnbDgz6VZ
-	Z3TZlCt/S1K3HJLS1nzn3eLzxot7rlLvF62bz/CdSjdriJIyHetA9BfQvllSLM8co7nALXz920R
-	9BANrNJQvTfVF+8ODRwt68X7UeSLXNVvFTTNAnZF6y2enhJWuVzQBaj63QZmZIwsyry/tjLU47n
-	w06DCsi7TrtTaMT5EyO5Mwdeye2lL4FPEdxY6m/TDqbfXDWu7/tP42iqyenyHvvZLceflt8X4BL
-	+kC3hH8LQ/qOgbL8PxKsaNSdm94CNBZ05APwwFzD
-X-Received: by 2002:a05:7022:4591:b0:144:fd17:3b21 with SMTP id a92af1059eb24-1b25d1dc9f5mr12715241c88.0.1794074346483;
-        Sat, 07 Nov 2026 09:59:06 -0800 (PST)
-Received: from localhost.localdomain ([142.249.36.161])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b37314626dsm56423c88.1.2026.11.07.09.59.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 07 Nov 2026 09:59:06 -0800 (PST)
-From: Chengyu Liu <lui2012qwq@gmail.com>
-To: linux-raid@vger.kernel.org
-Cc: song@kernel.org,
-	yukuai@fygo.io,
-	Chengyu Liu <lui2012qwq@gmail.com>
-Subject: [PATCH v2] md/bitmap: fix missing_pages restore in resize rollback
-Date: Sun,  8 Nov 2026 01:57:34 +0800
-Message-Id: <20261107175734.25918-1-lui2012qwq@gmail.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OAmNdvRD
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD6681F0089F;
+	Sat,  7 Nov 2026 19:53:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794081201;
+	bh=AvZ97yWocWxohysGgiociKqR5TlzHE3BV/H/45G4aYE=;
+	h=From:To:Cc:Subject:Date;
+	b=OAmNdvRDj7vqEWk7fTx9FoiUHwJKkmtQjHz3oVGb+Patc9cYUBAK1s7/6lIhq9aMV
+	 UeRf6j8QOy5vSYBUH4320gmZA8ePyIbmtvbtA8ZTPU+pPSvzRvGgp+KrsUOX9hFKqs
+	 OeE+PzhXr3sdXGtL9oSU01FaoBVR3TpEIJrTJzony2gE/S3EkhqAyURKOk2iIzBVeT
+	 0CLjgRf8C5cHvaCUY+FJD2acS2tb53yM9Za5EU34Cv27uEAMBdNKyTQQxMJNp30Vsh
+	 fNM75pvb62rBLwoVEkzJrD1MirL4j6Ld9SEVX8Jxza/nATnCUrvHKbwV6Fj2qP06/P
+	 Wpipmj9F7INrA==
+From: Eric Biggers <ebiggers@kernel.org>
+To: stable@vger.kernel.org
+Cc: linux-raid@vger.kernel.org,
+	Eric Biggers <ebiggers@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 6.18] xor: add missing vzeroupper to AVX code
+Date: Sat,  7 Nov 2026 11:53:18 -0800
+Message-ID: <20261107195318.57068-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -95,33 +60,62 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The rollback for a failed clustered-raid bitmap preallocation copies
-old_counts.pages into missing_pages instead of old_counts.missing_pages.
-The counter then reports every page as missing and can grow past the
-page count as pages are freed later, making the used_pages stat in
-/proc/mdstat wrap around.  Accounting only, no corruption.
+commit 7b8fc26c40d6cf4c6751a045c9e42bbb7e78d81b upstream.
 
-Fixes: c9d650322829 ("md-cluster: always setup in-memory bitmap")
-Signed-off-by: Chengyu Liu <lui2012qwq@gmail.com>
+Since the AVX optimized XOR code uses YMM registers, execute vzeroupper
+before returning from it.  This is needed to avoid degrading the
+performance of any later SSE code that may happen to be executed.
+
+(Backported to the old organization of the XOR code.)
+
+Link: https://lore.kernel.org/20260831212248.213805-1-ebiggers@kernel.org
+Fixes: ea4d26ae24e5 ("raid5: add AVX optimized RAID5 checksumming")
+Signed-off-by: Eric Biggers <ebiggers@kernel.org>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: <stable@vger.kernel.org>
 ---
-v2: add Fixes tag (spotted by sashiko)
-v1: https://lore.kernel.org/linux-raid/20261107164305.11476-1-lui2012qwq@gmail.com/
+ arch/x86/include/asm/xor_avx.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
- drivers/md/md-bitmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+diff --git a/arch/x86/include/asm/xor_avx.h b/arch/x86/include/asm/xor_avx.h
+index 7f81dd5897f41..c6450acd055d1 100644
+--- a/arch/x86/include/asm/xor_avx.h
++++ b/arch/x86/include/asm/xor_avx.h
+@@ -50,6 +50,7 @@ do { \
+ 		p1 = (unsigned long *)((uintptr_t)p1 + 512);
+ 	}
+ 
++	asm volatile("vzeroupper");
+ 	kernel_fpu_end();
+ }
+ 
+@@ -81,6 +82,7 @@ do { \
+ 		p2 = (unsigned long *)((uintptr_t)p2 + 512);
+ 	}
+ 
++	asm volatile("vzeroupper");
+ 	kernel_fpu_end();
+ }
+ 
+@@ -116,6 +118,7 @@ do { \
+ 		p3 = (unsigned long *)((uintptr_t)p3 + 512);
+ 	}
+ 
++	asm volatile("vzeroupper");
+ 	kernel_fpu_end();
+ }
+ 
+@@ -155,6 +158,7 @@ do { \
+ 		p4 = (unsigned long *)((uintptr_t)p4 + 512);
+ 	}
+ 
++	asm volatile("vzeroupper");
+ 	kernel_fpu_end();
+ }
+ 
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index b8325cb09a37..66ed92a0715b 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -2495,7 +2495,7 @@
- 				/* restore some fields from old_counts */
- 				bitmap->counts.bp = old_counts.bp;
- 				bitmap->counts.pages = old_counts.pages;
--				bitmap->counts.missing_pages = old_counts.pages;
-+				bitmap->counts.missing_pages = old_counts.missing_pages;
- 				bitmap->counts.chunkshift = old_counts.chunkshift;
- 				bitmap->counts.chunks = old_counts.chunks;
- 				bitmap->mddev->bitmap_info.chunksize =
+base-commit: c3f63d70f236bb7685e6d11d1d9b5b351552e600
 -- 
-2.25.1
+2.56.0
+
