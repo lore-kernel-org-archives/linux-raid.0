@@ -1,53 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794082109;
-	b=5Oa/kK58EVepqh8O6p2CWoeHy11SXWhF3P+dGiIVLGLQvRCbeaH48h/GA17XaGj7CpqV
-	 okUmJLBGtm6FuXXMBQ1oTdWPX5kC7LVevQSoVFKTrWRes05bC80mNO8pWob7V6waeIP0G
-	 ztDm57b1c+IkeGii+aFm7PzEK0zdiHvnjw3BJcdTYFJXaUHSqnWJHN4ROnvnNRQ2rAmZP
-	 uIDkO0ZHHXhJjM4W4rcoNjHs2mFBpY1r6xvdYVkKyaRtqmyYo7jpAvCAIaxM9oKyJQfp6
-	 0sozoPJYvuwSfgn/vON/YW518a0CNmh7RM5N/B2bmRSslQklyZNsQRilL+S7B2Cvalg==
+	t=1794082155;
+	b=H2O7YqTi5L3iK+5ePdi6UoRirKbWnwq75lON5/cevHEVTsSRufXkt6F3S38CFTUoln/3
+	 7S6pX3LmStTC8tVbMHqI+UY6Z2zkWVoNeUVfLt9U4yfIfTHOb/A6Ox+m3S1VCt/qXBPS0
+	 ZwAjetzhvvqpJ9HmslTcP7DMIZVYV0RIQ95y28uOZAsgTKdq1F8EGcxRXHF1q7PD8o6Jo
+	 cvDqYEeZJvSXreVnicL4W/rdtU4Abf03MlncGCHr4GKhaHJDnCoSZoGu/9QvADU0KrHzt
+	 2ao5ZpHZtVHwjg6+q/brS9hvxvb02mmnxp+ud5QQsfjIV6fl35Lo9GrMA2IobKZToRw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794082109;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794082155;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=EhY9IdoF90/BI/O3GuB4KjcdWlLliaBr43p8vRIPJzY=;
-	b=mxo4nVDEql97Gps4MxDeLPriOlHE06XsvIX3p0vFmVQe8CpY5Jpd8juv1nLGtlG/fdXp
-	 kv54zAaz0d5vy6L71MMyo2cclXHS1/ibiZJiHXzE88S9Q1ufq4Gaaid6gaUIcKbLLI0IX
-	 xn9aVgXvbmN0q7XhY57OPi/WTa8GDJode6bagWS6w+0rxedSc9iOZ1bejdITOz91LyIfk
-	 BlMRI6QPCT5nfZRjT1LXYM860euU6KoicZEvPvzEngTcUEc+lRVAZFFqdzy6+AnwQoiZ7
-	 pbC14O89+KqVa0serhkG7HPIknnk3y3kaKpxyQblNsT/3mbjqMXM23AW4nOLOmgxOBg==
+	bh=heCP1ctwgt1GnMrAWvwe4yb/DKWEjkRjEYjYKC5xWTU=;
+	b=GOw3co0/p+vfHOK4hk3W76cQpyRerJG1r4Pc7YuohOv1Q4hivyC2QJr1iuWNzsz4S0H9
+	 VdUlJhNJ1LLO0B1nQVGNKc4A/jAGc/zVLmr4JK3YTp5geo3dDr2LXV4CVaGPDy7Ra7m6Z
+	 fvk7rdaXax7qIDu7rlZxBS5kB+xNEXW5tdK08G9DtHZEys72rWzie9atiNfAnTNigYIP/
+	 KhjEwWOFyJBrDkjIURUhAPFxMD+u6s090+NAXJDKY9VyaS8ZFCuDjMOAhNsJTP0hu29H8
+	 AjAbJbHX43Zry5jG1qeZ3DA5zu/m4iz3UVXwq3J8bJT2wAlfp5DMgsSEOOD4mjvw1cw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k7PkuVaX;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jJSwbYOR;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DD8D606A32C;
-	Sat,  7 Nov 2026 20:08:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CAEF606A32E;
+	Sat,  7 Nov 2026 20:09:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k7PkuVaX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3B5E1F0089F;
-	Sat,  7 Nov 2026 20:08:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jJSwbYOR
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E140A1F0089F;
+	Sat,  7 Nov 2026 20:09:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794082109;
-	bh=EhY9IdoF90/BI/O3GuB4KjcdWlLliaBr43p8vRIPJzY=;
+	s=k20260515; t=1794082155;
+	bh=heCP1ctwgt1GnMrAWvwe4yb/DKWEjkRjEYjYKC5xWTU=;
 	h=From:To:Cc:Subject:Date;
-	b=k7PkuVaXpfvuI+EupOhY4U3OOD5jmVBX69yNhls350uFHTjkt5QX+XjeB/sYlsVqO
-	 6vHfniglxPmiEju2MzhwgtZvn1UMY6WpCLJMNc9dlFbMCZV+U4XWncIVOTmOTUSIRV
-	 OIQeQIoU5NO0tINb1EgO2cSAM9O65CuaUFssTS/LSXkWf8aQojJrkaooH8nxo3K5iT
-	 CWytDyFmDOmSjIwzVJ23PxeCaVxkLm8EdVWMULJ+0Lyf2QyK6pxPLKT/rguevAz2M9
-	 Ub0CAn6kaiqH2Vh+cdkNiObIEZG8YtQWqkDLA2Q+NHhJDSCevkAm/2OlTdD17J0eHV
-	 DvQlWjwFBxXwA==
+	b=jJSwbYORtvfrGBYGAJ5Q7ESC5x0nA9QPITMb+1yQ6PwbZRQKOSJJt/x8BF5Mp/Sqw
+	 lMApF+nDEYWACOLzixiZvgu3uoHH7g8y+YENT8v46IiJ0O8kEQcU0JC9sOpnNTnt2a
+	 qvzIRWychARkejlIspUfs1Fshn9kczx3g4hMRIsROBaiy5z7jEDVH0UQouHh6CubMR
+	 8zIRDVbIvMkDhoNTzx2IxuDqT9Ec3StiC7Ct6byb+83Ss/3uLU2G3WQMJ01t7owbWN
+	 B3sDK+kfiV9ZrSyeUcQBQKhrnjy9F3pzQKr9i9NBMruaOGD/b5/ZRtFRKviQ8SJxRu
+	 Knm830g8dFLqA==
 From: Eric Biggers <ebiggers@kernel.org>
 To: stable@vger.kernel.org
 Cc: linux-raid@vger.kernel.org,
 	Eric Biggers <ebiggers@kernel.org>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 6.18] raid6: add missing vzeroupper to AVX-512 code
-Date: Sat,  7 Nov 2026 12:08:25 -0800
-Message-ID: <20261107200825.100575-1-ebiggers@kernel.org>
+Subject: [PATCH 6.12] raid6: add missing vzeroupper to AVX-512 code
+Date: Sat,  7 Nov 2026 12:09:13 -0800
+Message-ID: <20261107200913.103158-1-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
@@ -79,10 +79,10 @@ Cc: <stable@vger.kernel.org>
  2 files changed, 8 insertions(+)
 
 diff --git a/lib/raid6/avx512.c b/lib/raid6/avx512.c
-index 009bd0adeebf0..d989ca64847a5 100644
+index 9c3e822e1adf5..30956989e7d74 100644
 --- a/lib/raid6/avx512.c
 +++ b/lib/raid6/avx512.c
-@@ -93,6 +93,7 @@ static void raid6_avx5121_gen_syndrome(int disks, size_t bytes, void **ptrs)
+@@ -95,6 +95,7 @@ static void raid6_avx5121_gen_syndrome(int disks, size_t bytes, void **ptrs)
  	}
  
  	asm volatile("sfence" : : : "memory");
@@ -90,7 +90,7 @@ index 009bd0adeebf0..d989ca64847a5 100644
  	kernel_fpu_end();
  }
  
-@@ -152,6 +153,7 @@ static void raid6_avx5121_xor_syndrome(int disks, int start, int stop,
+@@ -154,6 +155,7 @@ static void raid6_avx5121_xor_syndrome(int disks, int start, int stop,
  	}
  
  	asm volatile("sfence" : : : "memory");
@@ -98,7 +98,7 @@ index 009bd0adeebf0..d989ca64847a5 100644
  	kernel_fpu_end();
  }
  
-@@ -225,6 +227,7 @@ static void raid6_avx5122_gen_syndrome(int disks, size_t bytes, void **ptrs)
+@@ -227,6 +229,7 @@ static void raid6_avx5122_gen_syndrome(int disks, size_t bytes, void **ptrs)
  	}
  
  	asm volatile("sfence" : : : "memory");
@@ -106,7 +106,7 @@ index 009bd0adeebf0..d989ca64847a5 100644
  	kernel_fpu_end();
  }
  
-@@ -309,6 +312,7 @@ static void raid6_avx5122_xor_syndrome(int disks, int start, int stop,
+@@ -311,6 +314,7 @@ static void raid6_avx5122_xor_syndrome(int disks, int start, int stop,
  	}
  
  	asm volatile("sfence" : : : "memory");
@@ -114,7 +114,7 @@ index 009bd0adeebf0..d989ca64847a5 100644
  	kernel_fpu_end();
  }
  
-@@ -415,6 +419,7 @@ static void raid6_avx5124_gen_syndrome(int disks, size_t bytes, void **ptrs)
+@@ -417,6 +421,7 @@ static void raid6_avx5124_gen_syndrome(int disks, size_t bytes, void **ptrs)
  	}
  
  	asm volatile("sfence" : : : "memory");
@@ -122,7 +122,7 @@ index 009bd0adeebf0..d989ca64847a5 100644
  	kernel_fpu_end();
  }
  
-@@ -548,6 +553,7 @@ static void raid6_avx5124_xor_syndrome(int disks, int start, int stop,
+@@ -550,6 +555,7 @@ static void raid6_avx5124_xor_syndrome(int disks, int start, int stop,
  			       "m" (q[d+128]), "m" (q[d+192]));
  	}
  	asm volatile("sfence" : : : "memory");
@@ -131,10 +131,10 @@ index 009bd0adeebf0..d989ca64847a5 100644
  }
  const struct raid6_calls raid6_avx512x4 = {
 diff --git a/lib/raid6/recov_avx512.c b/lib/raid6/recov_avx512.c
-index 7986120ca4442..32a9720be269d 100644
+index fd9e15bf3f30f..c8a152d9ab6da 100644
 --- a/lib/raid6/recov_avx512.c
 +++ b/lib/raid6/recov_avx512.c
-@@ -219,6 +219,7 @@ static void raid6_2data_recov_avx512(int disks, size_t bytes, int faila,
+@@ -221,6 +221,7 @@ static void raid6_2data_recov_avx512(int disks, size_t bytes, int faila,
  #endif
  	}
  
@@ -142,7 +142,7 @@ index 7986120ca4442..32a9720be269d 100644
  	kernel_fpu_end();
  }
  
-@@ -361,6 +362,7 @@ static void raid6_datap_recov_avx512(int disks, size_t bytes, int faila,
+@@ -363,6 +364,7 @@ static void raid6_datap_recov_avx512(int disks, size_t bytes, int faila,
  #endif
  	}
  
@@ -151,7 +151,7 @@ index 7986120ca4442..32a9720be269d 100644
  }
  
 
-base-commit: c3f63d70f236bb7685e6d11d1d9b5b351552e600
+base-commit: 5c40a1750f44dd6c7292d8c8d0b4ffff1734576e
 -- 
 2.56.0
 
