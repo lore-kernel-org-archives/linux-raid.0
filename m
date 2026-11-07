@@ -1,89 +1,73 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.181
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794069879;
-	b=t6UT0yZRzC7m+mhn8d2nqAvlv+HkxI2p/0IGaNiBXRSozyPxtnUpAGf84qUqqzNjWmLQ
-	 d1tEpvWgFadIvUvgRQ/QvEi8TWwTAbs3oni5RGLgDuRClDMjCrd+dYDM6apAhyJ+ay6W/
-	 yItO+E+bd/NbrwvFFVI0YWyns5RuTDMTf9iNaOWAubb5yv5fCxzhvpEmKlOvTQvJF4elF
-	 SDRCe1F3srnlktEft1G0eB9SkopLTefTWRpIX8MBJLFJrb1bqUngNazK8oplzSAyYjhyn
-	 I3h1F8WM4SICjhnbe+jUJ6XXpCTICh4BCwnM1rlBTYjNBIRyi0TjeGkiyevidJRUO/Q==
+	t=1794069982;
+	b=RNh5wlnikh9hM3seg2Z9rq3Aq6CChwRFgLX+d1XOmgd7u8hxwgTTlYK6N9/f4bWCDX8D
+	 8Rr2a8XT4yPBOCIwTx78INEIEj1C7kQQObdDVxtE/dHRozuDhikn9RUIlQguHifU76nYm
+	 pWx5PsH9uPJ+2fm9NjGe102vbuBpEO+RvGAiKo3XpoNeB/91jx76DIoU8K6WRtYvqx8kX
+	 Kc+AAHotmi5H93myO32zKbOT/UQmEEPRvPI8XIHopzfhQGFvqZeGhCOoycFmUCrBLUVHI
+	 S5e4AUKqWru1d91AAsQ/8thkTo9alggZBZcUb9AeeNFN8qHf7lrQjya1UliDYFi1ApQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794069879;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=cwPj/yL5tuc3miMt3pQkwgcVVGWR+Pp3SqkYDrCFSX4=;
-	b=JAulS5+s6pcNDPQuK8//vUCZu9TspVKW6KMAY3dPyAFGoSRzWNDwbEXekgoNkIFgeUTe
-	 E5Ccno5tjJU3eXPmXqLg2U0gcjlN7dg/ey7ZJT+NcAoK88yzk2hrG6DXi+rjrlpYv7rZp
-	 5kiYX/F3YkuUbHFbPX+kq3TUpa7RNRt7O83i/dBlxC21cAC8yvzkqooxw2pAt/rXieQDi
-	 gceiQe7ZPiZg/iRX0L2geFtsntQqGuF0cDN4KavLwpok1ME4D1yhvbJ1TiLRBXo8/O9Lg
-	 SVpLPgG9K7j0iJ/6ByNsXW4AKr51ArYkr12TLMozM7IyH37tUZjOLZ53kERhA7xz/qQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794069982;
+	h=Received:DKIM-Signature:Received:Received:X-ME-Sender:
+	 X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:Received:X-Mailer:
+	 MIME-Version:X-ThreadId:Date:From:To:Cc:Message-Id:In-Reply-To:
+	 References:Subject:Content-Type:Content-Transfer-Encoding;
+	bh=iQPFcguwJfJnGIUghj3vW2cnp0ZTKsyoI6OiYKG+trA=;
+	b=fjRHb47nKLsx1wy1GbPkMEGR+EqiDglnweWrt0G3kqWF6H6XFzloVWk/bzNBZH5uf7bk
+	 UDCg3OdSbJP/VDllYKt7b+K6TcV7nY7HnaGFou/njEUEU9X1grDttckHl2jhp1Fuhr/05
+	 QCDNWPOMcGhf4AVOrPSNSsYliKmETEaSSAw25ivGnDQwJA+kl8u/h9mbRf0sKrTTN6vqG
+	 SsiiugnK5x0zK5x1fcUTXw4xtlFEtCtI7NOkALdfCMrHxPlH5SzVCmOpg8i/328Z286fp
+	 Ta/8tGPrZiG09C0WYDOZgp8CCwY+RpbdsbWIn/g/okvTnZRHSlTjLJK2rEvUAvsfk9Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=bYZMD7DG;
-	arc=none smtp.remote-ip=74.125.82.181
-Received: from mail-dy1-f181.google.com (mail-dy1-f181.google.com [74.125.82.181])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VM9YuiWn;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25CA0606A33E
-	for <linux-raid@vger.kernel.org>; Sat,  7 Nov 2026 16:44:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 25CA0606A33E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DCAE606D80F;
+	Sat,  7 Nov 2026 16:46:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=bYZMD7DG
-Received: by mail-dy1-f181.google.com with SMTP id 5a478bee46e88-36ecc11bd26so213981eec.3
-        for <linux-raid@vger.kernel.org>; Sat, 07 Nov 2026 08:44:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794069878; x=1794674678; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=cwPj/yL5tuc3miMt3pQkwgcVVGWR+Pp3SqkYDrCFSX4=;
-        b=bYZMD7DGhru4EwZGA53HcQKs9PXfxWRoYdEa8UkS5cPIVeJk2Trobpsc6CR25V8iNg
-         VtnDYeUP9TpLEQ9awEQPqbhrGzzb7CdET5VWPA8PWPk01v//VR0P9XtPLaXBCOdeUX8Q
-         tZyTh1e5t9VZQv0e+WBaxcvXPpbXsRf54qKkEvHFI648VVT3A4sh85XmQcMrS7SzNEFJ
-         1AzaymQ8xv72gaKHR0tbsS0hcegYTcXehOCNjd1hxesBbHFJwi8/4vUvBbGF8Cet+pQa
-         xfXMB6rxqHKL9nz1EhDU7yvO+teM8IqQ/TRlqrvJpI2X/i8PCxhAIyRJjg2sMPyKyekr
-         ftEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794069878; x=1794674678;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=cwPj/yL5tuc3miMt3pQkwgcVVGWR+Pp3SqkYDrCFSX4=;
-        b=B1j4a8XqNrbFCvdascjC+6utVFV5RBr1Bf7BWva0oJI2CZV6WZHN3enKXG5ziwCCus
-         tAQBuWtEkhQ7QBLr+MhMneMOYFYb54Aokukat3SgcioPeSc4ZABCnYZ6PiKq0aehduuE
-         vFHGslaPPoBqiVxBz8m56OgqbpdldgUpfxNw+xpCswynXr/oNngvBICz9dwCTkzWp8m7
-         19Yi3d5LwRiJOyNmfjQ+9uFFTNTDkflx9k/i7V/LgnXzVd/BQUkXQ5mvOwwvO1iz16UH
-         YTRo0aW02S3c/WWCCUX/1DetWNhvzgnejGE0LVG4CIfvdh2+fLOnCl8jdB/xbPbvTS9m
-         ewWA==
-X-Gm-Message-State: APuU4Z/iAuOUMdi0T8KT6fd2xYgfvw6M7f5VOAC+gFZe5pHYxfI0jiAv
-	i/05nLuf2mo9SDp+X/umRtC9gsBbF1yhC87PRmTVrueZx/IDfiw/98+fqxsodHC1
-X-Gm-Gg: AYBFou1cve8t4DWADJm58bWhH179fgmEozuEuF0PY4aJZIVv2nl7Oy/0ozFkegZ7WzC
-	JXrWqqDPY1gpIImwtFLP6YHsdt08Vv/eeqAVJ3HD0iJj0B4g6J86iNcefeqOoIaGWWBygKaB5nX
-	uj084P6zMCCyWo1xauXp4no8w40HcmfwVDkxe5K3749lRwP5PEu1m6+Y78xQJoCsufLTBEjGoh+
-	0WDsuU7gontQuzbmlHrcQF6LVqsynAHjmr9zcBwOSHD8JzTjiaIazhFvxbNdYXpDCaTaF/bu87b
-	dBiWnlZNA9dvKjhXo1eKRcnl/K51ECVMwfvZ8swmFIbvYc/WpkKtnglZsRYI84RkDrej11U+QT2
-	Ow+3cFKlStgQNKg2JVocWOAK4NeBVHJFnx7OCrt9l+v2V2GMY1qATGBPghse2cACWLYEBGym2DB
-	66qlpRzesE/kQm91EhAc85fO/+DblXY13dpilZ98vh83d2L7sD0jWs7m5HOyIsx71mjN7AcoZ0V
-	nCGf7UHBHPQbnbZ01PZh5xqI0ou8KcGOqsWMYAijObrxR33zgbA0PaVe9thQUko6nju/p4oszaE
-	sK++xoycykWnt09iI8opLxWr05/txrdHDRFpFRAELqem9J7jm7C29oLtGQLstA==
-X-Received: by 2002:a05:693c:8852:b0:36c:a1bc:6114 with SMTP id 5a478bee46e88-36f6f3a068dmr6131284eec.0.1794069878005;
-        Sat, 07 Nov 2026 08:44:38 -0800 (PST)
-Received: from localhost.localdomain ([142.249.36.161])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36fa8d44a5fsm16172802eec.7.2026.11.07.08.44.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 07 Nov 2026 08:44:37 -0800 (PST)
-From: Chengyu Liu <lui2012qwq@gmail.com>
-To: linux-raid@vger.kernel.org
-Cc: song@kernel.org,
-	yukuai@fygo.io,
-	Chengyu Liu <lui2012qwq@gmail.com>
-Subject: [PATCH] md/bitmap: fix missing_pages restore in resize rollback
-Date: Sun,  8 Nov 2026 00:43:05 +0800
-Message-Id: <20261107164305.11476-1-lui2012qwq@gmail.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VM9YuiWn
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54C841F008A6;
+	Sat,  7 Nov 2026 16:46:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794069982;
+	bh=iQPFcguwJfJnGIUghj3vW2cnp0ZTKsyoI6OiYKG+trA=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject;
+	b=VM9YuiWnX2AxixylKQUoq+kcitnOG5EzbF2X9QExC8KlL2MDA2iyK+MohWy7Is5c9
+	 XVSDhAm8H/yBVlmhN+3IQseSQF2jGl1M+I2ez83FRgJrdtIoEzyyJH3UteHcMNBF3J
+	 CIxYy49tvs705sBEv6+oNmDe+XeTRlWWJAeIlasE4z+WjzM0vX46Vs29hEnM0d2wZb
+	 W1dkb+g9MV6DZn1boZSIdWYUouaQYtnA2TMkW/lFIttT5mLiUtyZmeYkxA+HrJ549d
+	 6AW15GkyWYPIpCmvFv4xURMQ9MDEdEzTK3dhB19k8mh2nE5zuDwmhWf+JnyyfSm3ph
+	 PLuUxIL3o5qoA==
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 8E1DEF40067;
+	Sat,  7 Nov 2026 11:46:19 -0500 (EST)
+Received: from phl-imap-15 ([10.202.2.104])
+  by phl-compute-10.internal (MEProxy); Sat, 07 Nov 2026 11:46:19 -0500
+X-ME-Sender: <xms:21Xvams7wVEmHspjWmbwhLpib2xNIptoVYE-80X8WqZqZcb1XPT-CA>
+    <xme:21XvamRC29Zg9ykNiW0vwrANU0AC0j8D3WACLizfxgWZ2OLmopVNcj-qyZCZTBqLn
+    FnUPDv24PUXWdCZGoMgnY4GISxXuJoqj_FJTWVyN8AgQyPiOZVj9Iah>
+X-ME-Proxy-Cause: dmFkZTEtlYS0+TY9rHJo1vCDNDBgG/0TlQu1ZgAaexztyT5e7mSb39t8Qfa0vTeatlfpwP
+    5ATotugI+S69Aq5UXpsB8wdUtjDvDqFpA717Gwij4u69sZUh6KSv9WWk6Jq//TgMNLfNVi
+    Uz7LSIH08qzFkhYYh9/35LIN1zJWwwarlCDU1iQg4wt21opJj09VkTQ37+xtOv284TX8B8
+    yl81LC5xmVZyo6A9GjLU5A0F5I2dYlaICl6rU5kYsMelZGpwWY/AOYhI+JMNgaonKgFQaK
+    ku+gQcY5aJl2LKRp0R1zioHZwwCKpV/Rgf4D5rEiKrG8xxXM/BULju0eld0dqqIZyyKUfJ
+    GW19ru42mbqsCpPSyXWqDBJxl5bN5OUlD62byk006CGbw520QKU/yBNHckj8/a7Aw/pswE
+    cEiGWvUnIlIDfqqhyBtbUxKdieVFtOg/Nh7ULYvIP/0NmKpXY6WcXU9anidEQ88SbIQjDc
+    p8Yn7T3r8Bo4iwmbKTgS1vVIcIOOKv75MyWqZv/+HCroxzEXbbFU7dyYNipmhzrf5va650
+    CqAuf2hfcDqsbABPPTHxkCEDCl/Z7jZw9/P1SXCFxyI0OJaeowmrBr44zHzsSCW7ueEBOE
+    v4mcadw/NREalORTbhxI6N8vjS1sruRGJ2ATEo0TnxHIE3AAjUR+ONXu5PSg
+X-ME-Proxy: <xmx:21XvanTCUxiRZL_4tn_RpzN8CzyhB8rLiSKq-UOIyotAbmuEjI7sGA>
+    <xmx:21XvaurCk3dCumlVKotKWDf68V8MDwwzlx-dEeK7pWGM9HqcR4oZkQ>
+    <xmx:21XvavRZiOL5frHmdBkAVeJ6cjpU89f7VYn1Ikw-RN984COqc-2ICA>
+    <xmx:21XvaoJKJLPj7VOMrYps6zuTHuKL8ZgDDK4Gr4RreYxXio5VOww0yA>
+    <xmx:21Xvag3Tq78e8w_19g2SFkvau64M8X7d5PUoh2FKftcFG01vhemSEsb1>
+Feedback-ID: ifa6e4810:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id 5E62D782738; Sat,  7 Nov 2026 11:46:19 -0500 (EST)
+X-Mailer: MessagingEngine.com Webmail Interface
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -93,31 +77,67 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-ThreadId: AjxZksNfZZQV
+Date: Sat, 07 Nov 2026 11:45:59 -0500
+From: "Chuck Lever" <cel@kernel.org>
+To: "Christian Brauner" <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
+Cc: "Linus Torvalds" <torvalds@linux-foundation.org>,
+ "Jann Horn" <jannh@google.com>, "Josef Bacik" <josef@toxicpanda.com>,
+ "Chris Mason" <mason@kernel.org>, "Jeff Layton" <jlayton@kernel.org>,
+ NeilBrown <neil@brown.name>, "Eric Dumazet" <edumazet@kernel.org>,
+ "Thomas Gleixner" <tglx@kernel.org>,
+ "Alexander Viro" <viro@zeniv.linux.org.uk>,
+ "Jonathan Corbet" <corbet@lwn.net>, "Christoph Hellwig" <hch@lst.de>,
+ "Greg Kroah-Hartman" <gregkh@suse.de>,
+ "Joel Granados" <joel.granados@kernel.org>, "Kees Cook" <kees@kernel.org>,
+ "Jan Kara" <jack@suse.cz>, "Jan Kara" <jack@suse.com>,
+ linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-s390@vger.kernel.org,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ linux-um@lists.infradead.org, linux-wireless@vger.kernel.org,
+ "Linuxppc Dev" <linuxppc-dev@lists.ozlabs.org>, netdev@vger.kernel.org,
+ ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org,
+ coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net,
+ jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org,
+ linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org,
+ linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
+ samba-technical@lists.samba.org, sparclinux@vger.kernel.org,
+ linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org,
+ linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net,
+ "Takashi Iwai" <tiwai@suse.de>, linux-input@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org
+Message-Id: <a1e2d05f-08c6-41ac-a8f9-6985ee00dc97@app.fastmail.com>
+In-Reply-To: <20261104-work-procfs-net-v2-10-221e2437fed1@kernel.org>
+References: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
+ <20261104-work-procfs-net-v2-10-221e2437fed1@kernel.org>
+Subject: Re: [PATCH RESEND v2 10/13] SUNRPC: let procfs own the wait queue of the
+ procfs channel files
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-The rollback for a failed clustered-raid bitmap preallocation copies
-old_counts.pages into missing_pages instead of old_counts.missing_pages.
-The counter then reports every page as missing and can grow past the
-page count as pages are freed later, making the used_pages stat in
-/proc/mdstat wrap around.  Accounting only, no corruption.
 
-Signed-off-by: Chengyu Liu <lui2012qwq@gmail.com>
----
- drivers/md/md-bitmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index b8325cb09a37..66ed92a0715b 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -2495,7 +2495,7 @@
- 				/* restore some fields from old_counts */
- 				bitmap->counts.bp = old_counts.bp;
- 				bitmap->counts.pages = old_counts.pages;
--				bitmap->counts.missing_pages = old_counts.pages;
-+				bitmap->counts.missing_pages = old_counts.missing_pages;
- 				bitmap->counts.chunkshift = old_counts.chunkshift;
- 				bitmap->counts.chunks = old_counts.chunks;
- 				bitmap->mddev->bitmap_info.chunksize =
+On Wed, Nov 4, 2026, at 4:13 PM, Christian Brauner wrote:
+> cache_poll() sleeps the poller on queue_wait, which went back to being
+> a static queue so that a poll() on a procfs channel file can't be left
+> on the queue of a cache_detail that its network namespace freed. procfs
+> owns the queue poll() uses now and it outlives the file, so the procfs
+> channel files leave the poll_wait() to procfs and an upcall wakes their
+> pollers through proc_poll_notify(). The channel entry is remembered in
+> the cache_detail for that and forgotten before the entries are removed.
+> The rpc_pipefs files keep sleeping on queue_wait, procfs has nothing to
+> do with them.
+>
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+> ---
+
+Acked-by: Chuck Lever <cel@kernel.org>
+
+
 -- 
-2.25.1
+Chuck Lever (Come to NFS bake-a-thon! https://nfsv4bat.org)
