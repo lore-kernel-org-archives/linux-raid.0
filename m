@@ -1,95 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.180
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794110557;
-	b=nKHrzuG4KL3uvo1Sht/AAbFZqYHBsIzRBo+/AxWNxJq6b3c8jH5Zt+ihAFsXkO++dhOB
-	 b5l9xhc/HxTZEaz/wlFSMFV0OaGvTSLCTh8pOIpblzPtzGkAEpqCkUs8FJ+33YJZPbSlW
-	 j5lRB1Bf/NT+VZBqQdK0JYOWzHwlMxskfWTLd69cwG1iTcxS1w/BzMEF2Tpn8chRO0lS1
-	 nXQLJKVzgPSansUzcMc00sjynTHKsWi/4DYLzBDE8/jXFe5+iySr3jPVSG+03rgj2OvZt
-	 HqncrC8swra14EwbtLR4e/oUSqMiwuq1myGyqyfLOjchJEuzmfyqxZtVPArTo2GphhQ==
+	t=1794127656;
+	b=RR2brm+YXBbz1NgWOyqntoOH9Se01yocExZ90BtuDPLMhFFQ6FkouSBNzHcKYnA4rzLN
+	 wS1uXvS+bfjJ3oZGWfEG+CxxrVYuqqFp8ASITbdTfuItHPr8v+aNd7NGXB2CLwthNrWVS
+	 Px/CK/vleO9J/dSZqVoST1O/AvpG7470tF3aeMqgcfmVZK5bVn6kjsxsNj93/geOz/O0A
+	 kWknwBpYTNNafqC2Ps4hFvLpjcJ4lDsDWnR/LVzXmxyl3saK7NoLPQZCAxogtsMqvI016
+	 P/CUzL/rrUFT99NCR9wOT50lVy9Ool1UXqnnKFm+YFdKVV2bpx2XW6NHVqj2G5R5awA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794110557;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794127656;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=e0N7bDNBnjqR8M4GFFj2K3/PwmzbihKT+GB9kbAlZp4=;
-	b=xZJEuzEvahNtnoKuHICiMpQ73Jqpx2tw3D+zkjQr9WtM6AdutGWRpHSZAS9HsUv22O7n
-	 8GX/KiCMoZwRwXDb4185gy190qNanOhfM3XQGj8QolLMA0QGrFpVe25pi4x2zfPSX19G/
-	 zjeE9zgkmoPUzNwOlqExOkGyw9wZU0mUs24GnLwL5j2iXgcuBOQ2jYh9rC2AJ9kVD0VDX
-	 mlJrqBVk6A86B8WUzE0+ZNYd+St+AXI/AeJ4a3CFjWcUFO1eW2rs10iG5D+X4EPV+tZnH
-	 dL7T/JRmrIZBIXbsRTX7XM5ohiWlJtzDuBMwMWnwDrgCN0J4NkXvVUUhkZTjG7l1ZNA==
+	 Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:User-Agent;
+	bh=oImRzjWDz8Wxxig3JSKCeNvDBZv9ghzuzFbbGiNLN58=;
+	b=3N/WDnVjkZD+BnU4dzCpdV0W6VPa2jzlf9xD2/eLf/0y+/mqqoJ/M6LojYwNQkVpSMFk
+	 nWtMavvg/bo/B+1zbLome94e0vtfdCS5fDxQym+DmMlh3H76bOyyzh8w+F/ILIm4WHfQj
+	 Kyb8U/gvrsNwjI0GTyH+d307rCNYMF4e559GFxKYUkf98spcxbFSjxC4gCxtCYJwEA0aB
+	 FeybaKKnRPQCIBJsqU60XHv5ZQDgJIvvJ+WFKnhXRZlGQiycKSnu0E3ntTDdMqqphVYrd
+	 Hq5ZgrgcR2WgiSeFoE9ljGfKnxJErxmtauZURaEO8VcmHtYGL8i3xpJd0UF+PT6xhuw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="R/A11VeQ";
-	arc=none smtp.remote-ip=209.85.215.172
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+	dmarc=pass header.from=chrisdown.name;
+	spf=pass smtp.mailfrom=chrisdown.name;
+	dkim=pass header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=drMYhROL;
+	arc=none smtp.remote-ip=209.85.214.180
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A931606A31A
-	for <linux-raid@vger.kernel.org>; Sun,  8 Nov 2026 04:02:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8A931606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 724DD606A320
+	for <linux-raid@vger.kernel.org>; Sun,  8 Nov 2026 08:47:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 724DD606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chrisdown.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chrisdown.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=R/A11VeQ
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-cc758830601so88420a12.2
-        for <linux-raid@vger.kernel.org>; Sat, 07 Nov 2026 20:02:37 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=drMYhROL
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2e9d1114320so1886235ad.3
+        for <linux-raid@vger.kernel.org>; Sun, 08 Nov 2026 00:47:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794110557; x=1794715357; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=e0N7bDNBnjqR8M4GFFj2K3/PwmzbihKT+GB9kbAlZp4=;
-        b=R/A11VeQmxpu+8xWracH1Bgz6odPsP7JVYaH2zLTe3hxDh6maT4GQr+yrEq3xHdH1g
-         USPwhFyE4qUJD1/PgblFfe1ESmYqQVMyAF14nBrUPurtzhaGIsEs5YKpRqpXV/S9Ofxr
-         /D8zdHmczgFDQiIZ9sK9Uft7NYG1O+K5Nl830KZavsSqtoFTk9UesADYyGexzb7Twfyl
-         SsLNyVDt1DHbdrfL8zFF1QwBQWTYyvqZoQDxxWzU0mWTA7dOBPmqyJlj6/g5scSKj0Kb
-         hYjl4g7Qj6SBFn6I5c/bP/WtItJRJxA7Gekfb+9B4zQLdfexUfEfA7Rc+nGSbB9R4mNd
-         v5Yw==
+        d=chrisdown.name; s=google; t=1794127656; x=1794732456; darn=vger.kernel.org;
+        h=user-agent:content-disposition:content-type:mime-version:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=oImRzjWDz8Wxxig3JSKCeNvDBZv9ghzuzFbbGiNLN58=;
+        b=drMYhROLQAzQQ0rCvGEW7U6+4IS+QEXz/+0FkEIiLobw7IaBIVdyXViS1ICHUVrB5e
+         bQSZVXmdMJ/FHLzna2uXzpaACX1RrMI8fEQg+In6z3kQVB3rbAs5i+Y4sk1uCE3jruNU
+         At/6FWAaHlS1dN4I7SabSoDcdqgB87zdbm9jU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794110557; x=1794715357;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=e0N7bDNBnjqR8M4GFFj2K3/PwmzbihKT+GB9kbAlZp4=;
-        b=QzQbFHD/79wgS9DX8H+ozuAOre5ovrCDhj+0aswvojC4Y7cLMFncZN235VORj1mP6M
-         e3zIj62HAYBGdXVCSdJUNqamR3GgJmpW5Ok/lYZVAZGzsl6XxJBcC3D9aAY7p9DF1nH6
-         hqIYwyDHhH96LjLO6watSI2qFCZaiURBwc4m5SaATp8Cfx0GtHA5a8FNpKnaoNOGTP5T
-         vNSKWTQ5MCmQD33hkBa+DpRNBVUk0vrkd0L8V8jNELb85LccO1w843RyC0LRHlXX9lw1
-         VyaerWr9FITdvj9BaF9PWay5YffnMGHeB6X04BR9JNe2QW950Gu7mo4GSA1sUGCwaIF0
-         ftlg==
-X-Forwarded-Encrypted: i=1; AL+hErHnmmn3CmrEi10s8gSXUN2m+1/RQcrCXi8AGRU7CNlROlKJJqW7pbQNFCPNlNqSmMjzxZLbjIRn/vdG@vger.kernel.org
-X-Gm-Message-State: APuU4Z/jjyAiexg9aLah7MvIRrHHk6WwTPBbC3zG6tpseZNOSUrypw/A
-	GKyFOg6cPo5zatH49YK7GfiEoO8feQqQIOJPrPIXR5ZKoKhO3NL1eRc1
-X-Gm-Gg: AYBFou1ptcEouEJ3yt8VmC4vx8/w/IOXKpTzTkLT02ouqbPKSScOPFKqFrOJAT3Gbra
-	dKZzyngW757kcxrM7gpUYeRzb/0uKQmkgbK3C/EpDHUwZ3GswPP3XxAROOXyvwP4dGfFipSs5vq
-	5JGYVTpD1CUTesPSAs1wLfeAujbvXgOEPOSmYgsgSdCY/d5V0IreA//Ghp36GnnBVTLcfEOT24T
-	b+LyQGRuMbi5dI81as2B9BXRX7h7CIqsTCJtEWTLj7zHHlYuMd8Bm0Qw7NYpKe0mq/Yj7s8ZYFQ
-	Weao3IlcWrTFf9W9tu8mWoC7BQyuyu9BowWog+yYQaZnKG40Q0J36UJ82zWUfB0ZJ1VPzEba3o7
-	I2KT+l//CJSk1IOJZZHIStQhomIBgvDy8BaPusyyE3YcmgRJe3wbGJvRS4l1pm/FiQnjdRzPzbx
-	Yne8jrTHdKQAzFObyuKWBTcrzNbOeID7W4i3QB/3N6Q2IT9FPzvDB32qY9g20MSH1fmCo4N21S8
-	Q4Pt+m8pW0KzNQYZxVhfSBfY3FH9nU0rBB6zTynzU6QEy82ZXykQ8o/vOXINTc8gp66yAHnjlEf
-	+c4b9eWCapDSaJLVom5gMTXeckXK
-X-Received: by 2002:a05:6a21:498e:b0:3e2:1160:6d20 with SMTP id adf61e73a8af0-3eecf97ebf0mr699131637.3.1794110556714;
-        Sat, 07 Nov 2026 20:02:36 -0800 (PST)
-Received: from thangnn-ASUS.. ([2a09:bac1:7aa0:50::498:71])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cdb969314a5sm295406a12.17.2026.11.07.20.02.34
+        d=1e100.net; s=20260707; t=1794127656; x=1794732456;
+        h=user-agent:content-disposition:content-type:mime-version:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=oImRzjWDz8Wxxig3JSKCeNvDBZv9ghzuzFbbGiNLN58=;
+        b=LxKkVqBluJBkpTC4tWsqystFXpm0p5OqahOjmoRwVbkAXR4llYMC35e9gWmzt5KKVb
+         NEsvVDdEFS0mLq3cI+V1OevnaWB4hKsDG2Zbc36dL15w0avjmKWHcFBEMvpsuIYI1rg6
+         JGz80IMfHeZ2z62D56QkRTvjTJNsjDhvefh4ebFlmtjXU+3K/coHiwKqqdJNO0dcAhcC
+         8HgCwz1Nd2jHPY7yAfNQzUcfIN88iuSfad47IDHCK1D/WOFKwi4xdIunsAVbupzrtxW1
+         L5e5ofRxQQ1iVOF90ZDvF+ebXeNr0bvamFJmO+w7gpzmsEm0y88ZaNoh/+JasBDUL7Jm
+         nqgw==
+X-Forwarded-Encrypted: i=1; AL+hErEXpbSe1SR3N3wm60bbPU2GMjWEukUrPyPKX9aRnQPJpfeL+iKiXwEZpmjsw2/wGAi6apAC1ii2FYHB@vger.kernel.org
+X-Gm-Message-State: APuU4Z8cb6qysx7nyFunCxq9118EYKn9tmdzWH7GmjrH36ALfpy+OhKl
+	pxALtiMI9ZIVzsMro5TnsttY+vc5zkeK2TxF4CxuHC17WOUbuL5iFbMPKuV1VlEN/to=
+X-Gm-Gg: AYBFou1PLD/JISqw9AZGauDa0wfMaE91uD4CfhRHJbCN9A199ImWwnS3ImM7TOmtsu+
+	nEuCAwAioCeiEZMEzJmRb18mifI6vvRpfSbcO5AIaTFXsbvBxHMKXXRtO80/v9mEpA26mnS7lZm
+	MZD/cDXJfugZBuXnqzoFpXZ0OhMR2tAU7cTcx+V0tqALqtfVksRuWNUTejufgZ3doojNzFVKQL4
+	OF7kY2HKKVe6QbnT7QL6uFx83DQ/kuhdaQoHcr5F4khqYWRZNfxQxSF2SAFcf6ZBP24Tfr6oMAG
+	4a4dMImQuFGyF3tFisK5v3ZS6BSgkUgI9B3QO39HOUawgTxPzwJyuMLvCOR3ZbxUcSPXjpN7DIp
+	NsRf4bjUsob0uyjcLXUT9woWVWhac7UCH1XU1ZJHvJnP1r6h1kQIuFBzhOEnjegO/NPimqWQRUp
+	Q58cSlMg9wnEjfG13hChHamxK4HWDDKnsnjNmssDSeFvZ9s7wZqoE2+7Qo0wApdtuTVq9I9Y/Iy
+	r5eRIcKJzdgfJZALtNc60szt423nZn+FcD9EkEqznVqfCBmB4xaN6FUa8zAoGwE3Vq/ehtW4NPQ
+	1UQ0LQyw9imN7JLtdzc1FNTZa6H97KWjBHrpaFxq/ReMqdw+xnwOcKKAzFymfOFE7uJjydPb+eX
+	c94YGu4AAr3dtA82/Gog6BTqelJP/e7vTo3B/TACywgf0jiIoBl0BA1IB8d1oiTz2igFvsOORYx
+	iO/dQOWSp9BEsiDtGwrfL+IcSJqfGOs+wuU4Qi/hpZenMxvXz4T6ok
+X-Received: by 2002:a17:902:ec8b:b0:2ed:3f47:9699 with SMTP id d9443c01a7336-2ed837dab45mr8233875ad.38.1794127655733;
+        Sun, 08 Nov 2026 00:47:35 -0800 (PST)
+Received: from localhost ([50.175.87.158])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed815e72acsm3030105ad.13.2026.11.08.00.47.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 07 Nov 2026 20:02:36 -0800 (PST)
-From: Nguyen Ngoc Thang <ngocthang2710.1999@gmail.com>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>
-Cc: Nguyen Ngoc Thang <ngocthang2710.1999@gmail.com>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	syzbot+0a8119ab801b078213ea@syzkaller.appspotmail.com
-Subject: [PATCH] md: don't ignore bd_link_disk_holder() failure in bind_rdev_to_array()
-Date: Sun,  8 Nov 2026 11:02:32 +0700
-Message-ID: <20261108040232.43694-1-ngocthang2710.1999@gmail.com>
-X-Mailer: git-send-email 2.43.0
+        Sun, 08 Nov 2026 00:47:35 -0800 (PST)
+Date: Sun, 8 Nov 2026 00:47:33 -0800
+From: Chris Down <chris@chrisdown.name>
+To: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
+	linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-team@meta.com
+Subject: [PATCH] md/raid10: Prevent data corruption after a rejected
+ backwards reshape
+Message-ID: <avA3JQ6lyAlMm1Q8@chrisdown.name>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -99,78 +95,41 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/2.3.3 (9073d26d) (2026-06-12)
 
-bind_rdev_to_array() adds the rdev to mddev->disks and then calls
-bd_link_disk_holder() without checking the result. If the link fails
-(e.g. an allocation failure in the holder or symlink setup), no
-bd_holder_disk is recorded for the member, but the rdev stays bound.
+A rejected backwards RAID10 reshape can leave the array using the
+requested geometry because raid10_start_reshape() updates conf->geo
+before checking whether the new geometry can hold the current array
+size. If the check fails, we return -EINVAL with the new geometry still
+in place. Subsequent I/O then uses a layout the data hasn't been moved
+to, so reads can return the wrong data and writes can silently corrupt
+the array.
 
-Stopping the array later calls bd_unlink_disk_holder() for every
-member, which finds no holder and warns:
+To fix this, let's take the existing abort path to restore the old
+geometry.
 
-  WARNING: block/holder.c:147 at bd_unlink_disk_holder+0xd8/0x2d4
-  Call trace:
-   bd_unlink_disk_holder+0xd8/0x2d4 block/holder.c:146
-   md_kick_rdev_from_array+0x8c/0x324 drivers/md/md.c:2683
-   export_array drivers/md/md.c:2714 [inline]
-   do_md_stop+0x708/0xe6c drivers/md/md.c:7252
-   md_ioctl+0x14ec/0x23e4 drivers/md/md.c:8462
-
-Link the holder before registering the rdev kobject, fail the bind
-if it cannot be created, and drop it again if kobject_add() fails.
-All callers already export the rdev when binding fails.
-
-Fixes: e09b457bdb7e ("block: simplify holder symlink handling")
-Reported-by: syzbot+0a8119ab801b078213ea@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=0a8119ab801b078213ea
-Signed-off-by: Nguyen Ngoc Thang <ngocthang2710.1999@gmail.com>
+Fixes: 3ea7daa5d7fd ("md/raid10: add reshape support")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Chris Down <chris@chrisdown.name>
 ---
-Tested in QEMU (x86_64, KASAN + lockdep + failslab) with a reproducer
-that sweeps fail-nth over ADD_NEW_DISK on a RAID1 /dev/md0 backed by
-/dev/ram0 and stops the array after each attempt:
+ drivers/md/raid10.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-  before: ADD_NEW_DISK returns 0 after the holder link fails, and the
-          next STOP_ARRAY hits WARNING at block/holder.c:147
-  after:  ADD_NEW_DISK fails with -ENOMEM instead, no warning, and
-          no KASAN or lockdep reports
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 066c43154497..4ade0cf3281f 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4393,7 +4393,8 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 			spin_unlock_irq(&conf->device_lock);
+ 			pr_warn("md/raid10:%s: array size must be reduce before number of disks\n",
+ 				mdname(mddev));
+-			return -EINVAL;
++			ret = -EINVAL;
++			goto abort;
+ 		}
+ 		mddev->resync_max_sectors = size;
+ 		conf->reshape_progress = size;
 
- drivers/md/md.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5b2add94631b..0ad8f298aa78 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2618,9 +2618,14 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
- 	if (mddev->raid_disks)
- 		mddev_create_serial_pool(mddev, rdev);
- 
--	if ((err = kobject_add(&rdev->kobj, &mddev->kobj, "dev-%s", b)))
-+	err = bd_link_disk_holder(rdev->bdev, mddev->gendisk);
-+	if (err)
- 		goto fail;
- 
-+	err = kobject_add(&rdev->kobj, &mddev->kobj, "dev-%s", b);
-+	if (err)
-+		goto fail_unlink;
-+
- 	/* failure here is OK */
- 	err = sysfs_create_link(&rdev->kobj, bdev_kobj(rdev->bdev), "block");
- 	rdev->sysfs_state = sysfs_get_dirent_safe(rdev->kobj.sd, "state");
-@@ -2630,10 +2635,10 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
- 		sysfs_get_dirent_safe(rdev->kobj.sd, "bad_blocks");
- 
- 	list_add_rcu(&rdev->same_set, &mddev->disks);
--	bd_link_disk_holder(rdev->bdev, mddev->gendisk);
--
- 	return 0;
- 
-+ fail_unlink:
-+	bd_unlink_disk_holder(rdev->bdev, mddev->gendisk);
-  fail:
- 	pr_warn("md: failed to register dev-%s for %s\n",
- 		b, mdname(mddev));
--- 
-2.43.0
-
+base-commit: 47e1b18f38d74015cb9fd30b5ff2a1eb88e77d31
