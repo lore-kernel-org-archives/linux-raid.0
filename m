@@ -1,56 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=78.133.224.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794194510;
-	b=vlSbkzjzIRHjq/8L/roUrNjYsC2gFP2WoeP+TRp5mZFs+yxDo2KNYI6WfhvfMNamwL4J
-	 fr5mWrRNQ1QkffHHVDatsHdeETY75izInhsF0bnHC7z2JFxlBKZ+AptCQhas/l1hTOw66
-	 zLEdwuWDgYHfg3x9F6sJf6aF3jd9gadMCR1o9XAnBlSn2tUaObINRRswBycc4V7vU9lh1
-	 bmqACB3f7LlPKKjZ3RGv6TyqKV7xK2JgqDORBjTrLrQv59tHtg+xnS6Ic1SKZXbeUMEKs
-	 n+SIdgb/qKxnNOiGDuWkHan/pCHuqkL8Y+B5QEwxGdQ06W06955HUgkWs6/2yxL32WQ==
+	t=1794200762;
+	b=LrG+DEEu60gJ62vzns+suZGrmEKRK0YtqaHn5WXr5tf1yY7yw2FGKosUn4N+BWIWmOzs
+	 8YH/Z6kAKOq4DRdwxOIEF0uum3MNQ6sCiYT0Fw65sBfM4bp/fX8HEACI+pycPrG3ANgmF
+	 0e10FM85Y90n9GEZcqj87xUzIjkfQ/2fgrRTTZEIXUQNyHeEJpNXiahk1rg7KYhStQ9op
+	 YLCUgBffpmj2YMNgfPSXl3fGEOwwhzwTt0uQ206cqbDieW5ZiklOrT9pcbyG39aXWuNZx
+	 VvAsG/FBocSTQw9IdspRDLu10fZf/+qpupZfv4YzTLCI7UtjDMFiAtdlH9J7SNs3TFw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794194510;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=MLubieIZakhvQCD9QssGY4reTRZXE0jARP2ANL06kB0=;
-	b=e1kXMxWGpnCqHdsqaJS3BkXBlpMn0cRpY72YvuyQ0+eHVpDkIB/if5haQ/vI0s2RQz7H
-	 2yTig/QULizz4MvebZoK81dNwOTslgu+7MLrw6qLUCRfuVyC6Le4uzKtstNUHWuVCxgij
-	 z9lHnJfvLnnQ7B9yiiW+b6DJgcGOnkbryvqGSlu25LQUWVBJ4RBAuJFX5nj5EmHV/FaRV
-	 FJby2m7ui0NHriC5JkPtzZ0phj6UU6GMk5F7AmY76lxNuV2qiJnCHQEFRjP6hrTPJx6J+
-	 7/008hw+Heg1UeHaki7xYtotA9y9Gq4uo3c6DF+fvGwSG0D5RJ2ayrQ5XNDMPn/b2qw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794200762;
+	h=DMARC-Filter:Received:Received:Date:From:To:cc:Subject:In-Reply-To:
+	 Message-ID:References:User-Agent:MIME-Version:Content-Type;
+	bh=+UmCB5muc9jAh5/NVu2M6h8Lcfrpgge2sRUuegusfl0=;
+	b=0OuLEIAgKXU7KAvFozkBBa3f1Mv708ZV/mV7AuEqlv+uNv4RQQ6oxLuRg70CaAlrcQda
+	 kU+/oTwNmCk/zqSL6WGacdL2KhGdhRBP6iAjFnQhUyBufPVmyVo9NSydGNXPPqZidzbqi
+	 rRT5RxlkRrYqJHI5/17JfeD3gW4i53LeqT0Re6P4C2VxMjHeIXqA+pU6csayT4bFkvyt4
+	 s5t29sErJRBTR2rzX/A9fzsDpt6mOW6cR2LBeiVOQFpMyu9K53GhNNVYS7dh5dhlWNz11
+	 w9LLnBMkuA51LXElSj1oFDY8oQxhCWOlue9fVSB2NQO3QDlefZUvazzMdeLxRtRqsDw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i45tSyvP;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09D22606A31C;
-	Mon,  9 Nov 2026 03:21:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i45tSyvP
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 150871F0089F;
-	Mon,  9 Nov 2026 03:21:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794194509;
-	bh=MLubieIZakhvQCD9QssGY4reTRZXE0jARP2ANL06kB0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=i45tSyvPL1BGVqQl0k89W39r8COhcc5jdq7K4bWkZgesrOvri5eDD932Fh1N1uLGC
-	 Sp1ChRtdwLe5kRZpJRYP9e0Fb7JgnhCkQJr17t1nzTa3sIbhRva0TeU9W6hpPdkiQM
-	 1bZSkI7O7CQ8zq5+2bXvasJpcbSIDM/PLDZKWP+NIBJ9JDAIx4G4XrQlimTfJbnpGm
-	 e6/pzxL/YyQLRVywueRGnFdTiO54uOJFxFqgcPLb2WvXPMktZZcx6KOio2+g5kN48H
-	 ntR2/ybkM084EPu9lOXmB16WsYAnrMuAkPz7ghqUuLbuR1FAbw6ZCnzwJvQ2xjhFdC
-	 1zwnmEbmCNi3w==
-Message-ID: <sashiko-outbox-204370@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] md: validate raid_disks range before loading
- personality
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ran Hongyun" <ranhongyun1@huawei.com>, agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, bmarzins@redhat.com, song@kernel.org, yukuai@fygo.io
-Cc: dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, chengzhihao1@huawei.com, yangerkun@huawei.com, yi.zhang@huawei.com
-In-Reply-To: <20261109025621.2031722-1-ranhongyun1@huawei.com>
-References: <20261109025621.2031722-1-ranhongyun1@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 09 Nov 2026 03:21:48 +0000
+	dmarc=none header.from=orcam.me.uk;
+	spf=none smtp.mailfrom=orcam.me.uk;
+	arc=none smtp.remote-ip=78.133.224.34
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 187C9606A322;
+	Mon,  9 Nov 2026 05:05:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 187C9606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+	id B42DD92009C; Mon,  9 Nov 2026 06:05:57 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by angie.orcam.me.uk (Postfix) with ESMTP id B0D2992009B;
+	Mon,  9 Nov 2026 05:05:57 +0000 (GMT)
+Date: Mon, 9 Nov 2026 05:05:57 +0000 (GMT)
+From: "Maciej W. Rozycki" <macro@orcam.me.uk>
+To: David Laight <david.laight.linux@gmail.com>
+cc: Christian Brauner <brauner@kernel.org>, 
+    Geert Uytterhoeven <geert@linux-m68k.org>, linux-fsdevel@vger.kernel.org, 
+    Linus Torvalds <torvalds@linux-foundation.org>, 
+    Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
+    Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
+    NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
+    Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
+    Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
+    Greg Kroah-Hartman <gregkh@suse.de>, 
+    Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, 
+    Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
+    linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
+    linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+    linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+    linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
+    linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, 
+    ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
+    coreteam@netfilter.org, kexec@lists.infradead.org, 
+    linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
+    netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+    ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
+    linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+    linux-cifs@vger.kernel.org, linux-fbdev@vger.kernel.org, 
+    linux-hwmon@vger.kernel.org, linux-mm@kvack.org, linux-sh@vger.kernel.org, 
+    linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
+    sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, 
+    linux-doc@vger.kernel.org, linux-serial@vger.kernel.org, 
+    linux-atm-general@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>, 
+    linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
+    linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
+    linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>
+Subject: Re: [PATCH RESEND v2 14/23] proc: let procfs copy in writes before
+ pinning the entry
+In-Reply-To: <20261108185953.28054fb3@pumpkin>
+Message-ID: <alpine.DEB.2.21.2611090504170.17804@angie.orcam.me.uk>
+References: <20261104-work-procfs-core-v2-14-76ace653a773@kernel.org> <CAMuHMdVfakapgBK6TBhO1iWX8qzvLDk8jzRS=t2MVa5G=MCUeg@mail.gmail.com> <20261107-akteur-gemieden-eckdaten-21304d085e35@brauner> <20261108185953.28054fb3@pumpkin>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -59,151 +79,21 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 
-Thank you for your contribution! Sashiko AI review found 3 potential
-issues to consider:
-- [High] md: md_run() cap at MAX_RAID_DEVICES breaks valid arrays with >
-  253 disks
-- [Medium] md: unchecked delta_disks in md_run() allows OOM warn and
-  divide-by-zero
-- [Medium] md: missing raid_disks upper bound in update_raid_disks() on
-  online reshape
-It also noticed 1 related pre-existing issue this patch does not
-introduce:
-- [Medium] md/raid1: missing raid_disks upper bounds check in
-  raid1_reshape() [1]
---
+On Sun, 8 Nov 2026, David Laight wrote:
 
-commit fc41ec678e6b01e865c547317a0225da7de795ee
-Author: Ran Hongyun <ranhongyun1@huawei.com>
+> > > While at it, I think it would be good to use this conversion as an
+> > > opportunity to replace "char *" by "void *", which will probably let
+> > > you drop several casts from users.  
+> > 
+> > So I tried that too. The thing is it drops exactly one u8 * cast in
+> > ntfs3's label write. 
+> 
+> Since char is now unsigned that one isn't even needed...
 
-md: validate raid_disks range before loading personality
+ Please excuse me missing the context, but what circumstances does your 
+claim refer to?
 
-This commit moves MAX_RAID_DEVICES (253) from dm-raid.c to md.h and rejects
-mddev->raid_disks values outside [1, MAX_RAID_DEVICES] in md_run() before
-invoking the personality run callback.
-
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 03e35386a8028..7b202b483e98c 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6703,6 +6703,13 @@ int md_run(struct mddev *mddev)
->  			return -EINVAL;
->  	}
-> =20
-> +	if (mddev->raid_disks <=3D 0 ||
-> +	    mddev->raid_disks > MAX_RAID_DEVICES) {
-> +		pr_warn("md: %s: raid_disks %d out of range [1, %d]\n",
-> +			mdname(mddev), mddev->raid_disks, MAX_RAID_DEVICES);
-> +		return -EINVAL;
-> +	}
-> +
->  	if (mddev->level !=3D LEVEL_NONE)
->  		request_module("md-level-%d", mddev->level);
->  	else if (mddev->clevel[0])
-
-[Severity: High]
-Does capping mddev->raid_disks at MAX_RAID_DEVICES (253) in md_run() break
-assembling valid native MD arrays with more than 253 member devices?
-
-MAX_RAID_DEVICES was a dm-raid target limit, whereas native MD v1.x
-superblocks support up to 384 devices in a 1 KiB superblock and up to 1920
-devices in a 4 KiB superblock:
-
-drivers/md/md.c:super_1_validate() {
-	...
-	mddev->max_disks =3D  (4096-256)/2;
-	...
-}
-
-In addition, raid6_takeover() converts a 253-disk RAID5 array into a
-254-disk RAID6 array by incrementing mddev->raid_disks to 254, which
-md_run() will now refuse to assemble with -EINVAL.
-
-[Severity: Medium]
-When an array is started with an active reshape (mddev->reshape_position !=
-=3D
-MaxSector), can an unvalidated mddev->delta_disks bypass this check and
-still trigger the oversized allocations or a divide-by-zero?
-
-On an inactive array, writing a large value to sysfs raid_disks, setting
-reshape_position, and then writing a small valid value to raid_disks (or
-loading a superblock with a crafted delta_disks) leaves mddev->raid_disks
-within [1, MAX_RAID_DEVICES] while mddev->delta_disks is arbitrarily
-negative.  raid5 setup_conf() and raid10 setup_conf() size their disk
-allocations from mddev->raid_disks - mddev->delta_disks:
-
-drivers/md/raid10.c:setup_conf() {
-	...
-	conf->mirrors =3D kzalloc_objs(struct raid10_info,
-				     mddev->raid_disks + max(0, -mddev->delta_disks));
-	...
-}
-
-This still hits the MAX_PAGE_ORDER warning (and overflows a signed int if
-mddev->delta_disks =3D=3D INT_MIN).  Furthermore, if mddev->delta_disks equ=
-als
-mddev->raid_disks, conf->prev.raid_disks (mddev->raid_disks -
-mddev->delta_disks) becomes 0 and raid10_run() -> enough() -> _enough()
-divides by zero at (this + 1) % disks.
-
-Checking that mddev->raid_disks - mddev->delta_disks is also within the
-valid range when mddev->reshape_position !=3D MaxSector would close this ga=
-p.
-
-[Severity: Medium]
-Does online reshape via update_raid_disks() bypass md_run() and leave
-raid1, raid5, and raid10 exposed to the same unbounded allocations?
-
-When reshaping an already-running array via sysfs raid_disks or
-ioctl(SET_ARRAY_INFO), raid_disks_store() and update_array_info() call
-update_raid_disks() directly without going through md_run():
-
-drivers/md/md.c:update_raid_disks() {
-	...
-	if (raid_disks <=3D 0 ||
-	    (mddev->max_disks && raid_disks >=3D mddev->max_disks))
-		return -EINVAL;
-	...
-	mddev->delta_disks =3D raid_disks - mddev->raid_disks;
-	...
-	rv =3D mddev->pers->check_reshape(mddev);
-	...
-}
-
-When mddev->max_disks is 0 (such as on non-persistent or external-metadata
-arrays), any positive raid_disks up to INT_MAX is accepted and passed to
-pers->check_reshape(), hitting the MAX_PAGE_ORDER and INT_MAX allocation
-warnings in raid1_reshape(), raid10_check_reshape(), and raid5
-check_reshape().
-
-[Severity: Medium]
-This problem wasn't introduced by this patch, but raid1_reshape() [1]
-lacks an upper bounds check on raid_disks when reshaping a running array
-with mddev->max_disks =3D=3D 0:
-
-drivers/md/raid1.c:raid1_reshape() {
-	...
-	raid_disks =3D mddev->raid_disks + mddev->delta_disks;
-	...
-	new_r1bio_size =3D offsetof(struct r1bio, bios[raid_disks * 2]);
-	newpool =3D mempool_create_kmalloc_pool(NR_RAID_BIOS, new_r1bio_size);
-	if (!newpool) {
-		return -ENOMEM;
-	}
-	newmirrors =3D kzalloc(array3_size(sizeof(struct raid1_info),
-					 raid_disks, 2),
-			     GFP_KERNEL);
-	...
-}
-
-Because update_raid_disks() does not bound raid_disks when mddev->max_disks
-is 0, a large raid_disks value overflows raid_disks * 2 in signed 32-bit
-arithmetic or exceeds KMALLOC_MAX_SIZE in mempool_create_kmalloc_pool() and
-kzalloc(), triggering a slab warning in ___kmalloc_large_node().
-
-[1] https://sashiko.dev/#/bug/linux-9d642fe4-31fe-4998-ac3d-c07a30507ae7
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109025621.2031=
-722-1-ranhongyun1@huawei.com?part=3D1
+  Maciej
