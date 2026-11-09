@@ -1,60 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=79.135.106.112
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794193709;
-	b=H8+0my5ijmp0rjYEwNw2uVF1eXDPhcuwjt/qFXyCtwr0d2KRg7zG0+bLvGgbIE2gjQ7l
-	 UU3p/s97A8vP5JXBtujoSpiqDA3Vb7ULva8SMmmJmj4Z4YeEAeo5IqA5OedaCgUO/sFdI
-	 5FBLNnCM7VtA51UJMQJeTb4l+BzJtdjbR4/gsPZtSfNzx1wDMfKoOTe0Xqig19SNXXvIA
-	 b5BbCLo952HO30kI2NGZl8m1m9hZZzU254AmXr1u9owES1eAhkKzhWKe+ik241vW7LgL1
-	 P5ksYpYy+Xi6nvMbuHDYxeLmzCpfUK5pVwL+ThznQLSZL5EPW7gQmQJgduHqJoJf0KA==
+	t=1794194510;
+	b=vlSbkzjzIRHjq/8L/roUrNjYsC2gFP2WoeP+TRp5mZFs+yxDo2KNYI6WfhvfMNamwL4J
+	 fr5mWrRNQ1QkffHHVDatsHdeETY75izInhsF0bnHC7z2JFxlBKZ+AptCQhas/l1hTOw66
+	 zLEdwuWDgYHfg3x9F6sJf6aF3jd9gadMCR1o9XAnBlSn2tUaObINRRswBycc4V7vU9lh1
+	 bmqACB3f7LlPKKjZ3RGv6TyqKV7xK2JgqDORBjTrLrQv59tHtg+xnS6Ic1SKZXbeUMEKs
+	 n+SIdgb/qKxnNOiGDuWkHan/pCHuqkL8Y+B5QEwxGdQ06W06955HUgkWs6/2yxL32WQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794193709;
-	h=DMARC-Filter:DKIM-Signature:X-Pm-Submission-Id:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=Y3YZ4XZqcxssxJ/4BRJGkkKL0kCh9N5Lz7PpxuiUZaQ=;
-	b=N9TwIUW6FHpFDvK4WQCjt5Rkrs2+f/k7jpDUWhaBwbZF3odeTlndh+uKCA4htABHa7v/
-	 jbXiZqBbxRN9s1nW4aYqHYR52OFEuLWHVS84EvfdX5wN5BX7KVVIwfVMLNszMzqucK86F
-	 27QlWoIcQWTj5VzHaZLXqaI8wY4TRUbdSDgplRU7qsQtOJoRPauluWXyw0QvQOBgQRZHj
-	 jheU+ZmlntpSnWPu9mOZjXjbalmSloamCO0HI6IhscHob75Gs+mtMBb60RFpRzlXabzF8
-	 eGwFo3DZfDeUlIFAJEyG6i5CQr5R+IZjoiuDGdux9CEpuV59apcO8poEuYVzlagtLpw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794194510;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=MLubieIZakhvQCD9QssGY4reTRZXE0jARP2ANL06kB0=;
+	b=e1kXMxWGpnCqHdsqaJS3BkXBlpMn0cRpY72YvuyQ0+eHVpDkIB/if5haQ/vI0s2RQz7H
+	 2yTig/QULizz4MvebZoK81dNwOTslgu+7MLrw6qLUCRfuVyC6Le4uzKtstNUHWuVCxgij
+	 z9lHnJfvLnnQ7B9yiiW+b6DJgcGOnkbryvqGSlu25LQUWVBJ4RBAuJFX5nj5EmHV/FaRV
+	 FJby2m7ui0NHriC5JkPtzZ0phj6UU6GMk5F7AmY76lxNuV2qiJnCHQEFRjP6hrTPJx6J+
+	 7/008hw+Heg1UeHaki7xYtotA9y9Gq4uo3c6DF+fvGwSG0D5RJ2ayrQ5XNDMPn/b2qw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=raidlab.org;
-	spf=pass smtp.mailfrom=raidlab.org;
-	arc=none smtp.remote-ip=79.135.106.112
-Received: from mail-106112.protonmail.ch (mail-106112.protonmail.ch [79.135.106.112])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i45tSyvP;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70AA8606A320
-	for <linux-raid@vger.kernel.org>; Mon,  9 Nov 2026 03:08:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 70AA8606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=raidlab.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=raidlab.org
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=raidlab.org;
-	s=protonmail; t=1794193696; x=1794452896;
-	bh=Y3YZ4XZqcxssxJ/4BRJGkkKL0kCh9N5Lz7PpxuiUZaQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:From:To:Cc:Date:Subject:
-	 Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=GKCmNUHCHWlPsRyDmFodjCEp9YedEhXqBSCM3Vwb6YBA/sQcqXqw2FuA/bE2mwgHg
-	 QBrOLxPEhQZ+vx+YgolS7fgfL/CqKHWE0T/yRfYvzx/uAE8Xg8ZTjbZH6KBFHjWmyg
-	 PHLlg/wkxGK4QmDODuf+VtsoumXSnZaIXegt+iLxC5ghUbfbC80u+twc0+bLwUPPoU
-	 cuhiA58tB9HPUBrxvHlBe6oJceUKkt/xQtdjhTwVLzfUeZ1w6veLhdxff/Dj81CCZi
-	 GlHUcDhrnsWLOnfaZmKjKm+6QM0Ko3Mepqt4xaYttrz50cWBJshVqEgUaBzbLFNNUe
-	 wl1V0HHzHbMBw==
-X-Pm-Submission-Id: 4jNF8s2rbLz1DDXR
-From: Miroslav Cimerman <mc@raidlab.org>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	Ard Biesheuvel <ardb@kernel.org>,
-	Eric Biggers <ebiggers@kernel.org>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] raid6: use normal stores in the x86 x4 xor_syndrome functions
-Date: Mon,  9 Nov 2026 03:08:05 +0000
-Message-ID: <20261109030805.25709-1-mc@raidlab.org>
-X-Mailer: git-send-email 2.53.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09D22606A31C;
+	Mon,  9 Nov 2026 03:21:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i45tSyvP
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 150871F0089F;
+	Mon,  9 Nov 2026 03:21:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794194509;
+	bh=MLubieIZakhvQCD9QssGY4reTRZXE0jARP2ANL06kB0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=i45tSyvPL1BGVqQl0k89W39r8COhcc5jdq7K4bWkZgesrOvri5eDD932Fh1N1uLGC
+	 Sp1ChRtdwLe5kRZpJRYP9e0Fb7JgnhCkQJr17t1nzTa3sIbhRva0TeU9W6hpPdkiQM
+	 1bZSkI7O7CQ8zq5+2bXvasJpcbSIDM/PLDZKWP+NIBJ9JDAIx4G4XrQlimTfJbnpGm
+	 e6/pzxL/YyQLRVywueRGnFdTiO54uOJFxFqgcPLb2WvXPMktZZcx6KOio2+g5kN48H
+	 ntR2/ybkM084EPu9lOXmB16WsYAnrMuAkPz7ghqUuLbuR1FAbw6ZCnzwJvQ2xjhFdC
+	 1zwnmEbmCNi3w==
+Message-ID: <sashiko-outbox-204370@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] md: validate raid_disks range before loading
+ personality
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ran Hongyun" <ranhongyun1@huawei.com>, agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com, bmarzins@redhat.com, song@kernel.org, yukuai@fygo.io
+Cc: dm-devel@lists.linux.dev, linux-raid@vger.kernel.org, chengzhihao1@huawei.com, yangerkun@huawei.com, yi.zhang@huawei.com
+In-Reply-To: <20261109025621.2031722-1-ranhongyun1@huawei.com>
+References: <20261109025621.2031722-1-ranhongyun1@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 09 Nov 2026 03:21:48 +0000
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -63,156 +59,151 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-xor_syndrome() updates P and Q in place for a read-modify-write. md
-calls it twice on the same P/Q page per write, to remove the old data
-and to add the new data. The x1 and x2 unrolled versions write P and Q
-with normal stores since commit a582564b24be ("md/raid6 algorithms:
-xor_syndrome() for SSE2"), which argued that non-temporal stores of
-less than a cache line are slow, but kept non-temporal stores in the
-x4 version, as it writes whole cache lines. The AVX2 and AVX-512
-versions followed the same pattern.
+Thank you for your contribution! Sashiko AI review found 3 potential
+issues to consider:
+- [High] md: md_run() cap at MAX_RAID_DEVICES breaks valid arrays with >
+  253 disks
+- [Medium] md: unchecked delta_disks in md_run() allows OOM warn and
+  divide-by-zero
+- [Medium] md: missing raid_disks upper bound in update_raid_disks() on
+  online reshape
+It also noticed 1 related pre-existing issue this patch does not
+introduce:
+- [Medium] md/raid1: missing raid_disks upper bounds check in
+  raid1_reshape() [1]
+--
 
-The non-temporal stores evict P and Q from the cache and the sfence
-waits until they are written to memory, just before the second call
-reads the same P and Q again, now from memory.
+commit fc41ec678e6b01e865c547317a0225da7de795ee
+Author: Ran Hongyun <ranhongyun1@huawei.com>
 
-Use normal aligned stores in the x4 unrolled versions too, like the x1
-and x2 versions and the other architectures.
+md: validate raid_disks range before loading personality
 
-md RAID-6, 4 KiB random writes, md thread on one core, Xeon E5-2699 v3:
+This commit moves MAX_RAID_DEVICES (253) from dm-raid.c to md.h and rejects
+mddev->raid_disks values outside [1, MAX_RAID_DEVICES] in md_run() before
+invoking the personality run callback.
 
-  8+2 on null_blk (dm-raid):     85.6k -> 98.1k IOPS (+15%)
-  6+2 on 8 Intel Optane M10:     57.3k -> 62.1k IOPS (+8%)
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 03e35386a8028..7b202b483e98c 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -6703,6 +6703,13 @@ int md_run(struct mddev *mddev)
+>  			return -EINVAL;
+>  	}
+> =20
+> +	if (mddev->raid_disks <=3D 0 ||
+> +	    mddev->raid_disks > MAX_RAID_DEVICES) {
+> +		pr_warn("md: %s: raid_disks %d out of range [1, %d]\n",
+> +			mdname(mddev), mddev->raid_disks, MAX_RAID_DEVICES);
+> +		return -EINVAL;
+> +	}
+> +
+>  	if (mddev->level !=3D LEVEL_NONE)
+>  		request_module("md-level-%d", mddev->level);
+>  	else if (mddev->clevel[0])
 
-Change in time per write in md's pattern (both calls and the 4 KiB copy
-between them), kernel code built in userspace, one core, geometric
-mean over 2-24 data disks, data in cache / DRAM:
+[Severity: High]
+Does capping mddev->raid_disks at MAX_RAID_DEVICES (253) in md_run() break
+assembling valid native MD arrays with more than 253 member devices?
 
-  avx2x4 (Xeon E5-2699 v3):  -66% / -38%
-  avx512x4 (Xeon Gold 6130): -78% / -48%
-  sse2x4 (Core i5-2520M):    -37% / -19%
+MAX_RAID_DEVICES was a dm-raid target limit, whereas native MD v1.x
+superblocks support up to 384 devices in a 1 KiB superblock and up to 1920
+devices in a 4 KiB superblock:
 
-Signed-off-by: Miroslav Cimerman <mc@raidlab.org>
----
-Notes:
-- The IOPS were measured on 2651f6deb332 (between 7.4-rc1 and -rc2) with
-  and without this patch, with avx2x4 forced by a test-only change in
-  raid6_choose_gen().
-- The raid6 benchmark picks the implementation by gen_syndrome() speed
-  alone. On Haswell-EP, AVX2 x2 and x4 differ only by noise, so either
-  can be picked. With x2 picked, xor_syndrome() already uses normal
-  stores, so this patch makes no difference in that case.
-- The sfence at the end of the xor_syndrome() functions (x1, x2 versions
-  since 2014, x4 with this patch) is no longer needed, as it no longer
-  orders any non-temporal stores. Removing it made no measurable
-  difference. I am happy to send a follow-up patch that removes it from
-  all xor_syndrome() variants.
-- Tested: raid6 KUnit on SSE2 and AVX2, AVX-512 was checked in userspace
-  against a scalar reference on a Xeon Gold 6130.
+drivers/md/md.c:super_1_validate() {
+	...
+	mddev->max_disks =3D  (4096-256)/2;
+	...
+}
 
- lib/raid/raid6/x86/avx2.c   | 16 ++++++++--------
- lib/raid/raid6/x86/avx512.c | 16 ++++++++--------
- lib/raid/raid6/x86/sse2.c   | 16 ++++++++--------
- 3 files changed, 24 insertions(+), 24 deletions(-)
+In addition, raid6_takeover() converts a 253-disk RAID5 array into a
+254-disk RAID6 array by incrementing mddev->raid_disks to 254, which
+md_run() will now refuse to assemble with -EINVAL.
 
-diff --git a/lib/raid/raid6/x86/avx2.c b/lib/raid/raid6/x86/avx2.c
-index 3cc2fe7ac42c..fbc1328574e1 100644
---- a/lib/raid/raid6/x86/avx2.c
-+++ b/lib/raid/raid6/x86/avx2.c
-@@ -435,18 +435,18 @@ static void raid6_avx24_xor_syndrome(int disks, int start, int stop,
- 			asm volatile("vpxor %ymm13,%ymm12,%ymm12");
- 			asm volatile("vpxor %ymm15,%ymm14,%ymm14");
- 		}
--		asm volatile("vmovntdq %%ymm2,%0" : "=m" (p[d]));
--		asm volatile("vmovntdq %%ymm3,%0" : "=m" (p[d+32]));
--		asm volatile("vmovntdq %%ymm10,%0" : "=m" (p[d+64]));
--		asm volatile("vmovntdq %%ymm11,%0" : "=m" (p[d+96]));
-+		asm volatile("vmovdqa %%ymm2,%0" : "=m" (p[d]));
-+		asm volatile("vmovdqa %%ymm3,%0" : "=m" (p[d+32]));
-+		asm volatile("vmovdqa %%ymm10,%0" : "=m" (p[d+64]));
-+		asm volatile("vmovdqa %%ymm11,%0" : "=m" (p[d+96]));
- 		asm volatile("vpxor %0,%%ymm4,%%ymm4" : : "m" (q[d]));
- 		asm volatile("vpxor %0,%%ymm6,%%ymm6" : : "m" (q[d+32]));
- 		asm volatile("vpxor %0,%%ymm12,%%ymm12" : : "m" (q[d+64]));
- 		asm volatile("vpxor %0,%%ymm14,%%ymm14" : : "m" (q[d+96]));
--		asm volatile("vmovntdq %%ymm4,%0" : "=m" (q[d]));
--		asm volatile("vmovntdq %%ymm6,%0" : "=m" (q[d+32]));
--		asm volatile("vmovntdq %%ymm12,%0" : "=m" (q[d+64]));
--		asm volatile("vmovntdq %%ymm14,%0" : "=m" (q[d+96]));
-+		asm volatile("vmovdqa %%ymm4,%0" : "=m" (q[d]));
-+		asm volatile("vmovdqa %%ymm6,%0" : "=m" (q[d+32]));
-+		asm volatile("vmovdqa %%ymm12,%0" : "=m" (q[d+64]));
-+		asm volatile("vmovdqa %%ymm14,%0" : "=m" (q[d+96]));
- 	}
- 	asm volatile("sfence" : : : "memory");
- 	asm volatile("vzeroupper");
-diff --git a/lib/raid/raid6/x86/avx512.c b/lib/raid/raid6/x86/avx512.c
-index 772bfc4af6df..520094efbb71 100644
---- a/lib/raid/raid6/x86/avx512.c
-+++ b/lib/raid/raid6/x86/avx512.c
-@@ -516,18 +516,18 @@ static void raid6_avx5124_xor_syndrome(int disks, int start, int stop,
- 				     :
- 				     : );
- 		}
--		asm volatile("vmovntdq %%zmm2,%0\n\t"
--			     "vmovntdq %%zmm3,%1\n\t"
--			     "vmovntdq %%zmm10,%2\n\t"
--			     "vmovntdq %%zmm11,%3\n\t"
-+		asm volatile("vmovdqa64 %%zmm2,%0\n\t"
-+			     "vmovdqa64 %%zmm3,%1\n\t"
-+			     "vmovdqa64 %%zmm10,%2\n\t"
-+			     "vmovdqa64 %%zmm11,%3\n\t"
- 			     "vpxorq %4,%%zmm4,%%zmm4\n\t"
- 			     "vpxorq %5,%%zmm6,%%zmm6\n\t"
- 			     "vpxorq %6,%%zmm12,%%zmm12\n\t"
- 			     "vpxorq %7,%%zmm14,%%zmm14\n\t"
--			     "vmovntdq %%zmm4,%4\n\t"
--			     "vmovntdq %%zmm6,%5\n\t"
--			     "vmovntdq %%zmm12,%6\n\t"
--			     "vmovntdq %%zmm14,%7"
-+			     "vmovdqa64 %%zmm4,%4\n\t"
-+			     "vmovdqa64 %%zmm6,%5\n\t"
-+			     "vmovdqa64 %%zmm12,%6\n\t"
-+			     "vmovdqa64 %%zmm14,%7"
- 			     :
- 			     : "m" (p[d]),  "m" (p[d+64]), "m" (p[d+128]),
- 			       "m" (p[d+192]), "m" (q[d]),  "m" (q[d+64]),
-diff --git a/lib/raid/raid6/x86/sse2.c b/lib/raid/raid6/x86/sse2.c
-index 43b09ce58270..da8374e506b6 100644
---- a/lib/raid/raid6/x86/sse2.c
-+++ b/lib/raid/raid6/x86/sse2.c
-@@ -432,18 +432,18 @@ static void raid6_sse24_xor_syndrome(int disks, int start, int stop,
- 			asm volatile("pxor %xmm13,%xmm12");
- 			asm volatile("pxor %xmm15,%xmm14");
- 		}
--		asm volatile("movntdq %%xmm2,%0" : "=m" (p[d]));
--		asm volatile("movntdq %%xmm3,%0" : "=m" (p[d+16]));
--		asm volatile("movntdq %%xmm10,%0" : "=m" (p[d+32]));
--		asm volatile("movntdq %%xmm11,%0" : "=m" (p[d+48]));
-+		asm volatile("movdqa %%xmm2,%0" : "=m" (p[d]));
-+		asm volatile("movdqa %%xmm3,%0" : "=m" (p[d+16]));
-+		asm volatile("movdqa %%xmm10,%0" : "=m" (p[d+32]));
-+		asm volatile("movdqa %%xmm11,%0" : "=m" (p[d+48]));
- 		asm volatile("pxor %0,%%xmm4" : : "m" (q[d]));
- 		asm volatile("pxor %0,%%xmm6" : : "m" (q[d+16]));
- 		asm volatile("pxor %0,%%xmm12" : : "m" (q[d+32]));
- 		asm volatile("pxor %0,%%xmm14" : : "m" (q[d+48]));
--		asm volatile("movntdq %%xmm4,%0" : "=m" (q[d]));
--		asm volatile("movntdq %%xmm6,%0" : "=m" (q[d+16]));
--		asm volatile("movntdq %%xmm12,%0" : "=m" (q[d+32]));
--		asm volatile("movntdq %%xmm14,%0" : "=m" (q[d+48]));
-+		asm volatile("movdqa %%xmm4,%0" : "=m" (q[d]));
-+		asm volatile("movdqa %%xmm6,%0" : "=m" (q[d+16]));
-+		asm volatile("movdqa %%xmm12,%0" : "=m" (q[d+32]));
-+		asm volatile("movdqa %%xmm14,%0" : "=m" (q[d+48]));
- 	}
- 	asm volatile("sfence" : : : "memory");
- 	kernel_fpu_end();
+[Severity: Medium]
+When an array is started with an active reshape (mddev->reshape_position !=
+=3D
+MaxSector), can an unvalidated mddev->delta_disks bypass this check and
+still trigger the oversized allocations or a divide-by-zero?
 
-base-commit: 7475ea8b58616b33c04afb976cf0fbaad9dd63fb
--- 
-2.53.0
+On an inactive array, writing a large value to sysfs raid_disks, setting
+reshape_position, and then writing a small valid value to raid_disks (or
+loading a superblock with a crafted delta_disks) leaves mddev->raid_disks
+within [1, MAX_RAID_DEVICES] while mddev->delta_disks is arbitrarily
+negative.  raid5 setup_conf() and raid10 setup_conf() size their disk
+allocations from mddev->raid_disks - mddev->delta_disks:
 
+drivers/md/raid10.c:setup_conf() {
+	...
+	conf->mirrors =3D kzalloc_objs(struct raid10_info,
+				     mddev->raid_disks + max(0, -mddev->delta_disks));
+	...
+}
+
+This still hits the MAX_PAGE_ORDER warning (and overflows a signed int if
+mddev->delta_disks =3D=3D INT_MIN).  Furthermore, if mddev->delta_disks equ=
+als
+mddev->raid_disks, conf->prev.raid_disks (mddev->raid_disks -
+mddev->delta_disks) becomes 0 and raid10_run() -> enough() -> _enough()
+divides by zero at (this + 1) % disks.
+
+Checking that mddev->raid_disks - mddev->delta_disks is also within the
+valid range when mddev->reshape_position !=3D MaxSector would close this ga=
+p.
+
+[Severity: Medium]
+Does online reshape via update_raid_disks() bypass md_run() and leave
+raid1, raid5, and raid10 exposed to the same unbounded allocations?
+
+When reshaping an already-running array via sysfs raid_disks or
+ioctl(SET_ARRAY_INFO), raid_disks_store() and update_array_info() call
+update_raid_disks() directly without going through md_run():
+
+drivers/md/md.c:update_raid_disks() {
+	...
+	if (raid_disks <=3D 0 ||
+	    (mddev->max_disks && raid_disks >=3D mddev->max_disks))
+		return -EINVAL;
+	...
+	mddev->delta_disks =3D raid_disks - mddev->raid_disks;
+	...
+	rv =3D mddev->pers->check_reshape(mddev);
+	...
+}
+
+When mddev->max_disks is 0 (such as on non-persistent or external-metadata
+arrays), any positive raid_disks up to INT_MAX is accepted and passed to
+pers->check_reshape(), hitting the MAX_PAGE_ORDER and INT_MAX allocation
+warnings in raid1_reshape(), raid10_check_reshape(), and raid5
+check_reshape().
+
+[Severity: Medium]
+This problem wasn't introduced by this patch, but raid1_reshape() [1]
+lacks an upper bounds check on raid_disks when reshaping a running array
+with mddev->max_disks =3D=3D 0:
+
+drivers/md/raid1.c:raid1_reshape() {
+	...
+	raid_disks =3D mddev->raid_disks + mddev->delta_disks;
+	...
+	new_r1bio_size =3D offsetof(struct r1bio, bios[raid_disks * 2]);
+	newpool =3D mempool_create_kmalloc_pool(NR_RAID_BIOS, new_r1bio_size);
+	if (!newpool) {
+		return -ENOMEM;
+	}
+	newmirrors =3D kzalloc(array3_size(sizeof(struct raid1_info),
+					 raid_disks, 2),
+			     GFP_KERNEL);
+	...
+}
+
+Because update_raid_disks() does not bound raid_disks when mddev->max_disks
+is 0, a large raid_disks value overflows raid_disks * 2 in signed 32-bit
+arithmetic or exceeds KMALLOC_MAX_SIZE in mempool_create_kmalloc_pool() and
+kzalloc(), triggering a slab warning in ___kmalloc_large_node().
+
+[1] https://sashiko.dev/#/bug/linux-9d642fe4-31fe-4998-ac3d-c07a30507ae7
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109025621.2031=
+722-1-ranhongyun1@huawei.com?part=3D1
