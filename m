@@ -1,90 +1,105 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.44
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794273281;
-	b=cmHibdkD5xXiuSJQTrH04o4drQrY8taMkwkkNkp0k9JWyHmg0MiVi+DKZjq7LnGX8+B/
-	 CP3yVbfaPchF3iVujXE3aJledkIF5j0TqMbIDhAEd71rVub6AV6IATe3Ns0G6OSOJSqyT
-	 +qGwyhCsbmv39G1fVRX2wxcd6rjMg9bdGWIpyb7Rxt+tGIFHGrJ2UKDDLrvbVx+9euv+W
-	 mCsEEdF7AT3oC3LGJx3TlkRPfsXPcCadLNNKY6oS8w8U1rFj7v42rlriiGD5SDFpuIuMK
-	 cXcvV3fgCILrSlENvEOBYSftsjEzVAMsQ0HutNAqM36Zrx2cUdtG6ED1dQcpm9uLqkQ==
+	t=1794289506;
+	b=o8Twvvgcop+bli4fEHdje/hG9yZAYxlntcl9y2pYpBWtX8hT64S9zwmF2tvF/SFhR2I8
+	 66a9VQJstVynlCP1AusIVDQIHkrD1hkHgjcJkqN2yDc04czSQK7mPMymik9W3SNJOmGul
+	 JM0dS3o4PZXBaZls98EZIriOKd2ffxz4AldbW8yiTLqIxWPizGMJ5IaiPjZXTynHc6mXM
+	 nA46jrqs0cmiUrmOrfGmcbrAo+Mi+RNaf3s2+zobsQJQCUTccVyAKWwlrJuzIKIMksv3m
+	 L3sx5/yW9siL1QNgCyvHuLSHYB063uolpdwoBQWAQDb6q20Q6dfGhivVgNZ8yL9Nghg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794273281;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794289506;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:X-Forwarded-Encrypted:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=m2qXctBTC0OPADf0V2KkMb6r2GA0JgabIuFAMe6ERzQ=;
-	b=GQ0DR/XNdEq2Z94R5vi27xmfRgbWu8Tn9f15EZ8OPF7Yf60PfA9o6Z7k9ZpGIYf3rlix
-	 2s3dCDzuk3TLI2Bw6KjGIyLOsx3AeOz8VKKiYLKUatn8xX1ICup8u0Th0VaZkHsFtXwAH
-	 CV4vXHTqeSkDudk/QNEfT5PLAz8LE/6m2GO/x/ovjQZHiL/1QPwgYRaSUGcgtnICB3PAN
-	 BcItBxNOknhO3Qbt3sYdUYASPxXtipDZxdt1rVIs1EPAduZXaJ3hkTKoalT9cKj+9TWJi
-	 MwMZCZFc3NSbc2Crl7VYK9d+Tk18LApe0GP9MedrFqiX6EtyTKZMQ79Xf+A1Z59FmTQ==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=p+m90ZHP6p5x4AVs4ojsWRq2UWvQJVYuVb7I16eMYE0=;
+	b=WpeJeJjjBuE+6Y1xj+fIRGElslVuTY1VFcKHRJhxHRt+6kCMKVoiEVNYnQPnvZOWYvnr
+	 p0+kXPiBLXKYM7om/VN7q34zOOAwBSFRk5b0lPIB8/0W8vxvbJw2bZJcFFpPt0qFAPocc
+	 VDQ5coQwxQCApxoiTkIxVeZQ0SRP7zA8kqw8fBJ7lfaUN88sk1vVSyRZiUrSknF8MFcnW
+	 QtlQio4gvL83fQ2jdHvPDbkyEd6BdutOl1clVn1PMV+cnHXfnAc3uhqiaXWRyUc/mPubn
+	 gKmgBSKfOM4//Boi8aZtjB+Y6nOAWAgiDTcQ1kFOFbGRni0OOisXHrLfpvRqRnSJc4Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=linux-foundation.org;
-	spf=pass smtp.mailfrom=linuxfoundation.org;
-	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=google header.b=c3HPZ9w3;
-	arc=none smtp.remote-ip=209.85.128.53
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=CnZ8C7h5;
+	arc=none smtp.remote-ip=209.85.221.44
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28711606A321
-	for <linux-raid@vger.kernel.org>; Tue, 10 Nov 2026 01:14:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 28711606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0D44606A330
+	for <linux-raid@vger.kernel.org>; Tue, 10 Nov 2026 05:45:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E0D44606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=google header.b=c3HPZ9w3
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a2153c8525so11415145e9.3
-        for <linux-raid@vger.kernel.org>; Mon, 09 Nov 2026 17:14:39 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=CnZ8C7h5
+Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-48e47347279so1000364f8f.1
+        for <linux-raid@vger.kernel.org>; Mon, 09 Nov 2026 21:45:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1794273278; x=1794878078; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=m2qXctBTC0OPADf0V2KkMb6r2GA0JgabIuFAMe6ERzQ=;
-        b=c3HPZ9w3X3vdF/+J+vaP+PQYAUd2+9JOKWwj6JMce2A8a3XTTDedjlXPO55cC45zjl
-         2hZf2gArAaC7b2VANcAz9siQ8hXOL0yOpee0+28IQ4U11h71kiwdUMjW00TOftz1OChD
-         IA4Fb2sqqSoZR8rQ6NvDOj7SKOizFmF/BfqF0=
+        d=gmail.com; s=20260707; t=1794289504; x=1794894304; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=p+m90ZHP6p5x4AVs4ojsWRq2UWvQJVYuVb7I16eMYE0=;
+        b=CnZ8C7h5094DmlshNeGptAMnvcSxnLAeyMg8K/R3q+alRDLFABRomdJnRcergKmB3S
+         51RfVxdzAx82FnvV3pyNPgZcTOcTei24JRyX4rc5R+0h5RDUc/Dt9iTqrob60+wuwzBz
+         ZpMM4yiGR0SZ7TlAjZLozlqJbWctfFkfa7yeHINDvW41NcJN/Frae+iLfbX8OBnJZHqh
+         2wMLhFOlWcp/DI23lfYsIQ+062ENiDQPILuRF8eMUu5IjwhyRf3sT8HBBLwHOZuenMDn
+         11mcSyLPcR1eDkjPct+01O2JlNKgiEYjfI41OdXC8KJ0obKKrprZHdHl1xdHGru0rZLv
+         63mg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794273278; x=1794878078;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=m2qXctBTC0OPADf0V2KkMb6r2GA0JgabIuFAMe6ERzQ=;
-        b=O2n9bgdbPifyUdiaWmYMLuUfkPHEpmZJ6PHEeHzBquMEo6vhy4S1gBL4M0ou30OWiD
-         Ki+GX1Zj6V/91Gu0rLY7kGgcNL3GOBVO1Q+JId13AanTkHkABAIoInCWB8VkPY0qOOxE
-         b28EsCrKWRJjKEMNyd1hiSV7zTsez/3GHDu4x6g1wDefSiSbccrBDi0zPM/ol3gpvFev
-         9dJd5fmrnx4U5CWQ9wpPjrV4pha+pAy4hR4YcopCzri0QYyktVO9jWlfzcP22rWHPukP
-         rIjUCGaWOwOLmomFcC9Y4vaRvBjIG2T6/S/MgLUyBE0WaH9sOImacj3ePDYA+mUjtO/1
-         vA3w==
-X-Forwarded-Encrypted: i=1; AL+hErEIAJZ548fFce7Z/OBNPNn65mmtuqJkGrP01POwJK5OX4GsuZH4gUm4Ds/XEWxh9fJ2P40ja9S2RzR8@vger.kernel.org
-X-Gm-Message-State: APuU4Z+WBAFbOck200kKbBjovH5DYn70Y9n3IY+9+1qV0hjFu9lqUHcU
-	z6YjSSaHEcnBLSVOCioaSyUcp1y6DWRQcAX6RjlHeL7osQcCs89pVGjiKesnTS3kw7ToYIx4PDM
-	tdLtYdI/XOg==
-X-Gm-Gg: AYBFou2vBzkSSIxfUA0kc2JKB8sppIZ+xjns/5RJ6KOTO1/r0gyPXaA6mwLmSU/1fn/
-	nuAuOnXcxmA0tmXjX/Di6mIB3xm3oeQ1SpFc2YDJkE/+DOWA3J6XuFbKLr/qv3T0rg3ER/L0bt8
-	7YM7ErgEm7y1/2Wpc6Q/W/W976S02a50v/IX4zOiapfKd/QjWLES0LZuCI0GJUYDmVe8hihV8lF
-	uGMYoe/h7GA9JMLmuMqS8SRVnWXMrzfoxN5Q6feC6eBbi4sopYRdIJl9NBEgUEnKGNHlKmTTRMr
-	5Z5GhGfyUinOKxRQiqB+1J7KUxYCU9e9IFG4unS2VAMOkWls7Y5MdDlsBvUkXpQaflcbFtUQO8b
-	HSATQMhhPwInssE+R84RIzjCvaer4KI1BpBuIEpZm7v4EeNXP/t1EaSN5VNZPPT944J2pOsmbAA
-	7qrHh73tuXWSyjflDsk/JbgekZ/rhzKVe23v7sSopS1SDcC4wsTxo6H+ZKiOg0U7XUC3bqmQGos
-	+WCBrLGBPxPGZTXApxGxsXsutj0+au+l+zZQm6jkIF0225hXe/MURhcUvczI8s9XtlwWAQp9eCE
-	NkPc2KspeTiBNIEg3+KXK7vLg4jXDtk/q3WXbDsCpNL3XCfzhNggRuyMIxVZQHc5mACgdAt8xHt
-	XaA==
-X-Received: by 2002:a05:600c:64c8:b0:4a2:e0c:2b0a with SMTP id 5b1f17b1804b1-4ba02343ac3mr13422385e9.16.1794273278595;
-        Mon, 09 Nov 2026 17:14:38 -0800 (PST)
-Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com. [209.85.218.47])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4ba01fe9357sm30340465e9.9.2026.11.09.17.14.36
-        for <linux-raid@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 09 Nov 2026 17:14:37 -0800 (PST)
-Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-c4d2b741ed9so241841766b.2
-        for <linux-raid@vger.kernel.org>; Mon, 09 Nov 2026 17:14:36 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AL+hErEDpNOc1zHnpkWdH33pC5VGv/hG0wNcsyXNwCZ5b5TgE4RUU4nutHbxPUi0CR1yI9OYv7ud2gtt9hkp@vger.kernel.org
-X-Received: by 2002:a17:907:9451:b0:c41:1750:59a2 with SMTP id
- a640c23a62f3a-c50495dfbd5mr87253466b.12.1794273275844; Mon, 09 Nov 2026
- 17:14:35 -0800 (PST)
+        d=1e100.net; s=20260707; t=1794289504; x=1794894304;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=p+m90ZHP6p5x4AVs4ojsWRq2UWvQJVYuVb7I16eMYE0=;
+        b=DabZ3Yp7bt4TBlorejQpHfCre2uWf3bUsH+2z1jPPdgtIbhStl3DvOQ5w51Ld5K8OB
+         xMR3bfwYZPRfI5lFcNGXCOrRqXZkSSVjG41+cjFj6mjaK4uBLR4a6f4FcTt7J6efjqP9
+         qAET9tHQgAOUEKK1ufEe+JutrOqYLe3ayk1ysd6DqhWBfOSD5c/HVdRfq4vLWnY81cUR
+         +PGHhInLWNPR1vmNIk9tyFtJKtDewFQAUXfNMVHAYtNBItNabR42s959TmE3FoJh3Zig
+         iLN2vz7OImImeaTmPlwEvryL38dEX7kq1Dtg2yGj5Kf+Qt92flLFfpNpkkxg07OpFrGK
+         5KVA==
+X-Forwarded-Encrypted: i=1; AL+hErFosBUDegh9s2RUJIAVZV530u2yYBEV0WFyOJhTubiDfiTGuXIl3mczlFLTiItxAKwTSpNu01XRvAVi@vger.kernel.org
+X-Gm-Message-State: APuU4Z+Sc3oOU6dm82whXyfcfBEYeprhrTgpl8rZhf5ntrlD6EGJPp66
+	7VbiTx6HAefFpO0K1/TtblwCM7p70bSd0t01AfAmYRXkc+mXW3Cft/Qy
+X-Gm-Gg: AYBFou2hvfcqxfke5T/FI3J5ibEapAcfsNR2BwxN9DY3vUlzNffPI+H+PPxaxw61kEu
+	De+6PGX176oc8hcHG8nRdELLKsVlym1OnntzG2kYRpDN6hIafhXmkm5HjnFmDzx467QfvYs4OXi
+	s6DqFzx4Nwy5qgtyeDzUmFG8X7zDUPmj/oLp3MkNrnWgwnZVYAblQxvC8qHW3aOJ7xgfneFdENl
+	+10W8NX+eKtuJRxtfypCC7YrEb3xqJA4RhZCX1QZdhYJM4Ny1Ldeumba/JXwuE22fOWK5W6KfpM
+	sBW8Z+HWgSKy7XgqdCWMpQJ5mWqAR94zLXX6/w+fLrFLstABn+lR1et8HzIdh+CRs01RKeYD8GE
+	xA3hHSwN2MUZVMO4LrZjTbJm304dTypIKEFkn3Ut3sr5Xa4/HAjGMps/or9Onqx6HS+O+xIhEHV
+	9A45MGTwNyYEAMGk68qbX3/viNKgGJHuC86OA0DpEPgmkX07lgdD+DeCqRqqB4hwSGgdElYtEZH
+	i0dB1GgaqZNKhJxWSvnnbgsMe1L4vbMMnAKMnBxBYN/0NNKNttyJ9LtfK0wASp6nilXQ+xkIqvw
+	DOqfQlgnjrJP1Y1DKycPlpszlsBVs+HL9vAmu3M4YufWkWHebnHUhfu4sinjU0NoUFA399sAriZ
+	EFaVohoFxjd05+w==
+X-Received: by 2002:a05:6000:2482:b0:48e:353b:9f28 with SMTP id ffacd0b85a97d-4982b28ac5emr3169751f8f.1.1794289504112;
+        Mon, 09 Nov 2026 21:45:04 -0800 (PST)
+Received: from DESKTOP-OL07BOP.localdomain (109-92-113-33.dynamic.isp.telekom.rs. [109.92.113.33])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-498365cbfc6sm3083123f8f.41.2026.11.09.21.45.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Nov 2026 21:45:03 -0800 (PST)
+From: Hristos Nenkov <nenkov2004@gmail.com>
+To: Song Liu <song@kernel.org>,
+	linux-raid@vger.kernel.org
+Cc: Yu Kuai <yukuai@fygo.io>,
+	Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	dm-devel@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	Alasdair Kergon <agk@redhat.com>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	Benjamin Marzinski <bmarzins@redhat.com>,
+	syzbot+8b22a0459202f76b4096@syzkaller.appspotmail.com,
+	Hristos Nenkov <nenkov2004@gmail.com>
+Subject: [PATCH] md/raid10: preserve recovery flags on reshape abort
+Date: Tue, 10 Nov 2026 06:44:56 +0100
+Message-ID: <20261110054456.625-1-nenkov2004@gmail.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <6aec6738.059f5055.2712e4.0005.GAE@google.com>
+References: <6aec6738.059f5055.2712e4.0005.GAE@google.com>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -94,56 +109,43 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261104-work-procfs-core-v2-14-76ace653a773@kernel.org>
- <CAMuHMdVfakapgBK6TBhO1iWX8qzvLDk8jzRS=t2MVa5G=MCUeg@mail.gmail.com>
- <20261107-akteur-gemieden-eckdaten-21304d085e35@brauner> <20261108185953.28054fb3@pumpkin>
- <alpine.DEB.2.21.2611090504170.17804@angie.orcam.me.uk> <20261109214558.0d9d5228@pumpkin>
-In-Reply-To: <20261109214558.0d9d5228@pumpkin>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 9 Nov 2026 17:14:19 -0800
-X-Gmail-Original-Message-ID: <CAHk-=whsA3tKcUCBJDj_vmJ11rVGT9rivgnKjGRgMO21CPmCxg@mail.gmail.com>
-X-Gm-Features: AclHuK-x8jcOOQUqd2amGoGEAKER9jIFGaeL4LxxWAd0cGV7dz_RR64PtDogpPU
-Message-ID: <CAHk-=whsA3tKcUCBJDj_vmJ11rVGT9rivgnKjGRgMO21CPmCxg@mail.gmail.com>
-Subject: Re: [PATCH RESEND v2 14/23] proc: let procfs copy in writes before
- pinning the entry
-To: David Laight <david.laight.linux@gmail.com>
-Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>, Christian Brauner <brauner@kernel.org>, 
-	Geert Uytterhoeven <geert@linux-m68k.org>, linux-fsdevel@vger.kernel.org, 
-	Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, Chris Mason <mason@kernel.org>, 
-	Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
-	Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
-	Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, Greg Kroah-Hartman <gregkh@suse.de>, 
-	Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
-	linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, ntfs3@lists.linux.dev, 
-	platform-driver-x86@vger.kernel.org, coreteam@netfilter.org, 
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net, 
-	jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
-	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, 
-	samba-technical@lists.samba.org, sparclinux@vger.kernel.org, 
-	linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
-	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
-	linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-On Mon, 9 Nov 2026 at 13:46, David Laight <david.laight.linux@gmail.com> wrote:
->
-> Just that the cast would have to be:
->         u8 *foo = (u8 *)bar;
-> where 'bar' is 'char *', and I don't think you need a cast there when
-> char is unsigned.
+raid10_start_reshape() can fail while resizing a bitmap before it
+changes any recovery bits on its success path. Its abort path nevertheless
+clears the entire mddev->recovery bitmap.
 
-.. and just to clarify: 'char' is always unsigned in the kernel on all
-architectures since commit 3bc753c06dd0 ("kbuild: treat char as always
-unsigned") back four years ago...
+dm-raid keeps MD_RECOVERY_FROZEN set across suspend and resume. If RAID10
+reshape setup fails, raid_preresume() logs the failure and continues with
+resume. Clearing the bitmap removes MD_RECOVERY_FROZEN and makes
+raid_resume() hit its invariant warning.
 
-            Linus
+Do not clear mddev->recovery from the RAID10 abort path. The error paths
+reach abort before raid10_start_reshape() modifies the recovery bits, so
+there is no personality-owned recovery state to roll back there.
+
+Fixes: bb63a7019df9 ("md/raid10: resize bitmap when required during reshape.")
+Reported-by: syzbot+8b22a0459202f76b4096@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=8b22a0459202f76b4096
+Signed-off-by: Hristos Nenkov <nenkov2004@gmail.com>
+---
+ drivers/md/raid10.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 066c43154..1fd3f5f4f 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4490,7 +4490,6 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 	return 0;
+ 
+ abort:
+-	mddev->recovery = 0;
+ 	spin_lock_irq(&conf->device_lock);
+ 	conf->geo = conf->prev;
+ 	mddev->raid_disks = conf->geo.raid_disks;
+
+base-commit: b3dfbde62cf1981c4638939c159dfd087b7a72e9
+-- 
+2.43.0
+
