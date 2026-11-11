@@ -1,84 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=82.195.75.108
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794398342;
-	b=0tyZQwbuiy42oxCDaVhOZzFjT7aC/WSLR2SlOoaWuvS62YqCniej84tplEepbvPSlRKd
-	 1xsqOjVh/35KuwmC09naKQbkkulbMst9tNuXnSZqlhH8e2ZLjd0FtGfVJBO0VVujzvbYl
-	 x3DQlnuZLnxxehKy9CtxCnyy7vQUPAldID4mJ6meVgsr+rXYxHQC4c66bLZ30JEi01Wbu
-	 5/LlzZn2MF5v2N5KKTkqXAstrlKSeiBeLuWOK03ZdK5c3Z3U1GDW5dy9ijMKXkwUoVG/i
-	 Xfozy+6rWG6NkG5PO2yVwfbP1MDtQ3a9r2WuqMUg15T+DS9Tmmw2FIgDbvKHuQALPmA==
+	t=1794430588;
+	b=XM8HdxZRC5pKfHvv2W6WIsi1dZ/Bi9+VzJdfKaJ449j/etu3aKNkUc99XnikQmFrTNhV
+	 /upbFW/teytAlb8zAeJ4RJK6ipi7gLqpqvmkiLATDbrubpabxaLUnMAAmqhCIG5dBcQRo
+	 ZFXAlgjPVQbNwkSz0dfeAbD/sA+ffsgBmxUt0LT1yEgyelSoehE7Xr5hQeHTUqA1+zx54
+	 SbhjM8f7CHDiimRaHDI9J3oKnomonRSN7gNXe2mvBGxvpXOQrBqwWOUeS2BmlCq/aVM+g
+	 aFyyIlCDBj9BDI92MMqwKYH0QvNVv0eatWk8UObleFeNrKEnIetAlEyVw6y8AlvV/Cg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794398342;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-Debian-User;
-	bh=6+DIIko/jddTALojzUdCwqYFD7qAVSieeB13vaTbTZ4=;
-	b=3ZRUCpDbmpEIqJg6asZuWCc8fZxzo6lXaaSCZ0QAxP95vLI7LAQKcX9iohx0TsIgU1va
-	 QTCQH6UO/prTdzSOxtGty+PEHCFS9gxfcgdDwUDTIDO+KF2UrMC+hIfrKbno6sAIIHCHX
-	 Pnt/VW+p7jrXC6xEZ+yX7nTykz7R5OhdVuFCPQBEvrcsnB5UL4etyyEpvKyffZ/B5JHfC
-	 rPeAdPgYjX4Ox0IBDUvQ0dmGh9A/d4tlouZAkjgs3eoZcLbblxEvT4fsiU26tlsbBU3yd
-	 4YMi9mRgAwMd7CawaTdNiNWpC2QZimU59ww6viAdoJL39aN3SflSSlyy2qCaOHa2AcQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794430588;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=+Ozfd/UGl2JfH7oM0NdRPY4AUBHvoqAHb4WsrY6jft0=;
+	b=h5UTyVceG+AU/C+IQkq0HjF+9Vfg+iqUUKYLjeLDhXUxCXISYXAE4BesLNy89cioPPyR
+	 dEyqFeaWpSdpn56bvZ9/66Uk2XW5uT4hpPE9q8ZU1Z1bv1RH9ekiEBd1uzVqKIDag52yG
+	 mjSSyupOlQaKPs6qF/KENrmSRQuDu1ddbimyAac3+AZqL8D9n8hcxgDiGVEDIlpord5tS
+	 plBk4UbRzSV7DV+1fx6cqlSjb3dqhRPdzLly+N+d3Q97T+UTNXw1LW8MwzaCUaAxgLKun
+	 XhhbNwSvnP+M3CHA7DrzSrmAVSYFf008cUCgoemKFOni3Q/ntQA1pqT+cTMDqEkegIw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=debian.org;
-	spf=pass smtp.mailfrom=debian.org;
-	dkim=pass header.d=debian.org header.i=@debian.org header.a=rsa-sha256 header.s=smtpauto.stravinsky header.b=R5XxGFbM;
-	arc=none smtp.remote-ip=82.195.75.108
-Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CnsIQZmI;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 579BC606A324;
-	Wed, 11 Nov 2026 11:59:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 579BC606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=debian.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D0A8606A31C;
+	Wed, 11 Nov 2026 20:56:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.a=rsa-sha256 header.s=smtpauto.stravinsky header.b=R5XxGFbM
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.stravinsky; h=X-Debian-User:In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=6+DIIko/jddTALojzUdCwqYFD7qAVSieeB13vaTbTZ4=; b=R5XxGFbM6TZRqhT0SXxuzcMt1x
-	LUNRh7V8lAnKwChToktKXZ/BvtFiWDBfAUJ9dLKtb2UHW2064KOlAZ6KUeSJJgWg/hPASfykHm9lb
-	dvvgSD9ejQiiI+LIrAd6gbPGs/9xZWqr0yWBdHoCClUgJD2Bg1YMupaoC/QOZRmfVPSCT6MpDMhbS
-	246KM0GzqcBbc4E2580QxhluNnyoa2vW19Sk2kqFlCkeQ6ViS/yest6rZWy5lPKlR+T/Ay7hDfWGq
-	IJLMSEFD0EmRJ6D4dVOiq+0BkJb7lfNarlib+MyMxjNYvepLWzR3xSOakoCQkMgy3TimUB70/p52t
-	iE2dAMXA==;
-Received: from authenticated-user
-	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.96)
-	(envelope-from <leitao@debian.org>)
-	id 1xR6yh-00DAF9-2o;
-	Wed, 11 Nov 2026 11:59:00 +0000
-Date: Wed, 11 Nov 2026 03:58:49 -0800
-From: Breno Leitao <leitao@debian.org>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, 
-	Linus Torvalds <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
-	Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
-	Eric Dumazet <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Al Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
-	Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados <joel.granados@kernel.org>, 
-	Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
-	linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	netdev@vger.kernel.org, ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
-	coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
-	linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
-	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
-	sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
-	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, 
-	Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
-Subject: Re: [PATCH RESEND v2 39/51] powerpc/crash_dump: recover from a
- machine check in copy_oldmem_page()
-Message-ID: <avRXzzCSzT9Qj2FC@gmail.com>
-References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
- <20261104-work-procfs-bugfixes-v2-39-021c84d852e0@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CnsIQZmI
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3391E1F00A05;
+	Wed, 11 Nov 2026 20:56:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794430587;
+	bh=+Ozfd/UGl2JfH7oM0NdRPY4AUBHvoqAHb4WsrY6jft0=;
+	h=From:To:Cc:Subject:Date;
+	b=CnsIQZmIDu0zX+R7fJahTWEnO+LDhd5bHuHgGISJjFshK9S8OfUbJBR+m2JHCwTYY
+	 96eUQUOUvmycrccd7F1UIKO71hQ9XpjfdqB7Noxllri/4v7QX81AY1vKazW9d5FgeD
+	 qlCiEBOGV39CC2qH+KSYRXjxJyJVfERF2hwTM6L72g7FoPEq7Di1AwuyPS3+7BHXbe
+	 F4o6uzro0F6EC0QF4xZ4DnZRg2n3b4qXWiXQySl+SZWCRgH101WPUzKeO6wMR8GggQ
+	 BEWFB0bKMzOZLNISsMt/2MgWz3AWo9lzYZ9UQ6IuZPlD8zeJIAoO/K5w58h50gvJQs
+	 hbbxgLwMbfAYw==
+From: Eric Biggers <ebiggers@kernel.org>
+To: akpm@linux-foundation.org,
+	linux-raid@vger.kernel.org
+Cc: linux-crypto@vger.kernel.org,
+	x86@kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	Richard Weinberger <richard@nod.at>,
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Eric Biggers <ebiggers@kernel.org>
+Subject: [PATCH 0/3] lib/raid: opt out of initializing MXCSR and 387 state
+Date: Wed, 11 Nov 2026 12:56:01 -0800
+Message-ID: <20261111205604.47547-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.56.1
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -88,52 +62,44 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-39-021c84d852e0@kernel.org>
-X-Debian-User: leitao
+Content-Transfer-Encoding: 8bit
 
-On Wed, Nov 04, 2026 at 08:25:32PM +0100, Christian Brauner wrote:
-> A capture kernel reads the memory of the crashed kernel, and that memory
-> may well have uncorrectable errors. On powerpc a machine check in the
-> kernel is only recovered from if the instruction that took it has an
-> exception table entry (cf. mce_common_process_ue()). copy_oldmem_page()
-> copies with copy_to_iter(). For a read() of /proc/vmcore that is a user
-> copy, all of whose loads have exception table entries, so the machine
-> check turns into a short copy and read_from_oldmem() returns -EFAULT.
-> 
-> But since commit 4a22fd20379c ("vmcore: convert __read_vmcore to use an
-> iov_iter") /proc/vmcore can be spliced too, and splice(), sendfile()
-> and copy_file_range() copy into kernel pages with memcpy(), which has
-> no exception table entries. A machine check there panics the capture
-> kernel. The same goes for the reads of the ELF headers and notes that
-> vmcore does itself, and those have been memcpy() for as long as
-> copy_oldmem_page() has had its kernel buffer branch, since commit
-> 54c32021eb6f ("[PATCH] powerpc: Add arch-dependent copy_oldmem_page").
-> 
-> Copy with _copy_mc_to_iter() instead. PPC64 selects ARCH_HAS_COPY_MC
-> and there it uses copy_mc_generic() for kernel and user destinations
-> alike, which has the exception table entries. Everywhere else it is
-> _copy_to_iter().
-> 
-> Reported-by: Chris Mason <mason@kernel.org>
-> Fixes: 54c32021eb6f ("[PATCH] powerpc: Add arch-dependent copy_oldmem_page")
-> Fixes: 4a22fd20379c ("vmcore: convert __read_vmcore to use an iov_iter")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+This series slightly reduces the overhead of the x86 kernel-mode "FPU"
+sections in the RAID code by using kernel_fpu_begin_mask(0) instead of
+kernel_fpu_begin(), thus opting out of the 'ldmxcsr' (and on 32-bit
+kernels, also 'fninit').  MXCSR is irrelevant for integer code.
 
-Reviewed-by: Breno Leitao <leitao@debian.org>
+This mirrors similar optimizations for the crypto and CRC code
+(https://lore.kernel.org/linux-crypto/20261105005523.84925-1-ebiggers@kernel.org/).
+It's more important there than in the RAID code, since short lengths are
+common in the x86-optimized crypto and CRC functions.  However, I think
+it's worth updating the RAID code too for consistency.
 
-The change is the right direction, and x86_64 has the same gap.
+Unlike the crypto and CRC code, the RAID code is built for user-mode
+Linux.  Therefore, as a prerequisite for this change, patch 1 also
+defines a stub for kernel_fpu_begin_mask() on user-mode Linux.
 
-arch/x86/kernel/crash_dump_64.c:__copy_oldmem_page() copies with
-copy_to_iter(), the same as the powerpc code this patch changes. x86_64
-selects ARCH_HAS_COPY_MC, and _copy_mc_to_iter() is already available,
-with the _copy_to_iter() fallback in include/linux/uio.h for arches
-without it. The plain and encrypted paths share __copy_oldmem_page(), so
-one conversion there covers both.
+This series is targeting mm/mm-nonmm-unstable.
 
-PS: I found this because I am looking at x856 production fleet  kdump
-success rate , where first kernel died of an MCE very often produce no
-usable vmcore at all, and makedumpfile never finishes due to this type
-of problem.
+Eric Biggers (3):
+  um: Define kernel_fpu_begin_mask()
+  xor: opt out of initializing MXCSR and 387 state
+  raid6: opt out of initializing MXCSR and 387 state
+
+ arch/um/include/asm/fpu/api.h     |  1 +
+ lib/raid/raid6/x86/avx2.c         | 12 ++++++------
+ lib/raid/raid6/x86/avx512.c       | 12 ++++++------
+ lib/raid/raid6/x86/recov_avx2.c   |  4 ++--
+ lib/raid/raid6/x86/recov_avx512.c |  4 ++--
+ lib/raid/raid6/x86/recov_ssse3.c  |  4 ++--
+ lib/raid/raid6/x86/sse2.c         | 12 ++++++------
+ lib/raid/xor/x86/xor-avx.c        |  2 +-
+ lib/raid/xor/x86/xor-avx512.c     |  2 +-
+ lib/raid/xor/x86/xor-sse.c        |  4 ++--
+ 10 files changed, 29 insertions(+), 28 deletions(-)
+
+
+base-commit: d0ad02b9d5dd7ae551f450cfd233f3e28bbf59d3
+-- 
+2.56.1
+
