@@ -1,55 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=79.135.106.112
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794485616;
-	b=tjihljIlutNHyAw36Wxru7GNQRvqnEwR/LNq+poj2TrsnXcnBhw8Qu48RhaC2vYg6mXP
-	 L0rrWiDHX/Kr1mWr1mCGCTZ7RXNFGu36Sd+YIF4iZ6Hl43ge6U26J/Qed5lCWe6rIM6+B
-	 Le3/LZv7u1SLoWJe30o/NiFmbUwB/yyFtI9SJ0HGsC8Qjcg6wmGodWj6BDMpV75HEo9pY
-	 CcMnchQizyrrnJwRhhWEB+F/ofHYc21E7yR0i0oV6xhsBRNkoIt+dC7+dCF1+dWqwqfJL
-	 CRSlY2iNdCcnveVWL7mtUY/uLbZr9o/AY+JChGuIyueGiTU3hQZGKsJFnj3A5QflSOw==
+	t=1794486185;
+	b=It8zHTWjAkw1G8IS2fDHz4+xwHzLA+ZIAmTSP9Oj2orwJI+CvmzwecgN4spFhzRLCjEf
+	 wJQxRyXFEufza1KmlKloN2uZGC2BSMXgGGziS9U0CEMn7LKJIN9Omj2Qkfk8ByypdGupy
+	 Og0kjgQmhNSdJ6HVdBglZ1eaRfGsocWY9uDFotxa/DxJP4hTQppC/z8WIEekMjv8i9OtV
+	 A0/OuHy+BWlPjrvSPGaWFSMBCfSzczxKandU7OllFgOkdSEYgqewpfqzXJ7Vvfm+nS5Pi
+	 r1CxhUF07yguLx2Cu89n3ICVdiI0e+4ZQCW3z3biYe2d8LyER8o6qO3xBmZGOThAaqw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794485616;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=jyvKN9kAPrKoEg/N2y7gzAMN3km9rMLro0iNDuMlVo8=;
-	b=I1YN+46/xH94XqACDN88RRRGwopph1ad5hieaHl6l15ohbStA7viEb+IhFwUGoR8wH5O
-	 3hHYpk2C1zIh5ABM+DA1a9U6tKG+r+hOb382zZfFzdCIByi39o21a+aCCAuX/MTqxBMUP
-	 vjloO2MAo4m3oJ4HBh2PW5YULJl0BMM98LKR1/UT/424ItCiJgyUA3tbpLfJXIht1SY5h
-	 Pxe2FS6DiW9kxuWQyzQzBVJpzFwFH+uGn4twaoTNQTEqPxaJdlKvRSYU0TPzEqTMJNjeO
-	 uuzldtUNkapFxs5x5afM8uC3VxkFw1vSgn5telGFi0o+cxhp1vjNVM+6N3C7iBXQRlg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794486185;
+	h=DMARC-Filter:DKIM-Signature:X-Pm-Submission-Id:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=rWhSYBcxqes1xvTYu5NtXz1oF6AJO5nHGjtkI5rOYKc=;
+	b=An/GkgiH8TFxIbkX3zGSowtGcizmf9j8uABcm9RZo7k6M7OsKMa3jBfkgbpj9WtaZTaO
+	 dIHpLbELPs/GGmF+qPujnmoGyKSOmBqvJKzbSBrg9zGiwdN8GZYOYK9LkVPff/mN6/da4
+	 yRIYEcwRr9k2J+3IMcdlgQA724VUMH1yBXdh8EtGEqi8Bc8C5NRlUhMQLzcSdt9rAzPmt
+	 tOGTPnWTPGBu+CHsTYPYhMtw0juSob53T9/971J2r/de8n9/JBtaFAsQPIH/J89NlZHzk
+	 L19bYX6VUW4BwlQVg5TWc/HKnAVp+n4HgurqGMF1m8eFSD6p6mE1TrFiuJXE7/Zk9Sg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WAd2CbFm;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=raidlab.org;
+	spf=pass smtp.mailfrom=raidlab.org;
+	dkim=pass header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=nBEtwvjJ;
+	arc=none smtp.remote-ip=79.135.106.112
+Received: from mail-106112.protonmail.ch (mail-106112.protonmail.ch [79.135.106.112])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7406606A31C
-	for <linux-raid@vger.kernel.org>; Thu, 12 Nov 2026 12:13:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADDE1606A31C
+	for <linux-raid@vger.kernel.org>; Thu, 12 Nov 2026 12:23:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ADDE1606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=raidlab.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=raidlab.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WAd2CbFm
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22B5B1F00A05;
-	Thu, 12 Nov 2026 12:13:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794485616;
-	bh=jyvKN9kAPrKoEg/N2y7gzAMN3km9rMLro0iNDuMlVo8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WAd2CbFmlPidQZ8AK29mgNbj9YLxVy+L6s5hCSceM/q/OOnKYXap/bBDD6X1/bnr7
-	 xLHtHo8awkIlKFxD43HfZiW4TMU4tZYU97rs+IaeKljk3JIXgK2mH967LYPARXHwZj
-	 LOajiSDbVFhdE8gEqvZ0oj+x0ZdVyboG5u5wgeOHi8nxjiIUNxzkdpH9/oaQl91mVp
-	 T49oM5p0GQec/pABR+GmGJb9i7ib91ledoN3MjvO37wLaPbdGjq0NCELmNqIOxK1bG
-	 p73mZv7QSmzL927xKUU5rt9GbMre9N4JiW+e73u+ocEe6+GBBFZ6iyOPWysLJWt2VC
-	 t3zgZf4hvZgPA==
-Message-ID: <sashiko-outbox-211074@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] md: make mddev_get() fail until md_alloc() has finished
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <20261112114958.2244-1-abd.masalkhi@gmail.com>
-References: <20261112114958.2244-1-abd.masalkhi@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 12 Nov 2026 12:13:35 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=nBEtwvjJ
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=raidlab.org;
+	s=protonmail; t=1794486182; x=1794745382;
+	bh=rWhSYBcxqes1xvTYu5NtXz1oF6AJO5nHGjtkI5rOYKc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:From:To:
+	 Cc:Date:Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=nBEtwvjJIt+E9GSVizSl+RBHBhvqwnnY/4sADWvEuG9WL4wSLoqn0Zrp6EUnvE4XM
+	 vOsKiptvAsovjvJufblFBM0fIP3lCOlOlGEgnTLbb2HL/diCKHq8DgzX3eNTyaCRr8
+	 xkuZ7vhbSX84vkpqohkypkN3A7VE7E5HaoZ9QSFLYCb2XGdn2l7J980dpMyqP/vilK
+	 KqPt5eANgA+x9WmRTFFgJYgvnNNozUdzR9zf0Cg1UVq8y39yhiIwAyMJdeUWuev6NS
+	 Qtiyi26eaG6zx4cxPeV6BPidnmDyfZawQl4y2q3fpfZvnhWsXmtyB+apcMP58bmv63
+	 5R6Ob0bgfc2Sg==
+X-Pm-Submission-Id: 4jQKKb4Ljvz1DDLZ
+From: Miroslav Cimerman <mc@raidlab.org>
+To: song@kernel.org,
+	yukuai@fygo.io,
+	akpm@linux-foundation.org
+Cc: ardb@kernel.org,
+	ebiggers@kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	magiclinan@didiglobal.com,
+	xiao@kernel.org,
+	antosha20xx@gmail.com
+Subject: Re: [PATCH] raid6: use normal stores in the x86 x4 xor_syndrome functions
+Date: Thu, 12 Nov 2026 13:21:27 +0100
+Message-ID: <20261112122127.190285-2-mc@raidlab.org>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261109030805.25709-1-mc@raidlab.org>
+References: <20261109030805.25709-1-mc@raidlab.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -58,138 +70,30 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential
-issues to consider:
-- [Medium] md: premature KOBJ_ADD uevent in add_disk() while mddev_get()
-  fails
-- [Low] md: stale reconfig_mutex lock and comment in md_alloc()
-It also noticed 1 related pre-existing issue this patch does not
-introduce:
-- [Medium] md: kernfs_node memory leak in mddev_unlock() [1]
---
+Anton Gavriliuk tested the patch on Zen 5 (thread "xor_gen() md-raid6
+performance improvement"):
 
-commit 2ddaaecbff58458e8c38353164498300daf7d131
-Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+HPE DL345 Gen11, AMD EPYC 9455, 6x PCIe 5.0 NVMe (CM7-V 3.2 TB),
+Fedora 45 config, v7.4-rc2 with and without the patch, both kernels
+select avx512x4. RAID-6 4+2, chunk 512K, no bitmap, rmw_level=2,
+fio 4k randwrite, O_DIRECT, io_uring, 60 s, 3 runs per kernel:
 
-md: make mddev_get() fail until md_alloc() has finished
+  md defaults, 1 job x QD64:
+    without  127k / 122k / 125k IOPS  (mean 124.7k)
+    with     132k / 139k / 137k IOPS  (mean 136.0k)    +9.1%
+    (a repeat run a day later: 127k without, 135k with)
 
-This commit adds an mddev->sysfs_live flag set under all_mddevs_lock after
-kobject_add() succeeds in md_alloc(), and updates mddev_get() to fail until
-that flag is set.
+  group_thread_cnt=8, stripe_cache_size=32768, 16 jobs x QD64:
+    without  467k / 468k / 470k IOPS  (mean 468.3k)
+    with     473k / 471k / 471k IOPS  (mean 471.7k)    +0.7%
 
-Link: https://sashiko.dev/#/patchset/20261029202209.1422567-1-abd.masalkhi@=
-gmail.com?part=3D4
+With md's defaults one md thread does the stripe work for all writes
+and is busy most of the time (about 80% in top), so a cheaper
+xor_syndrome() shows up in IOPS. With 8 workers per node the limit is
+lock contention in md instead (on my machine most of the time goes to
+spinning on device_lock), so the saving hardly shows.
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 03e35386a8028..47118e9d1a656 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -641,7 +641,7 @@ static inline struct mddev *mddev_get(struct mddev *m=
-ddev)
->  {
->  	lockdep_assert_held(&all_mddevs_lock);
-> =20
-> -	if (test_bit(MD_DELETED, &mddev->flags))
-> +	if (test_bit(MD_DELETED, &mddev->flags) || !mddev->sysfs_live)
->  		return NULL;
->  	atomic_inc(&mddev->active);
->  	return mddev;
-> @@ -6432,10 +6432,16 @@ struct mddev *md_alloc(dev_t dev, char *name)
->  		return ERR_PTR(error);
->  	}
-> =20
-> -	kobject_uevent(&mddev->kobj, KOBJ_ADD);
->  	mddev->sysfs_state =3D sysfs_get_dirent_safe(mddev->kobj.sd, "array_sta=
-te");
->  	mddev->sysfs_level =3D sysfs_get_dirent_safe(mddev->kobj.sd, "level");
-
-[Severity: Medium]
-This problem wasn't introduced by this patch, but when
-legacy_async_del_gendisk is disabled, does mddev_unlock() leak
-mddev->sysfs_state and mddev->sysfs_level [1]?
-
-md_kobj_release() only calls sysfs_put() on mddev->sysfs_state and
-mddev->sysfs_level when legacy_async_del_gendisk is true, and the
-!legacy_async_del_gendisk teardown path in mddev_unlock() deletes
-mddev->kobj and mddev->gendisk without releasing those kernfs_node
-references:
-
-drivers/md/md.c:md_kobj_release() {
-	if (legacy_async_del_gendisk) {
-		if (mddev->sysfs_state)
-			sysfs_put(mddev->sysfs_state);
-		if (mddev->sysfs_level)
-			sysfs_put(mddev->sysfs_level);
-		del_gendisk(mddev->gendisk);
-	}
-	put_disk(mddev->gendisk);
-}
-
-> +
-> +	spin_lock(&all_mddevs_lock);
-> +	mddev->sysfs_live =3D true;
-> +	spin_unlock(&all_mddevs_lock);
-> +
-> +	kobject_uevent(&mddev->kobj, KOBJ_ADD);
->  	mutex_unlock(&disks_mutex);
-> +
->  	return mddev;
-> =20
->  out_put_disk:
-
-[Severity: Medium]
-Does making mddev_get() fail until mddev->sysfs_live is set cause a
-regression where udevd or concurrent openers fail with -ENODEV in md_open()
-and -EBUSY on md/ sysfs attributes right after add_disk() announces the
-disk?
-
-kobject_uevent(&mddev->kobj, KOBJ_ADD) is dropped by dev_uevent_filter()
-because mddev->kobj has ktype &md_ktype rather than &device_ktype.  The
-KOBJ_ADD uevent that actually reaches user space is sent earlier inside
-add_disk() -> add_disk_final() -> disk_uevent(disk, KOBJ_ADD), right after
-bdev_add() publishes the block device inode while mddev->sysfs_live is
-still false:
-
-CPU0                              CPU1 (udevd / opener)
-md_alloc()
-  add_disk(disk)
-    add_disk_final(disk)
-      bdev_add(...)
-      disk_uevent(disk, KOBJ_ADD)
-                                  blkdev_get_no_open()
-                                  md_open()
-                                    mddev_find()
-                                      mddev_get() -> NULL  <-- -ENODEV
-  kobject_add(&mddev->kobj, ...)
-  mddev->sysfs_live =3D true
-
-[Severity: Low]
-Since mddev_get() now returns NULL until mddev->sysfs_live is set after
-mddev_unlock(mddev), md_open() can no longer succeed while reconfig_mutex
-is held across add_disk() and kobject_add() from commit d1472ca2ca5d ("md:
-don't hand out the array before md_alloc() has added mddev->kobj").
-
-drivers/md/md.c:md_alloc() {
-	/*
-	 * add_disk() makes the array openable before mddev->kobj exists.
-	 * Hold reconfig_mutex until kobject_add() is done so that ioctls
-	 * issued in between wait instead of using an uninitialised kobj.
-	 */
-	mddev_lock_nointr(mddev);
-	error =3D add_disk(disk);
-    ...
-	error =3D kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "md");
-	mddev_unlock(mddev);
-}
-
-Does this make the comment and reconfig_mutex critical section in
-md_alloc() obsolete, as well as the commit message's first paragraph
-claiming that ioctls such as ADD_NEW_DISK can run before kobject_add()
-completes?
-
-[1] https://sashiko.dev/#/bug/linux-460ea5ed-96ea-49a0-8383-cfa84f28520b
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112114958.2244=
--1-abd.masalkhi@gmail.com?part=3D1
+Miroslav
