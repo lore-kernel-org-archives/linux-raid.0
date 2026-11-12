@@ -1,93 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794484223;
-	b=Zds2gQotvmyfHgzAnFwl1wuShiT5G+Z28WZxOspt2NalUrTvZCuMOdDDdxYs906W7zrF
-	 xr9+Hk9wDxvUrFv/CHiDX5yMD9bkZPWD9gIuxHl+NkVeNg1ObfVHIYlcLfZ65zs8jFFMa
-	 uqyjQs4RkKXfYrsm+GxbdFc11iObypuUdiL/zM67T60B4J6AtplTcZRF9BgGEhrKVcoaa
-	 LQhzuUmDF38u9KBYqLFCPfa7EoT4xnNmwEHVXFt2/WAf1fDV7DKraQXXCpQaLf1j4vVfG
-	 Gc6Nzb0lTT2sBatuMrtHXP5km4dYIjPm7EMYjx4ImjTLDjANBHRsHoPuhDTNMm4NUyw==
+	t=1794485616;
+	b=tjihljIlutNHyAw36Wxru7GNQRvqnEwR/LNq+poj2TrsnXcnBhw8Qu48RhaC2vYg6mXP
+	 L0rrWiDHX/Kr1mWr1mCGCTZ7RXNFGu36Sd+YIF4iZ6Hl43ge6U26J/Qed5lCWe6rIM6+B
+	 Le3/LZv7u1SLoWJe30o/NiFmbUwB/yyFtI9SJ0HGsC8Qjcg6wmGodWj6BDMpV75HEo9pY
+	 CcMnchQizyrrnJwRhhWEB+F/ofHYc21E7yR0i0oV6xhsBRNkoIt+dC7+dCF1+dWqwqfJL
+	 CRSlY2iNdCcnveVWL7mtUY/uLbZr9o/AY+JChGuIyueGiTU3hQZGKsJFnj3A5QflSOw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794484223;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=RLp801KKfsVZdQYaLNag2TdSqnCBgSM2Gu0Olt6/xr4=;
-	b=xCXxKn8mw6nAcviAmWK8IEebrKgZSOQZolmT4fsIL9FnQUiggsSyVq/rQXRTylUsXET7
-	 0NqDrWD6rstWqLuIM47KY9uWGyuGxc3JnqB0ngaJfnX9vRuqbohbDhxD21+rNb+kFm4CO
-	 gYS0yHwB1RDTvVueB6etOr5XeByoQBCeiQcpzyF5MGnWrpmsct+71v5kXZxJycPQeSnA4
-	 u8rNgGPTSh6bSf29ssZTsaxCKLIMAY7PO6o82dLlE/mbrGG1jsjrkqmIGgWIIZvW043yN
-	 cLO6Sy2ifFPEg/+hQA8+rEOfwPO+xyrtNN8C/7nL3B+bV4yzl13RBylqn4eTZQFZgvw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794485616;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=jyvKN9kAPrKoEg/N2y7gzAMN3km9rMLro0iNDuMlVo8=;
+	b=I1YN+46/xH94XqACDN88RRRGwopph1ad5hieaHl6l15ohbStA7viEb+IhFwUGoR8wH5O
+	 3hHYpk2C1zIh5ABM+DA1a9U6tKG+r+hOb382zZfFzdCIByi39o21a+aCCAuX/MTqxBMUP
+	 vjloO2MAo4m3oJ4HBh2PW5YULJl0BMM98LKR1/UT/424ItCiJgyUA3tbpLfJXIht1SY5h
+	 Pxe2FS6DiW9kxuWQyzQzBVJpzFwFH+uGn4twaoTNQTEqPxaJdlKvRSYU0TPzEqTMJNjeO
+	 uuzldtUNkapFxs5x5afM8uC3VxkFw1vSgn5telGFi0o+cxhp1vjNVM+6N3C7iBXQRlg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=NQdHOowS;
-	arc=none smtp.remote-ip=209.85.128.46
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WAd2CbFm;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBBFA606A884
-	for <linux-raid@vger.kernel.org>; Thu, 12 Nov 2026 11:50:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BBBFA606A884
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7406606A31C
+	for <linux-raid@vger.kernel.org>; Thu, 12 Nov 2026 12:13:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=NQdHOowS
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4a5720b0a57so4835805e9.0
-        for <linux-raid@vger.kernel.org>; Thu, 12 Nov 2026 03:50:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794484221; x=1795089021; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=RLp801KKfsVZdQYaLNag2TdSqnCBgSM2Gu0Olt6/xr4=;
-        b=NQdHOowSUtwMiLAq1OZHrxWGu8Gk2SiZZWfidzx0/bi1IORyg8THEANFrlUktiIT7+
-         SXGi42w44hN4Rq1U0JfxnMvVX/nhS9YjUmFAsAP4cI9AEn5yjlesmvYLWHPm357I72BO
-         hlrEDw6/LOOkC6x0pqWQyeuBI5uC03T1SYkIu54p5xZADvxIZJ8zw3CuH65u5EEEm2dz
-         0obWumfn9xsErrswweH7qAxz2dvpDMP3ZoGTHAtXVR+csoOt+3sj7Ke2eQpBPYu7oEy2
-         9sB6QYT+Vnw9lkwAGHW2+Bnxbk0i0KzP2G+LoYGo00/UDpDzoWuqZU77Jyx5SlPMWH1f
-         Erow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794484221; x=1795089021;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=RLp801KKfsVZdQYaLNag2TdSqnCBgSM2Gu0Olt6/xr4=;
-        b=EaciSSUtsw6SnoQd2RV8FD2bCL886vVstPwEVp5p1QEYIxUVHjjYNtZj7hdxvdhWoq
-         TacdZbFEdp8jzd3OjAttnN6PkrkyTpRYH4t3MESMWMW0LMJzMOiXKrIGq/eNTiiSWAlJ
-         km/DFPDm9HEewXmBwpvy66MYlvbw8Ff6cOetkD5MulYAsAbGZEipQd47Vl5d6NFyC+8I
-         xVC3Y+ciHkcpzshVqkamK6MtovTMSN9HV1kCibBUXmC6yAHbL8y1U8+mBfKmL4jbTnuy
-         uNinENRjZedONw8xnnJJtb7TymqKuIx1U9W2xNPxpjUaCxZ8+uN9bCi4jvh7LBKa4aB9
-         K9BQ==
-X-Gm-Message-State: APuU4Z/L5lOeyeJdkirUglik2fCoDsRuQbt6zi/5RqAtoeXxyAwnlqRW
-	y7apGNhp/Obas+YgAL0GToRElIyz6LVQsm1XZZtHQXk4BeEZNHrKLoJm
-X-Gm-Gg: AYBFou1fs+8PDQZG6KHgwDVMPRGJZ3C4wGoZ8QB1tyPO6rNawKiP/z/2GiJgnqFdXCZ
-	cMi1NI1spskbPmodttQeU8untsQgS4UuZWqtx9zzJJiClD++OLN5QnVhsMV1HrxHfgrLk5QAiLD
-	MHFBsl8o53fGQ9m8C+HM0NHSF4SXfgl8E53cJLLzcPT4I+pl7sN33wDLwsMHdRkYfURtcXH9xRB
-	CkoZMJzZBEQSQHo1ZnbklhnkhE5vkVe9+AKgN3/gCKPEu8UMW9dhvf+WiAFGiQzm/DoMuz3TF3i
-	ishpRDOSaPIeWJNLyOvVzpM0oLjDHuj+sLRPQi2lkM3Y76PjwJVLz6wdbg4Qh0A7p0owOMe+gfP
-	7JLWzSXn0mWNWFAJi/BXPa1ez4GbrQbmt8E3eLW2lYZ9f34dUsukLHinaL7GwG0+AQ/aFL48UNj
-	yURY7bCr37CDd67ivII+T/ZBicrIXmoZCrbcryW8L4/QKQ2SogNtmSzDmPhGlqOKln5lqohfrwR
-	w24fn01if8IvNGfQoPoq8DB2yGbX8LOeYQLNvsnc25a9qITZdviBeNiO9tOD4BhQTbOv6mVCxi/
-	TMrEwOSt8RZI456dHqAI/P9V
-X-Received: by 2002:a05:600c:63c1:b0:4ba:1fd:cd84 with SMTP id 5b1f17b1804b1-4bb4e2e9c30mr37576545e9.12.1794484221022;
-        Thu, 12 Nov 2026 03:50:21 -0800 (PST)
-Received: from env.. ([195.72.110.73])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4989a2a505asm14476287f8f.13.2026.11.12.03.50.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Nov 2026 03:50:20 -0800 (PST)
-From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
-To: song@kernel.org,
-	yukuai@fygo.io,
-	magiclinan@didiglobal.com,
-	xiao@kernel.org
-Cc: linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>,
-	sashiko-bot <sashiko-bot@kernel.org>
-Subject: [PATCH] md: make mddev_get() fail until md_alloc() has finished
-Date: Thu, 12 Nov 2026 11:49:58 +0000
-Message-ID: <20261112114958.2244-1-abd.masalkhi@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WAd2CbFm
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22B5B1F00A05;
+	Thu, 12 Nov 2026 12:13:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794485616;
+	bh=jyvKN9kAPrKoEg/N2y7gzAMN3km9rMLro0iNDuMlVo8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=WAd2CbFmlPidQZ8AK29mgNbj9YLxVy+L6s5hCSceM/q/OOnKYXap/bBDD6X1/bnr7
+	 xLHtHo8awkIlKFxD43HfZiW4TMU4tZYU97rs+IaeKljk3JIXgK2mH967LYPARXHwZj
+	 LOajiSDbVFhdE8gEqvZ0oj+x0ZdVyboG5u5wgeOHi8nxjiIUNxzkdpH9/oaQl91mVp
+	 T49oM5p0GQec/pABR+GmGJb9i7ib91ledoN3MjvO37wLaPbdGjq0NCELmNqIOxK1bG
+	 p73mZv7QSmzL927xKUU5rt9GbMre9N4JiW+e73u+ocEe6+GBBFZ6iyOPWysLJWt2VC
+	 t3zgZf4hvZgPA==
+Message-ID: <sashiko-outbox-211074@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] md: make mddev_get() fail until md_alloc() has finished
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>
+Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
+In-Reply-To: <20261112114958.2244-1-abd.masalkhi@gmail.com>
+References: <20261112114958.2244-1-abd.masalkhi@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 12 Nov 2026 12:13:35 +0000
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -96,85 +58,138 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-md_alloc() makes the disk visible with add_disk() before it adds
-mddev->kobj. In between, md_open() can take a reference with
-mddev_get() and send ioctls to an mddev whose kobject is not set up
-yet, for example ADD_NEW_DISK, which adds the rdev kobject under
-mddev->kobj.
+Thank you for your contribution! Sashiko AI review found 2 potential
+issues to consider:
+- [Medium] md: premature KOBJ_ADD uevent in add_disk() while mddev_get()
+  fails
+- [Low] md: stale reconfig_mutex lock and comment in md_alloc()
+It also noticed 1 related pre-existing issue this patch does not
+introduce:
+- [Medium] md: kernfs_node memory leak in mddev_unlock() [1]
+--
 
-If kobject_add() then fails, md_alloc() drops its own reference and
-expects mddev_put() to delete the mddev. A reference taken in the
-window keeps it alive instead, and if a command such as SET_ARRAY_INFO
-sets ->ctime, the final __mddev_put() keeps the mddev for good.
+commit 2ddaaecbff58458e8c38353164498300daf7d131
+Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
 
-Add mddev->sysfs_live, set under all_mddevs_lock after kobject_add()
-succeeds and the sysfs handles are cached. Make mddev_get() fail
-while it is not set. mddev_get() already runs under all_mddevs_lock,
-so whoever gets a reference sees a fully set up mddev.
+md: make mddev_get() fail until md_alloc() has finished
 
-Also, send the KOBJ_ADD uevent only after mddev->sysfs_live is set,
-so that user space reacting to it finds a usable mddev.
+This commit adds an mddev->sysfs_live flag set under all_mddevs_lock after
+kobject_add() succeeds in md_alloc(), and updates mddev_get() to fail until
+that flag is set.
 
-An open that races with md_alloc() now fails with -ENODEV, and a
-sysfs read in md/ before the flag is set fails with -EBUSY.
+Link: https://sashiko.dev/#/patchset/20261029202209.1422567-1-abd.masalkhi@=
+gmail.com?part=3D4
 
-Reported-by: sashiko-bot <sashiko-bot@kernel.org>
-Link: https://sashiko.dev/#/patchset/20261029202209.1422567-1-abd.masalkhi@gmail.com?part=4
-Signed-off-by: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
----
- drivers/md/md.c | 10 ++++++++--
- drivers/md/md.h |  4 ++++
- 2 files changed, 12 insertions(+), 2 deletions(-)
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 03e35386a8028..47118e9d1a656 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -641,7 +641,7 @@ static inline struct mddev *mddev_get(struct mddev *m=
+ddev)
+>  {
+>  	lockdep_assert_held(&all_mddevs_lock);
+> =20
+> -	if (test_bit(MD_DELETED, &mddev->flags))
+> +	if (test_bit(MD_DELETED, &mddev->flags) || !mddev->sysfs_live)
+>  		return NULL;
+>  	atomic_inc(&mddev->active);
+>  	return mddev;
+> @@ -6432,10 +6432,16 @@ struct mddev *md_alloc(dev_t dev, char *name)
+>  		return ERR_PTR(error);
+>  	}
+> =20
+> -	kobject_uevent(&mddev->kobj, KOBJ_ADD);
+>  	mddev->sysfs_state =3D sysfs_get_dirent_safe(mddev->kobj.sd, "array_sta=
+te");
+>  	mddev->sysfs_level =3D sysfs_get_dirent_safe(mddev->kobj.sd, "level");
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 154ee5a65cb7..20acd1e25e9e 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -627,7 +627,7 @@ static inline struct mddev *mddev_get(struct mddev *mddev)
- {
- 	lockdep_assert_held(&all_mddevs_lock);
- 
--	if (test_bit(MD_DELETED, &mddev->flags))
-+	if (test_bit(MD_DELETED, &mddev->flags) || !mddev->sysfs_live)
- 		return NULL;
- 	atomic_inc(&mddev->active);
- 	return mddev;
-@@ -6403,10 +6403,16 @@ struct mddev *md_alloc(dev_t dev, char *name)
- 		return ERR_PTR(error);
- 	}
- 
--	kobject_uevent(&mddev->kobj, KOBJ_ADD);
- 	mddev->sysfs_state = sysfs_get_dirent_safe(mddev->kobj.sd, "array_state");
- 	mddev->sysfs_level = sysfs_get_dirent_safe(mddev->kobj.sd, "level");
-+
-+	spin_lock(&all_mddevs_lock);
-+	mddev->sysfs_live = true;
-+	spin_unlock(&all_mddevs_lock);
-+
-+	kobject_uevent(&mddev->kobj, KOBJ_ADD);
- 	mutex_unlock(&disks_mutex);
-+
- 	return mddev;
- 
- out_put_disk:
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 6440da292105..5e026307ca64 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -417,6 +417,10 @@ struct mddev {
- 	struct mutex			suspend_mutex;
- 	struct percpu_ref		active_io;
- 	int				ro;
-+	bool				sysfs_live; /* set under all_mddevs_lock
-+						     * after kobject_add()
-+						     * succeeds, never cleared
-+						     */
- 	int				sysfs_active; /* set when sysfs deletes
- 						       * are happening, so run/
- 						       * takeover/stop are not safe
--- 
-2.43.0
+[Severity: Medium]
+This problem wasn't introduced by this patch, but when
+legacy_async_del_gendisk is disabled, does mddev_unlock() leak
+mddev->sysfs_state and mddev->sysfs_level [1]?
 
+md_kobj_release() only calls sysfs_put() on mddev->sysfs_state and
+mddev->sysfs_level when legacy_async_del_gendisk is true, and the
+!legacy_async_del_gendisk teardown path in mddev_unlock() deletes
+mddev->kobj and mddev->gendisk without releasing those kernfs_node
+references:
+
+drivers/md/md.c:md_kobj_release() {
+	if (legacy_async_del_gendisk) {
+		if (mddev->sysfs_state)
+			sysfs_put(mddev->sysfs_state);
+		if (mddev->sysfs_level)
+			sysfs_put(mddev->sysfs_level);
+		del_gendisk(mddev->gendisk);
+	}
+	put_disk(mddev->gendisk);
+}
+
+> +
+> +	spin_lock(&all_mddevs_lock);
+> +	mddev->sysfs_live =3D true;
+> +	spin_unlock(&all_mddevs_lock);
+> +
+> +	kobject_uevent(&mddev->kobj, KOBJ_ADD);
+>  	mutex_unlock(&disks_mutex);
+> +
+>  	return mddev;
+> =20
+>  out_put_disk:
+
+[Severity: Medium]
+Does making mddev_get() fail until mddev->sysfs_live is set cause a
+regression where udevd or concurrent openers fail with -ENODEV in md_open()
+and -EBUSY on md/ sysfs attributes right after add_disk() announces the
+disk?
+
+kobject_uevent(&mddev->kobj, KOBJ_ADD) is dropped by dev_uevent_filter()
+because mddev->kobj has ktype &md_ktype rather than &device_ktype.  The
+KOBJ_ADD uevent that actually reaches user space is sent earlier inside
+add_disk() -> add_disk_final() -> disk_uevent(disk, KOBJ_ADD), right after
+bdev_add() publishes the block device inode while mddev->sysfs_live is
+still false:
+
+CPU0                              CPU1 (udevd / opener)
+md_alloc()
+  add_disk(disk)
+    add_disk_final(disk)
+      bdev_add(...)
+      disk_uevent(disk, KOBJ_ADD)
+                                  blkdev_get_no_open()
+                                  md_open()
+                                    mddev_find()
+                                      mddev_get() -> NULL  <-- -ENODEV
+  kobject_add(&mddev->kobj, ...)
+  mddev->sysfs_live =3D true
+
+[Severity: Low]
+Since mddev_get() now returns NULL until mddev->sysfs_live is set after
+mddev_unlock(mddev), md_open() can no longer succeed while reconfig_mutex
+is held across add_disk() and kobject_add() from commit d1472ca2ca5d ("md:
+don't hand out the array before md_alloc() has added mddev->kobj").
+
+drivers/md/md.c:md_alloc() {
+	/*
+	 * add_disk() makes the array openable before mddev->kobj exists.
+	 * Hold reconfig_mutex until kobject_add() is done so that ioctls
+	 * issued in between wait instead of using an uninitialised kobj.
+	 */
+	mddev_lock_nointr(mddev);
+	error =3D add_disk(disk);
+    ...
+	error =3D kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "md");
+	mddev_unlock(mddev);
+}
+
+Does this make the comment and reconfig_mutex critical section in
+md_alloc() obsolete, as well as the commit message's first paragraph
+claiming that ioctls such as ADD_NEW_DISK can run before kobject_add()
+completes?
+
+[1] https://sashiko.dev/#/bug/linux-460ea5ed-96ea-49a0-8383-cfa84f28520b
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112114958.2244=
+-1-abd.masalkhi@gmail.com?part=3D1
