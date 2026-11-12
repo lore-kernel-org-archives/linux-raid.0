@@ -1,60 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.2
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794430590;
-	b=vJU6ALvoBk+i3fsup1Cys7GvdX0Sk6ZzguS7UqpyH+zQlzIdps27z4AAB9ybPFprjyf5
-	 lWZ2VG1NMZdr+6XAsaZxCrDI5BG4gaVnuwUN5WNLTZ0lVKtQf1na56fQzhuqjTXzI/DsS
-	 ayQ/3FXS/TTxzTfObZ3WUkPN0CicOb2YfkKVihynGnQx4F+WyXuljgFmyfE7JUipugyoR
-	 i6Jz05jQAyr/YXHLLffJOkEoQkciKZ1pbUeaZkKiiQyTF07plj5IF8McxFpdtLcRhQPMy
-	 2uBDjppNds3BWZMJw+zoswIkCHRBoxrIEaPZsQ7MRBGxJL34CbbEGA4iA7AjahBLivA==
+	t=1794447377;
+	b=FmHCI2Tcho6vSkz/y+eu6JQpofWO3l1AnmqqB1dMJG5nQM9scF/uC3BjJqtW73Ah5XJ/
+	 VKORqe4IZey1t7nxen8Dhpckp5Fy9blbpVw1nKXFuVQYZlNBVjInRm6lu4grpKW1qEFPf
+	 qZMvJjusZlIXSkAWWhPDO1YXn61yW9nTWYatlPw+7OFybYL4Yo19nQXgbSOH0M2R515sI
+	 0gs7p+ighuhwMr6FgPPJ0gwZKPkazmhNFsSgFvm5xuce0aq6y/4nl4HioKKte0px8bV2+
+	 B1cCSEczo6/UyR4p4VcHGwm3rA89Di1KP+oe011PVG8wQKaOmPTsEYFFTZmVoTeLzAw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794430590;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=pStOyxBQoussPKbDWC0Y4yIvlj83S/Ec9vJBhAymBs8=;
-	b=5F7W+QHwNrtdRGuDvBflM1mn+5rI6jkM6EQ7cs3ihHQXVupEWCbH164ZM1hoy4AmqBrD
-	 bjUebpN4T4vjcdIfedpdA9vEL+UpFUgG+GFPR47hYbahiL5QpX5XT+AczWn8hAfXJ5bqO
-	 1UD0Xt8usLs0RAOYYzm93QG/OnsVemahu+cShU/PrnfmxTgKlb31hJZe5agN5wxfVj8u/
-	 ys/ky+vkm7D+MKMQgQKJYaVXkKXopj9BcmoPPrNrNvjqobPSWBsKgjtIQmpcSPMD0Xmri
-	 6xCnm61xJxHmynxP2iIz3wcUYskFVsCq1Sxk3gRXU6kLw7vhCnGSemKgG2H78rZW26Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794447377;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding:
+	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
+	bh=ELLqdcOAA9rFtchadf0YpKl1TUOHi1tEx6RNAEsB1Ng=;
+	b=Sols82Fm4MvDZBVnQFZl6e7JCwpht/8mFW+cx5zz4lTn49Y9aw9Ak/KDSiMLvnQDzoWG
+	 o9jqFPMgvTBFCJ3V4/291ZBkzh0cQYm5/SlZfHxvac6W5pgO6Ky++pQhT9jnZFUoQMUep
+	 6FW/HCF8xhTJogdDnmu/0SBK2kYXv3oTo1s4c5zf23iO0Wzw01svA4MLKanYJa+qp0e1B
+	 KRPxD1GZ7H9RHqAmVS2dbrLoqszn7y6zD5gWzk1K1oku1iNd71dhVuq0cZvJUWq0GSW1H
+	 TM5VaWhcJXA6rveRxH1mDMF1fIc56rg/YNx+ZOa9sI6wK/7sMQrWn1WGrwViYKLDASg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YtJF5DBX;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=163.com;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=jnpUM+nz;
+	arc=none smtp.remote-ip=117.135.210.2
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6B67606A32A;
-	Wed, 11 Nov 2026 20:56:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 311BD606A337;
+	Thu, 12 Nov 2026 01:36:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 311BD606A337
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YtJF5DBX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 397941F00A05;
-	Wed, 11 Nov 2026 20:56:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794430589;
-	bh=pStOyxBQoussPKbDWC0Y4yIvlj83S/Ec9vJBhAymBs8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=YtJF5DBX6JRDTGvLXLB3A1NjGlxPcVZSqlxUGuZfjLGV/gkzTEcD7kRiOt5BmcHOk
-	 UD6llHB7uXWkp/KD0rVUqS/sBTPceUz45ulDmOHjJtX7ccbD0eCZPZjtJMd3yTt+u3
-	 SiRi22bj+WhJ/ZSyMRImmmWP4hD6RrpdnY442usSP4AsvAC9tltCDiGeQqL1CrxIny
-	 U8ziSRc7T5sgIUTCbm+RdWeT7grjfwIDNKQdp6O/P50t9Y/zyATm6HUnh0UNKqbUPz
-	 ZSGg6fT1Yp1vXyjn4koV/x4sVqmAyh6eY8oNX/Z3fg/bLSwsM/yztva9JRV2NLXRaZ
-	 elPL/nB9tbcYA==
-From: Eric Biggers <ebiggers@kernel.org>
-To: akpm@linux-foundation.org,
-	linux-raid@vger.kernel.org
-Cc: linux-crypto@vger.kernel.org,
-	x86@kernel.org,
-	Christoph Hellwig <hch@lst.de>,
-	Richard Weinberger <richard@nod.at>,
-	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Eric Biggers <ebiggers@kernel.org>
-Subject: [PATCH 3/3] raid6: opt out of initializing MXCSR and 387 state
-Date: Wed, 11 Nov 2026 12:56:04 -0800
-Message-ID: <20261111205604.47547-4-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261111205604.47547-1-ebiggers@kernel.org>
-References: <20261111205604.47547-1-ebiggers@kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=jnpUM+nz
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=EL
+	LqdcOAA9rFtchadf0YpKl1TUOHi1tEx6RNAEsB1Ng=; b=jnpUM+nz1+F/CW7Tu3
+	DAHsc0kE5QXayzPzFu9XS8WRwY+e0Wcbqf9ceGXoQehX7uADa6N6yfMe137Kcwae
+	RUbhVuHNJg9otWS/iVd4slqDLUr2C8CuGhIO73dFv4FTAYV443bFWZLf6NX++I4x
+	Ct5SxfU9FN32OBmYE5VvqP3QQ=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wCnA2zdF_VqvPswHA--.52798S2;
+	Thu, 12 Nov 2026 09:35:27 +0800 (CST)
+From: "Li Youhong" <dayou5941@163.com>
+To: song@kernel.org,
+	yukuai@fygo.io,
+	agk@redhat.com,
+	snitzer@kernel.org,
+	mpatocka@redhat.com,
+	bmarzins@redhat.com
+Cc: dm-devel@lists.linux.dev,
+	magiclinan@didiglobal.com,
+	xiao@kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Li Youhong <liyouhong@kylinos.cn>,
+	syzbot+a53c2918175b36cfd601@syzkaller.appspotmail.com,
+	stable@vger.kernel.org
+Subject: [PATCH v5] md: fix sync_work vs array teardown races
+Date: Thu, 12 Nov 2026 09:35:23 +0800
+Message-Id: <20261112013523.120428-1-dayou5941@163.com>
+X-Mailer: git-send-email 2.25.1
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -65,277 +71,172 @@ List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wCnA2zdF_VqvPswHA--.52798S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW3Ary7Gr1DCw4fKryfAw1DJrb_yoWxWr18pr
+	WrJFn8Gr4Dt3yxZFZrK3WDua4Yvw1Sq3yDJryxWa4fAw1SyF47uFy09F1jvFWDJas3tayU
+	Zw4rJFZxuFyq9FJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jj_M-UUUUU=
+X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC3QAWxGr1F+CIuAAA3X
 
-The RAID6 code using "kernel-mode FPU" is integer code that does not use
-any MMX or x87 instructions.  (MMX optimized code previously existed but
-was recently removed.)  To the extent that float-domain instructions are
-used at all, they are only moves, shuffles, and XORs, none of which
-raises SIMD floating-point exceptions or depends on MXCSR.
+From: Li Youhong <liyouhong@kylinos.cn>
 
-Therefore, there's no need to initialize MXCSR or the 387 FPU state.
+dm-raid tears down arrays via md_stop(), which cleared mddev->pers
+without waiting for previously queued sync_work. That work could
+then call remove_spares() with pers == NULL, or keep using mddev
+after raid_dtr() frees it.
 
-Opt out of this initialization by using kernel_fpu_begin_mask(0) instead
-of kernel_fpu_begin().  This eliminates an 'ldmxcsr' instruction in
-every kernel-mode FPU section, reducing overhead, which matters most for
-short input lengths.  On 32-bit kernels it also eliminates 'fninit'.
+do_md_stop()/md_stop_writes() already call stop_sync_thread() before
+teardown. Do the same in md_stop(). Because md_start_sync() may still
+use mddev after unlocking / clearing MD_RECOVERY_RUNNING, flush
+sync_work whenever it is busy rather than only when work_pending().
 
-This will make the RAID code consistent with the crypto and CRC code,
-which are also switching to kernel_fpu_begin_mask(0)
-(https://lore.kernel.org/linux-crypto/20261105005523.84925-1-ebiggers@kernel.org/).
-Another precedent for this optimization can be found in
-commit a58db7ad80e8 ("netfilter: nft_set_pipapo_avx2: Skip LDMXCSR, we
-don't need a valid MXCSR state").
+Calling stop_sync_thread() from md_stop() can drop reconfig_mutex,
+which introduces two follow-on issues:
 
-Signed-off-by: Eric Biggers <ebiggers@kernel.org>
+- When nothing is in flight, keep reconfig_mutex if the caller held
+  it (gate the idle early-return with work_busy()). Otherwise clear
+  of an inactive array can race with do_md_run().
+
+- While the mutex is dropped, mddev->thread may run
+  md_reap_sync_thread() and queue event_work. Flush event_work on
+  the raid_ctr() error path before raid_set_free().
+
+Separately, the read-only path in md_check_recovery() queued
+sync_work without honouring MD_RECOVERY_FROZEN, unlike the
+read-write path. Check FROZEN there so freeze/stop cannot race
+with a new queue.
+
+Fixes: db5e653d7c9f ("md: delay choosing sync action to md_start_sync()")
+Fixes: 81e2ce1b3d5a ("md: delay remove_and_add_spares() for read only array to md_start_sync()")
+Reported-by: syzbot+a53c2918175b36cfd601@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=a53c2918175b36cfd601
+Cc: stable@vger.kernel.org
+Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
 ---
- lib/raid/raid6/x86/avx2.c         | 12 ++++++------
- lib/raid/raid6/x86/avx512.c       | 12 ++++++------
- lib/raid/raid6/x86/recov_avx2.c   |  4 ++--
- lib/raid/raid6/x86/recov_avx512.c |  4 ++--
- lib/raid/raid6/x86/recov_ssse3.c  |  4 ++--
- lib/raid/raid6/x86/sse2.c         | 12 ++++++------
- 6 files changed, 24 insertions(+), 24 deletions(-)
+v5:
+- Restore idle early-return in stop_sync_thread() gated by work_busy(),
+  so locked callers keep reconfig_mutex and do not race with do_md_run().
+- Flush event_work before raid_set_free() on the raid_ctr error path
+  (md_stop() may drop the mutex and let md_reap queue it).
+- v4: https://lore.kernel.org/linux-raid/20261111015027.4029184-1-dayou5941@163.com
 
-diff --git a/lib/raid/raid6/x86/avx2.c b/lib/raid/raid6/x86/avx2.c
-index 3cc2fe7ac42c5..e09d0bd418efc 100644
---- a/lib/raid/raid6/x86/avx2.c
-+++ b/lib/raid/raid6/x86/avx2.c
-@@ -32,7 +32,7 @@ static void raid6_avx21_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	p = dptr[z0+1];		/* XOR parity */
- 	q = dptr[z0+2];		/* RS syndrome */
+v4:
+- Always flush_work(&sync_work) in stop_sync_thread(); do not delay
+  clearing MD_RECOVERY_RUNNING (that can drop MD_RECOVERY_NEEDED via
+  md_check_recovery, and does not cover the successful sync_thread
+  registration path).
+- v3: https://lore.kernel.org/linux-raid/20261110063045.912703-1-dayou5941@163.com
+
+v3:
+- Honour MD_RECOVERY_FROZEN before queueing sync_work on the
+  read-only md_check_recovery() path.
+- (superseded) delayed MD_RECOVERY_RUNNING clear on not_running.
+- v2: https://lore.kernel.org/linux-raid/20261109023055.2164333-1-dayou5941@163.com
+
+v2:
+- Drop the pers NULL check in md_start_sync().
+- Call stop_sync_thread() from md_stop() before clearing pers,
+  matching do_md_stop()/md_stop_writes().
+- v1: https://lore.kernel.org/linux-raid/20261106083543.249267-1-dayou5941@163.com
+
+ drivers/md/dm-raid.c |  7 +++++++
+ drivers/md/md.c      | 41 ++++++++++++++++++++++++++++++++---------
+ 2 files changed, 39 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index ac019a0f5a92..f82c09d858de 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3319,6 +3319,13 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+ 	md_stop(&rs->md);
+ 	mddev_unlock(&rs->md);
+ bad:
++	/*
++	 * md_stop() may drop reconfig_mutex so mddev->thread can run
++	 * md_reap_sync_thread() and queue event_work; wait for it before
++	 * freeing raid_set. Skip if INIT_WORK has not run yet.
++	 */
++	if (rs->md.event_work.func)
++		flush_work(&rs->md.event_work);
+ 	raid_set_free(rs);
  
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
+ 	return r;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 680b34a63cb3..79c564320f18 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5184,7 +5184,14 @@ static void stop_sync_thread(struct mddev *mddev, bool locked)
+ {
+ 	int sync_seq = atomic_read(&mddev->sync_seq);
  
- 	asm volatile("vmovdqa %0,%%ymm0" : : "m" (raid6_avx2_constants.x1d[0]));
- 	asm volatile("vpxor %ymm3,%ymm3,%ymm3");	/* Zero temp */
-@@ -82,7 +82,7 @@ static void raid6_avx21_xor_syndrome(int disks, int start, int stop,
- 	p = dptr[disks-2];	/* XOR parity */
- 	q = dptr[disks-1];	/* RS syndrome */
+-	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
++	/*
++	 * If nothing is in flight, keep reconfig_mutex when locked so
++	 * callers such as do_md_stop() cannot race with do_md_run().
++	 * work_busy() is required: md_start_sync() may clear RUNNING and
++	 * still use mddev after unlocking.
++	 */
++	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
++	    !work_busy(&mddev->sync_work)) {
+ 		if (!locked)
+ 			mddev_unlock(mddev);
+ 		return;
+@@ -5192,14 +5199,20 @@ static void stop_sync_thread(struct mddev *mddev, bool locked)
  
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
+ 	mddev_unlock(mddev);
  
- 	asm volatile("vmovdqa %0,%%ymm0" : : "m" (raid6_avx2_constants.x1d[0]));
+-	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
++	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
++		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
++		/*
++		 * Thread might be blocked waiting for metadata update which
++		 * will now never happen
++		 */
++		md_wakeup_thread_directly(&mddev->sync_thread);
++	}
+ 	/*
+-	 * Thread might be blocked waiting for metadata update which will now
+-	 * never happen
++	 * md_start_sync() may still use mddev after unlocking. Always
++	 * flush so teardown waits for that work to return; checking
++	 * work_pending() is not enough once the work is running.
+ 	 */
+-	md_wakeup_thread_directly(&mddev->sync_thread);
+-	if (work_pending(&mddev->sync_work))
+-		flush_work(&mddev->sync_work);
++	flush_work(&mddev->sync_work);
  
-@@ -139,7 +139,7 @@ static void raid6_avx22_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	p = dptr[z0+1];		/* XOR parity */
- 	q = dptr[z0+2];		/* RS syndrome */
+ 	wait_event(resync_wait,
+ 		   !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
+@@ -7101,6 +7114,14 @@ void md_stop(struct mddev *mddev)
+ {
+ 	lockdep_assert_held(&mddev->reconfig_mutex);
  
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
++	/*
++	 * md_check_recovery() may have queued sync_work; that work accesses
++	 * pers. Wait for it here before __md_stop() clears pers, as
++	 * do_md_stop()/md_stop_writes() do.
++	 */
++	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
++	stop_sync_thread(mddev, true);
++
+ 	/* stop the array and free an attached data structures.
+ 	 * This is called from dm-raid
+ 	 */
+@@ -10494,9 +10515,11 @@ void md_check_recovery(struct mddev *mddev)
  
- 	asm volatile("vmovdqa %0,%%ymm0" : : "m" (raid6_avx2_constants.x1d[0]));
- 	asm volatile("vpxor %ymm1,%ymm1,%ymm1"); /* Zero temp */
-@@ -192,7 +192,7 @@ static void raid6_avx22_xor_syndrome(int disks, int start, int stop,
- 	p = dptr[disks-2];	/* XOR parity */
- 	q = dptr[disks-1];	/* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("vmovdqa %0,%%ymm0" : : "m" (raid6_avx2_constants.x1d[0]));
- 
-@@ -271,7 +271,7 @@ static void raid6_avx24_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	p = dptr[z0+1];		/* XOR parity */
- 	q = dptr[z0+2];		/* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("vmovdqa %0,%%ymm0" : : "m" (raid6_avx2_constants.x1d[0]));
- 	asm volatile("vpxor %ymm1,%ymm1,%ymm1");	/* Zero temp */
-@@ -353,7 +353,7 @@ static void raid6_avx24_xor_syndrome(int disks, int start, int stop,
- 	p = dptr[disks-2];	/* XOR parity */
- 	q = dptr[disks-1];	/* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("vmovdqa %0,%%ymm0" :: "m" (raid6_avx2_constants.x1d[0]));
- 
-diff --git a/lib/raid/raid6/x86/avx512.c b/lib/raid/raid6/x86/avx512.c
-index 772bfc4af6dfd..6ba5ca7df29d5 100644
---- a/lib/raid/raid6/x86/avx512.c
-+++ b/lib/raid/raid6/x86/avx512.c
-@@ -34,7 +34,7 @@ static void raid6_avx5121_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	p = dptr[z0+1];         /* XOR parity */
- 	q = dptr[z0+2];         /* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("vmovdqa64 %0,%%zmm0\n\t"
- 		     "vpxorq %%zmm1,%%zmm1,%%zmm1" /* Zero temp */
-@@ -93,7 +93,7 @@ static void raid6_avx5121_xor_syndrome(int disks, int start, int stop,
- 	p = dptr[disks-2];	/* XOR parity */
- 	q = dptr[disks-1];	/* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("vmovdqa64 %0,%%zmm0"
- 		     : : "m" (raid6_avx512_constants.x1d[0]));
-@@ -161,7 +161,7 @@ static void raid6_avx5122_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	p = dptr[z0+1];         /* XOR parity */
- 	q = dptr[z0+2];         /* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("vmovdqa64 %0,%%zmm0\n\t"
- 		     "vpxorq %%zmm1,%%zmm1,%%zmm1" /* Zero temp */
-@@ -225,7 +225,7 @@ static void raid6_avx5122_xor_syndrome(int disks, int start, int stop,
- 	p = dptr[disks-2];	/* XOR parity */
- 	q = dptr[disks-1];	/* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("vmovdqa64 %0,%%zmm0"
- 		     : : "m" (raid6_avx512_constants.x1d[0]));
-@@ -320,7 +320,7 @@ static void raid6_avx5124_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	p = dptr[z0+1];         /* XOR parity */
- 	q = dptr[z0+2];         /* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("vmovdqa64 %0,%%zmm0\n\t"
- 		     "vpxorq %%zmm1,%%zmm1,%%zmm1\n\t"       /* Zero temp */
-@@ -415,7 +415,7 @@ static void raid6_avx5124_xor_syndrome(int disks, int start, int stop,
- 	p = dptr[disks-2];	/* XOR parity */
- 	q = dptr[disks-1];	/* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("vmovdqa64 %0,%%zmm0"
- 		     :: "m" (raid6_avx512_constants.x1d[0]));
-diff --git a/lib/raid/raid6/x86/recov_avx2.c b/lib/raid/raid6/x86/recov_avx2.c
-index 820871046e305..41c050746b3dd 100644
---- a/lib/raid/raid6/x86/recov_avx2.c
-+++ b/lib/raid/raid6/x86/recov_avx2.c
-@@ -43,7 +43,7 @@ static void raid6_2data_recov_avx2(int disks, size_t bytes, int faila,
- 	qmul  = raid6_vgfmul[raid6_gfinv[raid6_gfexp[faila] ^
- 		raid6_gfexp[failb]]];
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	/* ymm0 = x0f[16] */
- 	asm volatile("vpbroadcastb %0, %%ymm7" : : "m" (x0f));
-@@ -205,7 +205,7 @@ static void raid6_datap_recov_avx2(int disks, size_t bytes, int faila,
- 	/* Now, pick the proper data tables */
- 	qmul  = raid6_vgfmul[raid6_gfinv[raid6_gfexp[faila]]];
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("vpbroadcastb %0, %%ymm7" : : "m" (x0f));
- 
-diff --git a/lib/raid/raid6/x86/recov_avx512.c b/lib/raid/raid6/x86/recov_avx512.c
-index 299a3f044d616..3b48822b61ac3 100644
---- a/lib/raid/raid6/x86/recov_avx512.c
-+++ b/lib/raid/raid6/x86/recov_avx512.c
-@@ -48,7 +48,7 @@ static void raid6_2data_recov_avx512(int disks, size_t bytes, int faila,
- 	qmul  = raid6_vgfmul[raid6_gfinv[raid6_gfexp[faila] ^
- 		raid6_gfexp[failb]]];
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	/* zmm0 = x0f[16] */
- 	asm volatile("vpbroadcastb %0, %%zmm7" : : "m" (x0f));
-@@ -243,7 +243,7 @@ static void raid6_datap_recov_avx512(int disks, size_t bytes, int faila,
- 	/* Now, pick the proper data tables */
- 	qmul  = raid6_vgfmul[raid6_gfinv[raid6_gfexp[faila]]];
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("vpbroadcastb %0, %%zmm7" : : "m" (x0f));
- 
-diff --git a/lib/raid/raid6/x86/recov_ssse3.c b/lib/raid/raid6/x86/recov_ssse3.c
-index 700bd2c865ece..5540944945d57 100644
---- a/lib/raid/raid6/x86/recov_ssse3.c
-+++ b/lib/raid/raid6/x86/recov_ssse3.c
-@@ -44,7 +44,7 @@ static void raid6_2data_recov_ssse3(int disks, size_t bytes, int faila,
- 	qmul  = raid6_vgfmul[raid6_gfinv[raid6_gfexp[faila] ^
- 		raid6_gfexp[failb]]];
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("movdqa %0,%%xmm7" : : "m" (x0f[0]));
- 
-@@ -210,7 +210,7 @@ static void raid6_datap_recov_ssse3(int disks, size_t bytes, int faila,
- 	/* Now, pick the proper data tables */
- 	qmul  = raid6_vgfmul[raid6_gfinv[raid6_gfexp[faila]]];
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("movdqa %0, %%xmm7" : : "m" (x0f[0]));
- 
-diff --git a/lib/raid/raid6/x86/sse2.c b/lib/raid/raid6/x86/sse2.c
-index 43b09ce58270a..2bbb288c244fc 100644
---- a/lib/raid/raid6/x86/sse2.c
-+++ b/lib/raid/raid6/x86/sse2.c
-@@ -28,7 +28,7 @@ static void raid6_sse21_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	p = dptr[z0+1];		/* XOR parity */
- 	q = dptr[z0+2];		/* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("movdqa %0,%%xmm0" : : "m" (raid6_sse_constants.x1d[0]));
- 	asm volatile("pxor %xmm5,%xmm5");	/* Zero temp */
-@@ -80,7 +80,7 @@ static void raid6_sse21_xor_syndrome(int disks, int start, int stop,
- 	p = dptr[disks-2];	/* XOR parity */
- 	q = dptr[disks-1];	/* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("movdqa %0,%%xmm0" : : "m" (raid6_sse_constants.x1d[0]));
- 
-@@ -136,7 +136,7 @@ static void raid6_sse22_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	p = dptr[z0+1];		/* XOR parity */
- 	q = dptr[z0+2];		/* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("movdqa %0,%%xmm0" : : "m" (raid6_sse_constants.x1d[0]));
- 	asm volatile("pxor %xmm5,%xmm5"); /* Zero temp */
-@@ -189,7 +189,7 @@ static void raid6_sse22_xor_syndrome(int disks, int start, int stop,
- 	p = dptr[disks-2];	/* XOR parity */
- 	q = dptr[disks-1];	/* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("movdqa %0,%%xmm0" : : "m" (raid6_sse_constants.x1d[0]));
- 
-@@ -266,7 +266,7 @@ static void raid6_sse24_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	p = dptr[z0+1];		/* XOR parity */
- 	q = dptr[z0+2];		/* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("movdqa %0,%%xmm0" :: "m" (raid6_sse_constants.x1d[0]));
- 	asm volatile("pxor %xmm2,%xmm2");	/* P[0] */
-@@ -353,7 +353,7 @@ static void raid6_sse24_xor_syndrome(int disks, int start, int stop,
- 	p = dptr[disks-2];	/* XOR parity */
- 	q = dptr[disks-1];	/* RS syndrome */
- 
--	kernel_fpu_begin();
-+	kernel_fpu_begin_mask(0);
- 
- 	asm volatile("movdqa %0,%%xmm0" :: "m" (raid6_sse_constants.x1d[0]));
- 
+ 			/*
+ 			 * Let md_start_sync() to remove and add rdevs to the
+-			 * array.
++			 * array. Honour MD_RECOVERY_FROZEN like the read-write
++			 * path so freeze/stop does not race with a new queue.
+ 			 */
+-			if (md_spares_need_change(mddev)) {
++			if (md_spares_need_change(mddev) &&
++			    !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
+ 				set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+ 				queue_work(md_misc_wq, &mddev->sync_work);
+ 			}
 -- 
-2.56.1
+2.25.1
 
