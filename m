@@ -1,63 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.49
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794469472;
-	b=PoF6ZvZYdP9ZiwY6ZEDDsB+lBZHjNliGkRl2de1z5ovOQNni6sFmRHRqSbZcAqA835lN
-	 Ti/uAEqLUFU9tGzzbaTHLmpeBESqelKRCCBC17H5pE3AItgo7F0AUJLDL4Ks/aGeAVOuU
-	 R0WJjVaRoqrCe/f8uzhQ27HMbrg80FXjgA4RKagMVy5qm8zY0CCT5+ayabc+WtIj7tZ+6
-	 iKGAgGLfnQBcUqTMfPrglDBXsTr4o1Cvo98W4Iusc2eTQCl/fxTxr5nz842IIcF/Y/Bf8
-	 obpTRA9SGKkSVOHF7mvbRavjIY+DCPEG9+9AMr187ImRcymdD/cq6m6CrOvsjdnAYbg==
+	t=1794474937;
+	b=0wK7x451t8Wn6gUqc86V7xjRG63vRcxPtXrvMH17wERFjyi4ZfJ+0wa8vnUa3wcNaQVa
+	 JQqdHdUw5KzHgqBtBjvmwm2rMKikcUC/tCd/rB9wWPSFs2KWxcZf6DGFPZGM1gS5JdRLE
+	 TjuBG9soH4M2Z8eGOLag8XLLboVgZX0i0cxPLhKX9YwHhXUYLorM/equNG62GO1NHY7Z/
+	 tgcqIQ+7P7FuMPPM6HlyOY86aZdRKWXwmEuwbLL0v5lSDtSaZp/lbGqJrb7YPxxkwwl0o
+	 m/ZE3WJXuxLIA43eNVYQ2aNd98uXt35RqHm4BeV7sTLmIj/SLutOtC9wR/VkUHWVOcg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794469472;
-	h=DMARC-Filter:DKIM-Signature:Date:From:To:Cc:Subject:X-Priority:
-	 X-Mailer:In-Reply-To:References:X-NTES-SC:Content-Transfer-Encoding:
-	 Content-Type:MIME-Version:Message-ID:X-Coremail-Locale:X-CM-TRANSID:
-	 X-CM-SenderInfo:X-Coremail-Antispam;
-	bh=LWKPSgJRoMSlJNX6eHD8xIdLMElp6tW7rKgc6Z5KaV8=;
-	b=PhJF3qJ3QdstfeHDIL50v/wRlb9Y6Jmjg5oomeHrkVrNJjtL+AhMjbiof849oneLxzi5
-	 lIwzwMJgLPZVVEHXUymaLQmYolHw7basg07t4IDWe9fPbQ/4TCwGEOEWEhgUDqwdED7nS
-	 O0sWofd+J616eQrzXnK4oOSnFpJZfxCvnTg4MKyl/s5Zro96g6hKAtFK4C1pp1Q5eaGDY
-	 r8OqYt6DhazgwSAGA5mWwNoHgnCYXtkesbPwwCRX1LRUFd0v2P2s8nTmgQWOFxBpNPF7G
-	 ACx1wS8AHAJXXhBdU8hY9f8ZYKiS94MtphcNVIg9v+ly1KpD1EhMWcf/WJbnyG58HEg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794474937;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=yusICm5FqFDhqKagzUFQzYsZYok+0ZTBuA+SIPwr+Q8=;
+	b=GyK2I3l2smYW+sbaZVoRtwdigyzu1F2r1W53e1TWnffnfec6U9VNtRIRN5UDDDmh/2Ly
+	 HczNH3ElWl9ApCB82fJB2N8UYqmXcIPxyUf5rHkN1A4V0Vw/RApdnABsmp2VPRGfJ4UlD
+	 lmYRplKlPVxbIEfLN3ZGhmVy72FZsFd93BP+idvcd+hOs9eKXWDqwAf1e1Y1tKhGwG1kv
+	 nKxgRgyQ549znXt1x3iolELHDu+PcogU9NdKxvJARwY6Pl0yzzMICTSemw9mitmGkUL7g
+	 4mGHWLvwwp8X3+L/tYKVd/Lk1idCwjghleECAMpt/tPKVBQT5ouCDHHSDUal3PQKcyg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=163.com;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=X9yJlMfF;
-	arc=none smtp.remote-ip=117.135.210.2
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=cloud.ionos.com;
+	spf=pass smtp.mailfrom=ionos.com;
+	dkim=pass header.d=cloud.ionos.com header.i=@cloud.ionos.com header.a=rsa-sha256 header.s=google header.b=SoVQ1BO0;
+	arc=none smtp.remote-ip=209.85.128.49
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57C56606A323
-	for <linux-raid@vger.kernel.org>; Thu, 12 Nov 2026 07:44:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 57C56606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ACBE606A333
+	for <linux-raid@vger.kernel.org>; Thu, 12 Nov 2026 09:15:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1ACBE606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=X9yJlMfF
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
-	Message-ID; bh=LWKPSgJRoMSlJNX6eHD8xIdLMElp6tW7rKgc6Z5KaV8=; b=X
-	9yJlMfFYH9mYbSi9i8sD3yUkh50v7znT3KjAV2kcGSenDRoeQuwj+RMHEwTxzXow
-	24aUJgq7xQkr6yjOdtySj+JetNdf8GzFz6pVn9+Zt24v/4dAq3AMMXx9/C4guRrs
-	6+bxtA30geZd6LNFqYEndmjeGQfN3+/SZWvyugOQtM=
-Date: Thu, 12 Nov 2026 15:43:48 +0800 (CST)
-From: =?GBK?B?wO7T07roIA==?= <dayou5941@163.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: song@kernel.org, yukuai@fygo.io, agk@redhat.com, snitzer@kernel.org,
-	mpatocka@redhat.com, bmarzins@redhat.com, dm-devel@lists.linux.dev,
-	magiclinan@didiglobal.com, xiao@kernel.org,
-	linux-raid@vger.kernel.org, "Li Youhong" <liyouhong@kylinos.cn>,
-	syzbot+a53c2918175b36cfd601@syzkaller.appspotmail.com
-Subject: Re:Re: [PATCH v5] md: fix sync_work vs array teardown races
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
- 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 163com
-In-Reply-To: <sashiko-outbox-210153@kernel.org>
-References: <20261112013523.120428-1-dayou5941@163.com>
- <sashiko-outbox-210153@kernel.org>
-X-NTES-SC: AL_Qu2SBvidtkwp7imQZOkckk4Wjug8Wcexufwj34NTc8gEtxjK1BonZkZAI3L44MaJFQOToSOcfQlWzcN4ZqpU3EytrUmd70Fo99HeECvQLg==
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=GBK
+	dkim=pass (2048-bit key, unprotected) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.a=rsa-sha256 header.s=google header.b=SoVQ1BO0
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4a56e05568aso3583425e9.1
+        for <linux-raid@vger.kernel.org>; Thu, 12 Nov 2026 01:15:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google; t=1794474934; x=1795079734; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=yusICm5FqFDhqKagzUFQzYsZYok+0ZTBuA+SIPwr+Q8=;
+        b=SoVQ1BO0VAZw4kc4pJVbOYxZKECJAqy7nj67e0EvhxlR7T5lJaoypjMfjhVpyC2fMz
+         oX125kayJQ8ipijpQTzBw5Y8NzSJeBbWVp41GFLNZDV95A/h4WKbKaVuK0etStV1JUuz
+         QdFtg4qJ+wxbS0Z2vw+glxpCo+Kw1VqFEyBQ2p5lUEh4ZKkCEzJ78ILoZ0qipaU0jiS+
+         B7GfEoxpOw/NrxJVmguaeqWdNWDQPLsJ5WXxg1ijeca5HbY0P2P49j6zGVFgDFhH3K6v
+         g+WvaOY8CwGRw4T0QO4shn7HmjAJKelf8DP4vC7tK0+0gIWLN8bs+RjwpBSzalZP8d+o
+         c8RQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794474934; x=1795079734;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=yusICm5FqFDhqKagzUFQzYsZYok+0ZTBuA+SIPwr+Q8=;
+        b=SuQTOZeviRhfhZPxKFqJyI2Iq5Te84/WYjCv9eMZyDMvyYH0ZM3oDkZ40afDPTp3Ur
+         FeJY8lUWzqYlwZGOV9lL9B0HO/rKY5VVLODKB+b2cm3XQqwqS6U0vRtCVIo9KJczFmoB
+         mn4ehNvldqKFs62YiHOXukQGa22YYjOsPWs1xZt6/DShiOaoG9Vem9CUMmCYMAG01Txk
+         3P2NxCaRZ6ZSDB8OYMRMUC70l00D4O5JR+cgBrC48beA75A++OAu2jJParUAnm2WYUAl
+         ExHWpfJV14gNVe7t06urjHB+8m+9CCKaBc3KmUzVCVPwj54icqegjWVElU4yA+BJwO6S
+         ufxw==
+X-Forwarded-Encrypted: i=1; AL+hErFLFj4lWyXDb7zqAU5vee4vbrK0rnIEs5/C9RZdR28aHo1iCuTi78QcG4NknFv8ECnpJzpCCzzM43rI@vger.kernel.org
+X-Gm-Message-State: APuU4Z9cWctu+MzYw7PxJ3JojHtDDUHfKaJ2UUSppi2uGs0PfGXCVxnp
+	udrS9cnaaev/3er9xrpJak7DwNL61qfxSJbf+3JK3dYzVDdtnJv9zRuwn6+Ba5Qpujg=
+X-Gm-Gg: AYBFou0TDUe9J0G6A8Bt164fShaXNqJyKAsyCVh4TLEoOVPyagN6VWCtm/04I34FAhW
+	eKjpaIwruxlgHidYVEnakBGZrG96kQnvPL13kR/bwRW9FWKv8GpzSCuz2DOo4Zi3gSaACHu405T
+	6OeZECYzjrVfpTZbZAQatzHye68HQw1Z1F06GzKOhgxBjc7/HBiiMn8PdHzOYrAQbQfFkmUs7oH
+	1O1DveqQxOxFxw0nMeuEPTK3WRr4J5fbtOmmWDjeD6QD3Cr/UO+TQOAebOXTk1/lNHKerYWZyer
+	F1siOJmg6/jUCYpnk6PUkcNBh7cnPenjt48SNhvk4gOFNIaz5PQ089fySSor19NJ4I4LO+nkQ3G
+	Q6QY9b4Rum6WM+ZmwxYr9DeBsI6UbVYxVjZltbzRumExXBNP8x7WHi4yQ1hiiDItTFbqp1wlMZj
+	Rc0K80VdFZWkPdQKXEdinlmHofHdPVK14FrD3w+mYZlbrbVDb/k/aLwxNYn79bvL+YZR5GfxIei
+	xCYbvy5JBIQQvqgXYOQ/+15uyhXRilhPZr3bbBLf7NuJTP8H4xFpfR0rNI6hg0n8v/mamnuANdh
+	Z3NezOS9wUXKCW0HSI5FOGM5skeebw5c+K/9f5jIDvjOwuGXKeDGXU+8aXq3/PzWlnEWzkHOT9d
+	tn2Hza1ECdYObAA3dOfNSyWcaFmw=
+X-Received: by 2002:a05:600c:4189:b0:4a2:417:7db5 with SMTP id 5b1f17b1804b1-4ba0935d28amr54148265e9.2.1794474934375;
+        Thu, 12 Nov 2026 01:15:34 -0800 (PST)
+Received: from jwang-ThinkPad-T14-Gen-6.fkb.profitbricks.net ([212.227.34.98])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb4e29daa5sm58129935e9.12.2026.11.12.01.15.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Nov 2026 01:15:34 -0800 (PST)
+From: Jack Wang <jinpu.wang@cloud.ionos.com>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v4] md: don't leak MD_CLOSING when array_state write is interrupted
+Date: Thu, 12 Nov 2026 10:15:33 +0100
+Message-ID: <20261112091533.145342-1-jinpu.wang@cloud.ionos.com>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -67,135 +98,105 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Message-ID: <4c4eee70.5a72.1a1ceb67eff.Coremail.dayou5941@163.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:eygvCgD3X3g2bvVqgJZsAA--.469W
-X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC+RXAb2r1bjXv-AAA3U
-X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
+Content-Transfer-Encoding: 8bit
 
-CgoKCgoKCgoKCgoKCgoKCgpBdCAyMDI2LTExLTEyIDEwOjA3OjM3LCBzYXNoaWtvLWJvdEBrZXJu
-ZWwub3JnIHdyb3RlOgo+VGhhbmsgeW91IGZvciB5b3VyIGNvbnRyaWJ1dGlvbiEgU2FzaGlrbyBB
-SSByZXZpZXcgZm91bmQgMiBwb3RlbnRpYWwKPmlzc3VlcyB0byBjb25zaWRlcjoKPi0gW0hpZ2hd
-IGRtLXJhaWQ6IHVzZS1hZnRlci1mcmVlIGluIHJhaWRfZHRyKCkgZHVlIHRvIHdvcmtfcGVuZGlu
-ZygpCj4gIGNoZWNrIGJlZm9yZSBmbHVzaF93b3JrKCkKPi0gW01lZGl1bV0gbWQ6IHN0b3Bfc3lu
-Y190aHJlYWQoKSBoYW5ncyBvbiBuZXcgc3luYyB3aGVuIG1kX3N0YXJ0X3N5bmMoKQo+ICBhYm9y
-dHMKPi0tCj4KPmNvbW1pdCAyMzJhZGQ4NTdlMjJiZWNiNzY0YTAwMjgxZDcwM2M0NWI4NzVmY2Vk
-Cj5BdXRob3I6IExpIFlvdWhvbmcgPGxpeW91aG9uZ0BreWxpbm9zLmNuPgo+Cj5tZDogZml4IHN5
-bmNfd29yayB2cyBhcnJheSB0ZWFyZG93biByYWNlcwo+Cj5UaGlzIGNvbW1pdCBzdG9wcyB0aGUg
-c3luYyB0aHJlYWQgYW5kIGZsdXNoZXMgc3luY193b3JrIGR1cmluZyBtZF9zdG9wKCksCj5mbHVz
-aGVzIGV2ZW50X3dvcmsgb24gdGhlIHJhaWRfY3RyKCkgZXJyb3IgcGF0aCwgYW5kIGNoZWNrcwo+
-TURfUkVDT1ZFUllfRlJPWkVOIG9uIHRoZSByZWFkLW9ubHkgcGF0aCBpbiBtZF9jaGVja19yZWNv
-dmVyeSgpLgo+Cj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL2RtLXJhaWQuYyBiL2RyaXZlcnMv
-bWQvZG0tcmFpZC5jCj4+IGluZGV4IGFjMDE5YTBmNWE5MjkuLmY4MmMwOWQ4NThkZTMgMTAwNjQ0
-Cj4+IC0tLSBhL2RyaXZlcnMvbWQvZG0tcmFpZC5jCj4+ICsrKyBiL2RyaXZlcnMvbWQvZG0tcmFp
-ZC5jCj4+IEBAIC0zMzE5LDYgKzMzMTksMTMgQEAgc3RhdGljIGludCByYWlkX2N0cihzdHJ1Y3Qg
-ZG1fdGFyZ2V0ICp0aSwgdW5zaWduZWQgaW50IGFyZ2MsIGNoYXIgKiphcmd2KQo+PiAgCW1kX3N0
-b3AoJnJzLT5tZCk7Cj4+ICAJbWRkZXZfdW5sb2NrKCZycy0+bWQpOwo+PiAgYmFkOgo+PiArCS8q
-Cj4+ICsJICogbWRfc3RvcCgpIG1heSBkcm9wIHJlY29uZmlnX211dGV4IHNvIG1kZGV2LT50aHJl
-YWQgY2FuIHJ1bgo+PiArCSAqIG1kX3JlYXBfc3luY190aHJlYWQoKSBhbmQgcXVldWUgZXZlbnRf
-d29yazsgd2FpdCBmb3IgaXQgYmVmb3JlCj4+ICsJICogZnJlZWluZyByYWlkX3NldC4gU2tpcCBp
-ZiBJTklUX1dPUksgaGFzIG5vdCBydW4geWV0Lgo+PiArCSAqLwo+PiArCWlmIChycy0+bWQuZXZl
-bnRfd29yay5mdW5jKQo+PiArCQlmbHVzaF93b3JrKCZycy0+bWQuZXZlbnRfd29yayk7Cj4+ICAJ
-cmFpZF9zZXRfZnJlZShycyk7Cj4+ICAKPj4gIAlyZXR1cm4gcjsKPgo+W1NldmVyaXR5OiBIaWdo
-XQo+RG9lcyByYWlkX2R0cigpIGFsc28gbmVlZCBhbiB1bmNvbmRpdGlvbmFsIGZsdXNoX3dvcmso
-JnJzLT5tZC5ldmVudF93b3JrKQo+aW5zdGVhZCBvZiBnYXRpbmcgaXQgb24gd29ya19wZW5kaW5n
-KCk/Cj4KPmRyaXZlcnMvbWQvZG0tcmFpZC5jOnJhaWRfZHRyKCkgewo+CS4uLgo+CWlmICh3b3Jr
-X3BlbmRpbmcoJnJzLT5tZC5ldmVudF93b3JrKSkKPgkJZmx1c2hfd29yaygmcnMtPm1kLmV2ZW50
-X3dvcmspOwo+CXJhaWRfc2V0X2ZyZWUocnMpOwo+fQo+Cj5XaGVuIG1kX3N0b3AoKSBkcm9wcyBy
-ZWNvbmZpZ19tdXRleCBpbiByYWlkX2R0cigpLCBtZGRldi0+dGhyZWFkIGNhbiBydW4KPm1kX3Jl
-YXBfc3luY190aHJlYWQoKSBhbmQgcXVldWUgZXZlbnRfd29yay4gIE9uY2UgYSB3b3JrZXIgZGVx
-dWV1ZXMKPmV2ZW50X3dvcmsgdG8gcnVuIGRvX3RhYmxlX2V2ZW50KCksIFdPUktfU1RSVUNUX1BF
-TkRJTkdfQklUIGlzIGNsZWFyZWQ6Cj4KPkNQVTAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICBrd29ya2VyIChtZF9taXNjX3dxKQo+cmFpZF9kdHIoKQo+ICBtZF9zdG9wKCZycy0+bWQpCj4g
-ICAgc3RvcF9zeW5jX3RocmVhZCgpCj4gICAgICBtZGRldl91bmxvY2soKQo+ICAgICAgLyogbWRf
-cmVhcF9zeW5jX3RocmVhZCgpCj4gICAgICAgICBxdWV1ZXMgZXZlbnRfd29yayAqLwo+ICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHByb2Nlc3Nfb25lX3dvcmsoKQo+ICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgLyogY2xlYXJzIFBFTkRJTkdfQklUICovCj4gICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkb190YWJsZV9ldmVudCgpCj4gIGlmICh3
-b3JrX3BlbmRpbmcoJmV2ZW50X3dvcmspKQo+ICAgIC8qIGZhbHNlLCBza2lwcyBmbHVzaF93b3Jr
-ICovCj4gIHJhaWRfc2V0X2ZyZWUocnMpCj4gICAga2ZyZWUocnMpCj4gICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIGRtX3RhYmxlX2V2ZW50KHJzLT50aS0+dGFibGUpCj4gICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPC0tIHVzZS1hZnRlci1mcmVlCj4K
-PkNhbGxpbmcgZmx1c2hfd29yaygmcnMtPm1kLmV2ZW50X3dvcmspIHVuY29uZGl0aW9uYWxseSBp
-biByYWlkX2R0cigpIGF2b2lkcwo+ZnJlZWluZyBycyB3aGlsZSBkb190YWJsZV9ldmVudCgpIGlz
-IHN0aWxsIHJ1bm5pbmcuCj4KQWdyZWVkLiByYWlkX2R0cigpIHNob3VsZCBub3QgcmVseSBvbiB3
-b3JrX3BlbmRpbmcoKSBiZWNhdXNlIHRoZSB3b3JrIG1heSBhbHJlYWR5IGJlCnJ1bm5pbmcgd2l0
-aCB0aGUgUEVORElORyBiaXQgY2xlYXJlZC4gSSB3aWxsIHNlbmQgYSBzZXBhcmF0ZSBwYXRjaCB0
-byBmbHVzaCBldmVudF93b3JrCndoZW5ldmVyIGl0IGhhcyBiZWVuIGluaXRpYWxpemVkLCBhbGln
-bmVkIHdpdGggdGhlIHNhbWUgY2hlY2sgaW4gcmFpZF9jdHIoKS4KCj4+IGRpZmYgLS1naXQgYS9k
-cml2ZXJzL21kL21kLmMgYi9kcml2ZXJzL21kL21kLmMKPj4gaW5kZXggMDNlMzUzODZhODAyOC4u
-YTMzMDc1ZjFiODMyNCAxMDA2NDQKPj4gLS0tIGEvZHJpdmVycy9tZC9tZC5jCj4+ICsrKyBiL2Ry
-aXZlcnMvbWQvbWQuYwo+PiBAQCAtNTE5OSw3ICs1MTk5LDE0IEBAIHN0YXRpYyB2b2lkIHN0b3Bf
-c3luY190aHJlYWQoc3RydWN0IG1kZGV2ICptZGRldiwgYm9vbCBsb2NrZWQpCj4+ICB7Cj4+ICAJ
-aW50IHN5bmNfc2VxID0gYXRvbWljX3JlYWQoJm1kZGV2LT5zeW5jX3NlcSk7Cj4+ICAKPj4gLQlp
-ZiAoIXRlc3RfYml0KE1EX1JFQ09WRVJZX1JVTk5JTkcsICZtZGRldi0+cmVjb3ZlcnkpKSB7Cj4+
-ICsJLyoKPj4gKwkgKiBJZiBub3RoaW5nIGlzIGluIGZsaWdodCwga2VlcCByZWNvbmZpZ19tdXRl
-eCB3aGVuIGxvY2tlZCBzbwo+PiArCSAqIGNhbGxlcnMgc3VjaCBhcyBkb19tZF9zdG9wKCkgY2Fu
-bm90IHJhY2Ugd2l0aCBkb19tZF9ydW4oKS4KPj4gKwkgKiB3b3JrX2J1c3koKSBpcyByZXF1aXJl
-ZDogbWRfc3RhcnRfc3luYygpIG1heSBjbGVhciBSVU5OSU5HIGFuZAo+PiArCSAqIHN0aWxsIHVz
-ZSBtZGRldiBhZnRlciB1bmxvY2tpbmcuCj4+ICsJICovCj4+ICsJaWYgKCF0ZXN0X2JpdChNRF9S
-RUNPVkVSWV9SVU5OSU5HLCAmbWRkZXYtPnJlY292ZXJ5KSAmJgo+PiArCSAgICAhd29ya19idXN5
-KCZtZGRldi0+c3luY193b3JrKSkgewo+PiAgCQlpZiAoIWxvY2tlZCkKPj4gIAkJCW1kZGV2X3Vu
-bG9jayhtZGRldik7Cj4+ICAJCXJldHVybjsKPj4gQEAgLTUyMDcsMTQgKzUyMTQsMjAgQEAgc3Rh
-dGljIHZvaWQgc3RvcF9zeW5jX3RocmVhZChzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBib29sIGxvY2tl
-ZCkKPj4gIAo+PiAgCW1kZGV2X3VubG9jayhtZGRldik7Cj4+ICAKPj4gLQlzZXRfYml0KE1EX1JF
-Q09WRVJZX0lOVFIsICZtZGRldi0+cmVjb3ZlcnkpOwo+PiArCWlmICh0ZXN0X2JpdChNRF9SRUNP
-VkVSWV9SVU5OSU5HLCAmbWRkZXYtPnJlY292ZXJ5KSkgewo+PiArCQlzZXRfYml0KE1EX1JFQ09W
-RVJZX0lOVFIsICZtZGRldi0+cmVjb3ZlcnkpOwo+PiArCQkvKgo+PiArCQkgKiBUaHJlYWQgbWln
-aHQgYmUgYmxvY2tlZCB3YWl0aW5nIGZvciBtZXRhZGF0YSB1cGRhdGUgd2hpY2gKPj4gKwkJICog
-d2lsbCBub3cgbmV2ZXIgaGFwcGVuCj4+ICsJCSAqLwo+PiArCQltZF93YWtldXBfdGhyZWFkX2Rp
-cmVjdGx5KCZtZGRldi0+c3luY190aHJlYWQpOwo+PiArCX0KPj4gIAkvKgo+PiAtCSAqIFRocmVh
-ZCBtaWdodCBiZSBibG9ja2VkIHdhaXRpbmcgZm9yIG1ldGFkYXRhIHVwZGF0ZSB3aGljaCB3aWxs
-IG5vdwo+PiAtCSAqIG5ldmVyIGhhcHBlbgo+PiArCSAqIG1kX3N0YXJ0X3N5bmMoKSBtYXkgc3Rp
-bGwgdXNlIG1kZGV2IGFmdGVyIHVubG9ja2luZy4gQWx3YXlzCj4+ICsJICogZmx1c2ggc28gdGVh
-cmRvd24gd2FpdHMgZm9yIHRoYXQgd29yayB0byByZXR1cm47IGNoZWNraW5nCj4+ICsJICogd29y
-a19wZW5kaW5nKCkgaXMgbm90IGVub3VnaCBvbmNlIHRoZSB3b3JrIGlzIHJ1bm5pbmcuCj4+ICAJ
-ICovCj4+IC0JbWRfd2FrZXVwX3RocmVhZF9kaXJlY3RseSgmbWRkZXYtPnN5bmNfdGhyZWFkKTsK
-Pj4gLQlpZiAod29ya19wZW5kaW5nKCZtZGRldi0+c3luY193b3JrKSkKPj4gLQkJZmx1c2hfd29y
-aygmbWRkZXYtPnN5bmNfd29yayk7Cj4+ICsJZmx1c2hfd29yaygmbWRkZXYtPnN5bmNfd29yayk7
-Cj4+ICAKPj4gIAl3YWl0X2V2ZW50KHJlc3luY193YWl0LAo+PiAgCQkgICAhdGVzdF9iaXQoTURf
-UkVDT1ZFUllfUlVOTklORywgJm1kZGV2LT5yZWNvdmVyeSkgfHwKPgo+W1NldmVyaXR5OiBNZWRp
-dW1dCj5DYW4gc3RvcF9zeW5jX3RocmVhZCgpIGJsb2NrIGluIHdhaXRfZXZlbnQoKSBmb3IgdGhl
-IGVudGlyZSBkdXJhdGlvbiBvZiBhCj5uZXdseSBzdGFydGVkIHN5bmMgd2hlbiBhbiBpbi1mbGln
-aHQgbWRfc3RhcnRfc3luYygpIGV4aXRzIHZpYSBub3RfcnVubmluZz8KPgo+VW5saWtlIG1kX3Jl
-YXBfc3luY190aHJlYWQoKSwgdGhlIG5vdF9ydW5uaW5nIHBhdGggaW4gbWRfc3RhcnRfc3luYygp
-IGNsZWFycwo+TURfUkVDT1ZFUllfUlVOTklORyBhbmQgdW5sb2NrcyByZWNvbmZpZ19tdXRleCB3
-aXRob3V0IGluY3JlbWVudGluZwo+bWRkZXYtPnN5bmNfc2VxOgo+Cj5kcml2ZXJzL21kL21kLmM6
-bWRfc3RhcnRfc3luYygpIHsKPgkuLi4KPm5vdF9ydW5uaW5nOgo+CWNsZWFyX2JpdChNRF9SRUNP
-VkVSWV9TWU5DLCAmbWRkZXYtPnJlY292ZXJ5KTsKPgljbGVhcl9iaXQoTURfUkVDT1ZFUllfUkVT
-SEFQRSwgJm1kZGV2LT5yZWNvdmVyeSk7Cj4JY2xlYXJfYml0KE1EX1JFQ09WRVJZX1JFUVVFU1RF
-RCwgJm1kZGV2LT5yZWNvdmVyeSk7Cj4JY2xlYXJfYml0KE1EX1JFQ09WRVJZX0NIRUNLLCAmbWRk
-ZXYtPnJlY292ZXJ5KTsKPgljbGVhcl9iaXQoTURfUkVDT1ZFUllfUlVOTklORywgJm1kZGV2LT5y
-ZWNvdmVyeSk7Cj4JbWRkZXZfdW5sb2NrKG1kZGV2KTsKPgkuLi4KPn0KPgo+V2hlbiBhIGNhbGxl
-ciBzdWNoIGFzIHJhaWRfbWVzc2FnZSgpIC0+IG1kX2lkbGVfc3luY190aHJlYWQoKSBlbnRlcnMK
-PnN0b3Bfc3luY190aHJlYWQoKSB3aXRoIE1EX1JFQ09WRVJZX0ZST1pFTiBjbGVhciB3aGlsZSBz
-eW5jX3dvcmsgaXMgc3RpbGwKPmJ1c3kgb24gdGhlIG5vdF9ydW5uaW5nIHBhdGgsIHN0b3Bfc3lu
-Y190aHJlYWQoKSBkcm9wcyByZWNvbmZpZ19tdXRleCBhbmQKPndhaXRzIGluIGZsdXNoX3dvcmso
-Jm1kZGV2LT5zeW5jX3dvcmspLiAgT25jZSBtZF9zdGFydF9zeW5jKCkgdW5sb2NrcywKPm1kZGV2
-LT50aHJlYWQgY2FuIHJ1biBtZF9jaGVja19yZWNvdmVyeSgpIGFuZCBzdGFydCBhIG5ldyBzeW5j
-IGJlZm9yZQo+c3RvcF9zeW5jX3RocmVhZCgpIHJlYWNoZXMgd2FpdF9ldmVudCgpOgo+Cj5DUFUw
-IChyYWlkX21lc3NhZ2UgImlkbGUiKSAgICAgICAga3dvcmtlciAgICAgICAgICAgICAgIG1kZGV2
-LT50aHJlYWQKPm1kX2lkbGVfc3luY190aHJlYWQoKQo+ICBzdG9wX3N5bmNfdGhyZWFkKCkKPiAg
-ICBzeW5jX3NlcSA9IC4uLgo+ICAgIC8qIHdvcmtfYnVzeShzeW5jX3dvcmspICovCj4gICAgbWRk
-ZXZfdW5sb2NrKCkKPiAgICBmbHVzaF93b3JrKCZzeW5jX3dvcmspCj4gICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgbWRfc3RhcnRfc3luYygpCj4gICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgbm90X3J1bm5pbmc6Cj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICBjbGVhciBSVU5OSU5HCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBt
-ZGRldl91bmxvY2soKQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICBtZF9jaGVja19yZWNvdmVyeSgpCj4gICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc2V0IFJVTk5JTkcKPiAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjbGVhciBJ
-TlRSCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgcXVldWUgc3luY193b3JrCj4gICAgd2FpdF9ldmVudChyZXN5bmNfd2FpdCwgLi4uKQo+
-ICAgICAgPC0tIGJsb2NrcyB1bnRpbCBuZXcgc3luYyBmaW5pc2hlcwo+Cj5CZWNhdXNlIE1EX1JF
-Q09WRVJZX1JVTk5JTkcgaXMgc2V0IGFnYWluLCBNRF9SRUNPVkVSWV9JTlRSIHdhcyBjbGVhcmVk
-IGJ5Cj5tZF9jaGVja19yZWNvdmVyeSgpLCBhbmQgc3luY19zZXEgbmV2ZXIgY2hhbmdlZCwgc3Rv
-cF9zeW5jX3RocmVhZCgpIHdhaXRzCj5mb3IgdGhlIG5ldyBzeW5jIG9wZXJhdGlvbiB0byBjb21w
-bGV0ZSBpbnN0ZWFkIG9mIHJldHVybmluZyBvbmNlIHRoZQo+YWJvcnRlZCBzeW5jX3dvcmsgZmlu
-aXNoZXMuCj4KCkFncmVlZC4gVGhlIHN5bmNfc2VxLWJhc2VkIHdhaXQgY29uZGl0aW9uIGNhbiBj
-YXVzZSBtZF9pZGxlX3N5bmNfdGhyZWFkKCkgdG8gYmxvY2sgdW50aWwgYSBuZXdseQpzdGFydGVk
-IHN5bmMgY29tcGxldGVzLiBJIHdpbGwgc2VuZCBhIHNlcGFyYXRlIHBhdGNoIHRvIHNpbXBsaWZ5
-IHRoZSB3YWl0IGNvbmRpdGlvbiBhbmQgcmVtb3ZlCnRoZSBub3ctdW51c2VkIHN5bmNfc2VxIGZp
-ZWxkLgoKQm90aCBpc3N1ZXMgYXJlIGluZGVwZW5kZW50IG9mIHRoZSBjb3JlIHY1IGZpeCBhbmQg
-d2lsbCBiZSBhZGRyZXNzZWQgaW4gc2VwYXJhdGUgcGF0Y2hlcyBzZW50IHRvIHRoZQpyZXNwZWN0
-aXZlIG1haW50YWluZXJzLgoKClRoYW5rcywKTGkgWW91aG9uZwo=
+Writing "clear", "readonly", "inactive" or "read_auto" to array_state
+calls mddev_set_closing_and_sync_blockdev(), which sets MD_CLOSING to
+keep the array from being reopened while it is torn down. The flag is
+only cleared again at the tail of array_state_store() (for readonly /
+read_auto / inactive, or the failed-clear case).
+
+Between setting the flag and reaching that tail there is an early return:
+
+	err = mddev_lock(mddev);
+	if (err)
+		return err;
+
+mddev_lock() is mutex_lock_interruptible() on reconfig_mutex. If the
+writing task catches a signal while blocked there, it returns -EINTR and
+MD_CLOSING is left set on a still-running array. do_md_stop() /
+md_set_readonly() never ran, so the array keeps working internally, but
+every subsequent md_open() now returns -ENODEV for all callers - the
+device shows up in /proc/mdstat and sysfs is fully populated, yet cannot
+be opened, and cannot be recovered without a reboot (all clear paths
+either need the device open or re-enter test_and_set_bit(MD_CLOSING) and
+bail with -EBUSY before the clear).
+
+The window is easy to hit on a busy host: reconfig_mutex is held for long
+stretches by a running resync/recovery, widening the interruptible wait,
+and a userspace helper writing to array_state and then being killed or
+timed out is enough to leak the flag.
+
+Clear the flag directly in the interrupted-lock exit. Guard the clear
+with a set_closing flag that records whether this write actually set
+MD_CLOSING: the set call is skipped when the array is not running
+read-write (or mddev->pers is NULL), and in that case this write must
+not clear a MD_CLOSING it never set. This also tightens the pre-existing
+tail clear, which had the same unconditional behaviour.
+
+Fixes: 99b902ac1725 ("md: sync blockdev before stopping raid or setting readonly")
+Signed-off-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+---
+v4: (Kuai) drop the Assisted-by tag, checkpatch does not accept it.
+    Keep the set_closing guard at the tail clear but still skip it after a
+    successful clear: md_clean() keeps MD_CLOSING set (except for legacy
+    async del_gendisk with hold_active), so clearing it here would let the
+    stopped array be reopened.
+v3: (Kuai) clear MD_CLOSING directly at the mddev_lock() failure and
+    return, drop the out_clear_closing label; reword the commit message.
+    Keep the set_closing guard: the set call is skipped when the array
+    is not rdwr or mddev->pers is NULL, so this write may not own the
+    flag. Rebased on v7.4-rc1.
+v2: guard the clear with set_closing.
+
+ drivers/md/md.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 03e35386a802..fb9c4d12c4c5 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4671,6 +4671,7 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ {
+ 	int err = 0;
+ 	enum array_state st = match_word(buf, array_states);
++	bool set_closing = false;
+ 
+ 	/* No lock dependent actions */
+ 	switch (st) {
+@@ -4691,6 +4692,7 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 		err = mddev_set_closing_and_sync_blockdev(mddev, 0);
+ 		if (err)
+ 			return err;
++		set_closing = true;
+ 		break;
+ 	default:
+ 		break;
+@@ -4718,8 +4720,12 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 		return err ?: len;
+ 	}
+ 	err = mddev_lock(mddev);
+-	if (err)
++	if (err) {
++		/* Interrupted before any teardown ran, don't leak MD_CLOSING */
++		if (set_closing)
++			clear_bit(MD_CLOSING, &mddev->flags);
+ 		return err;
++	}
+ 
+ 	switch (st) {
+ 	case inactive:
+@@ -4792,8 +4798,8 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 	}
+ 	mddev_unlock(mddev);
+ 
+-	if (st == readonly || st == read_auto || st == inactive ||
+-	    (err && st == clear))
++	/* A successful clear must keep MD_CLOSING set, see md_clean() */
++	if (set_closing && (st != clear || err))
+ 		clear_bit(MD_CLOSING, &mddev->flags);
+ 
+ 	return err ?: len;
+-- 
+2.43.0
+
