@@ -1,83 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.2
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794514195;
-	b=09H58MdK6cZ39oX649mKGU46kp3+qFiNLyaVxLXrhvJ2a/qjz8QgYORFzLztttuji8AY
-	 bpEcWlgELQGqqiHfpaPSHRM+6KZbSuyc8+jTKU6Ok/lVsqh8TJT9RMhIQkiLbqBzGdOaW
-	 G0kf9rNcicm1PYIEXwMeZSKjwvqMYHXZGtfEl94WkbvX9UWZxdrAc+NRRyowsrvIKUrlC
-	 XCYB82PQZG1BMEoK96fmhhBDbBRmBFMAVZsSIz7mOJQx1AI4pJL3j2/pAsq6BpokTWz2c
-	 5AbSDrujeKHJMy+EosgNsBROoEgE/dpRYRu0QriG2/nb5rYoKZiXDdXOtR4qb8VkLvQ==
+	t=1794532214;
+	b=4KI7GRz+KCRUgdiXq9BwVFIhkUrsA7SG8yI84mysnlET/WJCgqFnaYZVSZs+6fjk7QT4
+	 yd9DWZ9p1HQCJ+PoVAXbfX8m21A8W3dwe3syqbLbkfZlcgLE3CZMrsrawnST4XWFhCW/U
+	 bXpHhwGLVDMPi1el+nAuGQnOihGrkzavGnU0R39x2XuSbZQZKoaDMWSJvVZU82HCsoO8s
+	 D2ETtpysfm8ZmQ1Z1CAjYD6BV5s+YBk2iYDtasTqKP2L2RXyDqLGlL4R1mb+dxdNG0dyb
+	 c3ozf77Yp5u2EhdDrUbpmFjZ5+ZvGnOchbqcuVZT/Y53fTeHhURbr978yVfsAX/xCLA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794514195;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=V0x5gM9R4RZz6VFzF3hAmKn3AxcaWq4rZbeIDdG+M3U=;
-	b=ADY2HGt3P8yjNzGWJ0pGV2Kf6wZxsC+kHZZZ8UoE4FliQI3fx/QqSnvqBJo4n1/AjQt8
-	 ELGod5VSg9N0bz+sFmqS2hRmMjOtTzcfpr9qB0l/oCrIEjZkE9MojBfslalH+3+WrgONJ
-	 ihgO0STg4h6QOIo5poBTNdUir9FdEzlLUuhUMfHbgqFWa8idL0O3N+MpYk0KhfbMNu6LA
-	 wj8AtN9zMfss7GNzw3n+jyMM4CTtk7ZDZMOKQEGOzTswbvfEsPY1/vDHWFdftJHHSapFE
-	 xZo3a9hQEfL6ajRaR6TQZtqNSw9NJOG5f0w21SCUXOc9vn654xsmI0PWoW9d5IiMItw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794532214;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding:
+	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
+	bh=KP3chNyPq62LE1SUl5yEk6RTR3rwbe41xhjBB3QL1EU=;
+	b=HwoKT2rwnvkwEQCBGNgfGOuE/dyqTVet/X7+20TB2gJGTtvffk7fMpPsIaUhv34qKRBK
+	 wJX0rIs3qOnSkNQBubvXM/EhBBG5Neq1Fe5DITPCCsjWkrIaSDVXW845PiPplbCjANOtA
+	 NJYOJlbQ0JW/WC6q46wJoirtWAAqUUy7cQ4pSrNxAH//Koz/VyO0wwdIvmwaSueMMVfmB
+	 UOdFA+hWIoqFzk4MV/uf7o317sLVfYGHlFQ6lakgpSaSDtKOPc6y5QlRQd6xPs921b9wy
+	 h4QwZGCi4dHAfXrTQjz34wd59TlekYIpGyWWXdpXUCZeEntYJ2vD1GfJ6qp1/Bj08PA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=h5jvJa1x;
-	arc=none smtp.remote-ip=198.175.65.15
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=163.com;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b="b8AU/N+5";
+	arc=none smtp.remote-ip=117.135.210.2
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAC72606A321;
-	Thu, 12 Nov 2026 20:09:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EAC72606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7899A606A31C;
+	Fri, 13 Nov 2026 01:10:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7899A606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=h5jvJa1x
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794514195; x=1826050195;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=w/pUbqky+3MybazUz1OqukkycGYf0ZUmSI+0cWXg05s=;
-  b=h5jvJa1xJfvACZK1CvBCJjOa7P7MF+RVFGcRMHbPWFmpHMHfUsERA825
-   36R/CJx/INB4ju3+KkKSz/cYoWNR+8w2vFHg/WjcL8OuFCVrFbdrXLKtr
-   LobbnkRRlC7+st4Fv0t7jtsj7ppaW3c5iRAir635w/UD7GfaJi87LcjVc
-   NaqTJ5cmFuHOAth8XmqSYefvHiwtPDSSTWVUk6tvV8HEqmzff323X0Xb5
-   8p+TgV8oI1j31mIqEZ+tP39xAMjO1RrqfrL2HbA8D1u+aurXkG+MG2iOt
-   LPt/wunej5/XaX5ikQoRqMEx8kMsBE76qplUSV+OlbRmwitlMrAAjbwVg
-   g==;
-X-CSE-ConnectionGUID: vMwElf7vRlyb8G6CGVUnbw==
-X-CSE-MsgGUID: WKTwK0LXQAirJ0jz6XLrHQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11964"; a="3315830"
-X-IronPort-AV: E=Sophos;i="6.27,210,1787036400"; 
-   d="scan'208";a="3315830"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2026 12:09:55 -0800
-X-CSE-ConnectionGUID: z7vCoFA6RBGx7KvCOw8FvA==
-X-CSE-MsgGUID: rFSjSnl3T6O9oOYID5LUyw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,210,1787036400"; 
-   d="scan'208";a="9074007"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by fmviesa001.fm.intel.com with ESMTP; 12 Nov 2026 12:09:51 -0800
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xRb7E-000000011zx-3K1z;
-	Thu, 12 Nov 2026 20:09:48 +0000
-Date: Fri, 13 Nov 2026 04:09:18 +0800
-From: kernel test robot <lkp@intel.com>
-To: Jack Wang <jinpu.wang@cloud.ionos.com>, Yu Kuai <yukuai@fygo.io>,
-	Song Liu <song@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-	Christoph Hellwig <hch@lst.de>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Li Nan <magiclinan@didiglobal.com>, Xiao Ni <xiao@kernel.org>,
-	linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 1/2] block: suspend bio based disks around queue
- limits updates
-Message-ID: <202611130320.U910h0Q4-lkp@intel.com>
-References: <20261112134700.372702-2-jinpu.wang@cloud.ionos.com>
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=b8AU/N+5
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=KP
+	3chNyPq62LE1SUl5yEk6RTR3rwbe41xhjBB3QL1EU=; b=b8AU/N+5DPkDow0Jww
+	2Tg3EVDf59Wqa4sbtKa2Tn0If7hV55K5KcO4zNC7FwpO+WUfaxWmHgypBFutIwF4
+	8tqNLK542eYRpqbNbfOBcf/v/tAfMgdMRTyFBLyVlNGWO3vawo0EQX/xLuuw4Ltp
+	OzWHKDaRzBdGGUQCY6PVZhuhY=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wA3FxM2Y_ZqO82+HA--.10295S2;
+	Fri, 13 Nov 2026 09:09:11 +0800 (CST)
+From: "Li Youhong" <dayou5941@163.com>
+To: song@kernel.org,
+	yukuai@fygo.io
+Cc: magiclinan@didiglobal.com,
+	xiao@kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Li Youhong <liyouhong@kylinos.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH v2] md: fix stop_sync_thread() hang on new sync in idle path
+Date: Fri, 13 Nov 2026 09:09:09 +0800
+Message-Id: <20261113010909.30324-1-dayou5941@163.com>
+X-Mailer: git-send-email 2.25.1
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -87,82 +64,57 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261112134700.372702-2-jinpu.wang@cloud.ionos.com>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wA3FxM2Y_ZqO82+HA--.10295S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7tr47Xw1kKFykuF47Jr1fJFb_yoW8Cw1fpF
+	WxtF98WrWrXrWxXa4jg3ykAFyrAw1jqFWUJrZrC3s5Aas5t3W3AryYgF1Dua1DuFySyF4j
+	van0gFsxZ3W29aDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jY89tUUUUU=
+X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC+hc+7Gr2YzeR2QAA3-
 
-Hi Jack,
+From: Li Youhong <liyouhong@kylinos.cn>
 
-kernel test robot noticed the following build warnings:
+stop_sync_thread() waits for either MD_RECOVERY_RUNNING to be cleared,
+or (when MD_RECOVERY_FROZEN is clear) for mddev->sync_seq to change.
+The sync_seq counter is only incremented when a sync thread is reaped
+in md_reap_sync_thread(), not on the md_start_sync() not_running path.
 
-[auto build test WARNING on 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4]
+If the previous sync attempt took the not_running path, sync_seq does
+not advance. If mddev->thread then queues and runs a new sync in the
+window between flush_work() and wait_event(), that new sync may start
+a real sync thread, leaving MD_RECOVERY_RUNNING set while sync_seq is
+still unchanged. md_idle_sync_thread() then waits until that new sync
+thread is reaped and sync_seq finally changes, even though it only
+needs to wait for the current sync attempt to finish.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Jack-Wang/block-suspend-bio-based-disks-around-queue-limits-updates/20261112-144659
-base:   6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
-patch link:    https://lore.kernel.org/r/20261112134700.372702-2-jinpu.wang%40cloud.ionos.com
-patch subject: [PATCH v4 1/2] block: suspend bio based disks around queue limits updates
-config: loongarch-defconfig (https://download.01.org/0day-ci/archive/20261113/202611130320.U910h0Q4-lkp@intel.com/config)
-compiler: clang version 24.0.0git (https://github.com/llvm/llvm-project 1b1fed44d3dcca649a9877915d57c3357a98124e)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261113/202611130320.U910h0Q4-lkp@intel.com/reproduce)
+Fix this by incrementing sync_seq on the not_running path as well, so
+that the wait condition correctly observes the current sync attempt has
+completed.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202611130320.U910h0Q4-lkp@intel.com/
+Fixes: f52f5c71f3d4 ("md: fix stopping sync thread")
+Cc: stable@vger.kernel.org
+Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
+---
+v2: 
+- Fix the Fixes: tag to reference the upstream commit f52f5c71f3d4
+  instead of the stable backport a17d1bca5aba.
+- v1: https://lore.kernel.org/all/20261112092634.1700963-1-dayou5941@163.com/
 
-All warnings (new ones prefixed by >>):
+ drivers/md/md.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-   In file included from block/blk-integrity.c:18:
-   block/blk.h:680:10: warning: releasing mutex 'disk->queue->limits_lock' that was not held [-Wthread-safety-analysis]
-     680 |                 return queue_limits_commit_update(disk->queue, lim);
-         |                        ^
-   block/blk.h:681:9: warning: releasing mutex 'disk->queue->limits_lock' that was not held [-Wthread-safety-analysis]
-     681 |         return queue_limits_commit_update_frozen(disk->queue, lim);
-         |                ^
->> block/blk-integrity.c:255:1: warning: mutex '(dev - #undefined)->bd_disk->queue->limits_lock' is not held on every path through here [-Wthread-safety-analysis]
-     255 | }
-         | ^
-   block/blk-integrity.c:244:8: note: mutex acquired here
-     244 |         lim = queue_limits_start_update(q);
-         |               ^
-   3 warnings generated.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 68a72513e884..1970c945e597 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -10352,6 +10352,7 @@ static void md_start_sync(struct work_struct *ws)
+ 	clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
+ 	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
+ 	clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
++	atomic_inc(&mddev->sync_seq);
+ 	mddev_unlock(mddev);
+ 	/*
+ 	 * md_start_sync was triggered by MD_RECOVERY_NEEDED, so we should
+-- 
+2.25.1
 
-
-vim +255 block/blk-integrity.c
-
-e9f5f44ad372533 Christoph Hellwig 2024-06-13  225  
-b83bd486b43d2b7 Kanchan Joshi     2024-06-17  226  static ssize_t flag_store(struct device *dev, const char *page, size_t count,
-b83bd486b43d2b7 Kanchan Joshi     2024-06-17  227  		unsigned char flag)
-1366251a794b149 Christoph Hellwig 2024-06-13  228  {
-9a7e3243fd42730 Jack Wang         2026-11-12  229  	struct gendisk *disk = dev_to_disk(dev);
-9a7e3243fd42730 Jack Wang         2026-11-12  230  	struct request_queue *q = disk->queue;
-c6e56cf6b2e79a4 Christoph Hellwig 2024-06-13  231  	struct queue_limits lim;
-1d59857ed2ec4d5 Christoph Hellwig 2024-06-13  232  	unsigned long val;
-1d59857ed2ec4d5 Christoph Hellwig 2024-06-13  233  	int err;
-1d59857ed2ec4d5 Christoph Hellwig 2024-06-13  234  
-1d59857ed2ec4d5 Christoph Hellwig 2024-06-13  235  	err = kstrtoul(page, 10, &val);
-1d59857ed2ec4d5 Christoph Hellwig 2024-06-13  236  	if (err)
-1d59857ed2ec4d5 Christoph Hellwig 2024-06-13  237  		return err;
-1366251a794b149 Christoph Hellwig 2024-06-13  238  
-9a7e3243fd42730 Jack Wang         2026-11-12  239  	err = blk_disk_suspend(disk);
-9a7e3243fd42730 Jack Wang         2026-11-12  240  	if (err)
-9a7e3243fd42730 Jack Wang         2026-11-12  241  		return err;
-9a7e3243fd42730 Jack Wang         2026-11-12  242  
-c6e56cf6b2e79a4 Christoph Hellwig 2024-06-13  243  	/* note that the flags are inverted vs the values in the sysfs files */
-c6e56cf6b2e79a4 Christoph Hellwig 2024-06-13  244  	lim = queue_limits_start_update(q);
-1366251a794b149 Christoph Hellwig 2024-06-13  245  	if (val)
-c6e56cf6b2e79a4 Christoph Hellwig 2024-06-13  246  		lim.integrity.flags &= ~flag;
-9f4aa46f2a74010 Christoph Hellwig 2024-06-13  247  	else
-c6e56cf6b2e79a4 Christoph Hellwig 2024-06-13  248  		lim.integrity.flags |= flag;
-c6e56cf6b2e79a4 Christoph Hellwig 2024-06-13  249  
-9a7e3243fd42730 Jack Wang         2026-11-12  250  	err = blk_disk_commit_limits(disk, &lim);
-9a7e3243fd42730 Jack Wang         2026-11-12  251  	blk_disk_resume(disk);
-c6e56cf6b2e79a4 Christoph Hellwig 2024-06-13  252  	if (err)
-c6e56cf6b2e79a4 Christoph Hellwig 2024-06-13  253  		return err;
-1366251a794b149 Christoph Hellwig 2024-06-13  254  	return count;
-1366251a794b149 Christoph Hellwig 2024-06-13 @255  }
-1366251a794b149 Christoph Hellwig 2024-06-13  256  
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
