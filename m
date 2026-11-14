@@ -1,95 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794618414;
-	b=XFidty64G7FtFCr8o/e/HA6pKTcVKpKgrb91Xgfz1cmyjDGl3M7GYFM7+y9eocZ0mUE6
-	 83FI2+4+ypvpiGB1rPciwB9/l72NpdBfehI2TcBEIJ7H3iavTP4w0RdNWinXOkEDlF9eE
-	 jokROFRKWWevi07oHu5Kxr9RsHjuVxLJrHL+1yaQuDzY9RsKgM+wiS4QXlaebDM44gxCd
-	 +zrJhy/c+s7u63jUOq3m8lSy/h2Hk6JIZDKV03m6nDb1REKHOXsj4ZL6s7bHDVEae+P7n
-	 QVGc0oKt5Ur2piYwzjIVvMZEBjKbP/RXdWldtrth7NvpSPV+ZCQr8Jvc6KAgiCBpVHg==
+	t=1794619927;
+	b=DofL4Pk/OLPdtqsKPvinyBCQqS1lJaUm1yb2iZASx8H7KbTaofHy9UN5Juokpk5ywDen
+	 wFxOQBNX1VFM1V93p7M0cYUAGadV1vnYFlkzz0bRDu2RcPVH7utuPb8G7U2aGOXc8SXu8
+	 RH98UtO234rS+biZrcIrjgNFgbXlGjrYhx22jxEMWJA8Od8feU6Gjmdz32hP++8zZez7l
+	 CKGj1JCEJeSpoa2sDX3B+PVQ/bZrQM3l1G8H8CuN9Lyuu7CMfVGJLDGTgSGZPxyCSx5hm
+	 ig2uZIUOQKkYqAreeIHpA08VWQNMxq+/Xfl/5Z0uUpdAv2q/NVk3AOq6sz5+J3DQsfQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794618414;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=B2e76bhPXFe3TTOBltWF8laVYOhrcZJqYieGLm3qKQQ=;
-	b=JgLhCxc9C5ecOKIAXSpI6VzgJdELK60ym4GcC63h9GSsIN5vgLMOPBfGcKBfhfKUTc10
-	 sWslS6pnosU64ypRH7BCRM5pNTTNmJlpZK62wJgDLD8yjemyzeu9bbZzw+m022ZfSTLnH
-	 Ad9BW8oRNtnzRueSxztgSE4+pLHl/xV7mr/CWA+chcMScjOdHe0VeZYfg4eTMWrl0TWM0
-	 KBPi0uMxpCuCSmS5te84pYX5EUCVKFuzr8dL9YLyTeE9WDs3uOxVNYxXzvJuzvKGtyTZx
-	 7JMvvL0LolT7ZFF9R4cJYEYmtF8xAp9GXirnV0rs//+SqHTWkz8vftr7kfTPSeaHg5Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794619927;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=ocCPvrdHmwjH21HnsoEsq7cTVjjRmGUqJJnJcSHAd4Y=;
+	b=CdrC5/rGeP/ObEflZMCxFKVuKK8UajXhbRcqXn2zEV9E8xz79brAhtHQefd4sX41epBl
+	 maZzb9886p5/XXVgaWIiBCErKUUgnaNkyyxc7khBNCQzmj1I958g4p4dZF3u18bT36ML7
+	 TTdZ5bzP39GTb6ZAb3vgEVtWV6jhDIHWKdhOEvBNBOVwmRvlSelcSaS+6Apoyj3PZIHje
+	 1LqNKIoWVDf75sQq+o8pJTh33i8RqUkIyD0gyE/+dTlarHAfl2nFhQV1r0m6H1sl3a9mn
+	 +BHETnUPQXxxmipB1lIsO4AAAKNFMSYD87vtx/h29FfajQ9oeWr9AEmPbsgLDVK4b2w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=c2g78JQ9;
-	arc=none smtp.remote-ip=209.85.214.182
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kX2zDz8o;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51AC9606A881
-	for <linux-raid@vger.kernel.org>; Sat, 14 Nov 2026 01:06:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 51AC9606A881
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F6A0606A337
+	for <linux-raid@vger.kernel.org>; Sat, 14 Nov 2026 01:32:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=c2g78JQ9
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2edd50e36f2so9528235ad.3
-        for <linux-raid@vger.kernel.org>; Fri, 13 Nov 2026 17:06:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794618413; x=1795223213; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=B2e76bhPXFe3TTOBltWF8laVYOhrcZJqYieGLm3qKQQ=;
-        b=c2g78JQ9ITc/EFcuKhARjltX2dU7rNuSdGyE+qt6IpQzAD9RZb5kEOFlh5bK58LWYJ
-         67s3CmZPE8ivdvnHmp1/mDx+3j2uNuC0ijJM6kB6OjAN7wfBYROODrc6wFuggVvNLE70
-         Gbu+hUxtF0m39Y9IFcGhmmaKfi6S1YQABFj4d3r8n/3UH03SqPeMceJqOpZFDFDPwQRv
-         2lL8K2V6N+tvdG+ZyoG+PILEDag3fOC2JhcOjZua/HiZ/Z5TVlYDQAMPBjm+IjgoTTLh
-         BEfnLpeNjx0zpKnDlHX8diHWRt7HCd9RBND2UgWeTb1fXDKx39PPFSM3GV2EsPGUitja
-         U8gw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794618413; x=1795223213;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=B2e76bhPXFe3TTOBltWF8laVYOhrcZJqYieGLm3qKQQ=;
-        b=jHrfo09VAjntgNO8ucPpYGPHE9x1pNdbCot01+0yOT3zXS1GVm1MJuE90SWlFVwJzs
-         mStfbe4rQQ/r4eVq3vakoD1xFX1+3ezrcPSdv1L2UbQOSnSKOP5JPIy9BcQWRACo5PjZ
-         Z9GBLePvK5ZkGsj6/wJ1EM7PXtXSjyraTaIpGsLqD2SKWTqgTq7eXG8Nf8NYUEeW46TY
-         JCRhHrdKvjNkYoULcn5wU1bgn/2mTKjFwmIcQtAYwMN1+kwWhJ/f9ZW1sg36x6d77Y9Q
-         qgdPloFIE51NeXy617jbkHJYAZSn040oHStB+KMPI44qRfSh14FbIp9zfOwIer7iFfZ/
-         CnCw==
-X-Forwarded-Encrypted: i=1; AL+hErGHDcgAfp9jpiskPq4SYWH246vLCXWjS5UC+Pk24dNRyZM78Q/3L+m0wkwAyTJMz6CnB0fNSTQyGhFd@vger.kernel.org
-X-Gm-Message-State: APuU4Z/yK5zLDUT80O1x7TIvCKBew9cz91Wtx8avvLVY7AP7HSIPzSFU
-	Pqpx49a5cCRUitlQcrEPt1r+Q+DZDmEu6JD2Vh+S5Uxqz46sY0VIg8qP
-X-Gm-Gg: AYBFou3agSjZRR6DNRqoX9iV4/xZ+sdIjYDrWD5g686HQXgSJ9V+td5DfOZobNuvyL0
-	4wkNof1KwRBDDFRbysQYE/w15WopZPudJf6wsDTmfoRh+gmw62CSl+612mFem7f31dInnZzy6S0
-	uSElxHE7FX4FOVOi6lPIkZiNOr+rWIxTWIfzE2Y9qEHGqdnA5QDxdhdAtl4hyDY7DawoGYdrIbT
-	d0YnOtckGQyyj01HLjoE/oxpz7LHkSyc4u/qxIEDms52RBBJykMWm2I3nMDW+vCwfWApW6pIlZ6
-	hJuWCYmyy9PQP2vhFEScdOOvehPcXHrxcO0oDc+xRmejUF4JEzpPJ9wl9zjN3E4otocesGPs85r
-	ngYmQKB/T5on1aBcQh5FbVJJ5rA1K97jFgGkqvyK7/WXBEZy5G+s+i8WxYcaFdHpTXJuqMMifnz
-	AUW5702T0V9HwsS18R3meqgkjt5c+XtgYq5kt9KfsG/RfKU11662bK6rFlVtlSBsvqeDYxZdAko
-	AU3T1NnkceaWtPwss4FyDDE19VzKgzuxuMPQohvJ091z6R20p+Lx4jwcHEoe7ezKJYv9U3w/9zW
-	ckXhefOrz8DiZkwtu0IvG5F7iVFWV/UXyEZ6H1Lr
-X-Received: by 2002:a17:903:3843:b0:2ed:18cc:d3ac with SMTP id d9443c01a7336-2ee0de41dd4mr36568865ad.16.1794618412485;
-        Fri, 13 Nov 2026 17:06:52 -0800 (PST)
-Received: from TheRealOne ([2409:40e1:1d:6fc6:f687:5d72:dcf5:c0a5])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ee0f7d99fasm16531025ad.35.2026.11.13.17.06.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Nov 2026 17:06:52 -0800 (PST)
-From: Chandradhar Kumar <chandradhar.2003@gmail.com>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Chandradhar Kumar <chandradhar.2003@gmail.com>,
-	syzbot+9e3014263a35700ab49b@syzkaller.appspotmail.com
-Subject: [PATCH v2] md: enforce MD_SB_DISKS bounds across v0.90 superblock paths
-Date: Sat, 14 Nov 2026 06:36:23 +0530
-Message-ID: <20261114010635.6048-1-chandradhar.2003@gmail.com>
-X-Mailer: git-send-email 2.56.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kX2zDz8o
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3222C1F000C4;
+	Sat, 14 Nov 2026 01:32:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794619927;
+	bh=ocCPvrdHmwjH21HnsoEsq7cTVjjRmGUqJJnJcSHAd4Y=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=kX2zDz8oNJMK5p+k72RhtMPYPBJVIQ/MhQ0j2+upwkvZbt1x8N53b8zvpoFT5HHoZ
+	 zdMu2qwZX0NQN5K+H7A2MPwBPcnKacV7iXzgGhglS811gkCwAF29BV7mWgl0+rcrHF
+	 B9cZYr/gCFd4OvptWIFXHz0gpp71PEpcWoikOkYwMLCeHj887uLWzxcJguhyDIS15I
+	 QHIpLfHZHJIm6IcjFRf2roflEeZGfU2s52MBwMGOd9pAN/SulPWIAKEZTIrwP4IAnC
+	 A3LMr9FyvbHV9VAp9flg95YhTtJrBrcVCHD4GNZuqExMEpm5hvDawMnxnhVwHE6TmI
+	 deDrfZKKhKA3Q==
+Message-ID: <sashiko-outbox-214006@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] md: enforce MD_SB_DISKS bounds across v0.90
+ superblock paths
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chandradhar Kumar" <chandradhar.2003@gmail.com>, linux-raid@vger.kernel.org
+Cc: yukuai@fygo.io
+In-Reply-To: <20261114010635.6048-1-chandradhar.2003@gmail.com>
+References: <20261114010635.6048-1-chandradhar.2003@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 14 Nov 2026 01:32:06 +0000
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -98,208 +59,158 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-The legacy v0.90 superblock format (mdp_super_t) embeds a fixed-size
-array of MD_SB_DISKS (27) disk descriptors (sb->disks[27]). Currently,
-several configuration and metadata load paths fail to enforce this
-upper bound, allowing mddev->raid_disks, rdev->raid_disk, or
-rdev->desc_nr to exceed MD_SB_DISKS - 1 and trigger an out-of-bounds
-array access in super_90_sync():
+Thank you for your contribution! Sashiko AI review found 3 potential
+issues to consider:
+- [High] md: incomplete MD_SB_DISKS validation in super_90_validate()
+- [Medium] md: missing mddev->max_disks update in md_set_array_info()
+  and MD_SB_DISKS check in update_raid_disks()
+- [Medium] md: signed overflow of mddev->raid_disks in
+  raid_disks_store() bypasses metadata_store() check
+--
 
-  UBSAN: array-index-out-of-bounds in drivers/md/md.c:1740:29
-  index 124 is out of range for type 'mdp_disk_t [27]'
+commit 5e97b94d742c20742fe700227c811d79a4c7ba7c
+Author: Chandradhar Kumar <chandradhar.2003@gmail.com>
 
-Fix this across all entry points and harden super_90_sync():
+md: enforce MD_SB_DISKS bounds across v0.90 superblock paths
 
-1. In super_90_load(), reject superblocks with sb->raid_disks >
-   MD_SB_DISKS or sb->this_disk.number >= MD_SB_DISKS, and guard
-   rdev->desc_nr in super_90_validate() before indexing sb->disks[].
-2. In metadata_store(), validate existing mddev->raid_disks against
-   MD_SB_DISKS when major == 0 and initialize mddev->max_disks so
-   sysfs-configured v0.90 arrays enforce the 27-disk limit regardless
-   of the order in which raid_disks and metadata_version are written.
-3. In raid_disks_store(), slot_store(), and md_set_array_info(),
-   reject disk counts or slot indices that exceed MD_SB_DISKS or
-   mddev->max_disks across all configuration and reshape branches.
-4. In super_90_sync(), bounds-check desc_nr and mddev->raid_disks
-   before indexing sb->disks[], and synthesize a faulty/removed
-   this_disk descriptor if rdev->desc_nr is out of range rather than
-   indexing out-of-bounds or zeroing this_disk (which would alias
-   slot 0).
+This commit adds MD_SB_DISKS bounds checks across v0.90 superblock load,
+validation, sync, sysfs configuration, and ioctl paths to prevent
+out-of-bounds accesses on sb->disks[].
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Reported-by: syzbot+9e3014263a35700ab49b@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=9e3014263a35700ab49b
-Signed-off-by: Chandradhar Kumar <chandradhar.2003@gmail.com>
----
-Changes in v2:
-- Drop early return in super_90_sync() so rdev->sb_size and sb_page are
-  properly initialized before sync_sbs() sets rdev->sb_loaded = 1.
-- Do not reset rdev2->desc_nr = -1 or zero sb->this_disk on skip; instead
-  populate sb->this_disk as faulty/removed with rdev->desc_nr so a skipped
-  device cannot alias slot 0 on reassembly.
-- Validate mddev->raid_disks and set mddev->max_disks = MD_SB_DISKS in
-  metadata_store() when major == 0, and move the raid_disks_store() check
-  above the reshape/active branches to cover all sysfs paths.
-- Remove the info->major_version == 0 condition in md_set_array_info().
-- Drop redundant unsigned < 0 check on sb->this_disk.number in
-  super_90_load() and guard rdev->desc_nr in super_90_validate().
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 03e35386a8028..71f536d6257cd 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+[ ... ]
+> @@ -1587,6 +1588,8 @@ static int super_90_validate(struct mddev *mddev, s=
+truct md_rdev *freshest, stru
+>  			return 0;
+>  	}
+> =20
+> +	if (rdev->desc_nr < 0 || rdev->desc_nr >=3D MD_SB_DISKS)
+> +		return -EINVAL;
+>  	desc =3D sb->disks + rdev->desc_nr;
+> =20
+>  	if (desc->state & (1<<MD_DISK_FAULTY))
 
- drivers/md/md.c | 58 ++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 55 insertions(+), 3 deletions(-)
+[Severity: High]
+Does super_90_validate() still leave v0.90 superblock fields unvalidated
+against MD_SB_DISKS?
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 03e35386a802..71f536d6257c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1407,7 +1407,8 @@ static int super_90_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor
- 		goto abort;
- 	}
- 
--	if (sb->raid_disks <= 0 || sb->raid_disks > MD_SB_DISKS)
-+	if (sb->raid_disks <= 0 || sb->raid_disks > MD_SB_DISKS ||
-+	    sb->this_disk.number >= MD_SB_DISKS)
- 		goto abort;
- 
- 	if (md_csum_fold(calc_sb_csum(sb)) != md_csum_fold(sb->sb_csum)) {
-@@ -1587,6 +1588,8 @@ static int super_90_validate(struct mddev *mddev, struct md_rdev *freshest, stru
- 			return 0;
- 	}
- 
-+	if (rdev->desc_nr < 0 || rdev->desc_nr >= MD_SB_DISKS)
-+		return -EINVAL;
- 	desc = sb->disks + rdev->desc_nr;
- 
- 	if (desc->state & (1<<MD_DISK_FAULTY))
-@@ -1708,6 +1711,12 @@ static void super_90_sync(struct mddev *mddev, struct md_rdev *rdev)
- 		else
- 			desc_nr = next_spare++;
- 		rdev2->desc_nr = desc_nr;
-+
-+		if (desc_nr < 0 || desc_nr >= MD_SB_DISKS) {
-+			pr_warn("md: %s: desc_nr %d out of range for rdev %pg, skipping\n",
-+				mdname(mddev), desc_nr, rdev2->bdev);
-+			continue;
-+		}
- 		d = &sb->disks[rdev2->desc_nr];
- 		nr_disks++;
- 		d->number = rdev2->desc_nr;
-@@ -1736,7 +1745,7 @@ static void super_90_sync(struct mddev *mddev, struct md_rdev *rdev)
- 			d->state |= (1<<MD_DISK_FAILFAST);
- 	}
- 	/* now set the "removed" and "faulty" bits on any missing devices */
--	for (i=0 ; i < mddev->raid_disks ; i++) {
-+	for (i = 0 ; i < mddev->raid_disks && i < MD_SB_DISKS; i++) {
- 		mdp_disk_t *d = &sb->disks[i];
- 		if (d->state == 0 && d->number == 0) {
- 			d->number = i;
-@@ -1752,7 +1761,17 @@ static void super_90_sync(struct mddev *mddev, struct md_rdev *rdev)
- 	sb->failed_disks = failed;
- 	sb->spare_disks = spare;
- 
--	sb->this_disk = sb->disks[rdev->desc_nr];
-+	if (rdev->desc_nr >= 0 && rdev->desc_nr < MD_SB_DISKS) {
-+		sb->this_disk = sb->disks[rdev->desc_nr];
-+	} else {
-+		sb->this_disk.number = rdev->desc_nr;
-+		sb->this_disk.major = MAJOR(rdev->bdev->bd_dev);
-+		sb->this_disk.minor = MINOR(rdev->bdev->bd_dev);
-+		sb->this_disk.raid_disk = rdev->desc_nr;
-+		sb->this_disk.state = (1 << MD_DISK_FAULTY) |
-+				      (1 << MD_DISK_REMOVED);
-+	}
-+
- 	sb->sb_csum = calc_sb_csum(sb);
- }
- 
-@@ -3353,6 +3372,12 @@ slot_store(struct md_rdev *rdev, const char *buf, size_t len)
- 		if (slot >= rdev->mddev->raid_disks &&
- 		    slot >= rdev->mddev->raid_disks + rdev->mddev->delta_disks)
- 			return -ENOSPC;
-+		if ((rdev->mddev->max_disks &&
-+		     slot >= rdev->mddev->max_disks) ||
-+		    (rdev->mddev->persistent &&
-+		     rdev->mddev->major_version == 0 &&
-+		     slot >= MD_SB_DISKS))
-+			return -ENOSPC;
- 
- 		rdev->raid_disk = slot;
- 		if (test_bit(In_sync, &rdev->flags))
-@@ -3374,6 +3399,12 @@ slot_store(struct md_rdev *rdev, const char *buf, size_t len)
- 		if (slot >= rdev->mddev->raid_disks &&
- 		    slot >= rdev->mddev->raid_disks + rdev->mddev->delta_disks)
- 			return -ENOSPC;
-+		if ((rdev->mddev->max_disks &&
-+		     slot >= rdev->mddev->max_disks) ||
-+		    (rdev->mddev->persistent &&
-+		     rdev->mddev->major_version == 0 &&
-+		     slot >= MD_SB_DISKS))
-+			return -ENOSPC;
- 		rdev->raid_disk = slot;
- 		/* assume it is working */
- 		clear_bit(Faulty, &rdev->flags);
-@@ -4442,6 +4473,13 @@ raid_disks_store(struct mddev *mddev, const char *buf, size_t len)
- 	if (err)
- 		return err;
- 	noio_flags = memalloc_noio_save();
-+	if ((mddev->max_disks && n > mddev->max_disks) ||
-+	    (mddev->persistent && mddev->major_version == 0 &&
-+	     n > MD_SB_DISKS)) {
-+		err = -EINVAL;
-+		goto out_unlock;
-+	}
-+
- 	if (mddev->pers) {
- 		if (n != mddev->raid_disks)
- 			err = update_raid_disks(mddev, n);
-@@ -5029,6 +5067,7 @@ metadata_store(struct mddev *mddev, const char *buf, size_t len)
- 		mddev->external = 0;
- 		mddev->major_version = 0;
- 		mddev->minor_version = 90;
-+		mddev->max_disks = 0;
- 		goto out_unlock;
- 	}
- 	if (strncmp(buf, "external:", 9) == 0) {
-@@ -5043,6 +5082,7 @@ metadata_store(struct mddev *mddev, const char *buf, size_t len)
- 		mddev->external = 1;
- 		mddev->major_version = 0;
- 		mddev->minor_version = 90;
-+		mddev->max_disks = 0;
- 		goto out_unlock;
- 	}
- 	major = simple_strtoul(buf, &e, 10);
-@@ -5056,10 +5096,14 @@ metadata_store(struct mddev *mddev, const char *buf, size_t len)
- 	err = -ENOENT;
- 	if (major >= ARRAY_SIZE(super_types) || super_types[major].name == NULL)
- 		goto out_unlock;
-+	err = -EINVAL;
-+	if (major == 0 && mddev->raid_disks > MD_SB_DISKS)
-+		goto out_unlock;
- 	mddev->major_version = major;
- 	mddev->minor_version = minor;
- 	mddev->persistent = 1;
- 	mddev->external = 0;
-+	mddev->max_disks = (major == 0) ? MD_SB_DISKS : 0;
- 	err = 0;
- out_unlock:
- 	mddev_unlock(mddev);
-@@ -7951,6 +7995,14 @@ int md_set_array_info(struct mddev *mddev, struct mdu_array_info_s *info)
- 		mddev->ctime         = ktime_get_real_seconds();
- 		return 0;
- 	}
-+
-+	if (info->raid_disks < 0 ||
-+	    (!info->not_persistent && info->raid_disks > MD_SB_DISKS)) {
-+		pr_warn("md: %s: invalid raid_disks %d for v0.90 superblock\n",
-+			mdname(mddev), info->raid_disks);
-+		return -EINVAL;
-+	}
-+
- 	mddev->major_version = MD_MAJOR_VERSION;
- 	mddev->minor_version = MD_MINOR_VERSION;
- 	mddev->patch_version = MD_PATCHLEVEL_VERSION;
--- 
-2.56.0
+First, the new rdev->desc_nr check is placed after the mddev->pers =3D=3D N=
+ULL
+branch, which already indexes sb->disks[rdev->desc_nr].state.  Second,
+desc->raid_disk is copied into rdev->raid_disk and rdev->saved_raid_disk
+without checking that desc->raid_disk < MD_SB_DISKS:
 
+drivers/md/md.c:super_90_validate() {
+    ...
+	} else if (desc->state & (1<<MD_DISK_SYNC)) {
+		set_bit(In_sync, &rdev->flags);
+		rdev->raid_disk =3D desc->raid_disk;
+		rdev->saved_raid_disk =3D desc->raid_disk;
+    ...
+}
+
+When md_add_new_disk() -> add_bound_rdev() runs on an active array,
+add_bound_rdev() ignores validate_super()'s return value and passes rdev
+directly to mddev->pers->hot_add_disk() without going through analyze_sbs(),
+allowing an out-of-range desc->raid_disk to index conf->mirrors[] out of
+bounds in raid1_add_disk() or raid10_add_disk().
+
+In addition, for minor_version >=3D 91, super_90_validate() copies
+sb->delta_disks into mddev->delta_disks without bounds checking; a negative
+sb->delta_disks (or desc->raid_disk >=3D 0x80000000 wrapping to a negative
+int in rdev->raid_disk) bypasses the rdev->raid_disk >=3D (mddev->raid_disk=
+s -
+min(0, mddev->delta_disks)) check in analyze_sbs().
+
+[ ... ]
+
+> @@ -4442,6 +4473,13 @@ raid_disks_store(struct mddev *mddev, const char *=
+buf, size_t len)
+>  	if (err)
+>  		return err;
+>  	noio_flags =3D memalloc_noio_save();
+> +	if ((mddev->max_disks && n > mddev->max_disks) ||
+> +	    (mddev->persistent && mddev->major_version =3D=3D 0 &&
+> +	     n > MD_SB_DISKS)) {
+> +		err =3D -EINVAL;
+> +		goto out_unlock;
+> +	}
+> +
+>  	if (mddev->pers) {
+>  		if (n !=3D mddev->raid_disks)
+>  			err =3D update_raid_disks(mddev, n);
+[ ... ]
+> @@ -5056,10 +5096,14 @@ metadata_store(struct mddev *mddev, const char *b=
+uf, size_t len)
+>  	err =3D -ENOENT;
+>  	if (major >=3D ARRAY_SIZE(super_types) || super_types[major].name =3D=
+=3D NULL)
+>  		goto out_unlock;
+> +	err =3D -EINVAL;
+> +	if (major =3D=3D 0 && mddev->raid_disks > MD_SB_DISKS)
+> +		goto out_unlock;
+>  	mddev->major_version =3D major;
+>  	mddev->minor_version =3D minor;
+>  	mddev->persistent =3D 1;
+>  	mddev->external =3D 0;
+> +	mddev->max_disks =3D (major =3D=3D 0) ? MD_SB_DISKS : 0;
+>  	err =3D 0;
+>  out_unlock:
+>  	mddev_unlock(mddev);
+
+[Severity: Medium]
+Can an unsigned value >=3D 2147483648 written to raid_disks_store() overflow
+mddev->raid_disks and bypass the check in metadata_store()?
+
+raid_disks_store() parses buf into unsigned int n with kstrtouint().  When
+raid_disks is written while metadata_version is still "none", both
+mddev->max_disks and mddev->persistent are 0, so n > INT_MAX is stored into
+the signed int mddev->raid_disks as a negative number.  Writing "0.90" to
+metadata_store() then passes the signed comparison mddev->raid_disks >
+MD_SB_DISKS, leaving the v0.90 array configured with a negative
+mddev->raid_disks.
+
+> @@ -7951,6 +7995,14 @@ int md_set_array_info(struct mddev *mddev, struct =
+mdu_array_info_s *info)
+>  		mddev->ctime         =3D ktime_get_real_seconds();
+>  		return 0;
+>  	}
+> +
+> +	if (info->raid_disks < 0 ||
+> +	    (!info->not_persistent && info->raid_disks > MD_SB_DISKS)) {
+> +		pr_warn("md: %s: invalid raid_disks %d for v0.90 superblock\n",
+> +			mdname(mddev), info->raid_disks);
+> +		return -EINVAL;
+> +	}
+> +
+>  	mddev->major_version =3D MD_MAJOR_VERSION;
+>  	mddev->minor_version =3D MD_MINOR_VERSION;
+>  	mddev->patch_version =3D MD_PATCHLEVEL_VERSION;
+
+[Severity: Medium]
+Does the info->raid_disks =3D=3D 0 branch in md_set_array_info() leave
+mddev->max_disks unset?
+
+When SET_ARRAY_INFO is called with info->raid_disks =3D=3D 0,
+md_set_array_info() sets mddev->major_version and mddev->persistent and
+returns early without updating mddev->max_disks.  If userspace then sets
+raid_disks via sysfs and starts the array, md_run() skips analyze_sbs()
+because mddev->raid_disks is already non-zero, so mddev->max_disks remains 0
+on a persistent v0.90 array.  As a result, bind_rdev_to_array() and
+update_array_info() -> update_raid_disks() (which only checks
+mddev->max_disks) do not enforce MD_SB_DISKS.
+
+Conversely, if metadata_store() set mddev->max_disks =3D MD_SB_DISKS and
+md_set_array_info() is later called with info->not_persistent =3D=3D 1 or w=
+ith
+info->raid_disks =3D=3D 0 and info->major_version !=3D 0, mddev->max_disks =
+is
+never cleared to 0.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261114010635.6048=
+-1-chandradhar.2003@gmail.com?part=3D1
