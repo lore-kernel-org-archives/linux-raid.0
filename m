@@ -1,160 +1,62 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.2.0
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794728503;
-	b=KfG99RI4GZH1LroJxnJ+sqJiie/C2gp5pOKnMn2BgEFJ+UhuSN0CnjESTVdx07XD+BZd
-	 TaOszwThDJZ4jMLKttSANXysLmQcCO+52ixmUi750HtQmHbN4HmCd7QJ4L63mTNio5oPq
-	 vIzU9x357Z0ad7/0UqMCxWULFw60N+Pyyp1of7sqGdad3FMBHTOt+HWNw3mIYGngBD3kb
-	 O3WjL98AsGAWsAZEQo+lDbkhokUhd3yoXyNBqlCAOcx/E3s9YkYlRT2IseC2NOzimYLI7
-	 TOGxJyhBiQVAiHYCCXaIKG9YwofMzEJYXgkrciLAznJVJ3HTedyLZL3B7U4fy8sIZ0w==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794728503;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
-	 Thread-Topic:Thread-Index:Date:Message-ID:Accept-Language:
-	 Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
-	 x-ms-publictraffictype:x-ms-traffictypediagnostic:
-	 x-ms-office365-filtering-correlation-id:x-microsoft-antispam:
-	 x-microsoft-antispam-message-info:
-	 x-ms-exchange-antispam-messagedata-chunkcount:
-	 x-ms-exchange-antispam-messagedata-0:Content-Type:
-	 Content-Transfer-Encoding:MIME-Version:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-AuthAs:X-MS-Exchange-CrossTenant-AuthSource:
-	 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-originalarrivaltime:
-	 X-MS-Exchange-CrossTenant-fromentityheader:
-	 X-MS-Exchange-CrossTenant-id:
-	 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=I3WByo8hq0A3AZv0A7D84Ij4JJGgH5ur7QrnfCQ0p58=;
-	b=SX3QWn2mEyQaIEBybOykC1cz3qKi+ky9T6b5fy6zTPpsxtkwx1ZzAU2aTZBG+QtSPISx
-	 3nG5Pwe0I/PikDDVmnVFPuLWjmdmHCE3Q+bGpDtcLBr06qNuX/XkCwc60rcVRGmK0MWGF
-	 v7f5DSC1gtdSCba2tVzYi+Yj5+eBO5Fjsu3RV0S5MvevvW3A+zz4LZn+Y7Q3XQE6c8gVu
-	 CAzqBnO1DFlwO7qHlgLnaR8CbZzREKAmlAw93nde6ZN9+2XrxANAO5ImncBtiBxHStT6e
-	 oDGuS1Urc0PAMLNYwvcyRpy4tXGjOStJ76GyhqS0NiSUABTYi/iQOGd+HWz0rgMch/A==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=outlook.com;
-	spf=pass smtp.mailfrom=outlook.com;
-	dkim=pass header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=RxHe5Qku;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.2.0
-Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazolkn19010000.outbound.protection.outlook.com [52.103.2.0])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=109.224.244.108
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794746337;
+	b=nMDx0ivZzQy7oGQkSJbJbvINPNCU27c4M7xKnrZap1dHedO9atr5hhn08PFT4L1Nw1oa
+	 XBsap828rcGmWwmpnyqhciWflspzPPD97vwfmmVAKIg1khQ1Aqo+/MA8GhIwM0I6E22Hp
+	 sQWw/pWDDaXkwsTGNyYkf4ZEjLCT9jbtnDttfoWuSTCQujuOpeStjd+X6VzZFg2GzeUMk
+	 m+UUC0hbzU3hYS2mNS1pI0QgAyXXvcNZ2FxrrVSTH28DlbULet0FWEdJweciEchEGITvo
+	 D6wEaCuirERU10be17DH6sNcw9oVo44K6KBfQ43C2Ed13NyB8IIc8kOVn+j6Wo/cKyw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794746337;
+	h=DMARC-Filter:DKIM-Signature:X-Pm-Submission-Id:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=GV5q5oyXG7o+6/jvs0rBK3bgCf4MVUtphWiCoyitBwU=;
+	b=IxkKLJSvMKKK7D9w2LA+AncV6HiVb+V1Pd1LXyIz+w2IiiCyZMBpATfKxGoScoxmG9SW
+	 DAdPRIiKv2ciJau0FysvdrLt0JNCNLI/21t0dqCxsWlKFvL4DtA7dnaXXdHuQN1crwMzg
+	 Eqkmo3SFTXhoC2f81abdWr+VbzFy6Xc5ulx7lkm75EnfSdGmgRm7+6FaZFMTZp0RQYWNp
+	 l78qMZZo7nxix3NNARwDh6a0Iv0eZfK24cnb0saE7M2hu3l5LHAIwxY+WQCUZTgOXfuME
+	 hn6Ge26QiKasp99JuT8BQJfhij2WU4RdBVIXolzKwrDkZ/iqZzYMOltSq9XZXx7O8GA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=raidlab.org;
+	spf=pass smtp.mailfrom=raidlab.org;
+	dkim=pass header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=w1jUf+GB;
+	arc=none smtp.remote-ip=109.224.244.108
+Received: from mail-244108.protonmail.ch (mail-244108.protonmail.ch [109.224.244.108])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B682606A333;
-	Sun, 15 Nov 2026 07:41:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5B682606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5439606A33B
+	for <linux-raid@vger.kernel.org>; Sun, 15 Nov 2026 12:38:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D5439606A33B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=raidlab.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=raidlab.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=RxHe5Qku
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=QpP7f5kHXPh8b1CBqvG+VULXPRFhpmAh7qvPvZQy1bWxxhcrPZd/QurveWIksnNEpikvb+RJxCQhbMEMIkKbNPcX5ryETUTm+lIPAhZQOJK3xFJMAJwoLSg2XxAfBkgat2Bx/kPTYYklz8CkcDRqpBpWrzLkM6Bqlc7GB+zR1zFzzEg43NGKYQbfDDLavyFQLK3NiQrzbYV81B0YQPBqAJIw2Vq3n7CGHh/c0d8Qth0hfDcD4SIC+PNCwJJf8kZg4sfLPacqJMoAH7Kn9fhIEE1cXr9lgO5nLbX6gWx8KLdmGBCIdC1YxrAPa+/PSQNRm0kpzABvyvQPdLHlg2IlPA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001; h=From:Date:Subject:Message-ID:MIME-Version;
- bh=I3WByo8hq0A3AZv0A7D84Ij4JJGgH5ur7QrnfCQ0p58=;
- b=csZye5PKTW17PS5BbmSiUHTIwgzw/7EYxD8S9+jRJNXuznuT+Aj9r+A1elimh16+bOReH7CefSXLgMdvixAV8WnBVa4w+y6ZxD2zbUJETK0E+wvc/ebRTx82CI/fL/RCHZ0E9wAfb+zP/sP8/4j1yOhJE3U1kyuerE1NMykl4vQnwF3+ZgfH0dbpnxbXRMgBbQVoilTbkXS01JYgXn25dSl1OvA4r1wAorkQFY2yiAjFbq+Tp3SCQNAckQk6BEcvnvmIQ55DDrm4L5kt4I3mQ7GANbUiSNyuZYh7dj3O3i6AQlQmDS7lS5PWY3tC61XCTGMK5dkhjSBZ3ZsOJYmKRQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=I3WByo8hq0A3AZv0A7D84Ij4JJGgH5ur7QrnfCQ0p58=;
- b=RxHe5Qku2AyrVYnY8FZwLiufUmULea1seno6Ow8+Bd8+yq7u0nOQCbFZK2//ztr/ev7bgv796bnBk3JfF5tFU9DMZPSqOK8Jfhd1ErgiKi6yHvcSqPCOg6xVBPUfkqaDsA+IrZlr62nZ1gsir531Bo+8Ep8LRNRHsoh69UHqIN/W399c/Olh9ZzHXoUc4graoVfxf+5zx5StnGVRwbad3W2roGOXXeIPWlyLelDPoaUXwpbYsmC15SDwYWoVKLHKpB53JL00mLIo5faWHDUfkEGIe/5lNaTmRn6jmYcpzv0LPkbK6VscjMTgfbo6MGEbDqWp+qcQTvPhifx28+pqyA==
-Received: from SA3PR05MB10385.namprd05.prod.outlook.com
- (2603:10b6:806:39d::17) by PH7PR05MB9777.namprd05.prod.outlook.com
- (2603:10b6:510:279::19) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.13; Sun, 15 Nov
- 2026 07:39:39 +0000
-Received: from SA3PR05MB10385.namprd05.prod.outlook.com
- ([fe80::e22f:a0f5:fcb0:9b0d]) by SA3PR05MB10385.namprd05.prod.outlook.com
- ([fe80::e22f:a0f5:fcb0:9b0d%6]) with mapi id 15.21.0615.012; Sun, 15 Nov 2026
- 07:39:39 +0000
-From: Yingjie Wang <x-professor@outlook.com>
-To: Song Liu <song@kernel.org>
-CC: Yu Kuai <yukuai@fygo.io>, Li Nan <magiclinan@didiglobal.com>, Xiao Ni
-	<xiao@kernel.org>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
-	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 0/2] md/raid5: fix PPL disk add and replacement removal
-Thread-Topic: [PATCH v2 0/2] md/raid5: fix PPL disk add and replacement
- removal
-Thread-Index: AQHddNR4NvT1XTTtWEeATR/zssZ/iQ==
-Date: Sun, 15 Nov 2026 07:39:39 +0000
-Message-ID: <cover.1794555233.git.x-professor@outlook.com>
-Accept-Language: en-US, zh-CN
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA3PR05MB10385:EE_|PH7PR05MB9777:EE_
-x-ms-office365-filtering-correlation-id: 9d514a4c-596e-4990-c157-08df42eb9acf
-x-microsoft-antispam:
- BCL:0;ARA:14566002|41001999006|51005399006|5062599005|38102599003|8062599012|8060799015|19110799012|24021099003|31061999003|25010399006|15080799012|4140399003|24121999003|22091999003|10035399007|12091999003|1602099012|40105399003|102099032|30101999006|440099028|4302099013|3412199025|26121999007;
-x-microsoft-antispam-message-info:
- =?utf-8?B?Nzg0SVpmRE5pcVkxY2djeEdjRi9Nc2pVaFNnUGRqWjFCdVg4bXYrMEZIeEw3?=
- =?utf-8?B?aHI5dzNxbEthZ3dLb3VhL0JYUTBYMVpCU1pYeVpNYjNqTS9DdXFNZTRzYkE5?=
- =?utf-8?B?T1lJcjhhR0tqNHVjQkQyRVlsTEdFODdUS01WYytyd2xYMWVmZmJpWVhjUkw2?=
- =?utf-8?B?K3pOWGx5VURLclBwZzdFMGxiZjNGSFI3L2R5UWlBZVBqT0J4Wmg1Sk94MTlp?=
- =?utf-8?B?aDBkZEs1d0kzcW44ZUE3T2VYOFFYSTMwclNOZjJPRXNmdTBoMkhSUERXT1pC?=
- =?utf-8?B?OWFaOGl3WGdSaWpOZ29JY2sxMThWckRSVnQ4bXN4UDhMTkNzazdXdnFFcXA3?=
- =?utf-8?B?M1pLMnJFMjJERHFPdWM3QVhES1RlRWVEeU9sUExnZGVVUFJFcEJBTXdYNFpo?=
- =?utf-8?B?SDBJcHFlbG00aFVtM1grdVJLMmxUa2dRTnNGaDlxS1hkVFpScEM0aXNzZU9L?=
- =?utf-8?B?RTJTQStQcHZhSURuZVBNc1kxT1NtT1YvTVpnRzIxbHZSTUxjNEFwM0ZsVHRB?=
- =?utf-8?B?WWk3NEJuNk1nQ1pnYkhqdUZTc09qN1lyM1VSclFmYVdsK2lXS3NHYVFQWTlD?=
- =?utf-8?B?TXFUUUt1cm03NERqb3lRSnZSc3J3T0dhbVFQOEExV1l2aGRFM1dTY1crTWF6?=
- =?utf-8?B?WGV2ZDhkZkFnMy9CNGlkcXY5WEJxTlo3VXJxZUNKT2cvZS9UNkliaUxndjl0?=
- =?utf-8?B?YkJmNXdpelorM3JVVlhDRUpuTzk2UkMrTlF0Mys2K25RQlNTN0ZoY01pbWJZ?=
- =?utf-8?B?LzNkMXNOVFNmZTAzRFpQWjIrTE1VdUhFaEVjMDFjQ3hlZWY5OXV2UG1vZTBr?=
- =?utf-8?B?RWdRM1Q0bGw0dktMOS9rVW9wR2NCN3RFbXdrRUpvaWp3RlpwSGNvMU5wZXUw?=
- =?utf-8?B?MHUzZUphWThNZGcvV1p5UEE1T29FZXFtLyt3ZzRxalJHSHd5ZVlLMEJHbXJX?=
- =?utf-8?B?dVZWMUlDeHowelNaaXRDVzVNWG1VOVJyVHVlbHFOMGpuanZDOGxqRmFmaHNW?=
- =?utf-8?B?akJqdWdLVXJLOFg5bTlrY3pZSkhSM1dMV1U4eldCS0ZRNjBoMnUxdFFhR2NR?=
- =?utf-8?B?QmltWXJabm9lUm5uamtQQk5OclBScU44cUFGMEVZa2g4Vjk3R1A1VS9id2t1?=
- =?utf-8?B?RUJXRDI3c0ZRMFlwbHNlMXVSSDJianJ3K1dTekJQUCtxTzIxdDl3QTFBN0g2?=
- =?utf-8?B?MkJQaDNxQUliZ3pTbXVRZit5RTNRaEJVaHN6TTlHSmplZkNZdGgyWEdzYkVz?=
- =?utf-8?B?V3hIejc2NVZEWTZ1Z1IrbXNuV0dNU1BuNmExR2hXZmNSbi9mYm5sNXplWVpl?=
- =?utf-8?B?TUt5dWp5UFJJbGRJc2IvYXB6ZmNHY0Y0RUdDejZyTkxpdk9WaTQvNm45dDhw?=
- =?utf-8?B?YkZaSDAyUkRDdFF2UHNESmsvTXd2c2Fvb0RWMGdITjVMUFluOW1NRFoxcmRW?=
- =?utf-8?B?QzNXU2pINkk0TXJhbUx4bzE1TWx3cGloUlM2Z090dEliWkFrQW4rZzhSNGZK?=
- =?utf-8?B?aW4yOGthdU1iYUZtOFhhTjFRV2l0NHZKd2M3akVoQUQzMld5alIveXZGZzFT?=
- =?utf-8?B?RWtUN3diZS82OFVrZ3V3bEN3c05aMzRtb0Q4MzBScG9TV2hWcUlOWTRDNEl2?=
- =?utf-8?Q?EcBi2oIqcOH4dfg2TaI7DnkvVwBVZINppmihXesdgTZg=3D?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?WGFsdkgwcE1rbC8wQVNldmpyQnN0a1J3ZjBaai93Y2RnbHVtR2JvbWdCSWhy?=
- =?utf-8?B?bGV4Z3JnVVdXdkFRMi9SQWRaMnNPazhUeXRhU2F0WnVsWGNqSzdHRk0wNXMy?=
- =?utf-8?B?anNqWEtKOGxYSzhYRmIwQnpKVkNsdGs5OXBBZnRGbkdiRis1QWNSdGQ0UTJs?=
- =?utf-8?B?Y0N3OFUyM2xiMW4xSkY3MWpRWFRnUFYzL1hwR2dldTNNUWJidXlLQW9iOUVQ?=
- =?utf-8?B?MUtjUkRCb1FQK0lJZXJ3NVNoM0hUQ2JoQ0JMK2lWUjVQVVh1V0V1UmJpaSt3?=
- =?utf-8?B?bHhPYWluN01aNVMzUVYzVU5ncDlYOFVFTEJ4dWhpeHd6dkc3K3lIMjVqa0Vu?=
- =?utf-8?B?TnAwZG81eFdSaDVCNGFvMHJVQ1cySEVLR09Nd1dIVnUwRzN5UVUwSHJWNlJu?=
- =?utf-8?B?TzNsR0kydTVxTGx5OGlEUitzT1ozUGVBUzdadkRObzVBMVdwci9yN2s0ZTNQ?=
- =?utf-8?B?MkZkM3M4bUVXdXJ2UXdNMFBkM2RRMW4vOXpTcDdiQms3QVRpZVJWT2Ruc01K?=
- =?utf-8?B?MTdTMEFUY3pvZGN1QjgxNUwxWXE4c2ZNdTk2R0lHczhZSDYvZnMydEpHd3pV?=
- =?utf-8?B?SytaODl4ZEhpRlF6akd1aUJGaUh0R2ZoWUlxZzZvZnFySUkzTmRqSDR5WjVi?=
- =?utf-8?B?bHB2VitDRDJtU3VROTBKTGdxaDZwVEFwZHBDcHc1SG51WFNxM2RPK2l0eGpT?=
- =?utf-8?B?ZWtRbWVCS2NTZGJYM28xbklHZWxFY0M5YVFqUmZpN2xkc1M1VHU3ck1qTXBW?=
- =?utf-8?B?K2NtTk5sRUVRMmlyTjR4b1FtOHVLRk51enpldUx2V251b1RYa21tMUdLQUtM?=
- =?utf-8?B?WlVtZ3NQeTNmK1VpT3VmSUJkclkyNUtSTGw5OXl2S2NtelREOG5tREFWVzRZ?=
- =?utf-8?B?N1JGSHBnYmZCL1JPcHFzSnQ2NlV3akx5a0lIK2crWUcyOVZ5RXlFY2tPbkFj?=
- =?utf-8?B?K1ZXWXZydmxmRlJCOUs0eGx0cU9nU0YrVVF6WW5xeW91WllKRVk0dzBuSHNw?=
- =?utf-8?B?d2dYb2RHMTYzVDRCUm9Qbks3SExLZm5sRkpNSkp2M2RUS1JOMjlZOGlEbTBt?=
- =?utf-8?B?dm43UzhoeUIrWW5mMlhGd2NmSGtLYk8yaFUxVEpGM1VXTC9KZmtacjdvdFFl?=
- =?utf-8?B?ZzVYMDUxNkgzOUdvdkFPTFJmUGJsYU1vbUFlUDBhT0h3Q0Z6d3VRZk14YThl?=
- =?utf-8?B?M1FzS2xOTFJkTTR6NXNsSmJnN3JOcFI3S0VuZkFKbnh6N24vNkNUcEQyY1J5?=
- =?utf-8?B?ZHg3Y0RlVDhpb3V3UE5QUmdFM1ljSUJkQnJYMWRGc2dwbnNaME9SbjBOREdI?=
- =?utf-8?B?ejZTSFR2L3EzLzFSNHVCZ01RMEJCZUpkR0J0WC9vU1gxMm1mQzh5MW9ZYmNP?=
- =?utf-8?B?dnRXczJibjVJZXZ0SS9uT1pBSXFYYnJod3cxWVoyanVZR3dBak1wRk9OZ1M0?=
- =?utf-8?B?eGh3Zm1zcURJVjJzTDAwSmdDYjZNU2tUVzc4S0ZKTDRHeHEwVE1FMkZLTTls?=
- =?utf-8?B?UkVBVDZyQStabVFKaVVmM25hbmZscXg2T2FjbzJlOFEwdXl5ZkxUT1hvL2xR?=
- =?utf-8?B?N1RKVjU0RGZXTnIxZTlPTGZyeXZ4ZHZqVVVFeDU2ZHFlVkV5ck1SSjZERjFL?=
- =?utf-8?B?N1hHbjJycERGZWhpa2hPbHZ5dUVKeXBMMVArVmFuUjRpR3RXT21KdnhxTG12?=
- =?utf-8?B?RkNuR01Jd3pWSTVGZnEwdjVycGQ3S1FUcDFicm1zQTc3UjdSWUgvRXoxUXdV?=
- =?utf-8?B?RXRtWVc0eS9tZE1MNzBacEZRQkZqTjN3VDlrNHJ0Q0I5NUh5RDUyTno4WXVR?=
- =?utf-8?B?TjZYTjUvRkJKSXJ6VWpQejBSenJMTjAwbFJqMjU0Nk03Tkc0K3R0dUJIemMx?=
- =?utf-8?Q?kcK+bUH6JIS9T?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key, unprotected) header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=w1jUf+GB
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=raidlab.org;
+	s=protonmail; t=1794746333; x=1795005533;
+	bh=GV5q5oyXG7o+6/jvs0rBK3bgCf4MVUtphWiCoyitBwU=;
+	h=From:To:Cc:Subject:Date:Message-ID:From:To:Cc:Date:Subject:
+	 Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=w1jUf+GBRM0NAa9ars55BdD+jwPqQGhMfMnzBXZblYRn1jX1EffQiP0X1WQgxMYB0
+	 lD1JRh3BiQ0n8YzFMQfhkO6dp9loWacpCUi0IEJbeg8kL6zuaV+EeIStBhMwH88CAg
+	 8qPsRlBwM7MI2CS5e2mTeip0a7NkAzBBxQsniOatABnzbi4mFlcZrD6lgZLncbiRIO
+	 CtO5IlIDoWUBnuQPNN7X/p4EAzshpLtQj3SnWw2HPZ45ZLYwPXcU8k69ctYDyzube+
+	 +oQBPAN9XuGxt4E8P8PaKjYmM0Y+IqVEF9DdiqT12T+1Tq31q+qQURrSO7rVdkAZhS
+	 04rk1o2I2gM6Q==
+X-Pm-Submission-Id: 4jS9XT5PKSz1DDXX
+From: Miroslav Cimerman <mc@raidlab.org>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Namhyung Kim <namhyung@kernel.org>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] md/raid5: fix wrong read data on RAID-4/5 with two failed devices
+Date: Sun, 15 Nov 2026 12:38:17 +0000
+Message-ID: <20261115123817.48388-1-mc@raidlab.org>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -164,58 +66,112 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA3PR05MB10385.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9d514a4c-596e-4990-c157-08df42eb9acf
-X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Nov 2026 07:39:39.1604
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR05MB9777
+Content-Transfer-Encoding: 8bit
 
-VGhpcyBpcyB2MiBvZiB0aGUgdHdvIGluZGVwZW5kZW50IFBQTCBkaXNrLXRyYW5zaXRpb24gZml4
-ZXMuIFRoZSBmaXJzdApwYXRjaCBpcyB1bmNoYW5nZWQuIFRoZSBzZWNvbmQgcGF0Y2ggYWxzbyBo
-YW5kbGVzIGEgc2xvdCB0aGF0IHJlbWFpbnMKYXNzaWduZWQgYWJvdmUgdGhlIGN1cnJlbnQgYXJy
-YXkgd2lkdGggYWZ0ZXIgYSBSQUlENSBzaHJpbmsuCgpXaGVuIGEgbmV3bHkgYWRkZWQgZGlzayBm
-YWlscyBQUEwgc2V0dXAsIHJhaWQ1X2FkZF9kaXNrKCkgY2FuIHB1Ymxpc2ggdGhlCnByaXZhdGUg
-ZGlzayBwb2ludGVyIGJlZm9yZSB0aGUgY2FsbGVyIHJvbGxzIGJhY2sgcmFpZF9kaXNrLiBBIGxh
-dGVyCnJlbW92YWwgY2FuIHRoZW4gZnJlZSB0aGUgZGlzayB3aGlsZSBSQUlENSBzdGlsbCByZWZl
-cmVuY2VzIGl0LiBQYXRjaCAxCnByZXBhcmVzIHRoZSBQUEwgbG9nIGJlZm9yZSBwdWJsaXNoaW5n
-IHRoZSBwb2ludGVyIGFuZCByZXN0b3JlcyB0aGUKcHJldmlvdXMgc3RhdGUgb24gZmFpbHVyZS4K
-ClBhdGNoIDIga2VlcHMgdGhlIGFjdGl2ZSBQUEwgbG9nIGF0dGFjaGVkIHdoZW4gYW4gdW5wcm9t
-b3RlZCByZXBsYWNlbWVudAppcyByZW1vdmVkLiBJdCBhbHNvIHNraXBzIGxvZ19tb2RpZnkoKSB3
-aGVuIHJlbW92aW5nIGFuIGFjdGl2ZSBkZXZpY2UgZnJvbQphIHNsb3QgYXQgb3IgYWJvdmUgdGhl
-IGN1cnJlbnQgcmFpZF9kaXNrcyB2YWx1ZS4gU3VjaCBhIHNsb3QgaGFzIG5vIFBQTApjaGlsZCBs
-b2cgYWZ0ZXIgYSBzaHJpbmssIGJ1dCBpdHMgZGV2aWNlIHBvaW50ZXIgc3RpbGwgaGFzIHRvIGJl
-IGNsZWFyZWQuCgpDaGFuZ2VzIGluIHYyOgoKICAqIGd1YXJkIHRoZSBhY3RpdmUtZGV2aWNlIGxv
-ZyB1cGRhdGUgd2l0aCBudW1iZXIgPCBjb25mLT5yYWlkX2Rpc2tzOwogICogYWRkIGEgc2hyaW5r
-IHRlc3QgdGhhdCBsZWF2ZXMgYW4gZXh0cmEgc2xvdCBibG9ja2VkLCBlbmFibGVzIFBQTCwgYW5k
-CiAgICBjb21wYXJlcyB0aGUgdjEgYW5kIHYyIHJlbW92YWwgcmVzdWx0cy4KClRoZSB2MSBwdWJs
-aWMgdGhyZWFkIGlzOgpodHRwczovL2xvcmUua2VybmVsLm9yZy9yL2NvdmVyLjE3OTQyMTUxMjgu
-Z2l0LngtcHJvZmVzc29yQG91dGxvb2suY29tLwoKVGVzdGVkIG9uIHg4Nl82NCB3aXRoIEtBU0FO
-LCBQUk9WRV9MT0NLSU5HLCBERUJVR19BVE9NSUNfU0xFRVAsIExPQ0tERVAsCk1ELCBhbmQgUkFJ
-RDQ1NiBlbmFibGVkOgoKICAqIHBlci1jb21taXQgVz0xIGJ1aWxkcyBmb3IgYm90aCBjb21taXRz
-OwogICogZmFpbGVkIFBQTCBkaXNrIGFkZGl0aW9uLCB3aGljaCByZWFjaGVzIERPTkUgb24gdGhl
-IHYyIHRpcDsKICAqIHVucHJvbW90ZWQgcmVwbGFjZW1lbnQgcmVtb3ZhbCwgd2hpY2ggcmVhY2hl
-cyBQQVNTIGFuZCBET05FIG9uIHRoZQogICAgdjIgdGlwLCB3aXRoIHRyYWNpbmcgb2JzZXJ2aW5n
-IGBwcGxfd3JpdGVfc3RyaXBlKClgIGFuZCBhIHN1Y2Nlc3NmdWwKICAgIHJldHVybiBkdXJpbmcg
-YSBzdWJzZXF1ZW50IGFycmF5IHdyaXRlOwogICogdGhlIHNocmluayBjb21wYXJpc29uLCB3aGVy
-ZSB0aGUgc2VudCB2MSByZW1haW5zIGF0IHNsb3QgMyBhZnRlcgogICAgdGhyZWUgcmVtb3ZlIGF0
-dGVtcHRzIHdoaWxlIHYyIHJlbW92ZXMgdGhlIHNsb3Qgb24gdGhlIGZpcnN0IGF0dGVtcHQ7CiAg
-KiBlbXB0eS1oZWFkZXIgYC1FSU9gIGluamVjdGlvbiB3aGlsZSBhZGRpbmcgYSBzcGFyZSwgd2hl
-cmUgYHNsb3Q9MGAKICAgIHJldHVybnMgYW4gZXJyb3IsIGxlYXZlcyB0aGUgc2xvdCB1bmFzc2ln
-bmVkLCByZXN0b3JlcyBgcHBsX3NpemVgLCBhbmQKICAgIGxlYXZlcyB0aGUgZGVncmFkZWQgYXJy
-YXkgd3JpdGFibGUuCgpUaGUgcnVudGltZSB0ZXN0cyB1c2UgbmF0aXZlIG1ldGFkYXRhIDEuMi4g
-SU1TTSBleHRlcm5hbCBtZXRhZGF0YSB3YXMgbm90CnJ1bi4gVGhlIGVtcHR5LWhlYWRlciBmYWls
-dXJlIHVzZXMgYSBkZWRpY2F0ZWQga2VybmVsIHdpdGgKYENPTkZJR19GQUlMX01BS0VfUkVRVUVT
-VGAgZW5hYmxlZDsgdGhlIHNlcGFyYXRlIHBhZ2UtYWxsb2NhdGlvbiBgLUVOT01FTWAKaW5qZWN0
-aW9uIHdhcyBub3QgcnVuLgoKWWluZ2ppZSBXYW5nICgyKToKICBtZC9yYWlkNTogcm9sbCBiYWNr
-IGZhaWxlZCBQUEwgZGlzayBhZGRpdGlvbnMKICBtZC9yYWlkNTogcHJlc2VydmUgYWN0aXZlIFBQ
-TCBsb2cgd2hlbiByZW1vdmluZyBhIHJlcGxhY2VtZW50CgogZHJpdmVycy9tZC9yYWlkNS1wcGwu
-YyB8IDExICsrKysrKysrKystCiBkcml2ZXJzL21kL3JhaWQ1LmMgICAgIHwgMTMgKysrKysrKysr
-LS0tLQogMiBmaWxlcyBjaGFuZ2VkLCAxOSBpbnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQoK
-CmJhc2UtY29tbWl0OiA0N2UxYjE4ZjM4ZDc0MDE1Y2I5ZmQzMGI1ZmYyYTFlYjg4ZTc3ZDMxCi0t
-IAoyLjQzLjAKCg==
+On RAID-4/5, a read of a block on a working member can return wrong
+data, without reading the member, when the stripe has two failed
+devices: the array has failed (MD_BROKEN only stops writes), or it is
+degraded and another member has a bad block in the stripe, for
+example after a write to it failed.
+
+fetch_block() computes two missing blocks at once when all but two
+blocks of the stripe are up to date and two devices have failed. That
+needs P and Q, but nothing limits the branch to RAID-6. On RAID-4/5,
+ops_run_compute5() computes sh->ops.target as the XOR of all the other
+blocks, including the second target, which was never read, and
+ops_complete_compute() marks both targets up to date. The read returns
+the XOR of the cached blocks and the unread page, and a later read of
+the second target returns that page instead of an error. The page is
+not cleared, so it can hold data of another block.
+
+Commit 93b3dbce6456 ("md/raid5: unite fetch_block5 and fetch_block6")
+brought the branch to RAID-4/5. fetch_block5() computed only one block.
+
+Take the branch on RAID-6 only, with the sh->qd_idx >= 0 test that the
+branch above already uses. On RAID-4/5 the block is then read from its
+member, and reads of failed members are failed by
+handle_failed_stripe() as before.
+
+For example, take a degraded 4-device RAID-5 (left-symmetric, 4 KiB
+chunks, device 1 missing) where block v holds the byte 0x10 + v. A
+write to block 3, on device 3, does a read-modify-write. Its write to
+device 3 fails: md records a bad block, keeps the device and fails the
+write. A read of block 4, on device 0, then returns 0x14 ^ 0x15 ^ the
+unread page (0x01 if it is zero) instead of 0x14, and a read of block
+5 returns the unread page instead of EIO.
+
+Found with FuzzyRAID, a fault-injection tester for RAID.
+
+Fixes: 93b3dbce6456 ("md/raid5: unite fetch_block5 and fetch_block6")
+Cc: stable@vger.kernel.org
+Signed-off-by: Miroslav Cimerman <mc@raidlab.org>
+---
+FuzzyRAID is not public yet. The analysis, the fix, the commit message
+and the reproducer were written with the help of an LLM. I reviewed
+everything and ran the reproducer on md-7.4 with and without this
+patch.
+
+Reproducer (needs only standard tools):
+
+#!/bin/bash
+# md RAID 5 with two failed devices for a stripe: a read of a block on a
+# working member returns wrong data, without reading the member, when exactly
+# disks-2 blocks of the stripe are cached.
+# Needs root, mdadm, losetup and GNU coreutils; uses /dev/md99 and 3 loop devices.
+set -e
+D=$(mktemp -d)
+for i in 0 2 3; do
+        truncate -s 64M $D/m$i
+        L[i]=$(losetup -f --show $D/m$i)
+done
+blk() { head -c 4096 /dev/zero | tr '\0' "\\$(printf %o $1)"; }
+for v in $(seq 0 11); do blk $((0x10 + v)); done > $D/pattern   # block v = 0x10+v
+blk 0xaa > $D/aa
+
+# degraded 4-device RAID 5, 4 KiB chunks;
+# stripe 1: block 3 on m3, block 4 on m0, block 5 on m1 (missing), P on m2
+mdadm -C /dev/md99 -R -l5 -n4 -c4 --assume-clean --bitmap=none \
+        ${L[0]} missing ${L[2]} ${L[3]}
+dd if=$D/pattern of=/dev/md99 bs=48k oflag=direct status=none
+mdadm -S /dev/md99                              # empty the stripe cache
+mdadm -A -R /dev/md99 ${L[0]} ${L[2]} ${L[3]}
+
+# read-modify-write of block 3: caches block 3 and P only
+dd if=$D/aa of=/dev/md99 bs=4k seek=3 oflag=direct status=none
+# second failure; md fails m3 and returns EBUSY, the array has failed
+echo faulty > /sys/block/md99/md/dev-${L[3]#/dev/}/state 2>/dev/null || true
+
+rd() { dd if=/dev/md99 bs=4k skip=$1 count=1 iflag=direct status=none | od -An -tx1 -N1 | tr -d " "; }
+echo "block 4 (m0, working), expected 14: $(rd 4)"
+echo "block 5 (m1, missing), expected I/O error: $(rd 5 2>&1)"
+
+mdadm -S /dev/md99
+for i in 0 2 3; do losetup -d ${L[i]}; rm $D/m$i; done
+rm $D/pattern $D/aa; rmdir $D
+
+ drivers/md/raid5.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index efb4b0d37cb0..f71fb0a265e4 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4019,9 +4019,11 @@ static int fetch_block(struct stripe_head *sh, struct stripe_head_state *s,
+ 			 */
+ 			s->uptodate++;
+ 			return 1;
+-		} else if (s->uptodate == disks-2 && s->failed >= 2) {
++		} else if (s->uptodate == disks - 2 && s->failed >= 2 &&
++			   sh->qd_idx >= 0) {
+ 			/* Computing 2-failure is *very* expensive; only
+-			 * do it if failed >= 2
++			 * do it if failed >= 2. It needs P and Q: RAID-4/5
++			 * computes one block only.
+ 			 */
+ 			int other;
+ 			for (other = disks; other--; ) {
+
+base-commit: 47e1b18f38d74015cb9fd30b5ff2a1eb88e77d31
+-- 
+2.53.0
+
