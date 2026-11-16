@@ -1,82 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.62.57.137
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.70.43.170
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794819557;
-	b=DvNLrYgVpDF2LuDm9HG9UTKndCtJC6Chb25/5UinkgYq72N0SB+KXSG0j/RlygeDIQzV
-	 Paj9lXgZeUOFpKlyRY02jmt/p2fe5/Z49jsq3QLqFJEENSiq7w1xEaRJPYblu53pFAG6j
-	 DQvHqroiBRvug76pkz1JHbOOXps+3Ps1BZHiv4VYPoZf+Ax5+ny6I15Nctz786uoeiq6n
-	 ShlfznTi6kGTN4TouC9oRDrEMDaa/G5833PDHGLvkV/2NUEN0InBsc0LP0+zaLcUJRMr+
-	 w+yrKr783gwRYJ4Z3V1dfWeTgL7cWaTYtkrmZLZXR0oU+YvfQ3UQvgR6rEETA3ntNoQ==
+	t=1794836426;
+	b=Fpt1U9hQg75Wg5wCnNuYesSGWMj6MKqOEg5wOqY9nzGk47sN0QpJo+tiIpxY88iL6Jhk
+	 OPfNdjpzTZ/yPorTzt+dmk9TpBWu/9+Rf/+t/BlycHBySjgE3fwqmEgusjHSp28rdF6uo
+	 NwlkXqmxZmN65nh7LL4Lt/gqBGIFkyGm9FMuVzcyGHQsnLRrr33t1xz5wutKWh/bAIQtf
+	 g3/eF+AkbSh0ZhCSmjRXmXY7c8xmnCPqb47yUcsUlEPz2IrEVsWpNV7mf2jW1IrPfPrvJ
+	 1HhYxUlpE8uoI6HhW+21mnvfex7az1hoZmLmOeyabp7OJg8whpG7BfxkWqDNXzcM+/A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794819557;
-	h=DMARC-Filter:DKIM-Signature:Received:X-QQ-mid:Message-ID:
-	 X-QQ-XMAILINFO:X-QQ-XMRINFO:From:To:Cc:Subject:Date:X-OQ-MSGID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=/dvIB4eCT65NW90Kjn4J4IQ988fOX5w1fXpawpMmbjI=;
-	b=qfxDEVvRq6KxSGcZCRg0wmQ189Tr7AeCMQtfwSohkEfPVfIjje2M3eIu5yfUZXZCrwFN
-	 pu7rD6bsyHhumVC2zgZx6ASGocMNbuHtw11uX4bzhw/udTgjfUi5UgrN0TqWJPMzdUJwH
-	 XPlXxHgtmL5iEjSfqnoS5D0NKLYXWeQG/ZCCz4RfhJNsR4Y6dl6PNJU6xyDQ+2zvSCkeO
-	 MS6UomC5h9BQSW7FI1u7R7IDAy06JLPLcI6HMWG4bp9IogdmHsX2Vynt7nuXCAbSY3PzC
-	 Kg0XcYREyCK2s2RvVniV1wxdveWLj/bxk3kuHvyFmPMZ2WQNrQO4MFLohT/umMVUmfA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794836426;
+	h=DMARC-Filter:DKIM-Signature:X-Pm-Submission-Id:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=Nbgs+wsdRMc6kX9/pFf9hzcSyrNXKiazeKOtRWb/CGQ=;
+	b=OIJ86jwpkRbG5hac/chdRVIxOU9Awlkule03ox/xPYQKN/PP96d8MsHXgok9KswTiR4F
+	 9XRA6ek3Qjg93ZHnp6XoaozVJNzucgB++gFVKnf4lrv+IUmlv9jbSn24JUtqxzljteUA+
+	 FUKXOakix5IAJz5f5lSU7hatRoBi0X+dNj0BkK/Ha2OOvH1b6AAqCJBY62oa2Srrt2Dn7
+	 WkPoZyR8fCZAPywV8l5tW6xIRSgWeD/fOIDRaZqA8X6ey0X70g5oo1VmrYisw71Hu7MMg
+	 tobcSpiHxGvUJrGWQC3B7PjFEdRrfKOJ4NoSEGAHwh2X06z+UkVVH6D+7jeP0/SNJvg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=qq.com;
-	spf=pass smtp.mailfrom=qq.com;
-	dkim=pass header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=peEHWOMl;
-	arc=none smtp.remote-ip=162.62.57.137
-Received: from out162-62-57-137.mail.qq.com (out162-62-57-137.mail.qq.com [162.62.57.137])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=raidlab.org;
+	spf=pass smtp.mailfrom=raidlab.org;
+	dkim=pass header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=KcKgsbjc;
+	arc=none smtp.remote-ip=185.70.43.170
+Received: from mail-43170.protonmail.ch (mail-43170.protonmail.ch [185.70.43.170])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FD8F606A882;
-	Mon, 16 Nov 2026 08:59:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0FD8F606A882
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20AC3606A323
+	for <linux-raid@vger.kernel.org>; Mon, 16 Nov 2026 13:40:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 20AC3606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=raidlab.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=raidlab.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=peEHWOMl
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1794819547; bh=/dvIB4eCT65NW90Kjn4J4IQ988fOX5w1fXpawpMmbjI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=peEHWOMlToaFBuaTLh6em9M6qR4m5ErZizJjYtQiVoQWLNanOk30BnxpExzDo3kmp
-	 3IRlx9KpulDgqTGdlokXgUgr2sMacFFY4gF3nzR1dyTRi13k2jIUK0u4KMNKw2Jm3b
-	 pyFjLjp3pAQ05TcukyxQzIJGViF7ZRGRdafMlBKM=
-Received: from shuai-VMware-Virtual-Platform.. ([117.158.156.199])
-	by newxmesmtplogicsvrsza63-0.qq.com (NewEsmtp) with SMTP
-	id EC40F80D; Mon, 16 Nov 2026 16:59:04 +0800
-X-QQ-mid: xmsmtpt1794819544tj0nn1keq
-Message-ID: <tencent_FEF23D4D4FB8FD625C136CEE6ED2092C9E08@qq.com>
-X-QQ-XMAILINFO: MzVGNhsCLlFKMFEt6x/QY7Ju2K3buoUBPqsqjH6W019wGi/TGLBLW8jlci1+SG
-	 mGdvSLbtvkjyj4/E3VpLf6x/GSZb2FztxY/elAt0BPr35LEl0tvBLJL65pYeTsHq8Zqy6U9FokCy
-	 TYWD6OaCc/2F9ssQa8jC89NpD+boi6kQzozugmwMapv/mtGec62JpWbP2l/75CMz0ya08FOUsyCa
-	 fZNk1PnKjJA6GT7uvtHf3KYgY8466wvuiynLrXbtPShAZWQSfzzpD/zu2BXw84fwbGxyUVGIwWxF
-	 yQVJt7Bub3Sl64Xq0yRD3gQgfrjXeuRktXhfeTzwQHMbeuyKMG8uioKf2Cn+sUJr8H3TrZFIzCre
-	 ROdhZW6wPZXk7ybfdj6d/Pb5CDTP06lBpv5fJNvBDAzK1jrBGgpnV6QyzzOW5EDPIWvkAbceg2XA
-	 MxjXthBkqH1uCiT9rjAZSDP97F1jvqBHomQUu+RXzoDIwHy6wqr2lDyi4eLIW7DQygJtydrNYKYy
-	 5UvoeaQk3LZo1tClapij+0QTRzWwbuPpv98XhImXq1XowwF28Ap3z7CZARs4p7tsYxbH7PtT1s0W
-	 gJ1ywMCGRCD/4iTQ/2NqDK+FTV+J2v8R3PDF2QG7x4yl0booqKLRUXd8WkXGuTJOhMMq2KKum7F+
-	 iXCqxUQW6dgco+MgtwnByfniwYCzLqSsdl5N7iPsw5Yuk9l6GqM7LtkycM9iZ1X2XPFcPCIjhTf7
-	 GVRXipPtQTL2Q88aOWGShXaSakX5aHUs8/IBSuvHdagmQeLe04cZkFoMZzY4pBLa3lM1B6DhFUgz
-	 iUKaMCzKDEHSxFo7cr86J7G0SP7WZHZ4N+yelI3BP7oP5/2aZoykTYP5KUHkYCAUdsgOMKTcQyFZ
-	 wfg6ZKC7JMVxLIypBVb/kJllEQFhxaYs5lC3FptNyzO7yRRsMcA/hWuzXq2GoVOk5BPW5Ql7SE6y
-	 yOJjiSbi7P5iAFQ247bGzDl7GBhXr6treOk/oqw45mhI+cZT09DoqTC4Q9Nx7svrvV3r0279mpVU
-	 qk1cBW4VjM2jiOPErM/Ha+guPqJAux6ctva3E9EbYFbaX93Rp4+PkCg3ThkqMWvc90SIoSbZl4gj
-	 +uLGeaqcWA7ZmYKu24IpM27Ztm1M1HdECGJazBL4GVyU0XtUMm2TcgFZkRte9L4fj0PWIY
-X-QQ-XMRINFO: NS+P29fieYNwqS3WCnRCOn9D1NpZuCnCRA==
-From: Shuai Liu <847807867@qq.com>
-To: linux-raid@vger.kernel.org
-Cc: song@kernel.org,
-	yukuai@fygo.io,
-	magiclinan@didiglobal.com,
-	xiao@kernel.org,
+	dkim=pass (2048-bit key, unprotected) header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=KcKgsbjc
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=raidlab.org;
+	s=protonmail; t=1794836422; x=1795095622;
+	bh=Nbgs+wsdRMc6kX9/pFf9hzcSyrNXKiazeKOtRWb/CGQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:From:To:Cc:Date:Subject:
+	 Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=KcKgsbjc8t5b+yN4YJdHZLvNeAebOZk/FRNfgSCJZocj2yVGL+EfgV+YWSuRi4LZ8
+	 CgP8V7+Aq0SVWX3X0uitNTvvKlffVorvdmen3WVYotuHH4ft9nHCV2KqdbNFL9J2+q
+	 v+VuVt7fU7i+J3Q5MTouCx/QKL8YQKUXZnyaZ2qV4LfluiYuPBA8J4jrda67uMXorx
+	 mtywrMz2pFBYpCmcj3SP7NDnWqjIKE0zVuzI+yFlBqfQbYqzV/IkCoMduD+ko1Ckvo
+	 e+PCX2ttAiheshTL++BrL1xmwFWwNuhb6Qej0tZS5mn6jn7vs9Jw88EYfu1SyzAa/g
+	 8XFB4x9xxiKKQ==
+X-Pm-Submission-Id: 4jSprz6c5xz2ScQ5
+From: Miroslav Cimerman <mc@raidlab.org>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	syzbot+c5969d7e0a934b384fd6@syzkaller.appspotmail.com,
-	sashiko-bot@kernel.org,
-	847807867@qq.com
-Subject: [PATCH v2] md: reject out-of-bounds desc_nr in super_90_validate()
-Date: Mon, 16 Nov 2026 16:59:03 +0800
-X-OQ-MSGID: <20261116085903.1081772-1-847807867@qq.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <sashiko-outbox-216570@kernel.org>
-References: <sashiko-outbox-216570@kernel.org>
+	Anton Gavriliuk <antosha20xx@gmail.com>
+Subject: [PATCH] md/raid5: grow stripe hash table with the size of stripe cache
+Date: Mon, 16 Nov 2026 13:39:54 +0000
+Message-ID: <20261116133954.5111-1-mc@raidlab.org>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -88,128 +67,191 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-super_90_validate() indexes the on-disk disk descriptor array with
-rdev->desc_nr without any bounds check:
+The stripe hash table has a fixed size of one page, 512 buckets with
+4 KiB pages. With stripe_cache_size at its current maximum (32768), a
+bucket contains 64 stripes on average. Every stripe lookup walks one
+chain with interrupts off and the hash lock held, and with random I/O
+most lookups miss and walk the whole chain. This costs CPU time on
+every request and makes the hash locks more contended.
 
-	desc = sb->disks + rdev->desc_nr;
-	if (desc->state & (1<<MD_DISK_FAULTY))
-		...
+Grow the table when stripe_cache_size is written, to about
+STRIPES_PER_HASH_BUCKET (two) stripes per bucket, rounded up to a
+power of two. The new table is allocated before any hash lock is taken,
+and the stripes are moved to it with all hash locks held. The table
+size stays a power of two and a multiple of NR_STRIPE_HASH_LOCKS, so
+every stripe keeps its hash lock. If the allocation fails, the old
+table stays. Moving about 24k stripes (only stripes that have been
+used are in the table) took about 2 ms with interrupts off on the
+Xeon machine below. This happens only when stripe_cache_size is set.
 
-mdp_super_t carries only MD_SB_DISKS (27) descriptors of 128 bytes
-each starting at offset 512, so any desc_nr outside [0, MD_SB_DISKS)
-reads past the end of the 4KB superblock page.
+The table starts at one page as before. It needs at most 8 bytes per
+stripe: 128 KiB at stripe_cache_size=32768, where the stripe pages
+alone take 768 MiB on RAID-6 4+2. The table is not shrunk when
+stripe_cache_size is lowered.
 
-Such an out-of-range desc_nr is reachable in several ways:
+2x Xeon E5-2699 v3 (one NUMA node used), RAM disks, chunk 512K,
+stripe_cache_size=32768, group_thread_cnt=8, io_uring, without -> with
+this patch:
 
-1. On a running non-persistent array, ADD_NEW_DISK with the
-   MD_DISK_JOURNAL flag reaches add_bound_rdev(), which calls
-   validate_super() unconditionally for journal disks.
-   bind_rdev_to_array() auto-assigns desc_nr = mddev->raid_disks to
-   a new rdev, and its max_disks check is skipped both for journal
-   disks and when mddev->max_disks == 0 (the case for non-persistent
-   arrays, which never set it).  With raid_disks > MD_SB_DISKS the
-   assigned desc_nr points past the descriptor array.
+  RAID-6 4+2  4k random write, 16 jobs QD64  320k -> 355k IOPS  (+11%)
+  RAID-6 6+2  4k random write, 16 jobs QD64  345k -> 381k IOPS  (+10%)
+  RAID-5 5+1  4k random write, 16 jobs QD64  437k -> 514k IOPS  (+18%)
+  RAID-6 4+2  1M seq write, 4 jobs QD16      4410 -> 4971 MiB/s (+13%)
+  RAID-6 4+2  4k random read, degraded       543k -> 705k IOPS  (+30%)
 
-2. During assembly, rdev->desc_nr comes straight from the on-disk
-   sb->this_disk.number, which is fully attacker-controlled fuzz
-   input.
+HPE DL345 Gen11, AMD EPYC 9455, 6x PCIe 5.0 NVMe (KIOXIA CM7-V 3.2 TB),
+the same md settings and chunk size:
 
-syzbot hit path 1: a RAID1 array with raid_disks=35 and
-not_persistent=1 plus a hot-added journal disk made
-super_90_validate() read sb->disks[35].state at byte offset
-512 + 35 * 128 + 16 = 5008, i.e. 912 bytes into the page following
-the 4096-byte superblock page:
+  RAID-6 4+2  4k random write, 16 jobs QD64  501k -> 536k IOPS   (+7%)
+  RAID-6 4+2  2M seq write, 1 job QD64      10342 -> 13523 MiB/s (+31%)
 
-	BUG: KASAN: use-after-free in super_90_validate+0x178b/0x18c0 drivers/md/md.c:1592
-	Read of size 4 at addr ffff888073d36390 by task syz-executor291/6009
-	 ...
-	 super_90_validate+0x178b/0x18c0 drivers/md/md.c:1592
-	 add_bound_rdev+0x274/0x390 drivers/md/md.c:3012
-	 md_add_new_disk+0xca1/0x1820 drivers/md/md.c:7666
-	 md_ioctl+0x2c1d/0x3700 drivers/md/md.c:8525
-	 blkdev_ioctl+0x5ad/0x6f0 block/ioctl.c:798
+The CPU time per I/O drops by 21-34% on the Xeon, and by 12% (random)
+and 49% (sequential) on the EPYC. In the 4k random write tests,
+find_get_stripe() drops from 9.2% to 0.6% of all cycles on the Xeon,
+and from 3.4% to 0.2% on the EPYC. With md's default stripe_cache_size
+nothing changes.
 
-(The KASAN report shows use-after-free or slab-out-of-bounds
-depending on what occupies the neighbouring memory.)
-
-super_1_validate() already bounds desc_nr against sb->max_dev; the
-0.90 metadata path has no equivalent check.  Reject desc_nr outside
-[0, MD_SB_DISKS) with -EINVAL, which covers both the desc->state
-reads in super_90_validate() itself and keeps fuzzed on-disk
-sb->this_disk.number values from being used as an array index.
-
-Both callers of validate_super() in the hot-add path previously
-ignored its return value, so a disk with an out-of-bounds desc_nr
-would still be accepted onto the array with the invalid state
-intact, and a later md_update_sb() would then write
-sb->disks[rdev->desc_nr] out of bounds in super_90_sync() as well.
-Make add_bound_rdev() and md_add_new_disk() honor the -EINVAL and
-reject the disk instead, which closes that write path too.
-
-Verified with the syzbot reproducer under QEMU with KASAN (7.4-rc3
-based config): baseline reproduces the use-after-free on every run,
-with this patch the reproducer completes with zero KASAN reports
-across repeated runs.
-
-Reported-by: syzbot+c5969d7e0a934b384fd6@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=c5969d7e0a934b384fd6
-Signed-off-by: Shuai Liu <847807867@qq.com>
+Signed-off-by: Miroslav Cimerman <mc@raidlab.org>
 ---
+ drivers/md/raid5.c | 60 +++++++++++++++++++++++++++++++++++++++++++---
+ drivers/md/raid5.h | 14 ++++++++---
+ 2 files changed, 68 insertions(+), 6 deletions(-)
 
-Changes in v2:
-  - make add_bound_rdev() and md_add_new_disk() honor the
-    validate_super() return value so a disk with an out-of-bounds
-    desc_nr is rejected instead of being hot-added with the invalid
-    state intact; this also closes the super_90_sync() OOB write path
-    mentioned in v1 (Sashiko)
-  - raid1_add_disk() lacking an upper bound on rdev->raid_disk is a
-    related pre-existing issue (Sashiko); it is outside the scope of
-    this patch and flagged for separate discussion
- drivers/md/md.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 03e35386a8028..78ee8d932e71a 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1495,6 +1495,9 @@ static int super_90_validate(struct mddev *mddev, struct md_rdev *freshest, stru
- 	mdp_super_t *sb = page_address(rdev->sb_page);
- 	__u64 ev1 = md_event(sb);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index efb4b0d37cb0..5e28ab750398 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -77,7 +77,7 @@ static void raid5_quiesce(struct mddev *mddev, int quiesce);
  
-+	if (rdev->desc_nr < 0 || rdev->desc_nr >= MD_SB_DISKS)
-+		return -EINVAL;
+ static inline struct hlist_head *stripe_hash(struct r5conf *conf, sector_t sect)
+ {
+-	int hash = (sect >> RAID5_STRIPE_SHIFT(conf)) & HASH_MASK;
++	int hash = (sect >> RAID5_STRIPE_SHIFT(conf)) & conf->hash_mask;
+ 	return &conf->stripe_hashtbl[hash];
+ }
+ 
+@@ -7061,6 +7061,57 @@ raid5_show_stripe_cache_size(struct mddev *mddev, char *page)
+ 	return ret;
+ }
+ 
++static unsigned int nr_hash_buckets(int nr_stripes)
++{
++	unsigned int buckets = max(nr_stripes / STRIPES_PER_HASH_BUCKET, 1);
 +
- 	rdev->raid_disk = -1;
- 	clear_bit(Faulty, &rdev->flags);
- 	clear_bit(In_sync, &rdev->flags);
-@@ -3009,9 +3012,10 @@ static int add_bound_rdev(struct md_rdev *rdev)
- 		 * then added disks for geometry changes,
- 		 * and should be added immediately.
- 		 */
--		super_types[mddev->major_version].
-+		err = super_types[mddev->major_version].
- 			validate_super(mddev, NULL/*freshest*/, rdev);
--		err = mddev->pers->hot_add_disk(mddev, rdev);
-+		if (!err)
-+			err = mddev->pers->hot_add_disk(mddev, rdev);
- 		if (err) {
- 			md_kick_rdev_from_array(rdev);
- 			return err;
-@@ -7590,9 +7594,11 @@ int md_add_new_disk(struct mddev *mddev, struct mdu_disk_info_s *info)
- 			} else
- 				rdev->raid_disk = -1;
- 			rdev->saved_raid_disk = rdev->raid_disk;
--		} else
--			super_types[mddev->major_version].
--				validate_super(mddev, NULL/*freshest*/, rdev);
-+		} else if (super_types[mddev->major_version].
-+			   validate_super(mddev, NULL/*freshest*/, rdev)) {
-+			export_rdev(rdev);
-+			return -EINVAL;
++	/*
++	 * The table size must be a multiple of NR_STRIPE_HASH_LOCKS for a
++	 * stripe to keep its lock when the table grows.
++	 */
++	BUILD_BUG_ON(NR_HASH_MIN % NR_STRIPE_HASH_LOCKS);
++	return max_t(unsigned int, roundup_pow_of_two(buckets), NR_HASH_MIN);
++}
++
++/*
++ * Grow the stripe hash table so that there are fewer stripes hashed to
++ * a single bucket when the stripe cache is enlarged.
++ *
++ * This is only an optimization. If the allocation of the new table fails,
++ * the old table stays.
++ */
++static void raid5_grow_stripe_hashtbl(struct r5conf *conf, int nr_stripes)
++{
++	unsigned int new_size = nr_hash_buckets(nr_stripes);
++	unsigned int i, old_size;
++	struct hlist_head *new, *old;
++	struct stripe_head *sh;
++	struct hlist_node *tmp;
++
++	lockdep_assert_held(&conf->cache_size_mutex);
++	old = conf->stripe_hashtbl;
++	old_size = conf->hash_mask + 1;
++	if (new_size <= old_size)
++		return;
++	new = kvzalloc_objs(*new, new_size, GFP_KERNEL | __GFP_NOWARN);
++	if (!new)
++		return;
++
++	lock_all_device_hash_locks_irq(conf);
++	conf->stripe_hashtbl = new;
++	conf->hash_mask = new_size - 1;
++	for (i = 0; i < old_size; i++) {
++		hlist_for_each_entry_safe(sh, tmp, &old[i], hash) {
++			hlist_del(&sh->hash);
++			hlist_add_head(&sh->hash,
++				       stripe_hash(conf, sh->sector));
 +		}
- 		if ((info->state & (1<<MD_DISK_SYNC)) &&
- 		     rdev->raid_disk != info->raid_disk) {
- 			/* This was a hot-add request, but events doesn't
++	}
++	unlock_all_device_hash_locks_irq(conf);
++
++	kvfree(old);
++}
++
+ int
+ raid5_set_cache_size(struct mddev *mddev, int size)
+ {
+@@ -7086,6 +7137,7 @@ raid5_set_cache_size(struct mddev *mddev, int size)
+ 			result = -ENOMEM;
+ 			break;
+ 		}
++	raid5_grow_stripe_hashtbl(conf, conf->max_nr_stripes);
+ 	mutex_unlock(&conf->cache_size_mutex);
+ 
+ 	return result;
+@@ -7589,7 +7641,7 @@ static void free_conf(struct r5conf *conf)
+ 			put_page(conf->disks[i].extra_page);
+ 	kfree(conf->disks);
+ 	bioset_exit(&conf->bio_split);
+-	kfree(conf->stripe_hashtbl);
++	kvfree(conf->stripe_hashtbl);
+ 	kfree(conf->pending_data);
+ 
+ 	mempool_destroy(conf->ctx_pool);
+@@ -7785,9 +7837,11 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 		goto abort;
+ 
+ 	ret = -ENOMEM;
+-	conf->stripe_hashtbl = kzalloc(PAGE_SIZE, GFP_KERNEL);
++	conf->stripe_hashtbl = kvzalloc_objs(*conf->stripe_hashtbl,
++					     NR_HASH_MIN);
+ 	if (!conf->stripe_hashtbl)
+ 		goto abort;
++	conf->hash_mask = NR_HASH_MIN - 1;
+ 
+ 	/* We init hash_locks[0] separately to that it can be used
+ 	 * as the reference lock in the spin_lock_nest_lock() call
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 1a61b474fc22..6d1d4aa125f2 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -489,8 +489,12 @@ struct disk_info {
+ 
+ #define	IO_THRESHOLD		1
+ #define BYPASS_THRESHOLD	1
+-#define NR_HASH			(PAGE_SIZE / sizeof(struct hlist_head))
+-#define HASH_MASK		(NR_HASH - 1)
++/*
++ * The stripe hash table starts at one page and is enlarged with
++ * stripe_cache_size, to about STRIPES_PER_HASH_BUCKET stripes per bucket.
++ */
++#define NR_HASH_MIN		(PAGE_SIZE / sizeof(struct hlist_head))
++#define STRIPES_PER_HASH_BUCKET	2
+ #define MAX_STRIPE_BATCH	8
+ 
+ /* NOTE NR_STRIPE_HASH_LOCKS must remain below 64.
+@@ -570,7 +574,11 @@ struct raid5_percpu {
+ 
+ struct r5conf {
+ 	struct hlist_head	*stripe_hashtbl;
+-	/* only protect corresponding hash list and inactive_list */
++	unsigned int		hash_mask; /* stripe_hashtbl size - 1 */
++	/*
++	 * Protect corresponding hash list and inactive_list. All of them are
++	 * held to replace stripe_hashtbl and hash_mask during the table growth.
++	 */
+ 	spinlock_t		hash_locks[NR_STRIPE_HASH_LOCKS];
+ 	struct mddev		*mddev;
+ 	int			chunk_sectors;
+
+base-commit: 47e1b18f38d74015cb9fd30b5ff2a1eb88e77d31
 -- 
-2.43.0
+2.53.0
 
