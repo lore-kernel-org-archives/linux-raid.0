@@ -1,83 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.179
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794907288;
-	b=OoZlm7jZMn9JcPpsIAoAjov1337SnCAQhk5jrsO1iY+pHctAtb2fb5yDusdiIsWT4P5k
-	 Yg+t1BOu4TOYUpdnoD7NQezTBXEj/M8W8PpQcnMhdjmLsHC7X/HmFinAnmrUp2fBuGrgY
-	 d8mMnlrEB/AGx3ruA+dq4Vq2zscLEOnC0yfk9SH8ScjYb8QSuwvnX/BiJToqpKxeN+slJ
-	 vmRTMawIoUDLLu2Toc2nuVVu2txKMWqrfzPZN/dhLYiNiH64X6rXXktGbifN+FPbsxDdF
-	 HE9GWp9VxlLVIG3FkBgHwSuyjrMt9oLX0gy9wkyfjpKNlzLtDZ3tGUZnKrE5d2oSzlg==
+	t=1794907294;
+	b=MhQi77jnJzQWyxhdgHUnDLOmBtDhBAHdARADOseftnusVk4IoOBQN78sKypOdWb1/C1U
+	 8x2iEOhED9V65isN2ewZ/lq9kM8LUKvERQ+kiyR/Miy7laDXHTsdm8oD8vdeXZ5GPPY+4
+	 OTE4IIxvwHGFelSWW478viT1dvTxaOTFAunQq4WTxKHuMFXGzr1shJGNvhR/XOfNTs7I6
+	 mo8CGmkVGApyCGaztHxlqT1DwhprUBqpap2IFPcuL+XdazcMRl7eaDuGNVho5q7/N+XLq
+	 /wuJcSrFJKXwWKkC4wIxbZRiEHj7XvfkIvBOFPpszpq5/UNzGbYM1agJ6iFbBVVpqyQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794907288;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794907294;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=WeFYOR/cWTH/jnpZ6ZgLyMhZDub8heVxegcNE8OIuKY=;
-	b=JRrcuN+2PJ5Bw2k+bx1KJ2pjhFPn1JiXi374EKpF1tSwrh1/MRfm/EKoTvUvRUbH8p05
-	 EE+FRqVfy5UH8A9H/zUxaqSb2CVl+DyVT9oKNFAXH8b6ZmKdnshv3Y87Tm1CcxrUe3aoD
-	 ozUpFv84oa5SuQ/J4gMvLPVQzXDAjYm9OGis3NizlHDZXDTY9bQZ+N1zjnqzqWVAhptdZ
-	 oCt6gGpefH/1DrNitMbnoFvdBMeids7iKhpRAd7j/DexdF7NVXYs/q2rluhnKeavqtroE
-	 XSExP0SOzFlZD4s7g5Wjeotwhu4rHr1ToGKG1p99LnCY6T7CC6iAXm2s7q/dj4tTfoQ==
+	bh=V5C32j7KQtTkw2KKwIqJ7ZKWPh3APBzMNv1Aof2IOsg=;
+	b=DZbDAmFf/deGU/jdGnyLuv/FwOcWjrqf/3omSdU/ZywJvu410Snjd3JhLw1KmGi0w63t
+	 SoUVqcrd7URYxiI3h6WZGNF0v/SNZR6NwpwTJ7KviFeM80lFC3Nlv/035uLdvw56mGy/C
+	 Cg+xDnuRR5ZS8dh3qPxBawDZ8bF4SMAngdDyn+eY2fmIYKipw8mKa0Q81MJh8OaGJ6fAk
+	 FISiv2mfI0Tcv3XrggOrrVolPn61sXI3zkztN1O9gFyRb/ZHMS2Xp8BwHuXOqQ3lYxKXi
+	 UhSbkmG/2pYzXDnHOhGoqjdD0HYPyZ6N2B+SD+XY+RnsHCZWQ2Ns/J0bFgTVYCbgvzg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="Czyncu/5";
-	arc=none smtp.remote-ip=209.85.210.174
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=vKpSprbp;
+	arc=none smtp.remote-ip=209.85.210.179
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 026F5606A334
-	for <linux-raid@vger.kernel.org>; Tue, 17 Nov 2026 09:21:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 026F5606A334
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0355D606A336
+	for <linux-raid@vger.kernel.org>; Tue, 17 Nov 2026 09:21:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0355D606A336
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Czyncu/5
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-8a9f9473029so4108689b3a.2
-        for <linux-raid@vger.kernel.org>; Tue, 17 Nov 2026 01:21:27 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=vKpSprbp
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-8b5c3288e6cso1984800b3a.3
+        for <linux-raid@vger.kernel.org>; Tue, 17 Nov 2026 01:21:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794907287; x=1795512087; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1794907293; x=1795512093; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=WeFYOR/cWTH/jnpZ6ZgLyMhZDub8heVxegcNE8OIuKY=;
-        b=Czyncu/5OMro3QMVvzH0a9UWnmQRCKbTP+YZRK0YG4PG8zYLIM+pZLpW5p4HpYyMyu
-         sA/VRdQgoEKoq6tXcjf5AMKwJpRVtqXH0LfvIkrOQkWqEGAXja6pSuXu6fHLYMefTC/t
-         B1AW4+CmKAkjNvfbVl+4A/207boa387ia1THm8/QkNKwkhtxBW7OC2F9LHX5Rr7Mjps7
-         dqcFuz5IRUYZGQ4hnBRcZbt9dKEG2YZLgIcAEoMLUMDLHPwZuCXlvKOO0DP8x7WU8WBt
-         tyfufAyR7KWxLgNjS1KuxQJJ1nHJq9mkUmyZS4IOOlUVPw/ynk4vGLlFqQoKPCHs2R4M
-         3Uaw==
+        bh=V5C32j7KQtTkw2KKwIqJ7ZKWPh3APBzMNv1Aof2IOsg=;
+        b=vKpSprbpMiiYi8HmgBFAbSBdNJ+AKqjeniNUkcJfH1FyyPtXU36hapcigKFt4FSxsJ
+         a5xJvHlVBPf7HLm78iCJYfTrYmg8sPB3uZNMmJylFU/0DjU7t4QMFYfFgq0XEu03J/lm
+         lGR9iTukqLor8F70voAbVdYI2g60oa06Nl81CVdl0+lJ7HVpbaeoPkOQWYJzU5sJqeUH
+         SFWrG7bzBn4LUBj5tgXTSuMOCuqvykGyjLwsEqRgO5DqlNqTqFKR/yK1sP4k9AArzGSh
+         BN9smaww8aZdSW4tVNn9e/Ist7olhPoQMep3kuYDYO5YRv0q45HemtlkDU3jEr42faw9
+         0eBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794907287; x=1795512087;
+        d=1e100.net; s=20260707; t=1794907293; x=1795512093;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=WeFYOR/cWTH/jnpZ6ZgLyMhZDub8heVxegcNE8OIuKY=;
-        b=zTc2JnDbrSkXMbAzXiGZWEUoPqRg25pyzOWd0HRW0nYFGK2yB0/05DpHm2BDewm18A
-         l4DuWidYh9PmMdwAghNwyK21Lv2K2UnS+R6aG3feW/sTv7e9c6qlkq10n9TgkiKqAFvM
-         PO22AOOlfyEjDldJ/xJ4YG/126/l5dTYqluGSNlRYSxOLPfFlZxj/7CqZWNmGC+zBYBr
-         K8PKudLaS7QGOaDeVv7DWoIt0O2Vo2wBvrS9I/hTmEP8slVXviPxMhWlcxOl2ai1rFmh
-         0fLr0WAje8iKg+Celh0gg3PS3STHT8RG5jylvxkjmN3s+qHgICHGdjZv6m08pldwdNhm
-         zuMQ==
-X-Forwarded-Encrypted: i=1; AL+hErGxbgtrzD+wJwJh4lB0fNwMEWJNqKyesKE+24YCFme5grD9EfTNFAr3uaVkSa5jB7bAn7xO452HFFYz@vger.kernel.org
-X-Gm-Message-State: APuU4Z+SLdufUCVbzASroRlGTLnUEAxoqVXmnGB8zLwA96fQeSPu+var
-	evfO5j2OeyY/8R8H58pAMK2ZQKZNjc/tXUK3YP/wRndpoaClylDuCPsO
-X-Gm-Gg: AYBFou0xz97uzDrq5H+6FaJklibD8GY3o0qzXexsi5YDEOQalrwdDo/0WoD+6H2Mske
-	nHQuTiKPmTYPjsx/NpgvoleHfO8MXuvy1banN10Lz+g6AZr4XGoWNtvfFmM99KBlfUbf7ypzmCw
-	AzNSkz+fidc9panOe1sDBnXqLKufTJE4u1vGy8wghzIGV7QP7bTknrJWrHih4YsiQUovp2qJ25r
-	txpRZvmtGlw6SID0D99hsVWxUhRoySs91vsk6H82GmAE7lkZcN2BjFQLqKWx9Yds2dqfb2Xwf5l
-	8E+bCI0X+Kc9lgiFWMkRT1Dxu1oI1WSGdsBZJVhFcETtLnGzZPk5RGIJGKsvW4Y9JRjcJCNCPv8
-	Y0bOGsl/xNpWFq+kZvSPRb567VaT2N822ClUEk0Rk6o/hwlO7ECnJ0sduN31AYT5NtoGohvInQB
-	3xzfA+dpSDPoZMf1/iZjaiyUt2y+kr9mFKoweQjSSWtih9UlaZzttDyv2DeH8hVpyLerj0hO6xu
-	p2NkspqIpB1UOeaHnoY7dRjG6B9vX9/3MRBcjiw1qsiLyUdC504swq3o/VcF/hwAFW3SA/irwuh
-	6CpGQY+ObO/fcwGpCrxUqKisRBUIdIqXCUmIdD7B
-X-Received: by 2002:a05:6a00:2d2a:b0:89e:b291:89c1 with SMTP id d2e1a72fcca58-8beb7d17eabmr12615132b3a.53.1794907287251;
-        Tue, 17 Nov 2026 01:21:27 -0800 (PST)
+        bh=V5C32j7KQtTkw2KKwIqJ7ZKWPh3APBzMNv1Aof2IOsg=;
+        b=mqMxx+cOcl7NLgLwHLv+W7SbAyEvIU+X9pvGvcZvjXTF2OZ7/iN3I+sPEEYLD7E2hU
+         k9kXyeHACbpPjAJpp4rnOZhgeQGdxJXNthJHz6i+euIbHkVWSX2xJ8SvLf74Urmmh8Wk
+         8srxwLciE3bLpuStf7oQj/OmRrEnolmwZfZfXbTFVel2k6IVlnu93QO0Na7HCUvPyKy0
+         xR9EXrcHuxU6pTxXGgxF8ZvXyExI6HwM1MZAbrQUjbymf8R459d0x0oGu4dLo/6744Gm
+         V2KuH6o4lj+fQyjmP+CcDnAaxTm2/Fwkex9s7+RKKP97PlFanYkkfpoM4ENUFFmwRKvw
+         5vYA==
+X-Forwarded-Encrypted: i=1; AL+hErHPd9NYJ3A4gFBbBuhjBWXMhY/wqbxIMajZ9ZqdSWN3YJmZxF6usAABcqjjFrIXkIy0WLmXS1vF2m+E@vger.kernel.org
+X-Gm-Message-State: APuU4Z8IXH4oUEqrCsIG84SkuSGOo0p7209WrxayhfffrppK8cX/9wwg
+	GbKqoeyRryWy4cuD2bMe2auIWzV3UXUQ1FtF3VSWbg77k1r9VlWk5Trx
+X-Gm-Gg: AYBFou0o8R9qHNIUpdNiaIc35jUGnsvc7UKr6qHa1y67frjaNvQPzS8IS/5K374xNq8
+	DaJ54m9gNbrhZDgVsylmZ/q8L0ANrQxTJ5etDNA7rjq2LdAfr3InauJSIQUlujhW8Ho7fiOA1vq
+	u6NWCygz56itbufhWFuwnyWhvVTayU12VWGXqJh1DQbCF2WNetcMCgN3we2CCFE6AtqHgYVNWMZ
+	6OHV6dCKnPd2bpYZIYMeIpFpOSSYNbQqjxDLwGD74tvDKGz13uE5Ta7aD1wQnPCkduGW9KjsFga
+	IM+Vwbu2XKIZk+ombZgXe39YkhNJOJP5wlEKl8mLtI6gBei7JHN9qNy8rrEQaCKFUWBJUH+CQcK
+	/CxpX+PPrkvgI3AcHQ+m3apKEh4SOFGwc5Db1fw6Esi8IXLyc0i3csIuYSqdd0Y2YxaJNlbgKSj
+	aYhlHLN9FX/gGZKrzZJAyL4iDSbV8hY5UmQ/wl10wdL/m8uOJmIR48RTmU3kvmvwnBhOxVjoDXK
+	bcZDH6rFOwCM8VVfdZUKqGZ7MUz04B7JU+CmuV91eJWTYf7NJ8hx1QATxCSOP6h9623Cserw2x4
+	3/0gFtOHbeEcfhhKwrvGVwJxPdUVbe0tPYKaqG8=
+X-Received: by 2002:a05:6a00:1a92:b0:886:d769:615 with SMTP id d2e1a72fcca58-8beb1fd9e52mr12502977b3a.1.1794907293239;
+        Tue, 17 Nov 2026 01:21:33 -0800 (PST)
 Received: from TheRealOne ([2409:40e1:499:722a:52aa:d755:8f06:9251])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8bed204f7d6sm5014996b3a.35.2026.11.17.01.21.23
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8bed204f7d6sm5014996b3a.35.2026.11.17.01.21.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Nov 2026 01:21:27 -0800 (PST)
+        Tue, 17 Nov 2026 01:21:32 -0800 (PST)
 From: Chandradhar Kumar <chandradhar.2003@gmail.com>
 To: song@kernel.org,
 	yukuai@fygo.io
@@ -87,9 +87,9 @@ Cc: xiao@kernel.org,
 	linux-kernel@vger.kernel.org,
 	syzbot+9e3014263a35700ab49b@syzkaller.appspotmail.com,
 	Chandradhar Kumar <chandradhar.2003@gmail.com>
-Subject: [PATCH v5 2/3] md: maintain max_disks for v0.90 arrays in metadata_store and ioctl
-Date: Tue, 17 Nov 2026 14:50:52 +0530
-Message-ID: <20261117092053.10884-3-chandradhar.2003@gmail.com>
+Subject: [PATCH v5 3/3] md: enforce max_disks and MD_SB_DISKS in raid_disks and slot sysfs stores
+Date: Tue, 17 Nov 2026 14:50:53 +0530
+Message-ID: <20261117092053.10884-4-chandradhar.2003@gmail.com>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261117092053.10884-1-chandradhar.2003@gmail.com>
 References: <20261117092053.10884-1-chandradhar.2003@gmail.com>
@@ -104,112 +104,79 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When a v0.90 array is assembled from on-disk superblocks,
-super_90_validate() sets mddev->max_disks = MD_SB_DISKS (27). However,
-when an array is configured via sysfs (metadata_store) or the
-SET_ARRAY_INFO ioctl (md_set_array_info), mddev->max_disks is not
-consistently updated across metadata transitions, and existing or
-requested disk counts are not validated against MD_SB_DISKS.
+Userspace can configure a persistent v0.90 array via sysfs with
+mddev->raid_disks > MD_SB_DISKS or rdev->raid_disk >= MD_SB_DISKS when
+mddev->max_disks is not yet populated or when writing to the inactive
+or reshape sysfs paths.
 
-Fix both configuration paths:
+Enforce the disk and slot bounds in raid_disks_store() and slot_store()
+so invalid configurations are rejected upfront with -EINVAL or -ENOSPC:
 
-1. In metadata_store(), when switching to v0.90 metadata (major == 0),
-   verify that mddev->raid_disks and the pre-reshape disk count
-   ((s64)mddev->raid_disks - mddev->delta_disks) are within
-   [0, MD_SB_DISKS], and set mddev->max_disks = MD_SB_DISKS (or reset
-   it to 0 for non-v0.90 / external / non-persistent metadata).
-2. In md_set_array_info(), reject negative or > MD_SB_DISKS raid_disks
-   values for persistent v0.90 arrays, validate existing raid_disks and
-   pre-reshape counts in the info->raid_disks == 0 branch, and update
-   mddev->max_disks across both persistent and non-persistent branches.
+1. In raid_disks_store(), reject values exceeding INT_MAX to prevent
+   signed overflow when assigning to mddev->raid_disks, and check
+   mddev->max_disks and MD_SB_DISKS (for persistent v0.90 arrays)
+   before branching into active, reshape, or inactive configuration.
+2. In slot_store(), reject slot >= mddev->max_disks or slot >=
+   MD_SB_DISKS (for persistent v0.90 arrays) in both the active
+   hot-add and inactive configuration branches.
 
 Fixes: 1a33a379e678 ("md: reject v0.90 arrays with too many devices")
 Signed-off-by: Chandradhar Kumar <chandradhar.2003@gmail.com>
 ---
- drivers/md/md.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+ drivers/md/md.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 6baf209703c8..b09553078353 100644
+index b09553078353..9fac810edc26 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -5063,6 +5063,7 @@ metadata_store(struct mddev *mddev, const char *buf, size_t len)
- 		mddev->external = 0;
- 		mddev->major_version = 0;
- 		mddev->minor_version = 90;
-+		mddev->max_disks = 0;
- 		goto out_unlock;
- 	}
- 	if (strncmp(buf, "external:", 9) == 0) {
-@@ -5077,6 +5078,7 @@ metadata_store(struct mddev *mddev, const char *buf, size_t len)
- 		mddev->external = 1;
- 		mddev->major_version = 0;
- 		mddev->minor_version = 90;
-+		mddev->max_disks = 0;
- 		goto out_unlock;
- 	}
- 	major = simple_strtoul(buf, &e, 10);
-@@ -5090,10 +5092,17 @@ metadata_store(struct mddev *mddev, const char *buf, size_t len)
- 	err = -ENOENT;
- 	if (major >= ARRAY_SIZE(super_types) || super_types[major].name == NULL)
- 		goto out_unlock;
-+	err = -EINVAL;
-+	if (major == 0 &&
-+	    (mddev->raid_disks < 0 || mddev->raid_disks > MD_SB_DISKS ||
-+	     (s64)mddev->raid_disks - mddev->delta_disks < 0 ||
-+	     (s64)mddev->raid_disks - mddev->delta_disks > MD_SB_DISKS))
-+		goto out_unlock;
- 	mddev->major_version = major;
- 	mddev->minor_version = minor;
- 	mddev->persistent = 1;
- 	mddev->external = 0;
-+	mddev->max_disks = (major == 0) ? MD_SB_DISKS : 0;
- 	err = 0;
- out_unlock:
- 	mddev_unlock(mddev);
-@@ -7975,16 +7984,33 @@ int md_set_array_info(struct mddev *mddev, struct mdu_array_info_s *info)
- 				info->major_version);
- 			return -EINVAL;
- 		}
-+		if (!info->not_persistent && info->major_version == 0 &&
-+		    (mddev->raid_disks < 0 ||
-+		     mddev->raid_disks > MD_SB_DISKS ||
-+		     (s64)mddev->raid_disks - mddev->delta_disks < 0 ||
-+		     (s64)mddev->raid_disks - mddev->delta_disks > MD_SB_DISKS))
-+			return -EINVAL;
- 		mddev->major_version = info->major_version;
- 		mddev->minor_version = info->minor_version;
- 		mddev->patch_version = info->patch_version;
- 		mddev->persistent = !info->not_persistent;
-+		mddev->max_disks = (mddev->persistent &&
-+				    info->major_version == 0) ?
-+				   MD_SB_DISKS : 0;
- 		/* ensure mddev_put doesn't delete this now that there
- 		 * is some minimal configuration.
- 		 */
- 		mddev->ctime         = ktime_get_real_seconds();
- 		return 0;
- 	}
-+
-+	if (info->raid_disks < 0 ||
-+	    (!info->not_persistent && info->raid_disks > MD_SB_DISKS)) {
-+		pr_warn("md: %s: invalid raid_disks %d for v0.90 superblock\n",
-+			mdname(mddev), info->raid_disks);
+@@ -3387,6 +3387,12 @@ slot_store(struct md_rdev *rdev, const char *buf, size_t len)
+ 		if (slot >= rdev->mddev->raid_disks &&
+ 		    slot >= rdev->mddev->raid_disks + rdev->mddev->delta_disks)
+ 			return -ENOSPC;
++		if ((rdev->mddev->max_disks &&
++		     slot >= rdev->mddev->max_disks) ||
++		    (rdev->mddev->persistent &&
++		     rdev->mddev->major_version == 0 &&
++		     slot >= MD_SB_DISKS))
++			return -ENOSPC;
+ 
+ 		rdev->raid_disk = slot;
+ 		if (test_bit(In_sync, &rdev->flags))
+@@ -3408,6 +3414,12 @@ slot_store(struct md_rdev *rdev, const char *buf, size_t len)
+ 		if (slot >= rdev->mddev->raid_disks &&
+ 		    slot >= rdev->mddev->raid_disks + rdev->mddev->delta_disks)
+ 			return -ENOSPC;
++		if ((rdev->mddev->max_disks &&
++		     slot >= rdev->mddev->max_disks) ||
++		    (rdev->mddev->persistent &&
++		     rdev->mddev->major_version == 0 &&
++		     slot >= MD_SB_DISKS))
++			return -ENOSPC;
+ 		rdev->raid_disk = slot;
+ 		/* assume it is working */
+ 		clear_bit(Faulty, &rdev->flags);
+@@ -4471,11 +4483,20 @@ raid_disks_store(struct mddev *mddev, const char *buf, size_t len)
+ 	err = kstrtouint(buf, 10, &n);
+ 	if (err < 0)
+ 		return err;
++	if (n > INT_MAX)
 +		return -EINVAL;
+ 
+ 	err = mddev_suspend_and_lock(mddev);
+ 	if (err)
+ 		return err;
+ 	noio_flags = memalloc_noio_save();
++	if ((mddev->max_disks && n > mddev->max_disks) ||
++	    (mddev->persistent && mddev->major_version == 0 &&
++	     n > MD_SB_DISKS)) {
++		err = -EINVAL;
++		goto out_unlock;
 +	}
 +
- 	mddev->major_version = MD_MAJOR_VERSION;
- 	mddev->minor_version = MD_MINOR_VERSION;
- 	mddev->patch_version = MD_PATCHLEVEL_VERSION;
-@@ -8014,6 +8040,8 @@ int md_set_array_info(struct mddev *mddev, struct mdu_array_info_s *info)
- 		mddev->max_disks = MD_SB_DISKS;
- 		mddev->flags = 0;
- 		mddev->sb_flags = 0;
-+	} else {
-+		mddev->max_disks = 0;
- 	}
- 	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
- 
+ 	if (mddev->pers) {
+ 		if (n != mddev->raid_disks)
+ 			err = update_raid_disks(mddev, n);
 -- 
 2.56.1
 
