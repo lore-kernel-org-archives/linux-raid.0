@@ -1,68 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.135
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.199
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794989776;
-	b=jezRTFSUol9aORuS7pJmBDiscLgY13yFPBqqoUGz5Go+1TkBgJt3uSAiwHGQ2h8M85j2
-	 mgBqt6j/77qwylsQIvGR+kA0WwxkkT2zQ3zIKLEz1zhU7fdIvcx/lVprkU/hRV/de+Tdb
-	 9Y6LPjEZ84AOr6dqZGhgN4A8tnSkiPPZ0/sZ2rFtnUzZJsmrROpA8xOkgl4aOveMm1wLv
-	 DRun+Wk1v07WqaEamS7bzar5hTqvdQnPIXVrbRVciUMgxCmFjHtIKKKssrOLw3q9B78IO
-	 Wn7avnnb3qrRl2oQ5QPuKZrh6qKWP3mJbuJioycqaNOE02o5n9pNo8Zh9/DyrdT9IQQ==
+	t=1795009840;
+	b=n47ME/5xvOfWa/L1ZOVhjRzBLEcKXxg19MawwNGv2Thcjxd89P+uxX71wKHJ4QkhoaqW
+	 6D2+KE+5SGafepTxc/jE7r+vh6aGaR+v/vL2fY2m8aJnN7C+r4mrgQZgond+if64rqhg1
+	 /CpGyFx0xBU0tABCATqOwn6E59swk7gWAF2asUe1GKEP5yIHy3rg+9VXEhUSleMzjC0FX
+	 GTukWXISFXgTApVnfQ6ZqcJqzv5HtIaabS6YVtdiljJOOcupWxlcZKapCgRxBkj6oJePw
+	 dtst2rKazkFkfUeLgAPbWQH7h9hX3SVhiajQp0Hj2rmohXCB0U4xfTKOLlhjrXlLR/A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794989776;
-	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
-	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
-	 To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=XL3h2yYsYjPUzu7A8O3AV6SsM8VkYtjNh+ErAVl7/BY=;
-	b=DZUwI9aX/Xstrt1OzqBnzYzWceFJb2iHe7NRTslc5zEm7TUmuhpTepi+UAZaekA5t9Tn
-	 9fvdF9Y2L+4acrK1Wn4LVJMcY/AdAIVTAjLE50SYtkumP7c2ZsB9g2tZHhK2Oh5dK9jTA
-	 DObhy1WERx0B+cBRhw8tBAdZf7+CWEpxzft7gB6GIUKE/1DhbF5bZtUP1MvlVi0DvgQML
-	 mSdmUaAkM91g+ZNMzR0sTt3JMH1MNsKoiQrAbrRDLqJ5gBJ7aiXR6R9gvo1g+62sObBc9
-	 pyWy2VNmpQc44wY/uPJmZoJGNT1b3rb4WXsWS9jMnfPFE+SSvxx+5nq48U++FkgsPLQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795009840;
+	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:MIME-Version:X-Received:Date:In-Reply-To:
+	 X-Google-Appengine-App-Id:X-Google-Appengine-App-Id-Alias:Message-ID:
+	 Subject:From:To:Content-Type;
+	bh=oe3qxDxEEBCgkMf3LaoAvV0Pg0/IXg79f/nMkFBr+bY=;
+	b=FJ9SjAt/NqdlKRgx7PErAtv6sYXyXeIaxETvDWetCCQ8woZEmRy7z85uqvpYT2A1lOKv
+	 A4FRbFMkxlNlNRYxm8dMAb93JNPZgWNXN3TLEF3JiNE5+BUIhemEel9NcgxeHLc3M2pvf
+	 SKzJVaRVdAW6PtcwxUmXV0vTpYsoUS8M/wJ60xyu35YkvNkzmEVIZ2mNbOTx+r1d2Lp/L
+	 JTs8dKzmJJqezMFPMK5L6aVXoZw1oyw4P8Aq7fthTPPpforElWeppAvuQQx+9w+FRUY0D
+	 laGxH5BWXlmuA3o0uL8yJw5cXE7Byn7xM/qOWgxIqPsTu0nOZlUiY+pjmeSnMtAHfwg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cmss.chinamobile.com;
-	spf=pass smtp.mailfrom=cmss.chinamobile.com;
-	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=L4sO12OV;
-	arc=none smtp.remote-ip=111.22.67.135
-Received: from cmccmta2.chinamobile.com (cmccmta2.chinamobile.com [111.22.67.135])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D5715606A334;
-	Wed, 18 Nov 2026 08:16:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D5715606A334
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=L4sO12OV
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=cmss.chinamobile.com; s=default; l=0;
-	h=from:subject:message-id:to:cc:mime-version;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=L4sO12OVGyKu/VFfG8cNKQZm/K6/7E2AY/XQUptKwt08372tWM4Mp6S0rSQA4H8mpUFwO88qoDrJg
-	 3ZI5JHQi9wEt4IxPCqE7wU/zoVv4QKmHP+y+EJrVSWaXVDLlnFf2NC2sCRiBZH2dPnOMNFresSKZrM
-	 Y23kIA4xyVlQ6Sfo=
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
-	by rmmx-syy-dmz-app07-12007 (RichMail) with SMTP id 2ee76afd5e5f111-12fff;
-	Wed, 18 Nov 2026 16:14:24 +0800 (CST)
-X-RM-TRANSID:2ee76afd5e5f111-12fff
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from FHD-W7400297 (unknown[10.55.1.70])
-	by rmsmtp-syy-appsvr06-12006 (RichMail) with SMTP id 2ee66afd5e5e2eb-cfa5b;
-	Wed, 18 Nov 2026 16:14:24 +0800 (CST)
-X-RM-TRANSID:2ee66afd5e5e2eb-cfa5b
-From: Aibing Chen <chenaibing@cmss.chinamobile.com>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>
-Cc: Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	linux-raid@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] md/raid1: reject oversized raid_disks values
-Date: Wed, 18 Nov 2026 16:14:21 +0800
-Message-ID: <20261118081421.2004-1-chenaibing@cmss.chinamobile.com>
-X-Mailer: git-send-email 2.50.1.windows.1
-In-Reply-To: <20261117235714.1101-1-chenaibing@cmss.chinamobile.com>
-References: <20261117235714.1101-1-chenaibing@cmss.chinamobile.com>
+	dmarc=fail header.from=syzkaller.appspotmail.com;
+	spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com;
+	arc=none smtp.remote-ip=209.85.167.199
+Received: from mail-oi1-f199.google.com (mail-oi1-f199.google.com [209.85.167.199])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DC26606A325
+	for <linux-raid@vger.kernel.org>; Wed, 18 Nov 2026 13:50:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8DC26606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi1-f199.google.com with SMTP id 5614622812f47-574ae6cc614so2039231b6e.1
+        for <linux-raid@vger.kernel.org>; Wed, 18 Nov 2026 05:50:40 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795009839; x=1795614639;
+        h=content-type:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=oe3qxDxEEBCgkMf3LaoAvV0Pg0/IXg79f/nMkFBr+bY=;
+        b=UPAtfRHLNd4D0f47VCoVJx7XG408EwjujrPCgyvrvTQ5oaxbD56/iE+XXQA2AjB8iL
+         WR2uWw9U1Lrtc2FqC8gmXB+XuyLfaMYkcQDVp4sFulv2fXaDab2DekKN/FyLccv4coJW
+         oxwczIDH2ZWgom/arfwW2+mKXeeObb4PBoMibufLhcAcJZCOmA+kKl1DnLiwfuy9AmGF
+         Xb/Xvh8z2t5qhyU7Wv7IxsGZur9KoL7wkxbF+aE7SKcVz74F7RgxeQ0+zwew+x9N4NG/
+         Ytvw0YSWms6Gg9+cCMyewCOUd+LC4Ul2aUzagQTuUGP7zoiJ2U9K0QzoXk/d16DWlyuk
+         mQXw==
+X-Forwarded-Encrypted: i=1; AL+hErEDJk7P4BDSu9aivv+IlvKU2483JLijxS7UD6SEMxz5YuJkJp4GMShFXPLjVgNvxPoVi8qPACEriLzB@vger.kernel.org
+X-Gm-Message-State: APuU4Z9/5PXp+L3Gj7sZdx11N4Fedc/ZO1agRMZmVtjYIop3VxV2ABA3
+	Tl9z+ta6s0Rn58MvPlSqj0xWoVnSyqBUgDXvYOwrDYJWABTfcucHtyJhQY5q8l/KEg8Yan98O9U
+	WSnq7su4WeWwn1w9niyY9myaRKFzZ9CFa/7XyToUZbP2s1m/b6x/KdbpSKjY=
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -72,75 +58,114 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Received: by 2002:a05:6808:c1d4:b0:4dd:f8bb:e1bd with SMTP id
+ 5614622812f47-575dd62583amr4190167b6e.13.1795009839590; Wed, 18 Nov 2026
+ 05:50:39 -0800 (PST)
+Date: Wed, 18 Nov 2026 05:50:39 -0800
+In-Reply-To: <6aec63fe.5f5735a5.290c1c.0004.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6afdad2f.15a38f0c.5f8d.0009.GAE@google.com>
+Subject: Re: [syzbot] [raid?] BUG: unable to handle kernel paging request in remove_spares
+From: syzbot <syzbot+a53c2918175b36cfd601@syzkaller.appspotmail.com>
+To: agk@redhat.com, bmarzins@redhat.com, dayou5941@163.com, 
+	dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org, 
+	linux-raid@vger.kernel.org, liyouhong@kylinos.cn, magiclinan@didiglobal.com, 
+	mpatocka@redhat.com, sashiko-bot@kernel.org, snitzer@kernel.org, 
+	song@kernel.org, stable@vger.kernel.org, syzkaller-bugs@googlegroups.com, 
+	xiao@kernel.org, yukuai@fygo.io
+Content-Type: text/plain; charset="UTF-8"
 
-setup_conf(), raid1_reshape() and r1buf_pool_alloc() size the mirrors
-array, the r1bio pool and the resync buffer pool by raid_disks * 2.
-raid_disks is set from the user through the SET_ARRAY_INFO ioctl and is
-unbounded, so a large value makes one of those allocations exceed
-KMALLOC_MAX_SIZE: kmalloc emits a WARN_ON_ONCE_GFP() splat (syzbot:
-WARNING in r1buf_pool_alloc) and returns NULL.
+syzbot has found a reproducer for the following issue on:
 
-Cap raid_disks by the largest element size involved, and check the cap
-both in raid1_run(), before the pools are allocated, and in
-raid1_reshape(), which updates raid_disks on a running array through
-update_raid_disks().
+HEAD commit:    20eef29b7c84 Merge tag 'arc-fixes-7.4' of git://git.kernel..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=1186ff3d580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=1cf189394a856f11
+dashboard link: https://syzkaller.appspot.com/bug?extid=a53c2918175b36cfd601
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=17f8f94d580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=173f9411580000
 
-Reported-by: syzbot+c0e700c08ee88f60e54d@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=c0e700c08ee88f60e54d
-Signed-off-by: Aibing Chen <chenaibing@cmss.chinamobile.com>
----
-v2:
-- cap by max(sizeof(struct resync_pages), sizeof(struct raid1_info)) so
-  the mirrors array is covered on 64K page kernels as well.
-- add the same check to raid1_reshape(), which changes raid_disks on a
-  running array without going through raid1_run().
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-20eef29b.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/bb852a1ddb76/vmlinux-20eef29b.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/4c636c3f4242/bzImage-20eef29b.xz
 
- drivers/md/raid1.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+AI-generated root cause summary:
+In the MD (Multiple Devices / RAID) subsystem, md_start_sync is scheduled as a
+work item on the md_misc workqueue to initiate resynchronization or manage spare
+devices. For read-only arrays (!md_is_rdwr(mddev)), md_start_sync executes
+remove_and_add_spares(), which invokes remove_spares(). However, md_start_sync
+fails to verify whether the array's personality (mddev->pers) is still valid
+before calling into personality operations, and array stop/detach sequences do
+not ensure that mddev->sync_work is completely halted or prevented from running
+after mddev->pers is cleared. When remove_spares() executes with mddev->pers ==
+NULL, it attempts to invoke mddev->pers->hot_remove_disk (located at offset
+0x50), triggering a NULL pointer dereference crash.
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 894efb50c..609c64d85 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -3152,6 +3152,18 @@ static int raid1_set_limits(struct mddev *mddev)
- 	return queue_limits_set(mddev->gendisk->queue, &lim);
- }
- 
-+/*
-+ * setup_conf(), raid1_reshape() and r1buf_pool_alloc() size the mirrors
-+ * array, the r1bio pool and the resync buffer pool by raid_disks * 2.
-+ * Reject a disk count for which those allocations would exceed
-+ * KMALLOC_MAX_SIZE instead of letting kmalloc warn and fail later.
-+ */
-+static int raid1_max_disks(void)
-+{
-+	return KMALLOC_MAX_SIZE /
-+		(2 * max(sizeof(struct resync_pages), sizeof(struct raid1_info)));
-+}
-+
- static int raid1_run(struct mddev *mddev)
- {
- 	struct r1conf *conf;
-@@ -3169,6 +3181,9 @@ static int raid1_run(struct mddev *mddev)
- 		return -EIO;
- 	}
- 
-+	if (mddev->raid_disks <= 0 || mddev->raid_disks > raid1_max_disks())
-+		return -EINVAL;
-+
- 	/*
- 	 * copy the already verified devices into our private RAID1
- 	 * bookkeeping area. [whatever we allocate in run(),
-@@ -3318,6 +3333,9 @@ static int raid1_reshape(struct mddev *mddev)
- 
- 	raid_disks = mddev->raid_disks + mddev->delta_disks;
- 
-+	if (raid_disks <= 0 || raid_disks > raid1_max_disks())
-+		return -EINVAL;
-+
- 	if (raid_disks < conf->raid_disks) {
- 		cnt=0;
- 		for (d= 0; d < conf->raid_disks; d++)
+full analysis:  https://syzkaller.appspot.com/x/ai_root_cause?x=a53c2918175b36cfd601
 
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+a53c2918175b36cfd601@syzkaller.appspotmail.com
 
+Oops: general protection fault, probably for non-canonical address 0xdffffc000000000a: 0000 [#1] SMP KASAN NOPTI
+KASAN: null-ptr-deref in range [0x0000000000000050-0x0000000000000057]
+CPU: 2 UID: 0 PID: 66 Comm: kworker/2:2 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+Workqueue: md_misc md_start_sync
+RIP: 0010:remove_spares+0x147/0x540 drivers/md/md.c:10182
+Code: 67 60 f9 45 84 ff 74 55 e8 e6 6c 60 f9 48 8b 44 24 10 80 38 00 0f 85 83 03 00 00 49 8b 45 08 48 8d 78 50 48 89 fa 48 c1 ea 03 <42> 80 3c 22 00 0f 85 78 03 00 00 48 89 de 4c 89 ef 48 8b 40 50 2e
+RSP: 0018:ffffc90000d47a10 EFLAGS: 00010206
+RAX: 0000000000000000 RBX: ffff888059649108 RCX: 0000000000000000
+RDX: 000000000000000a RSI: ffffffff88ae1bfa RDI: 0000000000000050
+RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000001
+R10: ffff8880596491cf R11: 0000000000000000 R12: dffffc0000000000
+R13: ffff888059648058 R14: ffff888059648070 R15: 0000000000000001
+FS:  0000000000000000(0000) GS:ffff8880d4669000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000001b30924008 CR3: 0000000051ca3000 CR4: 0000000000352ef0
+Call Trace:
+ <TASK>
+ remove_and_add_spares+0x6c7/0x7f0 drivers/md/md.c:10207
+ md_start_sync+0x736/0xea0 drivers/md/md.c:10323
+ process_one_work+0xac7/0x1b10 kernel/workqueue.c:3495
+ process_scheduled_works kernel/workqueue.c:3578 [inline]
+ worker_thread+0x5ef/0xe50 kernel/workqueue.c:3659
+ kthread+0x373/0x450 kernel/kthread.c:436
+ ret_from_fork+0x730/0xd60 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:remove_spares+0x147/0x540 drivers/md/md.c:10182
+Code: 67 60 f9 45 84 ff 74 55 e8 e6 6c 60 f9 48 8b 44 24 10 80 38 00 0f 85 83 03 00 00 49 8b 45 08 48 8d 78 50 48 89 fa 48 c1 ea 03 <42> 80 3c 22 00 0f 85 78 03 00 00 48 89 de 4c 89 ef 48 8b 40 50 2e
+RSP: 0018:ffffc90000d47a10 EFLAGS: 00010206
+RAX: 0000000000000000 RBX: ffff888059649108 RCX: 0000000000000000
+RDX: 000000000000000a RSI: ffffffff88ae1bfa RDI: 0000000000000050
+RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000001
+R10: ffff8880596491cf R11: 0000000000000000 R12: dffffc0000000000
+R13: ffff888059648058 R14: ffff888059648070 R15: 0000000000000001
+FS:  0000000000000000(0000) GS:ffff8880d4669000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000001b30924008 CR3: 0000000051ca3000 CR4: 0000000000352ef0
+----------------
+Code disassembly (best guess):
+   0:	67 60                	addr32 (bad)
+   2:	f9                   	stc
+   3:	45 84 ff             	test   %r15b,%r15b
+   6:	74 55                	je     0x5d
+   8:	e8 e6 6c 60 f9       	call   0xf9606cf3
+   d:	48 8b 44 24 10       	mov    0x10(%rsp),%rax
+  12:	80 38 00             	cmpb   $0x0,(%rax)
+  15:	0f 85 83 03 00 00    	jne    0x39e
+  1b:	49 8b 45 08          	mov    0x8(%r13),%rax
+  1f:	48 8d 78 50          	lea    0x50(%rax),%rdi
+  23:	48 89 fa             	mov    %rdi,%rdx
+  26:	48 c1 ea 03          	shr    $0x3,%rdx
+* 2a:	42 80 3c 22 00       	cmpb   $0x0,(%rdx,%r12,1) <-- trapping instruction
+  2f:	0f 85 78 03 00 00    	jne    0x3ad
+  35:	48 89 de             	mov    %rbx,%rsi
+  38:	4c 89 ef             	mov    %r13,%rdi
+  3b:	48 8b 40 50          	mov    0x50(%rax),%rax
+  3f:	2e                   	cs
