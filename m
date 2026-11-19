@@ -1,64 +1,93 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.41
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795068555;
-	b=ufbw4JuNzN1cS9rCr66dMSfkVZV+21/vDM1N+vZgk7LnLBEh8B5mnIcFja+yPRdpIwI3
-	 b4lkgfTDZpjelNDCZ95l4qz9q/zuuYd86tODGbTPJ3iSfH9Gx+En18O++h85vId1M3BXQ
-	 13LkZpgNvKOK4KQU4zPIm3QAA5ZWtmgdAC1MYNWYn243SmTM7R5gD3aCkPbOtM9pH+Qjt
-	 zcZDdVFm1WuqvJmhC9+LqB8LbssT81fcU9nlLrB6qRwInFD8W2qNIZw/PQgMYnSO+fF9M
-	 9OqEFglKQsg6nlcC9V0uZ42CfEj4R0Y6TZX1gG8YhQ7ferONUNxgy/x0Ow74lVkONIg==
+	t=1795078864;
+	b=2+v0FY8UF8QsKBl4FyWNW/BHoO/4D5VKZwM53ZGzirOUMpSg+rNTbn2Zvo6pRRCDqeHm
+	 cUL4XcW5sGLp95YLVZbpMgCfkq8ongo0U7MlKxClAcT16EFq/zxSWUXd/kzNus0aq5Wz2
+	 0+hXJgvC27hchH4O+bGWOJs7AQW6fF/FpDJAZC3Z8r7SzGC206QHduH7mKEbamZR0FOlw
+	 LVh0qIcMJhrof5xbVjr3rNHezrCgbQFa7zChdzTMGcQJcf/mlctPyQ5j4soJc9h27bgGz
+	 mBXVqXYKOV0JLOJbK7wuCcdLmPDpdQcCny8PPTNuYZtrFvBK1E1fY32DrzpysfIS3Dg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795068555;
-	h=DMARC-Filter:DKIM-Signature:Date:From:To:Cc:Subject:X-Priority:
-	 X-Mailer:In-Reply-To:References:X-NTES-SC:Content-Transfer-Encoding:
-	 Content-Type:MIME-Version:Message-ID:X-Coremail-Locale:X-CM-TRANSID:
-	 X-CM-SenderInfo:X-Coremail-Antispam;
-	bh=V7SUYsmuNsMVcT0DsDg2UAzZ3vjHnuoSv5f9GMfd370=;
-	b=WwnqutiziLdqmazTa1vQTrGyNK1Gk0Xei/RLdJqB6pIY/9ayZKT/ipCIMYeePMGJvlNa
-	 SXaE/yQboe9H0hhKPLcYOrO1swxlVMxF98bBgxnuCTsOxk1n3wvuXfMHUOoYXzuyYTBWV
-	 EVvsBH3okG/7H91EhmyZg3CKFN/7dNLwAI5MTKZKnr3nncHyt7j05C9Bz/M0u4gnVKItq
-	 Me8+kko9lNc7N2vV3Mbyjp1mGnB5pLatqzQM3UxH48rXIZwTYXqbLlxd04G1xaB6cjuq9
-	 ht+CMqI9FEGrRzeT7WCf1GmAYjhuGr23/fFjZ3XQJg325CgOEWLO73hSv2VfL8X7Vnw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795078864;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Subject:From:To:Cc:Date:Message-Id:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version;
+	bh=IaVGtrUtYv4HD8uCsAtcdorTy8sx9p1imeyyTVfExi4=;
+	b=eabauYWlVBzD8ota46id8pYsuMZa2/JSjpXkgeiI6x9lClBdClMRWxnOhzwbqyRUov47
+	 2JngdOZYBhAuwLMoNv+CEvNSqyVDgaGznrk+0oKRK/zz+YJA14xoyQsRCTKZA0mobyiVH
+	 DMNhSVushDuRXxO0ntKBTKhTPBWixgbZdt6b1WBVk8blPH0izWw0KU5nvObwbETboqNBj
+	 c7IJnWMhfsSqXyT19wsjuQBA0tWDSqvYIgJ9W5Uq9EdF5422tW/WrNFc+g4EW78zC++5f
+	 uWHM9VI6ZJYALtage6xXHmZwrkeIsL/2PCg29pe69IQhFyepFejvxcWKKbNcFuvenPg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=163.com;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=jqWynYDR;
-	arc=none smtp.remote-ip=117.135.210.2
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=u3iFxgy4;
+	arc=none smtp.remote-ip=209.85.216.41
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C24D5606A320;
-	Thu, 19 Nov 2026 06:09:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C24D5606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53496606A33A
+	for <linux-raid@vger.kernel.org>; Thu, 19 Nov 2026 09:01:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 53496606A33A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=jqWynYDR
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
-	Message-ID; bh=V7SUYsmuNsMVcT0DsDg2UAzZ3vjHnuoSv5f9GMfd370=; b=j
-	qWynYDR87IlsJ3B/ioAghTt4Ssr41ZMUOXkOGnFZRV5J+QFt+kMg7Nlzx6LNqWBU
-	DRg6hqMEWVRBJo2Cr5u/7CtYB2YnTQxSkWFutNBJsQhcBLV8+5/EpKrfd3OKgBeL
-	YEgK8bWCUyovzg+9nnDtWJIUJ31dKJ2Uu6BZQIDOUA=
-Date: Thu, 19 Nov 2026 14:07:27 +0800 (CST)
-From: =?GBK?B?wO7T07roIA==?= <dayou5941@163.com>
-To: syzbot <syzbot+a53c2918175b36cfd601@syzkaller.appspotmail.com>
-Cc: agk@redhat.com, bmarzins@redhat.com, dm-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-	liyouhong@kylinos.cn, magiclinan@didiglobal.com, mpatocka@redhat.com,
-	sashiko-bot@kernel.org, snitzer@kernel.org, song@kernel.org,
-	stable@vger.kernel.org, syzkaller-bugs@googlegroups.com,
-	xiao@kernel.org, yukuai@fygo.io
-Subject: Re:Re: [syzbot] [raid?] BUG: unable to handle kernel paging request
- in remove_spares
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
- 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 163com
-In-Reply-To: <6afdad2f.15a38f0c.5f8d.0009.GAE@google.com>
-References: <6afdad2f.15a38f0c.5f8d.0009.GAE@google.com>
-X-NTES-SC: AL_Qu2SB/ydt0wv4SCYYekckk4Wjug8Wcexufwj34NTc+YEmAXC2w8GZ1NtN2vK8OCWGw6FnxuRfzZf5el7d5VHUp+cYpb4HWPHb9xVc3dyxA==
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=GBK
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=u3iFxgy4
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-3b3af93b85cso1108994a91.1
+        for <linux-raid@vger.kernel.org>; Thu, 19 Nov 2026 01:01:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795078864; x=1795683664; darn=vger.kernel.org;
+        h=mime-version:content-transfer-encoding:content-type:message-id:date
+         :cc:to:from:subject:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=IaVGtrUtYv4HD8uCsAtcdorTy8sx9p1imeyyTVfExi4=;
+        b=u3iFxgy4/WQ6Zr2QqEVtzcgj80ryUNlNB8MeD97B1DLEhJ7vBBeC6KTTmVFq2Ui4n0
+         9pIGztm9nwN4K0gC71otRHuY2O96/ndHoif1/kcjlCzYeaxYnjuIh5yNEJyN0ehArKzl
+         aDniIA+RTveUE9WiCgXpmakHDid6m9bLiVkCgT1RRaxS0qjm/D1resB0oc97BiP2CtV7
+         5L0qddvW6KQv75sFZ+BgRxdGIbIxbzXdEYbq2LzclnK9/IaFAMmy7DxDQSF7X671/7rY
+         bkD7FP0bfgOroUPoYOq/1j77T4L7zB1nfp0LoeqEC23H/Bgwm1mv5IWz/rLdY3mP6+zP
+         PBmg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795078864; x=1795683664;
+        h=mime-version:content-transfer-encoding:content-type:message-id:date
+         :cc:to:from:subject:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=IaVGtrUtYv4HD8uCsAtcdorTy8sx9p1imeyyTVfExi4=;
+        b=Gm046eXyl5scF6KfIE7GovBVtSc91LMK3AUe6QFkvC3aG2y/8B8LQNpf5AykXGdlT+
+         UgjmQM19yK/5oxoOa4vioKTsEWjjQQpfkVKQ8W0iPM5QoOmSJQUgwwe+W/NxHtQJ7X/8
+         IIzFpRbH8gBS9Skh98zpIPDH2xBSDoFzkPY/f3KLPOkK5cjOWcy000I+xLbzndI7GYem
+         xhYcuEzN44NJK+ABNqmn/lw8sl3p2sQELNaanAkUbe7hLyNvd1ADw6ZPj5gkcKp30FPU
+         meShsOoqIIs++Kke5UWrogSd/963IH/+ux7Ym16CGAtYleHkQvioBWkU/icba5LkicXR
+         btRA==
+X-Forwarded-Encrypted: i=1; AL+hErFS/WRVP7q7on8mkvvSuqvUBPkzcoJHaOb2Kd9PsLojdwa8OW4XFhMm4bHxabiD+V4GrwMv+VUZFBrO@vger.kernel.org
+X-Gm-Message-State: APuU4Z/GqkYcLIc2QNQgVMP8HS5C6JOdMMoMsgFsIzcDBsjM319bkh5M
+	EW/nKdIS/bqQVfJafbErCOiQFM0Y7JubEzboXqSrvgqLqfdu/SMGTjiO7SFj/5R3FuRfxg==
+X-Gm-Gg: AZFdTZeKhDvPICDConD3RVMB8bVCShieYm3w2F7FTMQfJ6MGa5EPf+DPD4S6bR3F4Ms
+	84/2jnbhVjvLWckNkgS5/ITvLB0L0A7koTA4PY9R26tgkR3Ysh0Dkpe1pRvEnYtZegIGxDA5eG7
+	9YwzJ+As1d9o7YkuNNokwntVdOt9TPSOvrwWC8B92kNdXeiw2vbOWtN90EyJLI6NAcha0WddvfG
+	L0is8sDQvRck9bskbfo3n+62xJnKFCDEuxIm46ShO7TohdGr/4BjL3a+Yfo1KTZXncJAwqjTyG6
+	Y6bYEz1d2ntyn5l2haSGQAhO1BvjsIh8SAVrMeQG5unAytPZ/9TRoWbi99XW9c5xCHO0YM4H9G3
+	0VZxAKCGPrWMiiRX1s441zUtkCWT4iPVubyf2p/IGBB72s28QtGNS2OCYgKQMsDKzukgWJwCgV4
+	x8+KB1lC6ZYbD3eB++11JNKysSukGjgkwv25wQsRLEPrecVVEmCxmat2Y8PvGGo7v6mMen/JNts
+	5hnubJsac7jNGw5k41NHVlsUL+UZjbAgWtvoE4sqc9Ogg8ceAdH2jrASVeKvcIJpHvK0gVhAoXB
+	QIkPk7pr+w4A3odHwSXEIxhi1iyh2P9A8cbHntigQHKNH7f8jv9MEqumJKcCNHNbNj+fBqX8L4X
+	Kpd9niixHiGtl1+VvL9iJH2uItFMowcKPjcjzLervQuU8KQvcb81WQnRMCWGBT65X0A==
+X-Received: by 2002:a17:90b:39ad:b0:39e:4c81:6c5f with SMTP id 98e67ed59e1d1-3b3d0761543mr5312256a91.26.1795078863464;
+        Thu, 19 Nov 2026 01:01:03 -0800 (PST)
+Received: from ip-10-0-133-75.us-west-2.compute.internal (ec2-3-42-157-111.us-west-2.compute.amazonaws.com. [3.42.157.111])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b405ffa98esm1698021a91.17.2026.11.19.01.01.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Nov 2026 01:01:02 -0800 (PST)
+Subject: [PATCH] md: bound raid_disks by max_disks for v0.90 metadata
+From: Yang Luohan <ylh440104@gmail.com>
+To: song@kernel.org
+Cc:
+ yukuai3@huawei.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 19 Nov 2026 09:01:02 +0000
+Message-Id: <179507886219.2370.1301636898303569514@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -68,110 +97,96 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Message-ID: <4ac2cebb.48be.1a1f26ac925.Coremail.dayou5941@163.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:bigvCgD331sgkv5q2GJxAA--.369W
-X-CM-SenderInfo: 5gd103ivzuiqqrwthudrp/xtbC3QAHtWr+kiAJPwAA3-
-X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 
-CgoKCgoKCgoKCgoKCgoKCgpBdCAyMDI2LTExLTE4IDIxOjUwOjM5LCAic3l6Ym90IiA8c3l6Ym90
-K2E1M2MyOTE4MTc1YjM2Y2ZkNjAxQHN5emthbGxlci5hcHBzcG90bWFpbC5jb20+IHdyb3RlOgo+
-c3l6Ym90IGhhcyBmb3VuZCBhIHJlcHJvZHVjZXIgZm9yIHRoZSBmb2xsb3dpbmcgaXNzdWUgb246
-Cj4KPkhFQUQgY29tbWl0OiAgICAyMGVlZjI5YjdjODQgTWVyZ2UgdGFnICdhcmMtZml4ZXMtNy40
-JyBvZiBnaXQ6Ly9naXQua2VybmVsLi4KPmdpdCB0cmVlOiAgICAgICB1cHN0cmVhbQo+Y29uc29s
-ZSBvdXRwdXQ6IGh0dHBzOi8vc3l6a2FsbGVyLmFwcHNwb3QuY29tL3gvbG9nLnR4dD94PTExODZm
-ZjNkNTgwMDAwCj5rZXJuZWwgY29uZmlnOiAgaHR0cHM6Ly9zeXprYWxsZXIuYXBwc3BvdC5jb20v
-eC8uY29uZmlnP3g9MWNmMTg5Mzk0YTg1NmYxMQo+ZGFzaGJvYXJkIGxpbms6IGh0dHBzOi8vc3l6
-a2FsbGVyLmFwcHNwb3QuY29tL2J1Zz9leHRpZD1hNTNjMjkxODE3NWIzNmNmZDYwMQo+Y29tcGls
-ZXI6ICAgICAgIGdjYyAoRGViaWFuIDE0LjIuMC0xOSkgMTQuMi4wLCBHTlUgbGQgKEdOVSBCaW51
-dGlscyBmb3IgRGViaWFuKSAyLjQ0Cj5zeXogcmVwcm86ICAgICAgaHR0cHM6Ly9zeXprYWxsZXIu
-YXBwc3BvdC5jb20veC9yZXByby5zeXo/eD0xN2Y4Zjk0ZDU4MDAwMAo+QyByZXByb2R1Y2VyOiAg
-IGh0dHBzOi8vc3l6a2FsbGVyLmFwcHNwb3QuY29tL3gvcmVwcm8uYz94PTE3M2Y5NDExNTgwMDAw
-Cj4KPkRvd25sb2FkYWJsZSBhc3NldHM6Cj5kaXNrIGltYWdlIChub24tYm9vdGFibGUpOiBodHRw
-czovL3N0b3JhZ2UuZ29vZ2xlYXBpcy5jb20vc3l6Ym90LWFzc2V0cy9kOTAwZjA4M2FkYTMvbm9u
-X2Jvb3RhYmxlX2Rpc2stMjBlZWYyOWIucmF3Lnh6Cj52bWxpbnV4OiBodHRwczovL3N0b3JhZ2Uu
-Z29vZ2xlYXBpcy5jb20vc3l6Ym90LWFzc2V0cy9iYjg1MmExZGRiNzYvdm1saW51eC0yMGVlZjI5
-Yi54ego+a2VybmVsIGltYWdlOiBodHRwczovL3N0b3JhZ2UuZ29vZ2xlYXBpcy5jb20vc3l6Ym90
-LWFzc2V0cy80YzYzNmMzZjQyNDIvYnpJbWFnZS0yMGVlZjI5Yi54ego+Cj5BSS1nZW5lcmF0ZWQg
-cm9vdCBjYXVzZSBzdW1tYXJ5Ogo+SW4gdGhlIE1EIChNdWx0aXBsZSBEZXZpY2VzIC8gUkFJRCkg
-c3Vic3lzdGVtLCBtZF9zdGFydF9zeW5jIGlzIHNjaGVkdWxlZCBhcyBhCj53b3JrIGl0ZW0gb24g
-dGhlIG1kX21pc2Mgd29ya3F1ZXVlIHRvIGluaXRpYXRlIHJlc3luY2hyb25pemF0aW9uIG9yIG1h
-bmFnZSBzcGFyZQo+ZGV2aWNlcy4gRm9yIHJlYWQtb25seSBhcnJheXMgKCFtZF9pc19yZHdyKG1k
-ZGV2KSksIG1kX3N0YXJ0X3N5bmMgZXhlY3V0ZXMKPnJlbW92ZV9hbmRfYWRkX3NwYXJlcygpLCB3
-aGljaCBpbnZva2VzIHJlbW92ZV9zcGFyZXMoKS4gSG93ZXZlciwgbWRfc3RhcnRfc3luYwo+ZmFp
-bHMgdG8gdmVyaWZ5IHdoZXRoZXIgdGhlIGFycmF5J3MgcGVyc29uYWxpdHkgKG1kZGV2LT5wZXJz
-KSBpcyBzdGlsbCB2YWxpZAo+YmVmb3JlIGNhbGxpbmcgaW50byBwZXJzb25hbGl0eSBvcGVyYXRp
-b25zLCBhbmQgYXJyYXkgc3RvcC9kZXRhY2ggc2VxdWVuY2VzIGRvCj5ub3QgZW5zdXJlIHRoYXQg
-bWRkZXYtPnN5bmNfd29yayBpcyBjb21wbGV0ZWx5IGhhbHRlZCBvciBwcmV2ZW50ZWQgZnJvbSBy
-dW5uaW5nCj5hZnRlciBtZGRldi0+cGVycyBpcyBjbGVhcmVkLiBXaGVuIHJlbW92ZV9zcGFyZXMo
-KSBleGVjdXRlcyB3aXRoIG1kZGV2LT5wZXJzID09Cj5OVUxMLCBpdCBhdHRlbXB0cyB0byBpbnZv
-a2UgbWRkZXYtPnBlcnMtPmhvdF9yZW1vdmVfZGlzayAobG9jYXRlZCBhdCBvZmZzZXQKPjB4NTAp
-LCB0cmlnZ2VyaW5nIGEgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGNyYXNoLgo+Cj5mdWxsIGFu
-YWx5c2lzOiAgaHR0cHM6Ly9zeXprYWxsZXIuYXBwc3BvdC5jb20veC9haV9yb290X2NhdXNlP3g9
-YTUzYzI5MTgxNzViMzZjZmQ2MDEKPgo+SU1QT1JUQU5UOiBpZiB5b3UgZml4IHRoZSBpc3N1ZSwg
-cGxlYXNlIGFkZCB0aGUgZm9sbG93aW5nIHRhZyB0byB0aGUgY29tbWl0Ogo+UmVwb3J0ZWQtYnk6
-IHN5emJvdCthNTNjMjkxODE3NWIzNmNmZDYwMUBzeXprYWxsZXIuYXBwc3BvdG1haWwuY29tCj4K
-Pk9vcHM6IGdlbmVyYWwgcHJvdGVjdGlvbiBmYXVsdCwgcHJvYmFibHkgZm9yIG5vbi1jYW5vbmlj
-YWwgYWRkcmVzcyAweGRmZmZmYzAwMDAwMDAwMGE6IDAwMDAgWyMxXSBTTVAgS0FTQU4gTk9QVEkK
-PktBU0FOOiBudWxsLXB0ci1kZXJlZiBpbiByYW5nZSBbMHgwMDAwMDAwMDAwMDAwMDUwLTB4MDAw
-MDAwMDAwMDAwMDA1N10KPkNQVTogMiBVSUQ6IDAgUElEOiA2NiBDb21tOiBrd29ya2VyLzI6MiBO
-b3QgdGFpbnRlZCBzeXprYWxsZXIgIzAgUFJFRU1QVChmdWxsKSAKPkhhcmR3YXJlIG5hbWU6IFFF
-TVUgU3RhbmRhcmQgUEMgKFEzNSArIElDSDksIDIwMDkpLCBCSU9TIDEuMTYuMy1kZWJpYW4tMS4x
-Ni4zLTIgMDQvMDEvMjAxNAo+V29ya3F1ZXVlOiBtZF9taXNjIG1kX3N0YXJ0X3N5bmMKPlJJUDog
-MDAxMDpyZW1vdmVfc3BhcmVzKzB4MTQ3LzB4NTQwIGRyaXZlcnMvbWQvbWQuYzoxMDE4Mgo+Q29k
-ZTogNjcgNjAgZjkgNDUgODQgZmYgNzQgNTUgZTggZTYgNmMgNjAgZjkgNDggOGIgNDQgMjQgMTAg
-ODAgMzggMDAgMGYgODUgODMgMDMgMDAgMDAgNDkgOGIgNDUgMDggNDggOGQgNzggNTAgNDggODkg
-ZmEgNDggYzEgZWEgMDMgPDQyPiA4MCAzYyAyMiAwMCAwZiA4NSA3OCAwMyAwMCAwMCA0OCA4OSBk
-ZSA0YyA4OSBlZiA0OCA4YiA0MCA1MCAyZQo+UlNQOiAwMDE4OmZmZmZjOTAwMDBkNDdhMTAgRUZM
-QUdTOiAwMDAxMDIwNgo+UkFYOiAwMDAwMDAwMDAwMDAwMDAwIFJCWDogZmZmZjg4ODA1OTY0OTEw
-OCBSQ1g6IDAwMDAwMDAwMDAwMDAwMDAKPlJEWDogMDAwMDAwMDAwMDAwMDAwYSBSU0k6IGZmZmZm
-ZmZmODhhZTFiZmEgUkRJOiAwMDAwMDAwMDAwMDAwMDUwCj5SQlA6IDAwMDAwMDAwMDAwMDAwMDAg
-UjA4OiAwMDAwMDAwMDAwMDAwMDAwIFIwOTogMDAwMDAwMDAwMDAwMDAwMQo+UjEwOiBmZmZmODg4
-MDU5NjQ5MWNmIFIxMTogMDAwMDAwMDAwMDAwMDAwMCBSMTI6IGRmZmZmYzAwMDAwMDAwMDAKPlIx
-MzogZmZmZjg4ODA1OTY0ODA1OCBSMTQ6IGZmZmY4ODgwNTk2NDgwNzAgUjE1OiAwMDAwMDAwMDAw
-MDAwMDAxCj5GUzogIDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkgR1M6ZmZmZjg4ODBkNDY2OTAwMCgw
-MDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwCj5DUzogIDAwMTAgRFM6IDAwMDAgRVM6IDAwMDAg
-Q1IwOiAwMDAwMDAwMDgwMDUwMDMzCj5DUjI6IDAwMDAwMDFiMzA5MjQwMDggQ1IzOiAwMDAwMDAw
-MDUxY2EzMDAwIENSNDogMDAwMDAwMDAwMDM1MmVmMAo+Q2FsbCBUcmFjZToKPiA8VEFTSz4KPiBy
-ZW1vdmVfYW5kX2FkZF9zcGFyZXMrMHg2YzcvMHg3ZjAgZHJpdmVycy9tZC9tZC5jOjEwMjA3Cj4g
-bWRfc3RhcnRfc3luYysweDczNi8weGVhMCBkcml2ZXJzL21kL21kLmM6MTAzMjMKPiBwcm9jZXNz
-X29uZV93b3JrKzB4YWM3LzB4MWIxMCBrZXJuZWwvd29ya3F1ZXVlLmM6MzQ5NQo+IHByb2Nlc3Nf
-c2NoZWR1bGVkX3dvcmtzIGtlcm5lbC93b3JrcXVldWUuYzozNTc4IFtpbmxpbmVdCj4gd29ya2Vy
-X3RocmVhZCsweDVlZi8weGU1MCBrZXJuZWwvd29ya3F1ZXVlLmM6MzY1OQo+IGt0aHJlYWQrMHgz
-NzMvMHg0NTAga2VybmVsL2t0aHJlYWQuYzo0MzYKPiByZXRfZnJvbV9mb3JrKzB4NzMwLzB4ZDYw
-IGFyY2gveDg2L2tlcm5lbC9wcm9jZXNzLmM6MTU4Cj4gcmV0X2Zyb21fZm9ya19hc20rMHgxYS8w
-eDMwIGFyY2gveDg2L2VudHJ5L2VudHJ5XzY0LlM6MjQ1Cj4gPC9UQVNLPgo+TW9kdWxlcyBsaW5r
-ZWQgaW46Cj4tLS1bIGVuZCB0cmFjZSAwMDAwMDAwMDAwMDAwMDAwIF0tLS0KPlJJUDogMDAxMDpy
-ZW1vdmVfc3BhcmVzKzB4MTQ3LzB4NTQwIGRyaXZlcnMvbWQvbWQuYzoxMDE4Mgo+Q29kZTogNjcg
-NjAgZjkgNDUgODQgZmYgNzQgNTUgZTggZTYgNmMgNjAgZjkgNDggOGIgNDQgMjQgMTAgODAgMzgg
-MDAgMGYgODUgODMgMDMgMDAgMDAgNDkgOGIgNDUgMDggNDggOGQgNzggNTAgNDggODkgZmEgNDgg
-YzEgZWEgMDMgPDQyPiA4MCAzYyAyMiAwMCAwZiA4NSA3OCAwMyAwMCAwMCA0OCA4OSBkZSA0YyA4
-OSBlZiA0OCA4YiA0MCA1MCAyZQo+UlNQOiAwMDE4OmZmZmZjOTAwMDBkNDdhMTAgRUZMQUdTOiAw
-MDAxMDIwNgo+UkFYOiAwMDAwMDAwMDAwMDAwMDAwIFJCWDogZmZmZjg4ODA1OTY0OTEwOCBSQ1g6
-IDAwMDAwMDAwMDAwMDAwMDAKPlJEWDogMDAwMDAwMDAwMDAwMDAwYSBSU0k6IGZmZmZmZmZmODhh
-ZTFiZmEgUkRJOiAwMDAwMDAwMDAwMDAwMDUwCj5SQlA6IDAwMDAwMDAwMDAwMDAwMDAgUjA4OiAw
-MDAwMDAwMDAwMDAwMDAwIFIwOTogMDAwMDAwMDAwMDAwMDAwMQo+UjEwOiBmZmZmODg4MDU5NjQ5
-MWNmIFIxMTogMDAwMDAwMDAwMDAwMDAwMCBSMTI6IGRmZmZmYzAwMDAwMDAwMDAKPlIxMzogZmZm
-Zjg4ODA1OTY0ODA1OCBSMTQ6IGZmZmY4ODgwNTk2NDgwNzAgUjE1OiAwMDAwMDAwMDAwMDAwMDAx
-Cj5GUzogIDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkgR1M6ZmZmZjg4ODBkNDY2OTAwMCgwMDAwKSBr
-bmxHUzowMDAwMDAwMDAwMDAwMDAwCj5DUzogIDAwMTAgRFM6IDAwMDAgRVM6IDAwMDAgQ1IwOiAw
-MDAwMDAwMDgwMDUwMDMzCj5DUjI6IDAwMDAwMDFiMzA5MjQwMDggQ1IzOiAwMDAwMDAwMDUxY2Ez
-MDAwIENSNDogMDAwMDAwMDAwMDM1MmVmMAo+LS0tLS0tLS0tLS0tLS0tLQo+Q29kZSBkaXNhc3Nl
-bWJseSAoYmVzdCBndWVzcyk6Cj4gICAwOgk2NyA2MCAgICAgICAgICAgICAgICAJYWRkcjMyIChi
-YWQpCj4gICAyOglmOSAgICAgICAgICAgICAgICAgICAJc3RjCj4gICAzOgk0NSA4NCBmZiAgICAg
-ICAgICAgICAJdGVzdCAgICVyMTViLCVyMTViCj4gICA2Ogk3NCA1NSAgICAgICAgICAgICAgICAJ
-amUgICAgIDB4NWQKPiAgIDg6CWU4IGU2IDZjIDYwIGY5ICAgICAgIAljYWxsICAgMHhmOTYwNmNm
-Mwo+ICAgZDoJNDggOGIgNDQgMjQgMTAgICAgICAgCW1vdiAgICAweDEwKCVyc3ApLCVyYXgKPiAg
-MTI6CTgwIDM4IDAwICAgICAgICAgICAgIAljbXBiICAgJDB4MCwoJXJheCkKPiAgMTU6CTBmIDg1
-IDgzIDAzIDAwIDAwICAgIAlqbmUgICAgMHgzOWUKPiAgMWI6CTQ5IDhiIDQ1IDA4ICAgICAgICAg
-IAltb3YgICAgMHg4KCVyMTMpLCVyYXgKPiAgMWY6CTQ4IDhkIDc4IDUwICAgICAgICAgIAlsZWEg
-ICAgMHg1MCglcmF4KSwlcmRpCj4gIDIzOgk0OCA4OSBmYSAgICAgICAgICAgICAJbW92ICAgICVy
-ZGksJXJkeAo+ICAyNjoJNDggYzEgZWEgMDMgICAgICAgICAgCXNociAgICAkMHgzLCVyZHgKPiog
-MmE6CTQyIDgwIDNjIDIyIDAwICAgICAgIAljbXBiICAgJDB4MCwoJXJkeCwlcjEyLDEpIDwtLSB0
-cmFwcGluZyBpbnN0cnVjdGlvbgo+ICAyZjoJMGYgODUgNzggMDMgMDAgMDAgICAgCWpuZSAgICAw
-eDNhZAo+ICAzNToJNDggODkgZGUgICAgICAgICAgICAgCW1vdiAgICAlcmJ4LCVyc2kKPiAgMzg6
-CTRjIDg5IGVmICAgICAgICAgICAgIAltb3YgICAgJXIxMywlcmRpCj4gIDNiOgk0OCA4YiA0MCA1
-MCAgICAgICAgICAJbW92ICAgIDB4NTAoJXJheCksJXJheAoKPiAgM2Y6CTJlICAgICAgICAgICAg
-ICAgICAgIAljcwoKCnY1IGZpeCBpcyBoZXJlOgpodHRwczovL2xvcmUua2VybmVsLm9yZy9saW51
-eC1yYWlkLzIwMjYxMTEyMDEzNTIzLjEyMDQyOC0xLWRheW91NTk0MUAxNjMuY29tLwoKVGhhbmtz
-LApMaSBZb3Vob25n
+md: bound raid_disks by max_disks for v0.90 metadata
+
+commit 1a33a379e6 ("md: reject v0.90 arrays with too many devices")
+bounded sb->raid_disks in super_90_load(), so a crafted superblock can
+no longer describe more devices than a v0.90 superblock is able to hold.
+mddev->raid_disks however is not only loaded from the superblock.
+
+Both the raid_disks sysfs attribute and MD_SET_ARRAY_INFO write it
+directly while the array has no personality, and neither enforces any
+upper bound.  super_90_sync() then lays out the in-superblock device
+table using mddev->raid_disks and walks past the end of the 4 KiB
+superblock page.
+
+mddev->max_disks already carries the limit that the selected metadata
+format can represent, and update_raid_disks() already enforces it, but
+it is only initialized when a superblock is read from a member device.
+An array that has just been created through sysfs or
+MD_SET_ARRAY_INFO has max_disks cleared, so the check is skipped.
+
+Set max_disks when v0.90 metadata is selected in metadata_store(), and
+reject values the selected format cannot represent in
+raid_disks_store().  Both orderings are then covered: the limit is
+installed either before the value is written or together with the
+metadata choice.  Clamp super_90_sync() as well, so an array which
+already carries a larger value cannot walk past sb->disks[].
+
+v1.x metadata sets max_disks to (4096-256)/2 and is therefore not
+affected by the v0.90 limit.
+
+Fixes: 1a33a379e6 ("md: reject v0.90 arrays with too many devices")
+Signed-off-by: Yang Luohan <ylh440104@gmail.com>
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index d1465bcd8..769ed1f09 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1610,7 +1610,7 @@ static void super_90_sync(struct mddev *mddev, struct m=
+d_rdev *rdev)
+ {
+ 	mdp_super_t *sb;
+ 	struct md_rdev *rdev2;
+-	int next_spare =3D mddev->raid_disks;
++	int next_spare =3D min_t(int, mddev->raid_disks, MD_SB_DISKS);
+=20
+ 	/* make rdev->sb match mddev data..
+ 	 *
+@@ -1643,7 +1643,7 @@ static void super_90_sync(struct mddev *mddev, struct m=
+d_rdev *rdev)
+ 	sb->ctime =3D clamp_t(time64_t, mddev->ctime, 0, U32_MAX);
+ 	sb->level =3D mddev->level;
+ 	sb->size =3D mddev->dev_sectors / 2;
+-	sb->raid_disks =3D mddev->raid_disks;
++	sb->raid_disks =3D min_t(int, mddev->raid_disks, MD_SB_DISKS);
+ 	sb->md_minor =3D mddev->md_minor;
+ 	sb->not_persistent =3D 0;
+ 	sb->utime =3D clamp_t(time64_t, mddev->utime, 0, U32_MAX);
+@@ -1727,7 +1727,7 @@ static void super_90_sync(struct mddev *mddev, struct m=
+d_rdev *rdev)
+ 			d->state |=3D (1<<MD_DISK_FAILFAST);
+ 	}
+ 	/* now set the "removed" and "faulty" bits on any missing devices */
+-	for (i=3D0 ; i < mddev->raid_disks ; i++) {
++	for (i=3D0 ; i < min_t(int, mddev->raid_disks, MD_SB_DISKS) ; i++) {
+ 		mdp_disk_t *d =3D &sb->disks[i];
+ 		if (d->state =3D=3D 0 && d->number =3D=3D 0) {
+ 			d->number =3D i;
+@@ -4441,6 +4441,8 @@ raid_disks_store(struct mddev *mddev, const char *buf, =
+size_t len)
+ 		mddev->delta_disks =3D n - olddisks;
+ 		mddev->raid_disks =3D n;
+ 		mddev->reshape_backwards =3D (mddev->delta_disks < 0);
++	} else if (mddev->max_disks && n >=3D mddev->max_disks) {
++		err =3D -EINVAL;
+ 	} else
+ 		mddev->raid_disks =3D n;
+ out_unlock:
+@@ -5029,6 +5031,13 @@ metadata_store(struct mddev *mddev, const char *buf, s=
+ize_t len)
+ 	err =3D -ENOENT;
+ 	if (major >=3D ARRAY_SIZE(super_types) || super_types[major].name =3D=3D NU=
+LL)
+ 		goto out_unlock;
++	err =3D -EINVAL;
++	if (major =3D=3D 0 && mddev->raid_disks >=3D MD_SB_DISKS)
++		goto out_unlock;
++	if (major =3D=3D 0)
++		mddev->max_disks =3D MD_SB_DISKS;
++	else
++		mddev->max_disks =3D (4096 - 256) / 2;
+ 	mddev->major_version =3D major;
+ 	mddev->minor_version =3D minor;
+ 	mddev->persistent =3D 1;
