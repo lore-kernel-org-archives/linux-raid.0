@@ -1,54 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.54
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795164627;
-	b=ZzdqyEUvIVGBRguvfoVEdg0VsPvpxtryBMcv4LXQMwn48e2JYwolKAmNMsgepUBqkNpO
-	 uExES7IRAzMtRCYbcUmmD2YIP/9joZU+k8dZEcsWEcLYL4b/lIhuz4air/sP+AKlsVTM0
-	 PZ37VYTzKJv0yWvzA4DkzOBT+3smAHEEnuD/2pAJO5WH9xa/201USylNC7JeQ7MNUIXGb
-	 Fieg5OuCnQ5Yejp8YOtZp/G5Kh8h0+c6D7lMXJsmiP7AqOe6fAW/sdHkGeNjUiJtk+xSr
-	 RJV1D1/RivEMFFv74S6qE+XKN4jAq7wI1/ATH2hxk6V5yNVNvTlCOEqEP6hqomyuXkA==
+	t=1795171327;
+	b=JjwpdZxEZYV64juwfhnOL7PqtIzOz/5LZglmYdh9D/CZtu8IZiqPNnjda4aaXPUjoIhm
+	 iJAaxIhNaoYdbLxQX6tZoXvQgufeRMX9MPn1IQETnuM0fTWZ7VzBYwmFOq8uOO0W97qoi
+	 keLh+mAvzgD5KtqphoCdoLz/sFAszbjiL90C5cw7RH4aFrszYIGPbaec1McDDMycJIHtS
+	 wjnA+gvD97MEUtppF00Z9F74BtDFc0KQwD3RUIjIE/w5KgLArPYm9JIUIVo5tMjkDpJ6Q
+	 f4vSxOUzLm4cQ9WDPTwkah0D3kS3Sj0P3Iah/qba2a5LYRKiIlwuJYAeAZNt9X8wLDQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795164627;
-	h=DMARC-Filter:DKIM-Signature:Cc:Mime-Version:In-Reply-To:References:
-	 Content-Transfer-Encoding:From:Message-Id:X-Lms-Return-Path:To:
-	 Subject:Content-Type:X-Original-From:Reply-To:Date:Received:
-	 User-Agent;
-	bh=8AbiXIB/gnjp1Z+owg6HEbOnhKQ+HwREgu1dRQMA7/Y=;
-	b=aP5Vn1ZayyjPNz7+3QPl27mwPcCBbsw/SnycGRh4vKVnkp7/OqsK8JaJ5vThV6RR6wF1
-	 0xdU9zm8dkvmuZM4JxLc05WlXPbp6QZIAa0DcLqnBKyAkj2N3NLs9crNI4xgMFPg8JzQb
-	 XpCEvVgh1Dm9NH8ZJg67JEjkDrwF7K8J7lvfphdn5KSrSp3RpCC8NDWzx2dPyapQhKUqV
-	 6zok41dg6yCOOCB1SjW31uHg9aUmKnw/8ED73u9KHyU3a+U/F1udawc9/NJCUKQoYpGke
-	 msT4QDeHvN/ZQTuBkqflbwv9WH8hQgi+x6y7yqmbIegxsK++UjaDUd2Xk9KZYPgHTWw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795171327;
+	h=DMARC-Filter:DKIM-Signature:Cc:Mime-Version:Reply-To:Message-Id:
+	 X-Lms-Return-Path:From:Date:Received:User-Agent:References:
+	 In-Reply-To:To:Subject:Content-Type:Content-Transfer-Encoding:
+	 X-Original-From;
+	bh=um2hLh/hHD8l3GcR5JLblt1Cnw1tyAk72z1sNQOCRRM=;
+	b=oZua9+2img5lNOpDNsZ2xqkxLrX46rZFM753BhP26auFPRNm+aQpVaw9SJ7TOcuOsTb1
+	 UWxPYVW6i2ZlWIdzsNTdbcRSgb5BwMJK9C5n1Y4F/IBcvyHXSkTV18P73frwd2pv1ztc0
+	 Uc7uovc+lmv6YeoejLnvbtJjNPnzLc0ontUL45vJvOmaN9cZ6pLkJOK88ajHePRAes641
+	 CbY3it61Blvpc9TNk5tkmWeiKOmPzhCrpK3yixwz0h/y0efH7OZePsLgGLrWZHXx8+UqW
+	 xFFOUe26x3UMzroNu79Hn3Rxe/M+Ey+EO/LDh7dFU1ANj0CJtqKVPhsjve5a/OUmxQA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=fygo.io;
 	spf=pass smtp.mailfrom=fygo.io;
-	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=Mn8vnEZr;
-	arc=none smtp.remote-ip=209.127.231.54
-Received: from va-2-54.ptr.blmpb.com (va-2-54.ptr.blmpb.com [209.127.231.54])
+	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=YH6q1vZW;
+	arc=none smtp.remote-ip=209.127.231.43
+Received: from va-2-43.ptr.blmpb.com (va-2-43.ptr.blmpb.com [209.127.231.43])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EE42606A32A
-	for <linux-raid@vger.kernel.org>; Fri, 20 Nov 2026 08:50:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0EE42606A32A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C17E4606A320
+	for <linux-raid@vger.kernel.org>; Fri, 20 Nov 2026 10:42:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C17E4606A320
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=Mn8vnEZr
+	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=YH6q1vZW
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1795164618;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1795171319;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=8AbiXIB/gnjp1Z+owg6HEbOnhKQ+HwREgu1dRQMA7/Y=;
- b=Mn8vnEZrd5Z11JmYGcNCifiMuOF2gt+/nKZvWrl8D+ULCnqtJeH0EO1mG2msKQ9+V1IH19
- 1hH+hZb7wx947Nnss/byf+jlZz79YgPbh5iWu0g7qG+Mt+LWZ0AfVHEkiSK+rZRmn89XkA
- aX/SStbwLJCKZ69q5j7lg7jLLPLY7/SSKmY/h4ZsYLfcVRXhuuQp2Xuc30Qp8mARYqERFD
- luMWwaxva71UrFRSqFBIhueIc92C/VZwEV7WYBdEdJ9QCZZ4AVqoc7NWjdjHJ49rH2EwnK
- DP7acUFGGENrE2inTWTM3UJYd50h6kEuWR17kQ8uZxLpPFgKFEetlpPbb1cZnA==
-Cc: <dm-devel@lists.linux.dev>, <magiclinan@didiglobal.com>, 
-	<xiao@kernel.org>, <linux-raid@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>, "Li Youhong" <liyouhong@kylinos.cn>, 
-	<syzbot+a53c2918175b36cfd601@syzkaller.appspotmail.com>, 
-	<stable@vger.kernel.org>
+ bh=um2hLh/hHD8l3GcR5JLblt1Cnw1tyAk72z1sNQOCRRM=;
+ b=YH6q1vZW69WnKvnCjSNa6fEig2t9WlTdgVvEflmXW8WUAzS9txCKsEWWlNTYemezVP6pIv
+ ZByIpLEEzHxTxiP1m/6BuQBnLsQVPSt04tCuQCfKcyRidFZWIPI7+EUuT/panSv061+yc3
+ slo0tfOcFhpvzwbr1t/jWLsWka69mVeuw07TKB9TX26h+6VdFdMPvf2EpPLM21A1AVpfDJ
+ i6jsAyCAfAXq/rb0aEfuYK9YP0HK+N6s2xHZwoKKm9j/LaSBdzYyFgIar6GnQ1XYkTmzqo
+ Y1dLhY7wXE5p2zN1yvFJPOjy7w+o4VdmOnZPIDBP/DWdkplG5qbDeCzN3gRy1w==
+Cc: <linux-raid@vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -58,204 +54,178 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
-In-Reply-To: <20261112013523.120428-1-dayou5941@163.com>
-References: <20261112013523.120428-1-dayou5941@163.com>
-Content-Transfer-Encoding: quoted-printable
-From: "yu kuai" <yukuai@fygo.io>
-Message-Id: <0849198e-cbd3-42c4-bbce-4496ffbc974a@fygo.io>
-X-Lms-Return-Path: <lba+26b0009c9+1d9cb7+vger.kernel.org+yukuai@fygo.io>
-To: "Li Youhong" <dayou5941@163.com>, <song@kernel.org>, <agk@redhat.com>, 
-	<snitzer@kernel.org>, <mpatocka@redhat.com>, <bmarzins@redhat.com>, 
-	"yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH v5] md: fix sync_work vs array teardown races
-Content-Type: text/plain; charset=UTF-8
-X-Original-From: yu kuai <yukuai@fygo.io>
 Reply-To: yukuai@fygo.io
-Date: Fri, 20 Nov 2026 16:50:11 +0800
-Received: from [192.168.1.104] ([39.182.0.159]) by smtp.larksuite.com with ESMTPS; Fri, 20 Nov 2026 08:50:16 +0000
+Message-Id: <e0d5c880-ea38-4f25-8c1a-3bca0a4a5dcc@fygo.io>
+X-Lms-Return-Path: <lba+26b0023f6+a2ef9d+vger.kernel.org+yukuai@fygo.io>
+From: "yu kuai" <yukuai@fygo.io>
+Date: Fri, 20 Nov 2026 18:41:53 +0800
+Received: from [192.168.1.104] ([39.182.0.159]) by smtp.larksuite.com with ESMTPS; Fri, 20 Nov 2026 10:41:57 +0000
 User-Agent: Mozilla Thunderbird
+References: <20261112114958.2244-1-abd.masalkhi@gmail.com> <sashiko-outbox-211074@kernel.org> <m2tslm1988.fsf@gmail.com>
+In-Reply-To: <m2tslm1988.fsf@gmail.com>
+To: "Abd-Alrhman Masalkhi" <abd.masalkhi@gmail.com>, 
+	<sashiko-reviews@lists.linux.dev>, "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH] md: make mddev_get() fail until md_alloc() has finished
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Original-From: yu kuai <yukuai@fygo.io>
 
 Hi,
 
-=E5=9C=A8 2026/11/12 9:35, Li Youhong =E5=86=99=E9=81=93:
-> From: Li Youhong <liyouhong@kylinos.cn>
+=E5=9C=A8 2026/11/12 21:15, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
+> Hi Kuai,
 >
-> dm-raid tears down arrays via md_stop(), which cleared mddev->pers
-> without waiting for previously queued sync_work. That work could
-> then call remove_spares() with pers =3D=3D NULL, or keep using mddev
-> after raid_dtr() frees it.
->
-> do_md_stop()/md_stop_writes() already call stop_sync_thread() before
-> teardown. Do the same in md_stop(). Because md_start_sync() may still
-> use mddev after unlocking / clearing MD_RECOVERY_RUNNING, flush
-> sync_work whenever it is busy rather than only when work_pending().
->
-> Calling stop_sync_thread() from md_stop() can drop reconfig_mutex,
-> which introduces two follow-on issues:
->
-> - When nothing is in flight, keep reconfig_mutex if the caller held
->    it (gate the idle early-return with work_busy()). Otherwise clear
->    of an inactive array can race with do_md_run().
->
-> - While the mutex is dropped, mddev->thread may run
->    md_reap_sync_thread() and queue event_work. Flush event_work on
->    the raid_ctr() error path before raid_set_free().
->
-> Separately, the read-only path in md_check_recovery() queued
-> sync_work without honouring MD_RECOVERY_FROZEN, unlike the
-> read-write path. Check FROZEN there so freeze/stop cannot race
-> with a new queue.
->
-> Fixes: db5e653d7c9f ("md: delay choosing sync action to md_start_sync()")
-> Fixes: 81e2ce1b3d5a ("md: delay remove_and_add_spares() for read only arr=
-ay to md_start_sync()")
-> Reported-by: syzbot+a53c2918175b36cfd601@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3Da53c2918175b36cfd601
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
-> ---
-> v5:
-> - Restore idle early-return in stop_sync_thread() gated by work_busy(),
->    so locked callers keep reconfig_mutex and do not race with do_md_run()=
-.
-> - Flush event_work before raid_set_free() on the raid_ctr error path
->    (md_stop() may drop the mutex and let md_reap queue it).
-> - v4: https://lore.kernel.org/linux-raid/20261111015027.4029184-1-dayou59=
-41@163.com
->
-> v4:
-> - Always flush_work(&sync_work) in stop_sync_thread(); do not delay
->    clearing MD_RECOVERY_RUNNING (that can drop MD_RECOVERY_NEEDED via
->    md_check_recovery, and does not cover the successful sync_thread
->    registration path).
-> - v3: https://lore.kernel.org/linux-raid/20261110063045.912703-1-dayou594=
-1@163.com
->
-> v3:
-> - Honour MD_RECOVERY_FROZEN before queueing sync_work on the
->    read-only md_check_recovery() path.
-> - (superseded) delayed MD_RECOVERY_RUNNING clear on not_running.
-> - v2: https://lore.kernel.org/linux-raid/20261109023055.2164333-1-dayou59=
-41@163.com
->
-> v2:
-> - Drop the pers NULL check in md_start_sync().
-> - Call stop_sync_thread() from md_stop() before clearing pers,
->    matching do_md_stop()/md_stop_writes().
-> - v1: https://lore.kernel.org/linux-raid/20261106083543.249267-1-dayou594=
-1@163.com
->
->   drivers/md/dm-raid.c |  7 +++++++
->   drivers/md/md.c      | 41 ++++++++++++++++++++++++++++++++---------
->   2 files changed, 39 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-> index ac019a0f5a92..f82c09d858de 100644
-> --- a/drivers/md/dm-raid.c
-> +++ b/drivers/md/dm-raid.c
-> @@ -3319,6 +3319,13 @@ static int raid_ctr(struct dm_target *ti, unsigned=
- int argc, char **argv)
->   	md_stop(&rs->md);
->   	mddev_unlock(&rs->md);
->   bad:
-> +	/*
-> +	 * md_stop() may drop reconfig_mutex so mddev->thread can run
-> +	 * md_reap_sync_thread() and queue event_work; wait for it before
-> +	 * freeing raid_set. Skip if INIT_WORK has not run yet.
-> +	 */
-> +	if (rs->md.event_work.func)
-> +		flush_work(&rs->md.event_work);
->   	raid_set_free(rs);
->  =20
->   	return r;
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 680b34a63cb3..79c564320f18 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5184,7 +5184,14 @@ static void stop_sync_thread(struct mddev *mddev, =
-bool locked)
->   {
->   	int sync_seq =3D atomic_read(&mddev->sync_seq);
->  =20
-> -	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
-> +	/*
-> +	 * If nothing is in flight, keep reconfig_mutex when locked so
-> +	 * callers such as do_md_stop() cannot race with do_md_run().
-> +	 * work_busy() is required: md_start_sync() may clear RUNNING and
-> +	 * still use mddev after unlocking.
-> +	 */
-> +	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
-> +	    !work_busy(&mddev->sync_work)) {
+> On Thu, Nov 12, 2026 at 12:13 +0000, sashiko-bot@kernel.org wrote:
+>> Thank you for your contribution! Sashiko AI review found 2 potential
+>> issues to consider:
+>> - [Medium] md: premature KOBJ_ADD uevent in add_disk() while mddev_get()
+>>    fails
+>> - [Low] md: stale reconfig_mutex lock and comment in md_alloc()
+>> It also noticed 1 related pre-existing issue this patch does not
+>> introduce:
+>> - [Medium] md: kernfs_node memory leak in mddev_unlock() [1]
+>> --
+>>
+>> commit 2ddaaecbff58458e8c38353164498300daf7d131
+>> Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+>>
+>> md: make mddev_get() fail until md_alloc() has finished
+>>
+>> This commit adds an mddev->sysfs_live flag set under all_mddevs_lock aft=
+er
+>> kobject_add() succeeds in md_alloc(), and updates mddev_get() to fail un=
+til
+>> that flag is set.
+>>
+>> Link: https://sashiko.dev/#/patchset/20261029202209.1422567-1-abd.masalk=
+hi@gmail.com?part=3D4
+>>
+>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>> index 03e35386a8028..47118e9d1a656 100644
+>>> --- a/drivers/md/md.c
+>>> +++ b/drivers/md/md.c
+>>> @@ -641,7 +641,7 @@ static inline struct mddev *mddev_get(struct mddev =
+*mddev)
+>>>   {
+>>>   	lockdep_assert_held(&all_mddevs_lock);
+>>>  =20
+>>> -	if (test_bit(MD_DELETED, &mddev->flags))
+>>> +	if (test_bit(MD_DELETED, &mddev->flags) || !mddev->sysfs_live)
+>>>   		return NULL;
+>>>   	atomic_inc(&mddev->active);
+>>>   	return mddev;
+>>> @@ -6432,10 +6432,16 @@ struct mddev *md_alloc(dev_t dev, char *name)
+>>>   		return ERR_PTR(error);
+>>>   	}
+>>>  =20
+>>> -	kobject_uevent(&mddev->kobj, KOBJ_ADD);
+>>>   	mddev->sysfs_state =3D sysfs_get_dirent_safe(mddev->kobj.sd, "array_=
+state");
+>>>   	mddev->sysfs_level =3D sysfs_get_dirent_safe(mddev->kobj.sd, "level"=
+);
+>> [Severity: Medium]
+>> This problem wasn't introduced by this patch, but when
+>> legacy_async_del_gendisk is disabled, does mddev_unlock() leak
+>> mddev->sysfs_state and mddev->sysfs_level [1]?
+>>
+>> md_kobj_release() only calls sysfs_put() on mddev->sysfs_state and
+>> mddev->sysfs_level when legacy_async_del_gendisk is true, and the
+>> !legacy_async_del_gendisk teardown path in mddev_unlock() deletes
+>> mddev->kobj and mddev->gendisk without releasing those kernfs_node
+>> references:
+>>
+>> drivers/md/md.c:md_kobj_release() {
+>> 	if (legacy_async_del_gendisk) {
+>> 		if (mddev->sysfs_state)
+>> 			sysfs_put(mddev->sysfs_state);
+>> 		if (mddev->sysfs_level)
+>> 			sysfs_put(mddev->sysfs_level);
+>> 		del_gendisk(mddev->gendisk);
+>> 	}
+>> 	put_disk(mddev->gendisk);
+>> }
+>>
+>>> +
+>>> +	spin_lock(&all_mddevs_lock);
+>>> +	mddev->sysfs_live =3D true;
+>>> +	spin_unlock(&all_mddevs_lock);
+>>> +
+>>> +	kobject_uevent(&mddev->kobj, KOBJ_ADD);
+>>>   	mutex_unlock(&disks_mutex);
+>>> +
+>>>   	return mddev;
+>>>  =20
+>>>   out_put_disk:
+>> [Severity: Medium]
+>> Does making mddev_get() fail until mddev->sysfs_live is set cause a
+>> regression where udevd or concurrent openers fail with -ENODEV in md_ope=
+n()
+>> and -EBUSY on md/ sysfs attributes right after add_disk() announces the
+>> disk?
+>>
+>> kobject_uevent(&mddev->kobj, KOBJ_ADD) is dropped by dev_uevent_filter()
+>> because mddev->kobj has ktype &md_ktype rather than &device_ktype.  The
+>> KOBJ_ADD uevent that actually reaches user space is sent earlier inside
+>> add_disk() -> add_disk_final() -> disk_uevent(disk, KOBJ_ADD), right aft=
+er
+>> bdev_add() publishes the block device inode while mddev->sysfs_live is
+>> still false:
+>>
+>> CPU0                              CPU1 (udevd / opener)
+>> md_alloc()
+>>    add_disk(disk)
+>>      add_disk_final(disk)
+>>        bdev_add(...)
+>>        disk_uevent(disk, KOBJ_ADD)
+>>                                    blkdev_get_no_open()
+>>                                    md_open()
+>>                                      mddev_find()
+>>                                        mddev_get() -> NULL  <-- -ENODEV
+>>    kobject_add(&mddev->kobj, ...)
+>>    mddev->sysfs_live =3D true
+>>
+> I missed this case. Do you have a suggestion for a better fix, or should
+> I just drop this patch?
 
-I'll prefer to use mddev_get() in md_start_sync() to prevent accessing free=
-d mddev,
-this way there is no need to call mddev_unlock().
+Please drop this patch, let open disk fail is not a good idea.
 
->   		if (!locked)
->   			mddev_unlock(mddev);
->   		return;
-> @@ -5192,14 +5199,20 @@ static void stop_sync_thread(struct mddev *mddev,=
- bool locked)
->  =20
->   	mddev_unlock(mddev);
->  =20
-> -	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> +	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
-> +		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> +		/*
-> +		 * Thread might be blocked waiting for metadata update which
-> +		 * will now never happen
-> +		 */
-> +		md_wakeup_thread_directly(&mddev->sync_thread);
-> +	}
->   	/*
-> -	 * Thread might be blocked waiting for metadata update which will now
-> -	 * never happen
-> +	 * md_start_sync() may still use mddev after unlocking. Always
-> +	 * flush so teardown waits for that work to return; checking
-> +	 * work_pending() is not enough once the work is running.
->   	 */
-> -	md_wakeup_thread_directly(&mddev->sync_thread);
-> -	if (work_pending(&mddev->sync_work))
+I think you can just set a new flag to mddev if kobject_add failed, and che=
+ck
+the flag during opening, right after reconfig_mutex is grabbed.
 
-work_pending() is not correct in the first place, I think this should be a =
-separate
-patch to replace it with work_busy().
-
-> -		flush_work(&mddev->sync_work);
-> +	flush_work(&mddev->sync_work);
->  =20
->   	wait_event(resync_wait,
->   		   !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
-> @@ -7101,6 +7114,14 @@ void md_stop(struct mddev *mddev)
->   {
->   	lockdep_assert_held(&mddev->reconfig_mutex);
->  =20
-> +	/*
-> +	 * md_check_recovery() may have queued sync_work; that work accesses
-> +	 * pers. Wait for it here before __md_stop() clears pers, as
-> +	 * do_md_stop()/md_stop_writes() do.
-> +	 */
-> +	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> +	stop_sync_thread(mddev, true);
-> +
->   	/* stop the array and free an attached data structures.
->   	 * This is called from dm-raid
->   	 */
-> @@ -10494,9 +10515,11 @@ void md_check_recovery(struct mddev *mddev)
->  =20
->   			/*
->   			 * Let md_start_sync() to remove and add rdevs to the
-> -			 * array.
-> +			 * array. Honour MD_RECOVERY_FROZEN like the read-write
-> +			 * path so freeze/stop does not race with a new queue.
->   			 */
-> -			if (md_spares_need_change(mddev)) {
-> +			if (md_spares_need_change(mddev) &&
-> +			    !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
->   				set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
->   				queue_work(md_misc_wq, &mddev->sync_work);
->   			}
+>
+>> [Severity: Low]
+>> Since mddev_get() now returns NULL until mddev->sysfs_live is set after
+>> mddev_unlock(mddev), md_open() can no longer succeed while reconfig_mute=
+x
+>> is held across add_disk() and kobject_add() from commit d1472ca2ca5d ("m=
+d:
+>> don't hand out the array before md_alloc() has added mddev->kobj").
+>>
+>> drivers/md/md.c:md_alloc() {
+>> 	/*
+>> 	 * add_disk() makes the array openable before mddev->kobj exists.
+>> 	 * Hold reconfig_mutex until kobject_add() is done so that ioctls
+>> 	 * issued in between wait instead of using an uninitialised kobj.
+>> 	 */
+>> 	mddev_lock_nointr(mddev);
+>> 	error =3D add_disk(disk);
+>>      ...
+>> 	error =3D kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "md=
+");
+>> 	mddev_unlock(mddev);
+>> }
+>>
+>> Does this make the comment and reconfig_mutex critical section in
+>> md_alloc() obsolete, as well as the commit message's first paragraph
+>> claiming that ioctls such as ADD_NEW_DISK can run before kobject_add()
+>> completes?
+>>
+>> [1] https://sashiko.dev/#/bug/linux-460ea5ed-96ea-49a0-8383-cfa84f28520b
+>>
+>> --=20
+>> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112114958.2=
+244-1-abd.masalkhi@gmail.com?part=3D1
 
 --=20
 Thanks,
