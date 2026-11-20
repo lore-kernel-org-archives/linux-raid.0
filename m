@@ -1,82 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.53
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795173519;
-	b=CJ8Qo0sACjOTEGtTpKEghlO7I1GJ6axoMFC7PVN2cJIDps7eMyaVi8IrtcWgaRivQ/Ec
-	 O7B6ClBW5zHSucJ/yJ7jIgyPfWvMafNz44+0/B0+D6rg2UW6duH+5VYl3ns/adF25p/LB
-	 Gh+170Vm2O/8L85CP0GptkGpWkM+WKzjnt40FsONEkIk0gwKFGKm9LpfMeyQ6pHGwgOQG
-	 Bh4WOqwDJNDc9M5p1FYxGmueTtS3xKN0jx9vqmZBIBO6vENTlH9g91xEu0asFxcPusEwd
-	 dwAfDwES9p2wInk/0gMkJYu4PWZO4ndH2xTFbzmE3X3cNJWnlryKEWex6OwYPN/BLmA==
+	t=1795173522;
+	b=MwEMENTmDe65UeN6h2HZiB4hTbkaxXTPtMVF/Hc4TuwQUg8FX3YXzKr2jR8xMcn9fQnh
+	 fBiOFRHJLaUREaDuEsXmBCekq9y7ZcyLFeBFSLh14RafOGZ9pGc/2ZsoPCndMQeGMdWdK
+	 uwitu2CESdnLOffq/xqdboVyN/j2Iwu8p6jQW2jvyrXQiaq7uUGRw8cODdhHB9nRarsb5
+	 27peFyrKrF+2ntbm2jnFbWWhjUMXqWNoiJUiaRQDTE4QpLWmWoohcCbkUkDpG4PL2vlfm
+	 ntqEfsKgrup7AIqA8YTq6XnvHPNMJahe0GHGchou3kXhW67tdj+XRf7ybDiFkLOxKgQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795173519;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795173522;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=GVuAUaZMskqzeiLFr56cuMAxOEFeqJFepRj8B7tYuqg=;
-	b=cTdqe7zarweCxBAEHnrTX0e6htL0sTUCDEPr0RH+Sj+2bTOdgw1oqEPU0f3ReTWya6OW
-	 W/WdC2YXBuJmdjvBiWVrZmlGxA7Q8EthtpCfPeHulU/p7r+OeUVMYS555I4P5P5/cRgle
-	 s3xEc/RCTTjFeI1T0k+4Uvs9fzUxscfuJx5+5PbhjEHCpLS7ulmZAW3ops1TEWwsbQkqk
-	 qlnAYtrB/hVXbJY+rHcj+hZ9ln6Qyaw/hOtOhsZPzMmGWzfWz62zXgbJoOoBGmjJlr1nL
-	 v9Fm3GH3fBoelijPhxTrdUFfcMi+piN8EN5A+A8hmu59fM5KxDJXe82BLFXamIfCuSQ==
+	bh=k601JWrAQP7gZSxEDk6d56SMgqLV0ht9a++a4PXuy4c=;
+	b=Ea18f7r2MK8J9mVljtZxtVo3hxwCeOFAHyVawiDdFVyG94y92VEzDO4HJ3NmiPguwuhb
+	 N8+1V29k2yTOz17mIkKD7TbwFkcasOBnZLZidqr6xL+/WH7nD2KRng5eIJQzO571mGPFa
+	 zmK4Wku61SHHArcWanhp9+XQ9CJLETajRYzSBiGSo8auC9SHlOndlx2GflRjMKv7sQWbs
+	 4rA33A2+UOqrLldwnEyknElnrkGM2+sa2v8F1O4EJmW3Pnpz0ia1ub+24VvY8d3nCJn8E
+	 VVW4IjfhPXG7xVLGSNXa2bUdlTjsq9VGo7E1Da/WHO1sONqeFtS69Sp0xWwpftZFXmA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=uGOHyzOW;
-	arc=none smtp.remote-ip=209.85.218.53
-Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ahWN85vH;
+	arc=none smtp.remote-ip=209.85.128.43
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C313606A334
-	for <linux-raid@vger.kernel.org>; Fri, 20 Nov 2026 11:18:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7C313606A334
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D668C606A338
+	for <linux-raid@vger.kernel.org>; Fri, 20 Nov 2026 11:18:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D668C606A338
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=uGOHyzOW
-Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-c445c95d553so112195766b.1
-        for <linux-raid@vger.kernel.org>; Fri, 20 Nov 2026 03:18:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ahWN85vH
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a35a60499eso5859165e9.0
+        for <linux-raid@vger.kernel.org>; Fri, 20 Nov 2026 03:18:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795173517; x=1795778317; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1795173520; x=1795778320; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=GVuAUaZMskqzeiLFr56cuMAxOEFeqJFepRj8B7tYuqg=;
-        b=uGOHyzOWSEfWiJZ6I//Si1S/pmEbouLICKWn1MjChSpAZh4B8Baz/rLRknV5o+0qMO
-         w2TW4T6dlC7tzu68PhL0ENiSSI2Bb/PsKkzzOTZ71bl1ahqLORphGSduFy5sVVRGRn1o
-         Jf8kf4XRy2hLegP1DS98x0prWoQSVyoFKftinR38xifZPVaxvuWVWTDD2NSW7Pxlzbt8
-         HxuTkMNp12+GSK6uBCvu+vEsP7BzLdlOIrHGZqwIDqvG9EP3wlBKmjP9brw2u/JqEL7h
-         7SdQSkTnX11aFU3P3o7KPEcaYd3XYDwkZL5IJMUofTvcNNoMKfq6rQiBF3R7JnYsGBWz
-         g69A==
+        bh=k601JWrAQP7gZSxEDk6d56SMgqLV0ht9a++a4PXuy4c=;
+        b=ahWN85vHWoSEM4DwR9HOuN6FXWVtZUo0NPR4Avhttfx05MJ+e1d8qN4SiG5sP0qg5n
+         U0ohEYbbXXXMuP6pZI/UCRHkJApTF4Cj9SGyYXNC/nI9kgXAx7Aucqs1wQ5jVfBVoh3P
+         YqEdWI3IDAfvefQ27XsIjFRjcR8jC05OVmDoMFSNKWhy76qjq/E63ywDNA8LyUulORnp
+         flIQDzvkQgucbmmQZtBVeOToOwCj4a7K7vt50OOYkf/Oh+FaUYNQVkH6siWVcDdHaXUz
+         ACgnkiqOOkNyHWkgaLParD2vSGGxzcIsWof+jKVLRSszSSEL9S/xZ8i8LqJ/4PFSimJr
+         zr+Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795173517; x=1795778317;
+        d=1e100.net; s=20260707; t=1795173520; x=1795778320;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=GVuAUaZMskqzeiLFr56cuMAxOEFeqJFepRj8B7tYuqg=;
-        b=ndF50X/hj9ZLSdn9R3DzObhOud7dZ3U1cZOFNCpOQOB7/sVD26vt24r81KzzvFUI1Z
-         z/g47m3q9HKUfAeExCtMejSO/hEfK6h2419j8Lt4R4b4XQFuUYsY1OIWhNE1UBc1qqWz
-         ijHAiT2gi26I9PKojcxPS0cBMH4d3SCECsnEJasnJhPUTWnbtW+korXXC/GLUjjOdXC2
-         cVAmUiaXgmi7X1S7wHxgwcy+bI3WcjEgkE/UQoO6jHFhc94Q5txa/b7S/xrMo2xbAAFR
-         9noi69PrJUdlX7cWA5mkHSWw5xZzFrpXOBhzkrjnBdUPW2R9UHeHDkut3xc23u5lvLQH
-         SpDA==
-X-Gm-Message-State: APuU4Z8QSPhnS11W/Fss9blfprD6b3usonpDBvPAtv79FxypsLluYku1
-	t/uf55jnGmYJu5RyBNTvu8Ax+MMwiyVLuGht5pL8GWVcr9cO/ZO4szT0ddsqDY5jnqPKoA1z
-X-Gm-Gg: AYBFou0qb1km9VYo31CxP0F1IfbriLv62A6aW3ZrilGDlh1aJ+PQ75xdrWLMyEZG2Ar
-	k1Rwx9DLx0x0ipbiKL5v57lGzvzMvhkqOoA5/zaR7nagH6za1kq++6nMwmHP5fr6e7TeAVmlcfr
-	g30074iTAF28ENGkMws9G7H0ShZZiFRhhYp7N7zVAvyVjDa8rneyx1AXden3nAJowlaybFjac8d
-	WA8Mu+geZsE5CoeF6dA91WvPKEkXfMH3aZGAmHUkT++IPmqMwFarJN0ByLfMgj/0lc43vcSPBV+
-	aFLusl2REv9NBs/pks1w6NUjlW8BCGwgfMm2XAEgb3T8FFxWBYijheOYlf+TYMXiAdvlW0vg6J7
-	JZ+L8TLCMHQR+C8WfnZsYpGh59Jit6ILvvBgh5HakRmQHdDrflQQ2ovyhPmmQjXNcJ603+7zFGD
-	5nGpoEKfzdZRHeodzDfSMjOGRqaW0c2JG0+9o6CdCNjgTRFvO5CLLY3xYZbNgbfN199f/SwOVG5
-	aHmz5mIY9nOexHT8RdmFx7qL7FcAclZ60emAeKKFaIt20KZP72KauRZ2tWzeOeVIylcC2/93iGb
-	G7wzi/DgLBCguuzzHaykKRjErM0Oz0zdHxNs65dP++bx57DgsxNqPg==
-X-Received: by 2002:a17:907:6095:b0:c51:24eb:4de9 with SMTP id a640c23a62f3a-c513ac634admr257163466b.34.1795173516536;
-        Fri, 20 Nov 2026 03:18:36 -0800 (PST)
+        bh=k601JWrAQP7gZSxEDk6d56SMgqLV0ht9a++a4PXuy4c=;
+        b=BkpGVaYG61Ctml0NggVY5iaYmDnDFoqToHWPoFLJRJt9k9oFbYbmQy97B3DlCo4fk5
+         YS/JETlCO5LgKzeU5xJl60+PjGyQ/qAOBb/gNO+2DxeMfRda7YkWDZFZOb8DZnZtxfI3
+         U29HGLv+5ICRO6vItDT9U4OEIeffDLVS160Dp4jC96x95z1PEDtIpRmRB3a64Ea/JUnJ
+         o37Y0DREJrvVKl/S/DfMD8aTdmSpQ7WF7ePW0Gy61qdyuAhmFQfyL6PjENv4jV634puM
+         aV1P8YSCQm3TkTorhmbyYKx1KE4HfWo5+mh3gvwYxBFE4R+sqIO9hYkYTZL1JJ3q86XV
+         Ljaw==
+X-Gm-Message-State: APuU4Z8W0Pm/cD4p+an4BlQTZ4uYSRarSVew0tw+V7/0XzCd7rB5Sl1+
+	IQ4gBBdCflM0ndMMA9paCKkBsmkuzMMg/WAtXvLDpzGckzpEPF0K0vbo8M36nb4FDDlwt/CL
+X-Gm-Gg: AYBFou0Bx9jxBsAMAQ8BObgqeFspI1Y/Z0WLuZE3cXAXMFCFoHPp07PrZo3P6OY1wmZ
+	TKeADJWp3NaH/Lg7JFx9hmf7Bp04Yuz8sSpoTuGH/y6KqCt3N9wsgBSqXAkssEt7aqWPLhPleA0
+	cJYxn5/sMl7hG1PoVxVWEig3JxsZjT7iVos9tasSxuFfcTFbldn6Q+HXpKyGTVCXQXoval5ZY92
+	W8UQblSfOsQonkBAcEvKgUKzsM9kEQ0IohY7YCtV00NxRnXqKJsKSkhf7W4Us6h302q9WtBNXg9
+	tolwakm4JGshBPejOlzObUVOSOXYKReCBy+KrGMs45wMaitX5PkJ4ekwr3VNjpx8Uc9bUyAPHeE
+	YDKOaBFCXbKkrmeANZfT7lXU/yXOEhvR13rs3m3W1vZcsFjTiUPUS79I9BHAV2C2BSSMV/2bJFU
+	JDnc+9qKFJo2bLT1iYCOTQET7K5uvYyOjbiFqC1LfQoKONRYqIwtr6Zh8TjZc/gkiDwlWMzhdrA
+	+Mh+F94iYBH0eQ1cUoloDtn3Uq7U3NhqafH+vxBVaIiMKj/1pe3VsGnaTFH2Yw5ctHMj1RJzaT5
+	kpIXsQKKBm2Cu6VfCgrZErsIYM6y6hq+KHKKGI8tc/RTxrITP+bphRMQX4k3K0S7pshIEAT51A=
+	=
+X-Received: by 2002:a05:600c:820d:b0:4bb:6cef:d14b with SMTP id 5b1f17b1804b1-4bb887c34f1mr65783585e9.2.1795173519913;
+        Fri, 20 Nov 2026 03:18:39 -0800 (PST)
 Received: from DESKTOP-OL07BOP.localdomain ([87.116.183.240])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab658e2d60sm4985562f8f.3.2026.11.20.03.18.35
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab658e2d60sm4985562f8f.3.2026.11.20.03.18.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Nov 2026 03:18:36 -0800 (PST)
+        Fri, 20 Nov 2026 03:18:39 -0800 (PST)
 From: nenkov2004@gmail.com
 To: linux-raid@vger.kernel.org,
 	yukuai@fygo.io,
@@ -92,9 +93,9 @@ Cc: dm-devel@lists.linux.dev,
 	bmarzins@redhat.com,
 	syzbot+8b22a0459202f76b4096@syzkaller.appspotmail.com,
 	Hristos Nenkov <nenkov2004@gmail.com>
-Subject: [PATCH v2 1/2] dm raid: Clear MD_RECOVERY_WAIT on reshape setup failure
-Date: Fri, 20 Nov 2026 12:17:56 +0100
-Message-ID: <20261120111757.4705-2-nenkov2004@gmail.com>
+Subject: [PATCH v2 2/2] md/raid10: Preserve recovery flags on reshape abort
+Date: Fri, 20 Nov 2026 12:17:57 +0100
+Message-ID: <20261120111757.4705-3-nenkov2004@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261120111757.4705-1-nenkov2004@gmail.com>
 References: <4d13edef-f454-437b-8910-3a905697303e@fygo.io>
@@ -112,60 +113,31 @@ Content-Transfer-Encoding: 8bit
 
 From: Hristos Nenkov <nenkov2004@gmail.com>
 
-rs_start_reshape() sets MD_RECOVERY_WAIT to keep the sync thread
-from running before the table reload. If setup, check_reshape() or
-start_reshape() fails, raid_preresume() logs the error and continues
-without a reshape. There is no reshape-related table reload to wait for.
+raid10_start_reshape() can fail before it updates the recovery flags.
+Its abort path clears the entire recovery word, including the
+MD_RECOVERY_FROZEN bit that dm-raid requires until raid_resume().
 
-Clear MD_RECOVERY_WAIT on those error paths. Keep the bit set when
-reshape setup succeeds.
+Keep the recovery word intact when rolling back reshape setup. The
+preceding dm-raid change clears MD_RECOVERY_WAIT on failure in the
+caller that set it.
 
-Suggested-by: Yu Kuai <yukuai@fygo.io>
-Link: https://lore.kernel.org/r/4d13edef-f454-437b-8910-3a905697303e@fygo.io
+Fixes: bb63a7019df9 ("md/raid10: resize bitmap when required during reshape.")
+Reported-by: syzbot+8b22a0459202f76b4096@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=8b22a0459202f76b4096
 Signed-off-by: Hristos Nenkov <nenkov2004@gmail.com>
 ---
- drivers/md/dm-raid.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/md/raid10.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index ac019a0f5..e132951f3 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -4004,7 +4004,7 @@ static int rs_start_reshape(struct raid_set *rs)
- 
- 	r = rs_setup_reshape(rs);
- 	if (r)
--		return r;
-+		goto clear_recovery_wait;
- 
- 	/*
- 	 * Check any reshape constraints enforced by the personalility
-@@ -4014,7 +4014,7 @@ static int rs_start_reshape(struct raid_set *rs)
- 	r = pers->check_reshape(mddev);
- 	if (r) {
- 		rs->ti->error = "pers->check_reshape() failed";
--		return r;
-+		goto clear_recovery_wait;
- 	}
- 
- 	/*
-@@ -4025,7 +4025,7 @@ static int rs_start_reshape(struct raid_set *rs)
- 		r = pers->start_reshape(mddev);
- 		if (r) {
- 			rs->ti->error = "pers->start_reshape() failed";
--			return r;
-+			goto clear_recovery_wait;
- 		}
- 	}
- 
-@@ -4037,6 +4037,10 @@ static int rs_start_reshape(struct raid_set *rs)
- 	rs_update_sbs(rs);
- 
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 066c43154..1fd3f5f4f 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4490,7 +4490,6 @@ static int raid10_start_reshape(struct mddev *mddev)
  	return 0;
-+
-+clear_recovery_wait:
-+	clear_bit(MD_RECOVERY_WAIT, &mddev->recovery);
-+	return r;
- }
  
- static int raid_preresume(struct dm_target *ti)
+ abort:
+-	mddev->recovery = 0;
+ 	spin_lock_irq(&conf->device_lock);
+ 	conf->geo = conf->prev;
+ 	mddev->raid_disks = conf->geo.raid_disks;
