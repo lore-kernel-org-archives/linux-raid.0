@@ -1,62 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.57
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795158319;
-	b=KkSoOhfMkIc17ZKJNnOoozFBz8TqrOVn+R2LUL76rcXx3TE+e+X6yC0LQxoAzM4Z+pKd
-	 ZBfgWDwKpQyc2SltOxkFFaenj26pxdZzBTt8vxe6SvJDGfipuTEqrtpdmVkxKHq7tejY9
-	 bv5D6bnpKqufmLGABRjSGzH8sVg/S8Ab1XBlhcpa0aAozjMtshp4PC/vp6lg8h2uEPQQg
-	 Fl1iUSKndunU3ORHaM1iE/zRefq2XTpJgdX8rBrbOLP6rdtJOsr0cj6SRvHFbxmBgOzUt
-	 W2/8x83jSmykRBwSb0YI5d+Jq7qLnhfNVP+/FzhqiYK62YdWCV67fi3DCihah+VgRDA==
+	t=1795164627;
+	b=ZzdqyEUvIVGBRguvfoVEdg0VsPvpxtryBMcv4LXQMwn48e2JYwolKAmNMsgepUBqkNpO
+	 uExES7IRAzMtRCYbcUmmD2YIP/9joZU+k8dZEcsWEcLYL4b/lIhuz4air/sP+AKlsVTM0
+	 PZ37VYTzKJv0yWvzA4DkzOBT+3smAHEEnuD/2pAJO5WH9xa/201USylNC7JeQ7MNUIXGb
+	 Fieg5OuCnQ5Yejp8YOtZp/G5Kh8h0+c6D7lMXJsmiP7AqOe6fAW/sdHkGeNjUiJtk+xSr
+	 RJV1D1/RivEMFFv74S6qE+XKN4jAq7wI1/ATH2hxk6V5yNVNvTlCOEqEP6hqomyuXkA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795158319;
-	h=DMARC-Filter:DKIM-Signature:From:Reply-To:Date:Content-Type:
-	 X-Lms-Return-Path:Cc:Subject:Mime-Version:References:To:Message-Id:
-	 In-Reply-To:X-Original-From:Content-Transfer-Encoding:User-Agent:
-	 Received;
-	bh=5zP5q72DWvQvijg0sSGdzorkS5oZvfpTf7vMW3JaQss=;
-	b=B8MjTcZZ20V35Rb5XWshIiiZBYH4X9p+4UsX8RyJqIVK8Yc+vxYZd5OZpyYI9mhGL3Hq
-	 3mOHeN+GYJE8VvPwHKf9xG4GfHwZCbed8g/pymgXU/0ZvZu8YX/1Ql4zpNQVQ86hA3Xq1
-	 bNKVA6CrDcXOfah4rYsO4RHAIAEuiZMVp1CIdjoKHVhTO7clBfuIwngHTrDnL6XXXZlKA
-	 DeB9XwdjQKum1U82L0xU5K5YLn/Jvj3Jcdy45K3Yhnd+GkwkW0s8fPKLQ8UIC2CEh7mvo
-	 HErM25cr+NanOEUC0EdVwq56dlbsk7d68aB4L2kg2tJXQzn7iRu9uZ9RGEx8Fm7wrAQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795164627;
+	h=DMARC-Filter:DKIM-Signature:Cc:Mime-Version:In-Reply-To:References:
+	 Content-Transfer-Encoding:From:Message-Id:X-Lms-Return-Path:To:
+	 Subject:Content-Type:X-Original-From:Reply-To:Date:Received:
+	 User-Agent;
+	bh=8AbiXIB/gnjp1Z+owg6HEbOnhKQ+HwREgu1dRQMA7/Y=;
+	b=aP5Vn1ZayyjPNz7+3QPl27mwPcCBbsw/SnycGRh4vKVnkp7/OqsK8JaJ5vThV6RR6wF1
+	 0xdU9zm8dkvmuZM4JxLc05WlXPbp6QZIAa0DcLqnBKyAkj2N3NLs9crNI4xgMFPg8JzQb
+	 XpCEvVgh1Dm9NH8ZJg67JEjkDrwF7K8J7lvfphdn5KSrSp3RpCC8NDWzx2dPyapQhKUqV
+	 6zok41dg6yCOOCB1SjW31uHg9aUmKnw/8ED73u9KHyU3a+U/F1udawc9/NJCUKQoYpGke
+	 msT4QDeHvN/ZQTuBkqflbwv9WH8hQgi+x6y7yqmbIegxsK++UjaDUd2Xk9KZYPgHTWw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=fygo.io;
 	spf=pass smtp.mailfrom=fygo.io;
-	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=K7lMONVX;
-	arc=none smtp.remote-ip=209.127.231.57
-Received: from va-2-57.ptr.blmpb.com (va-2-57.ptr.blmpb.com [209.127.231.57])
+	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=Mn8vnEZr;
+	arc=none smtp.remote-ip=209.127.231.54
+Received: from va-2-54.ptr.blmpb.com (va-2-54.ptr.blmpb.com [209.127.231.54])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E212606A32A
-	for <linux-raid@vger.kernel.org>; Fri, 20 Nov 2026 07:05:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2E212606A32A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EE42606A32A
+	for <linux-raid@vger.kernel.org>; Fri, 20 Nov 2026 08:50:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0EE42606A32A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=K7lMONVX
+	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=Mn8vnEZr
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1795158306;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1795164618;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=5zP5q72DWvQvijg0sSGdzorkS5oZvfpTf7vMW3JaQss=;
- b=K7lMONVXRVEx2z/BY5Z6rpq2onJizjNYKRmRC37lIt53LKsSPTjSe22ZV0/oO4nZso+SuV
- mrbEniQk03HA6FImHV4eye+a79Sy/8bez6dvNPsYv/GuJQETkdPo9sisJRr2VWWyUuj9o1
- pOZGjsfFbdROBn5EugedFzH6M7xIuX7YJ2E+oofzd2UkQr73rLnY4IjgcrFmh0Fs9pCWWT
- oQXaFXKEOHxd1kBk0zmgeU7ulSmtQSLlx80Ct8UszUMOUef7FIhSpl3w4IzMB/WWEXwKQg
- hLbWewJlnVXR0qABh1lAI5YWLQ90E0p8Ac8JulQ1f96RG+iADbgW9kstuuwTCQ==
-From: "yu kuai" <yukuai@fygo.io>
-Reply-To: yukuai@fygo.io
-Date: Fri, 20 Nov 2026 15:05:00 +0800
-Content-Type: text/plain; charset=UTF-8
-X-Lms-Return-Path: <lba+26afff122+aeff87+vger.kernel.org+yukuai@fygo.io>
-Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
-	"NeilBrown" <neil@brown.name>, <dm-devel@lists.linux.dev>, 
-	<linux-kernel@vger.kernel.org>, "Alasdair Kergon" <agk@redhat.com>, 
-	"Mike Snitzer" <snitzer@kernel.org>, 
-	"Mikulas Patocka" <mpatocka@redhat.com>, 
-	"Benjamin Marzinski" <bmarzins@redhat.com>, 
-	<syzbot+8b22a0459202f76b4096@syzkaller.appspotmail.com>
-Subject: Re: [PATCH] md/raid10: preserve recovery flags on reshape abort
+ bh=8AbiXIB/gnjp1Z+owg6HEbOnhKQ+HwREgu1dRQMA7/Y=;
+ b=Mn8vnEZrd5Z11JmYGcNCifiMuOF2gt+/nKZvWrl8D+ULCnqtJeH0EO1mG2msKQ9+V1IH19
+ 1hH+hZb7wx947Nnss/byf+jlZz79YgPbh5iWu0g7qG+Mt+LWZ0AfVHEkiSK+rZRmn89XkA
+ aX/SStbwLJCKZ69q5j7lg7jLLPLY7/SSKmY/h4ZsYLfcVRXhuuQp2Xuc30Qp8mARYqERFD
+ luMWwaxva71UrFRSqFBIhueIc92C/VZwEV7WYBdEdJ9QCZZ4AVqoc7NWjdjHJ49rH2EwnK
+ DP7acUFGGENrE2inTWTM3UJYd50h6kEuWR17kQ8uZxLpPFgKFEetlpPbb1cZnA==
+Cc: <dm-devel@lists.linux.dev>, <magiclinan@didiglobal.com>, 
+	<xiao@kernel.org>, <linux-raid@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, "Li Youhong" <liyouhong@kylinos.cn>, 
+	<syzbot+a53c2918175b36cfd601@syzkaller.appspotmail.com>, 
+	<stable@vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -66,67 +58,204 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
-References: <6aec6738.059f5055.2712e4.0005.GAE@google.com> <20261110054456.625-1-nenkov2004@gmail.com>
-To: "Hristos Nenkov" <nenkov2004@gmail.com>, "Song Liu" <song@kernel.org>, 
-	<linux-raid@vger.kernel.org>, "yu kuai" <yukuai@fygo.io>
-Message-Id: <4d13edef-f454-437b-8910-3a905697303e@fygo.io>
-In-Reply-To: <20261110054456.625-1-nenkov2004@gmail.com>
-X-Original-From: yu kuai <yukuai@fygo.io>
+In-Reply-To: <20261112013523.120428-1-dayou5941@163.com>
+References: <20261112013523.120428-1-dayou5941@163.com>
 Content-Transfer-Encoding: quoted-printable
+From: "yu kuai" <yukuai@fygo.io>
+Message-Id: <0849198e-cbd3-42c4-bbce-4496ffbc974a@fygo.io>
+X-Lms-Return-Path: <lba+26b0009c9+1d9cb7+vger.kernel.org+yukuai@fygo.io>
+To: "Li Youhong" <dayou5941@163.com>, <song@kernel.org>, <agk@redhat.com>, 
+	<snitzer@kernel.org>, <mpatocka@redhat.com>, <bmarzins@redhat.com>, 
+	"yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH v5] md: fix sync_work vs array teardown races
+Content-Type: text/plain; charset=UTF-8
+X-Original-From: yu kuai <yukuai@fygo.io>
+Reply-To: yukuai@fygo.io
+Date: Fri, 20 Nov 2026 16:50:11 +0800
+Received: from [192.168.1.104] ([39.182.0.159]) by smtp.larksuite.com with ESMTPS; Fri, 20 Nov 2026 08:50:16 +0000
 User-Agent: Mozilla Thunderbird
-Received: from [192.168.1.104] ([39.182.0.159]) by smtp.larksuite.com with ESMTPS; Fri, 20 Nov 2026 07:05:05 +0000
 
 Hi,
 
-=E5=9C=A8 2026/11/10 13:44, Hristos Nenkov =E5=86=99=E9=81=93:
-> raid10_start_reshape() can fail while resizing a bitmap before it
-> changes any recovery bits on its success path. Its abort path nevertheles=
-s
-> clears the entire mddev->recovery bitmap.
+=E5=9C=A8 2026/11/12 9:35, Li Youhong =E5=86=99=E9=81=93:
+> From: Li Youhong <liyouhong@kylinos.cn>
 >
-> dm-raid keeps MD_RECOVERY_FROZEN set across suspend and resume. If RAID10
-> reshape setup fails, raid_preresume() logs the failure and continues with
-> resume. Clearing the bitmap removes MD_RECOVERY_FROZEN and makes
-> raid_resume() hit its invariant warning.
+> dm-raid tears down arrays via md_stop(), which cleared mddev->pers
+> without waiting for previously queued sync_work. That work could
+> then call remove_spares() with pers =3D=3D NULL, or keep using mddev
+> after raid_dtr() frees it.
 >
-> Do not clear mddev->recovery from the RAID10 abort path. The error paths
-> reach abort before raid10_start_reshape() modifies the recovery bits, so
-> there is no personality-owned recovery state to roll back there.
+> do_md_stop()/md_stop_writes() already call stop_sync_thread() before
+> teardown. Do the same in md_stop(). Because md_start_sync() may still
+> use mddev after unlocking / clearing MD_RECOVERY_RUNNING, flush
+> sync_work whenever it is busy rather than only when work_pending().
 >
-> Fixes: bb63a7019df9 ("md/raid10: resize bitmap when required during resha=
-pe.")
-> Reported-by: syzbot+8b22a0459202f76b4096@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3D8b22a0459202f76b4096
-> Signed-off-by: Hristos Nenkov <nenkov2004@gmail.com>
+> Calling stop_sync_thread() from md_stop() can drop reconfig_mutex,
+> which introduces two follow-on issues:
+>
+> - When nothing is in flight, keep reconfig_mutex if the caller held
+>    it (gate the idle early-return with work_busy()). Otherwise clear
+>    of an inactive array can race with do_md_run().
+>
+> - While the mutex is dropped, mddev->thread may run
+>    md_reap_sync_thread() and queue event_work. Flush event_work on
+>    the raid_ctr() error path before raid_set_free().
+>
+> Separately, the read-only path in md_check_recovery() queued
+> sync_work without honouring MD_RECOVERY_FROZEN, unlike the
+> read-write path. Check FROZEN there so freeze/stop cannot race
+> with a new queue.
+>
+> Fixes: db5e653d7c9f ("md: delay choosing sync action to md_start_sync()")
+> Fixes: 81e2ce1b3d5a ("md: delay remove_and_add_spares() for read only arr=
+ay to md_start_sync()")
+> Reported-by: syzbot+a53c2918175b36cfd601@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=3Da53c2918175b36cfd601
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Li Youhong <liyouhong@kylinos.cn>
 > ---
->   drivers/md/raid10.c | 1 -
->   1 file changed, 1 deletion(-)
+> v5:
+> - Restore idle early-return in stop_sync_thread() gated by work_busy(),
+>    so locked callers keep reconfig_mutex and do not race with do_md_run()=
+.
+> - Flush event_work before raid_set_free() on the raid_ctr error path
+>    (md_stop() may drop the mutex and let md_reap queue it).
+> - v4: https://lore.kernel.org/linux-raid/20261111015027.4029184-1-dayou59=
+41@163.com
 >
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 066c43154..1fd3f5f4f 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -4490,7 +4490,6 @@ static int raid10_start_reshape(struct mddev *mddev=
-)
->   	return 0;
+> v4:
+> - Always flush_work(&sync_work) in stop_sync_thread(); do not delay
+>    clearing MD_RECOVERY_RUNNING (that can drop MD_RECOVERY_NEEDED via
+>    md_check_recovery, and does not cover the successful sync_thread
+>    registration path).
+> - v3: https://lore.kernel.org/linux-raid/20261110063045.912703-1-dayou594=
+1@163.com
+>
+> v3:
+> - Honour MD_RECOVERY_FROZEN before queueing sync_work on the
+>    read-only md_check_recovery() path.
+> - (superseded) delayed MD_RECOVERY_RUNNING clear on not_running.
+> - v2: https://lore.kernel.org/linux-raid/20261109023055.2164333-1-dayou59=
+41@163.com
+>
+> v2:
+> - Drop the pers NULL check in md_start_sync().
+> - Call stop_sync_thread() from md_stop() before clearing pers,
+>    matching do_md_stop()/md_stop_writes().
+> - v1: https://lore.kernel.org/linux-raid/20261106083543.249267-1-dayou594=
+1@163.com
+>
+>   drivers/md/dm-raid.c |  7 +++++++
+>   drivers/md/md.c      | 41 ++++++++++++++++++++++++++++++++---------
+>   2 files changed, 39 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+> index ac019a0f5a92..f82c09d858de 100644
+> --- a/drivers/md/dm-raid.c
+> +++ b/drivers/md/dm-raid.c
+> @@ -3319,6 +3319,13 @@ static int raid_ctr(struct dm_target *ti, unsigned=
+ int argc, char **argv)
+>   	md_stop(&rs->md);
+>   	mddev_unlock(&rs->md);
+>   bad:
+> +	/*
+> +	 * md_stop() may drop reconfig_mutex so mddev->thread can run
+> +	 * md_reap_sync_thread() and queue event_work; wait for it before
+> +	 * freeing raid_set. Skip if INIT_WORK has not run yet.
+> +	 */
+> +	if (rs->md.event_work.func)
+> +		flush_work(&rs->md.event_work);
+>   	raid_set_free(rs);
 >  =20
->   abort:
-> -	mddev->recovery =3D 0;
+>   	return r;
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 680b34a63cb3..79c564320f18 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -5184,7 +5184,14 @@ static void stop_sync_thread(struct mddev *mddev, =
+bool locked)
+>   {
+>   	int sync_seq =3D atomic_read(&mddev->sync_seq);
+>  =20
+> -	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+> +	/*
+> +	 * If nothing is in flight, keep reconfig_mutex when locked so
+> +	 * callers such as do_md_stop() cannot race with do_md_run().
+> +	 * work_busy() is required: md_start_sync() may clear RUNNING and
+> +	 * still use mddev after unlocking.
+> +	 */
+> +	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
+> +	    !work_busy(&mddev->sync_work)) {
 
-This is not quite related to this patch, but take a look at rs_start_reshap=
-e(),
-MD_RECOVERY_WAIT is set before calling pers->start_reshape(), and it's neve=
-r
-cleared from error path.
+I'll prefer to use mddev_get() in md_start_sync() to prevent accessing free=
+d mddev,
+this way there is no need to call mddev_unlock().
 
-This should probably be fixed first, and then it's safe to remove the above=
- line.
+>   		if (!locked)
+>   			mddev_unlock(mddev);
+>   		return;
+> @@ -5192,14 +5199,20 @@ static void stop_sync_thread(struct mddev *mddev,=
+ bool locked)
+>  =20
+>   	mddev_unlock(mddev);
+>  =20
+> -	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> +	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
+> +		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> +		/*
+> +		 * Thread might be blocked waiting for metadata update which
+> +		 * will now never happen
+> +		 */
+> +		md_wakeup_thread_directly(&mddev->sync_thread);
+> +	}
+>   	/*
+> -	 * Thread might be blocked waiting for metadata update which will now
+> -	 * never happen
+> +	 * md_start_sync() may still use mddev after unlocking. Always
+> +	 * flush so teardown waits for that work to return; checking
+> +	 * work_pending() is not enough once the work is running.
+>   	 */
+> -	md_wakeup_thread_directly(&mddev->sync_thread);
+> -	if (work_pending(&mddev->sync_work))
 
->   	spin_lock_irq(&conf->device_lock);
->   	conf->geo =3D conf->prev;
->   	mddev->raid_disks =3D conf->geo.raid_disks;
->
-> base-commit: b3dfbde62cf1981c4638939c159dfd087b7a72e9
+work_pending() is not correct in the first place, I think this should be a =
+separate
+patch to replace it with work_busy().
+
+> -		flush_work(&mddev->sync_work);
+> +	flush_work(&mddev->sync_work);
+>  =20
+>   	wait_event(resync_wait,
+>   		   !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
+> @@ -7101,6 +7114,14 @@ void md_stop(struct mddev *mddev)
+>   {
+>   	lockdep_assert_held(&mddev->reconfig_mutex);
+>  =20
+> +	/*
+> +	 * md_check_recovery() may have queued sync_work; that work accesses
+> +	 * pers. Wait for it here before __md_stop() clears pers, as
+> +	 * do_md_stop()/md_stop_writes() do.
+> +	 */
+> +	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+> +	stop_sync_thread(mddev, true);
+> +
+>   	/* stop the array and free an attached data structures.
+>   	 * This is called from dm-raid
+>   	 */
+> @@ -10494,9 +10515,11 @@ void md_check_recovery(struct mddev *mddev)
+>  =20
+>   			/*
+>   			 * Let md_start_sync() to remove and add rdevs to the
+> -			 * array.
+> +			 * array. Honour MD_RECOVERY_FROZEN like the read-write
+> +			 * path so freeze/stop does not race with a new queue.
+>   			 */
+> -			if (md_spares_need_change(mddev)) {
+> +			if (md_spares_need_change(mddev) &&
+> +			    !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
+>   				set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+>   				queue_work(md_misc_wq, &mddev->sync_work);
+>   			}
 
 --=20
 Thanks,
