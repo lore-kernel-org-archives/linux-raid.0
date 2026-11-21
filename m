@@ -1,65 +1,62 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.55
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.41
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795233677;
-	b=XcPH6Qsyyb+L5mfWdgD5yJWUyU+eVNB+W1hX0BgTfZvyuyzjEMoCCnzeEtqhZT9jr7RO
-	 xY5x7wU5zH/zaMV+fYa2ruaF25VT8WRfxDat33/ZMvg8tgwaDwBBNVLmINB4QSsbXxODF
-	 2B+l1rbIotC/e2S2tNXWOdZ8VIYPMNyUXff7VizpvuqEGMZnaunAvILCzKhR778VZ9+8P
-	 PxF4SPL8scNj6IIvrBJ4u0zQILv5mYt4BgjwXbzxooOlovdPGDBYErJGoUjX4v9gBLwgo
-	 PhGfsQyBqxA8+LrjbMFFNOPCPnl882p05Xr4ovax9dC8k3mhBFIVNOEpgzqSKXNhaaQ==
+	t=1795258695;
+	b=PagDzGewU7Y2EU50N06SLRKwMH18970QIwSlau+N49Wpfa5X6vAgme2KEZXxfK8aRn9p
+	 6PuPrYPcDoL8Q1/4fluXvSguRcu+Tnq26UgN9keWS+k0NShmSv6O6HhQlUeSPjp0rmaEl
+	 A/HM6XYJ6idfck3ALuf/SPz9Ckiwtvw1kNym7HReMHrcK7CZHG4zJPez3aFR1bd3x02Xy
+	 ts3eXwm3A8FV81DUH9XJ/0r/oRo88S+asn8Q1Nfw8D2WD15x6SbM0fZG32PDdJTxvXMkN
+	 vfcJCEcgNlQJ7o1/8azvmbyRarx98zSy/nSFJTvWN4A/Wtc1Xw6xLqelJJ3tm+v1Z3w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795233677;
-	h=DMARC-Filter:DKIM-Signature:To:Cc:Message-Id:X-Lms-Return-Path:Date:
-	 X-Original-From:Content-Type:From:Subject:Received:User-Agent:
-	 Content-Transfer-Encoding:Reply-To:Mime-Version:In-Reply-To:
-	 References;
-	bh=UrcsvVeftCe2h0jVeUHs33Nz3YoSo2TG8AcMNWNV8dk=;
-	b=Q180WY4DKWuX2WjE/vdfAhYUcstmLK20h9HyqQl/zMRq2aBbOjQWAJCWuKhmDG3I6StB
-	 FqQy7w077MDynePqWBdYDrwsMqj5OaXsbRNuJ+zyNSrQghF3WcTGlo/U802xwCAly9JgW
-	 LosXyHOu6C/yeGY8r8DoFr5Og7purOGsiIvUvZTxjf601oDH42OZCEpETdNZLNzhMcGqk
-	 v4dPsQzjD6thHatZflhixosNBSWHc9SB0P06Mj1+f7/nl2R53/s6pmotAyQHk8wBNFS+j
-	 aDwgecB4TWT+IYrwbWXETr1P8a1dF1beCGaNy0JSQAtGCaWjiWT8g7k0oTIh9O0PAvg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795258695;
+	h=DMARC-Filter:DKIM-Signature:Date:X-Original-From:In-Reply-To:
+	 Content-Transfer-Encoding:User-Agent:Reply-To:To:From:Subject:
+	 Message-Id:Mime-Version:References:Content-Type:Received:
+	 X-Lms-Return-Path;
+	bh=V3bNUNiT/0ywDdd6Xcd8mmP1/n5MrmRMqYlXo9hj8KQ=;
+	b=QY21PmhVO2Sf1vECw/y6AXHl4kjDgesLHnQ0DFxzIrCEJH7J6e0mjDd3sve3pShKEiCC
+	 5Dty1uycnCZIiMUtoL19VoKkyt77howU9obvxoMOnby0ReWbLERtMoM6tw1dXhbOh+4Ql
+	 3RyyCow3rjPZBdrwx+1XIBIUE5aEUZbVgAUvmLSCwqhGShK9Kp30I8XKyX62DrzZXWfwK
+	 tN4lzqxFCwcCCrSYQAHvk3QCVWmZAxrW3VSF+bpTxCY2NI+nZSk4q3Ad6thAoJ8sWFMxx
+	 u6nh98yurXe7gUW/A5PEw9y+KeI8TsVbIO3iWF/GDUfbLIKR2X7oZtz2Pv8zD9FVGeQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=fygo.io;
 	spf=pass smtp.mailfrom=fygo.io;
-	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=Fy6iWUnI;
-	arc=none smtp.remote-ip=209.127.231.55
-Received: from va-2-55.ptr.blmpb.com (va-2-55.ptr.blmpb.com [209.127.231.55])
+	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=nHln9N2c;
+	arc=none smtp.remote-ip=209.127.231.41
+Received: from va-2-41.ptr.blmpb.com (va-2-41.ptr.blmpb.com [209.127.231.41])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 618B0606A6A9
-	for <linux-raid@vger.kernel.org>; Sat, 21 Nov 2026 04:01:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 618B0606A6A9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92F7E606A320
+	for <linux-raid@vger.kernel.org>; Sat, 21 Nov 2026 10:58:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 92F7E606A320
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=Fy6iWUnI
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=nHln9N2c
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1795233664;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1795258687;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=UrcsvVeftCe2h0jVeUHs33Nz3YoSo2TG8AcMNWNV8dk=;
- b=Fy6iWUnIEumqBg3C1pK0gOl0/VxPPt7Si4Pp8cTmqTtmaXJj2nm2zZgZnMl5MOjVjJKiGH
- 6TVH5k6Mjhb9G4v1LVvf57de95Hr43mzTAkB0pw3mJ4pzdEFScgqY3+WJ+IQZxv6wOLhu2
- d1d5/ppeJiYAuKApahWwa7xVMFEKvQr+42zJPYZqtaSHXHgTZIEdHxoNK4yrj5179Wvwkj
- XaI3b1lKbrVsLAOj1ABx/HhdmtM8IyyzcG4T4g2SGjZojhFV2mMk9IDPanDs+9rONhPbjP
- N03+bBlIerjlrF6PF8GqqDB3rsWFNFinW+inck/L8au2LbJAB3vi6FBwe3NLlw==
-To: "Miroslav Cimerman" <mc@raidlab.org>, "Song Liu" <song@kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <xiao@kernel.org>, 
-	"NeilBrown" <neil@brown.name>, "Namhyung Kim" <namhyung@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Message-Id: <6d3ad75f-71a8-4ea8-bbab-3aec886249f1@fygo.io>
-X-Lms-Return-Path: <lba+26b01177f+0fe80b+vger.kernel.org+yukuai@fygo.io>
-Date: Sat, 21 Nov 2026 12:00:58 +0800
+ bh=V3bNUNiT/0ywDdd6Xcd8mmP1/n5MrmRMqYlXo9hj8KQ=;
+ b=nHln9N2cAzfwDu3cnQey9Y7CZtTETZg9uZsYpo0pHpDjVsC5t5/lZhp0THoklE49wAkZ5G
+ 1BV2ack+8Ch9njWF1qTdyGLHj276TNEU5ynKq50ITwBCjPFhK5imi6uPwgcEOWF8ybWfdS
+ Oxdjqczz5t6Xl5TivFRKsZi59ou+nJ+EY+tMcnjUP/dBU29PFc74H5v8RdA+QE8QNupY9E
+ errtTK05M2Ow4rtefrpO101fsXwWphDdeX4HVnuC+HvnZqH/4SQhqkKT6stXuDtTrzidYu
+ GkP62Zd8ojuLgmdH4yxoYAgGbH7Shlepst5qaQEUjZh/oXA7+7uCD/O0ZBiLeA==
+Date: Sat, 21 Nov 2026 18:58:01 +0800
 X-Original-From: yu kuai <yukuai@fygo.io>
-Content-Type: text/plain; charset=UTF-8
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH] md/raid5: fix wrong read data on RAID-4/5 with two failed devices
-Received: from [192.168.1.104] ([39.182.0.159]) by smtp.larksuite.com with ESMTPS; Sat, 21 Nov 2026 04:01:02 +0000
-User-Agent: Mozilla Thunderbird
+In-Reply-To: <CAMnMt5Z+BwOaPWQGTTUeSr8uaT=dysMi42xRpFpUruRRcO7=wA@mail.gmail.com>
 Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
 Reply-To: yukuai@fygo.io
+To: "Herman Semenoff" <germanaizek0@gmail.com>, <song@kernel.org>, 
+	<magiclinan@didiglobal.com>, <xiao@kernel.org>, 
+	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	"yu kuai" <yukuai@fygo.io>
+From: "yu kuai" <yukuai@fygo.io>
+Subject: Re: [PATCH] md/raid0: optimize stripe mapping with bitwise shifts for power-of-2 devices
+Message-Id: <f1aa2a91-0859-44d7-9cc1-b64ed4def889@fygo.io>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -69,102 +66,161 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
-In-Reply-To: <20261115123817.48388-1-mc@raidlab.org>
-References: <20261115123817.48388-1-mc@raidlab.org>
+References: <CAMnMt5Z+BwOaPWQGTTUeSr8uaT=dysMi42xRpFpUruRRcO7=wA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Received: from [192.168.1.104] ([39.182.0.159]) by smtp.larksuite.com with ESMTPS; Sat, 21 Nov 2026 10:58:05 +0000
+X-Lms-Return-Path: <lba+26b01793e+928ddc+vger.kernel.org+yukuai@fygo.io>
 
-=E5=9C=A8 2026/11/15 20:38, Miroslav Cimerman =E5=86=99=E9=81=93:
+Hi,
 
-> On RAID-4/5, a read of a block on a working member can return wrong
-> data, without reading the member, when the stripe has two failed
-> devices: the array has failed (MD_BROKEN only stops writes), or it is
-> degraded and another member has a bad block in the stripe, for
-> example after a write to it failed.
+=E5=9C=A8 2026/11/17 13:15, Herman Semenoff =E5=86=99=E9=81=93:
+>  From 086678202572260393864f72c06f4d67032a4b76 Mon Sep 17 00:00:00 2001
+> From: Herman Semenoff <GermanAizek@yandex.ru>
+> Date: Sun, 8 Nov 2026 22:43:29 +0300
+> Subject: [PATCH] md/raid0: optimize stripe mapping with bitwise shifts
+> for power-of-2 devices
 >
-> fetch_block() computes two missing blocks at once when all but two
-> blocks of the stripe are up to date and two devices have failed. That
-> needs P and Q, but nothing limits the branch to RAID-6. On RAID-4/5,
-> ops_run_compute5() computes sh->ops.target as the XOR of all the other
-> blocks, including the second target, which was never read, and
-> ops_complete_compute() marks both targets up to date. The read returns
-> the XOR of the cached blocks and the unread page, and a later read of
-> the second target returns that page instead of an error. The page is
-> not cleared, so it can hold data of another block.
+> In drivers/md/raid0.c, map_sector() performs two 64-bit integer divisions
+> (sector_div) on every submitted bio:
+>    1. sector_div(chunk, zone->nb_dev << chunksect_bits) to compute the ch=
+unk
+>       offset within the member device.
+>    2. sector_div(sector, zone->nb_dev) to select the target member disk.
 >
-> Commit 93b3dbce6456 ("md/raid5: unite fetch_block5 and fetch_block6")
-> brought the branch to RAID-4/5. fetch_block5() computed only one block.
+> For ultra-low latency solid-state storage devices, such as Intel Optane
+> (3D XPoint NVMe SSDs) capable of sub-10us latencies and multi-million IOP=
+S,
+> these un-pipelined 64-bit division instructions create unnecessary CPU
+> pipeline stalls and latency overhead in the I/O submission hot path.
 >
-> Take the branch on RAID-6 only, with the sh->qd_idx >=3D 0 test that the
-> branch above already uses. On RAID-4/5 the block is then read from its
-> member, and reads of failed members are failed by
-> handle_failed_stripe() as before.
+> When the number of member devices in a strip zone is a power of two
+> (e.g., 2, 4, 8, 16 disks, which is the predominant configuration for
+> NVMe arrays), both divisions can be replaced with bitwise shifts and
+> masks:
+>    - chunk >>=3D (zone->nb_dev_shift + chunksect_bits)
+>    - disk_idx =3D sector & (zone->nb_dev - 1)
+>    - *sector_offset =3D (chunk << chunksect_bits) + sect_in_chunk
 >
-> For example, take a degraded 4-device RAID-5 (left-symmetric, 4 KiB
-> chunks, device 1 missing) where block v holds the byte 0x10 + v. A
-> write to block 3, on device 3, does a read-modify-write. Its write to
-> device 3 fails: md records a bad block, keeps the device and fails the
-> write. A read of block 4, on device 0, then returns 0x14 ^ 0x15 ^ the
-> unread page (0x01 if it is zero) instead of 0x14, and a read of block
-> 5 returns the unread page instead of EIO.
+> Store nb_dev_shift (ilog2(zone->nb_dev)) in struct strip_zone during zone
+> initialization when is_power_of_2(zone->nb_dev) is true, or -1 otherwise.
+> If nb_dev_shift is non-negative and chunk_sects is a power of two, fast
+> bitwise math is used with zero divisions. Arrays with non-power-of-2 disk
+> counts fall back to the existing sector_div() path without any behavior
+> or compatibility change.
 >
-> Found with FuzzyRAID, a fault-injection tester for RAID.
+> In addition, annotate the bio split check in raid0_make_request() with
+> unlikely(), as standard MD devices already enforce chunk_sectors limits
+> via bio_split_to_limits() in md_submit_bio().
 >
-> Fixes: 93b3dbce6456 ("md/raid5: unite fetch_block5 and fetch_block6")
-> Cc:stable@vger.kernel.org
-> Signed-off-by: Miroslav Cimerman<mc@raidlab.org>
+> Tested on an 8-disk Intel Optane Memory M10 (MEMPEK1J016GAD) RAID0 array:
+>    - Random 4K read QD1 latency:  avg lat 22.06 us -> 21.10 us (-4.4%)
+>    - Random 4K read QD1 IOPS:     42.6k IOPS       -> 44.6k IOPS (+4.7%)
+>    - Random 4K read QD32x8 IOPS:  1.11M IOPS       -> 1.72M IOPS (+54.5%)
+>    - Non-power-of-2 disk arrays:  unaffected, identical fallback path
+>
+> Signed-off-by: Herman Semenoff <GermanAizek@yandex.ru>
+> Signed-off-by: Herman Semenoff <GermanAizek@aizekgroup.ru>
 > ---
-> FuzzyRAID is not public yet. The analysis, the fix, the commit message
-> and the reproducer were written with the help of an LLM. I reviewed
-> everything and ran the reproducer on md-7.4 with and without this
-> patch.
+>   drivers/md/raid0.c | 26 +++++++++++++++++++-------
+>   drivers/md/raid0.h |  1 +
+>   2 files changed, 20 insertions(+), 7 deletions(-)
+
+This patch is unacceptable, you need to regenerate it with correct format.
+
 >
-> Reproducer (needs only standard tools):
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index 35e103f0c2c3..993df48eaa4c 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -207,6 +207,8 @@ static int create_strip_zones(struct mddev *mddev,
+> struct r0conf **private_conf)
+>    }
+>    zone->nb_dev =3D cnt;
+>    zone->zone_end =3D smallest->sectors * cnt;
+> + zone->nb_dev_shift =3D is_power_of_2(zone->nb_dev) ?
+> +     ilog2(zone->nb_dev) : -1;
 >
-> #!/bin/bash
-> # md RAID 5 with two failed devices for a stripe: a read of a block on a
-> # working member returns wrong data, without reading the member, when exa=
-ctly
-> # disks-2 blocks of the stripe are cached.
-> # Needs root, mdadm, losetup and GNU coreutils; uses /dev/md99 and 3 loop=
- devices.
-> set -e
-> D=3D$(mktemp -d)
-> for i in 0 2 3; do
->          truncate -s 64M $D/m$i
->          L[i]=3D$(losetup -f --show $D/m$i)
-> done
-> blk() { head -c 4096 /dev/zero | tr '\0' "\\$(printf %o $1)"; }
-> for v in $(seq 0 11); do blk $((0x10 + v)); done > $D/pattern   # block v=
- =3D 0x10+v
-> blk 0xaa > $D/aa
+>    curr_zone_end =3D zone->zone_end;
 >
-> # degraded 4-device RAID 5, 4 KiB chunks;
-> # stripe 1: block 3 on m3, block 4 on m0, block 5 on m1 (missing), P on m=
-2
-> mdadm -C /dev/md99 -R -l5 -n4 -c4 --assume-clean --bitmap=3Dnone \
->          ${L[0]} missing ${L[2]} ${L[3]}
-> dd if=3D$D/pattern of=3D/dev/md99 bs=3D48k oflag=3Ddirect status=3Dnone
-> mdadm -S /dev/md99                              # empty the stripe cache
-> mdadm -A -R /dev/md99 ${L[0]} ${L[2]} ${L[3]}
+> @@ -246,6 +248,8 @@ static int create_strip_zones(struct mddev *mddev,
+> struct r0conf **private_conf)
+>    }
 >
-> # read-modify-write of block 3: caches block 3 and P only
-> dd if=3D$D/aa of=3D/dev/md99 bs=3D4k seek=3D3 oflag=3Ddirect status=3Dnon=
-e
-> # second failure; md fails m3 and returns EBUSY, the array has failed
-> echo faulty >/sys/block/md99/md/dev-${L[3]#/dev/}/state 2>/dev/null || tr=
-ue
+>    zone->nb_dev =3D c;
+> + zone->nb_dev_shift =3D is_power_of_2(zone->nb_dev) ?
+> +     ilog2(zone->nb_dev) : -1;
+>    sectors =3D (smallest->sectors - zone->dev_start) * c;
+>    pr_debug("md/raid0:%s: zone->nb_dev: %d, sectors: %llu\n",
+>    mdname(mddev),
+> @@ -330,6 +334,7 @@ static struct md_rdev *map_sector(struct mddev
+> *mddev, struct strip_zone *zone,
+>    struct r0conf *conf =3D mddev->private;
+>    int raid_disks =3D conf->strip_zone[0].nb_dev;
+>    unsigned int chunk_sects =3D mddev->chunk_sectors;
+> + unsigned int disk_idx;
 >
-> rd() { dd if=3D/dev/md99 bs=3D4k skip=3D$1 count=3D1 iflag=3Ddirect statu=
-s=3Dnone | od -An -tx1 -N1 | tr -d " "; }
-> echo "block 4 (m0, working), expected 14: $(rd 4)"
-> echo "block 5 (m1, missing), expected I/O error: $(rd 5 2>&1)"
+>    if (is_power_of_2(chunk_sects)) {
+>    int chunksect_bits =3D ffz(~chunk_sects);
+> @@ -338,21 +343,28 @@ static struct md_rdev *map_sector(struct mddev
+> *mddev, struct strip_zone *zone,
+>    sector >>=3D chunksect_bits;
+>    /* chunk in zone */
+>    chunk =3D *sector_offset;
+> - /* quotient is the chunk in real device*/
+> - sector_div(chunk, zone->nb_dev << chunksect_bits);
+> - } else{
+> + if (zone->nb_dev_shift >=3D 0) {
+> + chunk >>=3D (zone->nb_dev_shift + chunksect_bits);
+> + disk_idx =3D sector & (zone->nb_dev - 1);
+> + } else {
+> + /* quotient is the chunk in real device*/
+> + sector_div(chunk, zone->nb_dev << chunksect_bits);
+> + disk_idx =3D sector_div(sector, zone->nb_dev);
+> + }
+> + *sector_offset =3D (chunk << chunksect_bits) + sect_in_chunk;
+> + } else {
+>    sect_in_chunk =3D sector_div(sector, chunk_sects);
+>    chunk =3D *sector_offset;
+>    sector_div(chunk, chunk_sects * zone->nb_dev);
+> + disk_idx =3D sector_div(sector, zone->nb_dev);
+> + *sector_offset =3D (chunk * chunk_sects) + sect_in_chunk;
+>    }
+>    /*
+>    *  position the bio over the real device
+>    *  real sector =3D chunk in device + starting of zone
+>    * + the position in the chunk
+>    */
+> - *sector_offset =3D (chunk * chunk_sects) + sect_in_chunk;
+> - return conf->devlist[(zone - conf->strip_zone)*raid_disks
+> -     + sector_div(sector, zone->nb_dev)];
+> + return conf->devlist[(zone - conf->strip_zone) * raid_disks + disk_idx]=
+;
+>   }
 >
-> mdadm -S /dev/md99
-> for i in 0 2 3; do losetup -d ${L[i]}; rm $D/m$i; done
-> rm $D/pattern $D/aa; rmdir $D
+>   static sector_t raid0_size(struct mddev *mddev, sector_t sectors, int
+> raid_disks)
+> @@ -616,7 +628,7 @@ static bool raid0_make_request(struct mddev
+> *mddev, struct bio *bio)
+>    ? (sector & (chunk_sects-1))
+>    : sector_div(sector, chunk_sects));
 >
->   drivers/md/raid5.c | 6 ++++--
->   1 file changed, 4 insertions(+), 2 deletions(-)
-Applied
+> - if (sectors < bio_sectors(bio)) {
+> + if (unlikely(sectors < bio_sectors(bio))) {
+>    bio =3D bio_submit_split_bioset(bio, sectors,
+>         &mddev->bio_set);
+>    if (!bio)
+> diff --git a/drivers/md/raid0.h b/drivers/md/raid0.h
+> index 8cc761ca7423..70b73511fb14 100644
+> --- a/drivers/md/raid0.h
+> +++ b/drivers/md/raid0.h
+> @@ -7,6 +7,7 @@ struct strip_zone {
+>    sector_t dev_start; /* Zone offset in real dev (in sectors) */
+>    int nb_dev; /* # of devices attached to the zone */
+>    int disk_shift; /* start disk for the original layout */
+> + int nb_dev_shift; /* log2(nb_dev) if power of 2, else -1 */
+>   };
+>
+>   /* Linux 3.14 (20d0189b101) made an unintended change to
 
 --=20
 Thanks,
