@@ -1,62 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.41
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.47
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795258695;
-	b=PagDzGewU7Y2EU50N06SLRKwMH18970QIwSlau+N49Wpfa5X6vAgme2KEZXxfK8aRn9p
-	 6PuPrYPcDoL8Q1/4fluXvSguRcu+Tnq26UgN9keWS+k0NShmSv6O6HhQlUeSPjp0rmaEl
-	 A/HM6XYJ6idfck3ALuf/SPz9Ckiwtvw1kNym7HReMHrcK7CZHG4zJPez3aFR1bd3x02Xy
-	 ts3eXwm3A8FV81DUH9XJ/0r/oRo88S+asn8Q1Nfw8D2WD15x6SbM0fZG32PDdJTxvXMkN
-	 vfcJCEcgNlQJ7o1/8azvmbyRarx98zSy/nSFJTvWN4A/Wtc1Xw6xLqelJJ3tm+v1Z3w==
+	t=1795266509;
+	b=z0CE2HMP4BnAmJAlAf33wSaHuMUxsTnYOHCrrktm5p1+zAxUQMgUXbbyl02l0iQXoaMu
+	 W5UG5RcISjiKNLTNVP5Jq/3n1Q1QpLZuL+/JvnyuaoihaGEvHKmaPH+3uEa4mFB57hluA
+	 nmjavLwd634TC4P95omKNFPovj8o1YC4qTgkN3lUgbqqKRQ+RrHDLibIezYS+VCsj2Ao+
+	 WF7Sp5FcDWpH3I3Z2cQPryev6vshu6eNxikrIPbkvh6P8u/oYEUaJrV8ZAzYryx4EgrXh
+	 IdkNODmisCx7dGUrXOpMNfSpIxm2O7s9y9DzKss0oITkocwx1K6RE2fGyqTCNSTbT4Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795258695;
-	h=DMARC-Filter:DKIM-Signature:Date:X-Original-From:In-Reply-To:
-	 Content-Transfer-Encoding:User-Agent:Reply-To:To:From:Subject:
-	 Message-Id:Mime-Version:References:Content-Type:Received:
-	 X-Lms-Return-Path;
-	bh=V3bNUNiT/0ywDdd6Xcd8mmP1/n5MrmRMqYlXo9hj8KQ=;
-	b=QY21PmhVO2Sf1vECw/y6AXHl4kjDgesLHnQ0DFxzIrCEJH7J6e0mjDd3sve3pShKEiCC
-	 5Dty1uycnCZIiMUtoL19VoKkyt77howU9obvxoMOnby0ReWbLERtMoM6tw1dXhbOh+4Ql
-	 3RyyCow3rjPZBdrwx+1XIBIUE5aEUZbVgAUvmLSCwqhGShK9Kp30I8XKyX62DrzZXWfwK
-	 tN4lzqxFCwcCCrSYQAHvk3QCVWmZAxrW3VSF+bpTxCY2NI+nZSk4q3Ad6thAoJ8sWFMxx
-	 u6nh98yurXe7gUW/A5PEw9y+KeI8TsVbIO3iWF/GDUfbLIKR2X7oZtz2Pv8zD9FVGeQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795266509;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 In-Reply-To:References:Date:Message-ID:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=LHjG/iTsDXs6nDYHCXcunTi8MwN8lduDlNDVFE7Jg1Q=;
+	b=hm4/78/dR/8l8YiG1Ym06iBjEvzQkIUkowNM6XKBGgXTpW4NHhWtc5uknvi7sO2VFlvs
+	 Pd93ZwE6Vp+WK/7NmE2MSuk+qEXbNUn+VvZSHsmLGqYCmnVmeGOiMicvqmaXfgFu0aON6
+	 ifQo02HXHsF8hYK/watSyTfq66OkAgFSjgJ9keSyAeAWqocGUcU6kkWvzrzV9zliUHM+g
+	 BoPAFjoom0J/uUdRQHIN/ImjeGrbd2NO70WtmXJzN3aHt8kJxj+vR0foOk6LWXzmCNl3q
+	 5jV7OTrCkZBB8Njt3eP2Mz0+YwMonFrev+vncfQ8DBM+OTlJ0z9l5d9+pGmG8YwMbtQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=fygo.io;
-	spf=pass smtp.mailfrom=fygo.io;
-	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=nHln9N2c;
-	arc=none smtp.remote-ip=209.127.231.41
-Received: from va-2-41.ptr.blmpb.com (va-2-41.ptr.blmpb.com [209.127.231.41])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=CKVBC5Q1;
+	arc=none smtp.remote-ip=209.85.128.47
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92F7E606A320
-	for <linux-raid@vger.kernel.org>; Sat, 21 Nov 2026 10:58:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 92F7E606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFE6A606A32A
+	for <linux-raid@vger.kernel.org>; Sat, 21 Nov 2026 13:08:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CFE6A606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=nHln9N2c
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1795258687;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=V3bNUNiT/0ywDdd6Xcd8mmP1/n5MrmRMqYlXo9hj8KQ=;
- b=nHln9N2cAzfwDu3cnQey9Y7CZtTETZg9uZsYpo0pHpDjVsC5t5/lZhp0THoklE49wAkZ5G
- 1BV2ack+8Ch9njWF1qTdyGLHj276TNEU5ynKq50ITwBCjPFhK5imi6uPwgcEOWF8ybWfdS
- Oxdjqczz5t6Xl5TivFRKsZi59ou+nJ+EY+tMcnjUP/dBU29PFc74H5v8RdA+QE8QNupY9E
- errtTK05M2Ow4rtefrpO101fsXwWphDdeX4HVnuC+HvnZqH/4SQhqkKT6stXuDtTrzidYu
- GkP62Zd8ojuLgmdH4yxoYAgGbH7Shlepst5qaQEUjZh/oXA7+7uCD/O0ZBiLeA==
-Date: Sat, 21 Nov 2026 18:58:01 +0800
-X-Original-From: yu kuai <yukuai@fygo.io>
-In-Reply-To: <CAMnMt5Z+BwOaPWQGTTUeSr8uaT=dysMi42xRpFpUruRRcO7=wA@mail.gmail.com>
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Mozilla Thunderbird
-Reply-To: yukuai@fygo.io
-To: "Herman Semenoff" <germanaizek0@gmail.com>, <song@kernel.org>, 
-	<magiclinan@didiglobal.com>, <xiao@kernel.org>, 
-	<linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	"yu kuai" <yukuai@fygo.io>
-From: "yu kuai" <yukuai@fygo.io>
-Subject: Re: [PATCH] md/raid0: optimize stripe mapping with bitwise shifts for power-of-2 devices
-Message-Id: <f1aa2a91-0859-44d7-9cc1-b64ed4def889@fygo.io>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=CKVBC5Q1
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4a210470b49so16194395e9.2
+        for <linux-raid@vger.kernel.org>; Sat, 21 Nov 2026 05:08:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795266507; x=1795871307; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :references:in-reply-to:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=LHjG/iTsDXs6nDYHCXcunTi8MwN8lduDlNDVFE7Jg1Q=;
+        b=CKVBC5Q1q7BcMuVLhAjA7CFGC8fCrcld5Qgxm2LqcDrf/NOo+0k5BeePKzMkY3zKRm
+         wyxAs/5nu00yr01MusdSqj0C0gCEWoLaHt+1SmsHwJAAKKNYwDqfu4Wh8l89Y69iKdgV
+         6uK56Xqa9HW1kxTppH0HPV3K/saBDecNV8Bsaa1enjKPuaf59+HEpqZG09VJAU0PiC0K
+         BoGDqNzVyCX9tyQ590554aXzVtlTzAUnBLnzZGXNSMfepJG+uM0QF5fPXQRGOYY/+HYE
+         nYeC23FFDe0IGDBMSnDBWwfrZGXMZwaedYCZLlLR+NhFEu0Ki2X+l3J/VgVIpVg77e9d
+         1KjQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795266507; x=1795871307;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :references:in-reply-to:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=LHjG/iTsDXs6nDYHCXcunTi8MwN8lduDlNDVFE7Jg1Q=;
+        b=oIdxNhxmbd8WFPxr4bw3vp4t9W8y6vp+rtSRlkumdz9HVRLU6b6Lpr2yrzLIguaEq8
+         toOjsf19T0S4nx/j2yZuCI1PGN+rSFcyt07HdLMbjMODIAZkletkr8Txnp/kj7ffgQ2E
+         Dd12ETVs98ghyXT2kuESnSSUVjSeY+IhTjzrLyxYN7QWzxGfcakCVUBCkmJI3Gy/GYqF
+         7nbt5oWYB9boxpVHZOnk2VP8T4osPtBaQC4w7GO7bbpfCFneSR/SnaKYURFMoJDhgyrz
+         JjtYzYEEgv1LKnevg5MIZHUD1cZOdYEH9GLSPESvk23P6XuAd2pNui6d1pb0x2ZyRZ+U
+         3mRA==
+X-Gm-Message-State: APuU4Z/v+I8bx9iI8gw2j7ZosW0nmezmd1A0CY6F2oI3kqxoog1sBGSa
+	tYcjggpsXPLE/SfTzGdjHLTiDHzhh21w8NDih+IEk/k2jQxUy21UbPEPKzfaUw==
+X-Gm-Gg: AZFdTZdNNZGYspQfA7cxJwHSs8juJgxIIac8WUhednAxhnqA2mRUZb+gDuyyx7vvy8Z
+	pjD6pkw2capYBaFKhmy0lMFpHGlCROrKOnokoxCxRulNRVQmdXf1KliDqnkKqTG5XZ+mrLeGb9/
+	dAMMa2Vu3tPYGgXSY2cEkxB7UzT1pWQaAlV2exbIiHD2PZHkgHSb37gNFq6HAdFxKhimQQGKCk9
+	0zDigIKYyDP9Smm3aPnc3u3h1hBsB0oHw0YAtLY1pJO3Sg9ilUEStNbmsWDgBXXs6pOQ+rq5S1j
+	G6HnlUKMkWzeftDhmBFnzxluoOESFT/vNv2wp9RkgscCwkHHkHhRyaril81wEop3uq+LYDtSRvp
+	Ly1w7ULO/vuaikew1yDu2XxvUUJXYsTUF3KnpCSCd7uh7s8b29oTkWcoMGENc2yS70/DNtdnsRt
+	m96CV9B2+WvDIbzpSAZ61wpB7eYIJc31Qp0amqCU3kEod7YLD8vXK/Zncfm0Qzitt2tRSqNUvF9
+	wKxe34xqj8tcA64aEw6x0hR64bI7Tflce/ExOMakP4Tip2mx2WTKcsQoH3kJSUoiBfGccpXZwac
+	ix62PTJAoaueY1U4P4Zv+656Y4YuYbknvaSFLTSUdtaPlGTRuVnrr72EG110g1iqsujdB1Dt
+X-Received: by 2002:a05:600c:5249:b0:4bb:665c:a078 with SMTP id 5b1f17b1804b1-4bb8893a89bmr134882075e9.28.1795266506857;
+        Sat, 21 Nov 2026 05:08:26 -0800 (PST)
+Received: from Abds-MacBook-Air.local ([2a02:3037:31c:5c36:c05b:18d5:9baf:f9f5])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb884c3063sm179882145e9.15.2026.11.21.05.08.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 21 Nov 2026 05:08:26 -0800 (PST)
+From: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+To: yu kuai <yukuai@fygo.io>, sashiko-reviews@lists.linux.dev, yu kuai
+ <yukuai@fygo.io>
+Cc: linux-raid@vger.kernel.org
+Subject: Re: [PATCH] md: make mddev_get() fail until md_alloc() has finished
+In-Reply-To: <e0d5c880-ea38-4f25-8c1a-3bca0a4a5dcc@fygo.io>
+References: <20261112114958.2244-1-abd.masalkhi@gmail.com>
+ <sashiko-outbox-211074@kernel.org> <m2tslm1988.fsf@gmail.com>
+ <e0d5c880-ea38-4f25-8c1a-3bca0a4a5dcc@fygo.io>
+Date: Sat, 21 Nov 2026 14:08:15 +0100
+Message-ID: <m2tslal4cg.fsf@gmail.com>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -65,163 +97,178 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <CAMnMt5Z+BwOaPWQGTTUeSr8uaT=dysMi42xRpFpUruRRcO7=wA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Received: from [192.168.1.104] ([39.182.0.159]) by smtp.larksuite.com with ESMTPS; Sat, 21 Nov 2026 10:58:05 +0000
-X-Lms-Return-Path: <lba+26b01793e+928ddc+vger.kernel.org+yukuai@fygo.io>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+Hi Kuai,
 
-=E5=9C=A8 2026/11/17 13:15, Herman Semenoff =E5=86=99=E9=81=93:
->  From 086678202572260393864f72c06f4d67032a4b76 Mon Sep 17 00:00:00 2001
-> From: Herman Semenoff <GermanAizek@yandex.ru>
-> Date: Sun, 8 Nov 2026 22:43:29 +0300
-> Subject: [PATCH] md/raid0: optimize stripe mapping with bitwise shifts
-> for power-of-2 devices
+On Fri, Nov 20, 2026 at 18:41 +0800, yu kuai wrote:
+> Hi,
 >
-> In drivers/md/raid0.c, map_sector() performs two 64-bit integer divisions
-> (sector_div) on every submitted bio:
->    1. sector_div(chunk, zone->nb_dev << chunksect_bits) to compute the ch=
-unk
->       offset within the member device.
->    2. sector_div(sector, zone->nb_dev) to select the target member disk.
+> =E5=9C=A8 2026/11/12 21:15, Abd-Alrhman Masalkhi =E5=86=99=E9=81=93:
+>> Hi Kuai,
+>>
+>> On Thu, Nov 12, 2026 at 12:13 +0000, sashiko-bot@kernel.org wrote:
+>>> Thank you for your contribution! Sashiko AI review found 2 potential
+>>> issues to consider:
+>>> - [Medium] md: premature KOBJ_ADD uevent in add_disk() while mddev_get()
+>>>    fails
+>>> - [Low] md: stale reconfig_mutex lock and comment in md_alloc()
+>>> It also noticed 1 related pre-existing issue this patch does not
+>>> introduce:
+>>> - [Medium] md: kernfs_node memory leak in mddev_unlock() [1]
+>>> --
+>>>
+>>> commit 2ddaaecbff58458e8c38353164498300daf7d131
+>>> Author: Abd-Alrhman Masalkhi <abd.masalkhi@gmail.com>
+>>>
+>>> md: make mddev_get() fail until md_alloc() has finished
+>>>
+>>> This commit adds an mddev->sysfs_live flag set under all_mddevs_lock af=
+ter
+>>> kobject_add() succeeds in md_alloc(), and updates mddev_get() to fail u=
+ntil
+>>> that flag is set.
+>>>
+>>> Link: https://sashiko.dev/#/patchset/20261029202209.1422567-1-abd.masal=
+khi@gmail.com?part=3D4
+>>>
+>>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>>> index 03e35386a8028..47118e9d1a656 100644
+>>>> --- a/drivers/md/md.c
+>>>> +++ b/drivers/md/md.c
+>>>> @@ -641,7 +641,7 @@ static inline struct mddev *mddev_get(struct mddev=
+ *mddev)
+>>>>   {
+>>>>   	lockdep_assert_held(&all_mddevs_lock);
+>>>>=20=20=20
+>>>> -	if (test_bit(MD_DELETED, &mddev->flags))
+>>>> +	if (test_bit(MD_DELETED, &mddev->flags) || !mddev->sysfs_live)
+>>>>   		return NULL;
+>>>>   	atomic_inc(&mddev->active);
+>>>>   	return mddev;
+>>>> @@ -6432,10 +6432,16 @@ struct mddev *md_alloc(dev_t dev, char *name)
+>>>>   		return ERR_PTR(error);
+>>>>   	}
+>>>>=20=20=20
+>>>> -	kobject_uevent(&mddev->kobj, KOBJ_ADD);
+>>>>   	mddev->sysfs_state =3D sysfs_get_dirent_safe(mddev->kobj.sd, "array=
+_state");
+>>>>   	mddev->sysfs_level =3D sysfs_get_dirent_safe(mddev->kobj.sd, "level=
+");
+>>> [Severity: Medium]
+>>> This problem wasn't introduced by this patch, but when
+>>> legacy_async_del_gendisk is disabled, does mddev_unlock() leak
+>>> mddev->sysfs_state and mddev->sysfs_level [1]?
+>>>
+>>> md_kobj_release() only calls sysfs_put() on mddev->sysfs_state and
+>>> mddev->sysfs_level when legacy_async_del_gendisk is true, and the
+>>> !legacy_async_del_gendisk teardown path in mddev_unlock() deletes
+>>> mddev->kobj and mddev->gendisk without releasing those kernfs_node
+>>> references:
+>>>
+>>> drivers/md/md.c:md_kobj_release() {
+>>> 	if (legacy_async_del_gendisk) {
+>>> 		if (mddev->sysfs_state)
+>>> 			sysfs_put(mddev->sysfs_state);
+>>> 		if (mddev->sysfs_level)
+>>> 			sysfs_put(mddev->sysfs_level);
+>>> 		del_gendisk(mddev->gendisk);
+>>> 	}
+>>> 	put_disk(mddev->gendisk);
+>>> }
+>>>
+>>>> +
+>>>> +	spin_lock(&all_mddevs_lock);
+>>>> +	mddev->sysfs_live =3D true;
+>>>> +	spin_unlock(&all_mddevs_lock);
+>>>> +
+>>>> +	kobject_uevent(&mddev->kobj, KOBJ_ADD);
+>>>>   	mutex_unlock(&disks_mutex);
+>>>> +
+>>>>   	return mddev;
+>>>>=20=20=20
+>>>>   out_put_disk:
+>>> [Severity: Medium]
+>>> Does making mddev_get() fail until mddev->sysfs_live is set cause a
+>>> regression where udevd or concurrent openers fail with -ENODEV in md_op=
+en()
+>>> and -EBUSY on md/ sysfs attributes right after add_disk() announces the
+>>> disk?
+>>>
+>>> kobject_uevent(&mddev->kobj, KOBJ_ADD) is dropped by dev_uevent_filter()
+>>> because mddev->kobj has ktype &md_ktype rather than &device_ktype.  The
+>>> KOBJ_ADD uevent that actually reaches user space is sent earlier inside
+>>> add_disk() -> add_disk_final() -> disk_uevent(disk, KOBJ_ADD), right af=
+ter
+>>> bdev_add() publishes the block device inode while mddev->sysfs_live is
+>>> still false:
+>>>
+>>> CPU0                              CPU1 (udevd / opener)
+>>> md_alloc()
+>>>    add_disk(disk)
+>>>      add_disk_final(disk)
+>>>        bdev_add(...)
+>>>        disk_uevent(disk, KOBJ_ADD)
+>>>                                    blkdev_get_no_open()
+>>>                                    md_open()
+>>>                                      mddev_find()
+>>>                                        mddev_get() -> NULL  <-- -ENODEV
+>>>    kobject_add(&mddev->kobj, ...)
+>>>    mddev->sysfs_live =3D true
+>>>
+>> I missed this case. Do you have a suggestion for a better fix, or should
+>> I just drop this patch?
 >
-> For ultra-low latency solid-state storage devices, such as Intel Optane
-> (3D XPoint NVMe SSDs) capable of sub-10us latencies and multi-million IOP=
-S,
-> these un-pipelined 64-bit division instructions create unnecessary CPU
-> pipeline stalls and latency overhead in the I/O submission hot path.
+> Please drop this patch, let open disk fail is not a good idea.
 >
-> When the number of member devices in a strip zone is a power of two
-> (e.g., 2, 4, 8, 16 disks, which is the predominant configuration for
-> NVMe arrays), both divisions can be replaced with bitwise shifts and
-> masks:
->    - chunk >>=3D (zone->nb_dev_shift + chunksect_bits)
->    - disk_idx =3D sector & (zone->nb_dev - 1)
->    - *sector_offset =3D (chunk << chunksect_bits) + sect_in_chunk
+> I think you can just set a new flag to mddev if kobject_add failed, and c=
+heck
+> the flag during opening, right after reconfig_mutex is grabbed.
 >
-> Store nb_dev_shift (ilog2(zone->nb_dev)) in struct strip_zone during zone
-> initialization when is_power_of_2(zone->nb_dev) is true, or -1 otherwise.
-> If nb_dev_shift is non-negative and chunk_sects is a power of two, fast
-> bitwise math is used with zero divisions. Arrays with non-power-of-2 disk
-> counts fall back to the existing sector_div() path without any behavior
-> or compatibility change.
->
-> In addition, annotate the bio split check in raid0_make_request() with
-> unlikely(), as standard MD devices already enforce chunk_sectors limits
-> via bio_split_to_limits() in md_submit_bio().
->
-> Tested on an 8-disk Intel Optane Memory M10 (MEMPEK1J016GAD) RAID0 array:
->    - Random 4K read QD1 latency:  avg lat 22.06 us -> 21.10 us (-4.4%)
->    - Random 4K read QD1 IOPS:     42.6k IOPS       -> 44.6k IOPS (+4.7%)
->    - Random 4K read QD32x8 IOPS:  1.11M IOPS       -> 1.72M IOPS (+54.5%)
->    - Non-power-of-2 disk arrays:  unaffected, identical fallback path
->
-> Signed-off-by: Herman Semenoff <GermanAizek@yandex.ru>
-> Signed-off-by: Herman Semenoff <GermanAizek@aizekgroup.ru>
-> ---
->   drivers/md/raid0.c | 26 +++++++++++++++++++-------
->   drivers/md/raid0.h |  1 +
->   2 files changed, 20 insertions(+), 7 deletions(-)
 
-This patch is unacceptable, you need to regenerate it with correct format.
+Thank you for the feedback. I will drop this patch and fix it
+accordingly.
 
+>>
+>>> [Severity: Low]
+>>> Since mddev_get() now returns NULL until mddev->sysfs_live is set after
+>>> mddev_unlock(mddev), md_open() can no longer succeed while reconfig_mut=
+ex
+>>> is held across add_disk() and kobject_add() from commit d1472ca2ca5d ("=
+md:
+>>> don't hand out the array before md_alloc() has added mddev->kobj").
+>>>
+>>> drivers/md/md.c:md_alloc() {
+>>> 	/*
+>>> 	 * add_disk() makes the array openable before mddev->kobj exists.
+>>> 	 * Hold reconfig_mutex until kobject_add() is done so that ioctls
+>>> 	 * issued in between wait instead of using an uninitialised kobj.
+>>> 	 */
+>>> 	mddev_lock_nointr(mddev);
+>>> 	error =3D add_disk(disk);
+>>>      ...
+>>> 	error =3D kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "m=
+d");
+>>> 	mddev_unlock(mddev);
+>>> }
+>>>
+>>> Does this make the comment and reconfig_mutex critical section in
+>>> md_alloc() obsolete, as well as the commit message's first paragraph
+>>> claiming that ioctls such as ADD_NEW_DISK can run before kobject_add()
+>>> completes?
+>>>
+>>> [1] https://sashiko.dev/#/bug/linux-460ea5ed-96ea-49a0-8383-cfa84f28520b
+>>>
+>>> --=20
+>>> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261112114958.=
+2244-1-abd.masalkhi@gmail.com?part=3D1
 >
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index 35e103f0c2c3..993df48eaa4c 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -207,6 +207,8 @@ static int create_strip_zones(struct mddev *mddev,
-> struct r0conf **private_conf)
->    }
->    zone->nb_dev =3D cnt;
->    zone->zone_end =3D smallest->sectors * cnt;
-> + zone->nb_dev_shift =3D is_power_of_2(zone->nb_dev) ?
-> +     ilog2(zone->nb_dev) : -1;
->
->    curr_zone_end =3D zone->zone_end;
->
-> @@ -246,6 +248,8 @@ static int create_strip_zones(struct mddev *mddev,
-> struct r0conf **private_conf)
->    }
->
->    zone->nb_dev =3D c;
-> + zone->nb_dev_shift =3D is_power_of_2(zone->nb_dev) ?
-> +     ilog2(zone->nb_dev) : -1;
->    sectors =3D (smallest->sectors - zone->dev_start) * c;
->    pr_debug("md/raid0:%s: zone->nb_dev: %d, sectors: %llu\n",
->    mdname(mddev),
-> @@ -330,6 +334,7 @@ static struct md_rdev *map_sector(struct mddev
-> *mddev, struct strip_zone *zone,
->    struct r0conf *conf =3D mddev->private;
->    int raid_disks =3D conf->strip_zone[0].nb_dev;
->    unsigned int chunk_sects =3D mddev->chunk_sectors;
-> + unsigned int disk_idx;
->
->    if (is_power_of_2(chunk_sects)) {
->    int chunksect_bits =3D ffz(~chunk_sects);
-> @@ -338,21 +343,28 @@ static struct md_rdev *map_sector(struct mddev
-> *mddev, struct strip_zone *zone,
->    sector >>=3D chunksect_bits;
->    /* chunk in zone */
->    chunk =3D *sector_offset;
-> - /* quotient is the chunk in real device*/
-> - sector_div(chunk, zone->nb_dev << chunksect_bits);
-> - } else{
-> + if (zone->nb_dev_shift >=3D 0) {
-> + chunk >>=3D (zone->nb_dev_shift + chunksect_bits);
-> + disk_idx =3D sector & (zone->nb_dev - 1);
-> + } else {
-> + /* quotient is the chunk in real device*/
-> + sector_div(chunk, zone->nb_dev << chunksect_bits);
-> + disk_idx =3D sector_div(sector, zone->nb_dev);
-> + }
-> + *sector_offset =3D (chunk << chunksect_bits) + sect_in_chunk;
-> + } else {
->    sect_in_chunk =3D sector_div(sector, chunk_sects);
->    chunk =3D *sector_offset;
->    sector_div(chunk, chunk_sects * zone->nb_dev);
-> + disk_idx =3D sector_div(sector, zone->nb_dev);
-> + *sector_offset =3D (chunk * chunk_sects) + sect_in_chunk;
->    }
->    /*
->    *  position the bio over the real device
->    *  real sector =3D chunk in device + starting of zone
->    * + the position in the chunk
->    */
-> - *sector_offset =3D (chunk * chunk_sects) + sect_in_chunk;
-> - return conf->devlist[(zone - conf->strip_zone)*raid_disks
-> -     + sector_div(sector, zone->nb_dev)];
-> + return conf->devlist[(zone - conf->strip_zone) * raid_disks + disk_idx]=
-;
->   }
->
->   static sector_t raid0_size(struct mddev *mddev, sector_t sectors, int
-> raid_disks)
-> @@ -616,7 +628,7 @@ static bool raid0_make_request(struct mddev
-> *mddev, struct bio *bio)
->    ? (sector & (chunk_sects-1))
->    : sector_div(sector, chunk_sects));
->
-> - if (sectors < bio_sectors(bio)) {
-> + if (unlikely(sectors < bio_sectors(bio))) {
->    bio =3D bio_submit_split_bioset(bio, sectors,
->         &mddev->bio_set);
->    if (!bio)
-> diff --git a/drivers/md/raid0.h b/drivers/md/raid0.h
-> index 8cc761ca7423..70b73511fb14 100644
-> --- a/drivers/md/raid0.h
-> +++ b/drivers/md/raid0.h
-> @@ -7,6 +7,7 @@ struct strip_zone {
->    sector_t dev_start; /* Zone offset in real dev (in sectors) */
->    int nb_dev; /* # of devices attached to the zone */
->    int disk_shift; /* start disk for the original layout */
-> + int nb_dev_shift; /* log2(nb_dev) if power of 2, else -1 */
->   };
->
->   /* Linux 3.14 (20d0189b101) made an unintended change to
+> --=20
+> Thanks,
+> Kuai
 
 --=20
-Thanks,
-Kuai
+Best Regards,
+Abd-Alrhman
