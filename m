@@ -1,98 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.54
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795281918;
-	b=qgtg77Ye+ew+qNLBhO/ypfAvyPd1F27mgS4gS2YAW/UwaaEvx6LPmOMsxdAjarqNIdiR
-	 6cSGGZR/pLZxk4CucnjEULxStb1wzKRFiy5ffysdMbsQ1KFe1htqiXfRLzbxjy0RObsfO
-	 FdCKF2leEciYdeh2sCQ4xhk03NKDEVcsL3UFciOBb7sI4jsIpsR8KvIynpkTUChxkwTUr
-	 5VL4EuN9NE61KI+OkAFfjPpdh4UlZfUgurmGwEefryF3E/fBX2aKt/YQWQLsFNF8DES1a
-	 sdhNo8BlB8iAEdSehuXXGJCcItwgTims0AEuGD2kv3guf33WCILQYYeKjypTKmJk4jQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795281918;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.48
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795296081;
+	b=TkFtRX4zqg87QOz1JrSySicHyFWEf2bBIaU5K1UlEB6x9FKZZN9mgCmGNzLj0nI0P6GN
+	 YDH46LhQ7b8Y5/MDsIxiUSSal23jiihtW8lPCM/GKLsQJEXXFd2qbjlEsVI9ffoC30/S2
+	 CiCWeypPefa46imgUbFqCabWf77SldyicriqONzBKumD2YQSq4HedFdALhr45UPIESlwS
+	 tWkW4qq2qQIBIuUmFsZTZns95T6B+PQ1S0gZOsooP2znG6B8Z+qkkzgTleSnvYyRQUpJc
+	 CDOvv587JB1Ps1Gy1Ye0hHoDAyBXq+Rl4BhjFcsSDj+f6bgSKg7myilXfxQ4YRN8FXQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795296081;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:From:Date:X-Gm-Features:Message-ID:Subject:To:
-	 Content-Type;
-	bh=jEVC9z3fKTdorHh4mzVaVfKrDjM6NNyS/otyoBpkmfM=;
-	b=o/xJSRDNMc2RnIWvpph7i1DQHlrAzgJKzLVRYpzADd8z7PjvnuaVe7XqMayUA4IVY2Ab
-	 uhzXueQBRBWWj4bUoyEggh0+l3WV8SLGY1fXs5iHcBe6bkVynaHDIOLMWiqM6dEUZqFTD
-	 2wKWqAJ+FYWy0MVipZFCH78BLp/xXiORMVBgXAUxtFwvawQE+yIdE5Hw62cS63gjzqKOl
-	 ajg/osLSZKvaG3DfamuQM/HMW3xIbHbmJMUn+cl2bkOV5CAMXC0qN6Y3SRBifsbBLWZVJ
-	 jym9SVGC5/+6kzdmNPhzvYxa/SeSpEGhDFaxQUTXs9EqtiCDTf2zAvO33CUJxleMkuQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Date:Message-ID;
+	bh=O3ljys2G/dfGrzQSHlcDxa7rlNuO9sIfulWEdwLNsJ0=;
+	b=EUACn8zcMBCjSUSHBUg2lLlOeBQdaLib13JKWif8CkoIDxQOnddi8p1DD5JAMx6mv+yQ
+	 suVmm/VLXgY5HW97CJBfX75BDvnu5IOQuxUZeJnZ0vgb5kH44NfcJRvuiwx0JH7miPuVw
+	 +SUCF5p8E6N4GGc1VMO46CHmcxx0C0bZK7jc4Z6ptrRT+ZyXPZd/Klyinq6oEQaQW2H8c
+	 Qn3y7WOoERHBeMhRZq0r0erPU8JGnOfGO80dNIHQ9poKlQ7NX37HbGJ9ddZwuy00Ihn7h
+	 vA/Lg6FuAfFUNOZsQ4qSHE5AT/aO6vAaXllV6m5ucWgfINFovOxpD61SQGsIVz71AlA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=f6Y9a7sv;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.54
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=i8Rz2RMp;
+	arc=none smtp.remote-ip=209.85.218.48
+Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B239606A32A
-	for <linux-raid@vger.kernel.org>; Sat, 21 Nov 2026 17:25:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1B239606A32A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1B49606A332
+	for <linux-raid@vger.kernel.org>; Sat, 21 Nov 2026 21:21:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E1B49606A332
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=f6Y9a7sv
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6ba38c41804so2127517a12.3
-        for <linux-raid@vger.kernel.org>; Sat, 21 Nov 2026 09:25:17 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1795281916; cv=none;
-        d=google.com; s=arc-20260327;
-        b=Y39x9ZdhIuC5WSUTf2EVhKEQ5iGcPSdrh7y7VMEneQt9Z8AidaEh2HzFddh1OZcsNM
-         VMN9dZ89uzvCPd8SYYAYfMuzV5oPvcpeY9ytC6XN/kvGHadVDTGLCmJLbS5YIqOtr35R
-         tiCF/6VD07glj36nBKMPwaQaKt3yhqy4w1td9v8dMmIDhQn5U2UJI6Ct4yUF3PesTisc
-         Hx9Yy7hevGGDGBMrgAWKVEwz3xLlcwLRpaWb4ub54+DSCpH2oDMQsvSYYO4GGNC8eqB0
-         1Exf4aPsgH9LkjNwRnQ/8anu6JRo7rg6aa4G26F/5LAmkqPqEev6eV2dPV/JzjoKwMHy
-         f+7Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=jEVC9z3fKTdorHh4mzVaVfKrDjM6NNyS/otyoBpkmfM=;
-        fh=KZLmMaG1VGwgjZhF4hLc8bi739ycGUsWAo97++FN/c0=;
-        b=A/+a7G6C7gMJeglCorjZAZQkJZYIg1fR6U3Nx8zQqChH9km/Bu+HmtVrqDgv6WLV/t
-         ThXHZvAqPeNbHV7o1OwUeEFNYmo+OUDJZU0UaLONlNnoGCB/cXgZ43hCiHHO5Y5t0+B/
-         CA2k/K8xPjLMaA+tdyzSonaM/YyOJ+ixTFznK+jSDW4eGV1WmVFd5YKxffDlm0iiB09v
-         NXTAEM+7AU5eMvezVUgLepAoaNXOGdAiVt6O1PsD1qgMqAOyuYgPJyoAM0WCBQPgGXRd
-         3S39LCTCMl2P8anPlevM8Bako8kpG5xOEBSbPBETqpYM5fw5JX2UnJUZ0Zise0H88IV2
-         jq5Q==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=i8Rz2RMp
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-c50e26763a4so381111966b.1
+        for <linux-raid@vger.kernel.org>; Sat, 21 Nov 2026 13:21:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795281916; x=1795886716; darn=vger.kernel.org;
-        h=content-type:to:subject:message-id:date:from:mime-version:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=jEVC9z3fKTdorHh4mzVaVfKrDjM6NNyS/otyoBpkmfM=;
-        b=f6Y9a7svjG0EyEwwrx0xhjyXCQMHAbjPLzlXgqSgV3RdK9zq2q1pgjPEnqqxR3efV1
-         VnMrXJlgSYszaAVGh2Xnp3wuMmzRGfn8Lf9EedcTIdZL/PisRtB/+NO1L7CSbCW9GQcl
-         76G37NuNS8u+7h7TPNhvzHNHS/jq2o52wfDdT/IAVLlHPYXAT5+yjSqbYWwC9YFcNEOB
-         nRVuTLPHMgIF14QNgZSZwCtdZMmA0ZRySlkeXjhITL1z5JqyLekE3/ayLOD/mgXjVGqY
-         Ew5HKpx+LrZKv8LCndASa8V32QBp/GOe/+DxHz/z+hnYWEGkulEaqcTeuAS/Qmf+ACBV
-         E5SA==
+        d=gmail.com; s=20260707; t=1795296079; x=1795900879; darn=vger.kernel.org;
+        h=message-id:date:content-transfer-encoding:content-type:mime-version
+         :references:in-reply-to:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=O3ljys2G/dfGrzQSHlcDxa7rlNuO9sIfulWEdwLNsJ0=;
+        b=i8Rz2RMpPmkXYItSIndpWJR63ShbcEOT18h3HDALB8+aTuOXp4xTJl0bXxP5lQ8Su3
+         E382aOfjHM96onbffE4BozXFmdo5gHP3RvxEg5KXM33RJL/vSmFp16Wtjd8BBedvHhgW
+         1iVU/K1qLjSptz5Yfltsg+Pudxm/+TbBWQOFPx+tVxAQhS8PMrW6XYqtk242qjuUvHGp
+         qnpLBWi5bevQxy9wxEdfLIwsD/K87xZHuH9/1TudVpGLrDLz6Ir8Zzo5Fed3UlYCQpBu
+         +dSqoOWTHFtfYm9IpDMTtsHZKW9o8LuBFQHc4q0zR4lsKsUGfdVGttxQSb2z0MremoYk
+         he4g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795281916; x=1795886716;
-        h=content-type:to:subject:message-id:date:from:mime-version:x-gm-gg
+        d=1e100.net; s=20260707; t=1795296079; x=1795900879;
+        h=message-id:date:content-transfer-encoding:content-type:mime-version
+         :references:in-reply-to:subject:cc:to:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=jEVC9z3fKTdorHh4mzVaVfKrDjM6NNyS/otyoBpkmfM=;
-        b=aJO4azxltrKMON++hdCpiDUBQUeOZRGHhmZrCBsk1pEgCKoGgZFGGxKm2LsBWTatTh
-         XisNhKEksBSw5Fgc1ljPwa2BDD7WG25DfCwmZxLmND2HJpYIG/gHv1mnSAKFWMyzfgyj
-         9SX3dTmGNYcsTKNUrPRsanhgyQpvsor0epPP3+xUxuwtRPb4/gSR+4EM8oHgUmE4Gvex
-         8cG/+ZmOubMlrUL6hh1drgbrABaAVprN07aXXMHk90KeWDeQit0lGupmsCPFSNVYP9XP
-         Yca1VvlEMRYZAwKWU+CDa0YhyuhuvmgUPhMMnXH0sp1S6WnUYcp1U34TLAXxRkXjgh7F
-         2UFA==
-X-Forwarded-Encrypted: i=1; AL+hErGYstBjyv7X9x7lQKW9Vud0hjuoN9RCH2a1DJYt734XnVtmHuDQTUtwmNk25SSsSi9oNqrg73boDA+7@vger.kernel.org
-X-Gm-Message-State: APuU4Z/Gtxodm5jy6WkQ5D5aFqqgUf08PDaHgdY18Ya4x8seWppKkT/h
-	veIbx+Kwgu1C1UG4zF1lTB9j1MvGzmyjTZwe8J+Rq/QBj2DgxaqlMgTujooMEdtdlbtxJS1WSPH
-	ErMe8dphN1B/h2Q8RvsOqVO02WuT4ccxYpy9DPjDGBw==
-X-Gm-Gg: AZFdTZeYLoPSdHsvDZJ7XX8GjmbWj+2/ft3ViFzJjJBRI0KR8hHsBGl+mcqpxx6VSvY
-	Kk5J47Jon8hwq8KfXh6ipnJ9wqRIyq3EN1yDe+P1ZO9bQmznBeM0RfKPMrJU5bvAlPtP4/oFUeI
-	ocH1LXQF4QlylNLiRlStmci5zVoCC57XkDcv1WlpM+soEStmwyAO4GMytkSXjt0XllTTKFnsjpF
-	RZ/PqSXwsRNkkS1cLqSKCin8XBrnPm+S94sGmxV7vGe17tMDepvsR+WOJxZOSw9nfHN7khtgN4u
-	bKWqC1EGEw1fXYDDIISvRblfTvrtQN/6f2sD5yXsa9FLfsNfCZpl4j+gL9lBf54172ZH357J2OT
-	KB+VXa8n35HETI83ucKTVEstvVQKpB0vRUe/D+mMp7A3OPzoZo/sLN8c/R7VtvuFNMIb/WG89VK
-	8PlbOeiROqH5s0W33MbE0gQgQgG5Lv5hzs7lFYU5NbDFXoqz7E
-X-Received: by 2002:a05:6402:a6cb:10b0:6b7:82cf:f6ab with SMTP id
- 4fb4d7f45d1cf-6ba37e8ae50mr3382914a12.28.1795281916291; Sat, 21 Nov 2026
- 09:25:16 -0800 (PST)
+        bh=O3ljys2G/dfGrzQSHlcDxa7rlNuO9sIfulWEdwLNsJ0=;
+        b=lrTop5sWpz4Yu5jFLe4gnpE0/CoEsDhyO7jzSTMnM0VTB8GPhc0Fr7z/G+1om4t8cw
+         ttuecNMg1l6BgIUL5X2PkvXeNpbOrvd7NM7KxTNOEJOt+N6UoUym6dIlvtHOMgILQDEw
+         IbgKMKfZwjQilWm2xBS1EDyXk765NJ14gcLtBvYjjaIkIcZpe5wV6f8zsOO8qu09ZVNX
+         FQ87sRq6Plqh2w4toRAjcpmsYGRbF+lqTuStWFDcN05XETU2hst84wO/cAzPW5UUyPDE
+         V9oITHPiY4JnqUCluN9SY/uuqcAeIZzFWDaP4Z5Cp+JLr0+uEP9Fv4OHcl4z8wuIBBYF
+         FwNw==
+X-Gm-Message-State: APuU4Z+oTOSgl2xMksWq/qNcfBGNyk43RlQY3plIEpFBpi+Hfq9YGCU1
+	V0Y7yf4vVsusQEGTp5ZUao7cR6PevxfDKIIxYMKrW0lrpTjWfv++A70mxiJbi1w62J19Pg==
+X-Gm-Gg: AZFdTZd/IsMJaovqPFbsF7NKG7sHj0/3ypQtpnnKjtx/BfSlCcd4dH6VWMBZnhzta52
+	4r/hmTzqwa0s7TS5WTWGLtdPSim9n9vVuJI5zS084Play94prhkV5ijR0jXDEIM8xHYI4+U93Z9
+	nKqtI0YqchzeMOxrMeJM6g9W5uS+ohZo77rCJWlyFqvUVQSXbwM1nic4raEB7/nOWqTZvdZ2KYO
+	3FxV8XzAGCBjvYnQ8DtoclHQdWsAOor6rgNm+GeaMUYfeRh7KKfvMonpec06bs+5nCyDLYW00Ys
+	Y1+cTIFcgxseugqc/jdIr4RRqDf9yeEbD26Za4FhbcN4fZ2YqsePJ/EslWR3jTyZfqyAOo1Aawc
+	aFzgzvSlrItEMmlr8KL7o3aYlYq2xyzY8oKzztZPuCfoIRKp0y6AogTHzw4+Ts4y9ALZJh7MMf+
+	+oBYDEB1rfW0+ckFw45FWBE1RB8U4cjoZ/M1BmfxoEO1fba5jAjD7PnG47mg6iFlHSVMt6lmENi
+	0e/RRjIU9MkQ3bvya/Lx1VglawS31WS/F5aIwu2FXQpNgZQivLxhR0C2hXGygL67OZWyGqy9+pd
+	BEiEDvz3M9SMBpuYerZFFLNn3z0=
+X-Received: by 2002:a17:906:7f01:b0:c4d:2867:281c with SMTP id a640c23a62f3a-c513a89466dmr477367466b.1.1795296079086;
+        Sat, 21 Nov 2026 13:21:19 -0800 (PST)
+Received: from [172.17.0.1] ([2a0c:db40:0:80df::2])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c513ad010a6sm243362266b.7.2026.11.21.13.21.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 21 Nov 2026 13:21:17 -0800 (PST)
+From: Konstantin Nikiforov <helllamer@gmail.com>
+To: linux-raid@vger.kernel.org
+Cc: linux-bcache@vger.kernel.org, regressions@lists.linux.dev,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+ Yu Kuai <yukuai@fygo.io>, Song Liu <song@kernel.org>,
+ Coly Li <colyli@fygo.io>, Kent Overstreet <kent.overstreet@linux.dev>,
+ magiclinan@didiglobal.com, xiao@kernel.org
+Subject: Re: [PATCH] md/raid5: complete unsupported discards successfully
+In-Reply-To: <179299857972.12222.2729359466842183358@gmail.com>
+References:
+ <CAO96y0V6oncv54ihXnHfJMYiG_QAQ-NM8BOdqPDXKL8r8-kR9Q@mail.gmail.com>
+ <179299857972.12222.2729359466842183358@gmail.com>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -102,158 +99,63 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-From: Herman Semenoff <germanaizek0@gmail.com>
-Date: Sat, 21 Nov 2026 20:25:33 +0300
-X-Gm-Features: Aa3M54qKzxb3G59FpL5NAPHMGhwfKir0wVcdEZBT1nycH2gYN6zKK6d4CYnGEpA
-Message-ID: <CAMnMt5bHeL-yk4hHmUYDC0yq6V5mxj8smkCPyGqjV-YnUBQ-xA@mail.gmail.com>
-Subject: [PATCH v2] md/raid0: optimize stripe mapping with bitwise shifts for
- power-of-2 devices
-To: Song Liu <song@kernel.org>, Yu Kuai <yukuai@fygo.io>, Li Nan <magiclinan@didiglobal.com>, 
-	Xiao Ni <xiao@kernel.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Date: Sun, 22 Nov 2026 00:21:15 +0300
+Message-ID: <179529607529.5.3302391929789139470@gmail.com>
 
-From 450ebc4be1d31f25855c6771e67d27718ab6540f Mon Sep 17 00:00:00 2001
-From: Herman Semenoff <GermanAizek@yandex.ru>
-Date: Sun, 8 Nov 2026 22:43:29 +0300
-Subject: [PATCH v2] md/raid0: optimize stripe mapping with bitwise
-shifts for power-of-2 devices
+Hi Kuai,
 
-In drivers/md/raid0.c, map_sector() performs two 64-bit integer divisions
-(sector_div) on every submitted bio:
-  1. sector_div(chunk, zone->nb_dev << chunksect_bits) to compute the chunk
-     offset within the member device.
-  2. sector_div(sector, zone->nb_dev) to select the target member disk.
+I built and tested md-7.5 with b964c9240a37 on the machine from the
+regression report.  The reproducer passes and the machine runs without
+backing-device errors.
 
-For ultra-low latency solid-state storage devices, such as Intel Optane
-(3D XPoint NVMe SSDs) capable of sub-10us latencies and multi-million IOPS,
-these un-pipelined 64-bit division instructions create unnecessary CPU
-pipeline stalls and latency overhead in the I/O submission hot path.
+Tested tree
+-----------
+md-7.5 tip c526b7cd32f7, based on v7.4-rc2, with b964c9240a37 applied.
+Built as 7.4.0-rc2-md75+ (x86_64, Arch config, gcc 16.2.1) and booted
+on the affected machine.
 
-When the number of member devices in a strip zone is a power of two
-(e.g., 2, 4, 8, 16 disks, which is the predominant configuration for
-NVMe arrays), both divisions can be replaced with bitwise shifts and
-masks:
-  - chunk >>= (zone->nb_dev_shift + chunksect_bits)
-  - disk_idx = sector & (zone->nb_dev - 1)
-  - *sector_offset = (chunk << chunksect_bits) + sect_in_chunk
+Reproducer
+----------
+Three 256M loop files -> raid5 (64K chunk, metadata 1.2) -> bcache
+backing device.  devices_handle_discard_safely is left at its default
+(N), so the array takes the raid5_discard_limits() path changed by the
+patch.
 
-Store nb_dev_shift (ilog2(zone->nb_dev)) in struct strip_zone during zone
-initialization when is_power_of_2(zone->nb_dev) is true, or -1 otherwise.
-If nb_dev_shift is non-negative and chunk_sects is a power of two, fast
-bitwise math is used with zero divisions. Arrays with non-power-of-2 disk
-counts fall back to the existing sector_div() path without any behavior
-or compatibility change.
+  md125: discard_max_bytes=2199023255040, discard_granularity=131072
+  blkdiscard 8M on md125: exit 0
+  bcache1 over md125: discard_max_bytes=2199023255040
+  4x blkdiscard 8M on bcache1: io_errors=0, no
+  bch_count_backing_io_errors lines in dmesg
 
-In addition, annotate the bio split check in raid0_make_request() with
-unlikely(), as standard MD devices already enforce chunk_sectors limits
-via bio_split_to_limits() in md_submit_bio().
+The same reproducer gave io_errors=4 with the unpatched 7.2.11 module.
+With the patched 7.2.11 module, and now with this kernel, it stays 0.
 
-Tested on an 8-disk Intel Optane Memory M10 (MEMPEK1J016GAD) RAID0 array:
-  - Random 4K read QD1 latency:  avg lat 22.06 us -> 21.10 us (-4.4%)
-  - Random 4K read QD1 IOPS:     42.6k IOPS       -> 44.6k IOPS (+4.7%)
-  - Random 4K read QD32x8 IOPS:  1.11M IOPS       -> 1.72M IOPS (+54.5%)
-  - Non-power-of-2 disk arrays:  unaffected, identical fallback path
+Affected machine
+----------------
+3x ST1000DM010 (no TRIM) -> md126 raid5 -> bcache0 (NVMe cache
+attached, writethrough) -> LVM -> ext4/btrfs root.
 
-Signed-off-by: Herman Semenoff <GermanAizek@yandex.ru>
-Signed-off-by: Herman Semenoff <GermanAizek@aizekgroup.ru>
----
- drivers/md/raid0.c | 26 +++++++++++++++++++-------
- drivers/md/raid0.h |  1 +
- 2 files changed, 20 insertions(+), 7 deletions(-)
+Since booting 7.4.0-rc2-md75+, md126 and md127 are [UUU],
+/sys/block/bcache0/bcache/io_errors is 0, and dmesg has no
+bch_count_backing_io_errors or md/bcache I/O errors.
 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 35e103f0c2c3..aeb305077a5e 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -207,6 +207,8 @@ static int create_strip_zones(struct mddev *mddev,
-struct r0conf **private_conf)
-  }
-  zone->nb_dev = cnt;
-  zone->zone_end = smallest->sectors * cnt;
-+ zone->nb_dev_shift = is_power_of_2(zone->nb_dev) ?
-+     ilog2(zone->nb_dev) : -1;
+Caveat: the local workaround (udev rule zeroing discard_max_bytes on
+md*/bcache*, plus nodiscard mounts) is still in the initramfs, so the
+HDD-backed array has not received discards on this boot.  The loop
+reproducer is what exercises the changed code path.  I can do a
+no-workaround boot and a scratch-LV discard test if you want that
+before this goes to stable.
 
-  curr_zone_end = zone->zone_end;
+Note: 7.2.y is EOL (7.2.15, 2026-11-01), so the "Cc: stable # 7.2" is
+stale; v7.3.5 still has the old code, so the fix is needed in 7.3.y
+once this reaches mainline.
 
-@@ -246,6 +248,8 @@ static int create_strip_zones(struct mddev *mddev,
-struct r0conf **private_conf)
-  }
+Tested-by: Konstantin Nikiforov <helllamer@gmail.com>
 
-  zone->nb_dev = c;
-+ zone->nb_dev_shift = is_power_of_2(zone->nb_dev) ?
-+     ilog2(zone->nb_dev) : -1;
-  sectors = (smallest->sectors - zone->dev_start) * c;
-  pr_debug("md/raid0:%s: zone->nb_dev: %d, sectors: %llu\n",
-  mdname(mddev),
-@@ -330,6 +334,7 @@ static struct md_rdev *map_sector(struct mddev
-*mddev, struct strip_zone *zone,
-  struct r0conf *conf = mddev->private;
-  int raid_disks = conf->strip_zone[0].nb_dev;
-  unsigned int chunk_sects = mddev->chunk_sectors;
-+ unsigned int disk_idx;
+#regzbot fix: md/raid5: complete unsupported discards successfully
 
-  if (is_power_of_2(chunk_sects)) {
-  int chunksect_bits = ffz(~chunk_sects);
-@@ -338,21 +343,28 @@ static struct md_rdev *map_sector(struct mddev
-*mddev, struct strip_zone *zone,
-  sector >>= chunksect_bits;
-  /* chunk in zone */
-  chunk = *sector_offset;
-- /* quotient is the chunk in real device*/
-- sector_div(chunk, zone->nb_dev << chunksect_bits);
-- } else{
-+ if (zone->nb_dev_shift >= 0) {
-+ chunk >>= (zone->nb_dev_shift + chunksect_bits);
-+ disk_idx = sector & (zone->nb_dev - 1);
-+ } else {
-+ /* quotient is the chunk in real device*/
-+ sector_div(chunk, zone->nb_dev << chunksect_bits);
-+ disk_idx = sector_div(sector, zone->nb_dev);
-+ }
-+ *sector_offset = (chunk << chunksect_bits) + sect_in_chunk;
-+ } else {
-  sect_in_chunk = sector_div(sector, chunk_sects);
-  chunk = *sector_offset;
-  sector_div(chunk, chunk_sects * zone->nb_dev);
-+ disk_idx = sector_div(sector, zone->nb_dev);
-+ *sector_offset = (chunk * chunk_sects) + sect_in_chunk;
-  }
-  /*
-  *  position the bio over the real device
-  *  real sector = chunk in device + starting of zone
-  * + the position in the chunk
-  */
-- *sector_offset = (chunk * chunk_sects) + sect_in_chunk;
-- return conf->devlist[(zone - conf->strip_zone)*raid_disks
--     + sector_div(sector, zone->nb_dev)];
-+ return conf->devlist[(zone - conf->strip_zone) * raid_disks + disk_idx];
- }
-
- static sector_t raid0_size(struct mddev *mddev, sector_t sectors, int
-raid_disks)
-@@ -616,7 +628,7 @@ static bool raid0_make_request(struct mddev
-*mddev, struct bio *bio)
-  ? (sector & (chunk_sects-1))
-  : sector_div(sector, chunk_sects));
-
-- if (sectors < bio_sectors(bio)) {
-+ if (unlikely(sectors < bio_sectors(bio))) {
-  bio = bio_submit_split_bioset(bio, sectors,
-       &mddev->bio_set);
-  if (!bio)
-diff --git a/drivers/md/raid0.h b/drivers/md/raid0.h
-index 8cc761ca7423..70b73511fb14 100644
---- a/drivers/md/raid0.h
-+++ b/drivers/md/raid0.h
-@@ -7,6 +7,7 @@ struct strip_zone {
-  sector_t dev_start; /* Zone offset in real dev (in sectors) */
-  int nb_dev; /* # of devices attached to the zone */
-  int disk_shift; /* start disk for the original layout */
-+ int nb_dev_shift; /* log2(nb_dev) if power of 2, else -1 */
- };
-
- /* Linux 3.14 (20d0189b101) made an unintended change to
--- 
-2.55.0
-
-base-commit: af5f12805e5cefa4fe68d6127c7e1fb78cd5535c
+Thanks,
+Konstantin
+DeepSeek Harness 0.2.2-rc.5; model: deepseek-flash
