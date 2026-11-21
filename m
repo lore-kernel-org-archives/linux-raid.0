@@ -1,51 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.43.8.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.45
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795208926;
-	b=OpwYQdc0PcpL+fV5JOG91SS8ut3Yp6/HokBFQs+6+Kznl9qZV5lt1eKYnqJDrPwIGK+v
-	 e7MfKIGguYiKFqFlZm+Px6Y74DA5hM/T/ygaYebiIxrxTTvuV97p6eZh1uTmoOVzrwjMw
-	 wnVzDcIBD0SgYI2Q9wxzhqb+zHWWL/maATxROORwciPiSDHRfVu/wCJgEmoBtlhU4k1eV
-	 fyjARBZoQqJHIi+Kg7WfPm2uGKJiF7f+M1yUA/CeCbmwiB+xg7PvXtNSqH9rWDSfYyuO1
-	 4mge5JUahKrMM14K9EnI4u7v9Uowi+vpSbCBEo8M9mnDrywZaGkOe5VBj/QY7KPzX7Q==
+	t=1795233441;
+	b=2+x2D53Jk3PTQCvyryduwp2Pg0vN6ImsTbDKINi9k4zmcE/QDSlR2wE8ReISExRidQ94
+	 Tbv1YhiqX6RSJTcn29G/UnPizAyzLza50rIMNw6RZcDtUsqKAo29WH3nWqf9/m67Hzy+6
+	 PubA/svebNa0BPcOBrX7+yWPUzS158w2KvDAE+ZcMkytHlW9XVkCxJAL+85XZ05Ke20ux
+	 FBJLgCuyDwXQ+NXDKJ0wTBMfIY5UIA/imqriTdXD5UNGCTtszTX0jIEjVKEY4+qR5ERi2
+	 nMtot0qQwxt/sgroO7xfxcWymCt5Am0TJRIBbBbCYueHeHedeCDcJ8qWM/rUA0ku76A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795208926;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-Spam;
-	bh=rHS+sknKa2E4kkd6M7PG4vQSRQsIe3WSEDGrpCa8nT8=;
-	b=HnZBh75X7kl+3qCYmzYc1EjhIr/v+8e1Z0S9eUJOBrxzVtbt5z58hZIRUS45cvVWUejn
-	 RuimVXd0WJYnzJoUoV1LNGYqnuGW+H+T6XAoA1aQYj21REpXmhcTT25JRmaT9JOH4fb5I
-	 Tgz7fup3Mgqjjec67xdrolSVH4wcNqVghyNkqYnTZs0nsJTeXccuxNOZks4WpqadwWfkr
-	 5fSTEHOddznBkzK3w9WFBz7gvMYIiz/arucG8VO/yi0+MIVXnnSbBXZkVcYPNVpAqVOx7
-	 hdJFQiGgtLL/PNKpt9ZtovdG89pEtzm4fUT4zhj0LzdVYF5yoh+0h/PBUAjHoWR9Qsg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795233441;
+	h=DMARC-Filter:DKIM-Signature:From:Message-Id:X-Lms-Return-Path:
+	 User-Agent:References:Subject:Date:Mime-Version:In-Reply-To:To:
+	 Received:Content-Transfer-Encoding:Content-Type:Reply-To:
+	 X-Original-From;
+	bh=ZK7OAS8yLy0R7OLa9rbaAIiJkcMNZo5CucExyd2a+gQ=;
+	b=SRzbo+ArUlOBoGqtCEJmWeSaVA+ettkEGAtQ/2oqHusi3SGlSUj2C70qoO3ojtvMqQrj
+	 b9PB/K6ofMjnJeS79HnIlheBx4dp2dacIyADxBleU9Buk6RP/vooeBDtwuJxkfUAyW9cB
+	 YHZDbQv1R56+9hwZ806RjbRA6JHqr/UmIieEDHAtlEEUj8/BRhbEnr5Vu83sct6zAr3kJ
+	 jZZeVrpJmi+9YqGceYp0FoREhMLfOA6EAFAr0rG5+CVg0moRSfjKcbt8AbN5sV8tKOWja
+	 EUjLfAE4UVVe8urSlXgkrRzOviOLTipsUIohpK2ygRcbXV7r4iozCtczCFEjui8Mcug==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=altlinux.org;
-	spf=pass smtp.mailfrom=altlinux.org;
-	arc=none smtp.remote-ip=193.43.8.18
-Received: from air.basealt.ru (air.basealt.ru [193.43.8.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=fygo.io;
+	spf=pass smtp.mailfrom=fygo.io;
+	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=UgtUEweQ;
+	arc=none smtp.remote-ip=209.127.231.45
+Received: from va-2-45.ptr.blmpb.com (va-2-45.ptr.blmpb.com [209.127.231.45])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 423DD606A33F;
-	Fri, 20 Nov 2026 21:08:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 423DD606A33F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=altlinux.org
-Received: from altlinux.ipa.basealt.ru (unknown [193.43.11.2])
-	(Authenticated sender: kovalevvv)
-	by air.basealt.ru (Postfix) with ESMTPSA id D00B023378;
-	Sat, 21 Nov 2026 00:08:33 +0300 (MSK)
-From: Vasiliy Kovalev <kovalev@altlinux.org>
-To: Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai@fygo.io>,
-	Li Nan <magiclinan@didiglobal.com>,
-	Xiao Ni <xiao@kernel.org>,
-	linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org,
-	kovalev@altlinux.org
-Subject: [PATCH v2] md/raid5: reject an invalid chunk size when continuing a reshape
-Date: Sat, 21 Nov 2026 00:08:33 +0300
-Message-ID: <20261120210833.625156-1-kovalev@altlinux.org>
-X-Mailer: git-send-email 2.50.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E716606A6BF
+	for <linux-raid@vger.kernel.org>; Sat, 21 Nov 2026 03:57:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3E716606A6BF
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=UgtUEweQ
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1795233428;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=ZK7OAS8yLy0R7OLa9rbaAIiJkcMNZo5CucExyd2a+gQ=;
+ b=UgtUEweQKIK5mR6/mFDZVZxUTXo/4QmYn9nC4+NbMgefZxJySZqZX/mn+ChN4rY5+NoWj4
+ vB0urFlG+n/8fUlASzRZ6io+mPelhG8GpJca3sz+oHamHR/T86x9Td3HYINCY4dLf/2AvF
+ ly3p6PSxXsqWdSfDv8g3YaeycWcAjkfzg2gEeZBkkx3Sd6yw3Am+h6FjjVcXZDGM3PhY7k
+ +26309X1NXsMgKvJuYeHclxX3WiNSnhOmWQQC52+kRz3nVy0gBKj3DRrfcLa+Gw1XE44Yk
+ xVMDBnUXWbXounVtK+O/JvvPn73qWRkPEenMZU+W6IMl/bzX2/0+v2t4TpDogA==
+From: "yu kuai" <yukuai@fygo.io>
+Message-Id: <9392ceb7-f883-4dcf-8668-35f5bb0eef7c@fygo.io>
+X-Lms-Return-Path: <lba+26b011693+058d16+vger.kernel.org+yukuai@fygo.io>
+User-Agent: Mozilla Thunderbird
+References: <20261024220842.665158-1-bugfood-ml@fatooh.org>
+Subject: Re: [PATCH v1] md/raid10: avoid resync when there is no room for redundancy
+Date: Sat, 21 Nov 2026 11:57:02 +0800
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -54,104 +59,49 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Spam: Yes
+Mime-Version: 1.0
+In-Reply-To: <20261024220842.665158-1-bugfood-ml@fatooh.org>
+To: "Corey Hickey" <bugfood-ml@fatooh.org>, "Song Liu" <song@kernel.org>, 
+	<linux-raid@vger.kernel.org>, "yu kuai" <yukuai@fygo.io>
+Received: from [192.168.1.104] ([39.182.0.159]) by smtp.larksuite.com with ESMTPS; Sat, 21 Nov 2026 03:57:06 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Reply-To: yukuai@fygo.io
+X-Original-From: yu kuai <yukuai@fygo.io>
 
-raid5_run() handles an array that claims an in-progress reshape
-(reshape_position != MaxSector) before any later chunk-size validation.
-It computes
+=E5=9C=A8 2026/10/25 6:08, Corey Hickey =E5=86=99=E9=81=93:
 
-	chunk_sectors = max(mddev->chunk_sectors, mddev->new_chunk_sectors);
-	new_data_disks = mddev->raid_disks - max_degraded;
-	if (sector_div(here_new, chunk_sectors * new_data_disks)) {
-	...
-	sector_div(here_old, chunk_sectors * (old_disks-max_degraded));
+> From: Corey Hickey<bugfood-c@fatooh.org>
+>
+> RAID-10 allows creation/assembly with missing devices. If the maximum
+> number of devices are missing, then a resync can do nothing--there is
+> nowhere to copy the data. A simple example of this is a four-device
+> RAID-10 with two devices missing.
+>
+> In this case, the kernel spends a while on a resync that copies no data
+> at all. The time required for this can vary, but takes ~3 minutes for a
+> 4x1TB RAID-10 on a Ryzen 7 7840HS, for example. Meanwhile, /proc/mdstat
+> reports nonsense values for finish=3D and speed=3D.
+>
+> md10 : active raid10 loop1[2] loop0[0]
+>        2147219456 blocks super 1.2 512K chunks 2 near-copies [4/2] [U_U_]
+>        [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>..........]  resync =3D 52.2% (112=
+1300864/2147219456) finish=3D96179868.0min speed=3D0K/sec
+>        bitmap: 16/16 pages [64KB], 65536KB chunk
+>
+> Neither RAID-1 nor RAID-5 do a resync when there are too few devices.
+> For RAID-10, Add a check that avoids the resync when possible. This
+> matches an equivalent (but more simple) check in raid1.c.
+>
+> Link:https://bugzilla.kernel.org/show_bug.cgi?id=3D222085
+> Link:https://www.reddit.com/r/linuxquestions/comments/1lh9to0/kernel_is_s=
+tuck_resyncing_a_4drive_raid10_array/
+> Signed-off-by: Corey Hickey<bugfood-c@fatooh.org>
+> ---
+>   drivers/md/raid10.c | 4 ++++
+>   1 file changed, 4 insertions(+)
+Applied
 
-The disk counts are checked earlier in this block, but the chunk sizes
-are not: the md/chunk_size sysfs attribute and a v1.x superblock can set
-them to any int value. The divisor is then zero for a zero chunk size,
-and for any product that is a multiple of 2^32, since sector_div()
-truncates the divisor to 32 bits, e.g. 2^30 sectors with four data
-disks:
-
-md/raid:md0: not clean -- starting background reconstruction
-Oops: divide error: 0000 [#1] SMP KASAN NOPTI
-CPU: 3 UID: 0 PID: 1414 Comm: syz.1.18 Not tainted 7.4.0-rc1-next-20261104-alt-syz-box-drivers_md_bcache #1 PREEMPT(lazy)
-RIP: 0010:raid5_run+0x5a8/0x27b0 drivers/md/raid5.c:8116
-Call Trace:
- <TASK>
- md_run+0xea5/0x2a00 drivers/md/md.c:6808
- do_md_run+0x32/0x660 drivers/md/md.c:6909
- md_ioctl+0x2ab2/0x4040 drivers/md/md.c:8541
- blkdev_ioctl+0x5a9/0x6e0 block/ioctl.c:798
- vfs_ioctl fs/ioctl.c:51 [inline]
- __do_sys_ioctl fs/ioctl.c:597 [inline]
- __se_sys_ioctl fs/ioctl.c:583 [inline]
- __x64_sys_ioctl+0x18a/0x210 fs/ioctl.c:583
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x112/0x630 arch/x86/entry/syscall_64.c:89
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x00007f562441a40b
- </TASK>
-
-Writing 8 (bytes) to md/chunk_size, a non-MaxSector reshape_position and
-then RUN_ARRAY on a raid5 array is enough to trigger it.
-
-check_reshape() and raid5_start_reshape() already reject a zero chunk
-size, but an interrupted reshape is resumed by raid5_run() itself and
-goes through neither of them.
-
-Require mddev->chunk_sectors to be a power of two of at least a page,
-as setup_conf() does for new_chunk_sectors: max() lets a valid
-new_chunk_sectors hide it, and setup_conf() copies it to
-prev_chunk_sectors unchecked. Also reject a chunk size that makes either
-product overflow int.
-
-Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
-
-Fixes: f67055780caa ("[PATCH] md: Checkpoint and allow restart of raid5 reshape")
-Cc: stable@vger.kernel.org
-Signed-off-by: Vasiliy Kovalev <kovalev@altlinux.org>
----
-v2: also validate mddev->chunk_sectors, which max() could hide behind a
-    valid new_chunk_sectors (Sashiko review).
-
-v1: https://lore.kernel.org/all/20261120184801.614123-1-kovalev@altlinux.org
-
- drivers/md/raid5.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index d52adf81065a..b62657b410d4 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -8103,6 +8103,12 @@ static int raid5_run(struct mddev *mddev)
- 				min_disks);
- 			return -EINVAL;
- 		}
-+		if (!is_power_of_2(mddev->chunk_sectors) ||
-+		    mddev->chunk_sectors < PAGE_SECTORS) {
-+			pr_warn("md/raid:%s: invalid chunk size for reshape - aborting.\n",
-+				mdname(mddev));
-+			return -EINVAL;
-+		}
- 		/* reshape_position must be on a new-stripe boundary, and one
- 		 * further up in new geometry must map after here in old
- 		 * geometry.
-@@ -8113,6 +8119,12 @@ static int raid5_run(struct mddev *mddev)
- 		here_new = mddev->reshape_position;
- 		chunk_sectors = max(mddev->chunk_sectors, mddev->new_chunk_sectors);
- 		new_data_disks = mddev->raid_disks - max_degraded;
-+		if ((u64)chunk_sectors * new_data_disks > INT_MAX ||
-+		    (u64)chunk_sectors * (old_disks - max_degraded) > INT_MAX) {
-+			pr_warn("md/raid:%s: chunk size too large for reshape - aborting.\n",
-+				mdname(mddev));
-+			return -EINVAL;
-+		}
- 		if (sector_div(here_new, chunk_sectors * new_data_disks)) {
- 			pr_warn("md/raid:%s: reshape_position not on a stripe boundary\n",
- 				mdname(mddev));
--- 
-2.50.1
-
+--=20
+Thanks,
+Kuai
