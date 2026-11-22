@@ -1,50 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=79.135.106.113
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.70.43.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795318190;
-	b=oUZ+S90eNtaGKIxDrohHWdNlrzFSEdyaRTJu8w+3mXsguG3Ytl3ezidoZL8le3pYmmiA
-	 WrE8Y/enJr4KTHArCyUXXVDuF+rMm54/qe+57DjXu6vFAHTmPx2kSp4A40RVYYPdwqoHd
-	 QJckyv9LI8zxdO62AtBMKo5AabsvdkWFVXYPHzI3NTJmdjAdZ0k+f0swgut8/l0Glc60f
-	 PUbQ074/psTs4JwwoHAfv/IJuDzmEBEFmZORc9M33QHrPIXu8mRT/m4lWDNNIgga1JnNC
-	 38W6wbLQmI3PpR374MwrJa/ICU8PdUBp3GzThSDXq0mBxWT/PqIMqJd1I5gvQwSKrYg==
+	t=1795318188;
+	b=YdunML0d8gr0AVe5C14GPf/CAS0wrR1kRwWBIwrqQTmMnjmoGACDmONuIHpaNLktNyEC
+	 TDQst2+IeviY7kJSgckOoAq3+VFuOzqdlIlpVV5lUZGm1Xa5HfLktaigPbkXYzWFvyUL9
+	 KS4SUkXFa0kyIg4gqF1htw5ERIr4JkEh46bfo68/KgcBggmWj+yNSOmIgTPAakRAOw1eO
+	 T/Z4Uab4MtnNmhVubKbhRGGupP7uLhwjtPXlozqHTEA3hhqx3Ee3CB200gb18QGeFgPQl
+	 4VdKTuxMHkr3sfgc4ba0FgxvN2XcNQ/0OkBzGEZiqbuzr7CvtUDNrb+GlLJ6v644o6A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795318190;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795318188;
 	h=DMARC-Filter:DKIM-Signature:X-Pm-Submission-Id:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=+gvvGKiXnM6uaroJfNk8CnYzm/dXCNho3UzC5dDTiU4=;
-	b=FICictLPFfWzI8ubw5rHBy+QN+1vyQJ+qcdzWGLLd5RoWKLardHWJd7XnsqPwowRzvmU
-	 enIPraBw1m3vP66ltkoA8F8+q6kFMI2uaeGCzZpfFx3Tg4fnrO0RXjk8KPsmA2U8TnQGs
-	 1vMr8jh12JwzHgqg9kSFeqk6dFNAPvPBLD+P6vroWdWkrhxCxsB0YUrE4i0KocV1tpnec
-	 efzkywifzv5QPk4DyR9B+XTFwqcEX/LglF1OwOSCvHhTMz6uLYxDe3R3yQyuTP4nHJOfw
-	 qML2NmH/t3tNoyCOSodam0IBBqy8XxTrE39aHbgJ2Q6MeinYoJolmSjAmfkp4HeAYiA==
+	bh=p3nqFkme7mg7H/fs+lYWoZopxp7iNJH2hxKNl8bsNRw=;
+	b=cCF3l1Mk3AqZtCe9J3x0oFEK5AH+spOZoGF06kbtz6kAidM9pDjQX/yPttJtC2fnOn67
+	 7/JVf1UfGDP0LCjmmOh709AS4O/Dz1UxQyifezHTE+ukUjrUPFfTkSBBBKqB03avdXHFP
+	 OGD0oGqG+gVmd9Vb/OlQ6xvAyzVu02OHPBT5iiGb1bbITBr1SV6i/poo4jSjDHS88xFKC
+	 Fb5pmpXMaSxZtRKzdNG0Vuu3ayRCCaW3/uqqmNCvI+TBD4uhG4OUGW4ETpvync9ryUm19
+	 hMjrDxExvooqpxZEQN2di7Pi6YQVYCP6YRwH43ZTuA5Sa5YMuNv/RfuzZ4hqRd1jaPA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=raidlab.org;
 	spf=pass smtp.mailfrom=raidlab.org;
-	dkim=pass header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=t48ShEHf;
-	arc=none smtp.remote-ip=79.135.106.113
-Received: from mail-106113.protonmail.ch (mail-106113.protonmail.ch [79.135.106.113])
+	dkim=pass header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=dyzICezC;
+	arc=none smtp.remote-ip=185.70.43.172
+Received: from mail-43172.protonmail.ch (mail-43172.protonmail.ch [185.70.43.172])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C628606A696
-	for <linux-raid@vger.kernel.org>; Sun, 22 Nov 2026 03:29:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0C628606A696
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36179606A680;
+	Sun, 22 Nov 2026 03:29:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 36179606A680
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=raidlab.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=raidlab.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=t48ShEHf
+	dkim=pass (2048-bit key, unprotected) header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=dyzICezC
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=raidlab.org;
-	s=protonmail; t=1795318187; x=1795577387;
-	bh=+gvvGKiXnM6uaroJfNk8CnYzm/dXCNho3UzC5dDTiU4=;
+	s=protonmail; t=1795318186; x=1795577386;
+	bh=p3nqFkme7mg7H/fs+lYWoZopxp7iNJH2hxKNl8bsNRw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:From:To:
 	 Cc:Date:Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=t48ShEHf+3/ljZDRqT4q2pYCgCmFl/PFhHKNIGPxvDj2kArMeZS9MnIH6p8LU+R0/
-	 uwy44bBEFTdx7mrG7xWQtZf/3JcQ6M0CyUjlFtswgZ9DN/vLddRI+B2qaDPl30yq19
-	 MwNrJEebsfE8Bzudrk6bN1Gl8QIO765lkDsY6+AXacG2/m2AKtIO5MEvUxBnuucGI5
-	 qzgsC5EflXh1KGZKAY1xm17WSTPJuvPR6JWJ4zC5j9U9qJ3/At2r4fb0RA7VyupiyX
-	 QrtZQwB18o2+voDvINC8o1QI46VLnqQuMOa4bNbrymlOzz2IBcSVDpFkrgpfsLo3JO
-	 1a1ANTxHV+Gag==
-X-Pm-Submission-Id: 4jXF1k0spSz1DDrS
+	b=dyzICezCY9q2jMs2tJclU8lxNYEQDOcniniqe35bTIiW/D/Kz4oit/hiQT3uK3LYS
+	 0Uj8H5mbWFoHXzXxXwxqBBOYTdnMhr2w+6W2jk7QA20M+QN1Glpw6tCQheICUoLMrQ
+	 73cNZ73nf2gxaozcUTqWuccNINCvfdxrRHupSrmsQEn4a7/34fpUM6vHoJ16fQKsOT
+	 C04I9U4MIF6zer+VZ+B185yHs6p3MWorRZg8B/ECSw0/4UhQ1+o3VYfdk7mBA4ErdD
+	 hCjZ1ObuNNDvMfgcZz6asSSTlKL2QvygXblMkCKOw71z31IZfZiXThcy/V7LHc/NBK
+	 U0ZhiGpadmfmQ==
+X-Pm-Submission-Id: 4jXF1h447Rz1DDqy
 From: Miroslav Cimerman <mc@raidlab.org>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fygo.io>,
@@ -57,9 +57,9 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	Markus Stockhausen <markus.stockhausen@collogia.de>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/3] raid6: prefetch Q with prefetcht0 in the x86 x4 xor_syndrome functions
-Date: Sun, 22 Nov 2026 03:29:33 +0000
-Message-ID: <20261122032933.2306875-4-mc@raidlab.org>
+Subject: [PATCH 2/3] raid6: remove the sfence from the x86 xor_syndrome functions
+Date: Sun, 22 Nov 2026 03:29:32 +0000
+Message-ID: <20261122032933.2306875-3-mc@raidlab.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261122032933.2306875-1-mc@raidlab.org>
 References: <20261122032933.2306875-1-mc@raidlab.org>
@@ -74,80 +74,116 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The x4 xor_syndrome() functions for SSE2, AVX2 and AVX-512 prefetch Q
-with prefetchnta. That hint is meant for data that is used once. Q is
-read, updated and written back with normal stores, and md calls
-xor_syndrome() twice on the same P/Q page for each write.
+The SSE2, AVX2 and AVX-512 xor_syndrome() functions end with an sfence.
+It orders non-temporal stores, but none of these functions uses them
+anymore. The x4 versions stopped with "raid6: use normal stores in the
+x86 x4 xor_syndrome functions", and the x1 and x2 versions never used
+them.
 
-Prefetch Q with prefetcht0, which keeps it in all cache levels. The data
-blocks are read once and keep prefetchnta.
+Remove the sfence from all nine functions. The gen_syndrome() functions
+still write P and Q with non-temporal stores and keep their sfence.
 
-Time per write measured in a userspace harness in md's read-modify-write
-pattern (two xor_syndrome() calls on the same P/Q page), avx512x4 on a
-Xeon Gold 6130, 2-24 data disks, write to the first, middle and last
-data disk, median of 10 passes:
+The asm of the AVX-512 functions relied on the "memory" clobber of the
+sfence. "raid6: declare the AVX-512 P/Q stores as asm outputs" declares
+their stores as outputs instead.
 
-  P and Q in DRAM:      -2.2% (geometric mean), up to -5.7%
-  P and Q in L3:        +0.2%
-  P and Q in L1/L2:     +0.3%
+The memory operands are still declared as single bytes while the asm
+accesses 16 to 64 bytes. This is unchanged. No C code in these functions
+accesses the buffers.
 
-The gain comes with 2-8 data disks, where Q is a larger part of the
-work. The SSE2 and AVX2 versions were not measured.
-
-Suggested-by: Eric Biggers <ebiggers@kernel.org>
-Link: https://lore.kernel.org/linux-raid/20261116210440.GE229817@google.com/
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Link: https://lore.kernel.org/linux-raid/avqegZd_W0kce0UA@infradead.org/
 Signed-off-by: Miroslav Cimerman <mc@raidlab.org>
 ---
- lib/raid/raid6/x86/avx2.c   | 4 ++--
- lib/raid/raid6/x86/avx512.c | 4 ++--
- lib/raid/raid6/x86/sse2.c   | 4 ++--
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ lib/raid/raid6/x86/avx2.c   | 3 ---
+ lib/raid/raid6/x86/avx512.c | 3 ---
+ lib/raid/raid6/x86/sse2.c   | 3 ---
+ 3 files changed, 9 deletions(-)
 
 diff --git a/lib/raid/raid6/x86/avx2.c b/lib/raid/raid6/x86/avx2.c
-index d3f488a9c1a5..5a49079ace68 100644
+index a9e709ce2104..d3f488a9c1a5 100644
 --- a/lib/raid/raid6/x86/avx2.c
 +++ b/lib/raid/raid6/x86/avx2.c
-@@ -408,8 +408,8 @@ static void raid6_avx24_xor_syndrome(int disks, int start, int stop,
- 			asm volatile("vpxor %ymm13,%ymm12,%ymm12");
- 			asm volatile("vpxor %ymm15,%ymm14,%ymm14");
- 		}
--		asm volatile("prefetchnta %0" :: "m" (q[d]));
--		asm volatile("prefetchnta %0" :: "m" (q[d+64]));
-+		asm volatile("prefetcht0 %0" :: "m" (q[d]));
-+		asm volatile("prefetcht0 %0" :: "m" (q[d+64]));
- 		/* P/Q left side optimization */
- 		for (z = start-1 ; z >= 0 ; z--) {
- 			asm volatile("vpxor %ymm5,%ymm5,%ymm5");
+@@ -115,7 +115,6 @@ static void raid6_avx21_xor_syndrome(int disks, int start, int stop,
+ 		asm volatile("vmovdqa %%ymm2,%0" : "=m" (p[d]));
+ 	}
+ 
+-	asm volatile("sfence" : : : "memory");
+ 	asm volatile("vzeroupper");
+ 	kernel_fpu_end();
+ }
+@@ -245,7 +244,6 @@ static void raid6_avx22_xor_syndrome(int disks, int start, int stop,
+ 		asm volatile("vmovdqa %%ymm3,%0" : "=m" (p[d+32]));
+ 	}
+ 
+-	asm volatile("sfence" : : : "memory");
+ 	asm volatile("vzeroupper");
+ 	kernel_fpu_end();
+ }
+@@ -448,7 +446,6 @@ static void raid6_avx24_xor_syndrome(int disks, int start, int stop,
+ 		asm volatile("vmovdqa %%ymm12,%0" : "=m" (q[d+64]));
+ 		asm volatile("vmovdqa %%ymm14,%0" : "=m" (q[d+96]));
+ 	}
+-	asm volatile("sfence" : : : "memory");
+ 	asm volatile("vzeroupper");
+ 	kernel_fpu_end();
+ }
 diff --git a/lib/raid/raid6/x86/avx512.c b/lib/raid/raid6/x86/avx512.c
-index 33d7639da5b3..38077109ab0f 100644
+index 7dc0a45cd2fb..33d7639da5b3 100644
 --- a/lib/raid/raid6/x86/avx512.c
 +++ b/lib/raid/raid6/x86/avx512.c
-@@ -476,8 +476,8 @@ static void raid6_avx5124_xor_syndrome(int disks, int start, int stop,
- 				       "m" (dptr[z][d+128]),
- 				       "m" (dptr[z][d+192]));
- 		}
--		asm volatile("prefetchnta %0\n\t"
--			     "prefetchnta %1\n\t"
-+		asm volatile("prefetcht0 %0\n\t"
-+			     "prefetcht0 %1\n\t"
- 			     :
- 			     : "m" (q[d]), "m" (q[d+128]));
- 		/* P/Q left side optimization */
+@@ -135,7 +135,6 @@ static void raid6_avx5121_xor_syndrome(int disks, int start, int stop,
+ 			     : "+m" (q[d]), "=m" (p[d]));
+ 	}
+ 
+-	asm volatile("sfence" : : : "memory");
+ 	asm volatile("vzeroupper");
+ 	kernel_fpu_end();
+ }
+@@ -290,7 +289,6 @@ static void raid6_avx5122_xor_syndrome(int disks, int start, int stop,
+ 			       "=m" (p[d+64]));
+ 	}
+ 
+-	asm volatile("sfence" : : : "memory");
+ 	asm volatile("vzeroupper");
+ 	kernel_fpu_end();
+ }
+@@ -527,7 +525,6 @@ static void raid6_avx5124_xor_syndrome(int disks, int start, int stop,
+ 			       "=m" (p[d+192]), "+m" (q[d]), "+m" (q[d+64]),
+ 			       "+m" (q[d+128]), "+m" (q[d+192]));
+ 	}
+-	asm volatile("sfence" : : : "memory");
+ 	asm volatile("vzeroupper");
+ 	kernel_fpu_end();
+ }
 diff --git a/lib/raid/raid6/x86/sse2.c b/lib/raid/raid6/x86/sse2.c
-index a0709916289c..c27a4c8254ba 100644
+index 9e8bece51690..a0709916289c 100644
 --- a/lib/raid/raid6/x86/sse2.c
 +++ b/lib/raid/raid6/x86/sse2.c
-@@ -405,8 +405,8 @@ static void raid6_sse24_xor_syndrome(int disks, int start, int stop,
- 			asm volatile("pxor %xmm13,%xmm12");
- 			asm volatile("pxor %xmm15,%xmm14");
- 		}
--		asm volatile("prefetchnta %0" :: "m" (q[d]));
--		asm volatile("prefetchnta %0" :: "m" (q[d+32]));
-+		asm volatile("prefetcht0 %0" :: "m" (q[d]));
-+		asm volatile("prefetcht0 %0" :: "m" (q[d+32]));
- 		/* P/Q left side optimization */
- 		for ( z = start-1 ; z >= 0 ; z-- ) {
- 			asm volatile("pxor %xmm5,%xmm5");
+@@ -113,7 +113,6 @@ static void raid6_sse21_xor_syndrome(int disks, int start, int stop,
+ 		asm volatile("movdqa %%xmm2,%0" : "=m" (p[d]));
+ 	}
+ 
+-	asm volatile("sfence" : : : "memory");
+ 	kernel_fpu_end();
+ }
+ 
+@@ -241,7 +240,6 @@ static void raid6_sse22_xor_syndrome(int disks, int start, int stop,
+ 		asm volatile("movdqa %%xmm3,%0" : "=m" (p[d+16]));
+ 	}
+ 
+-	asm volatile("sfence" : : : "memory");
+ 	kernel_fpu_end();
+ }
+ 
+@@ -445,7 +443,6 @@ static void raid6_sse24_xor_syndrome(int disks, int start, int stop,
+ 		asm volatile("movdqa %%xmm12,%0" : "=m" (q[d+32]));
+ 		asm volatile("movdqa %%xmm14,%0" : "=m" (q[d+48]));
+ 	}
+-	asm volatile("sfence" : : : "memory");
+ 	kernel_fpu_end();
+ }
+ 
 -- 
 2.53.0
 
