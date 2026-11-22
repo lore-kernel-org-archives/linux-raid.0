@@ -1,49 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.70.43.171
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=79.135.106.113
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795318186;
-	b=j6EgVTs4g+1KZfrsFFoeaOy2hiRe9g8hhae1UubNjt4tzo9BABH2ZoaylqjMUItTk8VU
-	 xJMchwTAmGqwlMO7r1qHxJEl/nYn+R0ir7EOfI2tb2O0BqpuCQgGkWmM3a+CyAoPDzMfh
-	 8YiVz6cA1mtcfcvZvHoTb85A1eY6LWDR7xwQyoAa9Bbja3K7DEARn6mOaHezApxCS1NoU
-	 k/I3GXhbbRzbEW8RHs1wT2OBiTuLe6ZnyW6aMV+O6alc3Bk0vWbpQjS+0ROg1T1ft0ZBh
-	 QOln017LSMRJHKnlLumIu53Gdq5/h7UHUzoUdQMFHo1gO4ucE6lxDryFaKgBtwgAiaQ==
+	t=1795318190;
+	b=oUZ+S90eNtaGKIxDrohHWdNlrzFSEdyaRTJu8w+3mXsguG3Ytl3ezidoZL8le3pYmmiA
+	 WrE8Y/enJr4KTHArCyUXXVDuF+rMm54/qe+57DjXu6vFAHTmPx2kSp4A40RVYYPdwqoHd
+	 QJckyv9LI8zxdO62AtBMKo5AabsvdkWFVXYPHzI3NTJmdjAdZ0k+f0swgut8/l0Glc60f
+	 PUbQ074/psTs4JwwoHAfv/IJuDzmEBEFmZORc9M33QHrPIXu8mRT/m4lWDNNIgga1JnNC
+	 38W6wbLQmI3PpR374MwrJa/ICU8PdUBp3GzThSDXq0mBxWT/PqIMqJd1I5gvQwSKrYg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795318186;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795318190;
 	h=DMARC-Filter:DKIM-Signature:X-Pm-Submission-Id:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=zw0RFWxkK80ZDQsxTqIzOsK9ms1kIlwgwAxsFykNLbQ=;
-	b=rX1tQ7yFRvR3Mc65FS51/TIPv935IlAampbxkMXtzp1d+RNgHjvkPRxDqiSgAPI4z1tj
-	 e0KJhVCH/FpHbRqQg19NJqLASddemcp5UdTTkSGfwy5f24wvde10GhUqDEb8BDc3/ynMh
-	 i1D7CuFClyRc68qn0rfN93gA/bGOT6Ig2aZK27eviOLg4TFhJUO9V2xD1JqQlheeGTByX
-	 fnZL+zZ82AtQ/HIRVlmQb4wpK9HPWLUZc2ZkyCKSlVyuwix+JUGRehXvyfI1hFvuJBgQZ
-	 vE7DyKvxI9iwIzE4ExywB2oIcwO3pGkOlgYqFU+9y0WTTIL4LO+aG/u3uvSk0PUjepw==
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=+gvvGKiXnM6uaroJfNk8CnYzm/dXCNho3UzC5dDTiU4=;
+	b=FICictLPFfWzI8ubw5rHBy+QN+1vyQJ+qcdzWGLLd5RoWKLardHWJd7XnsqPwowRzvmU
+	 enIPraBw1m3vP66ltkoA8F8+q6kFMI2uaeGCzZpfFx3Tg4fnrO0RXjk8KPsmA2U8TnQGs
+	 1vMr8jh12JwzHgqg9kSFeqk6dFNAPvPBLD+P6vroWdWkrhxCxsB0YUrE4i0KocV1tpnec
+	 efzkywifzv5QPk4DyR9B+XTFwqcEX/LglF1OwOSCvHhTMz6uLYxDe3R3yQyuTP4nHJOfw
+	 qML2NmH/t3tNoyCOSodam0IBBqy8XxTrE39aHbgJ2Q6MeinYoJolmSjAmfkp4HeAYiA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=raidlab.org;
 	spf=pass smtp.mailfrom=raidlab.org;
-	dkim=pass header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=Q65JK0UL;
-	arc=none smtp.remote-ip=185.70.43.171
-Received: from mail-43171.protonmail.ch (mail-43171.protonmail.ch [185.70.43.171])
+	dkim=pass header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=t48ShEHf;
+	arc=none smtp.remote-ip=79.135.106.113
+Received: from mail-106113.protonmail.ch (mail-106113.protonmail.ch [79.135.106.113])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07922606A320
-	for <linux-raid@vger.kernel.org>; Sun, 22 Nov 2026 03:29:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 07922606A320
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C628606A696
+	for <linux-raid@vger.kernel.org>; Sun, 22 Nov 2026 03:29:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0C628606A696
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=raidlab.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=raidlab.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=Q65JK0UL
+	dkim=pass (2048-bit key, unprotected) header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=t48ShEHf
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=raidlab.org;
-	s=protonmail; t=1795318182; x=1795577382;
-	bh=zw0RFWxkK80ZDQsxTqIzOsK9ms1kIlwgwAxsFykNLbQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:From:To:Cc:Date:Subject:
-	 Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=Q65JK0UL6eBWGjEOAdL6rgJAc62Wx8Si0vZTrbmyOGCofBm1yRVzBZi5opQWFDg15
-	 6CgZ2vuyNureHVX4TR0NP56Cq/dZPoHvGs/0GM1Q3MNaT2zRnxZGr5ecBj0asP8E4Q
-	 qZSBwY1GqrO/bm/g8ftd/dba38jFXPSwpkuHTaPo12AE2spdM7sibSNvh/hbNkmgW7
-	 BG67MYrrqxVFJ6OezCmp2w7MstwmvmqyFPlNMjFsUHQzihstp3DvTidJ4Dpsw2h6hZ
-	 P1ZUcDZ5kc4N1Z4tQTEipfSFEEtKa3dNOvxoypb6l437DrNgjXOYHBjqoQ3+JzqtvC
-	 k4MsueUf58Zkg==
-X-Pm-Submission-Id: 4jXF1c4hg1z1DDqy
+	s=protonmail; t=1795318187; x=1795577387;
+	bh=+gvvGKiXnM6uaroJfNk8CnYzm/dXCNho3UzC5dDTiU4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:From:To:
+	 Cc:Date:Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=t48ShEHf+3/ljZDRqT4q2pYCgCmFl/PFhHKNIGPxvDj2kArMeZS9MnIH6p8LU+R0/
+	 uwy44bBEFTdx7mrG7xWQtZf/3JcQ6M0CyUjlFtswgZ9DN/vLddRI+B2qaDPl30yq19
+	 MwNrJEebsfE8Bzudrk6bN1Gl8QIO765lkDsY6+AXacG2/m2AKtIO5MEvUxBnuucGI5
+	 qzgsC5EflXh1KGZKAY1xm17WSTPJuvPR6JWJ4zC5j9U9qJ3/At2r4fb0RA7VyupiyX
+	 QrtZQwB18o2+voDvINC8o1QI46VLnqQuMOa4bNbrymlOzz2IBcSVDpFkrgpfsLo3JO
+	 1a1ANTxHV+Gag==
+X-Pm-Submission-Id: 4jXF1k0spSz1DDrS
 From: Miroslav Cimerman <mc@raidlab.org>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fygo.io>,
@@ -56,10 +57,12 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	Markus Stockhausen <markus.stockhausen@collogia.de>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 0/3] raid6: x86: asm constraints, sfence and prefetch in xor_syndrome
-Date: Sun, 22 Nov 2026 03:29:30 +0000
-Message-ID: <20261122032933.2306875-1-mc@raidlab.org>
+Subject: [PATCH 3/3] raid6: prefetch Q with prefetcht0 in the x86 x4 xor_syndrome functions
+Date: Sun, 22 Nov 2026 03:29:33 +0000
+Message-ID: <20261122032933.2306875-4-mc@raidlab.org>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261122032933.2306875-1-mc@raidlab.org>
+References: <20261122032933.2306875-1-mc@raidlab.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -71,56 +74,80 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This follows up on the review of "raid6: use normal stores in the x86 x4
-xor_syndrome functions" [1]. With that patch, none of the x86
-xor_syndrome() functions uses non-temporal stores, so their sfence
-orders nothing. Christoph suggested removing it [2]. Eric pointed out
-that the AVX-512 functions list P and Q as asm inputs only and rely on
-the "memory" clobber of that sfence, and suggested prefetcht0 for Q [3].
-1/3 fixes the constraints, 2/3 removes the sfence, and 3/3 changes the
-prefetch of Q.
+The x4 xor_syndrome() functions for SSE2, AVX2 and AVX-512 prefetch Q
+with prefetchnta. That hint is meant for data that is used once. Q is
+read, updated and written back with normal stores, and md calls
+xor_syndrome() twice on the same P/Q page for each write.
 
-Based on mm-nonmm-unstable with [1] applied.
+Prefetch Q with prefetcht0, which keeps it in all cache levels. The data
+blocks are read once and keep prefetchnta.
 
-Testing:
-- Builds without warnings with W=1, gcc 15.2 and clang 21.1.
-- With 1/3, clang generates the same code as before. gcc reloads the
-  data pointers inside the loop of the AVX-512 functions (up to two
-  more instructions per function). With 2/3, the sfence instructions
-  are gone, and apart from alignment padding the code is the same.
-  3/3 only changes the six prefetch instructions.
-- The raid6 KUnit test passes in QEMU with -cpu max under KVM on a
-  Haswell host (avx2x1..x4) and with -cpu Westmere (sse2x1..x4). All
-  8 test cases pass in each run.
-- In userspace, gen_syndrome() and xor_syndrome() of all nine sse2,
-  avx2 and avx512 variants match a scalar reference (gen_syndrome for
-  2-24 data disks, xor_syndrome for every start/stop): sse2 natively on
-  a Core i5-2520M, avx2 natively on a Xeon E5-2699 v3, all variants
-  natively on a Xeon Gold 6130, and avx512 also with Intel SDE (-skx).
-  The AVX-512 functions were not run in a kernel. I have no AVX-512
-  machine with root access.
+Time per write measured in a userspace harness in md's read-modify-write
+pattern (two xor_syndrome() calls on the same P/Q page), avx512x4 on a
+Xeon Gold 6130, 2-24 data disks, write to the first, middle and last
+data disk, median of 10 passes:
 
-The patches and the tests were prepared with the help of an LLM. I
-reviewed everything.
+  P and Q in DRAM:      -2.2% (geometric mean), up to -5.7%
+  P and Q in L3:        +0.2%
+  P and Q in L1/L2:     +0.3%
 
-[1] https://lore.kernel.org/linux-raid/20261109030805.25709-1-mc@raidlab.org/
-[2] https://lore.kernel.org/linux-raid/avqegZd_W0kce0UA@infradead.org/
-[3] https://lore.kernel.org/linux-raid/20261116210440.GE229817@google.com/
+The gain comes with 2-8 data disks, where Q is a larger part of the
+work. The SSE2 and AVX2 versions were not measured.
 
-Miroslav Cimerman (3):
-  raid6: declare the AVX-512 P/Q stores as asm outputs
-  raid6: remove the sfence from the x86 xor_syndrome functions
-  raid6: prefetch Q with prefetcht0 in the x86 x4 xor_syndrome functions
+Suggested-by: Eric Biggers <ebiggers@kernel.org>
+Link: https://lore.kernel.org/linux-raid/20261116210440.GE229817@google.com/
+Signed-off-by: Miroslav Cimerman <mc@raidlab.org>
+---
+ lib/raid/raid6/x86/avx2.c   | 4 ++--
+ lib/raid/raid6/x86/avx512.c | 4 ++--
+ lib/raid/raid6/x86/sse2.c   | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
- lib/raid/raid6/x86/avx2.c   |  7 ++-----
- lib/raid/raid6/x86/avx512.c | 37 ++++++++++++++-----------------------
- lib/raid/raid6/x86/sse2.c   |  7 ++-----
- 3 files changed, 18 insertions(+), 33 deletions(-)
-
-
-base-commit: 609cd6a5e6138620c16d8818bb585e8766064c23
-prerequisite-patch-id: 0242f328222b644b2b329d90c8d50aad322b7655
-prerequisite-message-id: <20261109030805.25709-1-mc@raidlab.org>
+diff --git a/lib/raid/raid6/x86/avx2.c b/lib/raid/raid6/x86/avx2.c
+index d3f488a9c1a5..5a49079ace68 100644
+--- a/lib/raid/raid6/x86/avx2.c
++++ b/lib/raid/raid6/x86/avx2.c
+@@ -408,8 +408,8 @@ static void raid6_avx24_xor_syndrome(int disks, int start, int stop,
+ 			asm volatile("vpxor %ymm13,%ymm12,%ymm12");
+ 			asm volatile("vpxor %ymm15,%ymm14,%ymm14");
+ 		}
+-		asm volatile("prefetchnta %0" :: "m" (q[d]));
+-		asm volatile("prefetchnta %0" :: "m" (q[d+64]));
++		asm volatile("prefetcht0 %0" :: "m" (q[d]));
++		asm volatile("prefetcht0 %0" :: "m" (q[d+64]));
+ 		/* P/Q left side optimization */
+ 		for (z = start-1 ; z >= 0 ; z--) {
+ 			asm volatile("vpxor %ymm5,%ymm5,%ymm5");
+diff --git a/lib/raid/raid6/x86/avx512.c b/lib/raid/raid6/x86/avx512.c
+index 33d7639da5b3..38077109ab0f 100644
+--- a/lib/raid/raid6/x86/avx512.c
++++ b/lib/raid/raid6/x86/avx512.c
+@@ -476,8 +476,8 @@ static void raid6_avx5124_xor_syndrome(int disks, int start, int stop,
+ 				       "m" (dptr[z][d+128]),
+ 				       "m" (dptr[z][d+192]));
+ 		}
+-		asm volatile("prefetchnta %0\n\t"
+-			     "prefetchnta %1\n\t"
++		asm volatile("prefetcht0 %0\n\t"
++			     "prefetcht0 %1\n\t"
+ 			     :
+ 			     : "m" (q[d]), "m" (q[d+128]));
+ 		/* P/Q left side optimization */
+diff --git a/lib/raid/raid6/x86/sse2.c b/lib/raid/raid6/x86/sse2.c
+index a0709916289c..c27a4c8254ba 100644
+--- a/lib/raid/raid6/x86/sse2.c
++++ b/lib/raid/raid6/x86/sse2.c
+@@ -405,8 +405,8 @@ static void raid6_sse24_xor_syndrome(int disks, int start, int stop,
+ 			asm volatile("pxor %xmm13,%xmm12");
+ 			asm volatile("pxor %xmm15,%xmm14");
+ 		}
+-		asm volatile("prefetchnta %0" :: "m" (q[d]));
+-		asm volatile("prefetchnta %0" :: "m" (q[d+32]));
++		asm volatile("prefetcht0 %0" :: "m" (q[d]));
++		asm volatile("prefetcht0 %0" :: "m" (q[d+32]));
+ 		/* P/Q left side optimization */
+ 		for ( z = start-1 ; z >= 0 ; z-- ) {
+ 			asm volatile("pxor %xmm5,%xmm5");
 -- 
 2.53.0
 
