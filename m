@@ -1,61 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.62.57.210
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795583017;
-	b=XpkS01W95hV85zWQnjVgpmVvzblIf+dXIwaAj2agFnbzs9ObSaCgxRy1exlCCV13gbGR
-	 mkH1ioL4rqgQ4I81pdOqUtGIklgtYJymLExyBBRYgN6VYK/kgkZ4sD53WSNB/TTOEr1h7
-	 RpJ3RF+yfoorUsESAWB/Qr2HhzZOHJOp+XvmGyUukMRCqr8IkREqCX0L0B+JWqJ1GNQ0n
-	 Ifp7pgerhVvrJ9YRvg5KzO+tKHCYVa+KZ0TxMw7FBLUbjQaPEWlbwuGfVu0JwZhFPpu8q
-	 zQS5L0e+BQZuVM0sYpBLRRCaAlGeHRa3IM/30Up9aysMqaJH4jyKQQqhsnFSkY/cULA==
+	t=1795601546;
+	b=d04/ntPQRTldXF9nZLPZOQVwOigp3aVyCfgYKOUT8DOJDJGimX09lmEBES9t9tveSk/h
+	 /8jJQ+eeSGTOypbeY12PNYg6OJriokP7gaCzgCUmVJFBhrpCRA8P4tMjGRdxvyIrGNG7T
+	 WQRFkIp0QqdMVp4H0KVSHQW+RtJpySGaYK0EGGl/hX4haPyqsfgN/dInqTx+pqybj+NtQ
+	 Kr7nClaaWdPqQd+d2zfkWi7vVlDEM8rCuLQFHxneCxPc/uxrwDkvEuVoV0M7cVOqrCjaA
+	 3VXDlzs4oiN4OURh/DkJKrTJAojdi422jcN8a+w+ofmMDlEToSgI2cBTRCyrTqvf/lw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795583017;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-SRS-Rewrite;
-	bh=lBwceiwm98ReJuMPuSgjaP5OOtf3D+hnyit6ozIv9SY=;
-	b=dKkbS8A0Fosn5RrqpcZfc+dYQLwPVRomt1Owurw/oFsPZt5NZY/dE6MD7p7ZrJ4a/F6K
-	 U1l1Xg8iDn8547NAJZtNsfBfQRVhePkah5Ru/HONHFmj/Pa45tUh/S8Rvcml+0gPLvWLU
-	 zLXULrBeQKFo3j+D2nS5XjdiQgEuE6spKQdygs5TO1X1NHZA+pyQ4ozACrQkT0p7coI5C
-	 itmwsVXTbl5ZIaWEQqEsrgWOBcBDH47jr22K3tf8YkBy1JrNRapE9AIIip8cAblBgThEQ
-	 zQ2JCN7c2ZG/2KEc1X+/00lflTmhVf84bqa5fljMHsKqNfGRwECEdk3c6fJBK5UYzWA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795601546;
+	h=DMARC-Filter:DKIM-Signature:Received:X-QQ-mid:Message-ID:
+	 X-QQ-XMAILINFO:X-QQ-XMRINFO:From:To:Cc:Subject:Date:X-OQ-MSGID:
+	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=2mX9ihDMlJl52xt1g1QIufip43JLdoxN/JQUfY4xZWY=;
+	b=FbHDqiWkt5FvF1DEGfyYds2zC1fkE8cpujRNvzraQT1it4nyLQHIpNJqX5WpJPQFD19v
+	 CV7s5Q24XWasI8/sxznsafVC4ftD2Gtjcg/MPfPl/lowj4pv1sORG+K4AHzhABI1xUQhl
+	 /t2rndj0CRcbe0jEk+0Yr234sSmHbhag023tF0I/IIi3fl7wqoKQfkOYtWxUHGNhiHnQg
+	 HGcWmfbfDRYzxc9Em1NJ8rFNGWrOzlSbynCv6RV7pe8w969Sv03fp7l/f00xd8jkpTTL/
+	 Y2UPUYxilbM8RvmGQTL8akeHOr/6zu4FoXeZxaFEztYG3K1Q6x80eHDfZRPIYwBRxtw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=infradead.org;
-	spf=none smtp.mailfrom=bombadil.srs.infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=dJUXJlnL;
-	arc=none smtp.remote-ip=198.137.202.133
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=qq.com;
+	spf=pass smtp.mailfrom=qq.com;
+	dkim=pass header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=EsKTVtfB;
+	arc=none smtp.remote-ip=162.62.57.210
+Received: from out162-62-57-210.mail.qq.com (out162-62-57-210.mail.qq.com [162.62.57.210])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2B30606A31E
-	for <linux-raid@vger.kernel.org>; Wed, 25 Nov 2026 05:03:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D2B30606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59685606A326
+	for <linux-raid@vger.kernel.org>; Wed, 25 Nov 2026 10:12:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 59685606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=dJUXJlnL
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=lBwceiwm98ReJuMPuSgjaP5OOtf3D+hnyit6ozIv9SY=; b=dJUXJlnL2W606rxWFE8Kig79nW
-	0CeMsGBgT/28ajbGzS/oTSc07qDJkKBA75T7xTNLAyAQwIOiSrtVH1yJg6UMo8LZyZ3uckyQX757T
-	+3yIsJ2YUTodQc3HA8encfr76S/VjBH8uF81I6ljBd6/fI0OkrLtYOZPzMe6fTqzbcxJo7W1dKPb+
-	IEBHQOIQ9ALvaNfR+7TQy8hKJFGVKQqprx2M+w9lznby2YtFZOCLbOSgBZzETzcaaqlmxxypVrleL
-	4AqIBO+DzLrmlPOq125UUX560lAABfwSnHfOgajLuPXKY4sp26gj112vTwGJT0uvHF+cij0Brivhl
-	Ni7p2vMA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xW5AN-00000008RHv-3VLn;
-	Wed, 25 Nov 2026 05:03:35 +0000
-Date: Tue, 24 Nov 2026 21:03:35 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Zhou Minqiang <zhouminqiang2@huawei.com>
-Cc: song@kernel.org, yukuai@fygo.io, neilb@suse.com,
-	artur.paszkiewicz@intel.com, shli@kernel.org, axboe@kernel.dk,
-	linux-raid@vger.kernel.org, chengzhihao1@huawei.com,
-	yangerkun@huawei.com, yi.zhang@huawei.com
-Subject: Re: [PATCH] md/raid10: reset bi_offset in sync_request_write()
-Message-ID: <awZsJ5H6uEH4so8D@infradead.org>
-References: <20261124060856.559865-1-zhouminqiang2@huawei.com>
+	dkim=pass (1024-bit key, unprotected) header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=EsKTVtfB
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1795601534; bh=2mX9ihDMlJl52xt1g1QIufip43JLdoxN/JQUfY4xZWY=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=EsKTVtfB5892vv208t9deIB76fppH5JAl3qGco7BHl0QolBlb/UwCS3JwYAn0dwPu
+	 JPEft8yDwG+I8YiRMJ31+4f0QhChBMEguFUSUlFfPgRNt+THT+XYblzprI0YLIHk//
+	 vQtfLL3aE5zCNqEFeNiCnbfroQdMbnhKjArpnyXw=
+Received: from shuai-VMware-Virtual-Platform.. ([117.158.156.199])
+	by newxmesmtplogicsvrsza73-0.qq.com (NewEsmtp) with SMTP
+	id 30C26296; Wed, 25 Nov 2026 18:12:12 +0800
+X-QQ-mid: xmsmtpt1795601532t46va9gsd
+Message-ID: <tencent_FD9B3C56D33F6E8298C044857BB7342DCB06@qq.com>
+X-QQ-XMAILINFO: NGbyafB8LluusTr9Kim79at49nIYAEbCQRkOih0+dxyG3c/XMseINZK1pAHaTJ
+	 JPrnOviTR8RpEiSRjIrNqfPlU61s9PKCjU8au1pAUMp7Gs0AG9LLWu5YqMQb37PsWsd1sYtGTiC/
+	 KVDdjuhL4XtoaGsMr9tlxgdnhC9K8pCeNze3IAGlwWRr/1GHc01aeTIR2I0HPYp7jSkQ+yg2oJOO
+	 CDwWP8rZvmB7ZFbKMss0aKHX8Ao0LlyARUFRTaSpAyY4pXH+7uM5N+4tN247/ZuIackqH4/Oli3B
+	 FIdOYqqd09ctCW6a0CV++QAzWj15ZjS8YX9gC0FfyOOqznNO+mqUSkN8PmCSKoWruu/aTqKPhQ4S
+	 90vqOl+XozLGSFa691xec5nrDEydXihPNTVx2mZMej+GMjIOdKo0qjolC9lSZbDCcxbAGyiAXBUF
+	 74//qcVMwGjhSd5CaHyHDQgsch8qLyCf7DMWanRxsi011Mvc0ASOHVUVi79kenXtoEiBO1k1Uyid
+	 qPPXJKSIOfhmv6yGZ4j2Kz2rpdIvHJIWXWdt391wyji8k5NpgQHD64AIPkDAlFJ+TS9YyxVwm6Gv
+	 qXNeVYsI0Cx7xSgvj02UVZEngfqKeZPD9LoUtGQbd+oGuXxvksM4iDl1MZVvDSfVyIM4CHUqKwdL
+	 IGJy+F3aJdhihsjT6x2oEOp6pjmUsTwuogVxr2GMd8hdF/Mc/D8YYhJQxCWj9b0Zg/vVyyc4FE7f
+	 tBtSwhi9hLXcHirvliXMqe5SuHDShmUFwf0RuQ0L2/AB9YAxM6tfhjIXmfzsH/I4xhL4obNE+iu7
+	 ovJp+xTmh2hjHlzZDU/vGQ3uV7CY2GzfdDdKmOkoFtDttoWHDtqFIGC5YXGV0pGbUtfcU4q2GOcQ
+	 6BMVx8+FWDw90VMuaVynXKXzQv96HSbVv9Mi+xDxW/KhwU2cPngVWZumBVzoQbYOVeKDIH9tW9sW
+	 3jgcq686eTTBLXWjFQZ1z0dRoo0CqUb03O+QEUf324E4Xr4c2bCa0fyhhPooPau/A0WZMbO34x4g
+	 lIDF9iwchwIh3G1KoI302CeW6FwxihgNqR/h1BzZD8rjP4F7Cf0aaj1D/n3wVN5uNwH9caxY/abu
+	 5lDA6FW7wQGvAsQPo=
+X-QQ-XMRINFO: MPJ6Tf5t3I/ylTmHUqvI8+Wpn+Gzalws3A==
+From: Shuai Liu <847807867@qq.com>
+To: song@kernel.org,
+	yukuai@fygo.io
+Cc: magiclinan@didiglobal.com,
+	xiao@kernel.org,
+	syzbot+58beac388fb46ea52592@syzkaller.appspotmail.com,
+	linux-raid@vger.kernel.org,
+	Shuai Liu <847807867@qq.com>
+Subject: [PATCH] md: fix use-after-free of mddev in md_start_sync workqueue
+Date: Wed, 25 Nov 2026 18:12:12 +0800
+X-OQ-MSGID: <20261125101212.2440528-1-847807867@qq.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <6b04e83f.9a2182b0.37b108.0036.GAE@google.com>
+References: <6b04e83f.9a2182b0.37b108.0036.GAE@google.com>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -65,20 +84,107 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261124060856.559865-1-zhouminqiang2@huawei.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 
-On Tue, Nov 24, 2026 at 02:08:56PM +0800, Zhou Minqiang wrote:
-> +++ b/drivers/md/raid10.c
-> @@ -2330,6 +2330,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
->  	fbio = r10_bio->devs[i].bio;
->  	fbio->bi_iter.bi_size = r10_bio->sectors << 9;
->  	fbio->bi_iter.bi_idx = 0;
-> +	fbio->bi_iter.bi_offset = 0;
->  	fpages = get_resync_pages(fbio)->pages;
+md_check_recovery() queues mddev->sync_work on md_misc_wq without taking
+a reference on mddev. The mddev can be freed by another path that does
+not go through do_md_stop() -> stop_sync_thread() and therefore never
+flushes sync_work.
 
-Directly messing with the iterator is a really bad idea.  This needs to
-use bio_reuse or bio_reset.
+KASAN reports:
+  BUG: KASAN: slab-use-after-free Read in mddev_unlock+0x909/0x9e0
+  Read of size 8 at addr ffff8880367b21e8
+    (offset 488 inside kmalloc-4k)
+  by task kworker/1:2/1568, workqueue md_misc md_start_sync
+
+  Allocated by task 9718:
+    md_alloc -> md_probe -> blkdev_open (open /dev/mdX)
+  Freed by task 5627:
+    disk_release -> kobject_put -> mddev_free -> kfree(mddev)
+  Last related work creation:
+    md_check_recovery() queue_work(md_misc_wq, sync_work)
+
+The UAF happens because the mddev-free path does not serialize with
+sync_work. md_release() calls mddev_put() which may queue
+mddev->del_work when mddev->active hits zero. del_work runs on
+md_misc_wq and proceeds via
+  kobject_release -> disk_release -> mddev_free -> kfree(mddev)
+Meanwhile md_start_sync() computes mddev via container_of() on the
+work_struct it was handed, and after mddev_unlock() returns it still
+dereferences mddev members such as mddev->thread.
+
+Crucially, mddev_delayed_delete() does not wait for md_misc_wq work
+to drain: __mddev_put() just queues del_work with queue_work(). The
+only place that flushes sync_work is stop_sync_thread(), which is
+only invoked from do_md_stop() and the md_idle/md_frozen_sync_thread
+helpers - all of which require holding reconfig_mutex. md_release()
+does not take reconfig_mutex at all, so it can race with an
+in-flight sync_work.
+
+commit db5e653d7c9fae8ed61da58ab5e9a8db2cd61a2b
+  ("md: delay choosing sync action to md_start_sync()")
+moved md_choose_sync_action(), mddev_lock_nointr() and
+mddev_unlock() into md_start_sync() so that array reconfiguration
+became independent of the daemon thread. This change caused
+md_start_sync() to actually dereference mddev members after
+acquiring the lock. Prior to that commit the sync_work function
+barely touched mddev and the lack of a bump was harmless.
+
+Fix this by taking an mddev reference before queueing sync_work in
+both md_check_recovery() paths that use it, and releasing that
+reference at every return point inside md_start_sync().
+
+Checkpatch: 0 errors, 0 warnings on drivers/md/md.c.
+Kernel build: full make on top of Linux 7.4-rc5 succeeds
+              (bzImage ready). A syzbot-supplied C reproducer for this
+              issue is unavailable, so this patch is verified by code
+              review of the reference-accounting pattern and the
+              upstream build.
+
+Fixes: db5e653d7c9f ("md: delay choosing sync action to md_start_sync()")
+Reported-by: syzbot+58beac388fb46ea52592@syzkaller.appspotmail.com
+Closes: https://syzbot.org/bug?extid=58beac388fb46ea52592
+Signed-off-by: Shuai Liu <847807867@qq.com>
+---
+ drivers/md/md.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 03e35386a8028..4a40b4f358d84 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -10362,6 +10362,7 @@ static void md_start_sync(struct work_struct *ws)
+ 	md_wakeup_thread(mddev->sync_thread);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+ 	md_new_event();
++	mddev_put(mddev);
+ 	return;
+ 
+ not_running:
+@@ -10386,6 +10387,7 @@ static void md_start_sync(struct work_struct *ws)
+ 	if (test_and_clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery) &&
+ 	    mddev->sysfs_action)
+ 		sysfs_notify_dirent_safe(mddev->sysfs_action);
++	mddev_put(mddev);
+ }
+ 
+ static void unregister_sync_thread(struct mddev *mddev)
+@@ -10524,6 +10526,7 @@ void md_check_recovery(struct mddev *mddev)
+ 			 */
+ 			if (md_spares_need_change(mddev)) {
+ 				set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
++				atomic_inc(&mddev->active);
+ 				queue_work(md_misc_wq, &mddev->sync_work);
+ 			}
+ 
+@@ -10580,6 +10583,7 @@ void md_check_recovery(struct mddev *mddev)
+ 
+ 		if (test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery) &&
+ 		    !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
++			atomic_inc(&mddev->active);
+ 			queue_work(md_misc_wq, &mddev->sync_work);
+ 		} else {
+ 			clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+-- 
+2.43.0
 
