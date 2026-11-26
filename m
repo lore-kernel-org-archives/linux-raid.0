@@ -1,57 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.62.58.216
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795603957;
-	b=p4gUh23AprcItm0EE9JCY7oGmW+Q/nRuiUh3BR/APm4GUvE8TB34ppgxhTWB4dLoSo1E
-	 0pSKbSNfzq9akQFZCXY7Ndubi/K1WX4qIEEbwP1Y2wwTKGc10epuAYwooLUE794dAnTA+
-	 HAuOCwmqUmotjnKmFmNCqzpzkougXkSfBTRR/chmv1pV+FbbArGVJ3RaS9SMFuckAbemi
-	 0beekzKuT+woJBlgAYn5lg22N2uFNGKWACUm4j7sEm/vv2anmr8H1Ozvj+Dun586rvc2j
-	 b7yeJ5ZT9ZG/YGh/QxyJ37dA8a1SFp6hOWDbXce6KPRf1H9a/v72vU4Ns8M+VaDjgMQ==
+	t=1795653960;
+	b=rud86LFF6g69zgtY+FRj1BjQRsHqwwc2vcOq7U03BCzj+OVZyCEfiVgPZTpgMchk2pPm
+	 Zm2UiJEAy2Ex+NDp4jklzVaal0EpnS/y2wd7M86NGrGA5IL5EuY85MuVKS7TIgRbiSMa1
+	 /qkeKT9k2E1Zawyv7zllyDtcdF+29msG8ANtiVMc+1IbMwEuSISBuyeIeCqwhf80JT1LL
+	 0cShQUBNLbnZcRViGRYRaoyaKodVr2K9XGrLuZxPF3CksK4cSSdk+hiVXMIvKj6UKolfv
+	 CF06gLRCpE41h8Clm+PE5ApA+NnltPlP4Ha+LJqXudvmr0GKedLGTcqcfD662a3I1/A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795603957;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=XDSXEAtd5tmCxeIOOXJS3F5FL+B9RgtrnibHefwFMzM=;
-	b=NParrp6LNcrhYJCOEfu8C5VOdyvJhz7JqIX3dOOitAYRQNms7yBnhdygRzUCYf2QfD2B
-	 5jOCulD8rSuwEfmupNbB0i6ZRXJ4jrRloW+t5qNYyxJSaOfxP/RRENghOLTurvWML4iW5
-	 VUenqqLIDi/0WlEnLEIxXfGjTdga17t60pYGeg53rr395Jsns90CuST+bHKYLUjog9Sfs
-	 K2Dsk02nmB/yhoOQe6GIE9qXN1OyJqAMDRtQXP1fxxYSFlCqZx1EKM7cqFcHMFXvPSMAP
-	 sa3GOYZfGLaIBhRIirbGDlRuWm94LIqrIpBNiYV0dzHqestI8/a7Yr+P1SUFXbE0W4g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795653960;
+	h=DMARC-Filter:DKIM-Signature:Received:X-QQ-mid:Message-ID:
+	 X-QQ-XMAILINFO:X-QQ-XMRINFO:From:To:Cc:Subject:Date:X-OQ-MSGID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=X7wgyEBvNKNHFs2XEQ2QIntDmWd+F2tSnl7VfEit/Wg=;
+	b=ve6v8tjUNo5OZkgSw2aFCwNioj17rVZ6BgoQ6ngDehrQjsyFyHHs2iaNm85J1Dv82zPM
+	 /zjq3CFznMIbkKWN3mwcNf04/nrWCi5sBRkVvefiqa3eYouT4VyTN6ahZ2aMMdYBi0cjH
+	 K2hdjKqhBT4DwOVmsoOoc/jzrs6W27jkaG1yA+LKIjRJsXzSl/SubtN49753YziRC/KVI
+	 uTO23vH+WI3ktxph9Jlz4kf8yNGyMFq7IrvpgHXEe6df+XHYuc1DPnL7nP39KR/m/Dxns
+	 LSKC0wgGuOpFSH9ZatPFguQ+tgFHoP/tOiu/LGgc8lz2qHUSnnU0Jdu6HDVoc0XUChA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SxTKs+e5;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=qq.com;
+	spf=pass smtp.mailfrom=qq.com;
+	dkim=pass header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=pX0cJLUB;
+	arc=none smtp.remote-ip=162.62.58.216
+Received: from out162-62-58-216.mail.qq.com (out162-62-58-216.mail.qq.com [162.62.58.216])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEEFD606A31E
-	for <linux-raid@vger.kernel.org>; Wed, 25 Nov 2026 10:52:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94B31606A31E
+	for <linux-raid@vger.kernel.org>; Thu, 26 Nov 2026 00:45:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 94B31606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SxTKs+e5
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 898B81F000CA;
-	Wed, 25 Nov 2026 10:52:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795603956;
-	bh=XDSXEAtd5tmCxeIOOXJS3F5FL+B9RgtrnibHefwFMzM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SxTKs+e5SoISWW/lIjBlu98pjmOWI6IanwWXKsipHNsJIZCTtYrF2AnBgPFT5tmaU
-	 Z1t0digLNlYQatUWkKQj49tYa4sgR2KuDukx3JD3PMV2pJahRn2Z4KdTDCFfmrsVg3
-	 DZUNGqMgXpPWeEl1yosTbwJbuHO1H2Eiai3MGjuEaTKTF5cmadoB0YJtg3aJb142Cz
-	 TYJiuY0qn/Mvk4I+dxSQfu0In0Byg0rF1ddTyYVLn4ge7UqmaB9b+Sj+fQUGKZ4LlI
-	 Hj3URN8CxERui8gm1dPPUwrZvNmQlXiuk89vpIJpj9WCzksR6AuyARMCwGEnbpZz8j
-	 ZyPWSKbpG8L0A==
-Message-ID: <sashiko-outbox-233172@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] md: fix use-after-free of mddev in md_start_sync
- workqueue
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Shuai Liu" <847807867@qq.com>
-Cc: linux-raid@vger.kernel.org, yukuai@fygo.io
-In-Reply-To: <tencent_72E3228BE54C78B91F4B5BB1A4C84B34090A@qq.com>
-References: <6b04e83f.9a2182b0.37b108.0036.GAE@google.com>
- <tencent_72E3228BE54C78B91F4B5BB1A4C84B34090A@qq.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 25 Nov 2026 10:52:36 +0000
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=pX0cJLUB
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1795653954; bh=X7wgyEBvNKNHFs2XEQ2QIntDmWd+F2tSnl7VfEit/Wg=;
+	h=From:To:Cc:Subject:Date;
+	b=pX0cJLUBuF4yOfKY9Rd781xI20uHtarnCC9jnEc5ai/QUswlwEnmvVjEVhLZXOo8b
+	 5FD7kEMDzyhnazaJB3HFaVlqMFVh0V69I1TaWUMv8AVFSsx6v5rPhKjCoNi2qphT2I
+	 e5zdG11rbrmIjv/Q/RftZyRitRAO84LoIwRJ5eYE=
+Received: from shuai-VMware-Virtual-Platform.. ([117.158.156.198])
+	by newxmesmtplogicsvrszc43-0.qq.com (NewEsmtp) with SMTP
+	id B73BBC36; Thu, 26 Nov 2026 08:45:51 +0800
+X-QQ-mid: xmsmtpt1795653951ted91rnrg
+Message-ID: <tencent_B6137BEEFCD26A2CCBF27D4DF0B81D622608@qq.com>
+X-QQ-XMAILINFO: MipYEBg1qKqIF7GB5FTNNcAT6f6qwOsDmEDTD9IGQge3hTZIuQ4YmiFEdw5+0k
+	 CFAnJsrbDrBa9wW3y8P7VOtgGlaZt14GM7xuFD+Nhz5VpTEn/9lPHNpXrwR58rOq6GVQFFwlKn8R
+	 ozFOTyESV0ykNXaTS+QyyAl4UxGxfVUzYN8AHr0kZJMVsyDpq7llqYKJpvZkZlRGTRtGHHyOL96x
+	 zv7edko45YqxVkk7C2vxx72NSx++frxLEuZneFGz3i95EdPnWD+DEZIbQZHTH8HErikR2MKjpi34
+	 UYf9x1j4ysRe7nW5k6isX+DaSmFyDs+qpoRdEElhgo/dmWDNFR85LlYBw7LeoOIyhARIhj8zzarq
+	 Vo5TvTP8xNTo1vRUNlsPN38CDg1MTJqiAGZWlmExHytZwrWlXdZ1f5rii7FsLla3BZFMdKCiy9cA
+	 B/42P4x9OBKbks577aQvkv5AFvWxIUkZqhpH9xmaJLKP19ZK/up5nH8smWHjpbgQDVA4KI/FHZpg
+	 jYuzqU9eBb3L88ZfdNNnqCnTHnfkWHAmEo+iaME13HUChVX3u49wwkmbXlQqtdcAhYGh8MdC5nCP
+	 /6oaGsKHgtOUgQUF3Cu7y+gGTJm7B2HSnhr6eCUq4vww9a/JScFTb5Y+dSwo2pJQy0rXKs2g/VPj
+	 TgDJAM7UlEhxfn50i/OJN7k/RIx7OfFOtr7n6/Qhe5Mk7/BG1wt3Tlr1yXQ5SKG747FVIquA4HUu
+	 17bpzqUBjppXg8ljwBv6aCe/Vd4nkHyceqUE+WSgTLZt/yHkVsUnH/JSCiEDcvDsb+gtWOtqiiEz
+	 xa2FvEe4bTpNshIPwtjGNbbJhPnRLPjLT6d/xAucN8JhBCpGxiOWmtTiygyU4k0F3Y/oPDWgozxy
+	 yVHf/P0McD4X9IGKr3jgmrePwzs4xbf3KMH0iQNxMnkUcLsx+1aF/sjmQiwkd4NqiH8+lVy4J+g+
+	 JOcQukx3tH1R5C+/ACh9fhzPTx+GMY3jqmomChL0mtcL+gHpEFtHHe+7ZwlVZBVTUqc+42VUAFlZ
+	 r5HUw2DZAQ2PoCbDDMTxV7dTJx6NemzyjIeNEW6ov64UkD3VTqtOO5oSFm2sOmtdeV3F+GM0sY5t
+	 ErUds4CZBCb5h0kSU=
+X-QQ-XMRINFO: NI4Ajvh11aEjEMj13RCX7UuhPEoou2bs1g==
+From: Shuai Liu <847807867@qq.com>
+To: song@kernel.org,
+	yukuai@fygo.io
+Cc: magiclinan@didiglobal.com,
+	xiao@kernel.org,
+	syzbot+58beac388fb46ea52592@syzkaller.appspotmail.com,
+	linux-raid@vger.kernel.org,
+	Shuai Liu <847807867@qq.com>
+Subject: [PATCH v3] md: fix use-after-free of mddev in md_start_sync workqueue
+Date: Thu, 26 Nov 2026 08:45:51 +0800
+X-OQ-MSGID: <20261126004551.3116737-1-847807867@qq.com>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -60,184 +80,120 @@ List-Subscribe: <mailto:linux-raid+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential
-issues to consider:
-- [High] md: stop_sync_thread() skips mddev_unlock() when locked is
-  false
-- [Medium] md: clearing MD_RECOVERY_RUNNING unlocked in md_start_sync()
-  loses recovery
-- [Medium] md: stop_sync_thread() sets MD_RECOVERY_INTR when idle,
-  breaking dm-raid
---
+md_check_recovery() queues mddev->sync_work on md_misc_wq without taking
+a reference on mddev. mddev can be freed by another path that never
+flushes sync_work, leading to use-after-free in md_start_sync().
 
-commit caec665a679c8ea640cd24d1ebf83696517d0cc9
-Author: Shuai Liu <847807867@qq.com>
+KASAN reports:
+  BUG: KASAN: slab-use-after-free Read in mddev_unlock+0x909/0x9e0
+  Read of size 8 at addr ffff8880367b21e8
+    (offset 488 inside kmalloc-4k)
+  by task kworker/1:2/1568, workqueue md_misc md_start_sync
 
-md: fix use-after-free of mddev in md_start_sync workqueue
+  Allocated by task 9718: md_alloc -> md_probe -> blkdev_open
+  Freed by task 5627: disk_release -> mddev_free -> kfree(mddev)
+  Last related work creation:
+    md_check_recovery() queue_work(md_misc_wq, sync_work)
 
-This commit takes an mddev reference when queueing sync_work, flushes
-sync_work unconditionally in stop_sync_thread(), moves the clearing of
-MD_RECOVERY_RUNNING to the end of md_start_sync(), and checks
-MD_RECOVERY_FROZEN in the read-only path of md_check_recovery().
+commit db5e653d7c9f ("md: delay choosing sync action to md_start_sync()")
+moved md_choose_sync_action(), mddev_lock_nointr() and mddev_unlock()
+into md_start_sync() so that array reconfiguration became independent of
+the daemon thread. Prior to this the sync_work function barely touched
+mddev and the missing reference was harmless.
 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 47da9edc1c606..29b8eb3082ff5 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5210,13 +5210,13 @@ static void stop_sync_thread(struct mddev *mddev,=
- bool locked)
->  {
->  	int sync_seq =3D atomic_read(&mddev->sync_seq);
-> =20
-> -	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery)) {
-> -		if (!locked)
-> -			mddev_unlock(mddev);
-> -		return;
-> -	}
-> -
-> -	mddev_unlock(mddev);
-> +	/*
-> +	 * Release reconfig_mutex before flushing sync_work or waiting on
-> +	 * resync_wait. md_start_sync() needs reconfig_mutex via
-> +	 * mddev_lock_nointr(), so holding it here would deadlock.
-> +	 */
-> +	if (locked)
-> +		mddev_unlock(mddev);
+Fix this by taking an mddev reference before queueing sync_work and
+releasing it in md_start_sync(). Three complementary fixes close
+remaining race windows:
 
-[Severity: High]
-Does gating mddev_unlock(mddev) on locked leave reconfig_mutex held when
-locked is false?
+ - stop_sync_thread(): remove work_pending() guard so that running
+   sync_work is always flushed (workqueue core clears PENDING before
+   invoking callbacks, so work_pending() is false for running work).
+   The !MD_RECOVERY_RUNNING early return is preserved to avoid setting
+   MD_RECOVERY_INTR on idle arrays and to handle locked=false correctly.
 
-All callers of stop_sync_thread() enter with reconfig_mutex held; the
-locked parameter indicates whether reconfig_mutex should be re-acquired
-before returning or left unlocked.  When md_set_readonly() calls
-stop_sync_thread(mddev, false), reconfig_mutex is never released:
+ - md_check_recovery(): add MD_RECOVERY_FROZEN guard to the read-only
+   branch so it matches the main branch.
 
-drivers/md/md.c:md_set_readonly() {
-    ...
-	stop_sync_thread(mddev, false);
-	wait_event(mddev->sb_wait,
-		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
-	mddev_lock_nointr(mddev);
-    ...
-}
+ - dm-raid raid_dtr(): flush mddev->sync_work before raid_set_free().
+   dm-raid embeds mddev in raid_set and frees it directly, bypassing
+   mddev_free()'s mddev->active accounting. raid_dtr also does not
+   invoke stop_sync_thread() via md_stop(), so the original race
+   is not protected by either mechanism.
 
-Besides holding reconfig_mutex across flush_work(&mddev->sync_work) and
-wait_event(resync_wait, ...), stop_sync_thread(mddev, false) returns with
-reconfig_mutex still held and md_set_readonly() immediately deadlocks on
-mddev_lock_nointr(mddev).  mddev_unlock(mddev) needs to be unconditional
-here.
+Fixes: db5e653d7c9f ("md: delay choosing sync action to md_start_sync()")
+Reported-by: syzbot+58beac388fb46ea52592@syzkaller.appspotmail.com
+Closes: https://syzbot.org/bug?extid=58beac388fb46ea52592
+Signed-off-by: Shuai Liu <847807867@qq.com>
+---
+ drivers/md/dm-raid.c |  1 +
+ drivers/md/md.c      | 10 +++++++---
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-> =20
->  	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->  	/*
-> @@ -5224,8 +5224,18 @@ static void stop_sync_thread(struct mddev *mddev, =
-bool locked)
->  	 * never happen
->  	 */
->  	md_wakeup_thread_directly(&mddev->sync_thread);
-> -	if (work_pending(&mddev->sync_work))
-> -		flush_work(&mddev->sync_work);
-> +	/*
-> +	 * Always flush sync_work so that even an in-flight invocation
-> +	 * (already removed from the workqueue's pending list but not yet
-> +	 * returned from md_start_sync()) is drained. Previously this was
-> +	 * gated on work_pending() which is false for running work, and the
-> +	 * whole path could be short-circuited by MD_RECOVERY_RUNNING being
-> +	 * already clear =E2=80=94 but md_start_sync() now only clears RUNNING =
-after
-> +	 * its full tail, and unconditionally flushing handles any remaining
-> +	 * race where stop_sync_thread() was entered while sync_work was
-> +	 * already in flight.
-> +	 */
-> +	flush_work(&mddev->sync_work);
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index e44d92462affc..2b7cd9488eec0 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -3336,6 +3336,7 @@ static void raid_dtr(struct dm_target *ti)
+ 
+ 	if (rs->md.event_work.func)
+ 		flush_work(&rs->md.event_work);
++	flush_work(&rs->md.sync_work);
+ 	raid_set_free(rs);
+ }
+ 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 03e35386a8028..28f436fb1bad7 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5213,8 +5213,7 @@ static void stop_sync_thread(struct mddev *mddev, bool locked)
+ 	 * never happen
+ 	 */
+ 	md_wakeup_thread_directly(&mddev->sync_thread);
+-	if (work_pending(&mddev->sync_work))
+-		flush_work(&mddev->sync_work);
++	flush_work(&mddev->sync_work);
+ 
+ 	wait_event(resync_wait,
+ 		   !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
+@@ -10362,6 +10361,7 @@ static void md_start_sync(struct work_struct *ws)
+ 	md_wakeup_thread(mddev->sync_thread);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+ 	md_new_event();
++	mddev_put(mddev);
+ 	return;
+ 
+ not_running:
+@@ -10386,6 +10386,7 @@ static void md_start_sync(struct work_struct *ws)
+ 	if (test_and_clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery) &&
+ 	    mddev->sysfs_action)
+ 		sysfs_notify_dirent_safe(mddev->sysfs_action);
++	mddev_put(mddev);
+ }
+ 
+ static void unregister_sync_thread(struct mddev *mddev)
+@@ -10522,8 +10523,10 @@ void md_check_recovery(struct mddev *mddev)
+ 			 * Let md_start_sync() to remove and add rdevs to the
+ 			 * array.
+ 			 */
+-			if (md_spares_need_change(mddev)) {
++			if (!test_bit(MD_RECOVERY_FROZEN, &mddev->recovery) &&
++			    md_spares_need_change(mddev)) {
+ 				set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
++				atomic_inc(&mddev->active);
+ 				queue_work(md_misc_wq, &mddev->sync_work);
+ 			}
+ 
+@@ -10580,6 +10583,7 @@ void md_check_recovery(struct mddev *mddev)
+ 
+ 		if (test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery) &&
+ 		    !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery)) {
++			atomic_inc(&mddev->active);
+ 			queue_work(md_misc_wq, &mddev->sync_work);
+ 		} else {
+ 			clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+-- 
+2.43.0
 
-[Severity: Medium]
-Does removing the !MD_RECOVERY_RUNNING early return leave
-MD_RECOVERY_INTR set on an idle array?
-
-In dm-raid, rs_get_progress() checks MD_RECOVERY_INTR when the array is
-idle to distinguish an in-sync array from an interrupted sync:
-
-drivers/md/dm-raid.c:rs_get_progress() {
-    ...
-		if (state =3D=3D st_idle && !test_bit(MD_RECOVERY_INTR, &recovery))
-			r =3D mddev->resync_offset;
-		else
-			r =3D mddev->curr_resync_completed;
-    ...
-}
-
-When an in-sync, idle dm-raid array is suspended via raid_postsuspend() ->
-md_stop_writes() -> stop_sync_thread(), setting MD_RECOVERY_INTR with no
-sync running leaves the bit set and causes dm-raid status to report
-curr_resync_completed (0 if no sync ran since assembly) instead of
-resync_offset.
-
-[ ... ]
-
-> @@ -10368,7 +10379,6 @@ static void md_start_sync(struct work_struct *ws)
->  	clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
->  	clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
->  	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
-> -	clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
->  	mddev_unlock(mddev);
->  	/*
->  	 * md_start_sync was triggered by MD_RECOVERY_NEEDED, so we should
-> @@ -10381,10 +10391,18 @@ static void md_start_sync(struct work_struct *w=
-s)
->  		__mddev_resume(mddev, false);
->  	}
-> =20
-> -	wake_up(&resync_wait);
->  	if (test_and_clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery) &&
->  	    mddev->sysfs_action)
->  		sysfs_notify_dirent_safe(mddev->sysfs_action);
-> +	/*
-> +	 * Drop RUNNING only after the full tail of md_start_sync()
-> +	 * completes so that stop_sync_thread() can't observe !RUNNING and
-> +	 * return while md_start_sync() is still mid-execution. The put
-> +	 * follows so mddev remains alive while the flag is cleared.
-> +	 */
-> +	clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
-> +	wake_up(&resync_wait);
-> +	mddev_put(mddev);
->  }
-
-[Severity: Medium]
-Can clearing MD_RECOVERY_RUNNING after mddev_unlock() and
-__mddev_resume() race with md_check_recovery() and drop
-MD_RECOVERY_NEEDED?
-
-Commit db5e653d7c9f ("md: delay choosing sync action to md_start_sync()")
-cleared MD_RECOVERY_RUNNING before mddev_unlock() in the not_running path
-so that it was cleared under reconfig_mutex.  With clear_bit() moved to
-the end of md_start_sync(), both mddev_unlock() and __mddev_resume() wake
-mddev->thread while MD_RECOVERY_RUNNING is still set:
-
-kworker (md_start_sync)           mddev->thread (md_check_recovery)
-not_running:
-  mddev_unlock(mddev)
-    mutex_unlock(&reconfig_mutex)
-    md_wakeup_thread(mddev->thread)
-                                  mddev_trylock(mddev)
-                                  if (test_bit(MD_RECOVERY_RUNNING, ...))
-                                    unregister_sync_thread(mddev)
-                                      if (!test_bit(MD_RECOVERY_DONE, ...))
-                                        clear_bit(MD_RECOVERY_NEEDED, ...)
-                                  mddev_unlock(mddev)
-  clear_bit(MD_RECOVERY_RUNNING, ...)
-
-Because MD_RECOVERY_DONE is clear, unregister_sync_thread() assumes a
-sync thread is running and clears MD_RECOVERY_NEEDED, expecting
-md_reap_sync_thread() to set it again when that thread finishes.  Since
-md_start_sync() took the not_running path and never started a sync
-thread, the pending recovery is lost.  Since stop_sync_thread() now
-calls flush_work(&mddev->sync_work) before waiting on
-MD_RECOVERY_RUNNING, MD_RECOVERY_RUNNING can stay cleared before
-mddev_unlock().
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/tencent_72E3228BE54=
-C78B91F4B5BB1A4C84B34090A@qq.com?part=3D1
