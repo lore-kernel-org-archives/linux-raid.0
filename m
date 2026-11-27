@@ -1,58 +1,63 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=113.46.200.222
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.70.43.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795683658;
-	b=j0JU9pg67ygK4XqdwBGPnPuDTjhQlmYUN9Q6fWfKJKNkf2wY7UOpJaBZHSqRQuL8rSAv
-	 yrexxMkapTbuiF2m7x/DEWHlT6WvC+cseM3fOEaoU8CNnpXG6tgKkCjJdVSgC53Sbzl+r
-	 Vuvf6FUHmPaVU4M/PTHeOYdEV0QCCBjoMW+9FG861MBOmFXhm/VO863+UiD8keGdw/zju
-	 nMx5n1ajIG+YKbU5W8xQw1E7qqMCC0AAPrmvxkw2E/b57O29YNmRAFv8CmSccHG/BezMK
-	 XPnswFD5gl2swGZfgXsVIdByIIx8AD7QXwfMs8/o2gn/GXeztcj2w/AvXwnP56owPzw==
+	t=1795739564;
+	b=39dtHHEtWSmZadqPJKmq3mgDyZoK9VD/M9CvM8CdXGmaVoJ1uKN+O2NluUm7TWQF8C32
+	 ea/rQ3kwovEIhrbl6CeJQ44dbXGV4tNVFpfN0yfPSJD6uzn8dx+DAEOg5U4h7HYVeiIoN
+	 dSm15Nrj9mh1aNfHvb0meSXAexj1wz91/KlGCFPu0He+WHWXbC/8shIa1j5w39c6qE4HD
+	 Semw6c+4YP8Gls0RVJvPELIQyzsMqQMTc9G5BLqTgbmt23NGSC3yRawnqIlxCEo8w8gIQ
+	 lqnCNxi8J4c3kS3g4IW90EIwsOTnVBvTwDmxZPNuwXd8fpsHVWw6MpxxJ551lR/XHdw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795683658;
-	h=DMARC-Filter:dkim-signature:Received:Received:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type:Content-Transfer-Encoding:X-Originating-IP:
-	 X-ClientProxiedBy;
-	bh=/YNFWvrRx5X0CHYpDCHMceX/qTfoad6xQ8rtAaG4DEQ=;
-	b=1Te8Vp0CW4W01yIpWuy1y2ClG3rMxESOtntRJvQUqq4ren0EvNBcVb0lnMCat6cqnlXU
-	 qwSaTdgdwLmzQFVliEPQfJUmJtHZC4vbxwSgUNloxOpxdT44KE7wKnG/vAaomy9NX64Yi
-	 5sqXSO4/rDmnmfrquXK2WrG4+7VQV//cUwT6m7fSGrBO4Hp+1qCkL2F972Qt588FXbml+
-	 upfkCF2fwqxO3B6ZsXbNvV4itYACcHgoEfrZL7KrZQLsAzVdioZB8bAfykagLONod4UwX
-	 IKsEYCAdz/alZzPgeG+cBo6UuOvaQZgdl6PSa9RtSGoJe30Pu4Mql4VvMOcf7UbESHQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795739564;
+	h=DMARC-Filter:DKIM-Signature:X-Pm-Submission-Id:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=p3UGcK/Qihu9tLy9k3dYKcdr4pLFzlCh9vcNGRGlWeY=;
+	b=X8qLiNsyZu1qM/eQ1Ja+jv6XnvYuMIuIzwIX6lWp2l+nBgeE3RjanLiXu38nrBPCgIRU
+	 MDKWkba1ynxPmLw3KRuvU8BHQewHHvOKCjVK7wIKJ8FZUs6UCL7y3FHPXFjI7LPEkIm2z
+	 6ZwESjs16rxI8ujC3Lp6UpTGG6Psx6eZuQYAOxombKfp3AZtfQcm7QxIQsr7E5NbAQ3Iq
+	 iwSll1CfevXpbgff5fpeOSBia8yl6JScVIiWzrbnpFecByk7DANACYRRxcFeNJiGc2zVg
+	 YYp7O4/wdKZSz0ny5NKPwaeBndHCJ96Ffb/puy3JlAAdfUcNx3pCHadTiXWHASSrBYg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=huawei.com;
-	spf=pass smtp.mailfrom=huawei.com;
-	dkim=pass header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=oCg64jvb;
-	arc=none smtp.remote-ip=113.46.200.222
-Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
+	dmarc=pass header.from=raidlab.org;
+	spf=pass smtp.mailfrom=raidlab.org;
+	dkim=pass header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=OQZjEAqW;
+	arc=none smtp.remote-ip=185.70.43.172
+Received: from mail-43172.protonmail.ch (mail-43172.protonmail.ch [185.70.43.172])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82523606A321
-	for <linux-raid@vger.kernel.org>; Thu, 26 Nov 2026 09:00:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 82523606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4242A606A31E
+	for <linux-raid@vger.kernel.org>; Fri, 27 Nov 2026 00:32:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4242A606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=raidlab.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=raidlab.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.a=rsa-sha256 header.s=dkim header.b=oCg64jvb
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=/YNFWvrRx5X0CHYpDCHMceX/qTfoad6xQ8rtAaG4DEQ=;
-	b=oCg64jvbFYkvSJ6jEHCOdMIlhiV6yjFSDSTp4nn2hBwNXBYqbm2GADgdrC8dAT1VPTEkYHtyh
-	+G3WnyQT/be0mUSEFiZpxP1ZENT6NYHrl+PIjPzujeFkQQxIdsP0ggJmh+Vbspe6pLZlm1AvY7B
-	PVJ1RQIpDRZhAzi0fWPkROQ=
-Received: from mail.maildlp.com (unknown [172.19.163.15])
-	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4jZr9M1CcTzLlX5;
-	Thu, 26 Nov 2026 17:00:23 +0800 (CST)
-Received: from dggpemr100018.china.huawei.com (unknown [7.185.36.64])
-	by mail.maildlp.com (Postfix) with ESMTPS id AD8AE40586;
-	Thu, 26 Nov 2026 17:00:47 +0800 (CST)
-Received: from [10.174.179.156] (10.174.179.156) by
- dggpemr100018.china.huawei.com (7.185.36.64) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Thu, 26 Nov 2026 17:00:46 +0800
-Message-ID: <8888a9f6-8f8a-4c3f-a91d-e130fbb84d53@huawei.com>
-Date: Thu, 26 Nov 2026 17:00:45 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=OQZjEAqW
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=raidlab.org;
+	s=protonmail; t=1795739561; x=1795998761;
+	bh=p3UGcK/Qihu9tLy9k3dYKcdr4pLFzlCh9vcNGRGlWeY=;
+	h=From:To:Cc:Subject:Date:Message-ID:From:To:Cc:Date:Subject:
+	 Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=OQZjEAqWLNu1PebKQnB46ang+ZKqoyP275QALI68uXAFGT4hw92i12jr0tBZJJx+2
+	 8fYvsNzgM/6gCMeTas6Icosl3+Ds7CAnkZIxeVqmWLNgVr0vMUgQ1bMVHRvwocjUKn
+	 tLaC955oGY4zrUX97oiPDCCvfVJtA1R8LPK6tUombj2yaV5/8ewNl38lhPSt5wAuY3
+	 LGx5Cn+xQMYlS/tW7Ci4O1eqlMoZwSHE3md3ZoniPxUaclLI9uXrBU5QtNYJg2BYMK
+	 ctBSsfao0Aytyi+FsduASMoGqmtlki6EmX4cMZHQKwUu/+BmDW8hoC+SCYgyvy80Lg
+	 Gp4MU/IQmBOcA==
+X-Pm-Submission-Id: 4jbDs16WP4z2ScQG
+From: Miroslav Cimerman <mc@raidlab.org>
+To: Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai@fygo.io>
+Cc: Li Nan <magiclinan@didiglobal.com>,
+	Xiao Ni <xiao@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Mariusz Tkaczyk <mtkaczyk@kernel.org>,
+	Kenta Akagi <k@mgml.me>,
+	linux-raid@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 0/8] md/raid1,raid10: fix writes acknowledged before a failure is recorded
+Date: Fri, 27 Nov 2026 00:32:23 +0000
+Message-ID: <20261127003231.1180197-1-mc@raidlab.org>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -62,37 +67,69 @@ List-Unsubscribe: <mailto:linux-raid+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] md/raid10: reset bi_offset in sync_request_write()
-To: Christoph Hellwig <hch@infradead.org>
-CC: <song@kernel.org>, <yukuai@fygo.io>, <neilb@suse.com>,
-	<artur.paszkiewicz@intel.com>, <shli@kernel.org>, <axboe@kernel.dk>,
-	<linux-raid@vger.kernel.org>, <chengzhihao1@huawei.com>,
-	<yangerkun@huawei.com>, <yi.zhang@huawei.com>
-References: <20261124060856.559865-1-zhouminqiang2@huawei.com>
- <awZsJ5H6uEH4so8D@infradead.org>
-From: zhouminqiang <zhouminqiang2@huawei.com>
-In-Reply-To: <awZsJ5H6uEH4so8D@infradead.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
- dggpemr100018.china.huawei.com (7.185.36.64)
 
-Hi,
-bio_reuse() is indeed the right helper. v2 has been sent: 
-https://lore.kernel.org/all/20261126080632.1598653-1-zhouminqiang2@huawei.com/
+raid1 and raid10 hold a write that failed on one device until the
+superblock records that failure. This series fixes cases where a write
+still completes with success, although its data is not safe:
 
-在 2026/11/25 13:03, Christoph Hellwig 写道:
-> On Tue, Nov 24, 2026 at 02:08:56PM +0800, Zhou Minqiang wrote:
->> +++ b/drivers/md/raid10.c
->> @@ -2330,6 +2330,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
->>   	fbio = r10_bio->devs[i].bio;
->>   	fbio->bi_iter.bi_size = r10_bio->sectors << 9;
->>   	fbio->bi_iter.bi_idx = 0;
->> +	fbio->bi_iter.bi_offset = 0;
->>   	fpages = get_resync_pages(fbio)->pages;
-> 
-> Directly messing with the iterator is a really bad idea.  This needs to
-> use bio_reuse or bio_reset.
+1/8: the superblock write fails on the last working device, and reads
+     can return old data after a restart.
+2/8: raid10 waits for blocked devices by copy index, not by device.
+3/8: as 1/8, for a write that waited for the superblock update.
+4/8: with a bad block log, the device with the only good copy fails,
+     and reads of the write return EIO.
+5/8: a write whose copy fails on a device that is already faulty is
+     not held at all.
+6/8: raid1 can release a held write after it marks the device faulty
+     and before it requests the superblock update.
+7/8: a device that fails between the wait for blocked devices and the
+     selection of the devices for a write is skipped, and the write is
+     not held.
+8/8: with write-behind, a write whose copy failed on a device completes
+     once its write-mostly copy is done.
 
-Thanks.
+The MD_BROKEN checks skip dm-raid, which does not reject writes when
+MD_BROKEN is set, so dm-raid can still acknowledge such writes. I have a
+fix for dm-raid and a follow-up that drops these exceptions, both
+tested, and will send them to dm-devel on top of this series. The other
+changes apply to dm-raid too.
+
+Patch 1 fixes a bug found with FuzzyRAID, a fault injection fuzzer for
+RAID implementations. Patches 2 to 8 fix related cases found while
+analyzing it. I used an LLM (Claude) for this series: it found the bugs
+fixed by patches 2 to 8, drafted the code of patches 2, 4, 5, 6, 7 and 8
+and the changelogs, and wrote and ran the tests. I reviewed everything.
+
+Tested on md-7.5 with RAID1 (2 disks; 3 disks in controls) and RAID10 (2
+and 4 disks, near and far), with and without a bad block log, RAID1 also
+with a bitmap and with write-behind, and with failfast: 30 fault cases
+in which an acknowledged write was lost or read back old data now fail
+the write, and 20 controls give the same results as before (some now
+wait for the superblock update). The cases for patches 6, 7 and 8
+compare with the series without that patch, those for 6 and 7 with
+delays added only for the test. All others compare with stock md-7.5. A
+raid10 smoke test without faults (4-disk and 3-disk near, 2-disk far and
+offset, with discards) passes too. Not tested: the race that patch 2
+closes, MD_FAILLAST_DEV, dm-raid, replacements and reshape.
+
+Miroslav Cimerman (8):
+  md/raid1,raid10: fail held writes when the array fails
+  md/raid10: wait for the devices of the write in wait_blocked_dev()
+  md/raid1,raid10: fail writes that waited while the array failed
+  md/raid1,raid10: fail held writes that no working device has
+  md/raid1,raid10: hold writes that fail on a faulty device
+  md/raid1: set MD_SB_CHANGE_PENDING under device_lock in raid1_error()
+  md/raid1,raid10: hold writes that skip a newly failed device
+  md/raid1: hold write-behind writes that failed on a device
+
+ drivers/md/raid1-10.c | 12 ++++++
+ drivers/md/raid1.c    | 83 +++++++++++++++++++++++++++++++-------
+ drivers/md/raid10.c   | 92 +++++++++++++++++++++++++++++++++----------
+ 3 files changed, 152 insertions(+), 35 deletions(-)
+
+
+base-commit: c526b7cd32f75fea6021ffdab287b81cf38ddeb7
+-- 
+2.53.0
+
