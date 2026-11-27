@@ -1,49 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.70.43.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.70.43.170
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795739564;
-	b=39dtHHEtWSmZadqPJKmq3mgDyZoK9VD/M9CvM8CdXGmaVoJ1uKN+O2NluUm7TWQF8C32
-	 ea/rQ3kwovEIhrbl6CeJQ44dbXGV4tNVFpfN0yfPSJD6uzn8dx+DAEOg5U4h7HYVeiIoN
-	 dSm15Nrj9mh1aNfHvb0meSXAexj1wz91/KlGCFPu0He+WHWXbC/8shIa1j5w39c6qE4HD
-	 Semw6c+4YP8Gls0RVJvPELIQyzsMqQMTc9G5BLqTgbmt23NGSC3yRawnqIlxCEo8w8gIQ
-	 lqnCNxi8J4c3kS3g4IW90EIwsOTnVBvTwDmxZPNuwXd8fpsHVWw6MpxxJ551lR/XHdw==
+	t=1795739565;
+	b=WdArKIDJ+T+mj9nyBE1lnBCVh5VNvHOgccQXkoo2JB6cDPlFfo9PRR6PMlM738Kqs1NO
+	 WSprQZE2Q+6b1LQLem1aekJ8njVuDUc+gWT1fobx1k4rnDaqxzjrFoCNSU6OgezuR7+cc
+	 2AAjdRzcz/vH8jEtamczFkrmealLO23nsD2sUSLvCAH0yCFVhS5fhUsOea7n1gDzySAnv
+	 5h0XgXQX6LdJiGXOerE+0yCi/1vEizYAnIzmz5na37l48uwYrkdfWB5D4yD2qLVVUl3Tt
+	 m/MB8FgEBN0nT4OrAKQ+sbyU2x3j5f/UKR0XmwjDOTxgc97DnyCJx//lZZmmpmbwWBA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795739564;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795739565;
 	h=DMARC-Filter:DKIM-Signature:X-Pm-Submission-Id:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=p3UGcK/Qihu9tLy9k3dYKcdr4pLFzlCh9vcNGRGlWeY=;
-	b=X8qLiNsyZu1qM/eQ1Ja+jv6XnvYuMIuIzwIX6lWp2l+nBgeE3RjanLiXu38nrBPCgIRU
-	 MDKWkba1ynxPmLw3KRuvU8BHQewHHvOKCjVK7wIKJ8FZUs6UCL7y3FHPXFjI7LPEkIm2z
-	 6ZwESjs16rxI8ujC3Lp6UpTGG6Psx6eZuQYAOxombKfp3AZtfQcm7QxIQsr7E5NbAQ3Iq
-	 iwSll1CfevXpbgff5fpeOSBia8yl6JScVIiWzrbnpFecByk7DANACYRRxcFeNJiGc2zVg
-	 YYp7O4/wdKZSz0ny5NKPwaeBndHCJ96Ffb/puy3JlAAdfUcNx3pCHadTiXWHASSrBYg==
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=WFOlnWLmxVs+d/m6XENE7MTE2CKrqhRq+ItGAT7dH58=;
+	b=HRm/4K9vp/cjM77chzFNX4AaPsv8YROjMK9pyT5Y/N0yOE3/nKyclBKWJ/aEmu+y2IVs
+	 0xZY3gFswOUqqgLSi6DaQhd9jzKMPhAx3Kwm98rJIr1SbrWTZPI6G9nmJTJ3eWo1ind9L
+	 dCxQSna5nHTvtchtEaaajTGZfnm8LYcgvRmx6RPNctZPzImRrbe0lW585Gc7sr8oVSl0Q
+	 6JLAxTqr47XIeFOuPJLQB7s9hvQaul++9uXJGsMD7qgMFHzbv9Lxm6J0gOf2y2AHCu2sa
+	 zy1GoEjKmyiOMYvud1Hj9gPTcQ52epco8Of6fZ6Ua4I9r3rIAw9ZrcbZvXqbsejjlbA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=raidlab.org;
 	spf=pass smtp.mailfrom=raidlab.org;
-	dkim=pass header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=OQZjEAqW;
-	arc=none smtp.remote-ip=185.70.43.172
-Received: from mail-43172.protonmail.ch (mail-43172.protonmail.ch [185.70.43.172])
+	dkim=pass header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=HVazN9M2;
+	arc=none smtp.remote-ip=185.70.43.170
+Received: from mail-43170.protonmail.ch (mail-43170.protonmail.ch [185.70.43.170])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4242A606A31E
-	for <linux-raid@vger.kernel.org>; Fri, 27 Nov 2026 00:32:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4242A606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08A13606A32D;
+	Fri, 27 Nov 2026 00:32:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 08A13606A32D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=raidlab.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=raidlab.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=OQZjEAqW
+	dkim=pass (2048-bit key, unprotected) header.d=raidlab.org header.i=@raidlab.org header.a=rsa-sha256 header.s=protonmail header.b=HVazN9M2
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=raidlab.org;
-	s=protonmail; t=1795739561; x=1795998761;
-	bh=p3UGcK/Qihu9tLy9k3dYKcdr4pLFzlCh9vcNGRGlWeY=;
-	h=From:To:Cc:Subject:Date:Message-ID:From:To:Cc:Date:Subject:
-	 Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=OQZjEAqWLNu1PebKQnB46ang+ZKqoyP275QALI68uXAFGT4hw92i12jr0tBZJJx+2
-	 8fYvsNzgM/6gCMeTas6Icosl3+Ds7CAnkZIxeVqmWLNgVr0vMUgQ1bMVHRvwocjUKn
-	 tLaC955oGY4zrUX97oiPDCCvfVJtA1R8LPK6tUombj2yaV5/8ewNl38lhPSt5wAuY3
-	 LGx5Cn+xQMYlS/tW7Ci4O1eqlMoZwSHE3md3ZoniPxUaclLI9uXrBU5QtNYJg2BYMK
-	 ctBSsfao0Aytyi+FsduASMoGqmtlki6EmX4cMZHQKwUu/+BmDW8hoC+SCYgyvy80Lg
-	 Gp4MU/IQmBOcA==
-X-Pm-Submission-Id: 4jbDs16WP4z2ScQG
+	s=protonmail; t=1795739562; x=1795998762;
+	bh=WFOlnWLmxVs+d/m6XENE7MTE2CKrqhRq+ItGAT7dH58=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:From:To:
+	 Cc:Date:Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=HVazN9M2t9p7iJqTzZLlOUnJLhlTlNo3w8FjUHn5unFUzyeyjZ1dJHKQLYLAbIF5e
+	 R7lE6RPKwZEQF3LpFPXSkC2hPy4LloOcpFaqZREe16+d2xbgAbvpq4cDVnDNkm8l0R
+	 68X0TN04aUnFZ6h28EYt8BfeWbHcA0c3LT9LISH6zEkE/RsQM5ARQun/SIvCLtfxlg
+	 kUEMjQAz8y3iQcOHDXTwW7zhOD7tfqfsuvcL8rYXNosi82OCqdwA8Vu+FhBeTuWfAg
+	 q2O4xXCc6Is6/nx52VmiAJq2Nj0lDPhXvJM2s+1zz+NfXRcZcLUaxS71Nj+rrv0h8m
+	 t1iK7KlJygExg==
+X-Pm-Submission-Id: 4jbDs43Vpkz2SchB
 From: Miroslav Cimerman <mc@raidlab.org>
 To: Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai@fygo.io>
@@ -54,10 +55,12 @@ Cc: Li Nan <magiclinan@didiglobal.com>,
 	Kenta Akagi <k@mgml.me>,
 	linux-raid@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 0/8] md/raid1,raid10: fix writes acknowledged before a failure is recorded
-Date: Fri, 27 Nov 2026 00:32:23 +0000
-Message-ID: <20261127003231.1180197-1-mc@raidlab.org>
+Subject: [PATCH 1/8] md/raid1,raid10: fail held writes when the array fails
+Date: Fri, 27 Nov 2026 00:32:24 +0000
+Message-ID: <20261127003231.1180197-2-mc@raidlab.org>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261127003231.1180197-1-mc@raidlab.org>
+References: <20261127003231.1180197-1-mc@raidlab.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -70,66 +73,68 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
 raid1 and raid10 hold a write that failed on one device until the
-superblock records that failure. This series fixes cases where a write
-still completes with success, although its data is not safe:
+superblock records that device as faulty.
 
-1/8: the superblock write fails on the last working device, and reads
-     can return old data after a restart.
-2/8: raid10 waits for blocked devices by copy index, not by device.
-3/8: as 1/8, for a write that waited for the superblock update.
-4/8: with a bad block log, the device with the only good copy fails,
-     and reads of the write return EIO.
-5/8: a write whose copy fails on a device that is already faulty is
-     not held at all.
-6/8: raid1 can release a held write after it marks the device faulty
-     and before it requests the superblock update.
-7/8: a device that fails between the wait for blocked devices and the
-     selection of the devices for a write is skipped, and the write is
-     not held.
-8/8: with write-behind, a write whose copy failed on a device completes
-     once its write-mostly copy is done.
+If the superblock write then fails on the last working device, the
+error handler sets MD_BROKEN, keeps that device In_sync and requests no
+new superblock update. md_update_sb() clears MD_SB_CHANGE_PENDING, and
+the held write completes with success. No superblock records the failed
+device. After a restart, both devices assemble as in sync, and reads
+can return the old data of the failed one.
 
-The MD_BROKEN checks skip dm-raid, which does not reject writes when
-MD_BROKEN is set, so dm-raid can still acknowledge such writes. I have a
-fix for dm-raid and a follow-up that drops these exceptions, both
-tested, and will send them to dm-devel on top of this series. The other
-changes apply to dm-raid too.
+Fail the held writes when MD_BROKEN is set. dm-raid does not reject
+writes when MD_BROKEN is set, so leave it unchanged.
 
-Patch 1 fixes a bug found with FuzzyRAID, a fault injection fuzzer for
-RAID implementations. Patches 2 to 8 fix related cases found while
-analyzing it. I used an LLM (Claude) for this series: it found the bugs
-fixed by patches 2 to 8, drafted the code of patches 2, 4, 5, 6, 7 and 8
-and the changelogs, and wrote and ran the tests. I reviewed everything.
+Found with FuzzyRAID, a fault injection fuzzer for RAID
+implementations.
 
-Tested on md-7.5 with RAID1 (2 disks; 3 disks in controls) and RAID10 (2
-and 4 disks, near and far), with and without a bad block log, RAID1 also
-with a bitmap and with write-behind, and with failfast: 30 fault cases
-in which an acknowledged write was lost or read back old data now fail
-the write, and 20 controls give the same results as before (some now
-wait for the superblock update). The cases for patches 6, 7 and 8
-compare with the series without that patch, those for 6 and 7 with
-delays added only for the test. All others compare with stock md-7.5. A
-raid10 smoke test without faults (4-disk and 3-disk near, 2-disk far and
-offset, with discards) passes too. Not tested: the race that patch 2
-closes, MD_FAILLAST_DEV, dm-raid, replacements and reshape.
+Fixes: 55ce74d4bfe1 ("md/raid1: ensure device failure recorded before write request returns.")
+Fixes: 95af587e95aa ("md/raid10: ensure device failure recorded before write request returns.")
+Cc: stable@vger.kernel.org # v5.19+
+Signed-off-by: Miroslav Cimerman <mc@raidlab.org>
+---
+ drivers/md/raid1.c  | 8 ++++++++
+ drivers/md/raid10.c | 8 ++++++++
+ 2 files changed, 16 insertions(+)
 
-Miroslav Cimerman (8):
-  md/raid1,raid10: fail held writes when the array fails
-  md/raid10: wait for the devices of the write in wait_blocked_dev()
-  md/raid1,raid10: fail writes that waited while the array failed
-  md/raid1,raid10: fail held writes that no working device has
-  md/raid1,raid10: hold writes that fail on a faulty device
-  md/raid1: set MD_SB_CHANGE_PENDING under device_lock in raid1_error()
-  md/raid1,raid10: hold writes that skip a newly failed device
-  md/raid1: hold write-behind writes that failed on a device
-
- drivers/md/raid1-10.c | 12 ++++++
- drivers/md/raid1.c    | 83 +++++++++++++++++++++++++++++++-------
- drivers/md/raid10.c   | 92 +++++++++++++++++++++++++++++++++----------
- 3 files changed, 152 insertions(+), 35 deletions(-)
-
-
-base-commit: c526b7cd32f75fea6021ffdab287b81cf38ddeb7
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 25b80ad52f00..37d120a63778 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2629,6 +2629,14 @@ static void raid1d(struct md_thread *thread)
+ 			list_del(&r1_bio->retry_list);
+ 			idx = sector_to_idx(r1_bio->sector);
+ 			atomic_dec(&conf->nr_queued[idx]);
++			/*
++			 * If the array failed while this write was held, the
++			 * failed copy might not be recorded. Fail the write,
++			 * except for dm-raid.
++			 */
++			if (!mddev_is_dm(mddev) &&
++			    test_bit(MD_BROKEN, &mddev->flags))
++				clear_bit(R1BIO_Uptodate, &r1_bio->state);
+ 			if (test_bit(R1BIO_WriteError, &r1_bio->state))
+ 				close_write(r1_bio);
+ 			raid_end_bio_io(r1_bio);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 68f42cad32a5..a65bd65ae7bd 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2942,6 +2942,14 @@ static void raid10d(struct md_thread *thread)
+ 						   retry_list);
+ 			list_del(&r10_bio->retry_list);
+ 
++			/*
++			 * If the array failed while this write was held, the
++			 * failed copy might not be recorded. Fail the write,
++			 * except for dm-raid.
++			 */
++			if (!mddev_is_dm(mddev) &&
++			    test_bit(MD_BROKEN, &mddev->flags))
++				clear_bit(R10BIO_Uptodate, &r10_bio->state);
+ 			if (test_bit(R10BIO_WriteError,
+ 				     &r10_bio->state))
+ 				close_write(r10_bio);
 -- 
 2.53.0
 
