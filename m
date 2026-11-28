@@ -1,51 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.41
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.44
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795839081;
-	b=IFcN3WLtT6EY38yn6Rjm1MVHT+ZQMC70XF5aLb93iV4Hhr/fu+Y16a0ECOIAkW/4aDfn
-	 TpT3Z186FLzL0ui4XF8Vu5Ukmhg4EGTZggIiRrQIybZaA/at7d0u4jSETltzrU2m46HLH
-	 Kg33j0eA91lApAXpZVgU9svHX1X2beWIbYwmgPRCS8qjqlnLcYQFGgleSJIniiJXeoyeB
-	 w6X2TvVykWSd+3UPNfVsLcwlO9j7C7RlO8klGRZqOwcEMds8EZvp2AHMATWmfje4M/8FI
-	 9DjlHC6fmmbuGpjPQAIALund4lgFpV59sVQDBYhzmqIUk7uK7bPlFN1Q0Ro9VzZl6JA==
+	t=1795839238;
+	b=Z5+3JTyZsOt/FqWd/zXgfFKU3FJPBwrfzsRvEu7/CBgYy7+eD2kqDjFwgx+Sr77Wbezc
+	 9jm2MTbfROB+zg7FZ0tWOlYFa6moYQK6METANEKu8CFJbPksnYwwSOOgvi86lBydw3TO/
+	 KXgbyltB9NXOZybCrh7SJNnmKbYYSCSDffbrKKJJeqJ0XUf3x60+eTrAFilPei31Q3Eo4
+	 9dJdC+samg11bf0Y6NLBw0EpxhpflksclWlp68YGZxR/LSSK5QtfOlMwwdCgB+TP4G3Mo
+	 wvLCr68dKC5Cyu4PJeNJ8XT5WxX+Gpixl8RQqQG04kK8cl7Yvy7u8/iRFt/Wn+Mkw+w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795839081;
-	h=DMARC-Filter:DKIM-Signature:From:Date:Mime-Version:X-Original-From:
-	 Content-Type:To:Cc:In-Reply-To:References:X-Lms-Return-Path:
-	 Content-Transfer-Encoding:Subject:User-Agent:Content-Language:
-	 Message-Id:Received;
-	bh=ZEqs40Rf/Imt0CafY/o57h7J+a+Us7++1SuP9TFYybo=;
-	b=38K/gIr5+BvYWrr4dDtLu90tieI67FPJsiIZ9pq5JxXAjhJtpBqE1tOZSGVl1Ckcmdiy
-	 EbeKMJRTkl5zU2xDn7FZnSf0xPpTpFsPhI2FBFwCa8VB1gACJwb3A1Y+BEWzapBuphrba
-	 2ARS2CULLI/Chf0rBALf9l0Hkj0pG3g7jMBPzwUbkMJff7/dYVtRNueCKr+GGM9WS+RVT
-	 /TOMevQm6j+mGZq+9CbQvAeKmr34ZEcZbN+AjN4I0/kz2YLs8pW+0OmvNqYIYQdZtEnU/
-	 z2xsDzF013E9C4O1/OUodR4POp+yejRdOgOd0kn77Mal1E8o0p82ir6SENEusrl819w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795839238;
+	h=DMARC-Filter:DKIM-Signature:Received:References:User-Agent:To:Cc:
+	 From:Subject:Mime-Version:X-Original-From:Content-Transfer-Encoding:
+	 Content-Language:Date:Message-Id:Content-Type:In-Reply-To:
+	 X-Lms-Return-Path;
+	bh=J8nqDA43uuhMF+9YM//+c82Ss1ff12xJ6v6ttGiKSpA=;
+	b=bAYLgRoRsjghYllj+a5H0qr3bSyi2FZQlb23GiBYU16smiY+00OSNd7OZU96XFmo/c32
+	 xvI4k+2IX7z0XAGuw1Hx2y4pVnGbwZUIKqZTk1mQ5C8Xs0yasDK0Ofa2ixGpRenKDItDZ
+	 FZIrOKnjH5F97Itep7tLiHXt+MzOy7HGDxhLiA6LYVyaldwBYDWF6bEUFc4bl+DrtWm5U
+	 rZF47xF6AINR4nPIifGfijkj/7dKgzwfg1AvD5nSFlTSwLDLnWrZUgfrH0PqceJsKu8C6
+	 Ly2zFZ1NVudPXDi0ITABUe8+IPQdEMs9BTCmzE2LvF8pT6F94BZpVIj2Gb0qmSYLXYQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=fygo.io;
 	spf=pass smtp.mailfrom=fygo.io;
-	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=VQAuVd3i;
-	arc=none smtp.remote-ip=209.127.231.41
-Received: from va-2-41.ptr.blmpb.com (va-2-41.ptr.blmpb.com [209.127.231.41])
+	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=g2iOPYM5;
+	arc=none smtp.remote-ip=209.127.231.44
+Received: from va-2-44.ptr.blmpb.com (va-2-44.ptr.blmpb.com [209.127.231.44])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67A6A606A31C
-	for <linux-raid@vger.kernel.org>; Sat, 28 Nov 2026 04:11:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 67A6A606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A31C4606A31C
+	for <linux-raid@vger.kernel.org>; Sat, 28 Nov 2026 04:13:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A31C4606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=VQAuVd3i
+	dkim=pass (2048-bit key) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=g2iOPYM5
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1795839076;
+ s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1795839230;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=ZEqs40Rf/Imt0CafY/o57h7J+a+Us7++1SuP9TFYybo=;
- b=VQAuVd3iNiXH9lNE3SXnIH/oCWDpWrqalpBdQBn5+Ma6sZ2eufylgJ8mT6Ia+1go9Jpwa2
- Yo6grt9NAV3IhVRNseUSX+76Crts2TPQ77OhO7Ce5BdyWs04ICCLCFjmCv8JX5pfmBqH5Z
- ySBeJh7BW3SslkivOGMRu8wO9KBfzzeQXnhc9hEJri9DtJn4IO4cda9+OWu0darHUtMB0N
- 1EW5abLE65BRVtMSAFXYsiv/XNkZtHcTvaw7K2z9dYafPmZZAMMXLlkKer/TO40LG7lI2f
- 8pzNNeuqCeRSNb2xNjIzEjrnSS/BSxGfq/pjolmlhAn6Iu788jVsTiiXPYt+lw==
+ bh=J8nqDA43uuhMF+9YM//+c82Ss1ff12xJ6v6ttGiKSpA=;
+ b=g2iOPYM5qorj+W3o7sSwUaXmDNmVunZId4bPFT5KlkUKZnhsvdfsUPNI26M9ASsMCDb1Wd
+ 3/6T1Q+MsdnKvJZDrkSwZMN4yrnGbB1SzKJ9RyG3tV3WLCLv6TEn/4EwqJGVOCu0DiuBvw
+ JE/uvNh8d/67w3mzod0/W3JokQWKjSEi4wSmADHuJIJ82OC/ecMg1SXVRYwL+PczXsn5np
+ 1KpBNN+3IRNdY/GeThIGqzzO3x4Gvbbp9+g47M5g0iv+YRLnYHed1Q8STQ1V5hfUuj3i47
+ uuwwrFHeuIoh365bjPy1eZgdufjm8+qldCENpIlJkODls4Lfnd4YRyzNjP5h1Q==
+Received: from [198.18.0.1] ([183.34.192.120]) by smtp.larksuite.com with ESMTPS; Sat, 28 Nov 2026 04:13:48 +0000
+References: <20261128033316.3082583-1-chencheng@fygo.io>
+User-Agent: Mozilla Thunderbird
+To: "Chen Cheng" <chencheng@fnnas.com>, "Song Liu" <song@kernel.org>, 
+	"Yu Kuai" <yukuai@fygo.io>
+Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <nixiao@fygo.io>, 
+	<linux-raid@vger.kernel.org>
 From: "Chen Cheng" <chencheng@fygo.io>
-Date: Sat, 28 Nov 2026 12:11:11 +0800
+Subject: Re: [PATCH] md: identify array and device in metadata write errors
 X-Mailing-List: linux-raid@vger.kernel.org
 List-Id: <linux-raid.vger.kernel.org>
 List-Post: <mailto:linux-raid@vger.kernel.org>
@@ -56,24 +63,18 @@ List-Owner: <mailto:linux-raid+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
 X-Original-From: Chen Cheng <chencheng@fygo.io>
-Content-Type: text/plain; charset=UTF-8
-To: "Song Liu" <song@kernel.org>, "Yu Kuai" <yukuai@fygo.io>
-Cc: "Li Nan" <magiclinan@didiglobal.com>, "Xiao Ni" <nixiao@fygo.io>, 
-	<linux-raid@vger.kernel.org>
-In-Reply-To: <20261128040527.3087280-1-chencheng@fygo.io>
-References: <20261128040527.3087280-1-chencheng@fygo.io>
-X-Lms-Return-Path: <lba+26b0a5463+f0d4e6+vger.kernel.org+chencheng@fygo.io>
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] md: identify array and device in metadata write errors
-User-Agent: Mozilla Thunderbird
 Content-Language: en-US
-Message-Id: <90cdaf01-289f-4d95-ab8f-55fbb5c93155@fygo.io>
-Received: from [198.18.0.1] ([183.34.192.120]) by smtp.larksuite.com with ESMTPS; Sat, 28 Nov 2026 04:11:14 +0000
+Date: Sat, 28 Nov 2026 12:13:46 +0800
+Message-Id: <6061e6a7-1ce3-4e0a-86f1-969666315011@fygo.io>
+Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20261128033316.3082583-1-chencheng@fygo.io>
+X-Lms-Return-Path: <lba+26b0a54fd+6b039e+vger.kernel.org+chencheng@fygo.io>
 
 Ignore this one please, a apologize for noise because misuse my 
 deprecated e-mail address, thanks.
 
-On 2026/11/28 12:05, Chen Cheng wrote:
+On 2026/11/28 11:33, Chen Cheng wrote:
 > The error log in super_written() does not show which array or device
 > failed. Add both names to help locate the failed write.
 > 
